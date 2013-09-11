@@ -1,0 +1,21 @@
+function design = materialmasses_TORUS_CORELESS(design, simoptions)
+
+    % get the magnet mass (the rotor structural mass should have been
+    % calculated by integrating over the FE structure mesh)
+    design = materialmasses_TORUS_ROTOR(design, simoptions);
+    
+    % calculate the copper mass
+    design.CopperVol = design.MTL * design.CoilTurns * (pi * (design.Dc/2)^2);
+    
+    design.CopperMass = design.CopperVol * simoptions.evaloptions.CopperDensity;
+
+    % calculate the resin mass
+    coilthickness = (design.tauco - design.tauci)/2;
+    epoxyregionvol = design.tc * ((design.Rmo + coilthickness)^2 - (design.Rmi - coilthickness)^2);
+    design.EpoxyVol = epoxyregionvol - design.CopperVol;
+    design.EpoxyMass = design.EpoxyVol * simoptions.evaloptions.EpoxyDensity;
+    
+    % calculate the aluminium mass
+    
+    
+end
