@@ -1,0 +1,785 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Fractions Toolbox</title>
+      <meta name="generator" content="MATLAB 7.8">
+      <meta name="date" content="2009-08-25">
+      <meta name="m-file" content="demo_fr"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content">
+         <h1>Fractions Toolbox</h1>
+         <!--introduction-->
+         <p>This demo file shows how one might use the Fractions Toolbox</p>
+         <p>The code was inspired by, and to a large extent based upon, John D'Errico's Variable Precision Integer Toolbox.</p>
+         <p>Fractions are stored in the form K + N / D where N&gt;=0 and D&gt;=0.</p>
+         <p>The toolbox was designed to be very flexible in the types of objects that can be used, for example doubles, integers and vpi
+            numbers.  The fraction components can in principle be any objects provided certain minimal requirements are satisfied.
+         </p>
+         <p>Author: Ben Petschel  30/7/2009</p>
+         <!--/introduction-->
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">The creator for fraction objects is fr</a></li>
+               <li><a href="#2">Fractions are created by providing the numerator and denominator</a></li>
+               <li><a href="#8">Non-integers are automatically converted (including NaN and Inf)</a></li>
+               <li><a href="#11">Fractions can be infinite</a></li>
+               <li><a href="#17">For very large numerators or denominators, use vpi numbers</a></li>
+               <li><a href="#19">Arithmetic manipulation of fractions</a></li>
+               <li><a href="#25">Work with arrays of fractions</a></li>
+               <li><a href="#30">Using vpi fractions for larger arrays is recommended</a></li>
+               <li><a href="#31">Relational operators</a></li>
+               <li><a href="#36">Concatenation using []</a></li>
+               <li><a href="#37">Conversion from fraction back to double</a></li>
+               <li><a href="#38">Extracting the numerator and denominator</a></li>
+               <li><a href="#40">Extracting digits after the decimal point (including repeating sequence)</a></li>
+               <li><a href="#42">Extracting a fixed number of digits after the decimal point</a></li>
+               <li><a href="#45">Partial fractions</a></li>
+               <li><a href="#49">Continued fraction expansions and best rational approximations</a></li>
+               <li><a href="#52">Factoring numerator and denominator</a></li>
+               <li><a href="#54">Solving linear equations</a></li>
+               <li><a href="#58">Solving rank-deficient linear equations</a></li>
+            </ul>
+         </div>
+         <h2>The creator for fraction objects is fr<a name="1"></a></h2><pre class="codeinput">help <span class="string">fr</span>
+</pre><pre class="codeoutput">  fr: Creates a fraction object
+  usage: F = fr
+         F = fr(K)     % K is a numeric variable
+         F = fr(N,D)   % N and D are numeric variables
+         F = fr(K,N,D) % K, N and D are numeric variables
+         F = fr(...)   % K, N and D are compatible objects (see below)
+ 
+ 
+  Arguments:
+   K - the whole number part of the fraction
+   N - the numerator of the fraction
+   D - the denominator of the fraction
+ 
+   fr(K,N,D) returns a fraction object representing K + N/D.
+   K, N, D can be integers (double, single, int*) or any "compatible"
+   objects for which certain arithmetic and comparison operations are
+   defined (see below).  K, N, D are assumed to be 0, 0, 1 if not provided.
+ 
+ 
+   The fraction will be automatically reduced to lowest common form, N&gt;0.
+   - non-integer floats N (single/double) are converted to fractions using
+     RAT however this has a default tolerance of 1e-6*abs(N).
+     For better accuracy it is recommended that N and D are precomputed
+     with rats using a smaller tolerance.
+   - Integers N are represented by N + 0 / 1
+   - Negative fractions -N/D are represented by -1 + (D-N) / D (if N&lt;D)
+   - [-inf,nan,inf] are represented by 0 + [-1,0,1] / 0
+ 
+   The following object types are known to be compatible:
+     vpi (John D'Errico's Variable Precision Integer toolbox,
+          available on MATLAB File Exchange)
+ 
+   Non-standard objects must include 0, 1, -1 and require the following
+   operations to be defined in order to create a fraction object:
+     gcd
+     rem
+     sign
+     abs
+     +, - , .*, ./
+     ==, &lt;, &lt;=, &gt;, &gt;=, ~=
+   
+   The following additional operation definitions are recommended:
+     *, .^
+     sort
+     floor
+     factor
+     gcd (3-output form)
+     rat (if floor(x) or mod(x,1) is not always equal to x)
+ 
+   Examples:
+   f = fr      % creates a zero fraction (0+0/1)
+   f = fr([])  % creates an empty fraction object
+   f = fr(1,3) % creates a fraction representing 1/3 (0+1/3)
+   f = fr(1,vpi(3)^100) % creates a fraction representing 1/3^100
+                        % (requires VPI toolbox)
+ 
+   See also: double, single
+
+</pre><h2>Fractions are created by providing the numerator and denominator<a name="2"></a></h2><pre class="codeinput">FRAC = fr
+</pre><pre class="codeoutput">FRAC =
+   0
+</pre><pre class="codeinput">FRAC = fr(1)
+</pre><pre class="codeoutput">FRAC =
+   1
+</pre><pre class="codeinput">FRAC = fr(1,3)
+</pre><pre class="codeoutput">FRAC =
+   1 / 3
+</pre><pre class="codeinput">FRAC = fr(4,3)
+</pre><pre class="codeoutput">FRAC =
+   1 + 1 / 3
+</pre><pre class="codeinput">FRAC = fr(1,1,3)
+</pre><pre class="codeoutput">FRAC =
+   1 + 1 / 3
+</pre><pre class="codeinput">FRAC = fr(-4,3)
+</pre><pre class="codeoutput">FRAC =
+   -2 + 2 / 3
+</pre><h2>Non-integers are automatically converted (including NaN and Inf)<a name="8"></a></h2>
+         <p>keep in mind the default 1e-6 relative accuracy of rat</p><pre class="codeinput">FRAC = fr(1/3)
+</pre><pre class="codeoutput">FRAC =
+   1 / 3
+</pre><pre class="codeinput">FRAC = fr(pi)
+</pre><pre class="codeoutput">FRAC =
+   3 + 4703 / 33215
+</pre><pre class="codeinput">FRAC = fr(eps)
+</pre><pre class="codeoutput">FRAC =
+   1 / 4503599627370496
+</pre><h2>Fractions can be infinite<a name="11"></a></h2><pre class="codeinput">FRAC = fr(NaN)
+</pre><pre class="codeoutput">FRAC =
+   NaN
+</pre><pre class="codeinput">FRAC = fr(0,0)
+</pre><pre class="codeoutput">FRAC =
+   NaN
+</pre><pre class="codeinput">FRAC = fr(1,0)
+</pre><pre class="codeoutput">FRAC =
+   Inf
+</pre><pre class="codeinput">FRAC = fr(Inf)
+</pre><pre class="codeoutput">FRAC =
+   Inf
+</pre><pre class="codeinput">FRAC = fr(-1,0)
+</pre><pre class="codeoutput">FRAC =
+  -Inf
+</pre><pre class="codeinput">FRAC = fr(-Inf)
+</pre><pre class="codeoutput">FRAC =
+  -Inf
+</pre><h2>For very large numerators or denominators, use vpi numbers<a name="17"></a></h2>
+         <p>doubles can only represent integers exactly up to 2^53-1. If you have John D'Errico's Variable Precision Toolbox, use vpi
+            numbers. Although fr takes care to avoid integer overflow whenever possible, it is recommended that you use vpi numbers.
+         </p><pre class="codeinput">FRAC = fr(1,2^100)
+</pre><pre class="codeoutput">Warning: Any N, D or K that are doubles must be no larger than 2^53 - 1, otherwise roundoff error will result. 
+Warning: one of the fraction components is a double exceeding bitmax; results may be inaccurate - use vpi-based fractions
+instead 
+FRAC =
+   1 / 1267650600228229400000000000000
+</pre><pre class="codeinput"><span class="keyword">try</span>
+  FRAC = fr(1,vpi(2)^100)
+<span class="keyword">catch</span>
+  <span class="comment">% need VPI toolbox</span>
+<span class="keyword">end</span>;
+</pre><pre class="codeoutput">FRAC =
+   1 / 1267650600228229401496703205376
+</pre><h2>Arithmetic manipulation of fractions<a name="19"></a></h2><pre class="codeinput">FRAC = fr(1,3)
+</pre><pre class="codeoutput">FRAC =
+   1 / 3
+</pre><pre class="codeinput">FRAC + 1
+</pre><pre class="codeoutput">ans =
+   1 + 1 / 3
+</pre><pre class="codeinput">FRAC + fr(2,3)
+</pre><pre class="codeoutput">ans =
+   1
+</pre><pre class="codeinput">FRAC*3
+</pre><pre class="codeoutput">ans =
+   1
+</pre><pre class="codeinput">FRAC/4
+</pre><pre class="codeoutput">ans =
+   1 / 12
+</pre><pre class="codeinput">FRAC^2
+</pre><pre class="codeoutput">ans =
+   1 / 9
+</pre><h2>Work with arrays of fractions<a name="25"></a></h2><pre class="codeinput">A = fr(1,1:10)
+</pre><pre class="codeoutput">A =
+ 1x10 fraction array with elements (reading down columns)
+   1
+   1 / 2
+   1 / 3
+   1 / 4
+   1 / 5
+   1 / 6
+   1 / 7
+   1 / 8
+   1 / 9
+   1 / 10
+</pre><pre class="codeinput">B = A.^2
+</pre><pre class="codeoutput">B =
+ 1x10 fraction array with elements (reading down columns)
+   1
+   1 / 4
+   1 / 9
+   1 / 16
+   1 / 25
+   1 / 36
+   1 / 49
+   1 / 64
+   1 / 81
+   1 / 100
+</pre><p>Compute the sum</p><pre class="codeinput">sum(A)
+</pre><pre class="codeoutput">ans =
+   2 + 2341 / 2520
+</pre><p>Or the product</p><pre class="codeinput">prod(B)
+</pre><pre class="codeoutput">ans =
+   1 / 13168189440000
+</pre><p>Convolution</p><pre class="codeinput">conv(A,B)
+</pre><pre class="codeoutput">ans =
+ 1x19 fraction array with elements (reading down columns)
+   1
+   3 / 4
+   41 / 72
+   65 / 144
+   8009 / 21600
+   1127 / 3600
+   190513 / 705600
+   167101 / 705600
+   13371157 / 63504000
+   240427 / 1270080
+   1106573 / 15240960
+   10153 / 254016
+   438401 / 17781120
+   1517161 / 95256000
+   529817 / 50803200
+   42857 / 6350400
+   9761 / 2332800
+   19 / 8100
+   1 / 1000
+</pre><h2>Using vpi fractions for larger arrays is recommended<a name="30"></a></h2><pre class="codeinput"><span class="comment">%sum(fr(1,1:100))</span>
+<span class="keyword">try</span>
+  sum(fr(vpi(1),1:100))
+<span class="keyword">catch</span>
+  <span class="comment">% need VPI toolbox</span>
+<span class="keyword">end</span>;
+</pre><pre class="codeoutput">ans =
+   5 + 522561233577855727314756256041670736351 / 2788815009188499086581352357412492142272
+</pre><h2>Relational operators<a name="31"></a></h2>
+         <p>All of the standard operators are provided, &lt;, &gt;, &lt;=, &gt;=, ==, ~=</p><pre class="codeinput">a=fr(1,2)
+</pre><pre class="codeoutput">a =
+   1 / 2
+</pre><pre class="codeinput">b=fr(2,3)
+</pre><pre class="codeoutput">b =
+   2 / 3
+</pre><pre class="codeinput">1/(a*b) == 3
+</pre><pre class="codeoutput">
+ans =
+
+     1
+
+</pre><pre class="codeinput">a &gt; b
+</pre><pre class="codeoutput">
+ans =
+
+     0
+
+</pre><pre class="codeinput">a &lt;= 1
+</pre><pre class="codeoutput">
+ans =
+
+     1
+
+</pre><h2>Concatenation using []<a name="36"></a></h2><pre class="codeinput">[3 2]*[a,b;b,a]*[a^3 b^4]'
+</pre><pre class="codeoutput">ans =
+   409 / 432
+</pre><h2>Conversion from fraction back to double<a name="37"></a></h2><pre class="codeinput">double(fr(1,3))
+</pre><pre class="codeoutput">
+ans =
+
+    0.3333
+
+</pre><h2>Extracting the numerator and denominator<a name="38"></a></h2><pre class="codeinput">[n,d]=rat(fr(4,3))
+</pre><pre class="codeoutput">
+n =
+
+     4
+
+
+d =
+
+     3
+
+</pre><pre class="codeinput">[k,n,d]=rat(fr(4,3))
+</pre><pre class="codeoutput">
+k =
+
+     1
+
+
+n =
+
+     1
+
+
+d =
+
+     3
+
+</pre><h2>Extracting digits after the decimal point (including repeating sequence)<a name="40"></a></h2>
+         <p>base 10: 1/7=0.142857(142857)</p><pre class="codeinput">[dig,rep]=digits(fr(1,7))
+</pre><pre class="codeoutput">
+dig =
+
+     1     4     2     8     5     7
+
+
+rep =
+
+     1     4     2     8     5     7
+
+</pre><p>base 7: 1/7=0.1(0)</p><pre class="codeinput">[dig,rep]=digits(fr(1,7),[],7)
+</pre><pre class="codeoutput">
+dig =
+
+     1
+
+
+rep =
+
+     0
+
+</pre><h2>Extracting a fixed number of digits after the decimal point<a name="42"></a></h2>
+         <p>base 10: 1/7=0.142+(3/3500)</p><pre class="codeinput">[dig,rep]=digits(fr(1,7),3)
+</pre><pre class="codeoutput">
+dig =
+
+     1     4     2
+
+rep =
+   3 / 3500
+</pre><p>base 7: 1/7=0.100+(0)</p><pre class="codeinput">[dig,rep]=digits(fr(1,7),3,7)
+</pre><pre class="codeoutput">
+dig =
+
+     1     0     0
+
+rep =
+   0
+</pre><pre class="codeinput">fr(142,1000)+fr(3,3500)
+</pre><pre class="codeoutput">ans =
+   1 / 7
+</pre><h2>Partial fractions<a name="45"></a></h2>
+         <p>partial expansion of 1/12 as sum(a/p^k) where 0&lt;a&lt;p</p><pre class="codeinput">FPART=partial(fr(1,12))
+</pre><pre class="codeoutput">FPART =
+ 1x4 fraction array with elements (reading down columns)
+   -1
+   1 / 2
+   1 / 4
+   1 / 3
+</pre><pre class="codeinput">sum(FPART)
+</pre><pre class="codeoutput">ans =
+   1 / 12
+</pre><p>partial expansion of 1/12 as sum(a/p^k) where 0&lt;a&lt;p^k</p><pre class="codeinput">FPART=partial(fr(1,12),false)
+</pre><pre class="codeoutput">FPART =
+ 1x3 fraction array with elements (reading down columns)
+   -1
+   3 / 4
+   1 / 3
+</pre><pre class="codeinput">sum(FPART)
+</pre><pre class="codeoutput">ans =
+   1 / 12
+</pre><h2>Continued fraction expansions and best rational approximations<a name="49"></a></h2>
+         <p>continued fraction representation of a fraction:</p><pre class="codeinput">cf=cfrac(fr(3,8))
+</pre><pre class="codeoutput">
+cf =
+
+     0     2     1     2
+
+</pre><p>continued fraction expansion of a square root (including repeating term)</p><pre class="codeinput">[cf,rep]=cfracsqrt(fr(13))
+</pre><pre class="codeoutput">
+cf =
+
+     3
+
+
+rep =
+
+     1     1     1     1     6
+
+</pre><p>best rational approximations with a given denominator limit</p><pre class="codeinput">[r1,r2] = bestrat(fr(cf),rep,100)
+</pre><pre class="codeoutput">r1 =
+   3 + 23 / 38
+r2 =
+   3 + 43 / 71
+</pre><h2>Factoring numerator and denominator<a name="52"></a></h2><pre class="codeinput">F=factor(fr(35,24))
+</pre><pre class="codeoutput">F =
+ 1x6 fraction array with elements (reading down columns)
+   5
+   7
+   1 / 2
+   1 / 2
+   1 / 2
+   1 / 3
+</pre><pre class="codeinput">prod(F)
+</pre><pre class="codeoutput">ans =
+   1 + 11 / 24
+</pre><h2>Solving linear equations<a name="54"></a></h2>
+         <p>use of fractions eliminates many issues due to machine precision</p><pre class="codeinput">A=fr(ones(2),[2,3;5,7]);
+B=fr(ones(2,1),[11;13]);
+</pre><pre class="codeinput">rref([A,B])
+</pre><pre class="codeoutput">ans =
+ 2x3 fraction array with elements (reading down columns)
+   1
+   0
+   0
+   1
+   -3 + 49 / 143
+   4 + 37 / 143
+</pre><pre class="codeinput">A\B
+</pre><pre class="codeoutput">ans =
+ 2x1 fraction array with elements (reading down columns)
+   -3 + 49 / 143
+   4 + 37 / 143
+</pre><pre class="codeinput">double(A)\double(B)-double(A\B)
+</pre><pre class="codeoutput">
+ans =
+
+  1.0e-014 *
+
+   -0.1332
+    0.2665
+
+</pre><h2>Solving rank-deficient linear equations<a name="58"></a></h2>
+         <p>fr/mldivide ("\") can handle singular and non-square A</p><pre class="codeinput">A=[1,1;0,0];
+B=[1;0];
+</pre><p>the built-in version does not always find a particular solution</p><pre class="codeinput">A\B
+</pre><pre class="codeoutput">Warning: Matrix is singular to working precision. 
+
+ans =
+
+   NaN
+   NaN
+
+</pre><p>the 1-output version of "\" gives NaN values to indicate when the system has multiple solutions however substituting 0 for
+            NaN still gives a solution
+         </p><pre class="codeinput">X=fr(A)\fr(B)
+X(isnan(X))=0;
+</pre><pre class="codeoutput">Warning: Coefficient matrix is singular and the system has indeterminate components.  Recommend using [X,N]=A\B 
+X =
+ 2x1 fraction array with elements (reading down columns)
+   1
+   NaN
+</pre><pre class="codeinput">A*X-B
+</pre><pre class="codeoutput">ans =
+ 2x1 fraction array with elements (reading down columns)
+   0
+   0
+</pre><p>the 2-output version of "\" provides the general solution X+N*V where V is an arbitrary array or fraction array of compatible
+            size
+         </p><pre class="codeinput">[X,N]=fr(A)\fr(B)
+V=fr(5,13);
+</pre><pre class="codeoutput">X =
+ 2x1 fraction array with elements (reading down columns)
+   1
+   0
+N =
+ 2x1 fraction array with elements (reading down columns)
+   -1
+   1
+</pre><pre class="codeinput">A*(X+N*V)-B
+</pre><pre class="codeoutput">ans =
+ 2x1 fraction array with elements (reading down columns)
+   0
+   0
+</pre><p>when the equations have no solution, "\" returns an empty matrix and a warning (this differs from the built-in version) e.g.
+            {x=0,x=1}
+         </p><pre class="codeinput">fr([1;1])\[0;1]
+</pre><pre class="codeoutput">Warning: Coefficient matrix is singular and the system has inconsistent components.  Recommend using least squares
+X=lsq(A,B) 
+
+ans =
+
+   Empty matrix: 1-by-0
+
+</pre><p>to find the least squares solution, use lsq:</p><pre class="codeinput">lsq(fr([1;1]),[0;1])
+</pre><pre class="codeoutput">ans =
+   1 / 2
+</pre><p>See the help files for more details</p>
+         <p class="footer"><br>
+            Published with MATLAB&reg; 7.8<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Fractions Toolbox
+% This demo file shows how one might use the Fractions Toolbox
+%
+% The code was inspired by, and to a large extent based upon, John
+% D'Errico's Variable Precision Integer Toolbox.
+%
+% Fractions are stored in the form K + N / D where N>=0 and D>=0.
+%
+% The toolbox was designed to be very flexible in the types of objects that
+% can be used, for example doubles, integers and vpi numbers.  The fraction
+% components can in principle be any objects provided certain minimal
+% requirements are satisfied.
+%
+%
+% Author: Ben Petschel  30/7/2009
+
+%% The creator for fraction objects is fr
+help fr
+
+%% Fractions are created by providing the numerator and denominator
+FRAC = fr
+%%
+FRAC = fr(1)
+%%
+FRAC = fr(1,3)
+%%
+FRAC = fr(4,3)
+%%
+FRAC = fr(1,1,3)
+%%
+FRAC = fr(-4,3)
+
+%% Non-integers are automatically converted (including NaN and Inf)
+% keep in mind the default 1e-6 relative accuracy of rat
+FRAC = fr(1/3)
+%%
+FRAC = fr(pi)
+%%
+FRAC = fr(eps)
+
+%% Fractions can be infinite
+FRAC = fr(NaN)
+%%
+FRAC = fr(0,0)
+%%
+FRAC = fr(1,0)
+%%
+FRAC = fr(Inf)
+%%
+FRAC = fr(-1,0)
+%%
+FRAC = fr(-Inf)
+
+%% For very large numerators or denominators, use vpi numbers
+% doubles can only represent integers exactly up to 2^53-1.
+% If you have John D'Errico's Variable Precision Toolbox, use vpi numbers.
+% Although fr takes care to avoid integer overflow whenever possible, it is
+% recommended that you use vpi numbers.
+FRAC = fr(1,2^100)
+%%
+try
+  FRAC = fr(1,vpi(2)^100)
+catch
+  % need VPI toolbox
+end;
+
+%% Arithmetic manipulation of fractions
+FRAC = fr(1,3)
+%%
+FRAC + 1
+%%
+FRAC + fr(2,3)
+%%
+FRAC*3
+%%
+FRAC/4
+%%
+FRAC^2
+
+%% Work with arrays of fractions
+A = fr(1,1:10)
+%%
+B = A.^2
+
+%%
+% Compute the sum
+sum(A)
+
+%%
+% Or the product
+prod(B)
+
+%%
+% Convolution
+conv(A,B)
+
+%% Using vpi fractions for larger arrays is recommended
+%sum(fr(1,1:100))
+try
+  sum(fr(vpi(1),1:100))
+catch
+  % need VPI toolbox
+end;
+
+
+%% Relational operators
+% All of the standard operators are provided, <, >, <=, >=, ==, ~=
+a=fr(1,2)
+%%
+b=fr(2,3)
+%%
+1/(a*b) == 3
+%% 
+a > b
+%% 
+a <= 1
+
+
+%% Concatenation using []
+[3 2]*[a,b;b,a]*[a^3 b^4]'
+
+
+%% Conversion from fraction back to double
+double(fr(1,3))
+
+
+%% Extracting the numerator and denominator
+[n,d]=rat(fr(4,3))
+%%
+[k,n,d]=rat(fr(4,3))
+
+
+%% Extracting digits after the decimal point (including repeating sequence)
+% base 10: 1/7=0.142857(142857)
+[dig,rep]=digits(fr(1,7))
+%%
+% base 7: 1/7=0.1(0)
+[dig,rep]=digits(fr(1,7),[],7)
+
+
+%% Extracting a fixed number of digits after the decimal point
+% base 10: 1/7=0.142+(3/3500)
+[dig,rep]=digits(fr(1,7),3)
+%%
+% base 7: 1/7=0.100+(0)
+[dig,rep]=digits(fr(1,7),3,7)
+%%
+fr(142,1000)+fr(3,3500)
+
+
+%% Partial fractions
+% partial expansion of 1/12 as sum(a/p^k) where 0<a<p
+FPART=partial(fr(1,12))
+%%
+sum(FPART)
+
+
+%%
+% partial expansion of 1/12 as sum(a/p^k) where 0<a<p^k
+FPART=partial(fr(1,12),false)
+%%
+sum(FPART)
+
+
+%% Continued fraction expansions and best rational approximations
+% continued fraction representation of a fraction:
+cf=cfrac(fr(3,8))
+
+%%
+% continued fraction expansion of a square root (including repeating term)
+[cf,rep]=cfracsqrt(fr(13))
+
+
+%%
+% best rational approximations with a given denominator limit
+[r1,r2] = bestrat(fr(cf),rep,100) 
+
+
+%% Factoring numerator and denominator
+F=factor(fr(35,24))
+%%
+prod(F)
+
+
+%% Solving linear equations
+% use of fractions eliminates many issues due to machine precision
+A=fr(ones(2),[2,3;5,7]);
+B=fr(ones(2,1),[11;13]);
+%%
+rref([A,B])
+%%
+A\B
+%%
+double(A)\double(B)-double(A\B)
+
+%% Solving rank-deficient linear equations
+% fr/mldivide ("\") can handle singular and non-square A
+A=[1,1;0,0];
+B=[1;0];
+%%
+% the built-in version does not always find a particular solution
+A\B
+%%
+% the 1-output version of "\" gives NaN values to indicate when the system
+% has multiple solutions however substituting 0 for NaN still gives a solution
+X=fr(A)\fr(B)
+X(isnan(X))=0;
+%%
+A*X-B
+%%
+% the 2-output version of "\" provides the general solution X+N*V where V
+% is an arbitrary array or fraction array of compatible size
+[X,N]=fr(A)\fr(B)
+V=fr(5,13);
+%%
+A*(X+N*V)-B
+%%
+% when the equations have no solution, "\" returns an empty matrix and a
+% warning (this differs from the built-in version)
+% e.g. {x=0,x=1}
+fr([1;1])\[0;1]
+%%
+% to find the least squares solution, use lsq:
+lsq(fr([1;1]),[0;1])
+%%
+% See the help files for more details
+
+##### SOURCE END #####
+-->
+   </body>
+</html>
