@@ -1,0 +1,154 @@
+function [design, simoptions] = simfun_TORUS_CORELESS(design, simoptions)
+
+    design.Hc = design.tc;
+    design.Wc = (design.tauco - design.tauci) / 2;
+
+    [design, simoptions] = simfun_TORUS(design, simoptions);
+    
+    design.gap = 2*design.g + design.tc;
+    
+    if ~simoptions.SkipFEA
+        
+        % Draw the main sim to extract the vector potential
+        [design.FemmProblem, design.outermagsep] = corelessfemmprob_torus(design, ...
+                                                'NStages', simoptions.ndrawnstages, ...
+                                                'DrawCoils', true, ...
+                                                'Position', 0);
+
+        % make an appropriate name for the .fem file from the base name created
+        % by simfun_ROTARY
+        femfilename = [simoptions.filenamebase, '.fem'];
+
+        if isfield(design, 'HcMag')
+            design.FemmProblem.Materials(2).H_c = design.HcMag;
+    %         design.FemmProblem.Materials(2).Name = regexprep(design.FemmProblem.Materials(2).Name, '\d+', sprintf('%3.0d', hc2mgoe(design.HcMag)));
+        end
+
+    %     femfilename = 'temp_simfun_TORUS_CORELESS.fem';
+
+        % write the fem file to disk
+        writefemmfile(femfilename, design.FemmProblem);
+
+        % for now, with femm
+        openfemm;
+        main_minimize;
+
+        opendocument(femfilename);
+        mi_analyse(1);
+        mi_loadsolution;
+
+        % now, get the necessary data to perform a simulation
+        npoints = 45;
+        xmin = -(design.outermagsep/2) + (0.00001*design.gap);
+        xmax = xmin + design.gap - (2*0.00001*design.gap);
+        xrange = linspace(xmin, xmax, npoints);
+        yrange = linspace(0, 1, npoints);
+        [design.X, design.Y] = meshgrid(xrange,yrange);
+
+        % Extract various pieces of information from the simulation
+        p = mo_getpointvalues(design.X(:), design.Y(:) * design.taupm);
+
+        design.Bx = reshape(p(:,2), size(design.X));
+
+        design.By = reshape(p(:,3), size(design.X));
+
+        xycoords = [design.X(:), design.Y(:)];
+
+        % Fit a polynomial to the vector potential in the gap between the torus
+        % rotors
+        design.APoly = machineApoly(xycoords, 8, p(:,1));
+
+        [design.p_Bx, design.p_By] = machineBpolys(xycoords, 8, p(:,2:3));
+
+        % get the forces
+        mo_clearblock();
+        mo_groupselectblock(simoptions.ndrawnstages+1)
+        design.gforce = mo_blockintegral(18)/2;
+        design.gvar = design.g;
+
+        mo_close;
+        mi_close;
+
+        % now get some more data points for forces
+        simoptions = setfieldifabsent(simoptions, 'NForcePoints', 4);
+
+        pos = linspace(design.FEMMTol - design.g, 0, simoptions.NForcePoints-1);
+        pos(end) = 2*design.g;
+
+        design.gforce = [design.gforce, rotorforces_TORUS_CORELESS(design, simoptions.ndrawnstages, 2, pos)];
+        design.gvar = [design.gvar, design.g + pos];
+
+        % make an inductance sim
+        Lcurrent = inductancesimcurrent(design.CoilArea, design.CoilTurns);
+        InductanceFemmProblem = corelessLfemmprob_torus(design, ...
+                                    'NStages', simoptions.ndrawnstages, ...
+                                    'CoilCurrent', Lcurrent);
+        
+        % First copy over the existing femmproblem to a new structure                        
+%         InductanceFemmProblem = design.FemmProblem;
+
+        % change all materials to have a coercivity of zero
+%         InductanceFemmProblem.Materials = arraysetfield(InductanceFemmProblem.Materials, 'H_c', 0);
+
+        % change the coil current to a suitible value for the sim
+%         InductanceFemmProblem.Circuits(1).TotalAmps_re = inductancesimcurrent(design.CoilArea, design.CoilTurns);
+
+        % write the fem file to disk
+        writefemmfile(femfilename, InductanceFemmProblem);
+
+        % for now, with femm
+        opendocument(femfilename);
+        mi_analyse(1);
+        mi_loadsolution;
+
+        % Now get the resistance and inductance of the machine coils
+        [design.CoilResistance, design.CoilInductance] = RandLfromFEMMcircuit('1');
+        
+        % get the mutual inductance by dividing the flux in a neighbouring
+        % phase by the applied current in the first phase
+        temp = mo_getcircuitproperties('2');
+        design.CoilInductance(2) = abs(temp(3)) / Lcurrent;
+
+        mo_close;
+        mi_close;
+    
+    end
+    
+    design.Rmm = (design.Rmo + design.Rmi) / 2;
+    theta = design.tauci / design.Rmm;
+    design.taucio = theta * (design.Rco - design.Wc);
+    design.taucii = theta * (design.Rci + design.Wc);
+    
+    design.CoilResistance = design.WireResistivity * ...
+                            isotrapzcoilmtl(design.taucio, ...
+                                            design.taucii, ...
+                                            design.Rmo - design.Rmi, ...
+                                            design.Wc) * ...
+                            design.CoilTurns ./ (pi * (design.Dc/2)^2);
+    
+    
+    
+end
+
+
+
+function LAint = mutualinductance(design)
+
+        % now, get the necessary data to perform a simulation
+        npoints = 45;
+        xmin = -(design.outermagsep/2) + (0.00001*design.gap);
+        xmax = xmin + design.gap - (2*0.00001*design.gap);
+        xrange = linspace(xmin, xmax, npoints);
+        yrange = linspace(0, 1, npoints);
+        [design.X, design.Y] = meshgrid(xrange,yrange);
+
+        % Extract various pieces of information from the simulation
+        p = mo_getpointvalues(design.X(:), design.Y(:) * design.taupm);
+
+        design.Bx = reshape(p(:,2), size(design.X));
+
+        design.By = reshape(p(:,3), size(design.X));
+
+        xycoords = [design.X(:), design.Y(:)];
+
+end

@@ -1,0 +1,19 @@
+
+
+plot(design.intAdata.slotPos, design.intAdata.slotIntA)
+
+%%
+
+plot(design.intBdata.slotPos, design.intBdata.slotIntB)
+
+%%
+
+    design.psilookup(2,:) = fluxlinkagefrmintAslm(intAslm, ...
+                                                  coilpitch, ...
+                                                  design.psilookup(1,:), ...
+                                                  design.CoilTurns, ...
+                                                  design.ls, ...
+                                                  design.CoilArea, ...
+                                                  0.9);
+                                              
+plot(design.psilookup(1,:), design.psilookup(2,:));

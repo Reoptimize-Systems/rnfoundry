@@ -1,0 +1,8 @@
+% Test_machineidealfpto_linear
+
+load generator_design_and_simoptions.mat
+
+design, simoptions, Fpto, xBh, xBs, vBh, vBs, Icoils
+
+[EMF, idealIcoils, limitIcoils, Force, Ploss] = ...
+    machineidealfpto_linear(design, simoptions, Fpto, xBh, xBs, vBh, vBs, Icoils);
