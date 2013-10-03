@@ -80,7 +80,7 @@ function usages = find_in_files(exp, topdir, dodisplay)
         fprintf(1, 'Found %d occurances of pattern %s in files:\n', nusages, exp); 
         if nusages > 0
             for i = 1:nusages
-                fprintf(1, '%s\t| %s', usages{i,1}, usages{i,2});
+                fprintf(1, '%s  | line: %d  |  %s', usages{i,1}, usages{i,2}, usages{i,3});
             end
         end
         
@@ -98,7 +98,11 @@ function usages = searchfile(filename, exp)
     
     [pathstr, name, ext] = fileparts(filename);
         
+    linenum = 0;
+    
     while 1
+    
+        linenum = linenum + 1;
         
         tline = fgets(fid);
 
@@ -112,7 +116,7 @@ function usages = searchfile(filename, exp)
                 tokenname ] = regexp(tline, exp);
 
             if ~isempty(matchstart)
-                usages = [ usages; {[name, ext], strrep(tline, sprintf('\n'), ''), matchstart, matchend} ];
+                usages = [ usages; {linenum, [name, ext], strrep(tline, sprintf('\n'), ''), matchstart, matchend} ];
             end
         else
             break;
