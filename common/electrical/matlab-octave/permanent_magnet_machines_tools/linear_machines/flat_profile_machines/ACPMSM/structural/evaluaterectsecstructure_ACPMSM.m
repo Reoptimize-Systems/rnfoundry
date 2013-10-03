@@ -7,7 +7,7 @@ function design = evaluaterectsecstructure_ACPMSM(design, options)
 % 
     % Load the database of available beams
     % beams columns: t, d, b
-    beams = RectangularSections;
+    beams = rectangularsections;
     
     % Change to metres from mm
     beams = beams ./ 1000;

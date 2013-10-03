@@ -5,7 +5,7 @@ function design = evaluateIbeamstructure_ACPMSM(design, options, initDef)
 % 
     design = ratios2dimensions_ACPMSM(design);
     
-    beams = IBeamSections ./ 1000;
+    beams = Ibeamsections ./ 1000;
                                                   
     % We will calculatte the deflection of the I-Beams, stopping when we reach
     % an I-Beam that meets the specifications, as this will be the smallest
