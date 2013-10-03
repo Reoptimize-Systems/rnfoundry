@@ -6,7 +6,7 @@ function design = evaluateIBeamStructure_PMSM(design, options)
 % 
     % Load the database of available I-Beams
     % beams columns: h, b, tw, t, r, d
-    beams = IBeamSections;
+    beams = Ibeamsections;
     
     % Change to metres from mm
     beams = beams ./ 1000;
