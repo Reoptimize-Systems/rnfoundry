@@ -24,7 +24,7 @@ design.RgVRc = 10;
 design.mu_fT = 0;
 design.massT = 0;
 
-design = Ratios2Dimensions_ACTM(design);
+design = ratios2dimensions_ACTM(design);
 
 design.PoleWeight = (pi * (design.Rm - design.Rsi)^2 * design.Wp * 7500) + (pi * (design.Ra - design.Ri)^2 * design.Wp * 8600 * design.fillfactor);
 

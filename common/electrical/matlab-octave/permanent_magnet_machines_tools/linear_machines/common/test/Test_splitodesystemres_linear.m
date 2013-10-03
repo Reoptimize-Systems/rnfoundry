@@ -24,7 +24,7 @@ design.LgVLc = 0;
 design.poles = [10 30];
 design.RgVRc = 10;
 
-design = Ratios2Dimensions_ACTM(design);
+design = ratios2dimensions_ACTM(design);
 
 %% Set up the simulation options
 

@@ -16,6 +16,9 @@ function varargout = prescribedmotodeforcefcn_linear(t, x, design, simoptions)
 % 'simoptions'  is a structure determining the buoy and sea parameters used
 % in the simulation, and also any penalties to be used in the scoring of
 % the design. Essential fields are:
+%
+% TODO: complete help
+%
 
     if nargin == 0
         % get the output names
