@@ -1,0 +1,16 @@
+function G11 = cplateG11(r_o, r)
+
+    roVr = r_o ./ r;
+    
+    G11 = zeros(size(roVr));
+    
+    G11(r<=r_o) = 0;
+    
+    G11(r>r_o) = (1./64).*( ...
+               1 ...
+               + 4 .* roVr(r>r_o).^2 ...
+               - 5 .* roVr(r>r_o).^4 ...
+               - 4.*roVr(r>r_o).^2 .* ( 2 + roVr(r>r_o).^2) .* log(r(r>r_o)./r_o)...
+                    );
+
+end
