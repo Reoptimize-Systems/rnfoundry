@@ -93,7 +93,7 @@ design.poles = [10 30];
 % design.FieldDirection = 1;
 % design.PowerPoles = poles(1);
 
-design = Ratios2Dimensions_ACTM(design);
+design = ratios2dimensions_ACTM(design);
 
 simoptions.simfun = 'simfun_ACTM';
 mname = 'ACTM';

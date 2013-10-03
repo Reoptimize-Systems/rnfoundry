@@ -35,12 +35,6 @@ function varargout = prescribedmotode_linear(t, x, design, simoptions)
     % get the velocity and position at the current time
     [xTtemp, vTtemp] = prescribedmotvelpos(t, simoptions);
     
-%     % Interpolate the data set (times,xT) at current time
-%     xTtemp = interp1(simoptions.drivetimes, simoptions.xT, t); 
-%     
-%     % Interpolate the data set (times,vT) at current time
-%     vTtemp = interp1(simoptions.drivetimes, simoptions.vT, t); 
-
     simoptions.tether_length = 1000;
 
     % determine the machine outputs
