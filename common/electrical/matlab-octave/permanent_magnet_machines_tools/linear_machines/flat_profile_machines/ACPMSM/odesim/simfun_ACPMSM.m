@@ -64,7 +64,7 @@ function [design, simoptions] = simfun_ACPMSM(design, simoptions)
     solution = fpproc(ansfilename);
     
     % get the forces, these forces are the force on one side for
-    % two poles.
+    % two Poles.
     solution.groupselectblock(3);
 
     % Get the integral of the weighted maxwell stress tensor
@@ -102,7 +102,7 @@ function [design, simoptions] = simfun_ACPMSM(design, simoptions)
         solution = fpproc(ansfilename);
 
         % get the forces, these forces are the force on one side for
-        % two poles. 
+        % two Poles. 
         solution.groupselectblock(3);
 
         % Get the integral of the weighted maxwell stress tensor
@@ -131,14 +131,14 @@ function [design, simoptions] = simfun_ACPMSM(design, simoptions)
     solution = fpproc(ansfilename);
 
     % get the forces, these forces are the force on one side for
-    % two poles. Therefore as we want the total force between the
+    % two Poles. Therefore as we want the total force between the
     % sides for one pole we leave them as they are
     solution.groupselectblock(3);
 
     % Get the integral of the weighted maxwell stress tensor
     % over the translator. This is the per-pole force, as the
     % machine is double-sided, but the simulation consists of
-    % two poles but with only one side of the machine
+    % two Poles but with only one side of the machine
     FEAFx = -solution.blockintegral(18)/2;
     
     delete(femfilename);

@@ -15,7 +15,7 @@ design.tbi = [0.1, 0.2];
 design.Rmo = 10;
 design.Rmi = 9;
 
-design.poles = pi * 2 * mean([design.Rmo, design.Rmi]) / design.taupm;
+design.Poles = pi * 2 * mean([design.Rmo, design.Rmi]) / design.taupm;
 
 design.CoilTurns = 100;
 

@@ -2,7 +2,7 @@
 
 
 % First set the machine physical variables
-design.phases = 3;         
+design.Phases = 3;         
 design.Rm = 0.1;
 design.g = 5/1000;
 design.Ri = design.Rm + design.g;
@@ -14,9 +14,9 @@ design.RaVRo = 1.05;
 design.RsoVRm = 0.5;
 design.RsiVRso = 0;
 design.WcVWp = 1/3;
-design.fillfactor = 0.65;
+design.CoilFillFactor = 0.65;
 
-design = Ratios2Dimensions_ACTIAM(design);
+design = ratios2dimensions_ACTIAM(design);
 
 % set the number of turns or the wire diameter or both
 %design.Dc = 1/1000;
@@ -27,9 +27,9 @@ design.mode = 2;
 design.RgVRc = 10; 
 % ratio of grid inductance to machine inductance
 design.LgVLc = 0;
-% set the number of poles in each part to 1 as we will be multiplying up
-% the poles to get the required power specified in optins.targetpower
-design.poles = [1 1];
+% set the number of Poles in each part to 1 as we will be multiplying up
+% the Poles to get the required power specified in optins.targetpower
+design.Poles = [1 1];
 
 simoptions.Lmode = true;
 
@@ -55,7 +55,7 @@ simfunction = @simulatebuoysys_TM;
 polypsidot_TM(Mdesign, -Mdesign.Wp / 2)
 
 RunFEMMSimWithCoils_ACTIAM(Mdesign.WmVWp, Mdesign.WpVRm, Mdesign.RiVRm, Mdesign.RoVRm, Mdesign.RaVRo,  ...
-                                               Mdesign.RsoVRm, Mdesign.WcVWp, Mdesign.Rm, Mdesign.CoilTurns, Mdesign.fillfactor, ...
+                                               Mdesign.RsoVRm, Mdesign.WcVWp, Mdesign.Rm, Mdesign.CoilTurns, Mdesign.CoilFillFactor, ...
                                                [0 1e6 0], [2, 1, 1]);
                                            
 -yforce_TM(design, 1e6, 0.5*design.Wp);  
@@ -64,7 +64,7 @@ RunFEMMSimWithCoils_ACTIAM(Mdesign.WmVWp, Mdesign.WpVRm, Mdesign.RiVRm, Mdesign.
 
 
 RunFEMMSimWithCoils_ACTIAM(Mdesign.WmVWp, Mdesign.WpVRm, Mdesign.RiVRm, Mdesign.RoVRm, Mdesign.RaVRo,  ...
-                                               Mdesign.RsoVRm, Mdesign.WcVWp, Mdesign.Rm, Mdesign.CoilTurns, Mdesign.fillfactor, ...
+                                               Mdesign.RsoVRm, Mdesign.WcVWp, Mdesign.Rm, Mdesign.CoilTurns, Mdesign.CoilFillFactor, ...
                                                fliplr(Jz'), [2, 1, 1]);
                                            
                                            
@@ -72,10 +72,10 @@ scatter3(xycoords(:,1), xycoords(:,2), p(:,2));
 
 
 RunFEMMSimWithCoils_ACTIAM(design.WmVWp, design.WpVRm, design.RiVRm, design.RoVRm, design.RaVRo,  ...
-                                               design.RsoVRm, design.WcVWp, design.Rm, design.CoilTurns, design.fillfactor, ...
+                                               design.RsoVRm, design.WcVWp, design.Rm, design.CoilTurns, design.CoilFillFactor, ...
                                                [0 1e6 0], [2, 1, 0]);
                                            
- [tintBx, tintBy] = intB_TM(design, 0.5);                                           
+ [tintBx, tintBy] = coilfluxdensityintegral_TM(design, 0.5);                                           
                                            
 
 

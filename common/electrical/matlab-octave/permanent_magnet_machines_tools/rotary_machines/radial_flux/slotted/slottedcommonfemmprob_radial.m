@@ -12,8 +12,17 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 %                             ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd)
 %
 %  
+% Description
+%
+% slottedcommonfemmprob_radial performs some final problem creation tasks
+% common to all radial flux type rotary machines. These tasks include
+% drawing the inner or outer air regions and linking up and adding boundary
+% conditions to the simulation. This is a low-level function intended for
+% use by the main radial flux machine problem creation functions rather
+% than direct use.
+%
 
-    slotsperpole = design.Qs / design.poles;
+    slotsperpole = design.Qs / design.Poles;
 
     % define the block properties of the core region
     yokeBlockProps.BlockType = FemmProblem.Materials(BackIronMatInd).Name;
@@ -39,8 +48,8 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     
 %     corexpos = -outermagsep/2 + design.g + design.tc;
 
-    % add circuits for each phase
-    for i = 1:design.phases
+    % add circuits for each winding phase
+    for i = 1:design.Phases
         if i == 1
             FemmProblem = addcircuit_mfemm(FemmProblem, num2str(i), 'TotalAmps_re', Inputs.CoilCurrent);
         else
@@ -51,8 +60,9 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     edgenodes = [];
     
     switch Inputs.StatorType
+        
         case 'si'
-            % single inner facing stator
+            % single inner facing stator (magnets inside, stator outside)
             
             routerregion = [2*design.tm, 10*design.tm]; 
             
@@ -255,9 +265,9 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                                                'BoundaryMarker', boundnames{4});
 
             if ~linktb
-            % top gap corner to top core corner
-            FemmProblem = addsegments_mfemm(FemmProblem, topnodeid, magcornerids(2), ...
-                                               'BoundaryMarker', boundnames{4});
+                % top gap corner to top core corner
+                FemmProblem = addsegments_mfemm(FemmProblem, topnodeid, magcornerids(2), ...
+                                                   'BoundaryMarker', boundnames{4});
             end
             % bottom slot to edge
             FemmProblem = addarcsegments_mfemm(FemmProblem, nodeids(1), yokenodeids(2), ...
@@ -329,7 +339,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     row = 1;
 
     circnums = zeros(Inputs.NSlots, 1);
-    temp = (1:design.phases)';
+    temp = (1:design.Phases)';
 
     if design.yd == 1
 
@@ -367,7 +377,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
     if design.yd == 1
 
-        for ii = 1:2:2*design.phases
+        for ii = 1:2:2*design.Phases
 
             if ii <= numel(circnums)
 
@@ -385,7 +395,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
     else
 
-        for ii = 1:design.phases
+        for ii = 1:design.Phases
 
             if ii <= numel(circnums)
 
@@ -413,7 +423,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
         for n = 1:Inputs.NWindingLayers
 
-            if k <= 2*design.phases && docircname(k,n) ~= 0
+            if k <= 2*design.Phases && docircname(k,n) ~= 0
 
                 % only put the circuit in the first set of phase coils
                 coilBlockProps.InCircuit = num2str(circnums(k));

@@ -20,17 +20,17 @@ function [cost, design] = costestimate_ACPMSM(design, simoptions, buoymass)
     design.wlength = design.CoilTurns * rectcoilmtl(design.ls, design.bp, (design.Taup - design.bp) / 2);
     
     % Determine the copper cost based on the length of wire in a coil
-    % multiplied by the number of phases and armature poles and the wire
+    % multiplied by the number of Phases and armature Poles and the wire
     % cross-sectional area etc.
-    design.CopperMass = design.phases * design.wlength * (pi* (design.Dc/2)^2) * design.poles(2) * simoptions.evaloptions.CopperDensity;
+    design.CopperMass = design.Phases * design.wlength * (pi* (design.Dc/2)^2) * design.Poles(2) * simoptions.evaloptions.CopperDensity;
     design.CopperCost = design.CopperMass * simoptions.evaloptions.CopperCost;
     
     % Calculate the total cost of the magnets
-    design.MagnetMass = design.poles(1) * 2 * design.lm * design.ls * design.bp * simoptions.evaloptions.MagnetDensity;
+    design.MagnetMass = design.Poles(1) * 2 * design.lm * design.ls * design.bp * simoptions.evaloptions.MagnetDensity;
     design.MagnetCost = design.MagnetMass * simoptions.evaloptions.MagnetCost;
     
     % Calculate the cost of the back iron on the field
-    design.FieldIronMass = design.poles(1) * 2 * design.Taup * design.ls * design.dbi * simoptions.evaloptions.FieldIronDensity;;
+    design.FieldIronMass = design.Poles(1) * 2 * design.Taup * design.ls * design.dbi * simoptions.evaloptions.FieldIronDensity;;
     design.BackIronMass = design.FieldIronMass; % in case of compatibility issues
     design.FieldIronCost = design.FieldIronMass * simoptions.evaloptions.FieldIronCost;
     
@@ -45,7 +45,7 @@ function [cost, design] = costestimate_ACPMSM(design, simoptions, buoymass)
     
     if isfield(design, 'GuideRailIVars')
         % Calculate the cost of the guide rails
-        design.guideRailMass = (design.poles(2) .* design.Taup - design.Taup) * CSArea(design.GuideRailIVars, design.GuideRailIMethod) * 4 * simoptions.evaloptions.StructMaterialDensity;
+        design.guideRailMass = (design.Poles(2) .* design.Taup - design.Taup) * CSArea(design.GuideRailIVars, design.GuideRailIMethod) * 4 * simoptions.evaloptions.StructMaterialDensity;
 
     else
 

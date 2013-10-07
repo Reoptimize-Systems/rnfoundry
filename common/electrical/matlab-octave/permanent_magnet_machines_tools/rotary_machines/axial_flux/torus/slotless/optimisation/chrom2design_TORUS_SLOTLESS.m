@@ -35,12 +35,12 @@ function [design, simoptions] = chrom2design_TORUS_SLOTLESS(simoptions, Chrom, v
 %                    1,     10 ];   % 22. NStages
 %                                   % 23. 
 
-    % number of phases
-    options.phases = 3;
+    % number of Phases
+    options.Phases = 3;
     % number of coils per pole and phase
     options.qc = fr(3,3);
     options.RgVRc = 10;
-    options.fillfactor = 0.86;
+    options.CoilFillFactor = 0.86;
     options.BranchFac = 0;
     options.ModuleFac = 0;
     options.NStages = 1;
@@ -50,8 +50,8 @@ function [design, simoptions] = chrom2design_TORUS_SLOTLESS(simoptions, Chrom, v
     
     options = parseoptions(options, varargin);
     
-    design.fillfactor = options.fillfactor;
-    design.phases = max(1, round(options.phases));
+    design.CoilFillFactor = options.CoilFillFactor;
+    design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
     design.RgVRc = options.RgVRc;
     design.ModuleFac = options.ModuleFac;

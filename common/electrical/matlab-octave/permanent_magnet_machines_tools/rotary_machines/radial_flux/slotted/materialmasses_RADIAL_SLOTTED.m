@@ -16,7 +16,7 @@ function design = materialmasses_RADIAL_SLOTTED(design, simoptions)
 %     ls - the stack length of the machine
 %     thetam - the magnet pitch in radians
 %     thetap - the pole pitch in radians
-%     poles - the number of poles in the machine
+%     Poles - the number of Poles in the machine
 %     Dc - diameter of wire used in the coils
 %     MTL - mean turn length in a coil
 %     CoilTurns - number of turns in a coil
@@ -59,7 +59,7 @@ function design = materialmasses_RADIAL_SLOTTED(design, simoptions)
     
     % calculate the copper mass
     design.CopperVol = design.NCoilsPerPhase ... % number of coils per phase
-                       * design.phases ... % number of phases
+                       * design.Phases ... % number of Phases
                        * design.MTL ... % mean turn length in coil
                        * design.CoilTurns ... % number of turns per coil
                        * (pi * (design.Dc/2)^2); % cross-sectional area of wire
@@ -70,16 +70,16 @@ function design = materialmasses_RADIAL_SLOTTED(design, simoptions)
     if isfield(design, 'ArmatureIronAreaPerPole')
         design.ArmatureIronVol = design.ArmatureIronAreaPerPole ...
                                  * design.ls ...
-                                 * design.poles;
+                                 * design.Poles;
     else
         error('design.ArmatureIronAreaPerPole must be avaialable.')
 %     design.ArmatureIronVol = design.ls ...
-%                              * ( design.poles*annularsecarea(design.Ryi, design.Ryo, design.thetap) ...
+%                              * ( design.Poles*annularsecarea(design.Ryi, design.Ryo, design.thetap) ...
 %                                 + design.Qs * annularsecarea(design.Ryo, design.Rtsb, (design.thetas - design.thetac)) ...
-%                                 + design.Qs * annularsecarea(design.Rstg, design.Rso, (design.thetas - design.thetasg)) ...
-%                                 + ( design.Qs * (annularsecarea(design.Rstg, design.Rtsb, (design.thetas - design.thetasg)) ...
+%                                 + design.Qs * annularsecarea(design.Rtsg, design.Rso, (design.thetas - design.thetasg)) ...
+%                                 + ( design.Qs * (annularsecarea(design.Rtsg, design.Rtsb, (design.thetas - design.thetasg)) ...
 %                                                   - 2*sectorarea() ...
-%                                                   - 2*(0.5*(design.Rstg - design.Rtsb)*(sqrt(h^2 - ))))));
+%                                                   - 2*(0.5*(design.Rtsg - design.Rtsb)*(sqrt(h^2 - ))))));
     end
     
     design.ArmatureIronMass = design.ArmatureIronVol * simoptions.evaloptions.ArmatureIronDensity;

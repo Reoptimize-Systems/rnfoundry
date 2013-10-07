@@ -4,23 +4,23 @@ function [results] = splitodeelectricalresults_AM(flag, design, simoptions, resu
 
     if flag == 0
         
-        results.coilIsquaredsum = zeros(1,design.phases);
+        results.coilIsquaredsum = zeros(1,design.Phases);
         
-        results.phaseIsquaredsum = zeros(1,design.phases);
+        results.phaseIsquaredsum = zeros(1,design.Phases);
 
-        results.coilEMFsquaredsum = zeros(1,design.phases);
+        results.coilEMFsquaredsum = zeros(1,design.Phases);
         
-        results.phaseEMFsquaredsum = zeros(1,design.phases);
+        results.phaseEMFsquaredsum = zeros(1,design.Phases);
 
-        results.ICoilPeak = zeros(1,design.phases);
+        results.ICoilPeak = zeros(1,design.Phases);
 
-        results.EMFPhasePeak = zeros(1,design.phases);
+        results.EMFPhasePeak = zeros(1,design.Phases);
 
-        results.EnergyLoadTotal = zeros(1,design.phases);
+        results.EnergyLoadTotal = zeros(1,design.Phases);
         
         results.EnergyPhaseRTotal = zeros(1,1);
 
-        results.GridPowersum = zeros(1,design.phases);
+        results.GridPowersum = zeros(1,design.Phases);
         % the peak total exported power
         results.PowerLoadPeak = 0;
         
@@ -41,7 +41,7 @@ function [results] = splitodeelectricalresults_AM(flag, design, simoptions, resu
     % sol.y(simoptions.ODEPhaseCurrentCol,:) is the phase current of the
     % first phase, so we divide by the number of parallel branched to
     % obtain the current in the coils
-    phaseCurrent = sol.y(simoptions.ODEPhaseCurrentCol:simoptions.ODEPhaseCurrentCol-1+design.phases,:)';
+    phaseCurrent = sol.y(simoptions.ODEPhaseCurrentCol:simoptions.ODEPhaseCurrentCol-1+design.Phases,:)';
     
     % calculate the coil current
     coilCurrent = phaseCurrent ./ design.Branches;

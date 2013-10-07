@@ -1,9 +1,9 @@
-function fillfactor = fillfactorcalc(area, coilturns, dc)
+function CoilFillFactor = fillfactorcalc(area, coilturns, dc)
 
     fulldc = conductord2wired(dc);
     
     Ac = pi * (fulldc/2)^2;
     
-    fillfactor = area / (coilturns * Ac);
+    CoilFillFactor = area / (coilturns * Ac);
     
 end

@@ -163,7 +163,7 @@ function varargout = resultantforce_ACTM(varargin)
         
         pos = pos ./ design.Wp;
 
-        pos = pos + coilpos(design.phases);
+        pos = pos + coilpos(design.Phases);
         
         % ReactionForce
         varargout{1} = sum(ylorentzforce(Jz, design.slm_intBx, pos, design.MTL));

@@ -8,12 +8,12 @@ function [value,isterminal,direction] = systemevents_linear(t, y, design, simopt
     value(1,2) = 100 - abs(y(4));
     
     % cease simulation if any coil currents exceed 20 A/mm^2
-    value(1,3:2+design.phases) = ...
-        20e6 - (abs(y(5:4+design.phases)) / (design.Branches * design.ConductorArea));
+    value(1,3:2+design.Phases) = ...
+        20e6 - (abs(y(5:4+design.Phases)) / (design.Branches * design.ConductorArea));
     
     % define all the above events as terminal, and not dependent on
     % direction
-    isterminal = [1, 1, ones(1,design.phases)];
-    direction  = [0, 0, zeros(1,design.phases)];
+    isterminal = [1, 1, ones(1,design.Phases)];
+    direction  = [0, 0, zeros(1,design.Phases)];
 
 end

@@ -2,8 +2,8 @@
 % setup design
 clear design simoptions
 
-% number of phases in the machine
-design.phases = 3; %
+% number of Phases in the machine
+design.Phases = 3; %
 % number of parallel branches per phase
 design.Branches = 1;
 % number of series coils per branch
@@ -36,11 +36,11 @@ design.hcoil = 326/1000;
 design.Rci = design.Rmm - design.hcoil/2;
 % Outer Radius of coil
 design.Rco = design.Rmm + design.hcoil/2;
-% total number of magnetic poles
-design.poles = 176; %
+% total number of magnetic Poles
+design.Poles = 176; %
 
 % mean pole pitch
-design.taupm = (pi * (design.Rmo + design.Rmi)) / design.poles;
+design.taupm = (pi * (design.Rmo + design.Rmi)) / design.Poles;
 % mean magnet pitch
 design.taumm = 0.076; %
 % mean outer coil pitch
@@ -48,7 +48,7 @@ design.tauco = 0.133; %
 % mean coil former (inner coil) pitch
 design.tauci = 0.042; %
 % actual coil spacing (total coil spacing is slightly larger that tauco)
-design.taupcg = design.phases * 0.136;
+design.taupcg = design.Phases * 0.136;
 
 
 % complete standard design structure values used for calculations of some
@@ -64,7 +64,7 @@ design.CoilTurns = 20; %
 % non-round wire cross-sectional area
 design.Dc = 2 * area2radius(strandarea); %
 % determine the copper fill factor for completeness
-design.fillfactor = (design.CoilTurns * strandarea) / (design.Hc * design.Wc); %
+design.CoilFillFactor = (design.CoilTurns * strandarea) / (design.Hc * design.Wc); %
 % thickness of the magnet
 design.tm = 0.015; %
 % outer and inner plate thickness
@@ -113,7 +113,7 @@ simoptions = simsetup_ROTARY(design, 'simfun_TORUS_CORELESS', 'finfun_TORUS_CORE
                                 'Velocity', 1, 'TSpan', [0,10]);
                             
 simoptions.reltol = 1e-4;
-simoptions.abstol = repmat(0.001, 1, design.phases);
+simoptions.abstol = repmat(0.001, 1, design.Phases);
 simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 10000;
 
 [score, design, simoptions, T, Y, results] = ...

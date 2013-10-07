@@ -5,17 +5,17 @@
 clear design simoptions 
 
 design.StatorType = 'so';
-design.poles = 2;
-design.phases = 3;
+design.Poles = 2;
+design.Phases = 3;
 design.CoilLayers = 2;
-design.Qc = design.phases * design.poles;
+design.Qc = design.Phases * design.Poles;
 if design.CoilLayers == 1
-    design.Qs = design.phases * 2 * design.Qc;
+    design.Qs = design.Phases * 2 * design.Qc;
 elseif design.CoilLayers == 2
-    design.Qs = design.phases * 1 * design.Qc;
+    design.Qs = design.Phases * 1 * design.Qc;
 end
 design.yd = 4;
-design.thetap = 2*pi/design.poles;
+design.thetap = 2*pi/design.Poles;
 design.thetam = design.thetap * 0.8;
 design.thetac = (2*pi / design.Qs) * 0.85;
 design.thetasg = design.thetac * 0.95;
@@ -60,12 +60,12 @@ elseif strcmp(design.StatorType, 'so')
 end
 
 design.Dc = design.Rcm * design.thetac / 100;
-design.fillfactor = 0.7;
+design.CoilFillFactor = 0.7;
 
 design.Hc = design.tc / design.CoilLayers;
 design.CoilTurns = 250;
 
-design.NCoilsPerPhase = design.Qc / design.phases;
+design.NCoilsPerPhase = design.Qc / design.Phases;
 
 design.MagnetMaterial = 'NdFeB 32 MGOe';
 design.BackIronMaterial = '1117 Steel';

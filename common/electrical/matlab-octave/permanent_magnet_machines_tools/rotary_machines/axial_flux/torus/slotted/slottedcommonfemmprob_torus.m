@@ -2,7 +2,7 @@ function FemmProblem = slottedcommonfemmprob_torus(FemmProblem, design, ...
     Inputs, magsep, gapedgenodes, innerstagewidth, coillabellocs, yokenodeids, ...
     ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd)
 
-    slotsperpole = design.Qs / design.poles;
+    slotsperpole = design.Qs / design.Poles;
 
     % define the block properties of the core region
     yokeBlockProps.BlockType = FemmProblem.Materials(BackIronMatInd).Name;
@@ -29,7 +29,7 @@ function FemmProblem = slottedcommonfemmprob_torus(FemmProblem, design, ...
 %     corexpos = -outermagsep/2 + design.g + design.tc;
 
     % add circuits for each phase
-    for i = 1:design.phases
+    for i = 1:design.Phases
         if i == 1
             FemmProblem = addcircuit_mfemm(FemmProblem, num2str(i), 'TotalAmps_re', Inputs.CoilCurrent);
         else
@@ -113,7 +113,7 @@ function FemmProblem = slottedcommonfemmprob_torus(FemmProblem, design, ...
         row = 1;
         
         circnums = zeros(Inputs.NSlots, 1);
-        temp = (1:design.phases)';
+        temp = (1:design.Phases)';
         
         if design.yd == 1
             
@@ -151,7 +151,7 @@ function FemmProblem = slottedcommonfemmprob_torus(FemmProblem, design, ...
         
         if design.yd == 1
             
-            for ii = 1:2:2*design.phases
+            for ii = 1:2:2*design.Phases
 
                 if ii <= numel(circnums)
 
@@ -169,7 +169,7 @@ function FemmProblem = slottedcommonfemmprob_torus(FemmProblem, design, ...
 
         else
 
-            for ii = 1:design.phases
+            for ii = 1:design.Phases
 
                 if ii <= numel(circnums)
 
@@ -197,7 +197,7 @@ function FemmProblem = slottedcommonfemmprob_torus(FemmProblem, design, ...
 
             for n = 1:Inputs.NWindingLayers
 
-                if k <= 2*design.phases && docircname(k,n) ~= 0
+                if k <= 2*design.Phases && docircname(k,n) ~= 0
                     
                     % only put the circuit in the first set of phase coils
                     coilBlockProps.InCircuit = num2str(circnums(k));

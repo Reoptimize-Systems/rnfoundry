@@ -1,7 +1,7 @@
 function [design, simoptions] = preprocsystemdesign_ACPMSM(simoptions, Chrom)
     
     design.LgVLc = 0;
-    design.phases = 3;
+    design.Phases = 3;
 
     % make maximum pole width 30 cm
     maxtaup = 0.3;
@@ -22,9 +22,9 @@ function [design, simoptions] = preprocsystemdesign_ACPMSM(simoptions, Chrom)
     design.WcVTaup = Chrom(1,7);
     design.HcVgap = Chrom(1,8);
     design.RgVRc = Chrom(1,9);
-    design.fillfactor = Chrom(1,10);
+    design.CoilFillFactor = Chrom(1,10);
     design.DcAreaFac = Chrom(1,11);
-    design.poles(1) = round(Chrom(1,12));
+    design.Poles(1) = round(Chrom(1,12));
     design.BranchFac = Chrom(1,13);
             
     design = ratios2dimensions_ACPMSM(design);
@@ -88,7 +88,7 @@ function [design, simoptions] = preprocsystemdesign_ACPMSM(simoptions, Chrom)
     % 17th value is maximum allowed displacement of the translator which
     % determines end stop position, set this to infinity if not supplied
     if size(Chrom,2) > 16
-        simoptions.maxAllowedxT = Chrom(1,17) * design.poles(1) * design.Taup;
+        simoptions.maxAllowedxT = Chrom(1,17) * design.Poles(1) * design.Taup;
     else
         simoptions.maxAllowedxT = inf;
     end
@@ -98,14 +98,14 @@ function [design, simoptions] = preprocsystemdesign_ACPMSM(simoptions, Chrom)
         simoptions.buoy = round(Chrom(1,18));
     end
     
-%     design.Dc = sqrt(4 * (design.Hc * design.Wc * design.fillfactor * design.DcAreaFac) / pi);
+%     design.Dc = sqrt(4 * (design.Hc * design.Wc * design.CoilFillFactor * design.DcAreaFac) / pi);
 %     
 %     if design.Dc < minDc
 %         design.Dc = minDc;
 %     end
 
     if isfield(simoptions, 'maxAllowedTLength')
-        design.poles = max(1, min(design.poles(1), ...
+        design.Poles = max(1, min(design.Poles(1), ...
                                   round(simoptions.maxAllowedTLength / design.Taup)));
     end
 
@@ -115,14 +115,14 @@ function [design, simoptions] = preprocsystemdesign_ACPMSM(simoptions, Chrom)
 
         websperm = Chrom(1, 16);
 
-        design.OuterWebs = max(2, round(design.poles(1) * design.Taup * websperm));
+        design.OuterWebs = max(2, round(design.Poles(1) * design.Taup * websperm));
 
     end
     
     design.InnerStructureBeamVars = [];
     
     % process some common aspects of the linear machine design
-    design = preprocsystemdesign_linear(design, simoptions, design.poles);
+    design = preprocsystemdesign_linear(design, simoptions, design.Poles);
     
 %     simoptions = buoynum2buoydata(simoptions.buoylibdir, design.buoynum, simoptions);
     

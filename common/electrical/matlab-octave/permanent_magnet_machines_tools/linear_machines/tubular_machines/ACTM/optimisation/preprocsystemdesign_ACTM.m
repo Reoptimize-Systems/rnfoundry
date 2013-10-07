@@ -5,10 +5,10 @@ function [design, simoptions] = preprocsystemdesign_ACTM(simoptions, Chrom)
     % Steel in centre with steel removed
     % design.mode = 3;
     
-    design.phases = 3;
+    design.Phases = 3;
     design.RsiVRso = 0;
 %     design.AngleFromHorizontal = 80 * (pi/180);
-    design.phases = 3;
+    design.Phases = 3;
 
     % make maximum pole width 30 cm
     maxWp = 0.3;
@@ -29,13 +29,13 @@ function [design, simoptions] = preprocsystemdesign_ACTM(simoptions, Chrom)
     design.WcVWp = Chrom(1,7);
     design.Rm = Chrom(1,8);
     design.RgVRc = Chrom(1,9);
-    design.fillfactor = Chrom(1,10);
+    design.CoilFillFactor = Chrom(1,10);
     design.DcAreaFac = Chrom(1,11);
     design.Rs2VHmag = 0.5;
     design.Rs1VHmag = 0.5;
     design.Ws2VhalfWs = 0.5;
     design.Ws1VhalfWs = 0.5;
-    design.poles(1) = round(Chrom(1,12));
+    design.Poles(1) = round(Chrom(1,12));
     design.BranchFac = Chrom(1,13);
     design.nBpoints = round(Chrom(1,14));
     
@@ -50,8 +50,8 @@ function [design, simoptions] = preprocsystemdesign_ACTM(simoptions, Chrom)
         simoptions.buoy = round(Chrom(1,17));
     end
     
-    %            if design.poles(1) < design.nBpoints
-    %                design.nBpoints = max(design.poles(1)-1,0);
+    %            if design.Poles(1) < design.nBpoints
+    %                design.nBpoints = max(design.Poles(1)-1,0);
     %            end
 
     design.RoVRm = design.RoVRi * design.RiVRm;
@@ -101,21 +101,21 @@ function [design, simoptions] = preprocsystemdesign_ACTM(simoptions, Chrom)
 
     design = ratios2dimensions_ACTM(design);
     
-%     design.Dc = sqrt(4 * (design.Hc * design.Wc * design.fillfactor * design.DcAreaFac) / pi);
+%     design.Dc = sqrt(4 * (design.Hc * design.Wc * design.CoilFillFactor * design.DcAreaFac) / pi);
 %     
 %     if design.Dc < minDc
 %         design.Dc = minDc;
 %     end
 
     if isfield(simoptions, 'maxAllowedTLength')
-        design.poles = max(1, min(design.poles(1), ...
+        design.Poles = max(1, min(design.Poles(1), ...
                         round(simoptions.maxAllowedTLength / design.Wp)));
     end
     
 %     % now determine the number of parallel coil branches to use
-%     branchcomp = design.BranchFac * design.poles;
+%     branchcomp = design.BranchFac * design.Poles;
 %     
-%     factors = factor2(design.poles)';
+%     factors = factor2(design.Poles)';
 %     
 %     NearestFacStruct = ipdm(branchcomp, factors, ...
 %                             'Subset', 'NearestNeighbor', ...
@@ -123,15 +123,15 @@ function [design, simoptions] = preprocsystemdesign_ACTM(simoptions, Chrom)
 %                         
 %     design.Branches = factors(NearestFacStruct.columnindex, NearestFacStruct.rowindex);
 %     
-%     design.CoilsPerBranch = design.poles / design.Branches;
+%     design.CoilsPerBranch = design.Poles / design.Branches;
     
     if size(Chrom,2) > 15
-        simoptions.maxAllowedxT = Chrom(1,16) * design.poles(1) * design.Wp;
+        simoptions.maxAllowedxT = Chrom(1,16) * design.Poles(1) * design.Wp;
     else
         simoptions.maxAllowedxT = inf;
     end
     
-    design = preprocsystemdesign_linear(design, simoptions, design.poles);
+    design = preprocsystemdesign_linear(design, simoptions, design.Poles);
 
 %     simoptions = buoynum2buoydata(simoptions.buoylibdir, design.buoynum, simoptions);
     

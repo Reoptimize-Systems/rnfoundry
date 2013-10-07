@@ -35,7 +35,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
 %
 %   RgVRc - The apparent grid resistance to coil resistance ratio
 %
-%   fillfactor - the copper fill factor in the coil slots
+%   CoilFillFactor - the copper fill factor in the coil slots
 %
 %   lm - magnet depth
 %
@@ -96,7 +96,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
 %             coils are active and the resistance will be lower.
 %
 %             targetPower - If not zero, this is a target power rating for
-%             the machine. The number of field poles will be multiplied to
+%             the machine. The number of field Poles will be multiplied to
 %             the required number to achieve this output power. If this is
 %             present the system will look for the mlength field and act 
 %             accordingly depending on what is found. (default: 500e3 W)
@@ -141,36 +141,36 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
 
     if isfield(design, 'minLongMemberPoles')
         if isfield(simoptions, 'StatorPoles')
-            design.poles(simoptions.StatorPoles) = design.minLongMemberPoles;
+            design.Poles(simoptions.StatorPoles) = design.minLongMemberPoles;
         else  
             % by default the armature is the stator which is stored in
-            % design.poles(2) for the ACPMSM
-            design.poles(2) = design.minLongMemberPoles;
+            % design.Poles(2) for the ACPMSM
+            design.Poles(2) = design.minLongMemberPoles;
         end
     end
     
-    if design.poles(1) == 1 && design.poles(2) == 1
+    if design.Poles(1) == 1 && design.Poles(2) == 1
         
         if simoptions.evaloptions.targetPower == 0;
             
-            design.poles(2) = ceil(simoptions.evaloptions.mlength(2)/design.PoleWidth);
+            design.Poles(2) = ceil(simoptions.evaloptions.mlength(2)/design.PoleWidth);
             
-            design.poles(1) = ceil(simoptions.evaloptions.mlength(1)/design.PoleWidth);
+            design.Poles(1) = ceil(simoptions.evaloptions.mlength(1)/design.PoleWidth);
             
-            design.PowerLoadMean = design.PowerLoadMean * design.poles(1);
+            design.PowerLoadMean = design.PowerLoadMean * design.Poles(1);
             
         else
-            design.poles(1) = ceil(simoptions.evaloptions.targetPower / design.PowerLoadMean);
-            design.PowerLoadMean = design.PowerLoadMean * design.poles(1);
+            design.Poles(1) = ceil(simoptions.evaloptions.targetPower / design.PowerLoadMean);
+            design.PowerLoadMean = design.PowerLoadMean * design.Poles(1);
             % if target power specified, simoptions.evaloptions.mlength is a scalar containing the
             % overlap required (in m) between the field and armature, i.e.
             % how much longer the armature is than the field
-            design.poles(2) = ceil(((design.poles(1)*design.PoleWidth)+simoptions.evaloptions.mlength)/design.PoleWidth);
+            design.Poles(2) = ceil(((design.Poles(1)*design.PoleWidth)+simoptions.evaloptions.mlength)/design.PoleWidth);
         end
         
     end
     
-    design.PowerPoles = design.poles(1);
+    design.PowerPoles = design.Poles(1);
     
     if ~isfield(design, 'BeamSpreadFactor')
         design.BeamSpreadFactor = 0;
@@ -189,7 +189,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
     end
     
     % Do some final calculations
-    design.fLength = design.poles(1) * design.PoleWidth;
-    design.aLength = design.poles(2) * design.PoleWidth;
+    design.fLength = design.Poles(1) * design.PoleWidth;
+    design.aLength = design.Poles(2) * design.PoleWidth;
 
 end

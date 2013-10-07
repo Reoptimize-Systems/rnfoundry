@@ -28,7 +28,7 @@ function varargout = prescribedmotodeforcefcn_linear(t, x, design, simoptions)
 
     % Change the x members into more useful variables names, MATLAB will
     % optimise away any memory penalty associated with this I think    
-    Iphases = x(1:design.phases);
+    Iphases = x(1:design.Phases);
 
     Icoils = Iphases ./ design.Branches;
 
@@ -46,7 +46,7 @@ function varargout = prescribedmotodeforcefcn_linear(t, x, design, simoptions)
     
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(1:design.phases,1) = circuitode_linear(Iphases, EMF, design);
+    dx(1:design.Phases,1) = circuitode_linear(Iphases, EMF, design);
      
     % call the supplied additional force function
     [FaddE, ForceBD] = ...

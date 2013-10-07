@@ -9,7 +9,7 @@ function simoptions = simsetup_linear(design, simoptions, varargin)
 
         if isempty(Inputs.TSpan)
             if ~isempty(Inputs.PoleCount)
-                Inputs.TSpan = [0, Inputs.PoleCount * pi * 2 * design.Rmm / (Inputs.Velocity * design.poles)];
+                Inputs.TSpan = [0, Inputs.PoleCount * pi * 2 * design.Rmm / (Inputs.Velocity * design.Poles)];
             else
                 error('SIMSETUP_ROTARY:notspan', ...
                     'If supplying constant Rpm, Rps, AngularVelocity or Velocity, you must also supply the time span of the simulation.');

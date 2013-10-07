@@ -85,7 +85,7 @@ function [x, y, z, n, znodes, zguidecon, zsupp, zframe, zextreme, guideyshift, t
     % to accomodate the connections to the linear guides
     guideyshift = 50/1000;
     
-    % zextreme = (design.poles(1) .* design.Wp);
+    % zextreme = (design.Poles(1) .* design.Wp);
     zextreme = BeamInfo.GuideRails.length / 2;
     
 end

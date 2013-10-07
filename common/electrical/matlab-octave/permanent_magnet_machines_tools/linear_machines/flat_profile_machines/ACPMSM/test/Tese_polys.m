@@ -15,7 +15,7 @@ sections = 10;
 
 bp = 0.9*Taup; % magnet pitch, will assume 90% of pole pitch (is probably less)
 dg = lm + (hs/2) + g;
-fieldPoles = ceil(fieldSurfArea / (Taup * ls)); % total number of poles in the field/stator of machine
+fieldPoles = ceil(fieldSurfArea / (Taup * ls)); % total number of Poles in the field/stator of machine
 fieldLength = fieldSurfArea / ls;
 armPoles = ceil(armSurfArea / (Taup * ls));
 

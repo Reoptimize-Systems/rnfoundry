@@ -6,10 +6,10 @@ design.taumm = 0.8;
 design.g = 0.1; 
 design.tc = 0.15;
 design.ty = 0.15;
-design.phases = 3;
-design.taucsm = design.taupm/design.phases; 
+design.Phases = 3;
+design.taucsm = design.taupm/design.Phases; 
 design.tauco = 0.95 * design.taucsm;
-design.taupcg = design.phases * design.taucsm;
+design.taupcg = design.Phases * design.taucsm;
 design.tm = 0.15;
 design.tbi = [0.1, 0.2];
 

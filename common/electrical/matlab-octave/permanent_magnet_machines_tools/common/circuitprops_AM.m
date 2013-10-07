@@ -1,6 +1,6 @@
 function [design, simoptions] = circuitprops_AM(design, simoptions)
-% circuitprops_linear: calculates and completes various circuit parameters
-% for a machine for evaluation in a ode simulation
+% Calculates and completes various circuit parameters for a machine for
+% evaluation in a ode simulation
 %
 % Syntax
 % 
@@ -65,7 +65,7 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
 % If two values are supplied, the diagonal of the matriix will be as
 % previously, but the off-diagonal terms will be the second value supplied
 % in design.PhaseInductance. This should be the mutual inductance between
-% phases, so that L is
+% Phases, so that L is
 %
 % L = [ Lp M  M;
 %       M  Lp M;
@@ -116,14 +116,14 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
         
     end
     
-    % make a resistance matrix for the phases with diagonals all the
+    % make a resistance matrix for the Phases with diagonals all the
     % combiined load and phase resistances
     
     % first replicate the resistance values if necessary
     if isscalar(design.PhaseResistance)
-        design.PhaseResistance = repmat(design.PhaseResistance, 1, design.phases);
-    elseif numel(design.PhaseResistance) ~= design.phases
-        error('You must supply either a scalar value of the phase or coil resistance or a vector of size design.phases, one resistance value for each phase')
+        design.PhaseResistance = repmat(design.PhaseResistance, 1, design.Phases);
+    elseif numel(design.PhaseResistance) ~= design.Phases
+        error('You must supply either a scalar value of the phase or coil resistance or a vector of size design.Phases, one resistance value for each phase')
     end
     
     % determine the DC resistance at the base temperature 
@@ -150,13 +150,13 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
         % inductance (which can be zero)
         design.GridInductance = design.PhaseInductance(1) * design.LgVLc;
 
-        design.L = diag(repmat(design.PhaseInductance(1) + design.GridInductance, 1, design.phases));
+        design.L = diag(repmat(design.PhaseInductance(1) + design.GridInductance, 1, design.Phases));
 
-        % the mutual inductance between phases should be stored in the
+        % the mutual inductance between Phases should be stored in the
         % second value in design.PhaseInductance, if more than one value is
         % supplied
         if numel(design.PhaseInductance) == 2
-            design.L(~diag(true(1, design.phases))) = design.PhaseInductance(2);
+            design.L(~diag(true(1, design.Phases))) = design.PhaseInductance(2);
         end
         
     else
@@ -165,7 +165,7 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
         % phase so use a tiny nominal inductance in the ode solver, ignore
         % mutual inductances also, this options is really supplied for
         % legacy reasons
-        design.L = diag(repmat(design.PhaseInductance(1) * 1e-4, 1, design.phases));
+        design.L = diag(repmat(design.PhaseInductance(1) * 1e-4, 1, design.Phases));
 
     end
 

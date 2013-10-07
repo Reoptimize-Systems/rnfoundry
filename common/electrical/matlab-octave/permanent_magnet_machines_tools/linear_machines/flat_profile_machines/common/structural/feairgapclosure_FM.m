@@ -30,7 +30,7 @@ function [g, closingForces, BeamInfo, design] = feairgapclosure_FM(design, optio
         BeamInfo.PreviousMeshesNBeams = tempnbeams;
     end
     
-    % Get the initial machine airgaps for the translator poles. These are
+    % Get the initial machine airgaps for the translator Poles. These are
     % the air-gaps for every node, whereas the forces will be applied to
     % the sections between nodes
     g = repmat(design.g, [BeamInfo.OuterPoleSupports.NoPerSide, BeamInfo.OuterPoleSupports.Sections+1, BeamInfo.StructSides]);
@@ -42,7 +42,7 @@ function [g, closingForces, BeamInfo, design] = feairgapclosure_FM(design, optio
     
     % first do a quick analytical test of the structure to see if we should
     % bother with the detailed fe analysis
-    Def = analyticalstructdef_FM(design, options, OuterPoleWeight(1) * design.poles(2) / 2, BeamInfo, forceRatio);
+    Def = analyticalstructdef_FM(design, options, OuterPoleWeight(1) * design.Poles(2) / 2, BeamInfo, forceRatio);
                                 
     if Def > (min(((1-options.gfactor) * 2), 1) * design.g)
         

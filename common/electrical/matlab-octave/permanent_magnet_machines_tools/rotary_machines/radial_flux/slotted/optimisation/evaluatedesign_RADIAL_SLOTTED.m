@@ -71,9 +71,9 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         
     % number of slots per pole and phase
     if ~isfield(sdesign, 'qc')
-        sdesign.qc = fr(sdesign.Qs, sdesign.phases * sdesign.poles);
+        sdesign.qc = fr(sdesign.Qs, sdesign.Phases * sdesign.Poles);
     else
-        [sdesign.Qs,~] = rat(sdesign.qc * sdesign.phases * sdesign.poles);
+        [sdesign.Qs,~] = rat(sdesign.qc * sdesign.Phases * sdesign.Poles);
     end
     
     % get the pitch of a whole slot in radians
@@ -85,8 +85,8 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     % get the numerator and denominator of qc
     [sdesign.qcn,sdesign.qcd] = rat(sdesign.qc);
     
-    % Average coil pitch as defined by (Qs/poles)
-    sdesign.yp = fr(sdesign.Qs, sdesign.poles);
+    % Average coil pitch as defined by (Qs/Poles)
+    sdesign.yp = fr(sdesign.Qs, sdesign.Poles);
     
     % get the numerator and denominator of the coil pitch in slots
     [sdesign.ypn,sdesign.ypd] = rat(sdesign.yp);
@@ -205,7 +205,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     
     [sdesign, ssimoptions] = finfun_RADIAL(sdesign, ssimoptions);
 
-    sdesign.EMFCoilPeak = peakemfest_ROTARY(abs(peakfl), omega, sdesign.poles / 2);
+    sdesign.EMFCoilPeak = peakemfest_ROTARY(abs(peakfl), omega, sdesign.Poles / 2);
     
     sdesign.EMFCoilRms = sdesign.EMFCoilPeak / sqrt(2);
     
@@ -219,7 +219,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     sdesign.IPhaseRms = sdesign.IPhasePeak / sqrt(2);
     sdesign.ICoilRms = sdesign.IPhaseRms / sdesign.Branches;
     
-    sdesign.PowerLoadMean = sdesign.IPhaseRms.^2 * sdesign.GridResistance * sdesign.phases;
+    sdesign.PowerLoadMean = sdesign.IPhaseRms.^2 * sdesign.GridResistance * sdesign.Phases;
     
     sdesign.JCoilRms = sdesign.ICoilRms / sdesign.ConductorArea;
     

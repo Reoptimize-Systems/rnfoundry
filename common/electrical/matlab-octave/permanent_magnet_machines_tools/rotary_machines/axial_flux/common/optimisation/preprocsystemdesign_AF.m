@@ -2,8 +2,8 @@ function design = preprocsystemdesign_AF(design, simoptions)
 % preprocsystemdesign_AF: processes some common aspects of axial flux
 % machine designs in preparation for evaluation by a GA
 
-%     Qcfactors = factor2(design.Qc / design.phases);
-%     polefactors = factor2(design.poles);
+%     Qcfactors = factor2(design.Qc / design.Phases);
+%     polefactors = factor2(design.Poles);
 %     
 %     uniquefactors = unique([Qcfactors(:);  polefactors(:)]);
 %     

@@ -126,6 +126,6 @@ function [freqpeak, omegapeak] = freqest_ROTARY(design, results)
     freqpeak = omegapeak / (2*pi);
     
     % estimate the electrical frequency at the peak velocity
-    freqpeak = freqpeak  * (design.poles/2);
+    freqpeak = freqpeak  * (design.Poles/2);
 
 end

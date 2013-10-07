@@ -8,7 +8,7 @@ function n_beams = numbeams(b, PoleWidth, fieldLen, bpfactor)
 %
 %   PoleWidth - width of one pole
 %
-%   armLen - total length of all the poles
+%   armLen - total length of all the Poles
 %
 %   bpfactor - beam spread factor, defines the desired spacing between 
 %              beams as a factor of the pole width. This is the fraction of

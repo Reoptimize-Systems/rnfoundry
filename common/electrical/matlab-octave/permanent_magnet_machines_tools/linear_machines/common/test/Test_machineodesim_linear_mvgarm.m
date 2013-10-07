@@ -2,7 +2,7 @@
 
 simoptions.tether_length = 1;
 simoptions.NoOfMachines = 1;
-design.phases = 1;
+design.Phases = 1;
 Icoils=1;
 xA=0;
 vA=0;

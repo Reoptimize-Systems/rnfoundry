@@ -3,7 +3,7 @@ clear
 
 load PMSM_Test_Design.mat
 
-design.poles(2) = 3 * design.poles(2);
+design.Poles(2) = 3 * design.Poles(2);
 
 design.BeamSpreadFactor = 0;
 
@@ -65,7 +65,7 @@ for i = 1:size(IVars, 1)
     % get the number of pole support beams used in this design
     beams(i, IVarsLength + 4) = numbeams(span1(beams(i, 1:size(IVars, 2)), options.IMethod), ...
                                          design.PoleWidth, ...
-                                         design.poles(2) * design.PoleWidth, ...
+                                         design.Poles(2) * design.PoleWidth, ...
                                          design.BeamSpreadFactor);
 
     % Set the outer structure beam variables, the first row of these

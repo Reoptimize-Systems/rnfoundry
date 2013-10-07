@@ -1,7 +1,7 @@
 function design = completedesign_TORUS_SLOTLESS(design, simoptions)
     
     % get the basic winding (the smallest repetitive segment)
-    [design.Qcb,design.pb] = rat(design.qc * design.phases);
+    [design.Qcb,design.pb] = rat(design.qc * design.Phases);
     
 %     % find the least common multiple of the basic winding components
 %     design.WindingLCM = lcm(design.Qcb,design.pb);
@@ -15,12 +15,12 @@ function design = completedesign_TORUS_SLOTLESS(design, simoptions)
     % multiply the basic winding by the desired number to get the full
     % winding
     design.Qc = design.Qcb *  design.NBasicWindings;
-    design.poles = design.pb *  design.NBasicWindings;
+    design.Poles = design.pb *  design.NBasicWindings;
 
     % calculate the total number of coils in the machine per stage
-%     [design.Qc,junk] = rat(design.qc * design.phases * design.poles);
+%     [design.Qc,junk] = rat(design.qc * design.Phases * design.Poles);
     
-%     design.poles = design.PolePairs * 2;
+%     design.Poles = design.PolePairs * 2;
     
     
     ratiofields = { 'RsVRbi';
@@ -33,7 +33,7 @@ function design = completedesign_TORUS_SLOTLESS(design, simoptions)
     % mean radial position of magnets
     design.Rmm = mean([design.Rmo, design.Rmi]);
     
-    design.taupm = pi * 2 * design.Rmm / design.poles;
+    design.taupm = pi * 2 * design.Rmm / design.Poles;
     
     ratiofields = { 'tyVtm';
                     'tcVtm';
@@ -51,15 +51,15 @@ function design = completedesign_TORUS_SLOTLESS(design, simoptions)
     design.tbi = [design.tbio, design.tbii];
     
     % mean pitch of coil region span
-    design.taucsm = design.taupm * design.poles / design.Qc;
+    design.taucsm = design.taupm * design.Poles / design.Qc;
     % mean outer pitch of coil
     design.tauco = design.taucoVtaucsm * design.taucsm;
     % support base size
 %     design.tsuppb = design.tbio * design.tsuppbVtbio;
     % get the number of coils per phase
-    [design.NCoilsPerPhase,junk] = rat(fr(design.Qc,design.phases));
+    [design.NCoilsPerPhase,junk] = rat(fr(design.Qc,design.Phases));
     
-    design.taupcg = design.phases * design.taucsm;
+    design.taupcg = design.Phases * design.taucsm;
     
     coilthickness = design.tc;
     design.Rco = design.Rmi - coilthickness;

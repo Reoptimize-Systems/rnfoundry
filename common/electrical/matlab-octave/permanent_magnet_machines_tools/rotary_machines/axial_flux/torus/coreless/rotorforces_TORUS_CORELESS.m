@@ -14,7 +14,7 @@ function [force] = rotorforces_TORUS_CORELESS(design, ndrawnstages, nsimpoles, p
 %    used to create the forces. This is used to reduce the simulation size
 %    by drawing less stages than are actually present in the machine
 %
-%  nsimpoles - the number of poles actually drawn in the simulation. This
+%  nsimpoles - the number of Poles actually drawn in the simulation. This
 %    is used to determine the per-pole forces from the force integral
 %
 %  pos - vector of rotor displacements positions at which the forces will
@@ -62,7 +62,7 @@ function [force] = rotorforces_TORUS_CORELESS(design, ndrawnstages, nsimpoles, p
             solution.clearblock();
             solution.groupselectblock(ndrawnstages+1)
             
-            % we divide by the number of poles in the sim to get the per-pole
+            % we divide by the number of Poles in the sim to get the per-pole
             % force
             force(i) = solution.blockintegral(18) / nsimpoles;
         else
@@ -71,7 +71,7 @@ function [force] = rotorforces_TORUS_CORELESS(design, ndrawnstages, nsimpoles, p
             mo_clearblock();
             mo_groupselectblock(ndrawnstages+1)
             
-            % we divide by the number of poles in the sim to get the per-pole
+            % we divide by the number of Poles in the sim to get the per-pole
             % force
             force(i) = mo_blockintegral(18) / nsimpoles;
             

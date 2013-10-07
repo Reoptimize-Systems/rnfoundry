@@ -16,18 +16,18 @@ function [cost, design] = costestimate_ACTM(design, options, buoymass)
     design.wlength = design.CoilTurns * pi * 2 * (design.Ri + (design.Hc / 2));
     
     % Determine the copper cost based on the length of wire in a coil
-    % multiplied by the number of phases and armature poles and the wire
+    % multiplied by the number of Phases and armature Poles and the wire
     % cross-sectional area etc.
-    design.CopperMass = design.phases * design.wlength * (pi* (design.Dc/2)^2) ...
-                        * design.poles(2) * options.CopperDensity;
+    design.CopperMass = design.Phases * design.wlength * (pi* (design.Dc/2)^2) ...
+                        * design.Poles(2) * options.CopperDensity;
     design.CopperCost = design.CopperMass * options.CopperCost;
     
     % Now calculate the total cost of the magnets
-    design.MagnetMass = design.poles(1) * design.Wm * pi * (design.Rm.^2 - design.Rso^2) * options.MagnetDensity;
+    design.MagnetMass = design.Poles(1) * design.Wm * pi * (design.Rm.^2 - design.Rso^2) * options.MagnetDensity;
     design.MagnetCost = design.MagnetMass * options.MagnetCost;
     
     % Calculate the cost of the laminated iron in the armature
-    design.ArmatureIronMass = design.poles(2) * design.Wp * pi * (design.Ra.^2 - design.Ro.^2) * options.ArmatureIronDensity;
+    design.ArmatureIronMass = design.Poles(2) * design.Wp * pi * (design.Ra.^2 - design.Ro.^2) * options.ArmatureIronDensity;
     design.ArmatureIronCost = design.ArmatureIronMass * options.ArmatureIronCost;
     
     % Calculate the cost of the back iron on the field, i.e. the steel
@@ -39,7 +39,7 @@ function [cost, design] = costestimate_ACTM(design, options, buoymass)
     end
     
     design.FieldIronCost = (design.Ws * pi * (design.Rm^2 - design.Rso^2) - cavityvol) ...
-                            * design.poles(1) * options.FieldIronDensity * options.FieldIronCost;
+                            * design.Poles(1) * options.FieldIronDensity * options.FieldIronCost;
                     
     design.shaftCost = design.shaftMass * options.StructMaterialCost;
     

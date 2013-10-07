@@ -28,7 +28,7 @@ simoptions.maxAllowedEMFpeak = [];
 % set the other simulation parameters 
 
 % The maximum allowed translator length, this is a hard limit, not
-% determined by a penalty. The number of poles in the design will be
+% determined by a penalty. The number of Poles in the design will be
 % modified if exceeded
 simoptions.maxAllowedTLength = 5;
 % The maximum allowed translator displacement. An end-stop will be applied

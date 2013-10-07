@@ -3,7 +3,7 @@ function animatesytem_TM(design, simoptions, T, Y, results, frames, fps, avifile
 %
 % Input:
 %
-%   poles - The number of armature poles to draw in the simulation
+%   Poles - The number of armature Poles to draw in the simulation
 %
 %   Wp - The pole pitch of the machine
 %
@@ -67,7 +67,7 @@ function animatesytem_TM(design, simoptions, T, Y, results, frames, fps, avifile
     
     Axmin = -Axmax;
     
-    hTrans = design.poles(2) * design.Wp;
+    hTrans = design.Poles(2) * design.Wp;
 
     Aymin = -maxyT - hTrans/2;
     

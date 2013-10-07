@@ -48,13 +48,13 @@ function [design, simoptions] = finfun_TORUS_SLOTLESS(design, simoptions)
                                            design.taupm);   
     
 	% if not supplied work out the displacement of set of coils
-    % representing a full set of adjacent phases
+    % representing a full set of adjacent Phases
     if ~isfield(design, 'taupcg')
-        design.taupcg = design.phases * design.tauco;
+        design.taupcg = design.Phases * design.tauco;
     end
     
-    % calculate the separation between adjacent coils in the phases
-    design.CoilPositions = coilpos(design.phases) * design.taupcg / design.taupm;
+    % calculate the separation between adjacent coils in the Phases
+    design.CoilPositions = coilpos(design.Phases) * design.taupcg / design.taupm;
     
     % create the core loss functions
     design = makelossfcns_TORUS_SLOTLESS(design);

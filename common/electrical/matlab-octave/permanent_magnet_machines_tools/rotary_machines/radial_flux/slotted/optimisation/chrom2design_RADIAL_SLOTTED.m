@@ -10,14 +10,14 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
 
 % Copyright 2012-2013 Richard Crozier
 
-    % number of phases
-    options.phases = 3;
+    % number of Phases
+    options.Phases = 3;
     % number of coils per pole and phase
     options.qc = fr(3,3);
     % grid resistance to phase resistance ratio
     options.RgVRc = 10;
     % coil fill factor
-    options.fillfactor = 0.65;
+    options.CoilFillFactor = 0.65;
     % branch factor, determines number of parallel and series coils
     options.BranchFac = 0;
 %     options.ModuleFac = 0;
@@ -43,8 +43,8 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     
     % copy the resulting options into the appropriate places
     design.StatorType = options.StatorType;
-    design.fillfactor = options.fillfactor;
-    design.phases = max(1, round(options.phases));
+    design.CoilFillFactor = options.CoilFillFactor;
+    design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
     design.RgVRc = options.RgVRc;
     design.CoilLayers = options.CoilLayers;
@@ -96,7 +96,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
             design.tsb = design.tc*options.Max_tsbVtc;
             % recalculate the shoe gap size
             design.tsg = design.tsb * design.tsgVtsb;
-            design.Rstg = design.Rso - design.tsg;
+            design.Rtsg = design.Rso - design.tsg;
             design = updatedimsso(design);
         end
 
@@ -122,7 +122,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
             design.Ryi = design.Ryi + rshift;
             design.Ryo = design.Ryo + rshift;
             design.Rtsb = design.Rtsb + rshift;
-            design.Rstg = design.Rstg + rshift;
+            design.Rtsg = design.Rtsg + rshift;
             design.Rso = design.Rso + rshift;
             design.Rmi = design.Rmi + rshift;
             design = updatedimsso(design);
@@ -154,7 +154,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
                 design.Rco = design.Rco + rshift;
                 design.Rso = design.Rco;
                 design.Rtsb = design.Rco;
-                design.Rstg = design.Rco;
+                design.Rtsg = design.Rco;
 
                 design = updatedimsso(design);
             end
@@ -206,7 +206,7 @@ function design = updatedimsso(design)
     design.tbi = design.Rbo - design.Rbi;
 
     % the shoe tip length
-    design.Rstg = design.Rso - design.tsg;
+    design.Rtsg = design.Rso - design.tsg;
 
     % mean radial position of magnets
     design.Rmm = mean([design.Rmo, design.Rmi]);
@@ -225,7 +225,7 @@ function design = recalculateratios(design)
     design.RmiVRmo = design.Rmi / design.Rmo;
     design.RsoVRmi = design.Rso / design.Rmi;
     design.RtsbVRso = design.Rtsb / design.Rso;
-    design.RstgVRso = design.Rstg / design.Rso;
+    design.RtsgVRso = design.Rtsg / design.Rso;
     design.RyoVRtsb = design.Ryo / design.Rtsb;
     design.RyiVRyo = design.Ryi / design.Ryo;
     design.thetamVthetap = design.thetam / design.thetap;

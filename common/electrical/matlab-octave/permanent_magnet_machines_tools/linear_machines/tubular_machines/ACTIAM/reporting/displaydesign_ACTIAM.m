@@ -9,8 +9,8 @@ function displaydesign_ACTIAM(design, simoptions)
     fprintf(1, 'Ws:     %8.4f    Wc      %8.4f    Hc      %8.4f    g:      %8.4f\n', design.Ws, design.Wc, design.Hc, design.g);
     fprintf(1, 'Hmag:   %8.4f\n', design.Hmag);
 
-    if isfield(design, 'poles')
-        fprintf(1, 'poles: %s', num2str(design.poles));
+    if isfield(design, 'Poles')
+        fprintf(1, 'Poles: %s', num2str(design.Poles));
     end
 
     fprintf(1, '\n');

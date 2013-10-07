@@ -99,19 +99,19 @@ function [FemmProblem, outermagsep] = corelessLfemmprob_torus(design, varargin)
         
     end
     
-    % now modify the drawing to encompass a set of adjacent phases
+    % now modify the drawing to encompass a set of adjacent Phases
     
     if strcmp(design.WindingType, 'nonoverlapping')
         % scale all the node and block coordingate in the vertical direction to
-        % give the sim height equal to a repeating set of adjacent phases
+        % give the sim height equal to a repeating set of adjacent Phases
         FemmProblem = scaleproblem_mfemm(FemmProblem, 1, design.taupcg / (2*design.taupm));
         for i = 1:numel(FemmProblem.BlockLabels)
             FemmProblem.BlockLabels(i).MaxArea = FemmProblem.BlockLabels(i).MaxArea * design.taupcg / (2*design.taupm);
         end
         
-        ycoil = design.taupcg/design.phases/2;
+        ycoil = design.taupcg/design.Phases/2;
         
-        ycoildisp = design.taupcg/design.phases;
+        ycoildisp = design.taupcg/design.Phases;
         
     elseif strcmp(design.WindingType, 'overlapping')
         
@@ -123,7 +123,7 @@ function [FemmProblem, outermagsep] = corelessLfemmprob_torus(design, varargin)
         
         ycoil = 3*design.taupm/4;
         
-        ycoildisp = design.taupm/design.phases;
+        ycoildisp = design.taupm/design.Phases;
         
     else
         error('CORELESS_TORUS:corelessLfemmprob:badwindingtype', ...
@@ -131,7 +131,7 @@ function [FemmProblem, outermagsep] = corelessLfemmprob_torus(design, varargin)
     end
     
     % Now draw the coils 
-    for i = 1:2 %design.phases
+    for i = 1:2 %design.Phases
         
         % add a circuit for the coil
         if i == 1

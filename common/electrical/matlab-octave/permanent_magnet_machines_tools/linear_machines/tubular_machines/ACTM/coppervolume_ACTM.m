@@ -14,7 +14,7 @@ function CopperVol = coppervolume_ACTM(RoVRm, Ntot, Rm, g, dc, armPoles)
 %
 %   dc - wire diameter in m
 %
-%   armPoles - number of poles in the armature
+%   armPoles - number of Poles in the armature
 %
 % Output:
 %

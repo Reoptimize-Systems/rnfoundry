@@ -9,7 +9,7 @@ function [score, design, simoptions] = machinescore_PMSM(design, simoptions)
     
     % Estimate the mass of the translator
     if isfield(simoptions, 'StatorPoles')
-        % poles(1) is the armature poles(2) is the field for the PMSM
+        % Poles(1) is the armature Poles(2) is the field for the PMSM
         if simoptions.StatorPoles == 1
             design.massT = design.ArmatureIronMass + design.CopperMass;
         elseif simoptions.StatorPoles == 2

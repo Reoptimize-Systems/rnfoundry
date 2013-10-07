@@ -40,6 +40,6 @@ function [design, simoptions] = prescribedmotfinfun_linear_mvgarm(design, simopt
     simoptions.pp_xT = interp1(simoptions.drivetimes,simoptions.xT,'cubic','pp');
     simoptions.pp_vT = interp1(simoptions.drivetimes,simoptions.vT,'cubic','pp');
     
-    simoptions = setfieldifabsent(simoptions, 'IC', [0, 0, zeros(1, design.phases)]);
+    simoptions = setfieldifabsent(simoptions, 'IC', [0, 0, zeros(1, design.Phases)]);
 
 end

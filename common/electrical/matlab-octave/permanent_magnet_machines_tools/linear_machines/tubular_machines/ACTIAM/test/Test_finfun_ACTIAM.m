@@ -2,7 +2,7 @@
 
 clear design simoptions 
 
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -19,13 +19,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [5 10];
+design.Poles = [5 10];
 
 design = ratios2dimensions_ACTIAM(design);
 

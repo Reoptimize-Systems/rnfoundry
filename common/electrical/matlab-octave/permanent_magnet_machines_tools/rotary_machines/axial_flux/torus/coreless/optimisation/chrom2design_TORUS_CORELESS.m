@@ -20,12 +20,12 @@ function [design, simoptions] = chrom2design_TORUS_CORELESS(simoptions, Chrom, v
 %  parameter-value pairs and their default values are as follows:
 %
 %
-%    'phases' - The number of phases in the winding, defaults to  3 
+%    'Phases' - The number of Phases in the winding, defaults to  3 
 %
 %    'qc' - fr (fractions) object representing the number of coils per pole
 %       and phase. Defaults to fr(1,4).
 %
-%    'fillfactor' - Wire fill-factor in the coils, defaults to 0.86
+%    'CoilFillFactor' - Wire fill-factor in the coils, defaults to 0.86
 %
 %    'taucmoVtaucsm' - Outer coil pitch to max possible outer coil pitch
 %       ratio (percentage coils fills available space). Defaults to 0.99
@@ -75,13 +75,13 @@ function [design, simoptions] = chrom2design_TORUS_CORELESS(simoptions, Chrom, v
 %                    5,     50;     % 15. pole pairs
 
 
-    % number of phases
-    options.phases = 3;
+    % number of Phases
+    options.Phases = 3;
     % number of coils per pole and phase
     options.qc = fr(1,4);
     % grid resistance to phase resistance ratio
     options.RgVRc = 10;
-    options.fillfactor = 0.86;
+    options.CoilFillFactor = 0.86;
     options.ModuleFac = 0;
     options.NStages = 1;
     options.taucmoVtaucsm = 0.99;
@@ -101,8 +101,8 @@ function [design, simoptions] = chrom2design_TORUS_CORELESS(simoptions, Chrom, v
     
     design.WindingType = simoptions.WindingType;
     
-    design.fillfactor = options.fillfactor;
-    design.phases = max(1, round(options.phases));
+    design.CoilFillFactor = options.CoilFillFactor;
+    design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
     design.taucoVtaucsm = options.taucmoVtaucsm;
     design.RgVRc = options.RgVRc;

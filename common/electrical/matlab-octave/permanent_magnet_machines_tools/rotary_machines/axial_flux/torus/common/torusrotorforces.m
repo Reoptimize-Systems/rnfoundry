@@ -46,7 +46,7 @@ function [force] = torusrotorforces(FemmProblem, nstages, nsimpoles, pos, halfdi
         mo_clearblock();
         mo_groupselectblock(nstages+1)
         
-        % we divide by the number of poles in the sim to get the per-pole
+        % we divide by the number of Poles in the sim to get the per-pole
         % force
         force(i) = mo_blockintegral(18) / nsimpoles;
         

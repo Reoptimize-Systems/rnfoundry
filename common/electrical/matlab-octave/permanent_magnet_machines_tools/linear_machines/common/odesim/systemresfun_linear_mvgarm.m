@@ -50,7 +50,7 @@ function [results, design] = systemresfun_linear_mvgarm(T, Y, design, simoptions
     peakxA = max(Y(:,5));
     troughxA = min(Y(:,5));
 
-    design.minLongMemberLength = 2 * max(peakxT - troughxA, peakxA - troughxT) + (max(design.poles) * design.PoleWidth);
+    design.minLongMemberLength = 2 * max(peakxT - troughxA, peakxA - troughxT) + (max(design.Poles) * design.PoleWidth);
     
     design.minLongMemberPoles = ceil(design.minLongMemberLength ./ design.PoleWidth);
 

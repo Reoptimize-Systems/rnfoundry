@@ -9,7 +9,7 @@ function [results, design] = splitsystemresfun_linear_mvgarm(T, Y, design, simop
 %
         
     design.minLongMemberLength = 2 * max(results.peakxT - results.troughxA, ...
-        results.peakxA - results.troughxT) + (max(design.poles) * design.PoleWidth);
+        results.peakxA - results.troughxT) + (max(design.Poles) * design.PoleWidth);
     
     design.minLongMemberPoles = ceil(design.minLongMemberLength ./ design.PoleWidth);
 

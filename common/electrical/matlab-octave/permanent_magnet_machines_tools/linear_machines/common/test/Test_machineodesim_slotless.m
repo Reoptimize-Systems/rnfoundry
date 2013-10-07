@@ -21,7 +21,7 @@ plot(design.psilookup(1,:), slmeval(design.psilookup(1,:), design.slm_psidot, 1)
 hold off
 
 design.FieldDirection = -1;
-design.PowerPoles = design.poles(1);
+design.PowerPoles = design.Poles(1);
 
 xBh = 0;
 xBs = 0;

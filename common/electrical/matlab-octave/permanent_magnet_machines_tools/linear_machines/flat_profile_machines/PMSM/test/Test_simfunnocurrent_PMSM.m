@@ -2,7 +2,7 @@
 
 clear design simoptions
 
-design.phases = 3;
+design.Phases = 3;
 design.Wp = 0.12;
 design.Wm = 0.8*design.Wp;
 design.hm = 0.015;
@@ -11,19 +11,19 @@ design.kw = 0.84;
 %Ns = 6; % ???
 design.Hc = 979000;
 %ht = 0.1;
-design.fillfactor = 0.585;
+design.CoilFillFactor = 0.585;
 design.g = 0.003; 
 design.ls = 1; 
 design.Dc = 0.005; % gives Ns of 468
 design.E = [200e9 151e9];
-design.Ws=design.Wp/design.phases;
+design.Ws=design.Wp/design.Phases;
 design.Wt=design.Ws/2;
 design.ht=5*design.Wt;
 design.hbf = design.hm;
 design.hba = design.hbf;
 
-% Number of poles
-design.poles = [10 40];
+% Number of Poles
+design.Poles = [10 40];
 design.CoilTurns = 400;
 
 design.RgVRc = 10;

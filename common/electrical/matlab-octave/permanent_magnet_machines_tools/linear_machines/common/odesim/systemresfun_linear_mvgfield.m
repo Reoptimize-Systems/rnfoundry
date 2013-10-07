@@ -51,8 +51,8 @@ function [results, design] = systemresfun_linear_mvgfield(T, Y, design, simoptio
     
 %     design.xAmax = max(abs(peakxF, troughxF));
 
-    design.minTransLength = 2 * max(peakxT - troughxF, peakxF - troughxT) + (design.poles(1) * design.PoleWidth);
-    %design.minTransLength = max(max(abs(Y(:,6) - results.xT)),max(results.xT)) + (design.poles(1) * design.PoleWidth);
+    design.minTransLength = 2 * max(peakxT - troughxF, peakxF - troughxT) + (design.Poles(1) * design.PoleWidth);
+    %design.minTransLength = max(max(abs(Y(:,6) - results.xT)),max(results.xT)) + (design.Poles(1) * design.PoleWidth);
     design.minTransPoles = ceil(design.minTransLength ./ design.PoleWidth);
 
     design.minTransLength = design.minTransPoles * design.PoleWidth;

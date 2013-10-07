@@ -36,7 +36,7 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv, design] = machineodesim_l
 %      normalised displacement over one pole.
 %
 %    PowerPoles: scalar value of the number of active, power producing
-%      poles in the machine
+%      Poles in the machine
 %
 %    TemperatureBase: scalar value of a base temperature at which a
 %      conductor resistivity will be supplied, and temperature coefficient
@@ -54,13 +54,13 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv, design] = machineodesim_l
 %
 %    RDCBase: Matrix of base values of the resistance in of each phase at
 %      the base temperature in TemperatureBase. This must be a [n x n]
-%      matrix of values for n phases, where the diagonal terms are the
+%      matrix of values for n Phases, where the diagonal terms are the
 %      resistance of each phase, and the off-diagonal terms are typically
 %      zero, e.g. 
 %
 %      design.RDCBase = [R1, 0, 0; 0, R2, 0; 0, 0, R3]
 %
-%    phases - scalar number of phases in the machine armature.
+%    Phases - scalar number of Phases in the machine armature.
 %
 %
 %  simoptions - should contain at least the following fields:
@@ -78,7 +78,7 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv, design] = machineodesim_l
 % The following arguments are then:
 %
 % Icoils - A vector of values of the the coil current, should be the same
-%   length as the number of phases in the machine.
+%   length as the number of Phases in the machine.
 % 
 % xBh - The displacement of the prime mover (typically a buoy) in the
 %   vertical (heave) direction.

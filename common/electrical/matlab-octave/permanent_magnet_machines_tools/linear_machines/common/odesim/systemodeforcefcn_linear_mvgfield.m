@@ -143,7 +143,7 @@ function varargout = systemodeforcefcn_linear_mvgfield(t, x, design, simoptions)
     vBs = x(4);
     xF  = x(5);
     vF  = x(6);
-    Iphases = x(7:6+design.phases);
+    Iphases = x(7:6+design.Phases);
     
     Icoils = Iphases ./ design.Branches;
 
@@ -161,7 +161,7 @@ function varargout = systemodeforcefcn_linear_mvgfield(t, x, design, simoptions)
     
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(7:6+design.phases,1) = circuitode_linear(Iphases, EMF, design);
+    dx(7:6+design.Phases,1) = circuitode_linear(Iphases, EMF, design);
     
     % Calculate the drag forces on the translator
     % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
@@ -177,7 +177,7 @@ function varargout = systemodeforcefcn_linear_mvgfield(t, x, design, simoptions)
 %         % whatever the value of mu N is.
 %         
 %         Ffricfield = Ffield(2) * -sign(vF);
-%         dx(design.phases+1,1) = vF;
+%         dx(design.Phases+1,1) = vF;
 %         aF = (-FT + (sum(Ffield) - Ffield(2)) + Ffricfield - design.weightF) ./ design.massF;
 %         
 %     elseif abs(-FT + sum(Ffield) - Ffield(2)) < Ffield(2)
@@ -188,7 +188,7 @@ function varargout = systemodeforcefcn_linear_mvgfield(t, x, design, simoptions)
 %         % the frictional force, the acceleration will be zero, and the
 %         % frictional force equal to the net of the other forces
 %         Ffricfield = -(sum(Ffield) - Ffield(2));
-%         dx(design.phases+1,1) = vF;
+%         dx(design.Phases+1,1) = vF;
 %         aF = 0;
 % 
 %     else
@@ -196,7 +196,7 @@ function varargout = systemodeforcefcn_linear_mvgfield(t, x, design, simoptions)
 %         % if the armature is not moving, but the frictional force is less
 %         % than the net forces, there will be an acceleration
 %         Ffricfield = Ffield(2) * -sign((sum(Ffield) - Ffield(2)));
-%         dx(design.phases+1,1) = vF;
+%         dx(design.Phases+1,1) = vF;
 %         aF = (-FT + (sum(Ffield) - Ffield(2)) + Ffricfield - design.weightF) ./ design.massF;
 %         
 %     end    

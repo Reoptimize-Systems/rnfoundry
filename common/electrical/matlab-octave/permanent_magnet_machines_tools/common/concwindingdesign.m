@@ -8,7 +8,7 @@ function [Qc, k] = concwindingdesign(p, ndesigns, n, maxi)
 %
 % Input
 %
-%  p - the number of poles in the machine (must be an even number)
+%  p - the number of Poles in the machine (must be an even number)
 %
 %  ndesigns - the maximum number of winding designs to return
 %
@@ -31,7 +31,7 @@ function [Qc, k] = concwindingdesign(p, ndesigns, n, maxi)
 % According to [1], the procedure to determine valid layouts for
 % three-phase concentrated-coil windings is as follows: 
 %
-% 1) Select the number of poles divisible by two.
+% 1) Select the number of Poles divisible by two.
 %
 % 2) Identify those i’s, where i is a
 % positive integer that meet the following: 
@@ -53,7 +53,7 @@ function [Qc, k] = concwindingdesign(p, ndesigns, n, maxi)
 
     if ~iseven(p)
         error('ALLMACHINES:concwindingdesign:oddpoles', ...
-              'The number of poles must be an even number, you supplied: %d', p)
+              'The number of Poles must be an even number, you supplied: %d', p)
     end
     
     if nargin < 4

@@ -38,7 +38,7 @@ function vol = structvol_FM(design, options)
                                      
                         
 	% finally, add the guide rails to which the frame is fixed
-	height = max(design.poles) .* design.PoleWidth;
+	height = max(design.Poles) .* design.PoleWidth;
     
 	vol = vol + (4 * CSArea(design.GuideRailIVars, ...
                             design.GuideRailIMethod) * height);

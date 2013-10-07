@@ -3,7 +3,7 @@ e%% Test_designandevaluate_PMSM
 % First we need some plausible machine variables for testing, we will use
 % the AWS variables for this
 
-phases = 3;         % Number of phases in machine
+Phases = 3;         % Number of Phases in machine
 Taup = 0.1;         % Pole Pitch
 bp = 0.8*Taup;      % Magnet Pitch
 lm = 15/1000;       % Magnet depth
@@ -13,7 +13,7 @@ dc = 1/1000;        % 1 mm diameter wire for both machines
 E = [200e9 151e9];  % Young's modulus of elasticity for Structural steel and laminated steel respectively
 hty = 30/1000;      % Translator/Field yoke (back iron) thickness
 hsy = hty;          % Stator/Armature yoke (half central section) thickness
-Taus = Taup/phases; % Combined tooth and slot height
+Taus = Taup/Phases; % Combined tooth and slot height
 bs = Taus/2;        % Slot height
 bt = Taus/2;        % Tooth height
 hs = 100/1000;      % Tooth depth

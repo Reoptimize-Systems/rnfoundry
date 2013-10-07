@@ -26,7 +26,7 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
     design.SimTimeSpan = max(T) - simoptions.tspan(1);
     
     % we should use the phase that produced the highest current
-    [C,I] = max(max(abs(Y(:,simoptions.ODEPhaseCurrentCol:(simoptions.ODEPhaseCurrentCol-1+design.phases))), [], 1));
+    [C,I] = max(max(abs(Y(:,simoptions.ODEPhaseCurrentCol:(simoptions.ODEPhaseCurrentCol-1+design.Phases))), [], 1));
     
     if isfield(results, 'RPhase')
         design.PhaseResistance = results.RPhase;
@@ -35,7 +35,7 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
     
     % Determine some interesting machine electrical outputs
     design = odeelectricalresults(T, ...
-                                  Y(:,simoptions.ODEPhaseCurrentCol:simoptions.ODEPhaseCurrentCol-1+design.phases), ...
+                                  Y(:,simoptions.ODEPhaseCurrentCol:simoptions.ODEPhaseCurrentCol-1+design.Phases), ...
                                   results.EMF, ...
                                   design, ...
                                   simoptions);

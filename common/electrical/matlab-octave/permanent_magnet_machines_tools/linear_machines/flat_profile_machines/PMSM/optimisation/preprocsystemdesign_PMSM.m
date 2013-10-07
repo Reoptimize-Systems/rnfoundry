@@ -15,7 +15,7 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
 %     % make minimum possible wire diameter 0.5 mm
 %     minDc = 0.5/1000;
 %     design.AngleFromHorizontal = 80 * (pi/180);
-    design.phases = 3;
+    design.Phases = 3;
     
     % Construct initial design structure
     design.WmVWp = Chrom(1,1);
@@ -28,11 +28,11 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
     design.gVhm = Chrom(1,8);
     design.Wp = Chrom(1, 9);
     design.RgVRc = Chrom(1,10);
-    design.fillfactor = Chrom(1,11);
+    design.CoilFillFactor = Chrom(1,11);
     design.DcAreaFac = Chrom(1,12);
     
-    design.poles(1) = 1;
-    design.poles(2) = round(Chrom(1,13));
+    design.Poles(1) = 1;
+    design.Poles(2) = round(Chrom(1,13));
     design.BranchFac = Chrom(1,14);
     
     % defines the space between adjacent support beams on the structure
@@ -57,7 +57,7 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
     % Webs per m is Chrom(1, 17), see below
     
     if size(Chrom,2) > 18
-        simoptions.maxAllowedxT = Chrom(1,19) * design.poles(2) * design.Wp;
+        simoptions.maxAllowedxT = Chrom(1,19) * design.Poles(2) * design.Wp;
     else
         simoptions.maxAllowedxT = inf;
     end
@@ -85,14 +85,14 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
     
     design = dimensions2ratios_PMSM(design);
     
-%     design.Dc = sqrt(4 * ((design.ht * design.Ws / 2) * design.fillfactor * design.DcAreaFac) / pi);
+%     design.Dc = sqrt(4 * ((design.ht * design.Ws / 2) * design.CoilFillFactor * design.DcAreaFac) / pi);
 %     
 %     if design.Dc < minDc
 %         design.Dc = minDc;
 %     end
 
     if isfield(simoptions, 'maxAllowedTLength')
-        design.poles(2) = max(1, min(design.poles(2), ...
+        design.Poles(2) = max(1, min(design.Poles(2), ...
                         round(simoptions.maxAllowedTLength / design.Wp)));
     end
     
@@ -100,7 +100,7 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
 
         websperm = Chrom(1, 18);
 
-        design.OuterWebs = max(2, round(design.poles(2) * design.Wp * websperm));
+        design.OuterWebs = max(2, round(design.Poles(2) * design.Wp * websperm));
 
     end
     
@@ -109,7 +109,7 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
     design.Hc = design.ht;
     
     % process some common options
-    design = preprocsystemdesign_linear(design, simoptions, design.poles(2));
+    design = preprocsystemdesign_linear(design, simoptions, design.Poles(2));
     
 %     simoptions = buoynum2buoydata(simoptions.buoylibdir, design.buoynum, simoptions);
     

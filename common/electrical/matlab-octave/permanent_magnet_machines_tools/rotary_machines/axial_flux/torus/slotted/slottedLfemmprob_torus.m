@@ -33,13 +33,13 @@ function [FemmProblem, outermagsep, coillabellocs] = slottedLfemmprob_torus(desi
                                      choosemesharea_mfemm(design.tc, design.taucs, 1/40)  );
     Inputs.CoilRegionMeshSize = choosemesharea_mfemm(design.tc, design.taucs);
     Inputs.Tol = 1e-5;
-    Inputs.NSlots = 2*design.phases;
+    Inputs.NSlots = 2*design.Phases;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
     FemmProblem = Inputs.FemmProblem;
     
-    slotsperpole = design.Qs / design.poles;
+    slotsperpole = design.Qs / design.Poles;
     
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
@@ -119,7 +119,7 @@ function [FemmProblem, outermagsep, coillabellocs] = slottedLfemmprob_torus(desi
     
     % draw the stator slots for all stages
     [FemmProblem, yokenodeids, coillabellocs] = axialfluxinnerstator2dfemmprob( ...
-        innerstagewidth, design.Qs, design.poles, design.taupm, design.taucs, ...
+        innerstagewidth, design.Qs, design.Poles, design.taupm, design.taucs, ...
         design.tausgm, design.ty, design.tc, design.tsb, design.tsg, ...
         'NStators', Inputs.NStages, ...
         'NWindingLayers', Inputs.NWindingLayers, ...

@@ -35,8 +35,8 @@ function Fy = yforce_TM(design, Jz, y)
     
     %Fy = sum(ylorentzforce(Jz, design.p_intBx, y));
     
-    %Fy = Fy .* design.phases;
+    %Fy = Fy .* design.Phases;
     
-    Fy = sum(Fy,1) .* design.poles(1);
+    Fy = sum(Fy,1) .* design.Poles(1);
 
 end

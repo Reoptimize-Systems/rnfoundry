@@ -55,8 +55,8 @@ function ObjVal = objactiam_prototype(Chrom, rtn_type)
        %design.mode = 2;
        
        design.LgVLc = 0;
-       design.poles = [1 1];
-       design.phases = 3;
+       design.Poles = [1 1];
+       design.Phases = 3;
        design.RsiVRm = 0;
        % mounted at 10 degree angle to vertical
        design.AngleFromHorizontal = 80 * (pi/180);
@@ -80,7 +80,7 @@ function ObjVal = objactiam_prototype(Chrom, rtn_type)
            design.WcVWp = Chrom(i,5);
            %design.Rm = Chrom(i,8);
            design.RgVRc = Chrom(i,6);
-           design.fillfactor = Chrom(i,7);
+           design.CoilFillFactor = Chrom(i,7);
            design.Dc = Chrom(i,8);
            design.Rs2VHmag = Chrom(i,9);
            design.Rs1VHmag = Chrom(i,10);

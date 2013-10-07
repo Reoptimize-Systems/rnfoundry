@@ -1,15 +1,15 @@
-function pos = coilpos(phases)
-% chooses the spacing between phases for a group of n phases in an
+function pos = coilpos(Phases)
+% chooses the spacing between Phases for a group of n Phases in an
 % electrical machine
 %
 % Syntax
 %
-% pos = coilpos(phases)
+% pos = coilpos(Phases)
 %
 % Description
 %
-% pos = coilpos(phases) produces a vector of normalised coil spacing for a
-% set of 'phases' phases in an electrical machine. These positions are
+% pos = coilpos(Phases) produces a vector of normalised coil spacing for a
+% set of 'Phases' Phases in an electrical machine. These positions are
 % normalised to a single magnetic pole width.
 %
 % Example
@@ -24,7 +24,7 @@ function pos = coilpos(phases)
 %
 % 
 
-    switch phases
+    switch Phases
         
         case 1
             
@@ -40,7 +40,7 @@ function pos = coilpos(phases)
             
         otherwise
             
-            error('This number of phases has not yet been implemented');
+            error('This number of Phases has not yet been implemented');
             
     end
 

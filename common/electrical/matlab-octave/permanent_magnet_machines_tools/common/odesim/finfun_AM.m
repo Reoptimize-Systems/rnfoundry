@@ -30,8 +30,8 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     design = setfieldifabsent(design, 'FieldDirection', 1);
 
     % Set the coil positions (specified as a fraction of pole width for the
-    % given phases
-    design = setfieldifabsent(design, 'CoilPositions', coilpos(design.phases));
+    % given Phases
+    design = setfieldifabsent(design, 'CoilPositions', coilpos(design.Phases));
     
     % count the number of coils per phase
     design = setfieldifabsent(design, 'NCoilsPerPhase', design.CoilsPerBranch * design.Branches);
@@ -60,7 +60,7 @@ function [design, simoptions] = finfun_AM(design, simoptions)
 
     if max(design.psilookup(1,:)) - min(design.psilookup(1,:)) <= 1
         % psilookup is provided over one pole, replicate the data to cover
-        % two poles
+        % two Poles
         flpos = [design.psilookup(1,:), design.psilookup(1,end) + design.psilookup(1,2:end)];  
         fl = [ design.psilookup(2,:), fliplr(design.psilookup(2,1:end-1))];
         
@@ -99,7 +99,7 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     minIofinterest = min(design.ConductorArea * 0.1e6, ...
                          (10 / (design.Maxdlambdadx)) ) * design.Branches;
 
-    simoptions = setfieldifabsent(simoptions, 'PhaseCurrentTols', repmat(minIofinterest, 1, design.phases));
+    simoptions = setfieldifabsent(simoptions, 'PhaseCurrentTols', repmat(minIofinterest, 1, design.Phases));
     
     % we will create the absolute tolerances field if it is not present
     if ~isfield(simoptions, 'abstol') 
@@ -114,7 +114,7 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     % that a larger sim already has some tolerances specified in this field
     % which is used in simulatemachine_AM to set the absolute tolerances of
     % the ODE solver
-    simoptions.abstol = [simoptions.abstol, repmat(minIofinterest, 1, design.phases)];
+    simoptions.abstol = [simoptions.abstol, repmat(minIofinterest, 1, design.Phases)];
     
     % run a function to display the machine design if it is supplied
     if isfield(simoptions, 'DisplayDesignFcn')

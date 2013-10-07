@@ -10,7 +10,7 @@ function [vol, design] = structvol_PMSM(design, options)
 %
     
     % set the FieldPoles parameter for the structural calculation
-    design.FieldPoles = design.poles(2);
+    design.FieldPoles = design.Poles(2);
     
     % calculate the depth of the machine for the calculation of web volume
     design.Depth = 2 * (design.hbf + design.hm + design.g + design.ht + design.hba);

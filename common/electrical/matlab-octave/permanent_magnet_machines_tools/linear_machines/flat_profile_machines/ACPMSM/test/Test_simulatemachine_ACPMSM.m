@@ -11,13 +11,13 @@ design.WcVTaup = 1/3;
 design.HcVgap = 0.95;
 design.Taup = 0.2;
 design.Ntot = 1000;
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.J = 0;
 
 design = ratios2dimensions_ACPMSM(design);
 
-design.phases = 3;
-design.poles = [10 30];
+design.Phases = 3;
+design.Poles = [10 30];
 design.CoilTurns = 1000;
 design.RgVRc = 10;
 design.LgVLc = 0;
@@ -26,7 +26,7 @@ design.LgVLc = 0;
 %% Test with linear motion
 
 speed = 1;
-simoptions.IC = zeros(1, design.phases);
+simoptions.IC = zeros(1, design.Phases);
 simoptions.skip = 1;
 simoptions.tspan = [0, 5];
 simoptions.drivetimes = 0:simoptions.tspan(2)/2:simoptions.tspan(2);

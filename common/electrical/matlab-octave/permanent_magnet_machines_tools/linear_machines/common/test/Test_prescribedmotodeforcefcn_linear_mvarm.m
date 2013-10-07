@@ -28,16 +28,16 @@ design.Taum1 = 22/1000;
 design.hm1 = 7/1000;
 design.hc = 20/1000;
 design.hbi1 = 7.4/1000;
-design.poles(1) = 6;
+design.Poles(1) = 6;
 design.Dco = design.Taup - 5/1000;
 design.Dci = (design.Taum1) + (2/1000);
-design.fillfactor = 0.6;
+design.CoilFillFactor = 0.6;
 design.Dc = 0.75/1000;
 design.RgVRc = 15; % 10;
 design.extraAMassFact = 1.25;
 design.Cd = 0.1; %0; %1.05;
 design.DragArea = 0.01;
-design.phases = 1;
+design.Phases = 1;
 design.mu_fA = 0.2;
 
 design = dimensions2ratios_snapper(design);
@@ -62,7 +62,7 @@ simoptions.maxAllowedEMFpeak = [];
 % set the other simulation parameters 
 
 % The maximum allowed translator length, this is a hard limit, not
-% determined by a penalty. The number of poles in the design will be
+% determined by a penalty. The number of Poles in the design will be
 % modified if exceeded
 simoptions.maxAllowedTLength = 5;
 % determines method used to calculate inductance

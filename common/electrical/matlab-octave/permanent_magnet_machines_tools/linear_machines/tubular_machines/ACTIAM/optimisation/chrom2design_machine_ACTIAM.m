@@ -20,7 +20,7 @@ function [design, simoptions] = chrom2design_machine_ACTIAM(simoptions, Chrom)
 %     % design.mode = 3;
 %     
 %     design.LgVLc = 0;
-%     design.phases = 3;
+%     design.Phases = 3;
 %     design.RsiVRso = 0;
 % %     design.AngleFromHorizontal = 80 * (pi/180);
 % 
@@ -41,13 +41,13 @@ function [design, simoptions] = chrom2design_machine_ACTIAM(simoptions, Chrom)
 %     design.WcVWp = Chrom(1,7);
 %     design.Rm = Chrom(1,8);
 %     design.RgVRc = Chrom(1,9);
-%     design.fillfactor = Chrom(1,10);
+%     design.CoilFillFactor = Chrom(1,10);
 %     design.DcAreaFac = Chrom(1,11);
 %     design.Rs2VHmag = 0.5;
 %     design.Rs1VHmag = 0.5;
 %     design.Ws2VhalfWs = 0.5;
 %     design.Ws1VhalfWs = 0.5;
-%     design.poles(1) = round(Chrom(1,12));
+%     design.Poles(1) = round(Chrom(1,12));
 %     design.BranchFac = Chrom(1,13);
 %     design.nBpoints = round(Chrom(1,14));
 % 
@@ -63,7 +63,7 @@ function [design, simoptions] = chrom2design_machine_ACTIAM(simoptions, Chrom)
 %     design = ratios2dimensions_ACTM(design);
 %     
 %     if size(Chrom,2) > 15
-%         simoptions.maxAllowedxT = Chrom(1,16) * design.poles(1) * design.Wp;
+%         simoptions.maxAllowedxT = Chrom(1,16) * design.Poles(1) * design.Wp;
 %     else
 %         simoptions.maxAllowedxT = inf;
 %     end
@@ -72,8 +72,8 @@ function [design, simoptions] = chrom2design_machine_ACTIAM(simoptions, Chrom)
 %         simoptions.buoy = round(Chrom(1,17));
 %     end
 %     
-%     %            if design.poles(1) < design.nBpoints
-%     %                design.nBpoints = max(design.poles(1)-1,0);
+%     %            if design.Poles(1) < design.nBpoints
+%     %                design.nBpoints = max(design.Poles(1)-1,0);
 %     %            end
 % 
 %     
@@ -122,11 +122,11 @@ function [design, simoptions] = chrom2design_machine_ACTIAM(simoptions, Chrom)
 %     design = ratios2dimensions_ACTM(design);
 %     
 %     if isfield(simoptions, 'maxAllowedTLength')
-%         design.poles = max(1, min(design.poles(1), ...
+%         design.Poles = max(1, min(design.Poles(1), ...
 %                         round(simoptions.maxAllowedTLength / design.Wp)));
 %     end
 %     
 %     % process some common linear machine options
-%     design = preprocsystemdesign_linear(design, simoptions, design.poles);
+%     design = preprocsystemdesign_linear(design, simoptions, design.Poles);
 
 end

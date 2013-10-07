@@ -102,7 +102,7 @@ function results = splitodesystemres_ACTM(results, sol, design, simoptions)
         % output, this is not used in the cost calculations
         peakxT = max(abs(temp.xT));
 
-        results.minArmLength = max(results.minArmLength, 2 * peakxT + (design.poles(1) * design.Wp));
+        results.minArmLength = max(results.minArmLength, 2 * peakxT + (design.Poles(1) * design.Wp));
 
         if isempty(results.interpdur)
             results.interpdur = (max(sol.x)-min(sol.x))/(length(sol.x)*2);
@@ -123,13 +123,13 @@ function results = splitodesystemres_ACTM(results, sol, design, simoptions)
 
         results.EMFpeak = max(results.EMFpeak, max(abs(temp.EMF(:,1))));
         
-        results.TotalGridEnergy = results.TotalGridEnergy + (trapz(sol.x, sol.y(5,:).^2 .* design.GridResistance) * design.poles(1) * design.phases);
+        results.TotalGridEnergy = results.TotalGridEnergy + (trapz(sol.x, sol.y(5,:).^2 .* design.GridResistance) * design.Poles(1) * design.Phases);
         
-        GridPower = realpow(I,2) .* design.GridResistance .* design.poles(1) .* design.phases;
+        GridPower = realpow(I,2) .* design.GridResistance .* design.Poles(1) .* design.Phases;
         results.GridPowersum = results.GridPowersum + sum(GridPower);
         results.GridPowern = results.GridPowern + numel(GridPower); 
         
-        results.peakPower = max(results.peakPower, max(sol.y(5,:).^2 .* design.GridResistance) * design.poles(1) * design.phases);
+        results.peakPower = max(results.peakPower, max(sol.y(5,:).^2 .* design.GridResistance) * design.Poles(1) * design.Phases);
         
         %save(sprintf('splitode_test_%d.mat', results.block), 'sol', 'temp');
         

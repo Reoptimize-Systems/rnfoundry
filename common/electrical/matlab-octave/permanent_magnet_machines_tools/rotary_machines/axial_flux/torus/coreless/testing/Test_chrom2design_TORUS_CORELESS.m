@@ -1,11 +1,11 @@
 % Test_chrom2design_TORUS_CORELESS
 
-% number of phases
-options.phases = 3;
+% number of Phases
+options.Phases = 3;
 % number of coils per pole and phase
 options.qc = fr(3,4*3);
 options.RgVRc = 10;
-options.fillfactor = 0.9;
+options.CoilFillFactor = 0.9;
 options.BranchFac = 0;
 options.ModuleFac = 0;
 options.NStages = 1;

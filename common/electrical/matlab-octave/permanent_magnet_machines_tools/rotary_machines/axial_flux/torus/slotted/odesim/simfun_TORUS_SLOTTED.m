@@ -21,7 +21,7 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
     %   q = qc
     %   Qs = Qc
     %
-    % yp - Average coil pitch as defined by (Qs/poles)
+    % yp - Average coil pitch as defined by (Qs/Poles)
     % yd - Actual coil pitch as defined by round(yp) +/- k
     % Qs – number of stator slots
     % Qc – number of winding coils
@@ -34,13 +34,13 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
     
     % number of slots per pole and phase
     if ~isfield(design, 'qc')
-        design.qc = fr(design.Qs, design.phases * design.poles);
+        design.qc = fr(design.Qs, design.Phases * design.Poles);
     else
-        [design.Qs,junk] = rat(design.qc * design.phases * design.poles);
+        [design.Qs,junk] = rat(design.qc * design.Phases * design.Poles);
     end
     
     % number of slots per pole
-    slotsperpole = design.Qs / design.poles;
+    slotsperpole = design.Qs / design.Poles;
     
     % get the total slot width
     design.tausm = design.taupm / slotsperpole;
@@ -48,8 +48,8 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
     % get the numerator and denominator of qc
     [design.qcn,design.qcd] = rat(design.qc);
     
-    % Average coil pitch as defined by (Qs/poles)
-    design.yp = fr(design.Qs, design.poles);
+    % Average coil pitch as defined by (Qs/Poles)
+    design.yp = fr(design.Qs, design.Poles);
     
     % get the numerator and denominator of the coil pitch in slots
     [design.ypn,design.ypd] = rat(design.yp);

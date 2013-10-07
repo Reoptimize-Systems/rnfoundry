@@ -8,21 +8,21 @@
 
 clear design simoptions
 
-design.phases = 3;
+design.Phases = 3;
 design.Wp = 0.12;
 design.Wm = 0.8*design.Wp;
 design.lm = 0.015;
 
 design.Hc = 979000;
 
-design.fillfactor = 0.585;
+design.CoilFillFactor = 0.585;
 design.g = 0.003; 
 design.ls = 1; 
 design.Dc = 0.005;
 
 design.hba = design.Wp / 4;
 design.hbf = design.Wp / 4; 
-design.Ws = design.Wp / design.phases; 
+design.Ws = design.Wp / design.Phases; 
 design.Wt = design.Ws / 2;
 design.ht = 5*design.Wt;
 design.hm = 0.2 * design.Wm;

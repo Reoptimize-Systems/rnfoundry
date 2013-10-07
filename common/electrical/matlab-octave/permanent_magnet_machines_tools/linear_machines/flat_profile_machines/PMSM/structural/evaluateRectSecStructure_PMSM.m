@@ -31,7 +31,7 @@ function design = evaluateRectSecStructure_PMSM(design, options)
     % width.
     n_beams = zeros(size(beams,1), 1);
     for i = 1:size(beams,1)
-        n_beams(i,1) = numbeams(span1([d(i), b(i), di(i), bi(i)], options.IMethod), design.Wp, design.poles(1) * design.Wp, design.BeamSpreadFactor);
+        n_beams(i,1) = numbeams(span1([d(i), b(i), di(i), bi(i)], options.IMethod), design.Wp, design.Poles(1) * design.Wp, design.BeamSpreadFactor);
     end
     
     totalVol = design.sides .* volume .* n_beams;

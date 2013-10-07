@@ -52,7 +52,7 @@ function [output, design] = getfeadata_PMSM(design, Jcoil, xRVWp)
 %
 %   Ntot - number of turns in the winding
 %
-%   fillfactor - winding fill factor
+%   CoilFillFactor - winding fill factor
 %
 % Output:
 %
@@ -202,7 +202,7 @@ function [output, design] = getfeadata_PMSM(design, Jcoil, xRVWp)
 
             [design.FemmProblem] = pmsmfemmprob(design, xRVWp(j) .* design.Wp, ...
                                                 'NWindingLayers', design.CoilLayers, ...
-                                                'CoilCurrents', Jcoil(i,:) .* design.ConductorArea / design.fillfactor);
+                                                'CoilCurrents', Jcoil(i,:) .* design.ConductorArea / design.CoilFillFactor);
 
             % run the analysis in FEMM and load the simulation output
             femfilename = [tempname, '.fem'];
@@ -266,7 +266,7 @@ function [output, design] = getfeadata_PMSM(design, Jcoil, xRVWp)
             design = slotintBdata(design, solution, i, j, xRVWp);
 
             % get the forces, these forces are the force on one side for
-            % two poles. Therefore as we want the total force between the
+            % two Poles. Therefore as we want the total force between the
             % sides for one pole we leave them as they are
             solution.clearblock();
             solution.groupselectblock(3);
@@ -278,7 +278,7 @@ function [output, design] = getfeadata_PMSM(design, Jcoil, xRVWp)
                 % Get the integral of the weighted maxwell stress tensor
                 % over the translator. This is the per-pole force, as the
                 % machine is double-sided, but the simulation consists of
-                % two poles but with only one side of the machine
+                % two Poles but with only one side of the machine
                 FEAFx(k,1) = -solution.blockintegral(18)/2;
 
                 % round off the force to 5 decimal places so that error in
@@ -296,7 +296,7 @@ function [output, design] = getfeadata_PMSM(design, Jcoil, xRVWp)
                 % Get the integral of the weighted maxwell stress tensor
                 % over the translator. This is the per-pole force, as the
                 % machine is double-sided, but the simulation consists of
-                % two poles but with only one side of the machine and we
+                % two Poles but with only one side of the machine and we
                 % only wish to know the air-gap closing force on one side
                 FEAFx(k,1) = -solution.blockintegral(18)/2;
 

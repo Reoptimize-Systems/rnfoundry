@@ -18,7 +18,7 @@ design.tauco = 4 * design.taupm / 3;
 design.Wc = 0.112;
 design.tauci = design.tauco - 2 * design.Wc;
 design.Dc = design.taumm / 1000;
-design.fillfactor = 0.8;
+design.CoilFillFactor = 0.8;
 design.Hc = design.tc;
 design.CoilTurns =  75;
 design.Dc = 6.04 / 1000;
@@ -28,7 +28,7 @@ design.tbi = 0.045;
 design.NCoilsPerPhase = Npoles;
 design.RgVRc = 0.1;
 design.LgVLc = 0;
-design.phases = 1;
+design.Phases = 1;
 
 % Matlib = parsematlib_mfemm(fullfile(fileparts(which('mfemm_parsematlib.m')), 'matlib.dat'));
 

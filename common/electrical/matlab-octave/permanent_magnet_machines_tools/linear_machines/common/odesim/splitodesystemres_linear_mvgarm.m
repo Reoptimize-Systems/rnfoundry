@@ -76,7 +76,7 @@ function results = splitodesystemres_linear_mvgarm(flag, results, sol, design, s
                         fprintf(1, 'Buoy moving too fast in heave, speed = %f\n', results.ye(2,ind));
                     case 2
                         fprintf(1, 'Buoy moving too fast in surge, speed = %f\n', results.ye(4,ind));
-                    case (3:(2+design.phases))
+                    case (3:(2+design.Phases))
                         fprintf(1, 'Too much current in coil %d, current = %f\n', results.ie(ind)-2, results.ye(results.ie(ind)+2,ind));
                     otherwise
                         fprintf(1, 'Unknown termination reason, event solution vector ind: %d\n', results.ie(ind));

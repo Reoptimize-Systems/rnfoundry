@@ -17,12 +17,12 @@ design.tsb = 0.025;
 design.tsg = 0;%0.5 * design.tsb;
 design.ty = 0.15;
 
-design.phases = 3;
-design.poles = 28;
+design.Phases = 3;
+design.Poles = 28;
 design.Qc = 7;
-design.Qs = design.phases * 2 * design.Qc;
+design.Qs = design.Phases * 2 * design.Qc;
 design.yd = 1;
-slotsperpole = design.Qs / design.poles;
+slotsperpole = design.Qs / design.Poles;
 
 % design.tauco = 0.333 * design.taupm;
 
@@ -38,7 +38,7 @@ design.taucs = 0.8 * design.taupm / slotsperpole;
 design.tausgm = design.taucs * 0.3;
 
 design.Dc = design.taumm / 100;
-design.fillfactor = 0.7;
+design.CoilFillFactor = 0.7;
 
 design.CoilLayers = 1;
 design.Hc = design.tc / design.CoilLayers;

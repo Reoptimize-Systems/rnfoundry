@@ -1,10 +1,10 @@
-function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmprob(slots, poles, ypole, ycoil, yshoegap, xyoke, xcoil, xshoebase, xshoegap, xoffset, side, varargin)
+function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmprob(slots, Poles, ypole, ycoil, yshoegap, xyoke, xcoil, xshoebase, xshoegap, xoffset, side, varargin)
 % draw internal parts of half a slotted stator
 %
 % Syntax
 %
 % [FemmProblem, outernodes, coillabellocs] = ...
-%       axialfluxstatorhalf2dfemmprob(slots, poles, ypole, ycoil, yshoegap, ...
+%       axialfluxstatorhalf2dfemmprob(slots, Poles, ypole, ycoil, yshoegap, ...
 %       xyoke, xcoil, xshoebase, xshoegap, xoffset, side, varargin)
 %
 %
@@ -29,16 +29,16 @@ function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmpro
     % remove the odl one to save memory
     Inputs = rmfield(Inputs, 'FemmProblem');
     
-    % check an integer number of machine poles and slots (can't have half a
+    % check an integer number of machine Poles and slots (can't have half a
     % slot or a pole in a machine
     slots = round(slots);
-    poles = round(poles);
+    Poles = round(Poles);
 
-    slotsperpole = slots / poles;
+    slotsperpole = slots / Poles;
 
     % The user can either supply a set of slot positions (useful for
     % inductance simulations), or these will be calculated to fill two
-    % poles of the machine
+    % Poles of the machine
     if isempty(Inputs.SlotPositions)
         
         if isempty(Inputs.NSlots)

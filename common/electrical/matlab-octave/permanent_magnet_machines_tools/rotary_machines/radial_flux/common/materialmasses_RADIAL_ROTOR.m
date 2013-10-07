@@ -15,7 +15,7 @@ function [design, simoptions] = materialmasses_RADIAL_ROTOR(design, simoptions)
 %     ls - the stack length of the machine
 %     thetam - the magnet pitch in radians
 %     thetap - the pole pitch in radians
-%     poles - the number of poles in the machine
+%     Poles - the number of Poles in the machine
 %
 %   simoptions - another structure, this structure is expected to contiain
 %     the field 'evaloptions'. evaloptions is another structure which must
@@ -41,13 +41,13 @@ function [design, simoptions] = materialmasses_RADIAL_ROTOR(design, simoptions)
 
     design.MagnetVolume = annularsecarea(design.Rmi, design.Rmo, design.thetam) ...
                           * design.ls ...
-                          * design.poles;
+                          * design.Poles;
                       
     design.MagnetMass = design.MagnetVolume * simoptions.evaloptions.MagnetDensity; 
     
     design.FieldIronVolume = annularsecarea(design.Rbi, design.Rbo, design.thetap) ...
                              * design.ls ...
-                             * design.poles;
+                             * design.Poles;
     
     design.FieldIronMass = design.FieldIronVolume * simoptions.evaloptions.FieldIronDensity;
     

@@ -38,7 +38,7 @@ function ObjVal = objactm_system(Chrom, rtn_type, simoptions, options, multicore
                    0.1,   1/3;    % WcVWp
                    0.01,  1.0;    % Rm
                    0.5,   15.0;   % RgVRc
-                   0.2,   0.65;   % fillfactor
+                   0.2,   0.65;   % CoilFillFactor
                    0,     1;      % DcAreaFac
                    10,    200;    % TransPoles 
                    0,     5;      % bpoints

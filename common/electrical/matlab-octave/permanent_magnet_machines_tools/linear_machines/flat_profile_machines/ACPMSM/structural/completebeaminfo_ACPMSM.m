@@ -1,7 +1,7 @@
 function BeamInfo = completebeaminfo_ACPMSM(design, options)
 
-    design.NInnerPoles = design.poles(2);
-    design.NOuterPoles = design.poles(1);
+    design.NInnerPoles = design.Poles(2);
+    design.NOuterPoles = design.Poles(1);
     
     BeamInfo.StructSides = 2;
     
