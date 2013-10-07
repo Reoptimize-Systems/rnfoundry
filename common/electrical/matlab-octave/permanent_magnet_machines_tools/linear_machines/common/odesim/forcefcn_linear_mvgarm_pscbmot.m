@@ -11,7 +11,7 @@ function [FTVec, FA, ForceBD, xRmachine, xRmagcouple, vR, unitv] = forcefcn_line
     FEAFy = evalhpslmodd(design.MagCouple.slm_FEAFy, 0, xRmagcouple, 1) ...
                 * design.MagCouple.N * simoptions.NoOfMachines;
     
-%     FEAFy = evalhpslmodd(design.slm_FEAFy, 0, xR, 1) * design.poles(1) *
+%     FEAFy = evalhpslmodd(design.slm_FEAFy, 0, xR, 1) * design.Poles(1) *
 %     design.sides * simoptions.NoOfMachines;
     
     % Add a drag force with linear relationship to the relative velocity

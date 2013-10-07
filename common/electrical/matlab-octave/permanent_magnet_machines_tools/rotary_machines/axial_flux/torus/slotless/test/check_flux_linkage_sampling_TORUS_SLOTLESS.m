@@ -15,10 +15,10 @@ design.tauco = 0.333 * design.taupm;
 design.Hc = design.tc;
 design.Wc = design.tauco;
 design.Dc = design.taumm / 1000;
-design.fillfactor = 0.8;
+design.CoilFillFactor = 0.8;
 design.Hc = design.tc;
 design.Wc = design.tauco;
-[design.CoilTurns, design.Dc] = CoilTurns(design.Hc * design.Wc, design.fillfactor, design.Dc);
+[design.CoilTurns, design.Dc] = CoilTurns(design.Hc * design.Wc, design.CoilFillFactor, design.Dc);
 
 design.tm = 0.15 * design.taumm;
 design.tbi = 0.05;
@@ -27,7 +27,7 @@ design.ty = 2 * design.tbi;
 design.NPhaseCoils = Npoles;
 design.RgVRc = 0.1;
 design.LgVLc = 0;
-design.phases = 3;
+design.Phases = 3;
 
 % Matlib = parsematlib_mfemm(fullfile(fileparts(which('mfemm_parsematlib.m')), 'matlib.dat'));
 

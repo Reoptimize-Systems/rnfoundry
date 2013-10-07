@@ -138,7 +138,7 @@ function [airgapdisps, feb, geom, ur] = fielddef_FM(width, depth, height, BeamIn
 
     nels = 7;
 
-    % zextreme = (design.poles(1) .* design.Wp);
+    % zextreme = (design.Poles(1) .* design.Wp);
     zextreme = BeamInfo.GuideRails.length / 2;
 
     % we must shift the support beams in the positive and negative y directions

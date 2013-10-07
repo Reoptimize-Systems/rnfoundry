@@ -20,7 +20,7 @@ function design = checkcoilprops_AM(design)
 %   calculation in multi-layered windings, where Hc and Wc should be the
 %   total slot height and width.
 %
-%   It must have a field 'fillfactor' which is the copper fill factor in
+%   It must have a field 'CoilFillFactor' which is the copper fill factor in
 %   the coil, and either the field 'Dc', or the field 'CoilTurns', or both.
 %   If either 'Dc' or 'CoilTurns' is present the other is calculated and
 %   added to the design structure based on the fill factor and the supplied
@@ -43,9 +43,9 @@ function design = checkcoilprops_AM(design)
         end
     end
     
-    if ~isfield(design, 'fillfactor')
+    if ~isfield(design, 'CoilFillFactor')
         error('AM:checkcoilprops_AM:nofillfactor', ...
-            'You must supply a fillfactor field in the design structure')
+            'You must supply a CoilFillFactor field in the design structure')
     end
     
     % support old field name for the number of turns (Ntot)
@@ -57,15 +57,15 @@ function design = checkcoilprops_AM(design)
         
         % Find how many turns can be achieved with that fill factor and wire
         % diameter, and get the actual wire diameter which can achieve this
-        [design.CoilTurns, design.Dc] = CoilTurns(design.CoilArea, design.fillfactor, design.Dc);
+        [design.CoilTurns, design.Dc] = CoilTurns(design.CoilArea, design.CoilFillFactor, design.Dc);
 
     elseif ~isfield(design, 'Dc') && isfield(design, 'CoilTurns')
         
         % Find what wire diameter is necessary to achieve the desired
         % number of turns with the given fill factor
-        design.Dc = ConductorDiameter(design.CoilArea, design.fillfactor, design.CoilTurns);
+        design.Dc = ConductorDiameter(design.CoilArea, design.CoilFillFactor, design.CoilTurns);
         
-    elseif ~all(isfield(design, {'Dc', 'CoilTurns', 'fillfactor'}))
+    elseif ~all(isfield(design, {'Dc', 'CoilTurns', 'CoilFillFactor'}))
         
         error('AM:checkcoilprops_AM:insufficientinfo', ...
             'You have not supplied enough fields to determine the coil winding properties.')

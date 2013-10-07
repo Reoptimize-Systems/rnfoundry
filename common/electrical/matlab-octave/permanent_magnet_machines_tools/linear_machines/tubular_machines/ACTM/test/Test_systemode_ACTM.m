@@ -4,7 +4,7 @@ clear
 % First we need some plausible machine variables for testing, we will use
 % the AWS variables for this
 
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.1;
 design.g = 5/1000;
 design.Ri = design.Rm + design.g;
@@ -16,12 +16,12 @@ design.RaVRo = 1.025;
 design.RsoVRm = 0.1;
 design.RsiVRso = 0;
 design.WcVWp = 1/3;
-design.fillfactor = 0.65;
+design.CoilFillFactor = 0.65;
 %design.Dc = 1/1000;  % 1 mm diameter wire 
 design.Ntot = 500;
 design.mode = 2; 
 design.LgVLc = 0;
-design.poles = [10 30];
+design.Poles = [10 30];
 % Acon = pi * (dc/2)^2;
 % Acu = (Rm * WpVRm * WcVWp) * ((RoVRm * Rm) - Ri) * kfill;
 % AconVAcu = Acon / Acu;
@@ -86,7 +86,7 @@ design.RgVRc = 10; % Ratio of grid resistance to machine resistance
 %     %main_minimize;
 % end
 % 
-% RunFEMMSimWithCoils_ACTM_Dc_Value = RunFEMMSimWithCoils_ACTM(design.WmVWp, design1.WpVRm, design1.RiVRm, design1.RoVRm, design1.RsoVRm, design1.WcVWp, design1.Rm, design1.Ntot, design1.fillfactor, [0 0 0], [0 1]);
+% RunFEMMSimWithCoils_ACTM_Dc_Value = RunFEMMSimWithCoils_ACTM(design.WmVWp, design1.WpVRm, design1.RiVRm, design1.RoVRm, design1.RsoVRm, design1.WcVWp, design1.Rm, design1.Ntot, design1.CoilFillFactor, [0 0 0], [0 1]);
 % 
 
 

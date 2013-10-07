@@ -9,7 +9,7 @@ function design = preprocsystemdesign_AM(design, simoptions, coilsperphase)
     % make minimum possible wire diameter 0.5 mm
     simoptions = setfieldifabsent(simoptions, 'MinWireDiameter',  0.5/1000);
     
-    design.Dc = sqrt(4 * (design.Hc * design.Wc * design.fillfactor * design.DcAreaFac) / pi);
+    design.Dc = sqrt(4 * (design.Hc * design.Wc * design.CoilFillFactor * design.DcAreaFac) / pi);
     
     if design.Dc < simoptions.MinWireDiameter
         design.Dc = simoptions.MinWireDiameter;

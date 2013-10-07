@@ -45,7 +45,7 @@ function [force] = rotorforces_TORUS_SLOTTED(design, ndrawnstages, nsimpoles, po
             solution.clearblock();
             solution.groupselectblock(ndrawnstages+1)
             
-            % we divide by the number of poles in the sim to get the per-pole
+            % we divide by the number of Poles in the sim to get the per-pole
             % force
             force(i) = solution.blockintegral(18) / nsimpoles;
 
@@ -55,7 +55,7 @@ function [force] = rotorforces_TORUS_SLOTTED(design, ndrawnstages, nsimpoles, po
             mo_clearblock();
             mo_groupselectblock(ndrawnstages+1)
             
-            % we divide by the number of poles in the sim to get the per-pole
+            % we divide by the number of Poles in the sim to get the per-pole
             % force
             force(i) = mo_blockintegral(18) / nsimpoles;
             

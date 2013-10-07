@@ -17,11 +17,11 @@ design.FieldDirection = 1;
 design.PoleWidth = 1;
 design.PowerPoles  = 1;
 
-design.phases = 3;
-design.tauco = 1/design.phases;
-design.taupcg = design.phases * design.tauco;
+design.Phases = 3;
+design.tauco = 1/design.Phases;
+design.taupcg = design.Phases * design.tauco;
 % calculate the physical separation between adjacent coils in each phase
-design.CoilPositions = ((0:design.phases-1) .* (1/design.phases));
+design.CoilPositions = ((0:design.Phases-1) .* (1/design.Phases));
 % adjust positions to give correct polarity
 design.CoilPositions(2:2:end) = (design.CoilPositions(2:2:end) + 1);
 design.CoilPositions = design.CoilPositions * design.taupcg;
@@ -37,7 +37,7 @@ vRE = 0;
 
 xEF = linspace(0, 6, 100);
 
-Icoils = zeros(numel(xEF), design.phases);
+Icoils = zeros(numel(xEF), design.Phases);
 EMF = Icoils;
 dpsidxCRTF = Icoils;
 

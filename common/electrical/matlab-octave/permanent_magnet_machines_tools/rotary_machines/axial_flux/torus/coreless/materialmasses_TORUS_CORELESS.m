@@ -5,7 +5,7 @@ function design = materialmasses_TORUS_CORELESS(design, simoptions)
     design = materialmasses_TORUS_ROTOR(design, simoptions);
     
     % calculate the copper mass
-    design.CopperVol = design.NStages * design.NCoilsPerPhase * design.phases * design.MTL * design.CoilTurns * (pi * (design.Dc/2)^2);
+    design.CopperVol = design.NStages * design.NCoilsPerPhase * design.Phases * design.MTL * design.CoilTurns * (pi * (design.Dc/2)^2);
     
     design.CopperMass = design.CopperVol * simoptions.evaloptions.CopperDensity;
 

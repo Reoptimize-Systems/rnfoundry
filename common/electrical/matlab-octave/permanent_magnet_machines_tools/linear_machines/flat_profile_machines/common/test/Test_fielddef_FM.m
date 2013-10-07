@@ -57,7 +57,7 @@ BeamInfo.FieldPoleSupports.NoPerSide = 8;
 % 
 % y = (design.hbf + design.hm + design.g + desing.ht + design.hba);
 % The height of the frame above zero is half the total translator height
-% z = ((design.poles(2) .* design.Wp) - (design.Wp/2)) / 2;
+% z = ((design.Poles(2) .* design.Wp) - (design.Wp/2)) / 2;
 
 width = 2;
 depth = 1.0;

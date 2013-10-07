@@ -1,6 +1,6 @@
 % Test_evaluatedesign_TORUS_SLOTLESS
 clear design simoptions
-design.phases = 3;
+design.Phases = 3;
 
 design.taupm = 1;
 design.taumm = 0.8;
@@ -8,8 +8,8 @@ design.taumm = 0.8;
 design.g = 0.1; 
 design.tc = 0.15;
 design.ty = 0.15;
-design.taucsm = design.taupm / design.phases;
-design.taupcg = design.phases * design.taucsm;
+design.taucsm = design.taupm / design.Phases;
+design.taupcg = design.Phases * design.taucsm;
 design.tauco = 0.95 * design.taucsm;
 
 design.tm = 0.15;
@@ -22,7 +22,7 @@ design.Hc = design.tc;
 design.Wc = design.tauco;
 
 design.Dc = design.taumm / 100;
-design.fillfactor = 0.7;
+design.CoilFillFactor = 0.7;
 
 design.CoilTurns = 250;
 
@@ -43,7 +43,7 @@ simoptions = simsetup_ROTARY(design, 'simfun_TORUS_SLOTLESS', 'finfun_TORUS_SLOT
                                 'Velocity', 1, 'TSpan', [0,10]);
                             
 simoptions.reltol = 1e-4;
-simoptions.abstol = repmat(0.001, 1, design.phases);
+simoptions.abstol = repmat(0.001, 1, design.Phases);
 simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 10000;
 
 [score, design, simoptions, T, Y, results] = ...

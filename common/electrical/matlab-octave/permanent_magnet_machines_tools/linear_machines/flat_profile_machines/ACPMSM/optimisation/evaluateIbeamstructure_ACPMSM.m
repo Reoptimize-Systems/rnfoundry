@@ -36,7 +36,7 @@ function design = evaluateIbeamstructure_ACPMSM(design, options, initDef)
     % width.
     n_beams = zeros(size(beams,1), 1);
     for i = 1:size(beams,1)
-        n_beams(i,1) = numbeams(b(i,1), design.Taup, design.poles(1) * design.PoleWidth, design.BeamSpreadFactor);
+        n_beams(i,1) = numbeams(b(i,1), design.Taup, design.Poles(1) * design.PoleWidth, design.BeamSpreadFactor);
     end
     
     totalVol =  volume .* n_beams .* 2;

@@ -18,7 +18,7 @@ function [results, design] = prescribedmotresfun_linear_mvgfield(T, Y, design, s
         results.FLinearDrag = results.FaddF(:,2);
     end
     
-    design.xFmax = max(abs(Y(:,design.phases+1)));
+    design.xFmax = max(abs(Y(:,design.Phases+1)));
 
 %     design = odeelectricalresults(T, Y(:,1), results.EMF(:,1), design, simoptions);
 

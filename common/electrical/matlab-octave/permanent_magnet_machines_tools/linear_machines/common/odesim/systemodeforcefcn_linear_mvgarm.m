@@ -147,7 +147,7 @@ function varargout = systemodeforcefcn_linear_mvgarm(t, x, design, simoptions)
     vBs = x(4);
     xA  = x(5);
     vA  = x(6);
-    Iphases = x(7:6+design.phases);
+    Iphases = x(7:6+design.Phases);
     
     Icoils = Iphases ./ design.Branches;
 
@@ -165,7 +165,7 @@ function varargout = systemodeforcefcn_linear_mvgarm(t, x, design, simoptions)
 
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(7:6+design.phases,1) = circuitode_linear(Iphases, EMF, design);
+    dx(7:6+design.Phases,1) = circuitode_linear(Iphases, EMF, design);
 
 %     if any([xT, vT, xA, vA, xBh, xBs, vBh, vBs] > 30)
 %         keyboard
@@ -181,7 +181,7 @@ function varargout = systemodeforcefcn_linear_mvgarm(t, x, design, simoptions)
 %         % whatever the value of mu N is.
 %         
 %         FfA = Fa(2) * -sign(vA);
-%         dx(design.phases+1,1) = vA;
+%         dx(design.Phases+1,1) = vA;
 %         aA = (Fpto + (sum(Fa) - Fa(2)) + FfA - design.weightA) ./ design.massA;
 %         
 %     elseif abs(Fpto + sum(Fa) - Fa(2)) < Fa(2)
@@ -192,7 +192,7 @@ function varargout = systemodeforcefcn_linear_mvgarm(t, x, design, simoptions)
 %         % the frictional force, the acceleration will be zero, and the
 %         % frictional force equal to the net of the other forces
 %         FfA = -(sum(Fa) - Fa(2));
-%         dx(design.phases+1,1) = vA;
+%         dx(design.Phases+1,1) = vA;
 %         aA = 0;
 % 
 %     else
@@ -200,7 +200,7 @@ function varargout = systemodeforcefcn_linear_mvgarm(t, x, design, simoptions)
 %         % if the armature is not moving, but the frictional force is less
 %         % than the net forces, there will be an acceleration
 %         FfA = Fa(2) * -sign((sum(Fa) - Fa(2)));
-%         dx(design.phases+1,1) = vA;
+%         dx(design.Phases+1,1) = vA;
 %         aA = (Fpto + (sum(Fa) - Fa(2)) + FfA - design.weightA) ./ design.massA;
 %         
 %     end    

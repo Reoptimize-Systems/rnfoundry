@@ -24,7 +24,7 @@ function [design, simoptions] = optpreproc_ACTIAM(simoptions, Chrom, varargin)
     % design.mode = 3;
     
     design.LgVLc = 0;
-    design.phases = 3;
+    design.Phases = 3;
     design.RsiVRso = 0;
 
     % Construct initial design structure
@@ -37,9 +37,9 @@ function [design, simoptions] = optpreproc_ACTIAM(simoptions, Chrom, varargin)
     design.WcVWp = Chrom(1,7);
     design.Rm = Chrom(1,8);
     design.RgVRc = Chrom(1,9);
-    design.fillfactor = Chrom(1,10);
+    design.CoilFillFactor = Chrom(1,10);
     design.DcAreaFac = Chrom(1,11);
-    design.poles(1) = round(Chrom(1,12));
+    design.Poles(1) = round(Chrom(1,12));
     design.BranchFac = Chrom(1,13);
     design.nBpoints = round(Chrom(1,14));
     
@@ -58,7 +58,7 @@ function [design, simoptions] = optpreproc_ACTIAM(simoptions, Chrom, varargin)
 
     design = ratios2dimensions_ACTM(design);
     
-    simoptions.maxAllowedxT = Inputs.MaxAllowedxTFactor * design.poles(1) * design.Wp;
+    simoptions.maxAllowedxT = Inputs.MaxAllowedxTFactor * design.Poles(1) * design.Wp;
 
     if ~isempty(Inputs.BuoyNumber)
         simoptions.buoy = Inputs.BuoyNumber;
@@ -66,8 +66,8 @@ function [design, simoptions] = optpreproc_ACTIAM(simoptions, Chrom, varargin)
         simoptions.buoy = Inputs.BuoyDirectory;
     end
     
-    %            if design.poles(1) < design.nBpoints
-    %                design.nBpoints = max(design.poles(1)-1,0);
+    %            if design.Poles(1) < design.nBpoints
+    %                design.nBpoints = max(design.Poles(1)-1,0);
     %            end
 
     
@@ -116,11 +116,11 @@ function [design, simoptions] = optpreproc_ACTIAM(simoptions, Chrom, varargin)
     design = ratios2dimensions_ACTM(design);
     
     if isfield(simoptions, 'maxAllowedTLength')
-        design.poles = max(1, min(design.poles(1), ...
+        design.Poles = max(1, min(design.Poles(1), ...
                         round(simoptions.maxAllowedTLength / design.Wp)));
     end
     
     % process some common linear machine options
-    design = preprocsystemdesign_linear(design, simoptions, design.poles);
+    design = preprocsystemdesign_linear(design, simoptions, design.Poles);
 
 end

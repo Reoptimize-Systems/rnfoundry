@@ -6,10 +6,10 @@ function displaydesign_PMSM(design, simoptions)
     fprintf(1, 'Dim        Val      Dim        Val      Dim        Val      Dim        Val\n');
     fprintf(1, 'Wp:     %8.4f    Wm:     %8.4f    Wc:     %8.4f    Wt:     %8.4f\n', design.Wp, design.Wm, design.Wc, design.Wt);
     fprintf(1, 'Ws:     %8.4f    hba:    %8.4f    ht:     %8.4f    g:      %8.4f\n', design.Ws, design.hba, design.ht, design.g);
-    fprintf(1, 'hm:     %8.4f    hbf:    %8.4f    ls:     %8.4f    FF:     %8.4f\n', design.hm, design.hbf, design.ls, design.fillfactor);
+    fprintf(1, 'hm:     %8.4f    hbf:    %8.4f    ls:     %8.4f    FF:     %8.4f\n', design.hm, design.hbf, design.ls, design.CoilFillFactor);
 
-    if isfield(design, 'poles')
-        fprintf(1, 'poles: %s', num2str(design.poles));
+    if isfield(design, 'Poles')
+        fprintf(1, 'Poles: %s', num2str(design.Poles));
     end
     
     if isfield(design, 'Rs1')

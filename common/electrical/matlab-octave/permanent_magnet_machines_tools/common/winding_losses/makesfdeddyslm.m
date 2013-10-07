@@ -57,7 +57,7 @@ function sfdslm = makesfdeddyslm(rho, length, dc, nturns, pos, meanB1, meanB2, n
 % 
 %   pos - a vector of magnet positions at which values of the applied
 %     magnetic field int coil parts have been sampled. For compatibility
-%     with lossforces_AM.m, these positions should cover fully two poles of
+%     with lossforces_AM.m, these positions should cover fully two Poles of
 %     displacement.
 % 
 %   nturns - the number of turns in the coil

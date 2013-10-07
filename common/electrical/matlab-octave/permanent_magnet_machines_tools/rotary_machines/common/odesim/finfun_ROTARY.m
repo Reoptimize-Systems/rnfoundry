@@ -5,7 +5,7 @@ function [design, simoptions] = finfun_ROTARY(design, simoptions)
     % assign the pole width to be the angular width of a pole
     design = setfieldifabsent(design, 'PoleWidth', design.thetap);
     
-    % set the power poles, used to calculate force and power etc
+    % set the power Poles, used to calculate force and power etc
     design = setfieldifabsent(design, 'PowerPoles', design.NCoilsPerPhase);
     
     % set the number of machine stages to be one if not supplied
@@ -16,7 +16,7 @@ function [design, simoptions] = finfun_ROTARY(design, simoptions)
     design.CoreMaterialDensity = 7650;
     
     % set the machine initial conditions to zeros if not present
-    simoptions = setfieldifabsent(simoptions, 'IC', zeros(1, design.phases));
+    simoptions = setfieldifabsent(simoptions, 'IC', zeros(1, design.Phases));
     
     % complete the circuit properties
     [design, simoptions] = circuitprops_AM(design, simoptions);

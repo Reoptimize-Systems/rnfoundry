@@ -31,11 +31,11 @@ function idot = multiphasecurrentderiv(I, E, R, M)
 %                           \ \ \                                           
 %
 % However the circuit may be single or multiphase, with mutual inductances
-% between phases. 
+% between Phases. 
 %
 % Input
 %
-% I is a vector of values of the currentin the the machine phases at the
+% I is a vector of values of the currentin the the machine Phases at the
 %   current time.
 %
 % E is a vector of values of the emfs in each phase at the current time
@@ -48,7 +48,7 @@ function idot = multiphasecurrentderiv(I, E, R, M)
 %         0   0   Rc ];
 %
 % M is an inductance matrix with diagonal terms the main inductances of the
-%   phases, and off-diagonal terms the mutual inductances between phases
+%   Phases, and off-diagonal terms the mutual inductances between Phases
 %
 %   M = [ La   Lba  Lca;
 %         Lba  Lb   Lcb;

@@ -43,7 +43,7 @@ function Tmat = tThermal_PMSM(varargin)
     % Simulation parameters
     Q = 1;              % Number of parallel models, use to simulate entire pole, or machine
     pp = 99;            % Number of Pole-Pairs
-    Nphases = 3;        % Number of phases
+    Nphases = 3;        % Number of Phases
     Vpeak = 2.2;        % Peak machine velocity
 
     % Physical parameters and dimensions (all in [m] except k_Cu which is unitless)

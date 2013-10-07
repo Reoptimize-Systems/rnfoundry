@@ -20,7 +20,7 @@ function [Ftot, Firon, Feddy] = lossforces_AM(design, simoptions, xR, vR)
 %
 % The design structure must contain the following fields:
 %
-%   PowerPoles - a scalar value of the number of poles involved in the iron
+%   PowerPoles - a scalar value of the number of Poles involved in the iron
 %     loss in the machine
 %
 %   NStages - the number of stages in a multistage machine
@@ -112,12 +112,12 @@ function P = corelossfcn(v, x, hxslm, cxslm, exslm)
 %   x - relative position of the machine parts
 %
 %   hxslm - slm object fitted to the hysteresis loss function over two
-%     poles
+%     Poles
 %
 %   cxslm - slm object fitted to the eddy current loss function over two
-%     poles
+%     Poles
 %
-%   exslm - slm object fitted to the excess loss function over two poles
+%   exslm - slm object fitted to the excess loss function over two Poles
 %
 %
 % Output

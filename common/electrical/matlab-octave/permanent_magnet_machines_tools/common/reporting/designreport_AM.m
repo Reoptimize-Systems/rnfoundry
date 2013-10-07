@@ -19,9 +19,9 @@ function [reportstrs] = designreport_AM(design, simoptions, type, reportstrs)
     tabledata = { ...
         '$N_T$', 'Coil Turns', design.CoilTurns;
         '$N_s$', 'Strands Per Turn', design.NStrands;
-        '$Q_c$', 'Total Number of Coils', design.phases * design.NCoilsPerPhase; 
+        '$Q_c$', 'Total Number of Coils', design.Phases * design.NCoilsPerPhase; 
         '$N_{cp}$', 'Coils Per Phase', design.NCoilsPerPhase;
-        '$Q_s$', 'Total Number of Slots', design.phases * design.NCoilsPerPhase * 2;
+        '$Q_s$', 'Total Number of Slots', design.Phases * design.NCoilsPerPhase * 2;
         '$D_c$', 'Copper Wire Diameter', design.Dc;
         '', 'Parallel Branches', design.Branches;
         '', 'Series Coils Per Branch', design.CoilsPerBranch;

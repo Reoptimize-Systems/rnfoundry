@@ -13,19 +13,19 @@ function [design, simoptions] = finfun_PMSM(design, simoptions)
     
     design.PoleWidth = design.Wp;
     
-    design.NOuterPoles = design.poles(2);
+    design.NOuterPoles = design.Poles(2);
     
     % set some defaults if not already present
     
-    % which of the members of the design.poles field is the Stator
+    % which of the members of the design.Poles field is the Stator
     simoptions = setfieldifabsent(simoptions, 'StatorPoles', 1);
     
-    % The number of power producing poles in the machine
-    design = setfieldifabsent(design, 'PowerPoles', design.poles(2));
+    % The number of power producing Poles in the machine
+    design = setfieldifabsent(design, 'PowerPoles', design.Poles(2));
     
     % the number of structural members separating either side of the field
     % frame
-    design = setfieldifabsent(design, 'fieldwebs', ceil(design.poles(2) / 3));
+    design = setfieldifabsent(design, 'fieldwebs', ceil(design.Poles(2) / 3));
     
     % now create an slm object to simulate the flux linkage, we will
     % redefine the point 0.5 to be the starting point for convenience

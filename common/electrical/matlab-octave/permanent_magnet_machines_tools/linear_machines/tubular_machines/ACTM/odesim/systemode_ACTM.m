@@ -140,7 +140,7 @@ function varargout = systemode_ACTM(t, x, design, simoptions)
     % the relative position xR with the current values of J. Forces are
     % fitted to a 1m stack length, so we adjust for this by multiplying by
     % ls, the actual stack length in m
-    %Ffea = sum(intbpolyshearforce_AC(design, J, pos)) .* design.poles(1);
+    %Ffea = sum(intbpolyshearforce_AC(design, J, pos)) .* design.Poles(1);
     
     % ensure force is zero at xR = 0
 %     if abs(roundoff(xT ./ design.Taup, 5)) == 0
@@ -150,7 +150,7 @@ function varargout = systemode_ACTM(t, x, design, simoptions)
     % determine the forces due to the magnets and electrical forces at
     % the relative position xR absed on the coil current and rate of change
     % of flux linkage w.r.t. xR at this point.
-    Ffea = sum(Icoils .* -dpsidxR) .* design.poles(1);
+    Ffea = sum(Icoils .* -dpsidxR) .* design.Poles(1);
 
     %  Calculating the proportion that the machine forces are producing on
     %  surge and in heave. Do this by multiplying unit vector in direction

@@ -61,7 +61,7 @@ function evaloptions = designandevaloptions_ACPMSM(evaloptions)
 %             coils are active and the resistance will be lower.
 %
 %             targetPower - If not zero, this is a target power rating for
-%             the machine. The number of field poles will be multiplied to
+%             the machine. The number of field Poles will be multiplied to
 %             the required number to achieve this output power. If this is
 %             present the system will look for the mlength field and act 
 %             accordingly depending on what is found. (default: 500e3 W)

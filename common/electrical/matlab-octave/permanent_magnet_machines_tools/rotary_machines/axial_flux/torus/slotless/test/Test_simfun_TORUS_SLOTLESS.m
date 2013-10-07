@@ -1,9 +1,9 @@
 % Test_simfun_TORUS_SLOTLESS
 clear design
-design.phases = 3;
-design.poles = 24;
+design.Phases = 3;
+design.Poles = 24;
 design.Qc = 7;
-design.Qs = design.phases * 2 * design.Qc;
+design.Qs = design.Phases * 2 * design.Qc;
 design.yd = 1;
 design.NPhaseCoils = design.Qc;
 
@@ -13,8 +13,8 @@ design.taumm = 0.8;
 design.g = 0.1; 
 design.tc = 0.15;
 design.ty = 0.15;
-design.taucsm = design.taupm / design.phases;
-design.taupcg = design.phases * design.taucsm;
+design.taucsm = design.taupm / design.Phases;
+design.taupcg = design.Phases * design.taucsm;
 design.tauco = 0.95 * design.taucsm;
 
 design.tm = 0.15;
@@ -27,7 +27,7 @@ design.Hc = design.tc;
 design.Wc = design.tauco;
 
 design.Dc = design.taumm / 100;
-design.fillfactor = 0.7;
+design.CoilFillFactor = 0.7;
 
 design.CoilTurns = 250;
 

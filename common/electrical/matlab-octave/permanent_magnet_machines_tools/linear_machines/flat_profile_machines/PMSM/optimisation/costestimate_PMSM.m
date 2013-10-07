@@ -21,24 +21,24 @@ function [cost, design] = costestimate_PMSM(design, simoptions, buoymass)
     design.wlength = design.CoilTurns * rectcoilmtl(design.ls, design.Wp - design.Wc, design.Wc);
     
     % Determine the copper cost based on the length of wire in a coil
-    % multiplied by the number of phases and armature poles and the wire
+    % multiplied by the number of Phases and armature Poles and the wire
     % cross-sectional area etc.
-    design.CopperMass = design.phases * design.wlength * (pi* (design.Dc/2)^2) ...
-                        * design.poles(1) * design.sides * simoptions.evaloptions.CopperDensity;
+    design.CopperMass = design.Phases * design.wlength * (pi* (design.Dc/2)^2) ...
+                        * design.Poles(1) * design.sides * simoptions.evaloptions.CopperDensity;
     design.CopperCost = design.CopperMass * simoptions.evaloptions.CopperCost;
     
     % Calculate the total cost of the magnets
-    design.MagnetMass = design.poles(2) * design.sides * design.hm * design.ls ...
+    design.MagnetMass = design.Poles(2) * design.sides * design.hm * design.ls ...
                         * design.Wp * simoptions.evaloptions.MagnetDensity;
     design.MagnetCost =  design.MagnetMass * simoptions.evaloptions.MagnetCost;
     
     % Calculate the cost of the laminated iron (teeth and yoke) in the armature
-    design.ArmatureIronMass = design.poles(1) * design.sides * ((3 * design.ht * design.Wt * design.ls) ...
+    design.ArmatureIronMass = design.Poles(1) * design.sides * ((3 * design.ht * design.Wt * design.ls) ...
                               + (design.Wp * design.hba * design.ls)) * simoptions.evaloptions.ArmatureIronDensity;
     design.ArmatureIronCost = design.ArmatureIronMass * simoptions.evaloptions.ArmatureIronCost;
     
     % Calculate the cost of the back iron on the field
-    design.BackIronMass = design.poles(2) * design.sides * design.Wp * design.ls ...
+    design.BackIronMass = design.Poles(2) * design.sides * design.Wp * design.ls ...
                           * design.hbf * simoptions.evaloptions.FieldIronDensity;
     design.BackIronCost = design.BackIronMass * simoptions.evaloptions.FieldIronCost;
     
@@ -50,7 +50,7 @@ function [cost, design] = costestimate_PMSM(design, simoptions, buoymass)
         design.StructuralCost = design.StructuralMass * simoptions.evaloptions.StructMaterialCost;
 
         % Calculate the cost of the guide rails
-        design.guideRailMass = (design.poles(1) .* design.Wp - design.Wp) * CSArea(design.GuideRailIVars, design.GuideRailIMethod) * 2 * design.sides * simoptions.evaloptions.StructMaterialDensity;
+        design.guideRailMass = (design.Poles(1) .* design.Wp - design.Wp) * CSArea(design.GuideRailIVars, design.GuideRailIMethod) * 2 * design.sides * simoptions.evaloptions.StructMaterialDensity;
 
         design.guideRailCost = design.guideRailMass * simoptions.evaloptions.StructMaterialCost;
         

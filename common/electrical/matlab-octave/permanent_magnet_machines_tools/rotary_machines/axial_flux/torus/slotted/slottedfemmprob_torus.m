@@ -31,7 +31,7 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
     % Get the planar position from the position specification
     Inputs.Position = planarrotorpos(design.taupm, Inputs.Position, Inputs.FractionalPolePosition, Inputs.RotorAnglePosition);
     
-    Inputs.NSlots = 2*design.Qs/design.poles;
+    Inputs.NSlots = 2*design.Qs/design.Poles;
     
     FemmProblem = Inputs.FemmProblem;
     
@@ -66,7 +66,7 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
     
     % draw the stator slots for all stages
     [FemmProblem, yokenodeids, coillabellocs] = axialfluxinnerstator2dfemmprob( ...
-        innerstagewidth, design.Qs, design.poles, design.taupm, design.taucs, ...
+        innerstagewidth, design.Qs, design.Poles, design.taupm, design.taucs, ...
         design.tausgm, design.ty, design.tc, design.tsb, design.tsg, ...
         'NStators', Inputs.NStages, ...
         'NWindingLayers', Inputs.NWindingLayers, ...
@@ -214,7 +214,7 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
 %     end
 %     
 %     % add circuits for each phase
-%     for i = 1:design.phases
+%     for i = 1:design.Phases
 %        FemmProblem = addcircuit_mfemm(FemmProblem, num2str(i));
 %     end
 

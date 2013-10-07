@@ -19,7 +19,7 @@ design.tauco = design.taupm * 0.3;
 design.taupcg = design.taupm;
 design.Wc = design.tauco;
 design.Dc = design.taumm / 1000;
-design.fillfactor = 0.8;
+design.CoilFillFactor = 0.8;
 design.Hc = design.tc;
 design.CoilTurns =  75;
 design.Dc = 6.04 / 1000;
@@ -27,12 +27,12 @@ design.tm = 0.15 * design.taumm;
 design.tbi = 0.045;
 design.ty = 2 * design.tbi;
 
-[design.CoilTurns, design.Dc] = CoilTurns(design.Hc * design.Wc, design.fillfactor, design.Dc);
+[design.CoilTurns, design.Dc] = CoilTurns(design.Hc * design.Wc, design.CoilFillFactor, design.Dc);
 
 design.NPhaseCoils = Npoles;
 design.RgVRc = 0.1;
 design.LgVLc = 0;
-design.phases = 3;
+design.Phases = 3;
 design.Branches = 7;
 design.CoilsPerBranch = 4;
 
@@ -53,7 +53,7 @@ simoptions = simsetup_ROTARY(design, 'simfun_TORUS_SLOTLESS', 'finfun_TORUS_SLOT
                                 'forcefcnargs', {});
                                     
 simoptions.reltol = 1e-4;
-simoptions.abstol = repmat(0.001, 1, design.phases);
+simoptions.abstol = repmat(0.001, 1, design.Phases);
 simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 10000;
 
 % add core loss interpolation data

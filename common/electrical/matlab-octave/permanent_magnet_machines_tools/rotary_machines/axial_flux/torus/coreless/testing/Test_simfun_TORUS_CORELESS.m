@@ -6,8 +6,8 @@ design.tc = 0.3;
     
 design.taupm = 1;
 
-design.phases = 3;
-design.taupcg = (4/3) * design.taupm * design.phases;
+design.Phases = 3;
+design.taupcg = (4/3) * design.taupm * design.Phases;
 design.tauco = 0.32 * design.taupcg;
 design.tauci = 0.7 * design.tauco;
 design.CoilTurns = 250;
@@ -29,7 +29,7 @@ design.Hc = design.tc;
 design.Wc = (design.tauco - design.tauci) / 2;
 
 design.Dc = design.taumm / 100;
-design.fillfactor = 0.7;
+design.CoilFillFactor = 0.7;
 
 % Matlib = parsematlib_mfemm(fullfile(fileparts(which('mfemm_parsematlib.m')), 'matlib.dat'));
 

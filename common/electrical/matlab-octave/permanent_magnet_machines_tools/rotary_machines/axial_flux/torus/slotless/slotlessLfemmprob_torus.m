@@ -63,7 +63,7 @@ function [FemmProblem, outermagsep] = slotlessLfemmprob_torus(design, varargin)
                     -outermagsep/2+magsep, 2*design.taupm];
                 
     % scale all the node and block coordingate in the vertical direction to
-    % give the sim height equal to a repeating set of adjacent phases
+    % give the sim height equal to a repeating set of adjacent Phases
     FemmProblem = scaleproblem_mfemm(FemmProblem, 1, design.taupcg / (2*design.taupm));
     
     for i = 1:numel(FemmProblem.BlockLabels)
@@ -150,7 +150,7 @@ function [FemmProblem, outermagsep] = slotlessLfemmprob_torus(design, varargin)
             coil1BlockProps.Turns = design.CoilTurns;
 
             xcoil = -outermagsep/2 + design.g;
-            ycoil = ((design.taupcg / design.phases) - design.tauco) / 2; %design.taupm - design.tauco/2;
+            ycoil = ((design.taupcg / design.Phases) - design.tauco) / 2; %design.taupm - design.tauco/2;
             
             % add a rectangular region making up half the coil
             [FemmProblem, coil1lseginds, coil1lnodeinds, coil1lblockind, coil1lnodeids] = ...
@@ -179,7 +179,7 @@ function [FemmProblem, outermagsep] = slotlessLfemmprob_torus(design, varargin)
             coil2BlockProps.Turns = design.CoilTurns;
             
             xcoil = -outermagsep/2 + design.g;
-            ycoil = ycoil + (design.taupcg / design.phases);
+            ycoil = ycoil + (design.taupcg / design.Phases);
             
             % add a rectangular region making up half of coil 2
             [FemmProblem, coil2lseginds, coil2lnodeinds, coil2lblockind, coil2lnodeids] = ...

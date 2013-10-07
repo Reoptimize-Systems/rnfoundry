@@ -139,7 +139,7 @@ function [fens, gcells, BeamInfo, OuterSupportCells] = createmeshfebeamdef_FM(x,
 
     %% Add the main outer support beams
 
-    % These are the beams supporting the poles on the outer part to
+    % These are the beams supporting the Poles on the outer part to
     % which the outer magnets/coils are attached
 
     Parameters = BeamInfo.OuterPoleSupports;

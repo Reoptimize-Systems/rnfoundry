@@ -17,7 +17,7 @@ function [design, simoptions] = finfun_TM(design, simoptions)
     design.PoleWidth = design.Wp;
 
     if ~isfield(design, 'PowerPoles')
-        design.PowerPoles = design.poles(1);
+        design.PowerPoles = design.Poles(1);
     end
     
     design.psilookup = 0:0.01:1;
@@ -138,7 +138,7 @@ function [design, simoptions] = finfun_TM(design, simoptions)
         % RaVRo, steelDensity)
         design.PoleWeight = design.PoleWeight + armaturepoleweight_TM(design.WmVWp, ...
             design.RoVRm, design.Rm, design.g, design.WcVWp, ...
-            design.fillfactor, simoptions.CopperDensity, design.RaVRo, ...
+            design.CoilFillFactor, simoptions.CopperDensity, design.RaVRo, ...
             simoptions.ArmatureIronDensity);
         
     end

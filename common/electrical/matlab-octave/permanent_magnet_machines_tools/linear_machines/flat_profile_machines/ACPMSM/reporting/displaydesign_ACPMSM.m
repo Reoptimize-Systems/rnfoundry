@@ -9,8 +9,8 @@ function displaydesign_ACPMSM(design, simoptions)
     fprintf(1, 'ls:     %8.4f    dbi:    %8.4f    Wc:     %8.4f    Hc:     %8.4f\n', design.ls, design.dbi, design.Wc, design.Hc);
     fprintf(1, 'g:      %8.4f\n', design.g, design.g);
 
-    if isfield(design, 'poles')
-        fprintf(1, 'poles: %s\n', num2str(design.poles));
+    if isfield(design, 'Poles')
+        fprintf(1, 'Poles: %s\n', num2str(design.Poles));
     end
 
     displaydesign_AM(design, simoptions)

@@ -4,8 +4,8 @@
 %
 Taup = 0.12;
 ls = 1; 
-phases = 3;
-Taus=Taup/phases;
+Phases = 3;
+Taus=Taup/Phases;
 bs=Taus/2; 
 bt=Taus/2;
 hs=5*bt;

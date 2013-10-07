@@ -10,19 +10,19 @@ load actm_design_and_simoptions.mat
 
 clear simoptions
 
-design.poles = [15, 4];
+design.Poles = [15, 4];
 
-design.PowerPoles = design.poles(2);
+design.PowerPoles = design.Poles(2);
 
 design.ks = 30000;
 
-design.massA = design.phases * design.poles(2) * design.wlength  * (pi * (design.Dc/2).^2) * 8600;
+design.massA = design.Phases * design.Poles(2) * design.wlength  * (pi * (design.Dc/2).^2) * 8600;
 
 design.weightA = 9.81 * design.massA;
 
 design.massT = fieldpoleweight_TM(design.WmVWp, design.WpVRm, ...
                               design.RsiVRso, design.RsoVRm, ...
-                              design.Rm, 7500, 7500, 7500) * design.poles(1) / 9.81;
+                              design.Rm, 7500, 7500, 7500) * design.Poles(1) / 9.81;
 
 % Determine the amount the spring is compressed by the weight of
 % the armature. It will start from this compressed position
@@ -32,13 +32,13 @@ simoptions.maxAllowedxA = 1e6;
 design.maxAllowedxA = simoptions.maxAllowedxA;
 
 design.sides = 1;
-design.phases = 3;
+design.Phases = 3;
 
 designACTM = design;
 
 
 designACTM.Dc = 1/1000;
-[designACTM.Ntot, designACTM.Dc] = CoilTurns(designACTM.Hc * designACTM.Wc, design.fillfactor, designACTM.Dc);
+[designACTM.Ntot, designACTM.Dc] = CoilTurns(designACTM.Hc * designACTM.Wc, design.CoilFillFactor, designACTM.Dc);
 designACTM.CoilResistance = designACTM.wlength * 1.68e-8  / (pi*(designACTM.Dc/2)^2);
 designACTM.GridResistance = designACTM.CoilResistance * 10;
 designACTM.R = designACTM.CoilResistance + designACTM.GridResistance;
@@ -72,13 +72,13 @@ simoptions.maxAllowedEMFpeak = [];
 % set the other simulation parameters 
 
 % The maximum allowed translator length, this is a hard limit, not
-% determined by a penalty. The number of poles in the design will be
+% determined by a penalty. The number of Poles in the design will be
 % modified if exceeded
 simoptions.maxAllowedTLength = 5;
 % determines method used to calculate inductance
 simoptions.Lmode = 1;
 % the initial values of xA, vA and the initial currents in the coils at t=0
-simoptions.IC = [0, 0, zeros(1, designACTM.phases)];
+simoptions.IC = [0, 0, zeros(1, designACTM.Phases)];
 % the number of calculations to skip when producing output after the ode
 % solver finishes
 simoptions.skip = 1;

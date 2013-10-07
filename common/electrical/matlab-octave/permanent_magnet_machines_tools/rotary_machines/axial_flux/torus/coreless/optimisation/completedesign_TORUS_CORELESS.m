@@ -9,15 +9,15 @@ function design = completedesign_TORUS_CORELESS(design, simoptions)
 %
 
     % get the basic winding (the smallest repetitive segment)
-    [design.Qcb,design.pb] = rat(design.qc * design.phases);
+    [design.Qcb,design.pb] = rat(design.qc * design.Phases);
     
     % multiply the basic winding by the desired number to get the full
     % winding
     design.Qc = design.Qcb * design.NBasicWindings;
-    design.poles = design.pb *  design.NBasicWindings;
+    design.Poles = design.pb *  design.NBasicWindings;
     
     % get the number of coils per phase
-    [design.NCoilsPerPhase,junk] = rat(fr(design.Qc,design.phases));
+    [design.NCoilsPerPhase,junk] = rat(fr(design.Qc,design.Phases));
         
     ratiofields = { 'RsVRbi';
                     'RbiVRmi';
@@ -33,7 +33,7 @@ function design = completedesign_TORUS_CORELESS(design, simoptions)
     design.Cm = pi * 2 * design.Rmm;
     
     % pole pitch at the mean magnet radius
-    design.taupm = design.Cm / design.poles;
+    design.taupm = design.Cm / design.Poles;
     
     ratiofields = { 'tcVtm';
                     'gVtm';
@@ -72,15 +72,15 @@ function design = completedesign_TORUS_CORELESS(design, simoptions)
         end
         design.tauci = design.tauciVtauco * design.tauco;
         % taupcg is the span of a group of adjacent phase coils
-        design.taupcg = design.phases * design.taucsm;
+        design.taupcg = design.Phases * design.taucsm;
     
     elseif strcmpi(design.WindingType, 'overlapping')
         % for overlapping we assume double layered full pitched
         % windings
         
-%         design.Qc = 3 * design.poles;
+%         design.Qc = 3 * design.Poles;
 %         % get the number of coils per phase
-%         [design.NPhaseCoils,junk] = rat(fr(design.Qc,design.phases));
+%         [design.NPhaseCoils,junk] = rat(fr(design.Qc,design.Phases));
         
         % in a double-layered overlapping winding the variable taucsm is
         % the coil pitch, which for a full pitched winding is simply the

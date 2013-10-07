@@ -13,7 +13,7 @@ function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, f
 %    simoptions structure may contain the fields 'PoleCount' and 'RPM'. If
 %    present a set of times, positions and velocities will be added to the
 %    simoptions structure which yield a constant velocity simulation
-%    covering the displacement equivalent to the number of poles in
+%    covering the displacement equivalent to the number of Poles in
 %    polecount at the RPM in the 'RPM' field. A linear ramp up in speed from
 %    zero to the specified RPM is prepended to this simulation to avoid
 %    large currents due to inductances.
@@ -40,7 +40,7 @@ function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, f
                                 'simoptions', simoptions);
                           
         
-        % add a linear speed ramp up over 5 poles to reduce the starting
+        % add a linear speed ramp up over 5 Poles to reduce the starting
         % currents due to inductance
         nramppoles = 5;
         rampa = simoptions.omegaT(1)^2 / (2 * nramppoles * design.PoleWidth);
@@ -64,6 +64,6 @@ function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, f
         
     end
     
-%     simoptions.abstol = repmat(0.001, 1, design.phases);
+%     simoptions.abstol = repmat(0.001, 1, design.Phases);
         
 end

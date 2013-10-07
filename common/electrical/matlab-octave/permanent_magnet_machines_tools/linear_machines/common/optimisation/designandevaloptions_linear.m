@@ -29,7 +29,7 @@ function evaloptions = designandevaloptions_linear(evaloptions)
             else
 %                 % if a vector for the machine length is supplied but is the
 %                 % wrong size raise an error
-%                 if numel(evaloptions.mlength) ~= 2 || ~(numel(evaloptions.mlength) == 1 && design.poles) 
+%                 if numel(evaloptions.mlength) ~= 2 || ~(numel(evaloptions.mlength) == 1 && design.Poles) 
 %                     error('If a target power is not supplied in the evaloptions structure, evaloptions.mlength must be a vector of 2 values,\n the length of the field and armature respectively')
 %                 end
 

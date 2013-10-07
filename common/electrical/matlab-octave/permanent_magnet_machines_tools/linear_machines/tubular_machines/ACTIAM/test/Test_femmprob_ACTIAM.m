@@ -2,7 +2,7 @@
 
 %% Exactly 1/3 pole coils
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -19,13 +19,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -41,7 +41,7 @@ main_maximize();
 %% Less than 1/3 pole coils
 
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -58,13 +58,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -78,7 +78,7 @@ main_maximize();
 
 %% Exactly 1/3 pole coils mode = 0;
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -95,13 +95,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -118,7 +118,7 @@ main_maximize();
 %% Less than 1/3 pole coils mode = 0
 
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -135,13 +135,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -157,7 +157,7 @@ main_maximize();
 
 %% Exactly 1/3 pole coils mode = 1;
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -174,13 +174,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -197,7 +197,7 @@ main_maximize();
 %% Less than 1/3 pole coils mode = 1
 
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -214,13 +214,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -236,7 +236,7 @@ main_maximize();
 
 %% Exactly 1/3 pole coils mode = 2;
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -253,13 +253,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -276,7 +276,7 @@ main_maximize();
 %% Less than 1/3 pole coils mode = 2
 
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -293,13 +293,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -315,7 +315,7 @@ main_maximize();
 
 %% Exactly 1/3 pole coils mode = 3;
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -332,13 +332,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -355,7 +355,7 @@ main_maximize();
 %% Less than 1/3 pole coils mode = 3
 
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -372,13 +372,13 @@ design.Rs1VHmag = 0.5;
 design.Ws2VhalfWs = 0.5;
 design.Ws1VhalfWs = 0.5;
 
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 
@@ -396,7 +396,7 @@ main_maximize();
 
 %% Exactly 1/3 pole coils
 clear design
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.15;
 design.g = 3/1000;
 design.Ri = design.Rm + design.g;
@@ -419,7 +419,7 @@ design.mode = 2;
 design.LgVLc = 0;
 design.RgVRc = 10; % Ratio of machine resistance to grid resistance
 
-design.poles = [1 1];
+design.Poles = [1 1];
 
 design = ratios2dimensions_ACTIAM(design);
 

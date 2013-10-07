@@ -9,7 +9,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = coremachinesim_linear(design
 % Description
 %
 % coremachinesim_linear calculates the coil emfs and forces on the coils in
-% the phases of a linear machine. 
+% the Phases of a linear machine. 
 %
 % Input
 %
@@ -39,7 +39,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = coremachinesim_linear(design
 %      normalised displacement over one pole.
 %
 %    PowerPoles: scalar value of the number of active, power producing
-%      poles in the machine
+%      Poles in the machine
 %
 %    TemperatureBase: scalar value of a base temperature at which a
 %      conductor resistivity will be supplied, and temperature coefficient
@@ -57,7 +57,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = coremachinesim_linear(design
 %
 %    RDCBase: Matrix of base values of the resistance in of each phase at
 %      the base temperature in TemperatureBase. This must be a [n x n]
-%      matrix of values for n phases, where the diagonal terms are the
+%      matrix of values for n Phases, where the diagonal terms are the
 %      resistance of each phase, and the off-diagonal terms are typically
 %      zero, e.g. 
 %
@@ -139,9 +139,9 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = coremachinesim_linear(design
     % \end{equation}
     % </latex>
     % 
-%     pos = (((1:design.phases) .* (2/design.phases)) - 1 -
-%     (1/design.phases) + xRF)';
-%     pos = (((1:design.phases) .* (1/design.phases + 1) )  + xCoilRelToField)';
+%     pos = (((1:design.Phases) .* (2/design.Phases)) - 1 -
+%     (1/design.Phases) + xRF)';
+%     pos = (((1:design.Phases) .* (1/design.Phases + 1) )  + xCoilRelToField)';
     pos = design.CoilPositions + xCoilRelToField;
     
     % Find dpsidxR from an slm object fitted to the flux linkage versus

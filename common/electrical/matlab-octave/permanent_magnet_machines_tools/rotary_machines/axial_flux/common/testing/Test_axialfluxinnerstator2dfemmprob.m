@@ -1,9 +1,9 @@
 % Test_axialfluxinnerstator2dfemmprob
 
 slots = 2 * 21;
-poles = 28;
+Poles = 28;
 ypole = 1;
-ycoil = ypole / (slots / poles) * 0.8;
+ycoil = ypole / (slots / Poles) * 0.8;
 yshoegap = 0.2 * ycoil;
 xyoke = 0.05;
 xcoil = 0.3;
@@ -19,7 +19,7 @@ yokecentresep = 2 * (xshoebase + xcoil + g + xbackiron + xmag) + xyoke;
 2 * xmag + 2 * xbackiron + 2 * g
 
 [FemmProblem, outernodes] = ...
-    axialfluxinnerstator2dfemmprob(yokecentresep, slots, poles, ypole, ...
+    axialfluxinnerstator2dfemmprob(yokecentresep, slots, Poles, ypole, ...
         ycoil, yshoegap, xyoke, xcoil, xshoebase, xshoegap, 'NStators', 2);
     
     
@@ -34,9 +34,9 @@ opendocument(fullfile(pwd, filename))
 %% Any number of slots
 
 slots = 2 * 21;
-poles = 28;
+Poles = 28;
 ypole = 1;
-ycoil = ypole / (slots / poles) * 0.8;
+ycoil = ypole / (slots / Poles) * 0.8;
 yshoegap = 0.2 * ycoil;
 xyoke = 0.05;
 xcoil = 0.3;
@@ -52,7 +52,7 @@ yokecentresep = 2 * (xshoebase + xcoil + g + xbackiron + xmag) + xyoke;
 2 * xmag + 2 * xbackiron + 2 * g
 
 [FemmProblem, outernodes] = ...
-    axialfluxinnerstator2dfemmprob(yokecentresep, slots, poles, ypole, ...
+    axialfluxinnerstator2dfemmprob(yokecentresep, slots, Poles, ypole, ...
         ycoil, yshoegap, xyoke, xcoil, xshoebase, xshoegap, 'NStators', 2, 'NSlots', 7);
     
     

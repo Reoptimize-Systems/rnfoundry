@@ -34,7 +34,7 @@ function [results, design] = prescribedmotresfun_linear_mvgarm(T, Y, design, sim
 %         results.FLoss = -results.FaddA(:,4);
 %     end
     
-    design.xAmax = max(abs(Y(:,design.phases+1)));
-    design.vRmax = max(abs(results.vT - Y(:,design.phases+2)));
+    design.xAmax = max(abs(Y(:,design.Phases+1)));
+    design.vRmax = max(abs(results.vT - Y(:,design.Phases+2)));
 
 end

@@ -24,7 +24,7 @@ function [design, simoptions] = finfun_ACPMSM(design, simoptions)
 %         design.FieldDirection = 1;
 %     end
 
-    design = setfieldifabsent(design, 'PowerPoles', design.poles(1));
+    design = setfieldifabsent(design, 'PowerPoles', design.Poles(1));
     
     design = setfieldifabsent(design, 'InnerStructureBeamVars', []);
     

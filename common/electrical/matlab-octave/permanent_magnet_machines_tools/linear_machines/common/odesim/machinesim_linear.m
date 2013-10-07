@@ -30,9 +30,9 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv] = machinesim_linear(desig
 %       half period of the flux linkage waveform. The displacement over the
 %       half period should be normalised to the domain 0 to 1.
 %
-%   phases - scalar number of phases in the machine armature.
+%   Phases - scalar number of Phases in the machine armature.
 %
-%   PowerPoles - scalar value of the number active poles in the machine
+%   PowerPoles - scalar value of the number active Poles in the machine
 %       armature.
 %
 % simoptions must contain at least the following fields:
@@ -53,7 +53,7 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv] = machinesim_linear(desig
 % The following arguments are then:
 %
 % Icoils - A vector of values of the the coil current, should be the same
-%   length as the number of phases in the machine.
+%   length as the number of Phases in the machine.
 % 
 % xBh - The displacement of the prime mover (typically a buoy) in the
 %   vertical (heave) direction.

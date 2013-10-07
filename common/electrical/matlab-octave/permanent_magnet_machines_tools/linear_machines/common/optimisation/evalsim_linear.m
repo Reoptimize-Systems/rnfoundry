@@ -32,7 +32,7 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         
         % in this case we will do a preliminary simulation of the machine
         % moving with a fixed speed for a displacement of a set number of
-        % poles, to determine whether to bother with the main simulation or
+        % Poles, to determine whether to bother with the main simulation or
         % just to process the score based on the preliminary results to
         % avoid wasting computer time.
         if ~isempty(simoptions.simfun)
@@ -65,7 +65,7 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         presimoptions.forcefcnargs = {};
         presimoptions.finfun = simoptions.evaloptions.presimfinfun;
         
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'presimIC', zeros(1, design.phases));
+        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'presimIC', zeros(1, design.Phases));
         presimoptions.IC = simoptions.evaloptions.presimIC;
         
         presimoptions = rmiffield(presimoptions, {'events', 'abstol', 'maxstep', 'splitode'});

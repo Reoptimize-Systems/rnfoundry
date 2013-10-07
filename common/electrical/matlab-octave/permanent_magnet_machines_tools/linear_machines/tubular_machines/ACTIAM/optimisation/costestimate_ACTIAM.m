@@ -16,18 +16,18 @@ function [cost, design] = costestimate_ACTIAM(design, options, buoymass)
     design.wlength = design.CoilTurns * pi * 2 * (design.Ri + (design.Hc / 2));
     
     % Determine the copper cost based on the length of wire in a coil
-    % multiplied by the number of phases and armature poles and the wire
+    % multiplied by the number of Phases and armature Poles and the wire
     % cross-sectional area etc.
-    design.CopperMass = design.phases * design.wlength * (pi* (design.Dc/2)^2) ...
-                        * design.poles(2) * options.CopperDensity;
+    design.CopperMass = design.Phases * design.wlength * (pi* (design.Dc/2)^2) ...
+                        * design.Poles(2) * options.CopperDensity;
     design.CopperCost = design.CopperMass * options.CopperCost;
     
     % Now calculate the total cost of the magnets
-    design.MagnetMass = design.poles(1) * design.Wm * pi * (design.Rm.^2 - design.Rso^2)*options.MagnetDensity;
+    design.MagnetMass = design.Poles(1) * design.Wm * pi * (design.Rm.^2 - design.Rso^2)*options.MagnetDensity;
     design.MagnetCost = design.MagnetMass * options.MagnetCost;
     
     % Calculate the cost of the laminated iron in the armature
-    design.ArmatureIronMass = design.poles(2) * design.Wp * pi * (design.Ra.^2 - design.Ro.^2) * options.ArmatureIronDensity;
+    design.ArmatureIronMass = design.Poles(2) * design.Wp * pi * (design.Ra.^2 - design.Ro.^2) * options.ArmatureIronDensity;
     design.ArmatureIronCost = design.ArmatureIronMass * options.ArmatureIronCost;
     
     % Calculate the cost of the back iron on the field, i.e. the steel
@@ -39,12 +39,12 @@ function [cost, design] = costestimate_ACTIAM(design, options, buoymass)
     end
     
     design.FieldIronMass = (design.Ws * pi * (design.Rm^2 - design.Rso^2) - cavityvol) ...
-                           * design.poles(1) * options.FieldIronDensity;
+                           * design.Poles(1) * options.FieldIronDensity;
     design.FieldIronCost = design.FieldIronMass * options.FieldIronCost;
     
     % Calculate the cost of the shaft
     design.ShaftMass = (((design.supportLengths(1,2) + design.supportLengths(1,2)) * pi * (design.Rso^2 - design.Rsi^2)) ...
-                        + design.poles(1) * design.Wp * pi * (design.Rso^2 - design.Rsi^2))...
+                        + design.Poles(1) * design.Wp * pi * (design.Rso^2 - design.Rsi^2))...
                         * options.StructMaterialDensity;
     design.shaftCost = design.ShaftMass * options.StructMaterialCost;
     

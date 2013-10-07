@@ -4,7 +4,7 @@
 % the AWS variables for this
 clear
 
-design.phases = 3;
+design.Phases = 3;
 design.Wp = 0.12;
 design.Wm = 0.8*design.Wp;
 design.hm = 0.015;
@@ -13,12 +13,12 @@ design.kw = 0.84;
 %Ns = 6; % ???
 design.Hc = 979000;
 %ht = 0.1;
-design.fillfactor = 0.585;
+design.CoilFillFactor = 0.585;
 design.g = 0.003; 
 design.ls = 0.5; 
 design.Dc = 0.005; 
 design.E = [200e9 151e9];
-design.Ws=design.Wp/design.phases;
+design.Ws=design.Wp/design.Phases;
 design.Wc=design.Ws/2; 
 design.Wt=design.Ws - design.Wc;
 design.ht=5*design.Wt;
@@ -26,7 +26,7 @@ design.hbf = design.hm;
 design.hba = design.hbf;
 
 % Number of turns
-%design.poles = [1 1];
+%design.Poles = [1 1];
 % design.Ntot = 400;
 design.RgVRc = 10;
 design.LgVLc = 0;
@@ -63,7 +63,7 @@ simoptions.finfun = @prescribedmotfinfun_PMSM;
 simoptions.odeevfun = @prescribedmotode_linear;
 simoptions.resfun = @prescribedmotresfun_linear;
 
-design.poles = [1, 1];
+design.Poles = [1, 1];
 options.targetPower = 10e3; % 10kW machine
 
 %% Test with buoy
@@ -95,12 +95,12 @@ simoptions.odeevfun = 'systemode_linear';
 simoptions.finfun = 'systemfinfun_PMSM';
 simoptions.resfun = 'systemresfun_linear'; 
 
-design.poles = [18, 6];
+design.Poles = [18, 6];
 
 %%
 
 simoptions.Lmode = 1;
-simoptions.IC = zeros(1,design.phases);
+simoptions.IC = zeros(1,design.Phases);
 simoptions.skip = 1;
 simoptions.Translator = 2;
 

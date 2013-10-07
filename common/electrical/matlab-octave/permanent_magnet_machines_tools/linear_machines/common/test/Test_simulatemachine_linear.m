@@ -4,7 +4,7 @@
 
 clear design
 
-design.phases = 3;
+design.Phases = 3;
 design.Wp = 0.12;
 design.Wm = 0.8*design.Wp;
 design.hm = 0.015;
@@ -13,12 +13,12 @@ design.kw = 0.84;
 %Ns = 6; % ???
 design.Hc = 979000;
 %ht = 0.1;
-design.fillfactor = 0.585;
+design.CoilFillFactor = 0.585;
 design.g = 0.003; 
 design.ls = 0.2; 
 design.Dc = 0.005; 
 design.E = [200e9 151e9];
-design.Wc=design.Wp/design.phases;
+design.Wc=design.Wp/design.Phases;
 design.Ws=design.Wc/2; 
 design.Wt=design.Wc/2;
 design.ht=5*design.Wt;
@@ -26,7 +26,7 @@ design.hbf = design.hm;
 design.hba = design.hbf;
 
 
-design.poles = [15 5];
+design.Poles = [15 5];
 design.RgVRc = 10;
 design.LgVLc = 0;
 
@@ -53,13 +53,13 @@ design.WcVTaup = 1/3;
 design.hcVgap = 0.95;
 design.Taup = 0.2;
 design.Ntot = 1000;
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.J = 0;
 
 design = ratios2dimensions_ACPMSM(design);
 
-design.phases = 3;
-design.poles = [10 30];
+design.Phases = 3;
+design.Poles = [10 30];
 design.Ntot = 1000;
 design.RgVRc = 10;
 design.LgVLc = 0;
@@ -72,7 +72,7 @@ mname = 'ACPMSM';
 
 clear design
 
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.1;
 design.g = 5/1000;
 design.Ri = design.Rm + design.g;
@@ -84,14 +84,14 @@ design.RaVRo = 1.025;
 design.RsoVRm = 0.1;
 design.RsiVRso = 0;
 design.WcVWp = 1/3;
-design.fillfactor = 0.65;
+design.CoilFillFactor = 0.65;
 %design.Dc = 1/1000;  % 1 mm diameter wire 
 design.Ntot = 500;
 design.mode = 2; 
 design.LgVLc = 0;
-design.poles = [10 30];
+design.Poles = [10 30];
 % design.FieldDirection = 1;
-% design.PowerPoles = poles(1);
+% design.PowerPoles = Poles(1);
 
 design = ratios2dimensions_ACTM(design);
 
@@ -109,7 +109,7 @@ simoptions.maxAllowedxT = 0.5;
 %% Test with linear motion
 
 speed = 1;
-simoptions.IC = zeros(1, design.phases);
+simoptions.IC = zeros(1, design.Phases);
 simoptions.skip = 1;
 simoptions.tspan = [0, 5];
 simoptions.drivetimes = 0:simoptions.tspan(2)/2:simoptions.tspan(2);
@@ -129,7 +129,7 @@ plotresultsproscribedmot_linear(T, Y, results, 1);
 
 %% Test with sinusoidal motion
 
-simoptions.IC = zeros(1, design.phases);
+simoptions.IC = zeros(1, design.Phases);
 simoptions.skip = 1;
 simoptions.xTperiod = 3;
 simoptions.xTamplitude = 1;

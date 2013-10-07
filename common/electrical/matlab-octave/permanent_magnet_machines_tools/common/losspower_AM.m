@@ -20,7 +20,7 @@ function [Pironloss, Pexteddy] = losspower_AM(design, simoptions, xR, vR)
 %
 % The design structure must contain the following fields:
 %
-%   PowerPoles - a scalar value of the number of poles involved in the iron
+%   PowerPoles - a scalar value of the number of Poles involved in the iron
 %     loss in the machine
 %
 %   NStages - the number of stages in a multistage machine

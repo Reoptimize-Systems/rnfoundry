@@ -15,7 +15,7 @@ function [results, design] = splitsystemresfun_linear(T, Y, design, simoptions, 
         % length
         design.minLongMemberPoles = ceil(design.minLongMemberLength ./ design.PoleWidth);
         % recalculate the length to reflect the quantized nature of the
-        % poles
+        % Poles
         design.minLongMemberLength = design.minLongMemberPoles * design.PoleWidth;
         % copy over the max experienced relative speed
         design.vRmax = results.vRmax;

@@ -1,16 +1,16 @@
-function [N, dc] = CoilTurns(area, fillfactor, dc)
+function [N, dc] = CoilTurns(area, CoilFillFactor, dc)
 % calculates the number of turns in an available area of coil
 % cross-section.
 %
 % Syntax
 %
-% [N, dc] = CoilTurns(area, fillfactor, dc)
+% [N, dc] = CoilTurns(area, CoilFillFactor, dc)
 %
 % Input:
 %   
 %   area - the total cross-sectional area of the coil in m^2
 %
-%   fillfactor - the fill factor of the coil
+%   CoilFillFactor - the fill factor of the coil
 %
 %   dc - the target conductor diameter in m, this may be modified to the
 %        closest that is actually possible
@@ -34,16 +34,16 @@ function [N, dc] = CoilTurns(area, fillfactor, dc)
     Ac = pi * (fulldc/2)^2;
     
     % determine if we can fit any turns in
-    if Ac > (area * fillfactor)
+    if Ac > (area * CoilFillFactor)
         % If we cannot, we must modify the conductor diameter until at
         % least one does. 
         N = 1;
         % Allow 1% for insulation, this calculation of dc will return a
         % value in m, so no need to convert back
-        dc = 0.99 * sqrt(4 * area * fillfactor / pi);
+        dc = 0.99 * sqrt(4 * area * CoilFillFactor / pi);
     else
         % If we can fit turns in, calculate how many
-        N = round((area * fillfactor) / Ac);
+        N = round((area * CoilFillFactor) / Ac);
     end
     
 end

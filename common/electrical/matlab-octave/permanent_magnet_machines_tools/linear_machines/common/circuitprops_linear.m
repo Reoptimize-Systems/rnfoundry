@@ -34,7 +34,7 @@ function [design, simoptions] = circuitprops_linear(design, simoptions)
 % The design matrix will be populated with new fields depending on it's
 % inital contents.
 % 
-% In all cases the field 'R' will be added which contains the phases
+% In all cases the field 'R' will be added which contains the Phases
 % resistance.
 %
 % If not present previously the fields 'Branches' and 'CoilsPerBranch' will

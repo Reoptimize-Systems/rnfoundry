@@ -3,11 +3,11 @@
 %
 
 design.StatorType = 'so';
-design.poles = 28;
-design.phases = 3;
-design.Qs = design.phases * 2 * 7;
+design.Poles = 28;
+design.Phases = 3;
+design.Qs = design.Phases * 2 * 7;
 design.yd = 1;
-design.thetap = 2*pi/design.poles;
+design.thetap = 2*pi/design.Poles;
 design.thetam = design.thetap * 0.8;
 design.thetac = (2*pi / design.Qs) * 0.8;
 design.thetasg = design.thetac * 0.5;

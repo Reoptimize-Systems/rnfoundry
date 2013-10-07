@@ -4,7 +4,7 @@ clear
 
 load PMSM_Test_Design.mat
 
-design.poles(2) = 2 * design.poles(2);
+design.Poles(2) = 2 * design.Poles(2);
 
 design.BeamSpreadFactor = 1;
 
@@ -46,7 +46,7 @@ for i = 1:size(IVars, 1)
 
     n_beams(i,1) = numbeams(span1(IVars(i,:), options.IMethod), ...
         design.PoleWidth, ...
-        design.poles(2) * design.PoleWidth, ...
+        design.Poles(2) * design.PoleWidth, ...
         design.BeamSpreadFactor);
 
     design.OuterStructureBeamVars = IVars(i,:);

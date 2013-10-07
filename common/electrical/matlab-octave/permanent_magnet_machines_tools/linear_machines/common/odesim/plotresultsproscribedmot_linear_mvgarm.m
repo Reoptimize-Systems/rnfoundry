@@ -57,10 +57,10 @@ function plotresultsproscribedmot_linear_mvgarm(T, Y, results, design, skip)
         skip = 1;
     end
     
-    Icoils = Y(:,1:design.phases);
+    Icoils = Y(:,1:design.Phases);
     
-    xA = Y(:,design.phases + 1);
-    vA = Y(:,design.phases + 2);
+    xA = Y(:,design.Phases + 1);
+    vA = Y(:,design.Phases + 2);
     
 %     
 %     % Get the Y-axis limits for the various plots
@@ -82,7 +82,7 @@ function plotresultsproscribedmot_linear_mvgarm(T, Y, results, design, skip)
 %     xlabel('Time (s)');%,'FontSize',20);
 %     legstr = {'xT : Drive/Translator Position, m'};
 % 
-%     if ycols > design.phases
+%     if ycols > design.Phases
 %         
 %         hold on
 %         
@@ -96,7 +96,7 @@ function plotresultsproscribedmot_linear_mvgarm(T, Y, results, design, skip)
 %         
 %     end
 %     
-%     if ycols > design.phases
+%     if ycols > design.Phases
 %         
 %         currentylim = [-1.1*max(abs(vA)), 1.1*max(abs(vA))];
 %         
@@ -106,7 +106,7 @@ function plotresultsproscribedmot_linear_mvgarm(T, Y, results, design, skip)
 %     addaxis(T(:), results.vT, [min(currentylim(1), -1.1*max(results.vT)), max(currentylim(2), 1.1*max(results.vT))], '-r');
 %     addaxislabel(2,'Velocity, ms^{-1}');
 % 
-%     if ycols > design.phases
+%     if ycols > design.Phases
 %        
 %         addaxisplot(T(:), vA, 2, '-b');
 %         

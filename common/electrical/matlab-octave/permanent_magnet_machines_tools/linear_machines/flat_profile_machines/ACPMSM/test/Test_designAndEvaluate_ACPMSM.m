@@ -13,14 +13,14 @@ design.WcVTaup = 1/3;
 design.HcVgap = 0.95;
 design.Taup = 0.2;
 design.CoilTurns = 1000;
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.J = 0;
 
 design = ratios2dimensions_ACPMSM(design);
 
 design.AngleFromHorizontal = pi/2;
-design.phases = 3;
-design.poles = 5;
+design.Phases = 3;
+design.Poles = 5;
 design.CoilTurns = 1000;
 design.RgVRc = 10;
 design.LgVLc = 0;

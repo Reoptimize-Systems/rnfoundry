@@ -4,12 +4,12 @@ function plotsystemscene_TM(design, simoptions, xB, yB, yT, maxyT, yOffset, xOff
         mwscale = 1;
     end
     
-    hTrans = design.Wp * design.poles(1);
+    hTrans = design.Wp * design.Poles(1);
     
     if isfield(design, 'minArmLength')
         hArm = design.minArmLength;
     else
-        hArm = design.poles(2) * design.Wp;
+        hArm = design.Poles(2) * design.Wp;
     end
     
     wArm = mwscale * design.Ra - design.Ri;

@@ -14,11 +14,11 @@ design.WcVWp = 1/3;
 design.RgVRc = 1;
 design.LgVLc = 0.1;
 design.CoilTurns = 1000;
-design.fillfactor = 0.55;
+design.CoilFillFactor = 0.55;
 design.Rm = 0.15; 
 design.Wp = design.WpVRm * design.Rm;
 design.Ro = design.RoVRm .* design.Rm;
-design.poles = 50;
+design.Poles = 50;
 design.mode = 2; 
 
 % Test with linear motion

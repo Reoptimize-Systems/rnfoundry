@@ -141,7 +141,7 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
     vBh = x(2);
     xBs = x(3);
     vBs = x(4);
-    Iphases = x(5:4+design.phases);
+    Iphases = x(5:4+design.Phases);
     
     Icoils = Iphases ./ design.Branches;
 
@@ -162,13 +162,13 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
 
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(5:4+design.phases,1) = circuitode_linear(Iphases, EMF, design);
+    dx(5:4+design.Phases,1) = circuitode_linear(Iphases, EMF, design);
     
     % determine the forces due to the magnets and electrical forces at
     % the relative position xR with the current values of J. Forces are
     % fitted to a 1m stack length, so we adjust for this by multiplying by
     % ls, the actual stack length in m
-    %Ffea = sum(intbpolyshearforce_AC(design, J, pos)) .* design.poles(1);
+    %Ffea = sum(intbpolyshearforce_AC(design, J, pos)) .* design.Poles(1);
 
     % Calculate the drag forces on the translator
     % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;

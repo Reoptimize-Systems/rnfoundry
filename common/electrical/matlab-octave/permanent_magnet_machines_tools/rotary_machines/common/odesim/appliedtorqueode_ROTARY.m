@@ -11,7 +11,7 @@ function [dx, varargout] = appliedtorqueode_ROTARY(t, x, design, simoptions, tor
     
     % Change the x members into more useful variables names, MATLAB will
     % optimise away any memory penalty associated with this I think    
-    Iphases = x(3:(2+design.phases));
+    Iphases = x(3:(2+design.Phases));
     
     Icoils = Iphases ./ design.Branches;
     
@@ -24,7 +24,7 @@ function [dx, varargout] = appliedtorqueode_ROTARY(t, x, design, simoptions, tor
     
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(3:(2+design.phases),1) = circuitode_linear(Iphases, EMF, design);
+    dx(3:(2+design.Phases),1) = circuitode_linear(Iphases, EMF, design);
      
     % call the supplied additional force function
     [FaddE, ForceBD] = ...

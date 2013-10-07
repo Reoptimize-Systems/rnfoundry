@@ -21,10 +21,10 @@ function [score, design] = machinescore_TM(design, simoptions)
 
     % Calculate the mass of the shaft
     design.ShaftMass = (((design.supportLengths(1,2) + design.supportLengths(1,2)) * pi * (design.Rso^2 - design.Rsi^2)) ...
-                        + design.poles(1) * design.Wp * pi * (design.Rso^2 - design.Rsi^2))...
+                        + design.Poles(1) * design.Wp * pi * (design.Rso^2 - design.Rsi^2))...
                         * simoptions.evaloptions.StructMaterialDensity;
                     
-    design.massT = design.poles(1) * (steelWeight + magWeight) + design.ShaftMass;
+    design.massT = design.Poles(1) * (steelWeight + magWeight) + design.ShaftMass;
 
     % Need to multiply the machine cost by the number of machines
     simoptions.evaloptions.nmachines = simoptions.NoOfMachines;

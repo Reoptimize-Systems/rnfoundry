@@ -17,11 +17,11 @@ design.tsb = 0.025;
 design.tsg = design.tsb;
 design.ty = 0.15;
 
-design.poles = 28;
-design.phases = 3;
-design.Qs = design.phases * 2 * 7;
+design.Poles = 28;
+design.Phases = 3;
+design.Qs = design.Phases * 2 * 7;
 design.yd = 1;
-slotsperpole = design.slots / design.poles;
+slotsperpole = design.slots / design.Poles;
 design.taucs = 0.8 * design.taupm / slotsperpole;
 % design.taucs = 0.333 * design.taupm;
 
@@ -36,7 +36,7 @@ design.Wc = design.taucs;
 design.tausgm = design.Wc * 0.3;
 
 design.Dc = design.taumm / 100;
-design.fillfactor = 0.7;
+design.CoilFillFactor = 0.7;
 
 design.CoilTurns = 250;
 

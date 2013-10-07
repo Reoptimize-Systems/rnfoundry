@@ -9,9 +9,9 @@ function weight = apoleweight_ACPMSM(design, evaloptions)
     wlength = design.CoilTurns * rectcoilmtl(design.ls, design.bp, (design.Taup - design.bp) / 2);
     
     % Determine the copper weight based on the length of wire in a coil
-    % multiplied by the number of phases and armature poles and the wire
+    % multiplied by the number of Phases and armature Poles and the wire
     % cross-sectional area etc.
-    weight = design.phases * wlength * (pi* (design.Dc/2)^2) * evaloptions.CopperDensity;
+    weight = design.Phases * wlength * (pi* (design.Dc/2)^2) * evaloptions.CopperDensity;
     
     weight = weight * 9.81;
 

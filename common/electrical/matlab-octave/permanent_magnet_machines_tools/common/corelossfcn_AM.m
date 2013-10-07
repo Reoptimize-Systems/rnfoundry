@@ -13,12 +13,12 @@ function P = corelossfcn_AM(v, x, hxslm, cxslm, exslm)
 %   x - relative position of the machine parts
 %
 %   hxslm - slm object fitted to the hysteresis loss function over two
-%     poles
+%     Poles
 %
 %   cxslm - slm object fitted to the eddy current loss function over two
-%     poles
+%     Poles
 %
-%   exslm - slm object fitted to the excess loss function over two poles
+%   exslm - slm object fitted to the excess loss function over two Poles
 %
 %
 % Output

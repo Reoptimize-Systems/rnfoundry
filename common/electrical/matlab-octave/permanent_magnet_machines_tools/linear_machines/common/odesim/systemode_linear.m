@@ -142,7 +142,7 @@ function varargout = systemode_linear(t, x, design, simoptions)
     xBs = x(3);
     vBs = x(4);
     
-    Iphases = x(5:4+design.phases);
+    Iphases = x(5:4+design.Phases);
     
     Icoils = Iphases ./ design.Branches;
 
@@ -185,7 +185,7 @@ function varargout = systemode_linear(t, x, design, simoptions)
 
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(5:4+design.phases,1) = circuitode_linear(Iphases, EMF, design);
+    dx(5:4+design.Phases,1) = circuitode_linear(Iphases, EMF, design);
     
     % Calculate the drag forces on the translator
     % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;

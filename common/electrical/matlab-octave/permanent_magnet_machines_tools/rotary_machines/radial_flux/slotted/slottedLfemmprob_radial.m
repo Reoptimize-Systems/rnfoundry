@@ -37,13 +37,13 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
                                      choosemesharea_mfemm(design.tc, design.Rcm*design.thetac, 1/40)  );
     Inputs.CoilRegionMeshSize = choosemesharea_mfemm(design.tc, design.Rcm*design.thetac);
     Inputs.Tol = 1e-5;
-    Inputs.NSlots = 2*design.phases;
+    Inputs.NSlots = 2*design.Phases;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
     FemmProblem = Inputs.FemmProblem;
     
-    slotsperpole = design.Qs / design.poles;
+    slotsperpole = design.Qs / design.Poles;
     
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
@@ -158,7 +158,7 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
     
     % draw the stator slots for all stages
     [FemmProblem, yokenodeids, coillabellocs] = radialfluxstator2dfemmprob( ...
-        design.Qs, design.poles, Rs, design.thetap, design.thetac, ...
+        design.Qs, design.Poles, Rs, design.thetap, design.thetac, ...
         design.thetasg, design.ty, design.tc, design.tsb, design.tsg, drawnstatorsides, ...
         'NWindingLayers', Inputs.NWindingLayers, ...
         'FemmProblem', FemmProblem, ...

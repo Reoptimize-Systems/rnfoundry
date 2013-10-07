@@ -1,7 +1,7 @@
 function BeamInfo = completebeaminfo_PMSM(design, options)
 
-    design.NInnerPoles = design.poles(1);
-    design.NOuterPoles = design.poles(2);
+    design.NInnerPoles = design.Poles(1);
+    design.NOuterPoles = design.Poles(2);
     
     BeamInfo.StructSides = design.sides;
     

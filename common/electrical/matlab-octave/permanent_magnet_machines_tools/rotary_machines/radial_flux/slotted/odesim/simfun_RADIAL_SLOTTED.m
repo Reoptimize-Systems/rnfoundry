@@ -18,7 +18,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %   q = qc
 %   Qs = Qc
 %
-% yp - Average coil pitch as defined by (Qs/poles)
+% yp - Average coil pitch as defined by (Qs/Poles)
 % yd - Actual coil pitch as defined by round(yp) +/- k
 % Qs  -  number of stator slots
 % Qc  -  number of winding coils
@@ -30,48 +30,15 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 % qcd  -  denominator of qc
 
     design.Hc = design.tc;
-        
-    % number of slots per pole and phase
-    if ~isfield(design, 'qc')
-        design.qc = fr(design.Qs, design.phases * design.poles);
-    else
-        [design.Qs,~] = rat(design.qc * design.phases * design.poles);
-    end
     
-    % get the pitch of a whole slot in radians
-    design.thetas = (2*pi / design.Qs);
-    
-    % slot pitch at the mean slot height
-    design.tausm = design.thetas * design.Rcm;
-    
-    % get the numerator and denominator of qc
-    [design.qcn,design.qcd] = rat(design.qc);
-    
-    % Average coil pitch as defined by (Qs/poles)
-    design.yp = fr(design.Qs, design.poles);
-    
-    % get the numerator and denominator of the coil pitch in slots
-    [design.ypn,design.ypd] = rat(design.yp);
-    
-    % calculate the actual coil pitch in slots if not supplied
-    if ~isfield(design, 'yd')
-        if design.ypd == 1
-            % the coil pitch in slots will be the same as the numerator of
-            % yp, being an integral slot winding
-            design.yd = design.ypn;
-        else
-            error('You must specify the coil pitch in fractional slot windings.')
-        end
-    end
+    % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
+    % winding slot
+    design.Wc = design.thetac * design.Rcm;
     
     if design.ypd ~= 1 && design.ypd ~= 2
     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
     end
 
-    % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
-    % winding slot
-    design.Wc = design.thetac * design.Rcm;
-    
     if ~isfield(design, 'CoreLoss')
         % CoreLoss will be the armature back iron data
         [design.CoreLoss.fq, ...
@@ -96,8 +63,6 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     design.FirstSlotCenter = 0;
     design.feapos = linspace(0, 1, nfeapos);
 
-%     design = corelosssetup(design, feapos);
-
     design.intAdata.slotPos = [];
     design.intAdata.slotIntA = [];
     design.intBdata.slotPos = [];
@@ -106,13 +71,13 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     femfilename = [tempname, '_simfun_TORUS_SLOTTED.fem'];
     
     % determine a unit vector pointing in the direction normal to the air
-    % gap half way between the poles for the purpose of extracting the
+    % gap half way between the Poles for the purpose of extracting the
     % air-gap closing forces
     [gvector(1), gvector(2)] = pol2cart(design.thetap,1);
     gvector = unit(gvector);
     
     % determine a unit vector pointing in the direction tangential to the
-    % radius half way between the poles for the purpose of extracting
+    % radius half way between the Poles for the purpose of extracting
     % the cogging forces
     %
     % The dot product of orthogonal vectors is zero. In two dimensions the
@@ -127,7 +92,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         
     for i = 1:numel(design.feapos)
 
-        % Draw the sim 
+        % Draw the sim, i.e by creating the FemmProblem structure
         [design.FemmProblem, design.outermagsep, design.coillabellocs, design.yokenodeids] = ...
                             slottedfemmprob_radial(design, ...
                                 'StatorType', design.StatorType, ...
@@ -201,7 +166,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
             design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
                                          coggingvector);
 
-            design.coggingforce(i) = design.coggingforce(i) * design.poles(1);
+            design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
             
             % explicitly call the delete method on the solution
             delete(solution);

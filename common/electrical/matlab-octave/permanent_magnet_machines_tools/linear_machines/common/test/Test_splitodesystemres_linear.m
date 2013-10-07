@@ -4,7 +4,7 @@ clear
 % First we need some plausible machine variables for testing, we will use
 % the AWS variables for this
 
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.1;
 design.g = 5/1000;
 design.Ri = design.Rm + design.g;
@@ -16,12 +16,12 @@ design.RaVRo = 1.025;
 design.RsoVRm = 0.1;
 design.RsiVRso = 0;
 design.WcVWp = 1/3;
-design.fillfactor = 0.65;
+design.CoilFillFactor = 0.65;
 %design.Dc = 1/1000;  % 1 mm diameter wire 
 design.Ntot = 500;
 design.mode = 2; 
 design.LgVLc = 0;
-design.poles = [10 30];
+design.Poles = [10 30];
 design.RgVRc = 10;
 
 design = ratios2dimensions_ACTM(design);
@@ -42,14 +42,14 @@ simoptions.maxAllowedEMFpeak = [];
 % set the other simulation parameters 
 
 % The maximum allowed translator length, this is a hard limit, not
-% determined by a penalty. The number of poles in the design will be
+% determined by a penalty. The number of Poles in the design will be
 % modified if exceeded
 simoptions.maxAllowedTLength = 5;
 simoptions.maxAllowedxT = inf;
 % determines method used to calculate inductance
 simoptions.Lmode = 1;
 % the initial values of xA, vA and the initial currents in the coils at t=0
-simoptions.IC = [0, 0, zeros(1, design.phases)];
+simoptions.IC = [0, 0, zeros(1, design.Phases)];
 % the number of calculations to skip when producing output after the ode
 % solver finishes
 simoptions.skip = 1;

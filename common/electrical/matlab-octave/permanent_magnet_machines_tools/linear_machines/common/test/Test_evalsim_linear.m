@@ -1,6 +1,6 @@
 % Test_evalsim_linear
 
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of Phases in machine
 design.Rm = 0.1;
 design.g = 5/1000;
 design.Ri = design.Rm + design.g;
@@ -12,21 +12,21 @@ design.RaVRo = 1.025;
 design.RsoVRm = 0.1;
 design.RsiVRso = 0;
 design.WcVWp = 1/3;
-design.fillfactor = 0.65;
+design.CoilFillFactor = 0.65;
 %design.Dc = 1/1000;  % 1 mm diameter wire 
 design.Ntot = 500;
 design.mode = 2; 
 design.LgVLc = 0;
-design.poles = [10 30];
+design.Poles = [10 30];
 % design.FieldDirection = 1;
-% design.PowerPoles = poles(1);
+% design.PowerPoles = Poles(1);
 design.RgVRc = 10;
 design.mu_fT = 0;
 design.massT = 0;
 
 design = ratios2dimensions_ACTM(design);
 
-design.PoleWeight = (pi * (design.Rm - design.Rsi)^2 * design.Wp * 7500) + (pi * (design.Ra - design.Ri)^2 * design.Wp * 8600 * design.fillfactor);
+design.PoleWeight = (pi * (design.Rm - design.Rsi)^2 * design.Wp * 7500) + (pi * (design.Ra - design.Ri)^2 * design.Wp * 8600 * design.CoilFillFactor);
 
 
 simoptions.simfun = 'systemsimfun_ACTM';

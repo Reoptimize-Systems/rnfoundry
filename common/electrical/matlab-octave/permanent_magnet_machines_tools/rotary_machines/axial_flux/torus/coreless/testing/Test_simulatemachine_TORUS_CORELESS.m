@@ -14,21 +14,21 @@ Npoles = 400;
 design.NPhaseCoils = Npoles;
 design.RgVRc = 0.1;
 design.LgVLc = 0;
-design.phases = 3;
+design.Phases = 3;
 
 design.taupm = (pi * (design.Rmo + design.Rmi)) / Npoles;
 design.taumm = 0.85 * design.taupm;
 design.tausm = design.taupm / 3;
 design.tauco = 0.95 * design.tausm;
 design.tauci = 0.05 * design.tauco;
-design.taupcg = design.phases * 2 * design.tausm;
+design.taupcg = design.Phases * 2 * design.tausm;
 design.Dc = design.taumm / 1000;
-design.fillfactor = 0.8;
+design.CoilFillFactor = 0.8;
 design.Rco = design.Rmo + 0.01*design.Rmo;
 design.Rci = 0.99*design.Rmi;
 design.Hc = design.tc;
 design.Wc = (design.tauco - design.tauci) / 2;
-[design.CoilTurns, design.Dc] = CoilTurns(design.Hc * design.Wc, design.fillfactor, design.Dc);
+[design.CoilTurns, design.Dc] = CoilTurns(design.Hc * design.Wc, design.CoilFillFactor, design.Dc);
 
 design.tm = 0.15 * design.taumm;
 design.tbi = 0.05;
@@ -52,7 +52,7 @@ simoptions = simsetup_ROTARY(design, 'simfun_TORUS_CORELESS', 'finfun_TORUS_CORE
 
                             
 simoptions.reltol = 1e-4;
-simoptions.PhaseCurrentTols = repmat(0.001, 1, design.phases);
+simoptions.PhaseCurrentTols = repmat(0.001, 1, design.Phases);
 simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 10000;
 
 [T, Y, results, design, simoptions] = simulatemachine_AM(design, ...
