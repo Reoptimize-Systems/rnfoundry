@@ -1,10 +1,13 @@
+function mexlsei_setup(forcef2clibrecompile)
 % This file contains the procedure for building the mexlsei function from
 % scratch. Not every step in this file may be necessary as some will likely
 % have been performed already, such as steps 2 and 3. 
 % 
 
 % optional settings
-forcef2clibrecompile = true;
+if nargin < 1
+    forcef2clibrecompile = false;
+end
 
 %% 1. Change to the installation directory (where this file is)
 % you may need to do this manually if mexlsei_setup is not on the path
@@ -14,75 +17,86 @@ cd(rootdir);
 
 %% 2. Build the f2c lib which must be included
 
-% if forcef2clibrecompile
-    
-    temp = pwd;
-    
-    cd(fullfile(pwd, 'c', 'libf2c'));
-    
-    % get the local machine architecture
-    machine = computer('arch');
-    
-    if strcmp(machine,'win32')
-        
-        % To compile use Visual C++ Express Edition 2008
-        % Open the visual studio 2008 Command prompt and run the
-        % following
-        %
-        % > nmake -f makefile.vc32
-        
-        libfilename = 'vcf2c.lib';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            fprintf(1, 'Manual steps are required for win32 f2c lib compilation');
-            break;
-        end
-        
-    elseif strcmp(machine , 'mingw32-i686')
-        
-        libfilename = 'libf2cmingw32x86.a';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            % compile using gcc
-            system('make -f makefile.u');
-        end
-        
-    elseif strcmp(machine, 'win64')
-        
-        % To compile use Visual C++ Express Edition 2008
-        % Open the visual studio Cross-Tools x64 Command prompt and run the
-        % following
-        %
-        % > nmake -f makefile.vc64
-        libfilename = 'vc64f2c.lib';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            fprintf(1, 'Manual steps are required for win64 f2c lib compilation');
-            break;
-        end
-        
-    elseif strcmp(machine,'glnxa64') || strcmp(machine, 'gnu-linux-x86_64')
-        
-        libfilename = 'libf2cx64.a';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            % compile using gcc on 64 bit platform
-            system('make -f makefile.lx64');
-        end
-        
-    elseif strcmp(machine,'glnx86')
-        
-        libfilename = 'libf2cx86.a';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            % compile using gcc
-            system('make -f makefile.lx86');
-        end
-        
-    end
-    
-    % Move the library file to the directory above
-    libfiledir = fullfile(rootdir, 'c');
-    movefile(libfilename, libfiledir);
+temp = pwd;
 
-    cd(temp);
+cd(fullfile(pwd, 'c', 'libf2c'));
+
+% get the local machine architecture
+machine = computer('arch');
+
+% Put the library file to the directory above
+libfiledir = fullfile(rootdir, 'c');
+
+if strcmp(machine,'win32')
+
+    % To compile use Visual C++ Express Edition 2008
+    % Open the visual studio 2008 Command prompt and run the
+    % following
+    %
+    % > nmake -f makefile.vc32
+
+    libfilename = 'vcf2c.lib';
+    if ~exist(libfilename, 'file') || forcef2clibrecompile
+        fprintf(1, 'Manual steps are required for win32 f2c lib compilation');
+        return;
+    end
+
+elseif strcmp(machine , 'mingw32-i686')
+
+    libfilename = 'libf2cmingw32x86.a';
+    if ~exist(libfilename, 'file') || forcef2clibrecompile
+        % compile using gcc
+        system('make -f makefile.u');
+        movefile(libfilename, libfiledir);
+    end
+
+elseif strcmp(machine, 'win64')
+
+    % To compile use Visual C++ Express Edition 2008
+    % Open the visual studio Cross-Tools x64 Command prompt and run the
+    % following
+    %
+    % > nmake -f makefile.vc64
+    libfilename = 'vc64f2c.lib';
+    if ~exist(libfilename, 'file') || forcef2clibrecompile
+        fprintf(1, 'Manual steps are required for win64 f2c lib compilation');
+        return;
+    end
+
+elseif strcmp(machine,'glnxa64') || strcmp(machine, 'gnu-linux-x86_64')
+
+    % see if libf2c is installed as a system library 
+    [~,ldconfout] = system('ldconfig -p | grep libf2c');
+
+    libfilename = 'libf2cx64.a';
+    if (isempty(ldconfout) && ~exist(libfilename, 'file')) || forcef2clibrecompile
+        % compile using gcc on 64 bit platform
+        system('make -f makefile.lx64');
+        movefile(libfilename, libfiledir);
+    elseif ~isempty(ldconfout)
+        libfilename = 'libf2c';
+        libfiledir = '';
+    end
+
+elseif strcmp(machine,'glnx86')
+
+    % see if libf2c is installed as a system library 
+    [~,ldconfout] = system('ldconfig -p | grep libf2c');
+
+    libfilename = 'libf2cx86.a';
+    if (isempty(ldconfout) && ~exist(libfilename, 'file'))  || forcef2clibrecompile
+        % compile using gcc
+        system('make -f makefile.lx86');
+        movefile(libfilename, libfiledir);
+    elseif ~isempty(ldconfout)
+        libfilename = 'libf2c';
+        libfiledir = '';
+    end
+
+end
+
+cd(temp);
     
-% end
 
 %% 3. Convert the fortran code files into a single C file dlsei.c using
 %% f2c
