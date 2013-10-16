@@ -318,7 +318,12 @@ ylabel('Phase Currents (A)')
 % but many other time series results are supplied in the results output
 % structure
 results
-% and summary results added to the design structure
+% for example, the machine phase EMFs
+figure; plot(T, results.EMF);
+xlabel('Time (s)');
+ylabel('Phase EMFs (V)')
+
+% and summary results are also added to the design structure
 design
 
 
