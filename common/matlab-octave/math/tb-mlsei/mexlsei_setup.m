@@ -19,7 +19,6 @@ cd(rootdir);
 
 temp = pwd;
 
-cd(fullfile(pwd, 'c', 'libf2c'));
 
 % get the local machine architecture
 machine = computer('arch');
@@ -37,6 +36,7 @@ if strcmp(machine,'win32')
 
     libfilename = 'vcf2c.lib';
     if ~exist(libfilename, 'file') || forcef2clibrecompile
+        cd(fullfile(pwd, 'c', 'libf2c'));
         fprintf(1, 'Manual steps are required for win32 f2c lib compilation');
         return;
     end
@@ -46,6 +46,7 @@ elseif strcmp(machine , 'mingw32-i686')
     libfilename = 'libf2cmingw32x86.a';
     if ~exist(libfilename, 'file') || forcef2clibrecompile
         % compile using gcc
+        cd(fullfile(pwd, 'c', 'libf2c'));
         system('make -f makefile.u');
         movefile(libfilename, libfiledir);
     end
@@ -59,6 +60,7 @@ elseif strcmp(machine, 'win64')
     % > nmake -f makefile.vc64
     libfilename = 'vc64f2c.lib';
     if ~exist(libfilename, 'file') || forcef2clibrecompile
+        cd(fullfile(pwd, 'c', 'libf2c'));
         fprintf(1, 'Manual steps are required for win64 f2c lib compilation');
         return;
     end
@@ -70,6 +72,7 @@ elseif strcmp(machine,'glnxa64') || strcmp(machine, 'gnu-linux-x86_64')
 
     libfilename = 'libf2cx64.a';
     if (isempty(ldconfout) && ~exist(libfilename, 'file')) || forcef2clibrecompile
+        cd(fullfile(pwd, 'c', 'libf2c'));
         % compile using gcc on 64 bit platform
         system('make -f makefile.lx64');
         movefile(libfilename, libfiledir);
@@ -78,13 +81,14 @@ elseif strcmp(machine,'glnxa64') || strcmp(machine, 'gnu-linux-x86_64')
         libfiledir = '';
     end
 
-elseif strcmp(machine,'glnx86')
+elseif strcmp(machine,'glnx86') || strcmp(machine, 'gnu-linux-i686')
 
     % see if libf2c is installed as a system library 
     [~,ldconfout] = system('ldconfig -p | grep libf2c');
 
     libfilename = 'libf2cx86.a';
     if (isempty(ldconfout) && ~exist(libfilename, 'file'))  || forcef2clibrecompile
+        cd(fullfile(pwd, 'c', 'libf2c'));
         % compile using gcc
         system('make -f makefile.lx86');
         movefile(libfilename, libfiledir);
@@ -161,7 +165,7 @@ else
         './c/i1mach.c', ...
         './c/d1mach.c', ...
         ['-L"', libfiledir, '"'], ...
-        fullfile(libfiledir, libfilename), ...
+        ['-l', fullfile(libfiledir, libfilename)], ...
         '-v');
 end
 
