@@ -39,7 +39,7 @@ function reportandxls_RADIAL_SLOTTED(filename, varargin)
     strrepfile(reportname, '##1##', sprintf('%3.1f', simoptions.TargetPowerLoadMean/1e3)); % kW
     strrepfile(reportname, '##2##', sprintf('%3.1f', simoptions.RPM)); % RPM
 
-    if simoptions.RgVRc >= 40
+    if simoptions.RlVRp >= 40
         strrepfile(reportname, '##3##', 'High Efficiency'); % extra title string
     else
         strrepfile(reportname, '##3##', 'Low Efficiency'); % extra title string

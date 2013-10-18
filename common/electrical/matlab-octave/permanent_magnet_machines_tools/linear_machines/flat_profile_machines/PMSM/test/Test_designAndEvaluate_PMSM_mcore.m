@@ -28,7 +28,7 @@ design.hba = design.hbf;
 % Number of turns
 %design.Poles = [1 1];
 % design.Ntot = 400;
-design.RgVRc = 10;
+design.RlVRp = 10;
 design.LgVLc = 0;
 design.BeamSpreadFactor = 0.8;
 

@@ -4,7 +4,7 @@
 options.Phases = 3;
 % number of coils per pole and phase
 options.qc = fr(3,4*3);
-options.RgVRc = 10;
+options.RlVRp = 10;
 options.CoilFillFactor = 0.9;
 options.BranchFac = 0;
 options.ModuleFac = 0;

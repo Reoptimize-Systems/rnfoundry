@@ -24,7 +24,7 @@ design.CoilTurns = 500;
 % set the mode of the design
 design.mode = 2;
 % Ratio of grid resistance to machine resistance
-design.RgVRc = 10; 
+design.RlVRp = 10; 
 % ratio of grid inductance to machine inductance
 design.LgVLc = 0;
 % set the number of Poles in each part to 1 as we will be multiplying up

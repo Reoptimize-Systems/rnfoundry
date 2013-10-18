@@ -1,10 +1,10 @@
-function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RgVRc)
+function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlVRp)
 % generates tables of performance data a multiple speed and load points for
 % a slotted radial flux machine design
 %
 % Syntax
 %
-% [ptables] = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RgVRc)
+% [ptables] = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlVRp)
 %
 % Input
 %
@@ -12,7 +12,7 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RgV
 %
 %   rpm - vector of rpm values
 %
-%   RgVRc - vector of load resistance to phase resistance ratios
+%   RlVRp - vector of load resistance to phase resistance ratios
 %
 % Output
 %
@@ -34,6 +34,6 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RgV
     simoptions.resfun = 'prescribedmotresfun_ROTARY';
     
     % call the common radial performance tables function
-    ptables = performancetables_RADIAL(design, simoptions, rpm, RgVRc, outfields);
+    ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields);
     
 end

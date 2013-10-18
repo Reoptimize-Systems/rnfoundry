@@ -33,7 +33,7 @@ mname = 'ACTM';
 
 %% Set up Common Parameters
 
-design.RgVRc = 10;
+design.RlVRp = 10;
 
 simoptions.Lmode = 0;
 simoptions.NoOfMachines = 1;

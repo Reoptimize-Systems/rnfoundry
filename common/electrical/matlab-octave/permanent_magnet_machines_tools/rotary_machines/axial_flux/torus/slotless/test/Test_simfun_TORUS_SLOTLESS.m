@@ -39,7 +39,7 @@ design.MagnetMaterial = 'NdFeB 32 MGOe';
 design.BackIronMaterial = '1117 Steel';
 design.CoilMaterial = '36 AWG';
 
-design.RgVRc = 10;
+design.RlVRp = 10;
 
 simoptions = struct;
 simoptions.GetVariableGapForce = false;

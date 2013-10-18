@@ -26,7 +26,7 @@ function [design, simoptions] = chrom2design_TORUS_SLOTLESS(simoptions, Chrom, v
 %                    0.8,   0.99;   % 13. RbiVRmi
 %                    0.1,   0.9;    % 14. RmiVRmo
 %                    0.5,   3.0;    % 15. Rmo
-%                    0.5,   15.0;   % 16. RgVRc
+%                    0.5,   15.0;   % 16. RlVRp
 %                    0.2,   0.85;   % 17. kfill
 %                    0,     1;      % 18. DcAreaFac
 %                    5,     50;     % 19. pole pairs
@@ -39,7 +39,7 @@ function [design, simoptions] = chrom2design_TORUS_SLOTLESS(simoptions, Chrom, v
     options.Phases = 3;
     % number of coils per pole and phase
     options.qc = fr(3,3);
-    options.RgVRc = 10;
+    options.RlVRp = 10;
     options.CoilFillFactor = 0.86;
     options.BranchFac = 0;
     options.ModuleFac = 0;
@@ -53,7 +53,7 @@ function [design, simoptions] = chrom2design_TORUS_SLOTLESS(simoptions, Chrom, v
     design.CoilFillFactor = options.CoilFillFactor;
     design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
-    design.RgVRc = options.RgVRc;
+    design.RlVRp = options.RlVRp;
     design.ModuleFac = options.ModuleFac;
     
     % convert machine ratios to actual dimensions

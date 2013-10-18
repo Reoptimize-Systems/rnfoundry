@@ -22,7 +22,7 @@ design.AngleFromHorizontal = pi/2;
 design.Phases = 3;
 design.Poles = 5;
 design.CoilTurns = 1000;
-design.RgVRc = 10;
+design.RlVRp = 10;
 design.LgVLc = 0;
 % 
 % % Get the dimensionless ratios from the parameters

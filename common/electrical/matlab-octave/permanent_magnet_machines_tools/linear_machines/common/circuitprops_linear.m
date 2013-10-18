@@ -13,7 +13,7 @@ function [design, simoptions] = circuitprops_linear(design, simoptions)
 % structure must contain the following fields:
 % 
 %   CoilResistance - resistance of a single coil winding
-%   RgVRc - ratio of coil resistance to grid/load resistance
+%   RlVRp - ratio of coil resistance to grid/load resistance
 %
 % design can also optionally contain the following fields:
 %

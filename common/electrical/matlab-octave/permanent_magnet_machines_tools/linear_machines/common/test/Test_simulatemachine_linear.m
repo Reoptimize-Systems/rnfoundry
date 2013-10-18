@@ -27,7 +27,7 @@ design.hba = design.hbf;
 
 
 design.Poles = [15 5];
-design.RgVRc = 10;
+design.RlVRp = 10;
 design.LgVLc = 0;
 
 % Get the dimensionless ratios from the parameters
@@ -61,7 +61,7 @@ design = ratios2dimensions_ACPMSM(design);
 design.Phases = 3;
 design.Poles = [10 30];
 design.Ntot = 1000;
-design.RgVRc = 10;
+design.RlVRp = 10;
 design.LgVLc = 0;
 
 % set up the functions
@@ -100,7 +100,7 @@ mname = 'ACTM';
 
 %% Set up Common Parameters
 
-design.RgVRc = 10;
+design.RlVRp = 10;
 
 simoptions.Lmode = 0;
 simoptions.NoOfMachines = 1;

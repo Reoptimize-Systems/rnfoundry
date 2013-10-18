@@ -1,10 +1,10 @@
-function [ptables] = performancetables_ROTARY(design, simoptions, rpm, RgVRc, outfields)
+function [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields)
 % generates tables of performance data a multiple speed and load points for
 % a rotary machine design
 %
 % Syntax
 %
-% [ptables] = performancetables_ROTARY(design, simoptions, rpm, RgVRc, outfields)
+% [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields)
 %
 % Input
 %
@@ -12,7 +12,7 @@ function [ptables] = performancetables_ROTARY(design, simoptions, rpm, RgVRc, ou
 %
 %   rpm - vector of rpm values
 %
-%   RgVRc - vector of load resistance to phase resistance ratios
+%   RlVRp - vector of load resistance to phase resistance ratios
 %
 %   outfields - optional cell array of strings containing field names from
 %     the simulation output design array which will be added to the same
@@ -76,11 +76,11 @@ function [ptables] = performancetables_ROTARY(design, simoptions, rpm, RgVRc, ou
     
     for rpmind = 1:numel(rpm)
         
-        for RgVRcind  = 1:numel(RgVRc)
+        for RgVRcind  = 1:numel(RlVRp)
             
             simoptions.RPM = rpm(rpmind);
-            simoptions.RgVRc = RgVRc(RgVRcind);
-            design.RgVRc = RgVRc(RgVRcind);
+            simoptions.RlVRp = RlVRp(RgVRcind);
+            design.RlVRp = RlVRp(RgVRcind);
             simoptions.abstol = [];
             
             % simulate the machine

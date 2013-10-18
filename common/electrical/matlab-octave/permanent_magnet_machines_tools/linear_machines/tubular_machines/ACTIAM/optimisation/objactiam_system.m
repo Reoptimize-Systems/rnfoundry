@@ -25,7 +25,7 @@ function ObjVal = objactiam_prototype(Chrom, rtn_type)
 % Author:     Richard Crozier
 % History:    11.05.2010
 %
-%  WpVRm, RoVRi, RaVRo, RiVRm, WcVWp, RgVRc, kfill, Dc, Rs2VHmag, Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs
+%  WpVRm, RoVRi, RaVRo, RiVRm, WcVWp, RlVRp, kfill, Dc, Rs2VHmag, Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs
 
    Dim = 12;
 
@@ -45,7 +45,7 @@ function ObjVal = objactiam_prototype(Chrom, rtn_type)
       else
 
          % lower and upper bound, identical for all n variables
-%                   WpVRm      RoVRi      RaVRo    RiVRm    WcVWp    RgVRc    kfill     Dc         Rs2VHmag,    Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs
+%                   WpVRm      RoVRi      RaVRo    RiVRm    WcVWp    RlVRp    kfill     Dc         Rs2VHmag,    Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs
          ObjVal = [ 0.05,      1.05,     1.005,    1.001,    0.1,     0.5,     0.2,   0.5/1000,      0.10,        0.01,      0.10,      0.01;...
                     2.00,      3.00,     1.500,    1.100,    1/3,    15.0,    0.65,    1,            0.95,        0.99,      0.95,      0.99];%,                15];
       end
@@ -79,7 +79,7 @@ function ObjVal = objactiam_prototype(Chrom, rtn_type)
            design.RiVRm = Chrom(i,4);
            design.WcVWp = Chrom(i,5);
            %design.Rm = Chrom(i,8);
-           design.RgVRc = Chrom(i,6);
+           design.RlVRp = Chrom(i,6);
            design.CoilFillFactor = Chrom(i,7);
            design.Dc = Chrom(i,8);
            design.Rs2VHmag = Chrom(i,9);

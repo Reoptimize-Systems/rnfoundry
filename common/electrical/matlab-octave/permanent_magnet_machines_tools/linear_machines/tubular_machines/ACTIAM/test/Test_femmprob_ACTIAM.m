@@ -23,7 +23,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -62,7 +62,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -99,7 +99,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -139,7 +139,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -178,7 +178,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -218,7 +218,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -257,7 +257,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -297,7 +297,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -336,7 +336,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -376,7 +376,7 @@ design.CoilFillFactor = 0.55;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 
@@ -417,7 +417,7 @@ design.CoilTurns = 100;
 design.Dc = 0.5/1000;        % 1 mm diameter wire 
 design.mode = 2;
 design.LgVLc = 0;
-design.RgVRc = 10; % Ratio of machine resistance to grid resistance
+design.RlVRp = 10; % Ratio of machine resistance to grid resistance
 
 design.Poles = [1 1];
 

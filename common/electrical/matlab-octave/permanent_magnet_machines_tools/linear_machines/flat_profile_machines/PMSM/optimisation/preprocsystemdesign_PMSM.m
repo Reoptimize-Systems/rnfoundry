@@ -27,7 +27,7 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
     design.lsVWp = Chrom(1,7);
     design.gVhm = Chrom(1,8);
     design.Wp = Chrom(1, 9);
-    design.RgVRc = Chrom(1,10);
+    design.RlVRp = Chrom(1,10);
     design.CoilFillFactor = Chrom(1,11);
     design.DcAreaFac = Chrom(1,12);
     

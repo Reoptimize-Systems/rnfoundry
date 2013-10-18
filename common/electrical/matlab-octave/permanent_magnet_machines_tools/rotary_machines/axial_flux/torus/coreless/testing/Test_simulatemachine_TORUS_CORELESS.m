@@ -12,7 +12,7 @@ design.Rmo = 10;
 design.Rmi = 9.5;  
 Npoles = 400;
 design.NPhaseCoils = Npoles;
-design.RgVRc = 0.1;
+design.RlVRp = 0.1;
 design.LgVLc = 0;
 design.Phases = 3;
 

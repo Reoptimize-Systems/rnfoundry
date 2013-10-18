@@ -30,7 +30,7 @@ design.ty = 2 * design.tbi;
 [design.CoilTurns, design.Dc] = CoilTurns(design.Hc * design.Wc, design.CoilFillFactor, design.Dc);
 
 design.NPhaseCoils = Npoles;
-design.RgVRc = 0.1;
+design.RlVRp = 0.1;
 design.LgVLc = 0;
 design.Phases = 3;
 design.Branches = 7;

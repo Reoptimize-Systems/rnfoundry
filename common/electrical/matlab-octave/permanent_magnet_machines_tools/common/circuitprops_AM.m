@@ -13,7 +13,7 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
 % design structure must contain the following fields:
 % 
 %   CoilResistance - resistance of a single coil winding
-%   RgVRc - ratio of coil resistance to grid/load resistance
+%   RlVRp - ratio of coil resistance to grid/load resistance
 %
 % design can also optionally contain the following fields:
 %
@@ -104,15 +104,15 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
     design.PhaseResistance = design.CoilsPerBranch .* design.CoilResistance ./ design.Branches;
     design.PhaseInductance = design.CoilsPerBranch .* design.CoilInductance ./ design.Branches;
         
-    if isfield(design, 'RgVRc') 
+    if isfield(design, 'RlVRp') 
         
         % calculate the grid resistance based on the desired resistance ratio
         % if supplied
-        design.GridResistance = design.PhaseResistance * design.RgVRc;
+        design.LoadResistance = design.PhaseResistance * design.RlVRp;
         
-    elseif ~isfield(design, 'GridResistance')
+    elseif ~isfield(design, 'LoadResistance')
         
-        error('You must supply either a GridResistance value or a ratio of grid resistance to phase resistance.')
+        error('You must supply either a LoadResistance value or a ratio of grid resistance to phase resistance.')
         
     end
     
@@ -128,10 +128,10 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
     
     % determine the DC resistance at the base temperature 
     design.RDCPhase = diag(design.PhaseResistance);
-    design.RLoad = diag(repmat(design.GridResistance, size(design.PhaseResistance)));
+    design.RLoad = diag(repmat(design.LoadResistance, size(design.PhaseResistance)));
     
-    if ~isfield(design, 'GridInductance')
-        design.GridInductance = 0;
+    if ~isfield(design, 'LoadInductance')
+        design.LoadInductance = 0;
     end
     
     if ~isfield(simoptions, 'Lmode')
@@ -148,9 +148,9 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
         
         % We are assuming no power factor correction, but a known grid
         % inductance (which can be zero)
-        design.GridInductance = design.PhaseInductance(1) * design.LgVLc;
+        design.LoadInductance = design.PhaseInductance(1) * design.LgVLc;
 
-        design.L = diag(repmat(design.PhaseInductance(1) + design.GridInductance, 1, design.Phases));
+        design.L = diag(repmat(design.PhaseInductance(1) + design.LoadInductance, 1, design.Phases));
 
         % the mutual inductance between Phases should be stored in the
         % second value in design.PhaseInductance, if more than one value is

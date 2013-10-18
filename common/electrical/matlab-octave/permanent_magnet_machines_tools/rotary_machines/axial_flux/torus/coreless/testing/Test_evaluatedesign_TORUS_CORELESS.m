@@ -82,7 +82,7 @@ design.tausupp = 40/1000;
 
 % tdiscsep = (2*design.g) + design.tc;
 % Ratio of load resistance to phase resistance
-design.RgVRc = 10;
+design.RlVRp = 10;
 % Ratio of load inductance to phase inductance
 design.LgVLc = 0;
 % Resistivity of wire at 20 deg Celcius

@@ -56,7 +56,7 @@ function ObjVal = objpmsm_machine(Chrom, rtn_type, simoptions, multicoredir)
                     1.0,   20.0;       %  7. lsVWp
                     0,     3.0;        %  8. gVhm
                     0.025, 0.4;        %  9. Wp
-                    0.5,   15.0;       % 10. RgVRc
+                    0.5,   15.0;       % 10. RlVRp
                     0.2,   0.65;       % 11. kfill
                     0,     1;          % 12. DcAreaFac
                     5,     200;        % 13. TransPoles 

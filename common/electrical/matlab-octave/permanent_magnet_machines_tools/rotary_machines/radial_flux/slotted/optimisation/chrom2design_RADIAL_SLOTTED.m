@@ -15,7 +15,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % number of coils per pole and phase
     options.qc = fr(3,3);
     % grid resistance to phase resistance ratio
-    options.RgVRc = 10;
+    options.RlVRp = 10;
     % coil fill factor
     options.CoilFillFactor = 0.65;
     % branch factor, determines number of parallel and series coils
@@ -46,7 +46,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     design.CoilFillFactor = options.CoilFillFactor;
     design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
-    design.RgVRc = options.RgVRc;
+    design.RlVRp = options.RlVRp;
     design.CoilLayers = options.CoilLayers;
 %     design.ModuleFac = options.ModuleFac;
     

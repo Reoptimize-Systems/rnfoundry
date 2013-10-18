@@ -34,7 +34,7 @@ function ObjVal = objactiam_machine(Chrom, rtn_type, simoptions, multicoredir)
                    1.001, 1.1;    %  6. RiVRm 
                    0.1,   1/3;    %  7. WcVWp
                    0.01,  1.0;    %  8. Rm
-                   0.5,   15.0;   %  9. RgVRc
+                   0.5,   15.0;   %  9. RlVRp
                    0.2,   0.65;   % 10. kfill
                    0,     1;      % 11. DcAreaFac
                    10,    200;    % 12. TransPoles 
