@@ -25,7 +25,7 @@ function ObjVal = objactm_system(Chrom, rtn_type, simoptions, options, multicore
 % Author:     Richard Crozier
 % History:    11.05.2010
 %
-%   WmVWp WpVRm RoVRi RaVRo RsoVRm RiVRm WcVWp Rm RgVRc kfill  Dc
+%   WmVWp WpVRm RoVRi RaVRo RsoVRm RiVRm WcVWp Rm RlVRp kfill  Dc
 
    Dim = 18;
    
@@ -47,7 +47,7 @@ function ObjVal = objactm_system(Chrom, rtn_type, simoptions, options, multicore
          numbuoys = buoynum2buoydata(simoptions.buoylibdir);
          
          % lower and upper bound, identical for all n variables 
-%                  WmVWp     WpVRm       RoVRi      RaVRo    RsoVRm    RiVRm    WcVWp     Rm      RgVRc    kfill     Dc       Rs2VHmag,    Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs,  TransPoles  bpoints  buoynum
+%                  WmVWp     WpVRm       RoVRi      RaVRo    RsoVRm    RiVRm    WcVWp     Rm      RlVRp    kfill     Dc       Rs2VHmag,    Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs,  TransPoles  bpoints  buoynum
          ObjVal = [ 0.05,     0.05,      1.005,     1.050,    0.01,    1.001,    0.1,     0.01,    0.5,     0.2,   0.5/1000,      0.01,        0.01,      0.01,      0.01,        10,       0,       1;...
                     0.95,     2.00,      3.000,     1.500,    0.975,   1.100,    1/3,     1.00,   15.0,    0.65,    1,            0.99,        0.99,      0.99,      0.99,       200,       5,    numbuoys];%,                15];
       end

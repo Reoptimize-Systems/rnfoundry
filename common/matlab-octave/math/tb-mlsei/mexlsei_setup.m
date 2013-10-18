@@ -46,11 +46,11 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
         end
 
     elseif strcmp(machine , 'mingw32-i686')
-
+        % is probably Octave on 32 bit windows
         libfilename = 'libf2cmingw32x86.a';
         if ~exist(libfilename, 'file') || forcef2clibrecompile
             % compile using gcc
-            system('make -f makefile.u');
+            system('mingw32-make -f makefile.u');
             movefile(libfilename, libfiledir);
         end
 

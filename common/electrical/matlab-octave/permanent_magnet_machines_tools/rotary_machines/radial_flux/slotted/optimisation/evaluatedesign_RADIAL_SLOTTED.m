@@ -213,19 +213,19 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     
     sdesign.EMFPhaseRms = sdesign.EMFPhasePeak  / sqrt(2);
     
-    sdesign.IPhasePeak = sdesign.EMFPhasePeak / (sdesign.PhaseResistance(1) + sdesign.GridResistance(1));
+    sdesign.IPhasePeak = sdesign.EMFPhasePeak / (sdesign.PhaseResistance(1) + sdesign.LoadResistance(1));
     sdesign.ICoilPeak = sdesign.IPhasePeak / sdesign.Branches;
     
     sdesign.IPhaseRms = sdesign.IPhasePeak / sqrt(2);
     sdesign.ICoilRms = sdesign.IPhaseRms / sdesign.Branches;
     
-    sdesign.PowerLoadMean = sdesign.IPhaseRms.^2 * sdesign.GridResistance * sdesign.Phases;
+    sdesign.PowerLoadMean = sdesign.IPhaseRms.^2 * sdesign.LoadResistance * sdesign.Phases;
     
     sdesign.JCoilRms = sdesign.ICoilRms / sdesign.ConductorArea;
     
     sdesign.JCoilPeak = sdesign.ICoilPeak / sdesign.ConductorArea;
     
-    sdesign.Efficiency = 0.9 * (sdesign.GridResistance / (sdesign.CoilResistance + sdesign.GridResistance));
+    sdesign.Efficiency = 0.9 * (sdesign.LoadResistance / (sdesign.CoilResistance + sdesign.LoadResistance));
     sdesign.TorqueRippleFactor = 0.2;
     sdesign.VoltagePercentTHD = 50;
     

@@ -70,7 +70,7 @@ function [results] = splitodeelectricalresults_AM(flag, design, simoptions, resu
     results.EMFPhasePeak = max([results.EMFPhasePeak; abs(phaseEMF)], [], 1);
 
     % Calculate the power output at each time step
-    GridPower = phaseCurrentSquared .* design.GridResistance * powermult;
+    GridPower = phaseCurrentSquared .* design.LoadResistance * powermult;
 
     % The integral of the energy dissipated in the load resistance,
     % i.e. the integral of the grid power

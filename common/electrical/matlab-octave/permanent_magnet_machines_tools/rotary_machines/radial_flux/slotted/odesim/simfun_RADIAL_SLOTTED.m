@@ -50,9 +50,19 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     
     [design, simoptions] = simfun_RADIAL(design, simoptions);
     
-    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', -1);
-    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'YokeRegionMeshSize', -1);
-    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'CoilRegionMeshSize', -1);
+    if design.tsg > 1e-5
+        if design.tsb > 1e-5
+            simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', choosemesharea_mfemm(max(design.tsg, design.tsb), (design.Rmo*design.thetasg), 1/20));
+        else
+            simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', choosemesharea_mfemm(design.tsb, (design.Rmo*design.thetasg), 1/20));
+        end
+    else
+        if design.tsb > 1e-5
+            simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', choosemesharea_mfemm(design.tsb, (design.Rmo*design.thetasg), 1/20));
+        else
+            simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', -1);
+        end
+    end
     
     % now get the flux linkage in the coils, we will do this by getting the
     % integral of the vector potential in a slot over a half pole of

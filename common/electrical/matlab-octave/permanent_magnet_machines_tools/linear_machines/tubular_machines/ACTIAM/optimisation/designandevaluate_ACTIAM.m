@@ -33,7 +33,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACTIAM(d
 %
 %   Rm - Translator radius in m
 %
-%   RgVRc - The apparent grid resistance to coil resistance ratio
+%   RlVRp - The apparent grid resistance to coil resistance ratio
 %
 %   kfill - the copper fill factor in the coil slots
 %

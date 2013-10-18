@@ -20,7 +20,7 @@ design.LgVLc = 0;
 design.Poles = [10 30];
 % design.FieldDirection = 1;
 % design.PowerPoles = Poles(1);
-design.RgVRc = 10;
+design.RlVRp = 10;
 design.mu_fT = 0;
 design.massT = 0;
 

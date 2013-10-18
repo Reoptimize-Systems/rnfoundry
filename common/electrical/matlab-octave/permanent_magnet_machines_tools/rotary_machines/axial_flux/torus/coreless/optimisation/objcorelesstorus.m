@@ -38,7 +38,7 @@ function ObjVal = objcorelesstorus(Chrom, rtn_type, simoptions, multicoredir)
                    0.1,   0.9;    % 10. RmiVRmo
                    0.5,   3.0;    % 11. Rmo
                    0,     0.3;    % 12. NBasicWindings
-                   0.5,   15.0;   % 13. RgVRc
+                   0.5,   15.0;   % 13. RlVRp
                    0.2,   0.85;   % 14. kfill
                    0,     1;      % 15. DcAreaFac
                    5,     50;     % 16. pole pairs

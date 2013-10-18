@@ -78,9 +78,9 @@ function [results, design] = systemresfun_ACTM(T, Y, design, simoptions)
     design.Ipeak = max(abs(Y(:,5)));
     design.EMFpeak = max(abs(results.EMF(:,1)));
     design.maxJ = max(abs(Y(:,5))) / design.conductorArea;
-    design.TotalGridEnergy = trapz(T, Y(:,5).^2 .* design.GridResistance) * design.Poles(1) * 3;
+    design.TotalGridEnergy = trapz(T, Y(:,5).^2 .* design.LoadResistance) * design.Poles(1) * 3;
     design.AverageEnergy = design.TotalGridEnergy ./ (max(T) - min(T));
-    design.GridMeanPower = mean(interp1(T, Y(:,5), 0:max(T)/(length(T)*2):max(T)).^2 * design.GridResistance) * design.Poles(1) * 3;
-    design.peakPower = max(Y(:,5).^2 .* design.GridResistance) * design.Poles(1) * 3;
+    design.GridMeanPower = mean(interp1(T, Y(:,5), 0:max(T)/(length(T)*2):max(T)).^2 * design.LoadResistance) * design.Poles(1) * 3;
+    design.peakPower = max(Y(:,5).^2 .* design.LoadResistance) * design.Poles(1) * 3;
 
 end

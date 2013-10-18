@@ -15,16 +15,16 @@
 </Properties>
 <Symbol>
   <Ellipse -30 -150 40 40 #000000 0 1 #c0c0c0 1 0>
-  <.PortSym -40 -130 1 0>
-  <Line -40 -130 10 0 #000080 2 1>
+  <Line -50 -130 20 0 #000080 2 1>
   <.ID -30 -106 HV "1=f=50=Base Frequency (primary harmonic)=Frequency" "1=V0=0=DC voltage component amplitude=Voltage" "1=V1=1=1st Harmonic Amplitude=Voltage" "1=V3=0.5=3rd Harmonic Amplitude=Voltage" "1=V5=0=5th Harmonic Amplitude=Voltage" "0=V7=0=7th Harmonic Amplitude=Voltage" "0=V9=0=9th Harmonic Amplitude=Voltage" "0=V11=0=11th Harmonic Amplitude=Voltage" "0=V13=0=13th Harmonic Amplitude=Voltage">
   <Ellipse -5 -145 30 30 #000000 0 1 #c0c0c0 1 0>
-  <.PortSym 50 -130 2 180>
-  <Line 40 -130 10 0 #000080 2 1>
+  <Line 40 -130 20 0 #000080 2 1>
   <Ellipse 20 -140 20 20 #000000 0 1 #c0c0c0 1 0>
-  <Line -35 -145 0 10 #aa0000 2 1>
   <Line -40 -140 10 0 #aa0000 2 1>
   <Line 40 -140 10 0 #aa0000 2 1>
+  <Line -35 -145 0 10 #aa0000 2 1>
+  <.PortSym -50 -130 1 0>
+  <.PortSym 60 -130 2 180>
 </Symbol>
 <Components>
   <Port P1 1 90 280 -54 4 1 1 "1" 1 "analog" 0>

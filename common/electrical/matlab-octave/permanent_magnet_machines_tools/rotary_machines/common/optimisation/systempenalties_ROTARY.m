@@ -15,7 +15,7 @@ function [score, design, simoptions] = systempenalties_ROTARY(design, simoptions
         
         if ~isempty(simoptions.addEfficiencyPenalty) && simoptions.addEfficiencyPenalty
             
-            optimiumEfficiency = design.RgVRc / (design.RgVRc + 1);
+            optimiumEfficiency = design.RlVRp / (design.RlVRp + 1);
 
             simoptions = setfieldifabsent(simoptions, 'EfficiencyPenFactor', [1, 0]);
 

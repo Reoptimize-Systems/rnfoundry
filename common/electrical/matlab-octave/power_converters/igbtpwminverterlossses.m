@@ -51,7 +51,7 @@ function [ Ptot, Pi, Pd, Pon, Poff, Prr ]= ...
 %
 %   mtype - (optional) scalar specifying modulation type, can be 0 or 1, if
 %     0 sine modulation is used, if 1, sine modulation with the third
-%     harmonic is used. Default is 1 is not supplied. An mtype of 1 can be
+%     harmonic is used. Default is 1 if not supplied. An mtype of 1 can be
 %     used for other modulation systems which also give 100% output
 %     voltage, such as bus clamping and vector modulation with good
 %     accuracy.

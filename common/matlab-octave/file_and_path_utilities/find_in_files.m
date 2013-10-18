@@ -116,7 +116,7 @@ function usages = searchfile(filename, exp)
                 tokenname ] = regexp(tline, exp);
 
             if ~isempty(matchstart)
-                usages = [ usages; {linenum, [name, ext], strrep(tline, sprintf('\n'), ''), matchstart, matchend} ];
+                usages = [ usages; {[name, ext], linenum, strrep(tline, sprintf('\n'), ''), matchstart, matchend} ];
             end
         else
             break;

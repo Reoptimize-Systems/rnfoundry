@@ -25,7 +25,7 @@ function ObjVal = objactm_fixedspeed(Chrom, rtn_type)
 % Author:     Richard Crozier
 % History:    11.05.2010
 %
-%   WmVWp WpVRm RoVRi RaVRo RsoVRm RiVRm WcVWp Rm RgVRc kfill  Dc
+%   WmVWp WpVRm RoVRi RaVRo RsoVRm RiVRm WcVWp Rm RlVRp kfill  Dc
 
    Dim = 16;
    
@@ -45,7 +45,7 @@ function ObjVal = objactm_fixedspeed(Chrom, rtn_type)
       else
          
          % lower and upper bound, identical for all n variables 
-%                  WmVWp     WpVRm       RoVRi      RaVRo    RsoVRm    RiVRm    WcVWp     Rm      RgVRc    kfill     Dc         Rs2VHmag,    Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs,  nBpoints
+%                  WmVWp     WpVRm       RoVRi      RaVRo    RsoVRm    RiVRm    WcVWp     Rm      RlVRp    kfill     Dc         Rs2VHmag,    Rs1VHmag, Ws2VhalfWs, Ws1VhalfWs,  nBpoints
          ObjVal = [ 0.05,     0.05,      1.005,     1.050,    0.01,    1.001,    0.1,     0.01,    0.5,     0.2,   0.5/1000,      0.05,        0.05,      0.05,      0.05,         0;...
                     0.95,     2.00,      3.000,     1.500,    0.975,   1.100,    1/3,     1.00,   15.0,    0.65,    1,            0.95,        0.95,      0.95,      0.95,        10];%,                15];
       end
@@ -74,7 +74,7 @@ function ObjVal = objactm_fixedspeed(Chrom, rtn_type)
            design.RiVRm = Chrom(i,6);
            design.WcVWp = Chrom(i,7);
            design.Rm = Chrom(i,8);
-           design.RgVRc = Chrom(i,9);
+           design.RlVRp = Chrom(i,9);
            design.CoilFillFactor = Chrom(i,10);
            design.Dc = Chrom(i,11);
            design.Rs2VHmag = Chrom(i,12);

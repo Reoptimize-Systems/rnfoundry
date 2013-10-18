@@ -22,7 +22,7 @@ design.Ntot = 500;
 design.mode = 2; 
 design.LgVLc = 0;
 design.Poles = [10 30];
-design.RgVRc = 10;
+design.RlVRp = 10;
 
 design = ratios2dimensions_ACTM(design);
 

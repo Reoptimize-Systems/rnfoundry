@@ -1,10 +1,10 @@
-function ptables = performancetables_RADIAL(design, simoptions, rpm, RgVRc, outfields)
+function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields)
 % generates tables of performance data a multiple speed and load points for
 % a radial flux rotary machine design
 %
 % Syntax
 %
-% ptables = performancetables_RADIAL(design, simoptions, rpm, RgVRc, outfields)
+% ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields)
 %
 % Input
 %
@@ -12,7 +12,7 @@ function ptables = performancetables_RADIAL(design, simoptions, rpm, RgVRc, outf
 %
 %   rpm - vector of rpm values
 %
-%   RgVRc - vector of load resistance to phase resistance ratios
+%   RlVRp - vector of load resistance to phase resistance ratios
 %
 %   outfields - optional cell array of strings containing field names from
 %     the simulation output design array which will be added to the same
@@ -51,6 +51,6 @@ function ptables = performancetables_RADIAL(design, simoptions, rpm, RgVRc, outf
         outfields = {};
     end
 
-    [ptables] = performancetables_ROTARY(design, simoptions, rpm, RgVRc, outfields);
+    [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields);
 
 end

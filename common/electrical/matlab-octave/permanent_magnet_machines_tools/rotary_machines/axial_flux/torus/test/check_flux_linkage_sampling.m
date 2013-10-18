@@ -26,7 +26,7 @@ design.tm = 0.15 * design.taumm;
 design.tbi = 0.045;
 
 design.NCoilsPerPhase = Npoles;
-design.RgVRc = 0.1;
+design.RlVRp = 0.1;
 design.LgVLc = 0;
 design.Phases = 1;
 

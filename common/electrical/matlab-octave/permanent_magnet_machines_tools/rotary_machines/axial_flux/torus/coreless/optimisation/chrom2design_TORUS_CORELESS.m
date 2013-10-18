@@ -32,7 +32,7 @@ function [design, simoptions] = chrom2design_TORUS_CORELESS(simoptions, Chrom, v
 %
 %    'ModuleFac' - 
 %
-%    'RgVRc' - Machine phase resistance to load resistance ratio. Defaults
+%    'RlVRp' - Machine phase resistance to load resistance ratio. Defaults
 %       to 10.
 % 
 %    'Maxtc' - Maximum allowed coil height (dimension tc). Designs which 
@@ -69,7 +69,7 @@ function [design, simoptions] = chrom2design_TORUS_CORELESS(simoptions, Chrom, v
 %                    0.8,   0.99;   %  9. RbiVRmi
 %                    0.1,   0.9;    % 10. RmiVRmo
 %                    0.5,   3.0;    % 11. Rmo
-%                    0.5,   15.0;   % 12. RgVRc
+%                    0.5,   15.0;   % 12. RlVRp
 %                    0.2,   0.85;   % 13. kfill
 %                    0,     1;      % 14. DcAreaFac
 %                    5,     50;     % 15. pole pairs
@@ -80,7 +80,7 @@ function [design, simoptions] = chrom2design_TORUS_CORELESS(simoptions, Chrom, v
     % number of coils per pole and phase
     options.qc = fr(1,4);
     % grid resistance to phase resistance ratio
-    options.RgVRc = 10;
+    options.RlVRp = 10;
     options.CoilFillFactor = 0.86;
     options.ModuleFac = 0;
     options.NStages = 1;
@@ -105,7 +105,7 @@ function [design, simoptions] = chrom2design_TORUS_CORELESS(simoptions, Chrom, v
     design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
     design.taucoVtaucsm = options.taucmoVtaucsm;
-    design.RgVRc = options.RgVRc;
+    design.RlVRp = options.RlVRp;
     design.ModuleFac = options.ModuleFac;
     design.NStages = options.NStages;
     

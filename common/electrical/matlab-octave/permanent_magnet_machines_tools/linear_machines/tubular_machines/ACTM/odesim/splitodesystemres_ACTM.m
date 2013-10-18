@@ -123,13 +123,13 @@ function results = splitodesystemres_ACTM(results, sol, design, simoptions)
 
         results.EMFpeak = max(results.EMFpeak, max(abs(temp.EMF(:,1))));
         
-        results.TotalGridEnergy = results.TotalGridEnergy + (trapz(sol.x, sol.y(5,:).^2 .* design.GridResistance) * design.Poles(1) * design.Phases);
+        results.TotalGridEnergy = results.TotalGridEnergy + (trapz(sol.x, sol.y(5,:).^2 .* design.LoadResistance) * design.Poles(1) * design.Phases);
         
-        GridPower = realpow(I,2) .* design.GridResistance .* design.Poles(1) .* design.Phases;
+        GridPower = realpow(I,2) .* design.LoadResistance .* design.Poles(1) .* design.Phases;
         results.GridPowersum = results.GridPowersum + sum(GridPower);
         results.GridPowern = results.GridPowern + numel(GridPower); 
         
-        results.peakPower = max(results.peakPower, max(sol.y(5,:).^2 .* design.GridResistance) * design.Poles(1) * design.Phases);
+        results.peakPower = max(results.peakPower, max(sol.y(5,:).^2 .* design.LoadResistance) * design.Poles(1) * design.Phases);
         
         %save(sprintf('splitode_test_%d.mat', results.block), 'sol', 'temp');
         

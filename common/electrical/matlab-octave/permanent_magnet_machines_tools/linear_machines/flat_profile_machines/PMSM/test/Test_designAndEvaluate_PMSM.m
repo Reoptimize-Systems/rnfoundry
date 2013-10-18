@@ -30,9 +30,9 @@ options.alphab = (ls + 2*bearingWidth) / ls;
 % Get the dimensionless ratios from the parameters
 [dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm] = dimensions2ratios_PMSM(lm, Taup, bp, g, hs, ls, bt, dc, hty, lm+g+hs+hsy);
 
-RgVRc = 10; % Ratio of machine resistance to grid resistance
+RlVRp = 10; % Ratio of machine resistance to grid resistance
 
-[out, design1] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RgVRc, kfill, lm, options);
+[out, design1] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RlVRp, kfill, lm, options);
 
 %%
 % Then do a stack length of 0.5 m
@@ -43,9 +43,9 @@ options.alphab = (ls + 2*bearingWidth) / ls;
 % Get the dimensionless ratios from the parameters
 [dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm] = dimensions2ratios_PMSM(lm, Taup, bp, g, hs, ls, bt, dc, hty, lm+g+hs+hsy);
 
-RgVRc = 10; % Ratio of machine resistance to grid resistance
+RlVRp = 10; % Ratio of machine resistance to grid resistance
 
-[out, design2] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RgVRc, kfill, lm, options);
+[out, design2] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RlVRp, kfill, lm, options);
 
 %% Original Design
 
@@ -58,9 +58,9 @@ options.alphab = (ls + 2*bearingWidth) / ls;
 % Get the dimensionless ratios from the parameters
 [dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm] = dimensions2ratios_PMSM(lm, Taup, bp, g, hs, ls, bt, dc, hty, lm+g+hs+hsy);
 
-RgVRc = 10; % Ratio of machine resistance to grid resistance
+RlVRp = 10; % Ratio of machine resistance to grid resistance
 
-[out, design3] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RgVRc, kfill, lm, options);
+[out, design3] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RlVRp, kfill, lm, options);
 
 %% Minimum Stack length
 ls = 0.1; 
@@ -70,6 +70,6 @@ options.alphab = (ls + 2*bearingWidth) / ls;
 % Get the dimensionless ratios from the parameters
 [dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm] = dimensions2ratios_PMSM(lm, Taup, bp, g, hs, ls, bt, dc, hty, lm+g+hs+hsy);
 
-RgVRc = 10; % Ratio of machine resistance to grid resistance
+RlVRp = 10; % Ratio of machine resistance to grid resistance
 
-[out, design_min_stack] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RgVRc, kfill, lm, options);
+[out, design_min_stack] = designandevaluate_PMSM(dgVlm, dtVdg, bpVlm, taupVbp, lsVbp, btVbc, dcVbs, dtiVdt, dbiVlm, RlVRp, kfill, lm, options);

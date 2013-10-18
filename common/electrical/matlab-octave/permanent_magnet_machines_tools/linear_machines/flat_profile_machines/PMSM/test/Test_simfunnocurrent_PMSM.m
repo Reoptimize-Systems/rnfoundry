@@ -26,7 +26,7 @@ design.hba = design.hbf;
 design.Poles = [10 40];
 design.CoilTurns = 400;
 
-design.RgVRc = 10;
+design.RlVRp = 10;
 design.LgVLc = 0;
 
 % Get the dimensionless ratios from the parameters

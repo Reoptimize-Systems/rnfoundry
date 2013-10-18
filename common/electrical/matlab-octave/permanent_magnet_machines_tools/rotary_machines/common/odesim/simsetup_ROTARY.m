@@ -1,20 +1,73 @@
 function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
+% sets up variables for a rotary machine dynamic simulation 
+%
+% Syntax
+%
+% simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
+%
+% Description
+%
+% simsetup_ROTARY is a helper function to assist with setting up a dynamic
+% simulation for a rotary permanent magnet machine simulation. The function
+% provides the correct data for fixed speed simualtions, and sets up
+% defaults for standard simulations. 
+%
+% In addition to velocity and time information for the simulation operate
+% on, default simulation functions are assigned, these defaults are:
+%
+% odeevfun = 'prescribedmotodetorquefcn_ROTARY';
+% resfun = 'prescribedmotresfun_ROTARY';
+% torquefcn = 'torquefcn_ROTARY';
+%
+% Usage is best demonstrated through some examples:
+%
+% Example 1 - setting up a fixed speed sim for 10 seconds at 15 rad/s
+%
+% simoptions = simsetup_ROTARY(design, simfun, finfun, 'AngularVelocity', 15, 'TSpan', [0 10])
+%
+% Example 2 - setting up a fixed speed sim for long enough to cover 100
+%   machine poles at 15 rad/s
+%
+% simoptions = simsetup_ROTARY(design, simfun, finfun, 'AngularVelocity', 15, 'PoleCount', 100)
+%
+% Example 3 - setting up a fixed speed sim for 10 seconds at 50 rpm
+%
+% simoptions = simsetup_ROTARY(design, simfun, finfun, 'rpm', 15, 'TSpan', [0 10])
+%
+% Example 4 - setting up a sim with speeds interpolated from a number of
+%   arbitrary speeds over time
+%
+% % This is achieved using the TAngularVelocity options, the same thing can
+% % be done with 'TRpm' and 'TRps' instead for the expected result. 
+%
+% t = linspace(0, 1, 10)
+% omega = [ 0, 1, 3, 7, 20, 20, 20, 21, 20, 20 ]
+% simoptions = simsetup_ROTARY(design, simfun, finfun, 'TSpan', t, 'TAngularVelocity', omega)
+%
+% 
+%
+% See Also: simulatemachine_AM.m
+%
+
+% Created by Richard Crozier 2013
 
     Inputs.Rpm = [];
     Inputs.Rps = [];
     Inputs.AngularVelocity = [];
-    Inputs.Velocity = [];
+    Inputs.TangentialVelocity = [];
+    Inputs.TangentialVelocityRadius = [];
+    Inputs.TTangentialVelocity = [];
     Inputs.TRpm = [];
     Inputs.TRps = [];
     Inputs.TAngularVelocity = [];
-    Inputs.TVelocity = [];
     Inputs.TSpan = [];
     Inputs.PoleCount = [];
-    Inputs.odeevfun = 'prescribedmotode_linear';
+    Inputs.odeevfun = 'prescribedmotodetorquefcn_ROTARY';
     Inputs.resfun = 'prescribedmotresfun_ROTARY';
-    Inputs.forcefcn = '';
-    Inputs.forcefcnargs = {};
+    Inputs.torquefcn = 'torquefcn_ROTARY';
+    Inputs.torquefcnargs = {};
     Inputs.simoptions = struct();
+    Inputs.RampPoles = [];
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -23,13 +76,15 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     % check only one option is supplied
     
     nopts = numel([Inputs.Rpm, Inputs.Rps, Inputs.TAngularVelocity, ...
-                   Inputs.Velocity, Inputs.TRpm, Inputs.TRps, ...
-                   Inputs.TVelocity]);
+                   Inputs.TRpm, Inputs.TRps, Inputs.TTangentialVelocity, ...
+                   Inputs.TangentialVelocity]);
+               
+    
           
     if nopts > 1
           
           error('SIMSETUP_ROTARY:inconsistentinput', ...
-              'You must only specify one of the options Rpm, Rps, AngularVelcity, Velocity, TRpm, TRps, TAngularVelocity, or TVelocity.');
+              'You must only specify one of the options Rpm, Rps, AngularVelcity, TangentialVelocity, TRpm, TRps, TAngularVelocity, or TTangentialVelocity.');
           
     elseif nopts < 1
         % No velocity options supplied use an omega of 1rad/s at the magnet
@@ -39,39 +94,36 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     
     
     if ~isempty(Inputs.Rpm)
-        
         Inputs.AngularVelocity = rpm2omega(Inputs.Rpm);
-        
     end
 
     if ~isempty(Inputs.Rps)
-        
         Inputs.AngularVelocity = rpm2omega(Inputs.Rps * 60);
-        
     end 
     
-%     if ~isempty(Inputs.AngularVelocity)
-%         
-%         % omega = 2 pi f
-%         % omega = 2 pi / T
-%         % 1/T = omega / (2 pi)
-%         % Rps = Inputs.AngularVelocity / (2 * pi)
-%         % Velocity = d / t
-%         
-%         % v = ( pi * 2 Rm ) / time
-%         % time for one rotation = 1 / Rps
-%         
-%         % v = ( pi * 2 Rm ) / (1 / Rps)
-%         
-%         % v = ( pi * 2 Rm ) * Rps
-%         
-%         % v = ( pi * 2 Rm ) * (Inputs.AngularVelocity / (2 * pi))
-%         
-%         % v = Rm * Inputs.AngularVelocity 
-%         
-%         Inputs.Velocity = Inputs.AngularVelocity * (design.Rmo + design.Rmi) / 2;
-%         
-%     end
+    if ~isempty(Inputs.TRpm)
+        Inputs.TAngularVelocity = rpm2omega(Inputs.TRpm);
+    end
+
+    if ~isempty(Inputs.TRps)
+        Inputs.TAngularVelocity = rpm2omega(Inputs.TRps * 60);
+    end
+    
+    if ~isempty(Inputs.TangentialVelocity) && isempty(Inputs.TangentialVelocityRadius)
+        error('You have used option ''TangentialVelocity'' without option ''TangentialVelocityRadius''')
+    elseif isempty(Inputs.TangentialVelocity) && ~isempty(Inputs.TangentialVelocityRadius)
+        error('You have used option ''TangentialVelocityRadius'' without option ''TangentialVelocity''')
+    elseif ~isempty(Inputs.TangentialVelocity) && ~isempty(Inputs.TangentialVelocityRadius)
+        Inputs.AngularVelocity = vel2rpm(Inputs.TangentialVelocity, Inputs.TangentialVelocityRadius);
+    end
+    
+    if ~isempty(Inputs.TTangentialVelocity) && isempty(Inputs.TangentialVelocityRadius)
+        error('You have used option ''TangentialVelocity'' without option ''TangentialVelocityRadius''')
+    elseif isempty(Inputs.TTangentialVelocity) && ~isempty(Inputs.TangentialVelocityRadius)
+        error('You have used option ''TangentialVelocityRadius'' without option ''TangentialVelocity''')
+    elseif ~isempty(Inputs.TTangentialVelocity) && ~isempty(Inputs.TangentialVelocityRadius)
+        Inputs.TAngularVelocity = vel2rpm(Inputs.TTangentialVelocity, Inputs.TangentialVelocityRadius);
+    end
     
     if ~isempty(Inputs.AngularVelocity)
         
@@ -90,71 +142,25 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     
         simoptions.omegaT = repmat(Inputs.AngularVelocity, 1, ninterppoints);
         
-        % v = dx / dt, so intrgrate to get the velocity
+    end
+       
+    % simulation is not specified as a single velocity of some kind
+    if ~isempty(Inputs.TAngularVelocity)
+
+        if ~samesize(Inputs.TSpan, Inputs.TAngularVelocity)
+            error('TSpan and TAngularVelocity must be the same size.')
+        end
+
+        simoptions.drivetimes = Inputs.TSpan(:);
+
+        simoptions.omegaT = Inputs.TAngularVelocity(:);
+
+    end
+    
+    
+    if isfield(simoptions, 'omegaT')
+        % v = dx / dt, so integrate to get the velocity
         simoptions.thetaT = cumtrapz(simoptions.drivetimes, simoptions.omegaT);
-        
-    else
-
-        % simulation is not specified as a single velocity of some kind
-
-%         if ~isempty(Inputs.TRpm)
-%             
-%             simoptions.drivetimes = Inputs.TRpm(:,1);
-% 
-%             % change rotations to distance
-%             Inputs.TAngularVelocity(:,2) = Inputs.TRpm(:,2) .* pi * (design.Rmo + design.Rmi);
-%             
-%             % change rotations per minute to velocity at mean magnet radius
-%             Inputs.TTAngularVelocity(:,3) = pi .* Inputs.TRpm(:,3) .* (design.Rmo + design.Rmi) / 60;
-%             
-%         end
-% 
-%         if ~isempty(Inputs.TRps)
-%             
-%             simoptions.drivetimes = Inputs.TRpm(:,1);
-% 
-%             % change rotations to distance
-%             Inputs.TVelocity(:,2) = Inputs.TRps(:,2) .* pi * (design.Rmo + design.Rmi);
-%             
-%             % change rotations per second to velocity at mean magnet radius
-%             Inputs.TVelocity(:,3) = pi .* Inputs.TRps(:,3) .* (design.Rmo + design.Rmi);
-%             
-%         end
-% 
-%         if ~isempty(Inputs.TAngularVelocity)
-%             
-%             simoptions.drivetimes = Inputs.TRpm(:,1);
-% 
-%             % change angle swept out to distance at mean magnet radius
-%             Inputs.TVelocity(:,2) = (design.Rmo + design.Rmi) * Inputs.TAngularVelocity(:,2) ./ 2;
-%             
-%             % change angular velocities to velocities at mean magnet radius
-%             Inputs.TVelocity(:,3) = Inputs.TAngularVelocity(:,3) .* (design.Rmo + design.Rmi) ./ 2;
-% 
-%         end
-% 
-%         if ~isempty(Inputs.TVelocity)
-%             
-%             if ~isfield(simoptions, 'drivetimes')
-%                 
-%                 simoptions.drivetimes = Inputs.TVelocity(:,1)';
-%                 
-%             end
-%             
-%             if ~(isvector(simoptions.drivetimes) && all(diff(simoptions.drivetimes)>0))
-%                 
-%                 error('SIMSETUP_ROTARY:baddrivetimes', ...
-%                     'The times supplied were not a monatonically increasing vector.');
-%                 
-%             end
-%             
-%             simoptions.xt = Inputs.TVelocity(:,2)';
-%             
-%             simoptions.vt = Inputs.TVelocity(:,3)';
-%             
-% 
-%         end
-        
     end
 
     if ~isfield(simoptions, 'odeevfun') || isempty(simoptions.odeevfun)
@@ -169,13 +175,40 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     if ~isfield(simoptions, 'finfun') || isempty(simoptions.finfun)
         simoptions.finfun = finfun;
     end
-    if ~isfield(simoptions, 'forcefcn') || isempty(simoptions.forcefcn)
-        simoptions.forcefcn = Inputs.forcefcn;
+    if ~isfield(simoptions, 'torquefcn') || isempty(simoptions.torquefcn)
+        simoptions.torquefcn = Inputs.torquefcn;
     end
-    if ~isfield(simoptions, 'forcefcnargs') || isempty(simoptions.forcefcnargs)
-        simoptions.forcefcnargs = Inputs.forcefcnargs;
+    if ~isfield(simoptions, 'torquefcnargs') || isempty(simoptions.torquefcnargs)
+        simoptions.torquefcnargs = Inputs.torquefcnargs;
     end
     
     simoptions.tspan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
+    
+    % if an initial ramp up in speed has been specified, construct it
+    if ~isempty(Inputs.RampPoles)
+        
+        % add a linear speed ramp up over the specified number of poles,
+        % typically to reduce the starting currents due to inductance
+        nramppoles = Inputs.RampPoles;
+        rampa = simoptions.omegaT(1)^2 / (2 * nramppoles * design.PoleWidth);
+        rampTmax = simoptions.omegaT(1) / rampa;
+        rampT = linspace(0, rampTmax, 15);
+        rampomegaT = rampa .* rampT;
+        rampthetaT = 0.5 * rampa .* rampT.^2;
+
+        simoptions.omegaT = [rampomegaT(1:end-1), simoptions.omegaT];
+        simoptions.thetaT = [rampthetaT(1:end-1), simoptions.thetaT + rampthetaT(end)];
+        simoptions.drivetimes = [rampT(1:end-1), simoptions.drivetimes + rampT(end)];
+
+        simoptions.tspan = simoptions.drivetimes([1, end]);
+
+        simoptions.maxstep = (simoptions.tspan(end) - simoptions.tspan(end-1)) / (40 * Inputs.RampPoles);
+        
+    end
+    
+    % construct a piecewise polynomial interpolation of the position
+    % and velocity data
+    simoptions.pp_thetaT = interp1(simoptions.drivetimes,simoptions.thetaT,'cubic','pp');
+    simoptions.pp_omegaT = interp1(simoptions.drivetimes,simoptions.omegaT,'cubic','pp');
 
 end

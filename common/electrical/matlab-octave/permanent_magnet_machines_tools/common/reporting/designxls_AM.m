@@ -56,7 +56,7 @@ function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow
         'Peak Phase EMF (V)', design.EMFPhasePeak(1), 'RMS Phase EMF (V)', design.EMFPhaseRms(1);         
         'Mean Exported Power (kW)', design.PowerLoadMean/1000, 'Peak Exported Power (kW)', design.PowerLoadPeak/1000;
         'Phase Inductance (mH)', design.PhaseInductance(1)*1000, 'Phase Resistance (Ohm)', design.PhaseResistance(1);
-        'Load Resistance ()hm)',  design.GridResistance, 'Load Inductance (H)', design.GridInductance;
+        'Load Resistance ()hm)',  design.LoadResistance, 'Load Inductance (H)', design.LoadInductance;
         'Peak Flux Linkage (Wb)', slmpar(design.slm_fluxlinkage, 'maxfun'), 'Efficiency', design.Efficiency;
         'Mean Winding Losses (kW)', design.PowerPhaseRMean/1000, 'Mean Iron Losses (kW)', PowerLossIronMean;
         'Mean Winding Eddy Losses (kW)', PowerLossEddyMean, 'Mean Input Power (kW)', design.PowerInputMean/1e3;

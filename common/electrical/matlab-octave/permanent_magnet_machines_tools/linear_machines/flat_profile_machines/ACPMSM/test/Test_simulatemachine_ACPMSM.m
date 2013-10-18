@@ -19,7 +19,7 @@ design = ratios2dimensions_ACPMSM(design);
 design.Phases = 3;
 design.Poles = [10 30];
 design.CoilTurns = 1000;
-design.RgVRc = 10;
+design.RlVRp = 10;
 design.LgVLc = 0;
 
 

@@ -65,7 +65,7 @@ simoptions.resfun = 'systemresfun_linear';
 
 %%
 
-design.RgVRc = 10; % Ratio of grid resistance to machine resistance
+design.RlVRp = 10; % Ratio of grid resistance to machine resistance
 
 [score, design, simoptions, T, Y, results] = designandevaluate_ACTM(design, simoptions, options);
 

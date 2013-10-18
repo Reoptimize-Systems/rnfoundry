@@ -40,8 +40,8 @@ designACTM = design;
 designACTM.Dc = 1/1000;
 [designACTM.Ntot, designACTM.Dc] = CoilTurns(designACTM.Hc * designACTM.Wc, design.CoilFillFactor, designACTM.Dc);
 designACTM.CoilResistance = designACTM.wlength * 1.68e-8  / (pi*(designACTM.Dc/2)^2);
-designACTM.GridResistance = designACTM.CoilResistance * 10;
-designACTM.R = designACTM.CoilResistance + designACTM.GridResistance;
+designACTM.LoadResistance = designACTM.CoilResistance * 10;
+designACTM.R = designACTM.CoilResistance + designACTM.LoadResistance;
 designACTM.L = designACTM.L .* designACTM.Ntot / design.Ntot;
 
 

@@ -25,7 +25,7 @@ design.tbi = 0.05;
 design.ty = 2 * design.tbi;
 
 design.NPhaseCoils = Npoles;
-design.RgVRc = 0.1;
+design.RlVRp = 0.1;
 design.LgVLc = 0;
 design.Phases = 3;
 

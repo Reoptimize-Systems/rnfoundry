@@ -28,13 +28,13 @@ function design = odeelectricalresults(T, Iphase, EMF, design, simoptions)
 
     if numel(T) > 1
         
-        design.EnergyLoadTotal = sum(trapz(T, realpow(Iphase,2) .* design.GridResistance) ...
+        design.EnergyLoadTotal = sum(trapz(T, realpow(Iphase,2) .* design.LoadResistance) ...
                                       * simoptions.NoOfMachines * design.NStages);
         
 %         design.EnergyLoadMean = design.EnergyLoadTotal ./ (max(T) - min(T));
         
         % calculate the power from the phase currents in the load
-        loadPower = sum(realpow(Iphase,2), 2) * design.GridResistance * design.NStages * simoptions.NoOfMachines;
+        loadPower = sum(realpow(Iphase,2), 2) * design.LoadResistance * design.NStages * simoptions.NoOfMachines;
 
         design.PowerLoadMean = contmean(T, loadPower);
         

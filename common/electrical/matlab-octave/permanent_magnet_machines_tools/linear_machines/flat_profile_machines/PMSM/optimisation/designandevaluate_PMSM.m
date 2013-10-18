@@ -35,7 +35,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_PMSM(des
 %
 %   dbiVlm - The Translator/Field back iron thickness to magnet thickness ratio 
 %
-%   RgVRc - The apparent grid resistance to coil resistance ratio
+%   RlVRp - The apparent grid resistance to coil resistance ratio
 %
 %   CoilFillFactor - the copper fill factor in the coil slots
 %

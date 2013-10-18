@@ -24,9 +24,9 @@ function [design, simoptions] = simfun_ROTARY(design, simoptions)
         simoptions.femmmeshoptions = struct();
     end
     
-    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'MagnetRegionMeshSize', -1);
-    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'BackIronRegionMeshSize', -1);
-    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'AirGapMeshSize', -1);
-    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'OuterRegionsMeshSize', [-1, -1]);
-
+    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'MagnetRegionMeshSize', choosemesharea_mfemm(design.tm, (design.Rmm*design.thetam), 1/10));
+    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'BackIronRegionMeshSize', choosemesharea_mfemm(min(design.tbi), 2*(design.Rbm*design.thetap), 1/10));
+    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'AirGapMeshSize', choosemesharea_mfemm(design.g, (design.Rmm*design.thetap), 1/10));
+    simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'OuterRegionsMeshSize', [choosemesharea_mfemm(design.tm, (design.Rbo*design.thetap), 1/5), -1]);
+    
 end
