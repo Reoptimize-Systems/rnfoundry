@@ -90,6 +90,11 @@ design.CoilFillFactor = 0.6;
 % "Dc" and the number of turns in the field "CoilTurns". In this case we
 % will specify the number of turns
 design.CoilTurns = 500;
+% The number of series coils, or parallel branches of coils in a phase is
+% controlled with the fields 'CoilsPerBranch' or 'Branches'. We must set
+% one or both of these fields. Here we will use all coils in series by
+% setting the number of branches to one. 
+design.Branches = 1;
 
 % Now set up actual dimensions of the machine components. There are
 % actually three different ways to do this. One is to specify the outer
@@ -279,6 +284,11 @@ design.PhaseInductance
 % several other useful things. Much of the extra information is intended
 % for use by the dynamic simulation functions the toolbox provides, and
 % isn't much use otherwise.
+
+% The finite element analysis performed is based on the mfemm toolbox. This
+% toolbox stores problems in structure, and the last problem is left in the
+% design stucture, so we can have a look at the geometry by plotting it
+plotfemmproblem(design.FemmProblem);
 
 %% Dynamic Simulation
 %
