@@ -1,16 +1,61 @@
 function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmprob(...
     slots, Poles, thetapole, thetacoil, thetashoegap, ryoke, rcoil, rshoebase, rshoegap, roffset, side, varargin)
-% draw internal parts of half a slotted stator
+% draw internal parts of a slotted stator for a radial flux machine
 %
 % Syntax
 %
 % [FemmProblem, outernodes, coillabellocs] = ...
-%       radialfluxstatorhalf2dfemmprob(slots, Poles, thetapole, thetacoil, thetashoegap, ...
-%       ryoke, rcoil, rshoebase, rshoegap, coillayers, side, varargin)
+%       radialfluxstatorhalf2dfemmprob( slots, Poles, thetapole, thetacoil, ...
+%                                       thetashoegap, ryoke, rcoil, rshoebase, ...
+%                                       rshoegap, coillayers, side, varargin )
 %
+%
+% Description
+%
+% radialfluxstatorhalf2dfemmprob creates or adds to an mfemm FemmProblem
+% structure, the internal parts of a radial flux slotted stator. The
+% 'internal parts' refer to the segments, nodes and labels making up the
+% teeth and coils, but not the outer part of the yoke of the machine, i.e.
+% the stator drawing is not closed at its edges. It is intended for
+% radialfluxstatorhalf2dfemmprob to be used by higher level drawing
+% functions which are draing the full radial flux machine geometry. 
+% 
+% radialfluxstatorhalf2dfemmprob is a flexible function designed to draw
+% any number of slots, but by default draws enough to create a drawing
+% covering two full magnetic poles if possible.
 %
 % Input
 %
+%  slots - total number of slots in the machine design (note this is
+%    different from the number of slots that will actually be drawn), used
+%    to determine the slots / poles ratio.
+%
+%  Poles - total number of magnetic poles in the machine design (note this
+%    is different from the number of poles that will actually be drawn),
+%    used to determine the slots / poles ratio.
+%
+%  thetapole - 
+%
+%  thetacoil - 
+%
+%  thetashoegap - 
+%
+%  ryoke - 
+%
+%  rcoil - 
+%
+%  rshoebase - 
+%
+%  rshoegap - 
+%
+%  roffset - 
+%
+%  In addition, a number of other optional arguments can be supplied and
+%  parameter-value pairs.
+%
+% Output
+%
+% 
 
     Inputs.NWindingLayers = 1;
     Inputs.FemmProblem = newproblem_mfemm('planar');
@@ -67,7 +112,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     
     % make a single slot
     [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs] = ...
-            internalslotnodelinks(thetacoil, thetashoegap, ryoke/2, rcoil, rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol);
+            internalslotnodelinks( thetacoil, thetashoegap, ryoke/2, rcoil, ...
+                                   rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol);
 
     coillabellocs = [];
     
@@ -242,9 +288,7 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
                                       'MaxSegDegrees', slotangles ./ 20 );
                                   
         else
-%             [FemmProblem, seginds] = ...
-%                 addsegments_mfemm(FemmProblem, thisslotcornernodes(2), lastslottopnodes(1));
-%             
+            
             slotangles = chordpoints2angle(FemmProblem.Nodes(thisslotcornernodes(3)+1).Coords(1), ...
                                        FemmProblem.Nodes(thisslotcornernodes(3)+1).Coords(2), ...
                                        FemmProblem.Nodes(lastslotcornernodes(2)+1).Coords(1), ...
@@ -267,10 +311,7 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
         % get the coil label location
         coillabellocs = [ coillabellocs; ...
                           thiscoillabellocs ];
-                      
-%                           coillabellocs(1:Inputs.NWindingLayers,1), ...
-%                           coillabellocs(1:Inputs.NWindingLayers,2) + slotpos(i) - slotpos(1)];
-        
+                           
     end
     
     % we will return the outer corner node ids for later use
