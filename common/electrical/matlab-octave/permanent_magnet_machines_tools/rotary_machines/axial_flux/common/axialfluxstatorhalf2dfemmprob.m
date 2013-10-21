@@ -62,18 +62,14 @@ function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmpro
     end
     
     % make a single slot
-    [nodes, links, cornernodes, shoelabelloc, shoegaplabelloc, coillabellocs] = ...
+    [nodes, links, cornernodes, shoegaplabelloc, coillabellocs] = ...
             internalslotnodelinks(ycoil, yshoegap, xyoke/2, xcoil, xshoebase, xshoegap, Inputs.NWindingLayers, Inputs.Tol);
     
     % we flip the node positions if we are drawing the left hand side
     if side == 'l'
         
         nodes(:,1) = -nodes(:,1);
-        
-        if ~isempty(shoelabelloc)
-            shoelabelloc(:,1) = -shoelabelloc(:,1);
-        end
-        
+
         if ~isempty(shoegaplabelloc)
             shoegaplabelloc(:,1) = -shoegaplabelloc(:,1);
         end
@@ -90,10 +86,6 @@ function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmpro
     
     % add the specified offset in the x direction
     nodes(:,1) = nodes(:,1) + xoffset;
-
-    if ~isempty(shoelabelloc)
-        shoelabelloc(:,1) = shoelabelloc(:,1) + xoffset;
-    end
 
     if ~isempty(shoegaplabelloc)
         shoegaplabelloc(:,1) = shoegaplabelloc(:,1) + xoffset;
@@ -124,19 +116,6 @@ function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmpro
     [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
         
     [FemmProblem, seginds] = addsegments_mfemm(FemmProblem, thisslotlinks(:,1), thisslotlinks(:,2));
-        
-    if ~isempty(shoelabelloc)
-        
-        % add the block labels for the shoes and gap
-        FemmProblem = addblocklabel_mfemm(FemmProblem, shoelabelloc(1,1), shoelabelloc(1,2) + slotpos(1), ...
-                                            'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                            'MaxArea', Inputs.ToothRegionMeshSize);
-
-        FemmProblem = addblocklabel_mfemm(FemmProblem, shoelabelloc(2,1), shoelabelloc(2,2) + slotpos(1), ...
-                                            'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                            'MaxArea', Inputs.ToothRegionMeshSize);
-    
-    end
     
     if ~isempty(shoegaplabelloc)
         FemmProblem = addblocklabel_mfemm(FemmProblem, shoegaplabelloc(1,1), shoegaplabelloc(1,2) + slotpos(1), ...
@@ -159,20 +138,6 @@ function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmpro
         [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
         
         [FemmProblem, seginds] = addsegments_mfemm(FemmProblem, thisslotlinks(:,1), thisslotlinks(:,2));
-        
-        % add the block labels for the shoes and gap
-        if ~isempty(shoelabelloc)
-        
-            % add the block labels for the shoes and gap
-            FemmProblem = addblocklabel_mfemm(FemmProblem, shoelabelloc(1,1), shoelabelloc(1,2) + slotpos(i), ...
-                                                'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                                'MaxArea', Inputs.ToothRegionMeshSize);
-
-            FemmProblem = addblocklabel_mfemm(FemmProblem, shoelabelloc(2,1), shoelabelloc(2,2) + slotpos(i), ...
-                                                'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                                'MaxArea', Inputs.ToothRegionMeshSize);
-    
-        end
         
         if ~isempty(shoegaplabelloc)
             

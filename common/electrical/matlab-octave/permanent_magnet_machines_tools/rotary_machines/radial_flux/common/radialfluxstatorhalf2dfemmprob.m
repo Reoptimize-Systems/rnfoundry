@@ -66,7 +66,7 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     elcount = elementcount_mfemm(FemmProblem);
     
     % make a single slot
-    [nodes, links, cornernodes, shoelabelloc, shoegaplabelloc, firstcoillabellocs] = ...
+    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs] = ...
             internalslotnodelinks(thetacoil, thetashoegap, ryoke/2, rcoil, rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol);
 
     coillabellocs = [];
@@ -76,10 +76,6 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     if strcmp(side, 'i')
         
         nodes(:,1) = -nodes(:,1);
-        
-        if ~isempty(shoelabelloc)
-            shoelabelloc(:,1) = -shoelabelloc(:,1);
-        end
         
         if ~isempty(shoegaplabelloc)
             shoegaplabelloc(:,1) = -shoegaplabelloc(:,1);
@@ -96,10 +92,6 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     
     % add the specified offset in the radial direction
     nodes(:,1) = nodes(:,1) + roffset;
-
-    if ~isempty(shoelabelloc)
-        shoelabelloc(:,1) = shoelabelloc(:,1) + roffset;
-    end
 
     if ~isempty(shoegaplabelloc)
         shoegaplabelloc(:,1) = shoegaplabelloc(:,1) + roffset;
@@ -133,9 +125,6 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     % transform the node locations to convert the rectangulr region to the
     % desired arced region 
     [nodes(:,1), nodes(:,2)] = pol2cart(nodes(:,2), nodes(:,1));
-    if ~isempty(shoelabelloc)
-        [shoelabelloc(:,1), shoelabelloc(:,2)] = pol2cart(shoelabelloc(:,2),shoelabelloc(:,1));
-    end
     if ~isempty(shoegaplabelloc)
         [shoegaplabelloc(:,1), shoegaplabelloc(:,2)] = pol2cart(shoegaplabelloc(:,2),shoegaplabelloc(:,1));
     end
@@ -178,23 +167,6 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
                                                   thisslotvertlinks(:,2), ...
                                                   angles, ...
                                                   'MaxSegDegrees', angles ./ 20);
-        
-    if ~isempty(shoelabelloc) 
-            
-        thisshoelabelloc = shoelabelloc * rotM;
-        
-        % add the block labels for the shoes and gap
-        FemmProblem = addblocklabel_mfemm(FemmProblem, thisshoelabelloc(1,1), thisshoelabelloc(1,2), ...
-                                            'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                            'MaxArea', Inputs.ToothRegionMeshSize, ...
-                                            'InGroup', Inputs.ShoeGroup);
-
-        FemmProblem = addblocklabel_mfemm(FemmProblem, thisshoelabelloc(2,1), thisshoelabelloc(2,2), ...
-                                            'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                            'MaxArea', Inputs.ToothRegionMeshSize, ...
-                                            'InGroup', Inputs.ShoeGroup);
-    
-    end
     
     if ~isempty(shoegaplabelloc)
         
@@ -239,23 +211,6 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
                                                       angles, ...
                                                       'MaxSegDegrees', angles ./ 20 );
                                                
-        % add the block labels for the shoes and gap
-        if ~isempty(shoelabelloc)
-            
-            thisshoelabelloc = shoelabelloc * rotM;
-        
-            % add the block labels for the shoes and gap
-            FemmProblem = addblocklabel_mfemm(FemmProblem, thisshoelabelloc(1,1), thisshoelabelloc(1,2), ...
-                                                'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                                'MaxArea', Inputs.ToothRegionMeshSize, ...
-                                                'InGroup', Inputs.ShoeGroup);
-
-            FemmProblem = addblocklabel_mfemm(FemmProblem, thisshoelabelloc(2,1), thisshoelabelloc(2,2), ...
-                                                'BlockType', FemmProblem.Materials(Inputs.ToothMaterial).Name, ...
-                                                'MaxArea', Inputs.ToothRegionMeshSize, ...
-                                                'InGroup', Inputs.ShoeGroup);
-    
-        end
         
         if ~isempty(shoegaplabelloc)
             
