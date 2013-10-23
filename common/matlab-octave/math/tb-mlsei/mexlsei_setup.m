@@ -23,8 +23,6 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
 
     %% 2. Build the f2c lib which must be included if necessary
 
-    cd(fullfile(pwd, 'c', 'libf2c'));
-
     % get the local machine architecture
     machine = computer('arch');
 
@@ -49,6 +47,7 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
         % is probably Octave on 32 bit windows
         libfilename = 'libf2cmingw32x86.a';
         if ~exist(libfilename, 'file') || forcef2clibrecompile
+            cd(fullfile(libfiledir, 'libf77'));
             % compile using gcc
             system('mingw32-make -f makefile.u');
             movefile(libfilename, libfiledir);
@@ -74,11 +73,12 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
 
         libfilename = 'libf2cx64.a';
         if (isempty(ldconfout) && ~exist(libfilename, 'file')) || forcef2clibrecompile
+            cd(fullfile(libfiledir, 'libf77'));
             % compile using gcc on 64 bit platform
             system('make -f makefile.lx64');
             movefile(libfilename, libfiledir);
         elseif ~isempty(ldconfout)
-            libfilename = 'libf2c';
+            libfilename = 'f2c';
             libfiledir = '';
         end
 
@@ -89,11 +89,12 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
 
         libfilename = 'libf2cx86.a';
         if (isempty(ldconfout) && ~exist(libfilename, 'file'))  || forcef2clibrecompile
+            cd(fullfile(libfiledir, 'libf77'));
             % compile using gcc
             system('make -f makefile.lx86');
             movefile(libfilename, libfiledir);
         elseif ~isempty(ldconfout)
-            libfilename = 'libf2c';
+            libfilename = 'f2c';
             libfiledir = '';
         end
 
@@ -130,11 +131,12 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
         fid = fopen(fullfile(rootdir, 'c', 'dlsei.c'), 'a');
             
         fprintf(fid, ...
-                [ '\\n\\n', ...
+                [ '\n\n', ...
                 'void MAIN__()\n', ...
                 '{\n', ...
-                'fprintf(stderr,"If this appears, F2C is in conflict with C\\n");\n', ...
-                'exit(10);\n'...
+                '//fprintf(stderr,"If this appears, F2C is in conflict with C\\n");\n', ...
+                '//exit(10);\n'...
+                'return;', ...
                 '}', ...
                 ] );
             
