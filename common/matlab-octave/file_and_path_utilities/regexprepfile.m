@@ -1,23 +1,25 @@
-function strrepfile(filename,S1,S2)
-% STRREPFILE Replace string in a file with another.
+function regexprepfile(filename,exp,repstr)
+% Replace string in one or more files using regular expressions.
 %
 % Syntax
 %
-% strrepfile(filename,S1,S2)
+% regexprepfile(filename,exp,repstr)
 %
 % Description
 % 
-% STRREPFILE(filename,S1,S2) replaces all occurrences of the string S1 in
-% the file filename with the string S2. S1, S2 may also be cell arrays of
-% strings of the same size, in which case the replacement is performed for
-% each pair by performing a STRREP using corresponding elements of the
-% inputs. Alternatively S2 may be a string and S1 a cell array, in this
-% case the single string S2 will replace all the strings in S1
+% regexprepfile(filename,exp,repstr) replaces all occurrences of the string
+% exp in the file filename with the string repstr. exp, repstr may also be
+% cell arrays of strings of the same size, in which case the replacement is
+% performed for each pair by performing a regexprep using corresponding
+% elements of the inputs. Alternatively repstr may be a string and exp a
+% cell array, in this case the single string repstr will replace all the
+% strings in exp
 % 
 % filename may also be a cell array of strings, each a file name, in which
 % case the replacement is perfromed for each file.
 %
-%   See also STRFIND, REGEXPREP.
+%   See also regexprep, strrepfile
+%
 
     if ~iscellstr(filename) && ischar(filename)
         filename = {filename};
@@ -31,29 +33,29 @@ function strrepfile(filename,S1,S2)
             error('file %s not found', filename{i});
         end
        
-        if iscellstr(S1) && iscellstr(S2) 
+        if iscellstr(exp) && iscellstr(repstr) 
             
-            if ~samesize(S1, S2)
+            if ~samesize(exp, repstr)
                 error('If two cell arrays of strings are supplied, all dimensions must be the same size')
             end
             
-        elseif iscellstr(S1) && ischar(S2)
+        elseif iscellstr(exp) && ischar(repstr)
             
-            % replicate string in S1 to make cell array same size as S2
-            S2 = repmat({S2}, size(S1));
+            % replicate string in exp to make cell array same size as repstr
+            repstr = repmat({repstr}, size(exp));
             
-        elseif ischar(S1) && iscellstr(S2)
+        elseif ischar(exp) && iscellstr(repstr)
             
             % throw an error
-            error('S1 cannot be a string if S2 is a cell array of strings.')
+            error('exp cannot be a string if repstr is a cell array of strings.')
             
-        elseif ischar(S1) && ischar(S2)
+        elseif ischar(exp) && ischar(repstr)
             % convert strings to scalar cell arrays
-            S1 = {S1};
-            S2 = {S2};
+            exp = {exp};
+            repstr = {repstr};
             
         else
-            error('S1 and S2 must be two cell arrays of strings of the same size, or a combination of cell string array and strings, or two strings')
+            error('exp and repstr must be two cell arrays of strings of the same size, or a combination of cell string array and strings, or two strings')
         end
         
         [pathstr, name, ext] = fileparts(filename{i});
@@ -85,8 +87,8 @@ function strrepfile(filename,S1,S2)
             
             if tline ~= -1
                 
-                for ii = 1:numel(S1)
-                    tline = strrep(tline, S1{ii}, S2{ii});
+                for ii = 1:numel(exp)
+                    tline = regexprep(tline, exp{ii}, repstr{ii});
                 end
                 
                 fprintf(tempfid, '%s', tline);
