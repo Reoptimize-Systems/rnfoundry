@@ -7,18 +7,19 @@ function regexprepfile(filename,exp,repstr)
 %
 % Description
 % 
-% regexprepfile(filename,exp,repstr) replaces all occurrences of the string
-% exp in the file filename with the string repstr. exp, repstr may also be
-% cell arrays of strings of the same size, in which case the replacement is
-% performed for each pair by performing a regexprep using corresponding
-% elements of the inputs. Alternatively repstr may be a string and exp a
-% cell array, in this case the single string repstr will replace all the
-% strings in exp
+% regexprepfile(filename,exp,repstr) performs a regular expression
+% replacement using the pattern exp in the file filename with the string
+% repstr. exp, repstr may also be cell arrays of strings of the same size,
+% in which case the replacement is performed for each pair by performing a
+% regexprep using corresponding elements of the inputs. Alternatively
+% repstr may be a string and exp a cell array, in this case the single
+% string repstr will replace all the patterns in exp
 % 
 % filename may also be a cell array of strings, each a file name, in which
 % case the replacement is perfromed for each file.
 %
-%   See also regexprep, strrepfile
+%
+% See also regexprep, strrepfile
 %
 
     if ~iscellstr(filename) && ischar(filename)
@@ -118,8 +119,10 @@ function regexprepfile(filename,exp,repstr)
             rethrow(struct('message', message, 'identifier', messageid));
         end
         
-        % delete the temporary file
-        delete(tempfilename);
+        try
+            % attempt to delete the temporary file
+            delete (tempfilename);
+        end
         
     end
 
