@@ -1,9 +1,9 @@
-function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, quantityfname, score)
+function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, quantityfname, base_score, score)
 % function used to create penalties and add them to a design structure
 %
 % Syntax
 %
-% [score, design, simoptions] = addpenalty_AM(design, simoptions, type, quantityfname, score)
+% [score, design, simoptions] = addpenalty_AM(design, simoptions, type, quantityfname, base_score, score)
 %
 % Input
 %
@@ -42,8 +42,12 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
 %
 % 
 
-    if nargin < 5
+    if nargin < 6
         score = 0;
+    end
+    
+    if nargin < 5
+        base_score = 1;
     end
 
     switch type
@@ -70,8 +74,8 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
                         end
 
                         design.(penfieldname) = ...
-                            simoptions.(penfactfieldname)(1) * design.BaseScore * (design.(quantityfname) / simoptions.(limitfieldname))  ...
-                             + design.BaseScore * (simoptions.(penfactfieldname)(2) * design.(quantityfname) / simoptions.(limitfieldname))^2;
+                            simoptions.(penfactfieldname)(1) * base_score * (design.(quantityfname) / simoptions.(limitfieldname))  ...
+                             + base_score * (simoptions.(penfactfieldname)(2) * design.(quantityfname) / simoptions.(limitfieldname))^2;
 
                         score = score + design.(penfieldname);
 
@@ -106,8 +110,8 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
                         quantdiff = simoptions.(limitfieldname) - design.(quantityfname);
                         
                         design.(penfieldname) = ...
-                            simoptions.(penfactfieldname)(1) * design.BaseScore * (1 + abs(quantdiff/simoptions.(limitfieldname))) ...
-                              + design.BaseScore * (simoptions.(penfactfieldname)(2) * (1 + abs(quantdiff/simoptions.(limitfieldname))))^2;
+                            simoptions.(penfactfieldname)(1) * base_score * (1 + abs(quantdiff/simoptions.(limitfieldname))) ...
+                              + base_score * (simoptions.(penfactfieldname)(2) * (1 + abs(quantdiff/simoptions.(limitfieldname))))^2;
 
                         score = score + design.(penfieldname);
 
@@ -158,11 +162,11 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
                 
                 % apply a penalty for exceeding an upper bound on the
                 % target
-                [score, design, simoptions] = addpenalty_AM(design, simoptions, 'upper', quantityfname, score);
+                [score, design, simoptions] = addpenalty_AM(design, simoptions, 'upper', quantityfname, base_score, score);
                 
                 % apply a penalty for falling below a lower bound on the
                 % target
-                [score, design, simoptions] = addpenalty_AM(design, simoptions, 'lower', quantityfname, score);
+                [score, design, simoptions] = addpenalty_AM(design, simoptions, 'lower', quantityfname, base_score, score);
             
             end
             
