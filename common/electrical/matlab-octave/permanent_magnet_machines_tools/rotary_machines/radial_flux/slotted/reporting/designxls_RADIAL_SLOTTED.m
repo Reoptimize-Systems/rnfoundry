@@ -3,12 +3,16 @@ function [startrow] = designxls_RADIAL_SLOTTED(design, simoptions, filename, she
 %
 % Syntax
 %
-% reportstrs = designxls_RADIAL_SLOTTED(design, simoptions, filename, sheet, startrow)
+% startrow = designxls_RADIAL_SLOTTED(design, simoptions, filename, sheet, startrow)
 %
 %
 
 % Created by Richard Crozier 2013
 %
+
+    if ~ispc
+        error ('Cannot create Excel files on non-windows PCs.');
+    end
 
     if ~exist(filename, 'file')
         removesheets = true;
