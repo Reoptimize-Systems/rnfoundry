@@ -235,7 +235,7 @@
 
 
 %  \usepackage[caption=false]{caption}
-%  \usepackage[font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{subfig}
 %
 % subfig.sty, also written by Steven Douglas Cochran, is the modern
 % replacement for subfigure.sty. However, subfig.sty requires and
@@ -409,15 +409,15 @@
 % syntax layer called TikZ. You may also be interested in loading one of 
 % the several tikz libraries that are available
 %
- \usetikzlibrary{arrows}
+% \usetikzlibrary{arrows}
 %
 % provides a variety of arrow heads/line endings
 %
- \usetikzlibrary{calc}
+% \usetikzlibrary{calc}
 %
 % provides access to the math engine of pgf 
 %
- \usetikzlibrary{positioning}
+% \usetikzlibrary{positioning}
 %
 % provides useful positioning macros
 %
@@ -444,7 +444,7 @@
 \hyphenation{op-tical net-works semi-conduc-tor}
 
 
-\title{Slotted Radial Flux Design Report \\ ##1## kW ##2## RPM, ##3##}
+\title{Machine Design Report \\ ##1## kW ##2## RPM, ##3##}
 \author{Richard Crozier}
 %\date{June 2011}
 
@@ -462,7 +462,7 @@
 
 This brief report details a design for a radial flux permanent magnet 
 machine. The design is tailored for a power output of ##1##~kW at a 
-rotational speed of ##2##~rpm, with a maximum possible radius of ##4##~m. 
+rotational speed of ##2##~rpm. 
 The design does not include structural requirements. A description of the 
 design and its parameters now follows.
 
@@ -472,8 +472,14 @@ Figure \ref{fig:designfea}.
 
 \begin{figure}[htbp]
 	\centering
-		\includegraphics[width=1.08\textwidth]{fea.PNG}
-	\caption{Image from magnetic FEA simulation of the machine design.}
+    \subfloat [Cross-section of machine design geometry.] {%
+		\includegraphics[width=0.475\textwidth]{design_plot.pdf}
+    }
+    \hfill
+    \subfloat [Image from magnetic FEA simulation of the machine design.] {%
+        \includegraphics[width=0.475\textwidth]{field_plot.pdf}
+    }
+	\caption{Machine design diagrams.}
 	\label{fig:designfea}
 \end{figure}
 

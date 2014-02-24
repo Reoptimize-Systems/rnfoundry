@@ -24,7 +24,9 @@ function reportandxls_RADIAL_SLOTTED(filename, varargin)
     
     options = parseoptions(options, varargin);
     
-    tempd = pwd;
+    tmpdir = pwd;
+    
+    CC = onCleanup (@() cd (tmpdir));
     
     [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, simoptions] = ...
         reportandxls_RADIAL(filename, ...
@@ -59,7 +61,6 @@ function reportandxls_RADIAL_SLOTTED(filename, varargin)
         options.ReportXlsFcn(design, simoptions, xlsfilename, sprintf('%3.1f kW', simoptions.TargetPowerLoadMean/1e3), 2);
     end
     
-    cd(tempd)
 end
 
 function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, simoptions] = reportandxls_RADIAL(filename, varargin)
@@ -84,33 +85,50 @@ function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, 
                         'ReportTemplatePath', options.ReportTemplatePath, ...
                         'ExcelFilename', options.ExcelFilename);
 
-    if ispc
+    [ansfilename, femfilename] = analyse_mfemm(design.FemmProblem);
+    
+    solution = fpproc (ansfilename);
+    
+    if strcmp(design.StatorType, 'so')
         
-        openprobleminfemm_mfemm(design.FemmProblem);
+        [xl,yl] = pol2cart(2 * design.thetap, design.Rbo);
+        x = 0.8 * xl;
+        y = -0.05 * design.Rbo;
+        w = 1.05 * design.Rbo;
+        h = w;
         
-        mi_analyse;
-        mi_loadsolution;
+    elseif strcmp(design.StatorType, 'si')
         
-        mo_showdensityplot(1,0,1.5,0,'mag');
-        
-%         main_maximize;
-        main_restore;
-        
-        if strcmp(design.StatorType, 'so')
-            mo_zoom(design.Ryi - 50/1000, -50/1000, ...
-                design.Rmo + 50/1000, 2*design.thetap*design.Rmm );
-        elseif strcmp(design.StatorType, 'si')
-            mo_zoom(design.Ryi - 50/1000, -50/1000, ...
-                design.Rmo + 50/1000, 2*design.thetap*design.Rmm );
-        end
-        
-        mo_savebitmap(fullfile(reportdir, 'FEA.bmp'));
-        
-        mo_close;
-        mi_close;
+        [xl,yl] = pol2cart(2 * design.thetap, design.Ryo);
+        x = 0.8 * xl;
+        y = -0.05 * design.Ryo;
+        w = 1.05 * design.Ryo;
+        h = w;
         
     end
     
+    hfig = plotfemmproblem (design.FemmProblem);
+    
+    set (gcf, 'Color', 'w');
+    
+    tightfig (hfig);
+    
+    export_fig(hfig, fullfile(fileparts(reporttexpath), 'design_plot.pdf'), '-pdf');
+    
+    close (hfig)
+    
+    hfig = solution.plotBfield(x, y, w, h, 'FemmProblem', design.FemmProblem);
+
+    set (gcf, 'Color', 'w');
+    
+    colorbar
+    
+    tightfig (hfig);
+            
+    export_fig(hfig, fullfile(fileparts(reporttexpath), 'field_plot.pdf'), '-pdf');
+    
+    close (hfig)
+
     if options.MakePdf
         % make the report pdf, run twice
         system(['pdflatex -interaction=nonstopmode -halt-on-error "', reportname,'"']);
@@ -118,8 +136,14 @@ function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, 
     end
     
     if options.MakeExcel
+        
+        if ~ispc
+            warning ('Cannot create Excel files on non-windows PCs. No xls file will be produced.');
+            return;
+        end
         % now add the information to an excel spreadsheet
         options.ReportXlsFcn(design, simoptions, xlsfilename, sprintf('%3.1f kW', simoptions.TargetPowerLoadMean/1e3), 2);
+        
     end
 
 end
