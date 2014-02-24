@@ -20,9 +20,6 @@ function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, 
     options.ReportTemplatePath = fullfile(getmfilepath('reportandxls_AM'), 'design_report_template.tex');
     
     options = parseoptions(options, varargin);
-
-    % change to the report directory
-%     cd(getmfilepath('reportandxls_nova'));
     
     if strcmp(options.FType, 'ga')
         
@@ -42,11 +39,8 @@ function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, 
         
         load(filename, 'design', 'simoptions');
         
-        % get just the file name
-        [~, filename] = fileparts(filename);
-        
-        % design_and_simoptions_kW_1200pt0_rpm_380pt0_rmsemf_4pt1_to_4pt2_kV_RgVRc_40pt0.mat
-        reportdir = filename(23:end);
+        [~, name, ~] = fileparts(filename);
+        reportdir = name;
         
         if isempty(options.ExcelFilename)
             options.ExcelFilename = [ reportdir, '.xls'];
@@ -65,8 +59,8 @@ function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, 
     reportname = ['design_report_', reportdir, '.tex'];
     
     % copy the design report template
-    reporttexpath = fullfile(reportdir, reportname);
-    copyfile(options.ReportTemplatePath, fullfile('.', reportname));
+    reporttexpath = fullfile(pwd, reportname);
+    copyfile(options.ReportTemplatePath, reporttexpath);
     
     if options.MakePdf
         % make the report pdf, run twice
