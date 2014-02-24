@@ -72,12 +72,15 @@ function [Ftot, Firon, Feddy] = lossforces_AM(design, simoptions, xR, vR)
 % [1] C. R. Sullivan, "Computationally efficient winding loss calculation
 % with multiple windings, arbitrary waveforms, and two-dimensional or
 % three-dimensional field geometry," IEEE Transactions on Power
-% Electronics, vol. 16, no. 1, pp. 142–150, 2001.
+% Electronics, vol. 16, no. 1, pp. 142--150, 2001.
 %
 % [2] D. Lin, P. Zhou, W. N. Fu, Z. Badics, and Z. J. Cendes, "A Dynamic
 % Core Loss Model for Soft Ferromagnetic and Power Ferrite Materials in
 % Transient Finite Element Analysis," IEEE Transactions on Magnetics, vol.
-% 40, no. 2, pp. 1318–1321, Mar. 2004.
+% 40, no. 2, pp. 1318--1321, Mar. 2004.
+%
+%
+% See also: softferrolossrectregionvarxpartcalc.m
 %
 
 % Copyright Richard Crozier 2012-2013
