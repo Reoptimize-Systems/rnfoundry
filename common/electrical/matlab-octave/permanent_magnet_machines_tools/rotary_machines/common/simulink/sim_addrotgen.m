@@ -1,4 +1,4 @@
-function name = sim_addgen(design, simoptions, modelname)
+function name = sim_addrotgen(design, simoptions, modelname)
 % Adds a rotary generator block to a simulink model
 %
 % Syntax
