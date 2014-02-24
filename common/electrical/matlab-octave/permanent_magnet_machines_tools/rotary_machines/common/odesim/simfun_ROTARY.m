@@ -1,4 +1,16 @@
 function [design, simoptions] = simfun_ROTARY(design, simoptions)
+% common simulation setup function for rotary type machines
+%
+% Syntax
+%
+% [design, simoptions] = simfun_ROTARY(design, simoptions)
+%
+% Input
+%
+% design, simoptions - structures containing a design of a radial flux type
+%   machine, 
+%
+% 
 
     % perform pre-sim tasks common to all electrical machines
     [design, simoptions] = simfun_AM(design, simoptions);
