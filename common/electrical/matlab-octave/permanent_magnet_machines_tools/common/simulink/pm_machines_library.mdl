@@ -1,6 +1,6 @@
 Library {
   Name			  "pm_machines_library"
-  Version		  7.7
+  Version		  8.1
   MdlSubVersion		  0
   SavedCharacterEncoding  "UTF-8"
   LibraryType		  "BlockLibrary"
@@ -8,16 +8,56 @@ Library {
   ScopeRefreshTime	  0.035000
   OverrideScopeRefreshTime on
   DisableAllScopes	  off
+  FPTRunName		  "Run 1"
   MaxMDLFileLineLength	  120
+  Object {
+    $PropName		    "BdWindowsInfo"
+    $ObjectID		    1
+    $ClassName		    "Simulink.BDWindowsInfo"
+    Object {
+      $PropName		      "WindowsInfo"
+      $ObjectID		      2
+      $ClassName	      "Simulink.WindowInfo"
+      IsActive		      [1]
+      Location		      [-4.0, -4.0, 1288.0, 782.0]
+      Object {
+	$PropName		"ModelBrowserInfo"
+	$ObjectID		3
+	$ClassName		"Simulink.ModelBrowserInfo"
+	Visible			[0]
+	DockPosition		"Left"
+	Width			[50]
+	Height			[50]
+	Filter			[8]
+      }
+      Object {
+	$PropName		"ExplorerBarInfo"
+	$ObjectID		4
+	$ClassName		"Simulink.ExplorerBarInfo"
+	Visible			[1]
+      }
+      Object {
+	$PropName		"EditorsInfo"
+	$ObjectID		5
+	$ClassName		"Simulink.EditorInfo"
+	IsActive		[1]
+	ViewObjType		"SimulinkSubsys"
+	LoadSaveID		"46"
+	Extents			[1244.0, 623.0]
+	ZoomFactor		[1.0]
+	Offset			[0.0, 75.0]
+      }
+    }
+  }
   Created		  "Mon Mar 25 10:35:58 2013"
   Creator		  "s0237326"
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "s0237326"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Tue Jul  2 15:26:55 2013"
-  RTWModifiedTimeStamp	  294679529
-  ModelVersionFormat	  "1.%<AutoIncrement:58>"
+  LastModifiedDate	  "Tue Dec 03 11:52:30 2013"
+  RTWModifiedTimeStamp	  307972321
+  ModelVersionFormat	  "1.%<AutoIncrement:66>"
   ConfigurationManager	  "None"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -25,6 +65,7 @@ Library {
   WideLines		  off
   ShowLineDimensions	  off
   ShowPortDataTypes	  off
+  ShowDesignRanges	  off
   ShowLoopsOnError	  on
   IgnoreBidirectionalLines off
   ShowStorageClass	  off
@@ -84,14 +125,14 @@ Library {
     Type		    "Handle"
     Dimension		    1
     Simulink.ConfigSet {
-      $ObjectID		      1
-      Version		      "1.11.0"
+      $ObjectID		      6
+      Version		      "1.13.0"
       Array {
 	Type			"Handle"
 	Dimension		9
 	Simulink.SolverCC {
-	  $ObjectID		  2
-	  Version		  "1.11.0"
+	  $ObjectID		  7
+	  Version		  "1.13.0"
 	  StartTime		  "0.0"
 	  StopTime		  "10.0"
 	  AbsTol		  "auto"
@@ -109,6 +150,7 @@ Library {
 	  MaxConsecutiveMinStep	  "1"
 	  RelTol		  "1e-3"
 	  SolverMode		  "Auto"
+	  EnableConcurrentExecution off
 	  ConcurrentTasks	  off
 	  Solver		  "ode45"
 	  SolverName		  "ode45"
@@ -124,8 +166,8 @@ Library {
 	  InsertRTBMode		  "Whenever possible"
 	}
 	Simulink.DataIOCC {
-	  $ObjectID		  3
-	  Version		  "1.11.0"
+	  $ObjectID		  8
+	  Version		  "1.13.0"
 	  Decimation		  "1"
 	  ExternalInput		  "[t, u]"
 	  FinalStateName	  "xFinal"
@@ -156,8 +198,8 @@ Library {
 	  Refine		  "1"
 	}
 	Simulink.OptimizationCC {
-	  $ObjectID		  4
-	  Version		  "1.11.0"
+	  $ObjectID		  9
+	  Version		  "1.13.0"
 	  Array {
 	    Type		    "Cell"
 	    Dimension		    8
@@ -176,6 +218,7 @@ Library {
 	  ConditionallyExecuteInputs on
 	  InlineParams		  off
 	  UseIntDivNetSlope	  off
+	  UseFloatMulNetSlope	  off
 	  UseSpecifiedMinMax	  off
 	  InlineInvariantSignals  off
 	  OptimizeBlockIOStorage  on
@@ -208,11 +251,11 @@ Library {
 	  BufferReusableBoundary  on
 	  SimCompilerOptimization "Off"
 	  AccelVerboseBuild	  off
-	  AccelParallelForEachSubsystem	on
+	  ParallelExecutionInRapidAccelerator on
 	}
 	Simulink.DebuggingCC {
-	  $ObjectID		  5
-	  Version		  "1.11.0"
+	  $ObjectID		  10
+	  Version		  "1.13.0"
 	  RTPrefix		  "error"
 	  ConsistencyChecking	  "none"
 	  ArrayBoundsChecking	  "none"
@@ -261,12 +304,13 @@ Library {
 	  UnnecessaryDatatypeConvMsg "none"
 	  VectorMatrixConversionMsg "none"
 	  InvalidFcnCallConnMsg	  "error"
-	  FcnCallInpInsideContextMsg "Use local settings"
+	  FcnCallInpInsideContextMsg "UseLocalSettings"
 	  SignalLabelMismatchMsg  "none"
 	  UnconnectedInputMsg	  "warning"
 	  UnconnectedOutputMsg	  "warning"
 	  UnconnectedLineMsg	  "warning"
 	  SFcnCompatibilityMsg	  "none"
+	  FrameProcessingCompatibilityMsg "warning"
 	  UniqueDataStoreMsg	  "none"
 	  BusObjectLabelMismatch  "warning"
 	  RootOutportRequireBusObject "warning"
@@ -295,14 +339,18 @@ Library {
 	  SFInvalidInputDataAccessInChartInitDiag "warning"
 	  SFNoUnconditionalDefaultTransitionDiag "warning"
 	  SFTransitionOutsideNaturalParentDiag "warning"
+	  SFUnconditionalTransitionShadowingDiag "warning"
+	  SFUndirectedBroadcastEventsDiag "warning"
+	  SFTransitionActionBeforeConditionDiag	"warning"
 	}
 	Simulink.HardwareCC {
-	  $ObjectID		  6
-	  Version		  "1.11.0"
+	  $ObjectID		  11
+	  Version		  "1.13.0"
 	  ProdBitPerChar	  8
 	  ProdBitPerShort	  16
 	  ProdBitPerInt		  32
 	  ProdBitPerLong	  32
+	  ProdBitPerLongLong	  64
 	  ProdBitPerFloat	  32
 	  ProdBitPerDouble	  64
 	  ProdBitPerPointer	  32
@@ -312,17 +360,20 @@ Library {
 	  ProdEndianess		  "Unspecified"
 	  ProdWordSize		  32
 	  ProdShiftRightIntArith  on
+	  ProdLongLongMode	  off
 	  ProdHWDeviceType	  "32-bit Generic"
 	  TargetBitPerChar	  8
 	  TargetBitPerShort	  16
 	  TargetBitPerInt	  32
 	  TargetBitPerLong	  32
+	  TargetBitPerLongLong	  64
 	  TargetBitPerFloat	  32
 	  TargetBitPerDouble	  64
 	  TargetBitPerPointer	  32
 	  TargetLargestAtomicInteger "Char"
 	  TargetLargestAtomicFloat "None"
 	  TargetShiftRightIntArith on
+	  TargetLongLongMode	  off
 	  TargetIntDivRoundTo	  "Undefined"
 	  TargetEndianess	  "Unspecified"
 	  TargetWordSize	  32
@@ -334,8 +385,8 @@ Library {
 	  ProdEqTarget		  on
 	}
 	Simulink.ModelReferenceCC {
-	  $ObjectID		  7
-	  Version		  "1.11.0"
+	  $ObjectID		  12
+	  Version		  "1.13.0"
 	  UpdateModelReferenceTargets "IfOutOfDateOrStructuralChange"
 	  CheckModelReferenceTargetMessage "error"
 	  EnableParallelModelReferenceBuilds off
@@ -349,8 +400,8 @@ Library {
 	  SupportModelReferenceSimTargetCustomCode off
 	}
 	Simulink.SFSimCC {
-	  $ObjectID		  8
-	  Version		  "1.11.0"
+	  $ObjectID		  13
+	  Version		  "1.13.0"
 	  SFSimEnableDebug	  on
 	  SFSimOverflowDetection  on
 	  SFSimEcho		  on
@@ -364,8 +415,8 @@ Library {
 	}
 	Simulink.RTWCC {
 	  $BackupClass		  "Simulink.RTWCC"
-	  $ObjectID		  9
-	  Version		  "1.11.0"
+	  $ObjectID		  14
+	  Version		  "1.13.0"
 	  Array {
 	    Type		    "Cell"
 	    Dimension		    8
@@ -383,6 +434,7 @@ Library {
 	  GenCodeOnly		  off
 	  MakeCommand		  "make_rtw"
 	  GenerateMakefile	  on
+	  PackageGeneratedCodeAndArtifacts off
 	  TemplateMakefile	  "grt_default_tmf"
 	  GenerateReport	  off
 	  SaveLog		  off
@@ -399,6 +451,14 @@ Library {
 	  RTWUseSimCustomCode	  off
 	  IncludeHyperlinkInReport off
 	  LaunchReport		  off
+	  PortableWordSizes	  off
+	  GenerateErtSFunction	  off
+	  CreateSILPILBlock	  "None"
+	  CodeExecutionProfiling  off
+	  CodeExecutionProfileVariable "executionProfile"
+	  CodeProfilingSaveOptions "SummaryOnly"
+	  CodeProfilingInstrumentation off
+	  SILDebugging		  off
 	  TargetLang		  "C"
 	  IncludeBusHierarchyInRTWFileBlockHierarchyMap	off
 	  IncludeERTFirstTime	  off
@@ -408,8 +468,9 @@ Library {
 	  GenerateTraceReportSf	  off
 	  GenerateTraceReportEml  off
 	  GenerateCodeInfo	  off
-	  GenerateSLWebview	  off
+	  GenerateWebview	  off
 	  GenerateCodeMetricsReport off
+	  GenerateCodeReplacementReport	off
 	  RTWCompilerOptimization "Off"
 	  CheckMdlBeforeBuild	  "Off"
 	  CustomRebuildMode	  "OnUpdate"
@@ -417,8 +478,8 @@ Library {
 	    Type		    "Handle"
 	    Dimension		    2
 	    Simulink.CodeAppCC {
-	      $ObjectID		      10
-	      Version		      "1.11.0"
+	      $ObjectID		      15
+	      Version		      "1.13.0"
 	      Array {
 		Type			"Cell"
 		Dimension		21
@@ -454,6 +515,7 @@ Library {
 	      PreserveName	      off
 	      PreserveNameWithParent  off
 	      ShowEliminatedStatement off
+	      OperatorAnnotations     off
 	      IncAutoGenComments      off
 	      SimulinkDataObjDesc     off
 	      SFDataObjDesc	      off
@@ -461,7 +523,7 @@ Library {
 	      IncDataTypeInIds	      off
 	      MangleLength	      1
 	      CustomSymbolStrGlobalVar "$R$N$M"
-	      CustomSymbolStrType     "$N$R$M"
+	      CustomSymbolStrType     "$N$R$M_T"
 	      CustomSymbolStrField    "$N$M"
 	      CustomSymbolStrFcn      "$R$N$M$F"
 	      CustomSymbolStrFcnArg   "rt$I$N$M"
@@ -476,14 +538,15 @@ Library {
 	      SimulinkBlockComments   on
 	      MATLABSourceComments    off
 	      EnableCustomComments    off
+	      InternalIdentifier      "Shortened"
 	      InlinedPrmAccess	      "Literals"
 	      ReqsInCode	      off
 	      UseSimReservedNames     off
 	    }
 	    Simulink.GRTTargetCC {
 	      $BackupClass	      "Simulink.TargetCC"
-	      $ObjectID		      11
-	      Version		      "1.11.0"
+	      $ObjectID		      16
+	      Version		      "1.13.0"
 	      Array {
 		Type			"Cell"
 		Dimension		16
@@ -496,24 +559,21 @@ Library {
 		Cell			"GenerateTestInterfaces"
 		Cell			"ModelStepFunctionPrototypeControlCompliant"
 		Cell			"CPPClassGenCompliant"
-		Cell			"MultiInstanceERTCode"
+		Cell			"PortableWordSizes"
 		Cell			"PurelyIntegerCode"
 		Cell			"SupportComplex"
 		Cell			"SupportAbsoluteTime"
 		Cell			"SupportContinuousTime"
 		Cell			"SupportNonInlinedSFcns"
-		Cell			"PortableWordSizes"
+		Cell			"GenerateAllocFcn"
 		PropName		"DisabledProps"
 	      }
 	      TargetFcnLib	      "ansi_tfl_table_tmw.mat"
 	      TargetLibSuffix	      ""
 	      TargetPreCompLibLocation ""
-	      TargetFunctionLibrary   "ANSI_C"
+	      CodeReplacementLibrary  "ANSI_C"
 	      UtilityFuncGeneration   "Auto"
 	      ERTMultiwordTypeDef     "System defined"
-	      FunctionExecutionProfile off
-	      CodeExecutionProfiling  off
-	      ERTCodeCoverageTool     "None"
 	      ERTMultiwordLength      256
 	      MultiwordLength	      2048
 	      GenerateFullHeader      on
@@ -523,6 +583,7 @@ Library {
 	      ModelReferenceCompliant on
 	      ParMdlRefBuildCompliant on
 	      CompOptLevelCompliant   on
+	      ConcurrentExecutionCompliant on
 	      IncludeMdlTerminateFcn  on
 	      GeneratePreprocessorConditionals "Disable all"
 	      CombineOutputUpdateFcns off
@@ -543,10 +604,12 @@ Library {
 	      SupportVariableSizeSignals off
 	      EnableShiftOperators    on
 	      ParenthesesLevel	      "Nominal"
-	      PortableWordSizes	      off
+	      MATLABClassNameForMDSCustomization "Simulink.SoftwareTarget.GRTCustomization"
 	      ModelStepFunctionPrototypeControlCompliant off
 	      CPPClassGenCompliant    off
 	      AutosarCompliant	      off
+	      GRTInterface	      on
+	      GenerateAllocFcn	      off
 	      UseMalloc		      off
 	      ExtMode		      off
 	      ExtModeStaticAlloc      off
@@ -565,8 +628,8 @@ Library {
 	  }
 	}
 	hdlcoderui.hdlcc {
-	  $ObjectID		  12
-	  Version		  "1.11.0"
+	  $ObjectID		  17
+	  Version		  "1.13.0"
 	  Description		  "HDL Coder custom configuration component"
 	  Name			  "HDL Coder"
 	  Array {
@@ -585,6 +648,7 @@ Library {
     }
     PropName		    "ConfigurationSets"
   }
+  ExplicitPartitioning	  off
   BlockDefaults {
     ForegroundColor	    "black"
     BackgroundColor	    "white"
@@ -616,6 +680,25 @@ Library {
     FontWeight		    "normal"
     FontAngle		    "normal"
   }
+  MaskDefaults {
+    SelfModifiable	    "off"
+    IconFrame		    "on"
+    IconOpaque		    "on"
+    RunInitForIconRedraw    "off"
+    IconRotate		    "none"
+    PortRotate		    "default"
+    IconUnits		    "autoscale"
+  }
+  MaskParameterDefaults {
+    Evaluate		    "on"
+    Tunable		    "on"
+    NeverSave		    "off"
+    Internal		    "off"
+    ReadOnly		    "off"
+    Enabled		    "on"
+    Visible		    "on"
+    ToolTip		    "on"
+  }
   BlockParameterDefaults {
     Block {
       BlockType		      Constant
@@ -642,6 +725,7 @@ Library {
     }
     Block {
       BlockType		      From
+      GotoTag		      "A"
       IconDisplay	      "Tag"
       TagVisibility	      "local"
     }
@@ -736,6 +820,7 @@ Library {
       SystemSampleTime	      "-1"
       RTWFcnNameOpts	      "Auto"
       RTWFileNameOpts	      "Auto"
+      FunctionInterfaceSpec   "void_void"
       RTWMemSecFuncInitTerm   "Inherit from model"
       RTWMemSecFuncExecute    "Inherit from model"
       RTWMemSecDataConstants  "Inherit from model"
@@ -745,6 +830,7 @@ Library {
       DataTypeOverride	      "UseLocalSettings"
       DataTypeOverrideAppliesTo	"AllNumericTypes"
       MinMaxOverflowLogging   "UseLocalSettings"
+      SFBlockType	      "NONE"
       Variant		      off
       GeneratePreprocessorConditionals off
     }
@@ -777,8 +863,8 @@ Library {
   }
   System {
     Name		    "pm_machines_library"
-    Location		    [161, 145, 928, 839]
-    Open		    on
+    Location		    [-4, -4, 1284, 778]
+    Open		    off
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
     ScreenColor		    "white"
@@ -791,13 +877,14 @@ Library {
     ShowPageBoundaries	    off
     ZoomFactor		    "100"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "171"
+    SIDHighWatermark	    "195"
     Block {
       BlockType		      SubSystem
       Name		      "Angular Motion"
       SID		      "33"
       Ports		      [2, 3]
       Position		      [420, 62, 525, 168]
+      ZOrder		      -1
       MinAlgLoopOccurrences   off
       PropExecContextOutsideSubsystem off
       RTWSystemCode	      "Auto"
@@ -807,7 +894,7 @@ Library {
       MaskHideContents	      off
       System {
 	Name			"Angular Motion"
-	Location		[438, 226, 893, 444]
+	Location		[404, 107, 907, 560]
 	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
@@ -825,6 +912,7 @@ Library {
 	  Name			  "Torque"
 	  SID			  "34"
 	  Position		  [25, 103, 55, 117]
+	  ZOrder		  -1
 	  IconDisplay		  "Port number"
 	}
 	Block {
@@ -832,6 +920,7 @@ Library {
 	  Name			  "Moment of Inertia"
 	  SID			  "35"
 	  Position		  [25, 168, 55, 182]
+	  ZOrder		  -2
 	  Port			  "2"
 	  IconDisplay		  "Port number"
 	}
@@ -841,6 +930,7 @@ Library {
 	  SID			  "36"
 	  Ports			  [1, 1]
 	  Position		  [260, 90, 290, 120]
+	  ZOrder		  -3
 	}
 	Block {
 	  BlockType		  Product
@@ -848,6 +938,7 @@ Library {
 	  SID			  "37"
 	  Ports			  [1, 1]
 	  Position		  [100, 159, 130, 191]
+	  ZOrder		  -4
 	  Inputs		  "/"
 	  InputSameDT		  off
 	  OutDataTypeStr	  "Inherit: Inherit via internal rule"
@@ -860,6 +951,7 @@ Library {
 	  SID			  "38"
 	  Ports			  [2, 1]
 	  Position		  [180, 152, 210, 183]
+	  ZOrder		  -5
 	  InputSameDT		  off
 	  OutDataTypeStr	  "Inherit: Inherit via internal rule"
 	  SaturateOnIntegerOverflow off
@@ -870,12 +962,14 @@ Library {
 	  SID			  "39"
 	  Ports			  [1, 1]
 	  Position		  [335, 25, 365, 55]
+	  ZOrder		  -6
 	}
 	Block {
 	  BlockType		  Outport
 	  Name			  "theta"
 	  SID			  "40"
 	  Position		  [400, 33, 430, 47]
+	  ZOrder		  -7
 	  IconDisplay		  "Port number"
 	}
 	Block {
@@ -883,6 +977,7 @@ Library {
 	  Name			  "omega"
 	  SID			  "41"
 	  Position		  [400, 98, 430, 112]
+	  ZOrder		  -8
 	  Port			  "2"
 	  IconDisplay		  "Port number"
 	}
@@ -891,6 +986,7 @@ Library {
 	  Name			  "alpha"
 	  SID			  "42"
 	  Position		  [400, 163, 430, 177]
+	  ZOrder		  -9
 	  Port			  "3"
 	  IconDisplay		  "Port number"
 	}
@@ -955,6 +1051,7 @@ Library {
       SID		      "2"
       Ports		      [3, 0, 0, 0, 0, 3, 3]
       Position		      [60, 31, 220, 199]
+      ZOrder		      -2
       MinAlgLoopOccurrences   off
       PropExecContextOutsideSubsystem off
       RTWSystemCode	      "Auto"
@@ -962,16 +1059,16 @@ Library {
       Opaque		      off
       RequestExecContextInheritance off
       MaskHideContents	      off
-      MaskType		      "Controlled 3-Phase Voltage Source"
-      MaskDescription	      "Controlled 3-Phase Voltage Source Mask"
-      MaskIconFrame	      on
-      MaskIconOpaque	      on
-      MaskIconRotate	      "none"
-      MaskPortRotate	      "default"
-      MaskIconUnits	      "autoscale"
+      Object {
+	$PropName		"MaskObject"
+	$ObjectID		18
+	$ClassName		"Simulink.Mask"
+	Type			"Controlled 3-Phase Voltage Source"
+	Description		"Controlled 3-Phase Voltage Source Mask"
+      }
       System {
 	Name			"Controlled 3-Phase Voltage Source"
-	Location		[475, 301, 900, 600]
+	Location		[441, 182, 914, 716]
 	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
@@ -989,6 +1086,7 @@ Library {
 	  Name			  "Set A"
 	  SID			  "3"
 	  Position		  [105, 23, 135, 37]
+	  ZOrder		  -1
 	  IconDisplay		  "Port number"
 	  PortDimensions	  "1"
 	  VarSizeSig		  "No"
@@ -998,6 +1096,7 @@ Library {
 	  Name			  "Set B"
 	  SID			  "4"
 	  Position		  [105, 118, 135, 132]
+	  ZOrder		  -2
 	  Port			  "2"
 	  IconDisplay		  "Port number"
 	  PortDimensions	  "1"
@@ -1008,6 +1107,7 @@ Library {
 	  Name			  "Set C"
 	  SID			  "5"
 	  Position		  [105, 223, 135, 237]
+	  ZOrder		  -3
 	  Port			  "3"
 	  IconDisplay		  "Port number"
 	  PortDimensions	  "1"
@@ -1019,20 +1119,12 @@ Library {
 	  SID			  "6"
 	  Ports			  [1, 0, 0, 0, 0, 1, 1]
 	  Position		  [230, 60, 275, 95]
-	  LibraryVersion	  "1.1955"
+	  ZOrder		  -4
+	  LibraryVersion	  "1.2191"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Electrical\nSources/Controlled Voltage Source"
 	  SourceType		  "Controlled Voltage Source"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	  Initialize		  off
 	  Source_Type		  "AC"
 	  Amplitude		  "0"
@@ -1046,20 +1138,12 @@ Library {
 	  SID			  "7"
 	  Ports			  [1, 0, 0, 0, 0, 1, 1]
 	  Position		  [230, 235, 275, 270]
-	  LibraryVersion	  "1.1955"
+	  ZOrder		  -5
+	  LibraryVersion	  "1.2191"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Electrical\nSources/Controlled Voltage Source"
 	  SourceType		  "Controlled Voltage Source"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	  Initialize		  off
 	  Source_Type		  "AC"
 	  Amplitude		  "0"
@@ -1073,21 +1157,13 @@ Library {
 	  SID			  "8"
 	  Ports			  [1, 0, 0, 0, 0, 1, 1]
 	  Position		  [230, 145, 275, 180]
+	  ZOrder		  -6
 	  ShowName		  off
-	  LibraryVersion	  "1.1955"
+	  LibraryVersion	  "1.2191"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Electrical\nSources/Controlled Voltage Source"
 	  SourceType		  "Controlled Voltage Source"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	  Initialize		  off
 	  Source_Type		  "AC"
 	  Amplitude		  "0"
@@ -1101,6 +1177,7 @@ Library {
 	  SID			  "9"
 	  Tag			  "PMCPort"
 	  Position		  [25, 76, 55, 94]
+	  ZOrder		  -7
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  Port			  "1"
@@ -1112,6 +1189,7 @@ Library {
 	  SID			  "13"
 	  Tag			  "PMCPort"
 	  Position		  [25, 161, 55, 179]
+	  ZOrder		  -8
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  Port			  "2"
@@ -1123,6 +1201,7 @@ Library {
 	  SID			  "11"
 	  Tag			  "PMCPort"
 	  Position		  [25, 251, 55, 269]
+	  ZOrder		  -9
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  Port			  "3"
@@ -1134,6 +1213,7 @@ Library {
 	  SID			  "10"
 	  Tag			  "PMCPort"
 	  Position		  [370, 71, 400, 89]
+	  ZOrder		  -10
 	  BlockMirror		  on
 	  FontName		  "Verdana"
 	  FontSize		  11
@@ -1146,6 +1226,7 @@ Library {
 	  SID			  "14"
 	  Tag			  "PMCPort"
 	  Position		  [370, 156, 400, 174]
+	  ZOrder		  -11
 	  BlockMirror		  on
 	  FontName		  "Verdana"
 	  FontSize		  11
@@ -1158,6 +1239,7 @@ Library {
 	  SID			  "12"
 	  Tag			  "PMCPort"
 	  Position		  [370, 246, 400, 264]
+	  ZOrder		  -12
 	  BlockMirror		  on
 	  FontName		  "Verdana"
 	  FontSize		  11
@@ -1228,8 +1310,10 @@ Library {
 	  DstPort		  1
 	}
 	Annotation {
+	  SID			  "172"
 	  Name			  "Controlled Voltage Source B"
 	  Position		  [247, 191]
+	  ZOrder		  -1
 	}
       }
     }
@@ -1239,6 +1323,7 @@ Library {
       SID		      "46"
       Ports		      [1, 1]
       Position		      [95, 550, 190, 650]
+      ZOrder		      -3
       MinAlgLoopOccurrences   off
       PropExecContextOutsideSubsystem off
       RTWSystemCode	      "Auto"
@@ -1246,23 +1331,32 @@ Library {
       Opaque		      off
       RequestExecContextInheritance off
       MaskHideContents	      off
-      MaskPromptString	      "dq Reference Type"
-      MaskStyleString	      "popup(Synchronous|Stationary)"
-      MaskVariables	      "ref_type=@1;"
-      MaskTunableValueString  "off"
-      MaskEnableString	      "on"
-      MaskVisibilityString    "on"
-      MaskToolTipString	      "on"
-      MaskIconFrame	      on
-      MaskIconOpaque	      on
-      MaskIconRotate	      "none"
-      MaskPortRotate	      "default"
-      MaskIconUnits	      "autoscale"
-      MaskValueString	      "Stationary"
+      Object {
+	$PropName		"MaskObject"
+	$ObjectID		19
+	$ClassName		"Simulink.Mask"
+	Object {
+	  $PropName		  "Parameters"
+	  $ObjectID		  20
+	  $ClassName		  "Simulink.MaskParameter"
+	  Type			  "popup"
+	  Array {
+	    Type		    "Cell"
+	    Dimension		    2
+	    Cell		    "Synchronous"
+	    Cell		    "Stationary"
+	    PropName		    "TypeOptions"
+	  }
+	  Name			  "ref_type"
+	  Prompt		  "dq Reference Type"
+	  Value			  "Stationary"
+	  Tunable		  "off"
+	}
+      }
       System {
 	Name			"PM Measure To Simulink Measure"
-	Location		[172, 84, 1043, 793]
-	Open			off
+	Location		[-4, -4, 1284, 778]
+	Open			on
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
 	ScreenColor		"white"
@@ -1279,6 +1373,7 @@ Library {
 	  Name			  "In1"
 	  SID			  "47"
 	  Position		  [15, 333, 45, 347]
+	  ZOrder		  -1
 	  IconDisplay		  "Port number"
 	}
 	Block {
@@ -1286,6 +1381,7 @@ Library {
 	  Name			  "Constant"
 	  SID			  "48"
 	  Position		  [670, 95, 735, 115]
+	  ZOrder		  -2
 	  Value			  "[0,0,0]"
 	}
 	Block {
@@ -1293,6 +1389,7 @@ Library {
 	  Name			  "Constant1"
 	  SID			  "86"
 	  Position		  [670, 135, 735, 155]
+	  ZOrder		  -3
 	  Value			  "[0,0]"
 	}
 	Block {
@@ -1300,6 +1397,7 @@ Library {
 	  Name			  "Constant2"
 	  SID			  "87"
 	  Position		  [670, 175, 735, 195]
+	  ZOrder		  -4
 	  Value			  "[0,0]"
 	}
 	Block {
@@ -1307,16 +1405,18 @@ Library {
 	  Name			  "Constant3"
 	  SID			  "88"
 	  Position		  [670, 215, 735, 235]
+	  ZOrder		  -5
 	  Value			  "[0,0]"
 	}
 	Block {
 	  BlockType		  Demux
 	  Name			  "Demux"
 	  SID			  "49"
-	  Ports			  [1, 9]
+	  Ports			  [1, 10]
 	  Position		  [65, 80, 75, 600]
+	  ZOrder		  -6
 	  ShowName		  off
-	  Outputs		  "[3, 3, 1, 1, 1, 1, 1, 3, 3]"
+	  Outputs		  "[3, 3, 1, 1, 1, 1, 1, 1, 3, 3]"
 	  DisplayOption		  "bar"
 	}
 	Block {
@@ -1325,6 +1425,7 @@ Library {
 	  SID			  "83"
 	  Ports			  [1, 2]
 	  Position		  [575, 75, 585, 130]
+	  ZOrder		  -7
 	  ShowName		  off
 	  Outputs		  "[2,1]"
 	  DisplayOption		  "bar"
@@ -1335,6 +1436,7 @@ Library {
 	  SID			  "84"
 	  Ports			  [1, 2]
 	  Position		  [590, 440, 600, 495]
+	  ZOrder		  -8
 	  ShowName		  off
 	  Outputs		  "[2,1]"
 	  DisplayOption		  "bar"
@@ -1345,6 +1447,7 @@ Library {
 	  SID			  "85"
 	  Ports			  [1, 2]
 	  Position		  [590, 545, 600, 600]
+	  ZOrder		  -9
 	  ShowName		  off
 	  Outputs		  "[2,1]"
 	  DisplayOption		  "bar"
@@ -1354,18 +1457,21 @@ Library {
 	  Name			  "Flip is dq"
 	  SID			  "124"
 	  Position		  [645, 410, 680, 440]
+	  ZOrder		  -10
 	}
 	Block {
 	  BlockType		  DSPFlip
 	  Name			  "Flip phi dq"
 	  SID			  "126"
 	  Position		  [605, 75, 640, 105]
+	  ZOrder		  -11
 	}
 	Block {
 	  BlockType		  DSPFlip
 	  Name			  "Flip vs dq"
 	  SID			  "125"
 	  Position		  [645, 545, 680, 575]
+	  ZOrder		  -12
 	}
 	Block {
 	  BlockType		  Reference
@@ -1373,20 +1479,12 @@ Library {
 	  SID			  "50"
 	  Ports			  [2, 1]
 	  Position		  [425, 59, 555, 146]
-	  LibraryVersion	  "1.638"
+	  ZOrder		  -13
+	  LibraryVersion	  "1.664"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib_extras/Measurements/abc_to_dq0\nTransformation"
 	  SourceType		  "abc to dq0 Transformation"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	}
 	Block {
 	  BlockType		  Mux
@@ -1394,6 +1492,7 @@ Library {
 	  SID			  "51"
 	  Ports			  [11, 1]
 	  Position		  [765, 78, 770, 592]
+	  ZOrder		  -14
 	  ShowName		  off
 	  Inputs		  "11"
 	  DisplayOption		  "bar"
@@ -1403,7 +1502,8 @@ Library {
 	  Name			  "Mux2"
 	  SID			  "65"
 	  Ports			  [2, 1]
-	  Position		  [250, 306, 260, 359]
+	  Position		  [300, 286, 310, 339]
+	  ZOrder		  -15
 	  ShowName		  off
 	  Inputs		  "2"
 	  DisplayOption		  "bar"
@@ -1414,20 +1514,12 @@ Library {
 	  SID			  "53"
 	  Ports			  [2, 1]
 	  Position		  [440, 394, 570, 481]
-	  LibraryVersion	  "1.638"
+	  ZOrder		  -16
+	  LibraryVersion	  "1.664"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib_extras/Measurements/abc_to_dq0\nTransformation"
 	  SourceType		  "abc to dq0 Transformation"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	}
 	Block {
 	  BlockType		  Reference
@@ -1435,26 +1527,19 @@ Library {
 	  SID			  "54"
 	  Ports			  [2, 1]
 	  Position		  [440, 529, 570, 616]
-	  LibraryVersion	  "1.638"
+	  ZOrder		  -17
+	  LibraryVersion	  "1.664"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib_extras/Measurements/abc_to_dq0\nTransformation"
 	  SourceType		  "abc to dq0 Transformation"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	}
 	Block {
 	  BlockType		  Switch
 	  Name			  "Switch"
 	  SID			  "152"
-	  Position		  [335, 205, 385, 245]
+	  Position		  [335, 185, 385, 225]
+	  ZOrder		  -18
 	  Criteria		  "u2 > Threshold"
 	  Threshold		  "1"
 	  InputSameDT		  off
@@ -1465,65 +1550,82 @@ Library {
 	  BlockType		  Terminator
 	  Name			  "Terminator1"
 	  SID			  "56"
-	  Position		  [150, 110, 170, 130]
+	  Position		  [220, 105, 240, 125]
+	  ZOrder		  -19
 	}
 	Block {
 	  BlockType		  Terminator
 	  Name			  "Terminator2"
 	  SID			  "59"
-	  Position		  [135, 440, 155, 460]
+	  Position		  [165, 415, 185, 435]
+	  ZOrder		  -20
 	}
 	Block {
 	  BlockType		  Terminator
 	  Name			  "Terminator3"
 	  SID			  "127"
 	  Position		  [640, 615, 660, 635]
+	  ZOrder		  -21
 	}
 	Block {
 	  BlockType		  Terminator
 	  Name			  "Terminator4"
 	  SID			  "128"
 	  Position		  [605, 175, 625, 195]
+	  ZOrder		  -22
 	}
 	Block {
 	  BlockType		  Terminator
 	  Name			  "Terminator5"
 	  SID			  "129"
 	  Position		  [635, 485, 655, 505]
+	  ZOrder		  -23
 	}
 	Block {
 	  BlockType		  Terminator
 	  Name			  "Terminator6"
 	  SID			  "130"
-	  Position		  [150, 235, 170, 255]
+	  Position		  [190, 205, 210, 225]
+	  ZOrder		  -24
+	}
+	Block {
+	  BlockType		  Terminator
+	  Name			  "Terminator7"
+	  SID			  "193"
+	  Position		  [165, 455, 185, 475]
+	  ZOrder		  1
 	}
 	Block {
 	  BlockType		  Trigonometry
 	  Name			  "Trigonometric\nFunction"
 	  SID			  "68"
 	  Ports			  [1, 1]
-	  Position		  [165, 290, 225, 310]
+	  Position		  [215, 275, 275, 295]
+	  ZOrder		  -25
 	}
 	Block {
 	  BlockType		  Trigonometry
 	  Name			  "Trigonometric\nFunction1"
 	  SID			  "69"
 	  Ports			  [1, 1]
-	  Position		  [165, 344, 225, 366]
+	  Position		  [215, 329, 275, 351]
+	  ZOrder		  -26
 	  Operator		  "cos"
 	}
 	Block {
 	  BlockType		  Constant
 	  Name			  "Zero sin_cos"
 	  SID			  "153"
-	  Position		  [225, 195, 255, 225]
+	  Position		  [235, 175, 265, 205]
+	  ZOrder		  -27
 	  Value			  "[0,1]"
 	}
 	Block {
 	  BlockType		  Constant
 	  Name			  "ref_type"
 	  SID			  "154"
-	  Position		  [275, 225, 305, 255]
+	  Position		  [280, 210, 310, 240]
+	  ZOrder		  -28
 	  Value			  "ref_type"
 	}
 	Block {
@@ -1531,13 +1633,14 @@ Library {
 	  Name			  "Out2"
 	  SID			  "57"
 	  Position		  [825, 353, 855, 367]
+	  ZOrder		  -29
 	  IconDisplay		  "Port number"
 	}
 	Line {
 	  Labels		  [0, 0]
 	  SrcBlock		  "Demux"
 	  SrcPort		  2
-	  Points		  [305, 0; 0, -95]
+	  Points		  [305, 0; 0, -85]
 	  DstBlock		  "Flux (phi) abc_to_dq0\nTransformation"
 	  DstPort		  1
 	}
@@ -1550,14 +1653,14 @@ Library {
 	Line {
 	  SrcBlock		  "Demux"
 	  SrcPort		  4
-	  Points		  [530, 0; 0, 185]
+	  Points		  [530, 0; 0, 205]
 	  DstBlock		  "Mux"
 	  DstPort		  9
 	}
 	Line {
 	  SrcBlock		  "Demux"
 	  SrcPort		  6
-	  Points		  [200, 0; 0, 265; 445, 0; 0, -145]
+	  Points		  [74, 0; 0, 20; 97, 0; 0, 275; 474, 0; 0, -145]
 	  DstBlock		  "Mux"
 	  DstPort		  10
 	}
@@ -1576,15 +1679,15 @@ Library {
 	}
 	Line {
 	  SrcBlock		  "Demux"
-	  SrcPort		  8
-	  Points		  [300, 0; 0, 45]
+	  SrcPort		  9
+	  Points		  [124, 0; 0, 35]
 	  DstBlock		  "Stator Phase Voltages (I)\nabc_to_dq0 Transformation"
 	  DstPort		  1
 	}
 	Line {
 	  SrcBlock		  "Demux"
-	  SrcPort		  9
-	  Points		  [280, 0; 0, -145; 55, 0]
+	  SrcPort		  10
+	  Points		  [335, 0; 0, -150]
 	  Branch {
 	    DstBlock		    "Stator Phase Currents (I) \nabc_to_dq0 Transformation"
 	    DstPort		    1
@@ -1598,25 +1701,25 @@ Library {
 	Line {
 	  SrcBlock		  "Demux"
 	  SrcPort		  7
+	  Points		  [70, 0]
 	  DstBlock		  "Terminator2"
 	  DstPort		  1
 	}
 	Line {
 	  SrcBlock		  "Demux"
 	  SrcPort		  5
-	  Points		  [60, 0]
+	  Points		  [0, 25; 113, 0]
 	  Branch {
-	    Points		    [0, 75; 75, 0; 0, 270; 525, 0; 0, -125]
+	    Points		    [0, 67; 22, 0; 0, 278; 525, 0; 0, -125]
 	    DstBlock		    "Mux"
 	    DstPort		    11
 	  }
 	  Branch {
-	    Points		    [0, -40]
+	    Points		    [0, -55]
 	    DstBlock		    "Trigonometric\nFunction"
 	    DstPort		    1
 	  }
 	  Branch {
-	    Points		    [0, 15]
 	    DstBlock		    "Trigonometric\nFunction1"
 	    DstPort		    1
 	  }
@@ -1624,14 +1727,14 @@ Library {
 	Line {
 	  SrcBlock		  "Trigonometric\nFunction"
 	  SrcPort		  1
-	  Points		  [5, 0]
+	  Points		  [4, 0; 0, 15]
 	  DstBlock		  "Mux2"
 	  DstPort		  1
 	}
 	Line {
 	  SrcBlock		  "Trigonometric\nFunction1"
 	  SrcPort		  1
-	  Points		  [5, 0]
+	  Points		  [4, 0; 0, -15]
 	  DstBlock		  "Mux2"
 	  DstPort		  2
 	}
@@ -1744,7 +1847,6 @@ Library {
 	Line {
 	  SrcBlock		  "Demux"
 	  SrcPort		  3
-	  Points		  [25, 0; 0, 15]
 	  DstBlock		  "Terminator6"
 	  DstPort		  1
 	}
@@ -1757,14 +1859,14 @@ Library {
 	Line {
 	  SrcBlock		  "Mux2"
 	  SrcPort		  1
-	  Points		  [55, 0]
+	  Points		  [7, 0; 0, -95]
 	  DstBlock		  "Switch"
 	  DstPort		  3
 	}
 	Line {
 	  SrcBlock		  "ref_type"
 	  SrcPort		  1
-	  Points		  [0, -15]
+	  Points		  [1, 0; 0, -20]
 	  DstBlock		  "Switch"
 	  DstPort		  2
 	}
@@ -1773,12 +1875,7 @@ Library {
 	  SrcPort		  1
 	  Points		  [10, 0]
 	  Branch {
-	    Points		    [0, -100]
-	    DstBlock		    "Flux (phi) abc_to_dq0\nTransformation"
-	    DstPort		    2
-	  }
-	  Branch {
-	    Points		    [0, 235]
+	    Points		    [0, 255]
 	    Branch {
 	      DstBlock		      "Stator Phase Currents (I) \nabc_to_dq0 Transformation"
 	      DstPort		      2
@@ -1789,86 +1886,142 @@ Library {
 	      DstPort		      2
 	    }
 	  }
+	  Branch {
+	    Points		    [0, -80]
+	    DstBlock		    "Flux (phi) abc_to_dq0\nTransformation"
+	    DstPort		    2
+	  }
+	}
+	Line {
+	  SrcBlock		  "Demux"
+	  SrcPort		  8
+	  DstBlock		  "Terminator7"
+	  DstPort		  1
 	}
 	Annotation {
+	  SID			  "195"
+	  Name			  "RMS Flux"
+	  Position		  [114, 451]
+	}
+	Annotation {
+	  SID			  "173"
 	  Name			  "Electrical Freq (rad/s)"
-	  Position		  [139, 219]
+	  Position		  [134, 204]
+	  ZOrder		  -1
 	}
 	Annotation {
+	  SID			  "174"
 	  Name			  "Stator Flux Linkage (Wb)"
-	  Position		  [143, 162]
+	  Position		  [143, 157]
+	  ZOrder		  -2
 	}
 	Annotation {
+	  SID			  "175"
 	  Name			  "Stator Currents (Amps)"
 	  Position		  [145, 551]
+	  ZOrder		  -3
 	}
 	Annotation {
+	  SID			  "176"
 	  Name			  "Stator Voltages (V)"
-	  Position		  [136, 488]
+	  Position		  [136, 503]
+	  ZOrder		  -4
 	}
 	Annotation {
+	  SID			  "177"
 	  Name			  "Omega"
 	  Position		  [104, 273]
+	  ZOrder		  -5
 	}
 	Annotation {
+	  SID			  "178"
 	  Name			  "Electrical Angle"
-	  Position		  [100, 325]
+	  Position		  [125, 325]
+	  ZOrder		  -6
 	}
 	Annotation {
+	  SID			  "179"
 	  Name			  "Torque"
-	  Position		  [108, 386]
+	  Position		  [108, 381]
+	  ZOrder		  -7
 	}
 	Annotation {
+	  SID			  "180"
 	  Name			  "Torque"
 	  Position		  [798, 516]
+	  ZOrder		  -8
 	}
 	Annotation {
+	  SID			  "181"
 	  Name			  "Omega"
 	  Position		  [794, 468]
+	  ZOrder		  -9
 	}
 	Annotation {
+	  SID			  "182"
 	  Name			  "vs_qd"
 	  Position		  [796, 425]
+	  ZOrder		  -10
 	}
 	Annotation {
+	  SID			  "183"
 	  Name			  "is qd"
 	  Position		  [798, 331]
+	  ZOrder		  -11
 	}
 	Annotation {
+	  SID			  "184"
 	  Name			  "phi qd"
 	  Position		  [795, 383]
+	  ZOrder		  -12
 	}
 	Annotation {
+	  SID			  "185"
 	  Name			  "is abc"
 	  Position		  [793, 288]
+	  ZOrder		  -13
 	}
 	Annotation {
+	  SID			  "186"
 	  Name			  "ir abc"
 	  Position		  [793, 113]
+	  ZOrder		  -14
 	}
 	Annotation {
+	  SID			  "187"
 	  Name			  "ir qd"
 	  Position		  [791, 152]
+	  ZOrder		  -15
 	}
 	Annotation {
+	  SID			  "188"
 	  Name			  "phir qd"
 	  Position		  [797, 198]
+	  ZOrder		  -16
 	}
 	Annotation {
+	  SID			  "189"
 	  Name			  "vr qd"
 	  Position		  [792, 249]
+	  ZOrder		  -17
 	}
 	Annotation {
+	  SID			  "190"
 	  Name			  "Stator Phase Resistances"
-	  Position		  [145, 93]
+	  Position		  [145, 98]
+	  ZOrder		  -18
 	}
 	Annotation {
+	  SID			  "191"
 	  Name			  "Inertia"
-	  Position		  [107, 439]
+	  Position		  [107, 404]
+	  ZOrder		  -19
 	}
 	Annotation {
+	  SID			  "192"
 	  Name			  "Electrical Angle"
 	  Position		  [815, 560]
+	  ZOrder		  -20
 	}
       }
     }
@@ -1878,6 +2031,7 @@ Library {
       SID		      "16"
       Ports		      [1, 2, 0, 0, 0, 0, 3]
       Position		      [370, 282, 575, 478]
+      ZOrder		      -4
       MinAlgLoopOccurrences   off
       PropExecContextOutsideSubsystem off
       RTWSystemCode	      "Auto"
@@ -1885,16 +2039,16 @@ Library {
       Opaque		      off
       RequestExecContextInheritance off
       MaskHideContents	      off
-      MaskDisplay	      "port_label('input', 1, 'Omega')\nport_label('output', 1, 'Torque')\nport_label('output', 2, '"
-      "Meas')\nport_label('rconn', 1, 'Phase A')\nport_label('rconn', 2, 'Phase B')\nport_label('rconn', 3, 'Phase C')"
-      MaskIconFrame	      on
-      MaskIconOpaque	      on
-      MaskIconRotate	      "none"
-      MaskPortRotate	      "default"
-      MaskIconUnits	      "autoscale"
+      Object {
+	$PropName		"MaskObject"
+	$ObjectID		21
+	$ClassName		"Simulink.Mask"
+	Display			"port_label('input', 1, 'Omega')\nport_label('output', 1, 'Torque')\nport_label('output', 2, 'Meas')\nport_"
+	"label('rconn', 1, 'Phase A')\nport_label('rconn', 2, 'Phase B')\nport_label('rconn', 3, 'Phase C')"
+      }
       System {
 	Name			"Three Phase Rotary PM Machine"
-	Location		[158, 243, 1163, 616]
+	Location		[120, 100, 1173, 708]
 	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
@@ -1912,6 +2066,7 @@ Library {
 	  Name			  "omega"
 	  SID			  "17"
 	  Position		  [25, 73, 55, 87]
+	  ZOrder		  -1
 	  IconDisplay		  "Port number"
 	}
 	Block {
@@ -1920,18 +2075,10 @@ Library {
 	  SID			  "18"
 	  Ports			  [3, 0, 0, 0, 0, 3, 3]
 	  Position		  [485, 154, 630, 301]
-	  LibraryVersion	  "1.36"
+	  ZOrder		  -2
+	  LibraryVersion	  "1.58"
 	  SourceBlock		  "pm_machines_library/Controlled 3-Phase Voltage Source"
 	  SourceType		  "Controlled 3-Phase Voltage Source"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	}
 	Block {
 	  BlockType		  Demux
@@ -1939,6 +2086,7 @@ Library {
 	  SID			  "19"
 	  Ports			  [1, 3]
 	  Position		  [105, 100, 120, 200]
+	  ZOrder		  -3
 	  ShowName		  off
 	  Outputs		  "3"
 	  DisplayOption		  "bar"
@@ -1948,6 +2096,7 @@ Library {
 	  Name			  "From"
 	  SID			  "20"
 	  Position		  [40, 136, 80, 164]
+	  ZOrder		  -4
 	  GotoTag		  "Iabc"
 	}
 	Block {
@@ -1955,6 +2104,7 @@ Library {
 	  Name			  "From Measurement Iabc"
 	  SID			  "45"
 	  Position		  [285, 330, 330, 350]
+	  ZOrder		  -5
 	  BlockMirror		  on
 	  GotoTag		  "Iabc"
 	}
@@ -1963,6 +2113,7 @@ Library {
 	  Name			  "From Measurement Vabc"
 	  SID			  "44"
 	  Position		  [285, 286, 325, 304]
+	  ZOrder		  -6
 	  BlockMirror		  on
 	  GotoTag		  "Vabc"
 	}
@@ -1972,18 +2123,15 @@ Library {
 	  SID			  "21"
 	  Ports			  [0, 0, 0, 0, 0, 1]
 	  Position		  [404, 325, 426, 350]
+	  ZOrder		  -7
 	  BlockRotation		  270
 	  BlockMirror		  on
 	  ShowName		  off
-	  LibraryVersion	  "1.1955"
+	  LibraryVersion	  "1.2191"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Elements/Ground"
 	  SourceType		  "Ground"
-	  PhysicalDomain	  "powersysdomain"
-	  SubClassName		  "unknown"
-	  LeftPortType		  "p1"
-	  RightPortType		  "p1"
 	  LConnTagsString	  "a"
 	}
 	Block {
@@ -1992,6 +2140,7 @@ Library {
 	  SID			  "22"
 	  Ports			  [1, 1]
 	  Position		  [100, 30, 130, 60]
+	  ZOrder		  -8
 	}
 	Block {
 	  BlockType		  Mux
@@ -1999,6 +2148,7 @@ Library {
 	  SID			  "43"
 	  Ports			  [3, 1]
 	  Position		  [200, 223, 210, 367]
+	  ZOrder		  -9
 	  BlockMirror		  on
 	  ShowName		  off
 	  Inputs		  "3"
@@ -2010,30 +2160,23 @@ Library {
 	  SID			  "23"
 	  Ports			  [5, 5]
 	  Position		  [155, 27, 340, 203]
-	  LibraryVersion	  "1.36"
+	  ZOrder		  -10
+	  LibraryVersion	  "1.58"
 	  SourceBlock		  "pm_machines_library/Three Phase Rotary PM Machine S-Function"
-	  SourceType		  "Unknown"
+	  SourceType		  ""
 	}
 	Block {
 	  BlockType		  Reference
 	  Name			  "Three-Phase\nV-I Measurement"
 	  SID			  "24"
-	  Ports			  [0, 0, 0, 0, 0, 3, 3]
+	  Ports			  [0, 2, 0, 0, 0, 3, 3]
 	  Position		  [865, 157, 925, 303]
-	  LibraryVersion	  "1.1955"
+	  ZOrder		  -11
+	  LibraryVersion	  "1.2191"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Measurements/Three-Phase\nV-I Measurement"
 	  SourceType		  "Three-Phase VI Measurement"
-	  ShowPortLabels	  "FromPortIcon"
-	  SystemSampleTime	  "-1"
-	  FunctionWithSeparateData off
-	  RTWMemSecFuncInitTerm	  "Inherit from model"
-	  RTWMemSecFuncExecute	  "Inherit from model"
-	  RTWMemSecDataConstants  "Inherit from model"
-	  RTWMemSecDataInternal	  "Inherit from model"
-	  RTWMemSecDataParameters "Inherit from model"
-	  GeneratePreprocessorConditionals off
 	  VoltageMeasurement	  "phase-to-ground"
 	  SetLabelV		  on
 	  LabelV		  "Vabc"
@@ -2055,16 +2198,13 @@ Library {
 	  SID			  "25"
 	  Ports			  [0, 0, 0, 0, 0, 3, 3]
 	  Position		  [655, 156, 840, 304]
+	  ZOrder		  -12
 	  AttributesFormatString  "\\n"
-	  LibraryVersion	  "1.1955"
+	  LibraryVersion	  "1.2191"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Elements/Mutual Inductance"
 	  SourceType		  "Mutual Inductance"
-	  PhysicalDomain	  "powersysdomain"
-	  SubClassName		  "unknown"
-	  LeftPortType		  "p1"
-	  RightPortType		  "p1"
 	  LConnTagsString	  "a|b|c"
 	  RConnTagsString	  "A|B|C"
 	  TypeOfMutual		  "Two or three windings with equal mutual terms"
@@ -2083,6 +2223,7 @@ Library {
 	  Name			  "Conn1"
 	  SID			  "26"
 	  Position		  [950, 173, 980, 187]
+	  ZOrder		  -13
 	  BlockMirror		  on
 	  Port			  "1"
 	  Side			  "Right"
@@ -2092,6 +2233,7 @@ Library {
 	  Name			  "Conn2"
 	  SID			  "27"
 	  Position		  [950, 223, 980, 237]
+	  ZOrder		  -14
 	  BlockMirror		  on
 	  Port			  "2"
 	  Side			  "Right"
@@ -2101,6 +2243,7 @@ Library {
 	  Name			  "Conn3"
 	  SID			  "28"
 	  Position		  [950, 273, 980, 287]
+	  ZOrder		  -15
 	  BlockMirror		  on
 	  Port			  "3"
 	  Side			  "Right"
@@ -2110,6 +2253,7 @@ Library {
 	  Name			  "Out1"
 	  SID			  "29"
 	  Position		  [365, 38, 395, 52]
+	  ZOrder		  -16
 	  IconDisplay		  "Port number"
 	}
 	Block {
@@ -2117,6 +2261,7 @@ Library {
 	  Name			  "Out2"
 	  SID			  "30"
 	  Position		  [95, 288, 125, 302]
+	  ZOrder		  -17
 	  BlockMirror		  on
 	  Port			  "2"
 	  IconDisplay		  "Port number"
@@ -2314,16 +2459,17 @@ Library {
       SID		      "15"
       Ports		      [5, 5]
       Position		      [50, 300, 230, 460]
+      ZOrder		      -5
       FunctionName	      "rotgen_three_phase_sfcn"
-      MaskDisplay	      "port_label('input', 1, 'theta')\nport_label('input', 2, 'omega')\nport_label('input', 3, 'Pha"
-      "se A Current')\nport_label('input', 4, 'Phase B Current')\nport_label('input', 5, 'Phase C Current')\nport_label"
-      "('output', 1, 'Torque')\nport_label('output', 2, 'Phase A EMF')\nport_label('output', 3, 'Phase B EMF')\nport_la"
-      "bel('output', 4, 'Phase C EMF')\nport_label('output', 5, 'Meas')"
-      MaskIconFrame	      on
-      MaskIconOpaque	      on
-      MaskIconRotate	      "none"
-      MaskPortRotate	      "default"
-      MaskIconUnits	      "autoscale"
+      Object {
+	$PropName		"MaskObject"
+	$ObjectID		22
+	$ClassName		"Simulink.Mask"
+	Display			"port_label('input', 1, 'theta')\nport_label('input', 2, 'omega')\nport_label('input', 3, 'Phase A Current'"
+	")\nport_label('input', 4, 'Phase B Current')\nport_label('input', 5, 'Phase C Current')\nport_label('output', 1, 'Tor"
+	"que')\nport_label('output', 2, 'Phase A EMF')\nport_label('output', 3, 'Phase B EMF')\nport_label('output', 4, 'Phase"
+	" C EMF')\nport_label('output', 5, 'Meas')"
+      }
     }
   }
 }

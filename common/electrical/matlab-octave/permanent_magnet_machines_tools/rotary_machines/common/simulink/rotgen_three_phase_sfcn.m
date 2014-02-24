@@ -82,7 +82,7 @@ function setup(block)
     block.OutputPort(4).Complexity  = 'Real';
     
     % Fifth output is various quantities multiplexed together
-    block.OutputPort(5).Dimensions  = 11;
+    block.OutputPort(5).Dimensions  = 12;
     block.OutputPort(5).DatatypeID  = 0; % double
     block.OutputPort(5).Complexity  = 'Real';
     
@@ -222,7 +222,8 @@ function Outputs(block)
                                  omega, ...
                                  theta * (data.design.Poles(1) / 2), ... % the electrical angle
                                  torque, ...
-                                 data.design.RotorMomentOfInertia ];
+                                 data.design.RotorMomentOfInertia, ...
+                                 data.design.FluxLinkageRms ];
                                  
     
 end
