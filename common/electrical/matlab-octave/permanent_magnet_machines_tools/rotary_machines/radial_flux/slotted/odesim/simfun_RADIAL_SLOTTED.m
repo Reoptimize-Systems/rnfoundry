@@ -474,7 +474,8 @@ function design = corelosssetup(design, feapos)
     
     % yoke
     design.CoreLoss(1).dy = design.ty / 10;
-    design.CoreLoss(1).coreycoords = ((design.CoreLoss(1).dy/2):design.CoreLoss(1).dy:(design.ty-design.CoreLoss(1).dy/2))';
+    design.CoreLoss(1).coreycoords = ...
+        ((design.CoreLoss(1).dy/2):design.CoreLoss(1).dy:(design.ty-design.CoreLoss(1).dy/2))';
     
     if strcmp(design.StatorType, 'si')
         design.CoreLoss(1).coreycoords = ...
@@ -486,7 +487,10 @@ function design = corelosssetup(design, feapos)
 
     design.CoreLoss(1).dx = min([0.01 / 5, design.thetap / 10]);
     design.CoreLoss(1).corexcoords = ((design.CoreLoss(1).dx/2):design.CoreLoss(1).dx:(design.thetap-design.CoreLoss(1).dx/2))';
-    [design.CoreLoss(1).meshx, design.CoreLoss(1).meshy] = meshgrid(design.CoreLoss(1).coreycoords,design.CoreLoss(1).corexcoords);
+    
+    [design.CoreLoss(1).meshx, design.CoreLoss(1).meshy] = ...
+        meshgrid(design.CoreLoss(1).coreycoords,design.CoreLoss(1).corexcoords);
+    
     Ri = design.CoreLoss(1).meshx - design.CoreLoss(1).dx / 2;
     Ro = design.CoreLoss(1).meshx + design.CoreLoss(1).dx / 2;
     theta = design.CoreLoss(1).dy;
@@ -494,16 +498,16 @@ function design = corelosssetup(design, feapos)
     design.CoreLoss(1).dA = repmat(reshape(design.CoreLoss(1).dA, size(design.CoreLoss(1).dA,1), 1, size(design.CoreLoss(1).dA,2)), [1, npos, 1]);
     
     % convert mesh coordinates from polar to cart
-    [design.CoreLoss(1).meshx, design.CoreLoss(1).meshy] = pol2cart( design.CoreLoss(1).meshy, design.CoreLoss(1).meshx );
+    [design.CoreLoss(1).meshx, design.CoreLoss(1).meshy] = ...
+            pol2cart( design.CoreLoss(1).meshy, design.CoreLoss(1).meshx );
     
     % The values along the first dimension (down the columns) of the arrays
     % will contain values sampled in the x-direction in the fea simulation.
-    % In this case values along the dimension hbi, or ht in the case of the
+    % In this case values along the dimension ty, or tc in the case of the
     % teeth. The values along the second dimension are the values sampled
     % at each value xRVWp. The values along the third dimension of the
     % arrays will contain values which are sampled from the y direction of
-    % the fea simulation, in this case along the dimension taupm, or tsb
-    % and tc in the case of the teeth.
+    % the fea simulation, in this case along the dimension taupm
     design.CoreLoss(1).Bx = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
     design.CoreLoss(1).By = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
     design.CoreLoss(1).Bz = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
