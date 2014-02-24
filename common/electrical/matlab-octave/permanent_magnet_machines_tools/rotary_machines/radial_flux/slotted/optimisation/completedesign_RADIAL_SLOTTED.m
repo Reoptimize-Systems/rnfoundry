@@ -73,6 +73,11 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
             design.tsb = design.Rso - design.Rtsb;
             design.tsg = design.tsgVtsb * design.tsb;
             
+            design.Rco = design.Rtsb;
+            design.Rci = design.Ryo;
+            design.Rbi = design.Rmo;
+            design.Rtsg = design.Rso - design.tsg;
+            
             % calculate the lengths
             design.ty = design.Ryo - design.Ryi;
             design.tc = design.Rco - design.Rci;
@@ -94,6 +99,11 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
             design.tm = design.Rmo - design.Rmi;
             design.tbi = design.Rbo - design.Rbi;
             
+            design.Rco = design.Rtsb;
+            design.Rci = design.Ryo;
+            design.Rbi = design.Rmo;
+            design.Rtsg = design.Rso - design.tsg;
+            
         elseif all(isfield(design, dimfields2))
             % The dimensions are present already, specified using lengths,
             % calculate the radial dimensions
@@ -104,6 +114,11 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
             design.Ryo = design.Rtsb - design.tc; 
             design.Ryi = design.Ryo - design.ty;
             
+            design.Rco = design.Rtsb;
+            design.Rci = design.Ryo;
+            design.Rbi = design.Rmo;
+            design.Rtsg = design.Rso - design.tsg;
+            
         else
             % something's missing
             error( 'RENEWNET:pmmachines:slottedradspec', ...
@@ -112,12 +127,6 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
                    sprintf('%s, ', dimfields1{:}), ...
                    sprintf('%s, ', dimfields2{:}))
         end
-
-        % some additional radial variables
-        design.Rco = design.Rtsb;
-        design.Rci = design.Ryo;
-        design.Rbi = design.Rmo;
-        design.Rtsg = design.Rso - design.tsg;
         
     else
         error('Unrecognised stator type.')
