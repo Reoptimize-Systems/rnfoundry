@@ -1,5 +1,5 @@
-function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] ...
-    = internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, layers, tol)
+function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] ...
+    = internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, ylayers, tol, varargin)
 % creates a set of node, links and label locations for the points making up
 % the inside of a coil slot in an iron cored machine
 %
@@ -140,119 +140,215 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] ...
 
 % Created by Richard Crozier 2012
 
+    if nargin == 0 && nargout == 1
+        % return function handles to subfunctions for testing purposes
+        nodes = {@shoecurvepoints, @basecurvepoints};
+        return;
+    end
+    
+    options.CoilBaseFraction = 0.05;
+    options.ShoeCurveControlFrac = 0.5;
+    options.SplitX = false;
+    
+    options = parseoptions (options, varargin);
+    
+    if xcoil < 5*tol
+        error ('xcoil cannot be less than five times the tolerance.')
+    end
+    
+    if options.CoilBaseFraction > 1 || options.CoilBaseFraction < 0
+        error ('optional CoilBaseFraction must lie between 0 and 1.')
+    end
+    
+    xcoilbase = options.CoilBaseFraction * xcoil;
+    
+    if xcoilbase < 2*tol
+        xcoilbase = 2*tol;
+    end
+    
+    xcoilbody = xcoil - xcoilbase;
+    
     % there are no shoes so return an empty label
     shoegaplabelloc = [];
     
     if yshoegap > ycoil
         yshoegap = ycoil;
     end
+    
+    if numel (ycoil) == 1
+        ycoilshoe = ycoil;
+        ycoilbase = ycoil;
+    elseif numel (ycoil) == 2
+        ycoilshoe = ycoil(1);
+        ycoilbase = ycoil(2);
+    else
+        error ('ycoil must contain only one or two elements');
+    end
         
     if xshoebase < tol
         % there is no shoe in this case, so just make a line for the
         % coil flush with the tooth surface
         
-        nodes = [ xcore + xcoil, ycoil/2;
-                  xcore + xcoil, -ycoil/2 ];
+        nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2;
+                  xcore + xcoilbase + xcoilbody, -ycoilshoe/2;
+                  xcore + xcoilbase + xcoilbody, 0 ];
         
-        links = [ 1, 0 ];
+        links = [ 1, 2;
+                  2, 0 ];
+              
+        shoex = [];
+        shoey = [];
+        topshoenids = [];
+        botshoenids = [];
 
         topinnershoenode = 0;
         botinnershoenode = 1;
         
         topouternode = 0;
         botouternode = 1;
+        
+        midshoenode = 2;
+        
+        vertlinks = [1, 2];
                 
     else
         % there is a shoe on top of the tooth
 
         if yshoegap < tol
             % The shoe is joined in the middle seems odd, but we'll allow
-            % for it here
+            % for it here, who knows what applications the future might
+            % have for such a geometry?
 
             if xshoegap < tol
                 
                 % the tip of the shoe meets in a sharp point
                 %
-                % In this case three nodes are required to draw the shoe
-
-                % the top shoe nodes
-                nodes = [ xcore + xcoil, ycoil/2; ...
-                          xcore + xcoil + xshoebase, ycoil/2; ...
-                          xcore + xcoil + xshoebase, 0 ];
-                      
-                      
-                links = [ 0, 2;
-                          2, 1; ];
+                % In this case three main nodes are required to draw the
+                % shoe
  
-                % add the bottom shoe nodes
-                nodes = [ nodes; ...
-                          xcore + xcoil, -ycoil/2; ...
-                          xcore + xcoil + xshoebase, -ycoil/2 ];
-                      
-                links = [ links;
-                          2, 3;
-                          4, 2 ];
+                % calculate intermediate points between the shoe and top of
+                % coil region which create a curved surface
+                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                   xcore, ...
+                                                   xcoil, ...
+                                                   xshoebase, ...
+                                                   xshoegap, ...
+                                                   ycoilbase, ...
+                                                   ycoilshoe, ...
+                                                   yshoegap );
+                                 
+                ncurvepnts = numel(shoex);
+                
+                % the top shoe nodes
+                nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, 0; ...
+                          xcore + xcoilbase + xcoilbody, -ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, -ycoilshoe/2; ...
+                          shoex', shoey'; ...
+                          shoex', -shoey' ];                       
+                
+                topshoenids = 5:4+ncurvepnts;
+                botshoenids = 5+ncurvepnts:4+2*ncurvepnts;
+                
+                links = [ 2, 1; ...
+                          0, topshoenids(1); ...
+                          [topshoenids(1:end-1)', topshoenids(2:end)' ]; ... % join the curve nodes
+                          topshoenids(end), 2; ...
+                          3, botshoenids(1); ...
+                          [botshoenids(1:end-1)', botshoenids(2:end)' ]; ...
+                          botshoenids(end), 2; ...
+                          2, 4 ];
 
                 topinnershoenode = 0;
                 botinnershoenode = 3; 
                 
                 topouternode = 1;
                 botouternode = 4;
+                
+                midshoenode = 2;
+                
+                vertlinks = [ 1, size(links,1)];
 
-                if xshoebase > tol
-                    % link the base of the shoes, the coil won't be in here
-                    
-                    links = [ links;
-                              3, 0 ];
-                          
-                    shoegaplabelloc = tricenter( [xcore + xcoil + xshoebase, 0], ...
-                                                 [xcore + xcoil, ycoil/2], ...
-                                                 [xcore + xcoil, -ycoil/2], ...
-                                                 'incenter', false)';
-                    
-                end
+%                 if xshoebase > tol
+%                     % link the base of the shoes, the coil won't be in here
+%                     
+%                     links = [ links;
+%                               3, 0 ];
+%                           
+%                     shoegaplabelloc = tricenter( [xcore + xcoilbase + xcoilbody + xshoebase, 0], ...
+%                                                  [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
+%                                                  [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
+%                                                  'incenter', false)';
+%                     
+%                 end
 
             else
                 % there is a blunt edge on the shoe
                 %
                 % In this case 4 nodes are required to draw the shoe
+                % corners
                 
-                nodes = [ xcore + xcoil, ycoil/2; ...
-                          xcore + xcoil + xshoebase, ycoil/2; ...
-                          xcore + xcoil + xshoebase, 0; ...
-                          xcore + xcoil + xshoegap, 0];
-                      
-                links = [ 2, 1;
-                          2, 3;
-                          3, 0];
-                      
+                % calculate intermediate points between the shoe and top of
+                % coil region which create a curved surface
+                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                   xcore, ...
+                                                   xcoil, ...
+                                                   xshoebase, ...
+                                                   xshoegap, ...
+                                                   ycoilbase, ...
+                                                   ycoilshoe, ...
+                                                   yshoegap );
+
+                ncurvepnts = numel(shoex);
+                
+                nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, 0; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase - xshoegap, 0];
+
                 % now draw the other shoe 
                 nodes = [ nodes; 
                           nodes(2,1), -nodes(2,2); ...
-                          nodes(1,1), -nodes(1,2); ];
-                      
-                links = [ links; ...
-                          4, 2;
-                          5, 3 ];
-                      
+                          nodes(1,1), -nodes(1,2); ...
+                          shoex', shoey';
+                          shoex', -shoey'];
+
+                topshoenids = 6:5+ncurvepnts;
+                botshoenids = 6+ncurvepnts:5+2*ncurvepnts;
+                
+                links = [ 2, 1;
+                          2, 3;
+                          0, topshoenids(1); 
+                          [topshoenids(1:end-1)', topshoenids(2:end)' ]; ... % join the curve nodes
+                          topshoenids(end), 3; ...
+                          5, botshoenids(1); ...
+                          [botshoenids(1:end-1)', botshoenids(2:end)' ]; ...
+                          botshoenids(end), 3;
+                          4, 2];
+
                 topinnershoenode = 0;
                 botinnershoenode = 5; 
                 
                 topouternode = 1;
                 botouternode = 4;
                 
-                if (xshoebase - xshoegap) > tol
-                    % link the base of the shoes, the coil won't be in here
-                    
-                    links = [ links;
-                              5, 0 ];
-                          
-                    shoegaplabelloc = tricenter( [xcore + xcoil + xshoebase - xshoegap, 0], ...
-                                                 [xcore + xcoil, ycoil/2], ...
-                                                 [xcore + xcoil, -ycoil/2], ...
-                                                 'incenter', false)';
-                    
-                end
+                midshoenode = 3;
+                
+                vertlinks = [ 1, size(links,1)];
+                
+%                 if (xshoebase - xshoegap) > tol
+%                     % link the base of the shoes, the coil won't be in here
+%                     
+%                     links = [ links;
+%                               5, 0 ];
+%                           
+%                     shoegaplabelloc = tricenter( [xcore + xcoilbase + xcoilbody + xshoebase - xshoegap, 0], ...
+%                                                  [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
+%                                                  [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
+%                                                  'incenter', false)';
+%                     
+%                 end
                 
             end
 
@@ -262,26 +358,41 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] ...
             if xshoegap < tol
                 % the tip of the shoe ends in a sharp point
 
-                % the top shoe nodes
-                nodes = [ xcore + xcoil, ycoil/2; ...
-                          xcore + xcoil + xshoebase, ycoil/2; ...
-                          xcore + xcoil + xshoebase, yshoegap/2 ];
-                      
-                links = [ 1, 2;
-                          2, 0 ];
-                      
-%                 shoelabelloc = tricenter(nodes(1,:), nodes(2,:), nodes(3,:), 'incenter', false)';    
+                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                                   xcore, ...
+                                                                   xcoil, ...
+                                                                   xshoebase, ...
+                                                                   xshoegap, ...
+                                                                   ycoilbase, ...
+                                                                   ycoilshoe, ...
+                                                                   yshoegap );
+                                            
+                ncurvepnts = numel(shoex);
                 
-                nodes = [ nodes; ...
-                          xcore + xcoil, -ycoil/2; ...
-                          xcore + xcoil + xshoebase, -ycoil/2; ...
-                          xcore + xcoil + xshoebase, -yshoegap/2 ];
+                % the top shoe nodes
+                nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, yshoegap/2; ...
+                          xcore + xcoilbase + xcoilbody, -ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, -ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, -yshoegap/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, 0;
+                          shoex', shoey'; ...
+                          shoex', -shoey' ];
                       
-                links = [ links; ...
+                topshoenids = 7:6+ncurvepnts;
+                botshoenids = 7+ncurvepnts:6+2*ncurvepnts;
+                
+                links = [ 1, 2;
+                          0, topshoenids(1); 
+                          [topshoenids(1:end-1)', topshoenids(2:end)' ]; ... % join the curve nodes
+                          topshoenids(end), 2; 
+                          3, botshoenids(1); 
+                          [botshoenids(1:end-1)', botshoenids(2:end)' ]; 
+                          botshoenids(end), 5; 
                           4, 5;
-                          3, 5 ];
-                      
-                links = [ links; 5, 2 ];
+                          5, 6
+                          6, 2 ];
 
                 topinnershoenode = 0;
                 botinnershoenode = 3; 
@@ -289,43 +400,71 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] ...
                 topouternode = 1;
                 botouternode = 4;
                 
-                if xshoebase > tol
-                    % link the base of the shoes, the coil won't be in here
-                    
-                    links = [ links;
-                              3, 0 ];
-                          
-                    shoegaplabelloc = tricenter( [xcore + xcoil + xshoebase, 0], ...
-                                                 [xcore + xcoil, ycoil/2], ...
-                                                 [xcore + xcoil, -ycoil/2], ...
-                                                 'incenter', false)';
-                    
-                end
+                midshoenode = 6;
+                
+                vertlinks = [ 1, size(links,1)-2];
+                
+%                 if xshoebase > tol
+%                     % link the base of the shoes, the coil won't be in here
+%                     
+%                     links = [ links;
+%                               3, 0 ];
+%                           
+%                     shoegaplabelloc = tricenter( [xcore + xcoilbase + xcoilbody + xshoebase, 0], ...
+%                                                  [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
+%                                                  [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
+%                                                  'incenter', false)';
+%                     
+%                 end
                           
             else
+                % blunt edged shoes with gap
+                
+                % calculate intermediate points between the shoe and top of
+                % coil region which create a curved surface
+                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                   xcore, ...
+                                                   xcoil, ...
+                                                   xshoebase, ...
+                                                   xshoegap, ...
+                                                   ycoilbase, ...
+                                                   ycoilshoe, ...
+                                                   yshoegap );
+
+                ncurvepnts = numel(shoex);
+                
                 % there is a blunt edge on the shoe
-                nodes = [ xcore + xcoil, ycoil/2; ...
-                          xcore + xcoil + xshoebase, ycoil/2; ...
-                          xcore + xcoil + xshoebase, yshoegap/2; ...
-                          xcore + xcoil + xshoebase - xshoegap, yshoegap/2];
-                      
-                links = [ 2, 1;
-                          2, 3;
-                          0, 3];
+                nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, ycoilshoe/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase, yshoegap/2; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase - xshoegap, yshoegap/2];
                       
                 % now draw the other shoe 
                 nodes = [ nodes; 
-                          nodes(:,1), -nodes(:,2); ];
-
-                links = [ links; ...
+                          nodes(:,1), -nodes(:,2); 
+                          xcore + xcoilbase + xcoilbody + xshoebase - xshoegap, 0;
+                          shoex', shoey';
+                          shoex', -shoey' ];    
+                      
+                topshoenids = 9:8+ncurvepnts;
+                botshoenids = 9+ncurvepnts:8+2*ncurvepnts;
+                
+                links = [ 2, 1;
                           5, 6;
+                          2, 3;
+                          0, topshoenids(1);
+                          [topshoenids(1:end-1)', topshoenids(2:end)'  ]; ... % join the curve nodes
+                          topshoenids(end), 3;
                           6, 7;
-                          7, 4 ];
+                          4, botshoenids(1);
+                          [botshoenids(1:end-1)', botshoenids(2:end)'  ]; ... % join the curve nodes
+                          botshoenids(end), 7 ];
 
                 % make the shoe gap region
                 links = [ links; 
                           6, 2; 
-                          7, 3 ];
+                          7, 8;
+                          8, 3 ];
     
                 % get the centre of the shoe gap
                 shoegaplabelloc = rectcentre(nodes(8,:), nodes(3,:));
@@ -336,60 +475,389 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] ...
                 topouternode = 1;
                 botouternode = 5;
                 
-                if (xshoebase - xshoegap) > tol
-                    % link the base of the shoes, the coil won't be in here
-                    
-                    links = [ links;
-                              4, 0 ];
-                          
-                    shoegaplabelloc = [ shoegaplabelloc; ...
-                                        tricenter( [xcore + xcoil + xshoebase - xshoegap, 0], ...
-                                                   [xcore + xcoil, ycoil/2], ...
-                                                   [xcore + xcoil, -ycoil/2], ...
-                                                   'incenter', false)'; ...
-                                      ];
-                    
-                end
+                midshoenode = 8;
+                
+                vertlinks = [ 1, 2 ];
+                
+%                 if (xshoebase - xshoegap) > tol
+%                     % link the base of the shoes, the coil won't be in here
+%                     
+%                     links = [ links;
+%                               4, 0 ];
+%                           
+%                     shoegaplabelloc = [ shoegaplabelloc; ...
+%                                         tricenter( [xcore + xcoilbase + xcoilbody + xshoebase - xshoegap, 0], ...
+%                                                    [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
+%                                                    [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
+%                                                    'incenter', false)'; ...
+%                                       ];
+%                     
+%                 end
             end
 
 
         end
 
     end
+    
+    % make the curve at the base of the slot
+    [basex, basey, baseQx, baseQy, m, c] = basecurvepoints (xcore, xcoilbase, xcoilbody, ycoilbase, ycoilshoe);
+    
+    ncurvepnts = numel (basex);
+    
+    % this will be the id of the next node we add, the (xcore, 0) node
+    startbasenodeid = size (nodes, 1);
+    
+    nodes = [ nodes;
+              xcore, 0; 
+              basex', basey'; 
+              basex', -basey';
+              xcore+xcoilbase, ycoilbase/2;
+              xcore+xcoilbase, -ycoilbase/2 ];
+          
+    endbasenodeid = size (nodes, 1) - 1;
 
+    links = [ links;
+              startbasenodeid, startbasenodeid+1; 
+              [(startbasenodeid+1:startbasenodeid+ncurvepnts-1)', (startbasenodeid+2:startbasenodeid+ncurvepnts)']
+              startbasenodeid+ncurvepnts, endbasenodeid - 1;
+              startbasenodeid, startbasenodeid+ncurvepnts+1;
+              [(startbasenodeid+ncurvepnts+1:startbasenodeid+2*ncurvepnts-1)', (startbasenodeid+ncurvepnts+2:startbasenodeid+2*ncurvepnts)'] 
+              startbasenodeid+2*ncurvepnts, endbasenodeid  ];
     
     % get the starting inner nodes for making links
     lastinnernodes = [ topinnershoenode, botinnershoenode ];
     
     % starting position for layers, the top of the outer layer
-    layerpos = xcore + xcoil;
     
-    for i = 1:layers
-        % move the layerpos to the top of the next layer
-        layerpos = layerpos - xcoil/layers;
+    % calculate area of various coil regions, we will operate on one half
+    % of the winding to simplify finding the area under curves etc
+    basex = [xcore, basex, xcore+xcoilbase];
+    basey = [0, basey, ycoilbase/2];
+    topbasenids = [(startbasenodeid:startbasenodeid+ncurvepnts), endbasenodeid - 1];
+	botbasenids = [startbasenodeid, (startbasenodeid+ncurvepnts+1:startbasenodeid+2*ncurvepnts), endbasenodeid];
+    
+    basearea = trapz (basex, basey);
+    bodyarea = trapzarea ( ycoilbase, ycoilshoe, xcoilbody ) / 2;
+    shoearea = trapz ([ xcore+xcoil, shoex, xcore+xcoil+xshoebase-xshoegap ], ...
+                      [ ycoilbase/2, shoey, yshoegap ] );
+    
+    totalarea = basearea + bodyarea + shoearea;
+    
+    % calculate the area of one winding layer, given the number of layers
+    windingarea = totalarea / ylayers;
+    
+    if ylayers == 1
+        % simple case, there is only one layer per slot, winding fills the
+        % entire slot, but with the option of splitting into two layers in
+        % the alternate direction so coils lie side-by-side one another in
+        % the slot instead of on top of one another
         
-        % get the number of the next node
-        nextnode = size(nodes, 1);
+        if options.SplitX
+            
+            % add a link creating the sides and a horizontal split
+            links = [ links; 
+                      startbasenodeid, midshoenode;
+                      lastinnernodes(1), endbasenodeid - 1;
+                      lastinnernodes(2),  endbasenodeid ];
+            
+            % get a suitible position for the coil labels
+            coillabelloc = [ xcore + xcoilbase + xcoilbody/2, ycoilshoe/4;
+                             xcore + xcoilbase + xcoilbody/2, -ycoilshoe/4 ];
+        else
+            % add a link creating the horizontal split
+            links = [ links; 
+                      lastinnernodes(1), endbasenodeid - 1;
+                      lastinnernodes(2),  endbasenodeid ];
+                  
+            % get a suitible position for the coil label         
+            coillabelloc = [ xcore + (xcoilbase + xcoilbody)/2, 0 ];
+        end
+        
+    else
+        
+        layersmade = 0;
+        
+        coillabelloc = [];
+        
+        basemidnode = startbasenodeid;
+        
+        layer_area_available = 0;
+        
+        lastlayerstartx = xcore;
+        
+        if windingarea < basearea
+            % gobble up the base area, creating layers as necessary
+            starttrapzind = 1;
+                    
+            for ind = 2:numel (basex)
+                gobblearea = trapz (basex(starttrapzind:ind), basey(starttrapzind:ind));
+                if gobblearea >= windingarea
+                    % create a layer link and coil label location
+                    
+                    links = [ links; topbasenids(ind), botbasenids(ind) ];
+                    
+                    coillabelloc = [ coillabelloc; lastlayerstartx + (basex(ind) - lastlayerstartx)/2, 0 ];
+                    layersmade = layersmade + 1;
+                    
+                    layer_area_available = basearea - gobblearea;
+                    starttrapzind = ind;
+                    lastlayerstartx = basex(ind);
+                else
+                    layer_area_available = gobblearea;
+                end
+            end
+        else
+            layer_area_available = basearea;
+        end
+        
+        if (layersmade >= ylayers)
+            % return if we've made enough layers, partly to sidestep
+            % numerical issues
+            return;
+        end
 
-        % create coil layer
-        nodes = [ nodes; 
-                  layerpos, ycoil/2; 
-                  layerpos, -ycoil/2 ];
+        if windingarea < (layer_area_available + bodyarea)
+            % we calculate the required position for x by finding the roots
+            % of a quadratic obtained from the integral of the staight line
+            % making up the straight side of the coil
+            x1 = xcore + xcoilbase;
+            
+            lastlayernodeids = [topbasenids(end), botbasenids(end)];
+            
+            while 1
+                
+                bodyarealeft = trapzarea ( mxplusc (m, c, x1)*2, ...
+                                           mxplusc (m, c, xcore + xcoil)*2, ...
+                                           (xcore + xcoil) - x1 ) / 2;
 
-        links = [ links; ...
-                  lastinnernodes(1),  nextnode; ...
-                  lastinnernodes(2), nextnode+1; ...
-                  nextnode + 1, nextnode ];
-              
-        % store the new coil part nodes 
-        lastinnernodes = [ nextnode, nextnode + 1 ];      
+                bodyarealeft = bodyarealeft + layer_area_available;
+                
+                if (windingarea > bodyarealeft) || (layersmade >= ylayers)
+
+                    % link up the sides
+                    links = [ links;
+                              lastlayernodeids(1), topinnershoenode;
+                              lastlayernodeids(2), botinnershoenode; ];
+                    
+                    % store the remaining area in the body available to
+                    % a layer
+                    layer_area_available = bodyarealeft;
+                    
+                    % break out of the while loop
+                    break;
+                    
+                else
+                    % calculate the area of the body required to make up the
+                    % remaining required winding area
+                    At = windingarea - layer_area_available;
+
+                    % find the roots of the polynomial to get the position of x
+                    arearoots = roots ([ m/2, c, -(At + (m/2)*x1 + c*x1)]);
+
+                    x2 = arearoots(arearoots > 0);
+
+                    if isempty (x2)
+                        error ('Impossible coil shape');
+                    end
+
+                    % add new nodes and link
+                    newy = mxplusc (m, c, x2);
+
+                    nodes = [ nodes; 
+                              x2, newy; 
+                              x2, -newy ];
+
+                    thislayernodeids = [ size(nodes,1)-2, size(nodes,1)-1 ];
+
+                    links = [ links;
+                              lastlayernodeids(1), thislayernodeids(1);
+                              lastlayernodeids(2), thislayernodeids(2);
+                              thislayernodeids(1), thislayernodeids(2) ];
+
+                    coillabelloc = [ coillabelloc; lastlayerstartx + (x2-lastlayerstartx)/2, 0 ];
+                    layersmade = layersmade + 1;
+                    
+                    lastlayernodeids = thislayernodeids;
+
+                    lastlayerstartx = x2;
+                    
+                    x1 = x2;
+                    
+                    layer_area_available = 0;
+
+                end
+            end
+
+        else
+            layer_area_available = layer_area_available + bodyarea;
+        end
         
-        % get a suitible position for the coil label         
-        coillabelloc(i,1:2) = rectcentre( [layerpos, -ycoil/2], ...
-                                          [layerpos + xcoil/layers, ycoil/2]);
+        if (layersmade >= ylayers)
+            % return if we've made enough layers, partly to sidestep
+            % numerical issues
+            return;
+        end
         
+        shoex = [ xcore + xcoil, shoex ];    
+        shoey = [ ycoilshoe/2, shoey ];
+        
+        % gobble up the shoe area, creating layers as necessary
+        if windingarea < (layer_area_available + shoearea)
+            
+            starttrapzind = 1;
+                    
+            for ind = 2:numel (shoex)
+                gobblearea = trapz (shoex(starttrapzind:ind), shoey(starttrapzind:ind)) + layer_area_available;
+                if gobblearea >= windingarea
+                    % create a layer link and coil label location
+                    
+                    links = [ links; topshoenids(ind-1), botshoenids(ind-1) ];
+                    
+                    coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(ind) - lastlayerstartx)/2, 0 ];
+                    layersmade = layersmade + 1;
+                    lastlayerstartx = shoex(ind);
+                    starttrapzind = ind;
+                    layer_area_available = 0;
+                end
+            end
+            
+            if ylayers - layersmade == 1
+                % put the remaining layer in the remaining area
+                coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(end) - lastlayerstartx)/2, 0 ];
+            elseif layersmade ~= ylayers
+                error ('layer construction error')
+            end
+            
+        else
+            if ylayers - layersmade == 1
+                % put the remaining layer in the remaining area
+                coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(end) - lastlayerstartx)/2, 0 ];
+            elseif layersmade ~= ylayers
+                error ('layer construction error, ')
+            end
+        end
+    
     end
+    
+    
+%     for i = 1:layers
+%         % move the layerpos to the top of the next layer
+%         layerpos = layerpos - xcoil/layers;
+%         
+%         % get the number of the next node
+%         nextnode = size(nodes, 1);
+% 
+%         % create coil layer
+%         nodes = [ nodes; 
+%                   layerpos, ycoil/2; 
+%                   layerpos, -ycoil/2 ];
+% 
+%         links = [ links; ...
+%                   lastinnernodes(1),  nextnode; ...
+%                   lastinnernodes(2), nextnode+1; ...
+%                   nextnode + 1, nextnode ];
+%               
+%         % store the new coil part nodes 
+%         lastinnernodes = [ nextnode, nextnode + 1 ];      
+%         
+%         % get a suitible position for the coil label         
+%         coillabelloc(i,1:2) = rectcentre( [layerpos, -ycoil/2], ...
+%                                           [layerpos + xcoil/layers, ycoil/2]);
+%         
+%     end
     
     cornernodes = [ lastinnernodes(2), botouternode, topouternode, lastinnernodes(1) ];
                    
+end
+
+
+function [x, y, Qx, Qy] = shoecurvepoints (shoecontrolfrac, xcore, xcoil, xshoebase, xshoegap, ycoilbase, ycoilgap, yshoegap)
+% creates a curve based on a quadratic Bezier curve with three control
+% points
+%
+% 
+
+    % get the slope at the start of the curve of the shoe
+    cp1 = [xcore+xcoil, ycoilgap/2];
+ 
+    % get the slope at the point where the curve ends at the shoe gap
+    cp3 = [xcore+xcoil+xshoebase-xshoegap, yshoegap/2];
+    
+    % first get line equation
+    leftslope = ((ycoilgap - ycoilbase)/2) / (xcoil);
+    c = cp1(2) - leftslope * cp1(1);
+    % get intercept
+    yint = leftslope * cp3(1) + c;
+    
+    % calculate vector pointing from the right point to the intercept
+    Vlr = [cp3(1), yint] - cp1;
+    
+    % control point lies at specified fraction along this vector
+    cp2 = cp1 + shoecontrolfrac * Vlr;
+    
+    % construct the control points for the Bezier curve
+    Px = [cp1(1), cp2(1), cp3(1)]; 
+    Py = [cp1(2), cp2(2), cp3(2)];
+    
+    [Qx, Qy] = bezierpoints(Px,Py,100);
+    
+    % calculate the length of each curve segment
+    [~,rho] = cart2pol (Qx(2:end) - Qx(1:end-1), Qy(2:end) - Qy(1:end-1));
+    
+    % calculate the total length of the curve
+    curvelength = sum(rho);
+    
+    % choose appropriate number of points for femm to construct the curve,
+    % either one every half mm, or at least 3 points
+    npoints = max (3, min (ceil (curvelength/5e-4), 96));
+    
+    x = Qx(2:floor((numel(Qx)-2)/npoints):end-1);
+    y = Qy(2:floor((numel(Qy)-2)/npoints):end-1);
+    
+end
+
+function [x, y, Qx, Qy, m, c] = basecurvepoints (xcore, xcoilbase, xcoilbody, ycoilbase, ycoilgap)
+
+    % get the start and end points of the curve, which are the first and
+    % third control points
+    cp1 = [xcore, 0];
+    cp3 = [xcore+xcoilbase, ycoilbase/2];
+    
+    % first get line equation of slot side
+    m = ((ycoilgap - ycoilbase)/2) / (xcoilbody);
+    c = cp3(2) - m * cp3(1);
+    % get intercept with y = xcore
+    yint = m * xcore + c;
+    
+    % place the control point at the intercept. This should ensure that the
+    % curve joins smoothly at both ends with the rest of the coil surface
+    cp2 = [xcore, yint];
+    
+    % construct the control points for the Bezier curve
+    Px = [cp1(1), cp2(1), cp3(1)]; 
+    Py = [cp1(2), cp2(2), cp3(2)];
+    
+    [Qx, Qy] = bezierpoints(Px,Py,100);
+    
+    % calculate the length of each curve segment
+    [~,rho] = cart2pol (Qx(2:end) - Qx(1:end-1), Qy(2:end) - Qy(1:end-1));
+    
+    % calculate the total length of the curve
+    curvelength = sum(rho);
+    
+    % choose appropriate number of points for femm to construct the curve,
+    % either one every half mm, or at least 3 points
+    npoints = max (3, min (ceil (curvelength/5e-4), 96));
+    
+    x = Qx(2:floor((numel(Qx)-2)/npoints):end-1);
+    y = Qy(2:floor((numel(Qy)-2)/npoints):end-1);
+
+end
+
+
+function y = mxplusc (m, c, x)
+
+    y = m .* x + c;
+    
 end
