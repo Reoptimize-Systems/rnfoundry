@@ -1,6 +1,6 @@
 function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(thetapole, thetamag, rmag, rbackiron, drawnrotors, rrotor, varargin)
-% axialfluxouterrotor2dfemmprob: adds the outermost rotor parts of an axial
-% flux machine to a FemmProblem Structure
+% adds the outermost rotor parts of a radial flux machine to a FemmProblem
+% Structure
 
     Inputs.MagArrangement = 'NS';
     Inputs.PolarisationType = 'constant';
