@@ -7,8 +7,11 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
 % [FemmProblem, outernodes, coillabellocs] = ...
 %       radialfluxstatorhalf2dfemmprob( slots, Poles, thetapole, thetacoil, ...
 %                                       thetashoegap, ryoke, rcoil, rshoebase, ...
-%                                       rshoegap, coillayers, side, varargin )
+%                                       rshoegap, coillayers, side )
 %
+%
+% [FemmProblem, outernodes, coillabellocs] = ...
+%       radialfluxstatorhalf2dfemmprob( ..., 'Parameter', Value )
 %
 % Description
 %
@@ -50,8 +53,21 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
 %
 %  roffset - 
 %
-%  In addition, a number of other optional arguments can be supplied and
-%  parameter-value pairs.
+%  In addition, a number of other optional arguments can be supplied as
+%  parameter-value pairs. These options and their behaviour are as follows:
+%
+%  'FemmProblem'
+%  'NWindingLayers'
+%  'SlotPositions'
+%  'NSlots'
+%  'Tol'
+%  'ToothMaterial'
+%  'ToothRegionMeshSize'
+%  'ShoeGapMaterial'
+%  'ShoeGapRegionMeshSize'
+%  'CoilBaseFraction'
+%  'ShoeCurveControlFrac'
+%  'SplitX'
 %
 % Output
 %
@@ -67,6 +83,9 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     Inputs.SlotPositions = [];
     Inputs.NSlots = [];
     Inputs.Tol = 1e-5;
+    Inputs.CoilBaseFraction = 0.05;
+    Inputs.ShoeCurveControlFrac = 0.5;
+    Inputs.SplitX = false;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -111,7 +130,7 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     elcount = elementcount_mfemm(FemmProblem);
     
     % make a single slot
-    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs] = ...
+    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs, vertlinkinds] = ...
             internalslotnodelinks( thetacoil, thetashoegap, ryoke/2, rcoil, ...
                                    rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol);
 
@@ -150,12 +169,13 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
 	% get the vertical links by finding those links where the difference in
     % y coordinates of the link nodes is not zero, these links must be made
     % into arc segments
-    isvertlinks = abs(diff( [nodes(links(:,1)+1,1), nodes(links(:,2)+1,1)], 1, 2 )) < Inputs.Tol;
-    vertlinks = links(isvertlinks,:);
+%     isvertlinks = abs(diff( [nodes(links(:,1)+1,1), nodes(links(:,2)+1,1)], 1, 2 )) < Inputs.Tol;
+    vertlinks = links(vertlinkinds,:);
     angles = diff( [nodes(vertlinks(:,1)+1,2), nodes(vertlinks(:,2)+1,2)], 1, 2);
     
     % get the horizontal links, these will be segments
-    horizlinks = links(~isvertlinks,:);
+    horizlinks = links;
+    horizlinks(vertlinkinds,:) = [];
     
     % correct vertical links which are in the wrong direction
     for i = 1:size(vertlinks,1)
