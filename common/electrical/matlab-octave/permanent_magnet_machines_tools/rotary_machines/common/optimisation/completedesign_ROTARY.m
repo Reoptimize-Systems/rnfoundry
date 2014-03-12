@@ -11,7 +11,7 @@ function design = completedesign_ROTARY(design, simoptions)
     % the number of Poles should be supplied and the ratio of coils to
     % Poles and Phases
     if ~( xor( all(isfield(design, {'qc', 'Phases', 'NBasicWindings'})), all(isfield(design, {'qc', 'Phases', 'Poles'})) )  ...
-        || ~all(isfield(design, {'qc', 'Phases', 'Poles', 'NBasicWindings'})))
+          || all(isfield(design, {'qc', 'Phases', 'Poles', 'NBasicWindings'})))
     
         error( ['You must specify either the fields ''qc'', ''Phases'' and ''NBasicWindings''', ...
                 ' or ''qc'', ''Phases'' and ''Poles'', or all of these for the winding design specification'] )
