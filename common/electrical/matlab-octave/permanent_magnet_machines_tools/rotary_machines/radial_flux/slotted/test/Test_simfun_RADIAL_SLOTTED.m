@@ -14,6 +14,7 @@ if design.CoilLayers == 1
 elseif design.CoilLayers == 2
     design.Qs = design.Phases * 1 * design.Qc;
 end
+design.qc = fr (design.Qc, design.Poles * design.Phases);
 design.yd = 4;
 design.thetap = 2*pi/design.Poles;
 design.thetam = design.thetap * 0.8;
@@ -72,10 +73,13 @@ design.BackIronMaterial = '1117 Steel';
 design.YokeMaterial = design.BackIronMaterial;
 design.CoilMaterial = '36 AWG';
 
+%%
 design.RlVRp = 10;
 
 simoptions = struct();
 simoptions.GetVariableGapForce = false;
+
+design = completedesign_RADIAL_SLOTTED (design, simoptions);
 
 [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions);
 fprintf(1, 'done simfun\n');
