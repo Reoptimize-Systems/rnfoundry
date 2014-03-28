@@ -64,7 +64,7 @@ function usages = find_in_files(exp, topdir, dodisplay)
 
     for indi = 1:numel(thepath)
 
-        mfiles = dir([ thepath{indi}, '\*.m' ]);
+        mfiles = dir(fullfile(thepath{indi}, '*.m' ));
 
         for indii = 1:numel(mfiles)
             % find expression in file using regexp
