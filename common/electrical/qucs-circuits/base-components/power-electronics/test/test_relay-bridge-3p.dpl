@@ -1,0 +1,31 @@
+<Qucs Schematic 0.0.18>
+<Properties>
+  <View=0,0,800,800,1,0,0>
+  <Grid=10,10,0>
+  <DataSet=test_relay-bridge.dat>
+  <DataDisplay=test_relay-bridge.sch>
+  <OpenDisplay=1>
+  <Script=test_relay-bridge.m>
+  <RunScript=0>
+  <showFrame=0>
+  <FrameText0=Title>
+  <FrameText1=Drawn By:>
+  <FrameText2=Date:>
+  <FrameText3=Revision:>
+</Properties>
+<Symbol>
+</Symbol>
+<Components>
+</Components>
+<Wires>
+</Wires>
+<Diagrams>
+  <Rect 140 367 620 327 3 #c0c0c0 1 00 1 0 0.005 0.04 1 -1200 500 1200 1 450.624 100 1048.97 315 0 225 "" "" "">
+	<"VA.Vt" #ff0000 0 3 0 0 0>
+	<"VB.Vt" #00aa00 0 3 0 0 0>
+	<"VC.Vt" #0000ff 0 3 0 0 0>
+	<"DCout.Vt" #000000 3 3 0 3 0>
+  </Rect>
+</Diagrams>
+<Paintings>
+</Paintings>
