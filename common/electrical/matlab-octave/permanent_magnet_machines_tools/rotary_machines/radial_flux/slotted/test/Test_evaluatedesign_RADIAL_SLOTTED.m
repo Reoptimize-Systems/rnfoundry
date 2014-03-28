@@ -14,6 +14,7 @@ if design.CoilLayers == 1
 elseif design.CoilLayers == 2
     design.Qs = design.Phases * 1 * design.Qc;
 end
+design.qc = fr (design.Qc, design.Poles * design.Phases);
 design.yd = 4;
 design.thetap = 2*pi/design.Poles;
 design.thetam = design.thetap * 0.8;
@@ -106,6 +107,8 @@ design.OuterStructure.lst = 50/1000;
 design.OuterStructure.lp = 10/1000;
 design.OuterStructure.NSpokes = design.InnerStructure.NSpokes;
 design.OuterStructure.OuterConstraint = [1, 0];
+
+design = completedesign_RADIAL_SLOTTED (design, simoptions);
 
 [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOTTED(design, simoptions);
 
