@@ -1,6 +1,6 @@
 function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOTTED(design, simoptions)
-% evaluates a slotted radial flux permanent magnet machine design assigns
-% it a score
+% evaluates a slotted radial flux permanent magnet machine design and
+% assigns it a score
 %
 % Syntax
 %

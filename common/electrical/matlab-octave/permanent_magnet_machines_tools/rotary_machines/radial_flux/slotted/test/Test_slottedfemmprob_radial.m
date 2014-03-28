@@ -47,13 +47,14 @@ elseif strcmp(design.StatorType, 'so')
     design.Ryi = design.Ryo - design.ty;
     design.Rym = mean([design.Ryi, design.Ryo]);
 end
-
+%%
 [FemmProblem, outermagsep, coillabellocs, yokenodeids] = ...
     slottedfemmprob_radial(design, ...
                            'StatorType', design.StatorType );
 
 openprobleminfemm_mfemm(FemmProblem);
 
+%%
 [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, 'StatorType', design.StatorType);
 
 openprobleminfemm_mfemm(FemmProblem);

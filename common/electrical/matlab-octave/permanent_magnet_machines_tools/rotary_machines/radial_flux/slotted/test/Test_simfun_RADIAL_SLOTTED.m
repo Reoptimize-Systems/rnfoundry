@@ -83,5 +83,7 @@ design = completedesign_RADIAL_SLOTTED (design, simoptions);
 
 [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions);
 fprintf(1, 'done simfun\n');
+
+%%
 [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions);
 
