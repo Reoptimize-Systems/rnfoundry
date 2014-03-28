@@ -1,6 +1,8 @@
 function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmprob_radial(design, varargin)
 % creates a FemmProblem structure for a slotted radial flux permanent
 % magnet machine
+%
+% 
 
     % First set up some default inputs
     Inputs.StatorType = 'si';

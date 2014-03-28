@@ -6,7 +6,63 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
 %
 % design = completedesign_RADIAL_SLOTTED(design, simoptions)
 %
+% Description
+%
+% completedesign_RADIAL_SLOTTED takes a minimal design structure describing
+% a slotted radial flux permanent magnet machine design and completes it by
+% calculating various dimensions and parameters and properties of the
+% machine windings etc. The design dimensions can be specified either as
+% dimensionless ratios or actual dimensions, see below for details.
+%
 % Input
+%
+%  design - A radial slotted machine design structure. It must contain
+%    either all the fields:
+%
+%    RmoVRbo';
+%    RmiVRmo';
+%    RsoVRmi'; 
+%    RtsbVRso';
+%    RyoVRtsb';
+%    RyiVRyo'; 
+%    tsgVtsb'; 
+%    thetamVthetap';
+%    thetacVthetas'; 
+%    thetasgVthetac'; 
+%    lsVtm
+%
+%    or all the fields:
+%
+%    Rbo';
+%    Rmo';
+%    Rmi';
+%    Rso';
+%    Rtsb';
+%    Ryo'; 
+%    Ryi';
+%    tsg';
+%    thetam';
+%    thetasg'; 
+%    ls
+%
+%    or all the fields
+%
+%    Rbo';
+%    g';
+%    ty';
+%    tm';
+%    tc';
+%    tsb';
+%    tbi';
+%    tsg';
+%    thetam';
+%    thetasg'; 
+%    ls
+%
+%    In addition, it must contain either the fields:
+%
+%    or the fields:
+%
 %
 % Output
 %
