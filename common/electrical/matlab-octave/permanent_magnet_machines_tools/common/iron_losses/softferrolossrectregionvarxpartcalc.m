@@ -1,11 +1,11 @@
 function [histloss, eddyloss, excessloss] = ...
-    softferrolossrectregionvarxpartcalc(Bx, By, Bz, Hx, Hy, Hz, kc, ke, beta, xstep, dx, dy, dz)
+    softferrolossrectregionvarxpartcalc(Bx, By, Bz, kc, kh, ke, beta, xstep, dx, dy, dz)
 % part calculates the values of the hysteresis, eddy current and excess
 % loss in a cuboidal region of soft ferromagnetic material
 %
 % Syntax
 %
-% [histloss, eddyloss, excessloss] = softferrolossrectregpartcalc(Bx, By, Bz, Hx, Hy, Hz, dx, dy, dz, kc, ke, beta)
+% [histloss, eddyloss, excessloss] = softferrolossrectregpartcalc(Bx, By, Bz, dx, dy, dz, kc, ke, beta)
 %
 % Input
 %
@@ -14,12 +14,6 @@ function [histloss, eddyloss, excessloss] = ...
 %  By - 
 % 
 %  Bz -  
-% 
-%  Hx -  
-% 
-%  Hy -  
-% 
-%  Hz -  
 % 
 %  kc -  
 % 
@@ -55,9 +49,9 @@ function [histloss, eddyloss, excessloss] = ...
 % Transient Finite Element Analysis,�? IEEE Transactions on Magnetics, vol.
 % 40, no. 2, pp. 1318--1321, Mar. 2004.
 
-    if nargin == 11
+    if nargin == 9
         dV = dx;
-    elseif nargin == 13
+    elseif nargin == 11
         dV = dx .* dy .* dz;
     else
         error('Incorrect number of arguments.')
@@ -77,14 +71,22 @@ function [histloss, eddyloss, excessloss] = ...
     % generate the part calculation of the hysteresis losses for the
     % region, these must be multiplied by the velocity to get the actual
     % losses
-    histloss = abs(Hx .* dBxVdx).^(2/beta) ...
-               + abs(Hy .* dByVdx).^(2/beta) ...
-               + abs(Hz .* dBzVdx).^(2/beta);
+    Cbeta = 4 .* quad(@(theta) cos(theta).^beta, 0, pi/2);
+    
+    Hirrx = hirr_calc(Bx, beta, kh, Cbeta);
+    
+    Hirry = hirr_calc(By, beta, kh, Cbeta);
+    
+    Hirrz = hirr_calc(Bz, beta, kh, Cbeta);
+    
+    histloss = abs(Hirrx .* dBxVdx).^(2/beta) ...
+               + abs(Hirry .* dByVdx).^(2/beta) ...
+               + abs(Hirrz .* dBzVdx).^(2/beta);
            
 	% replace infinite values with realmax
 	histloss(isinf(histloss)) = realmax;
         
-    histloss = dV .* (histloss .^ (beta / 2));
+    histloss = bsxfun(@times, dV, (histloss .^ (beta / 2)));
     
     histloss = sum(histloss, 3);
     
@@ -93,13 +95,13 @@ function [histloss, eddyloss, excessloss] = ...
     % generate the part calculation of the eddy current losses for the
     % region, these must be multiplied by the square of the velocity (v^2)
     % to get the actual losses
-    Bderivsquares = realpow(dBxVdx, 2) + realpow(dByVdx, 2) + realpow(dBzVdx, 2);
+    Bderivsquares = realpow (dBxVdx, 2) + realpow (dByVdx, 2) + realpow (dBzVdx, 2);
     
-    eddyloss =  dV .* (kc / (2 * pi^2)) .* Bderivsquares;
+    eddyloss =  bsxfun (@times, dV, (kc / (2 * pi^2)) .* Bderivsquares);
     
-    eddyloss = sum(eddyloss, 3);
+    eddyloss = sum (eddyloss, 3);
     
-    eddyloss = sum(eddyloss, 1);
+    eddyloss = sum (eddyloss, 1);
     
     % generate the part calculation of the excess (sometimes innacurately
     % known as anomalous) losses for the region, these must be multiplied
@@ -113,14 +115,43 @@ function [histloss, eddyloss, excessloss] = ...
     % This is described in [1]
     Ce = 8.763363;
     
-    excessloss = dV .* (ke / Ce) .*  realpow(Bderivsquares, 0.75);
+    excessloss = bsxfun (@times, dV, (ke / Ce) .*  realpow(Bderivsquares, 0.75));
     
-    excessloss = sum(excessloss, 3);
+    excessloss = sum (excessloss, 3);
     
-    excessloss = sum(excessloss, 1);
+    excessloss = sum (excessloss, 1);
 
 end
 
+
+function Hirr = hirr_calc(B, beta, kh, Cbeta)
+% calcualtes the irreversible component of magnetisation in a material
+%
+% Syntax
+%
+% Hirr = hirr_calc(B, beta, kh, Cbeta)
+%
+% Input
+% 
+% 
+    
+%     % check for any dc component to the time varying field
+%     Bdc = mean(B,2);
+    
+%     Bac = bsxfun(@minus, B, Bdc);
+    Bac = B;
+    
+    Bm = max(abs(Bac),[],2);
+    
+    % determine the angle of the EEL elipse
+    xtheta = bsxfun(@rdivide, Bac, Bm);
+    
+    % estimate Hirr
+    Hirr = abs( (kh ./ Cbeta) .* abs( bsxfun(@times, cos(asin(xtheta)), Bm) ).^(beta - 1) );
+    
+    Hirr (isnan (Hirr)) = 0;
+    
+end
 
 
 function Bgrad = bgrad(Bmat, xstep)
