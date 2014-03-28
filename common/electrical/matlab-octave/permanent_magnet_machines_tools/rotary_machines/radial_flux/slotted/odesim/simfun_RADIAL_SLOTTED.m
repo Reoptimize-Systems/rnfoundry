@@ -45,7 +45,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
          design.CoreLoss.Bq, ...
          design.CoreLoss.Pq ] = m36assheared26gagecorelossdata(false);
      
-        design.CoreLoss(2) = design.CoreLoss(1);
+%         design.CoreLoss(2) = design.CoreLoss(1);
     end
     
     [design, simoptions] = simfun_RADIAL(design, simoptions);
@@ -117,21 +117,24 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                                 'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
                                 'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
 
-        if i == 1
-            design = corelosssetup(design, design.feapos);
-        end
-        
         % write the fem file to disk
         writefemmfile(femfilename, design.FemmProblem);
         % analyse the problem
         ansfilename = analyse_mfemm(femfilename, ...
                                     simoptions.usefemm, ...
                                     simoptions.quietfemm);
+                            
         
         if (exist('fpproc_interface_mex', 'file')==3) && ~simoptions.usefemm
             
             solution = fpproc(ansfilename);
+            % activate field smoothing so values are interpolated across
+            % mesh elements
             solution.smoothon();
+            
+            if i == 1
+                design = corelosssetup(design, design.feapos, solution);
+            end
             
             % get the integral of the vector potential in a slot, if two
             % layers get both layers
@@ -146,8 +149,6 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 
                 design.CoreLoss(ii).By(:,i,:) = reshape(p(2,:)', size(design.CoreLoss(ii).meshx));
                 design.CoreLoss(ii).Bx(:,i,:) = reshape(p(3,:)', size(design.CoreLoss(ii).meshx));
-                design.CoreLoss(ii).Hy(:,i,:) = reshape(p(6,:)', size(design.CoreLoss(ii).meshx));
-                design.CoreLoss(ii).Hx(:,i,:) = reshape(p(7,:)', size(design.CoreLoss(ii).meshx));
 
             end
             
@@ -183,6 +184,10 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
             clear solution;
             
         else
+            if i == 1
+                design = corelosssetup(design, design.feapos, ansfilename);
+            end
+            
             % open the solution in FEMM
             opendocument(ansfilename);
 
@@ -199,8 +204,6 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 
                 design.CoreLoss(ii).By(:,i,:) = reshape(p(:,2), size(design.CoreLoss(ii).meshx));
                 design.CoreLoss(ii).Bx(:,i,:) = reshape(p(:,3), size(design.CoreLoss(ii).meshx));
-                design.CoreLoss(ii).Hy(:,i,:) = reshape(p(:,6), size(design.CoreLoss(ii).meshx));
-                design.CoreLoss(ii).Hx(:,i,:) = reshape(p(:,7), size(design.CoreLoss(ii).meshx));
 
             end
             
@@ -458,243 +461,41 @@ end
 
 
 
-function design = corelosssetup(design, feapos)
-
+function design = corelosssetup(design, feapos, solution)
+    
     % get the number of positions
     npos = numel(feapos);
+    
+    if isa(solution, 'fpproc')
+        % it's an xfemm fpproc object
 
-    % obtain the coordinates of the four corners of the first stator
-    coords = getnodecoords_mfemm(design.FemmProblem);
-    coords = coords(design.yokenodeids(1,1:4)+1,:);
-    
-    % CoreLoss(1) will contain the data for the yoke while
-    % CoreLoss(2) will contain the data for the teeth central section
-    % without the shoes
-    % CoreLoss(3) will contain the data for the teeth shoes
-    
-    % yoke
-    design.CoreLoss(1).dy = design.ty / 10;
-    design.CoreLoss(1).coreycoords = ...
-        ((design.CoreLoss(1).dy/2):design.CoreLoss(1).dy:(design.ty-design.CoreLoss(1).dy/2))';
-    
-    if strcmp(design.StatorType, 'si')
-        design.CoreLoss(1).coreycoords = ...
-            design.CoreLoss(1).coreycoords + coords(2,1) + design.ty;
-    elseif strcmp(design.StatorType, 'so')
-        design.CoreLoss(1).coreycoords = ...
-            design.CoreLoss(1).coreycoords + coords(1,1) - design.ty;
-    end
-
-    design.CoreLoss(1).dx = min([0.01 / 5, design.thetap / 10]);
-    design.CoreLoss(1).corexcoords = ((design.CoreLoss(1).dx/2):design.CoreLoss(1).dx:(design.thetap-design.CoreLoss(1).dx/2))';
-    
-    [design.CoreLoss(1).meshx, design.CoreLoss(1).meshy] = ...
-        meshgrid(design.CoreLoss(1).coreycoords,design.CoreLoss(1).corexcoords);
-    
-    Ri = design.CoreLoss(1).meshx - design.CoreLoss(1).dx / 2;
-    Ro = design.CoreLoss(1).meshx + design.CoreLoss(1).dx / 2;
-    theta = design.CoreLoss(1).dy;
-    design.CoreLoss(1).dA = annularsecarea(Ri, Ro, theta);
-    design.CoreLoss(1).dA = repmat(reshape(design.CoreLoss(1).dA, size(design.CoreLoss(1).dA,1), 1, size(design.CoreLoss(1).dA,2)), [1, npos, 1]);
-    
-    % convert mesh coordinates from polar to cart
-    [design.CoreLoss(1).meshx, design.CoreLoss(1).meshy] = ...
-            pol2cart( design.CoreLoss(1).meshy, design.CoreLoss(1).meshx );
-    
-    % The values along the first dimension (down the columns) of the arrays
-    % will contain values sampled in the x-direction in the fea simulation.
-    % In this case values along the dimension ty, or tc in the case of the
-    % teeth. The values along the second dimension are the values sampled
-    % at each value xRVWp. The values along the third dimension of the
-    % arrays will contain values which are sampled from the y direction of
-    % the fea simulation, in this case along the dimension taupm
-    design.CoreLoss(1).Bx = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-    design.CoreLoss(1).By = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-    design.CoreLoss(1).Bz = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-    design.CoreLoss(1).Hy = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-    design.CoreLoss(1).Hx = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-    design.CoreLoss(1).Hz = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-    % make dz value equal to the depth of the simulation as it is used
-    % to calculate the volume of material generating the loss (volume
-    % will be dx X dy X dz)
-    design.CoreLoss(1).dz = design.ls;
-    % add xstep which is the size of the steps in xRVWp denormalised. This
-    % is later used to find the value of dB/dx at each position
-    design.CoreLoss(1).xstep = (feapos(2) - feapos(1)) * design.thetap;
-            
-    % now set up the tooth body sampling positions
-    design.CoreLoss(2).dy = design.tc / 10;
-    design.CoreLoss(2).coreycoords =  ...
-        ((design.CoreLoss(2).dy/2):design.CoreLoss(2).dy:(design.tc-design.CoreLoss(1).dy/2))';
-    design.CoreLoss(2).coreycoords = design.CoreLoss(2).coreycoords + coords(1,1);
-    
-    design.thetat = design.thetas-design.thetac;
-    design.CoreLoss(2).dx = min([0.01 / 5, design.thetat / 4]);
-    % these will be the angular positions of the points
-    halftoothcorex = ((design.CoreLoss(2).dx/2):design.CoreLoss(2).dx:(design.thetat/2-design.CoreLoss(2).dx/2))';
-    fulltoothcorex = ((design.CoreLoss(2).dx/2):design.CoreLoss(2).dx:(design.thetat-design.CoreLoss(2).dx/2))';
-    if design.ypd == 1
+        % get the volume of each element under consideration
+        design.CoreLoss(1).dV = solution.getgroupareas (2) .* design.ls;
         
-        design.CoreLoss(2).corexcoords = [halftoothcorex; ...
-                                          zeros(numel(fulltoothcorex)*(design.ypn-1),1); ...
-                                          halftoothcorex + design.thetap - (design.thetat/2) ];
-
-        for i = 1:(design.ypn-1)
-            design.CoreLoss(2).corexcoords( numel(halftoothcorex) ...
-                                            + (1+((i-1)*numel(fulltoothcorex)):(i*numel(fulltoothcorex))),1 ) ...
-                               = fulltoothcorex + i*design.thetas - design.thetat/2;
-        end
-                                  
-    elseif design.ypd == 2
+        % get the location we will use to estimate the flux in the element
+        temp = solution.getgroupcentroids (2);
+        design.CoreLoss(1).meshx = temp(:,1);
+        design.CoreLoss(1).meshy = temp(:,2);
         
-        design.CoreLoss(2).corexcoords = [halftoothcorex; ...
-                                          zeros(numel(fulltoothcorex)*floor(design.ypn/2),1)];
+        % The values along the first dimension (down the columns) of the
+        % arrays will contain values sampled in the x-direction in the fea
+        % simulation. In this case values along the dimension hbi, or ht in
+        % the case of the teeth. The values along the second dimension are
+        % the values sampled at each value xRVWp. The values along the
+        % third dimension of the arrays will contain values which are
+        % sampled from the y direction of the fea simulation, in this case
+        % along the dimension taupm, or tsb and tc in the case of the
+        % teeth.
+        design.CoreLoss(1).Bx = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
+        design.CoreLoss(1).By = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
+        design.CoreLoss(1).Bz = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
 
-        for i = 1:(floor(design.ypn/2))
-            design.CoreLoss(2).corexcoords((i*numel(fulltoothcorex)):((i+1)*numel(fulltoothcorex)-1),1) = ...
-                fulltoothcorex + i*design.thetas - design.thetat/2;
-        end
+        % add xstep which is the size of the steps in xRVWp denormalised. This
+        % is later used to find the value of dB/dx at each position
+        design.CoreLoss(1).xstep = (feapos(2) - feapos(1)) * design.thetap;
         
     else
-        error('denominator of slots per pole must be 1 or 2, other values not yet supported')
-    end
-    
-    design.CoreLoss(2).corexcoords = [ design.CoreLoss(2).corexcoords; ];
-                                   
-    design.CoreLoss(2).coreycoords = [ design.CoreLoss(2).coreycoords; ];
-    
-    [design.CoreLoss(2).meshx, design.CoreLoss(2).meshy] = ... 
-        meshgrid(design.CoreLoss(2).coreycoords,design.CoreLoss(2).corexcoords);
-    
-    % calculate the element areas
-    Ri = design.CoreLoss(2).meshx - (design.CoreLoss(2).dy / 2);
-    Ro = design.CoreLoss(2).meshx + (design.CoreLoss(2).dy / 2);
-    theta = design.CoreLoss(2).dx;
-    design.CoreLoss(2).dA = annularsecarea(Ri, Ro, theta);
-    design.CoreLoss(2).dA = repmat(reshape(design.CoreLoss(2).dA, size(design.CoreLoss(2).dA,1), 1, size(design.CoreLoss(2).dA,2)), [1, npos, 1]);
-    
-    [design.CoreLoss(2).meshx, design.CoreLoss(2).meshy] = ...
-        pol2cart(design.CoreLoss(2).meshy, design.CoreLoss(2).meshx);
-    
-    design.CoreLoss(2).Bx = zeros([size(design.CoreLoss(2).meshx,1), npos, size(design.CoreLoss(2).meshx,2)]);
-    design.CoreLoss(2).By = zeros([size(design.CoreLoss(2).meshx,1), npos, size(design.CoreLoss(2).meshx,2)]);
-    design.CoreLoss(2).Bz = zeros([size(design.CoreLoss(2).meshx,1), npos, size(design.CoreLoss(2).meshx,2)]);
-    design.CoreLoss(2).Hy = zeros([size(design.CoreLoss(2).meshx,1), npos, size(design.CoreLoss(2).meshx,2)]);
-    design.CoreLoss(2).Hx = zeros([size(design.CoreLoss(2).meshx,1), npos, size(design.CoreLoss(2).meshx,2)]);
-    design.CoreLoss(2).Hz = zeros([size(design.CoreLoss(2).meshx,1), npos, size(design.CoreLoss(2).meshx,2)]);
-    % make dz value equal to the depth of the simulation as it is used
-    % to calculate the volume of material generating the loss (volume
-    % will be dx X dy X dz)
-    design.CoreLoss(2).dz = design.CoreLoss(1).dz;
-    % add xstep which is the size of the steps in xRVWp denormalised. This
-    % is later used to find the value of dB/dx at each position
-    design.CoreLoss(2).xstep = design.CoreLoss(1).xstep;
-    
-    % shoes
-    if (design.thetac - design.thetasg) > (design.Rmm*design.FEMMTol)
-        
-        shoedx = min([0.01 / 5, (design.thetac - design.thetasg)/2 / 10]);
-        
-        shoedy = design.tsb / 10;
-        
-        design.thetacss = (design.thetac - design.thetasg) / 2;
-        
-        shoeangle = atan((design.tsb - design.tsg) / design.thetacss);
-        
-        xcoords = ((shoedx/2):shoedx:(design.thetacss-design.CoreLoss(1).dx/2));
-        
-        for i = 1:numel(xcoords)
-            
-            % copy over the information about the materials etc to the new
-            % structure
-            design.CoreLoss(2+i).fq = design.CoreLoss(2).fq;
-            design.CoreLoss(2+i).Bq = design.CoreLoss(2).Bq;
-            design.CoreLoss(2+i).Pq = design.CoreLoss(2).Pq;
-            design.CoreLoss(2+i).kh = design.CoreLoss(2).kh;
-            design.CoreLoss(2+i).kc = design.CoreLoss(2).kc;
-            design.CoreLoss(2+i).ke = design.CoreLoss(2).ke;
-            design.CoreLoss(2+i).beta = design.CoreLoss(2).beta;
-            design.CoreLoss(2+i).dz = design.CoreLoss(1).dz;
-            design.CoreLoss(2+i).xstep = design.CoreLoss(1).xstep;
-            
-            % choose y coords in a line across the shoe at the current x
-            % position
-            shoewid = design.tsg + xcoords(i)*tan(shoeangle);
-            design.CoreLoss(2+i).dy = shoedy;
-            shoeycoords = ((design.CoreLoss(2+i).dy/2):design.CoreLoss(2+i).dy:(shoewid-design.CoreLoss(2+i).dy/2))';
-            if isempty(shoeycoords)
-                if strcmp(design.StatorType, 'si')
-                    design.CoreLoss(2+i).coreycoords = coords(1,1) + shoewid/2;
-                elseif strcmp(design.StatorType, 'so')
-                    design.CoreLoss(2+i).coreycoords = coords(2,1) - shoewid/2;
-                end
-            else
-                if strcmp(design.StatorType, 'si')
-                    design.CoreLoss(2+i).coreycoords = shoeycoords + coords(1,1);
-                elseif strcmp(design.StatorType, 'so')
-                    design.CoreLoss(2+i).coreycoords = coords(2,1) - fliplr(shoeycoords);
-                end
-            end
-            
-            % add a single x coordinate for the tooth shoe at the bottom of
-            % the sim
-            design.CoreLoss(2+i).dx = shoedx;
-            design.CoreLoss(2+i).corexcoords = design.thetat/2 +  design.thetacss - xcoords(i);
-            
-            if design.ypd == 1
-                
-                for ii = 1:(design.ypn-1)
-                    
-                    design.CoreLoss(2+i).corexcoords = ...
-                        [design.CoreLoss(2+i).corexcoords;
-                         ii*design.thetas - design.thetat/2 - (design.thetacss) + xcoords(i); 
-                         ii*design.thetas + design.thetat/2 + (design.thetacss) - xcoords(i) ];
-                     
-                end
-                
-                % add a single x coordinate for the tooth shoe at the top
-                % of the pole
-                design.CoreLoss(2+i).dx = shoedx;
-                design.CoreLoss(2+i).corexcoords = [design.CoreLoss(2+i).corexcoords;
-                                                    design.thetap - (design.thetat/2 +  design.thetacss - xcoords(i)) ];
-                
-            elseif design.ypd == 2
-                
-                for ii = 1:(floor(design.ypn/2))
-                    
-                    design.CoreLoss(2+i).corexcoords = ...
-                        [design.CoreLoss(2+i).corexcoords;
-                         ii*design.thetas - design.thetat/2 - (design.thetacss) + xcoords(i);
-                         ii*design.thetas + design.thetat/2 + (design.thetacss) - xcoords(i) ];
-                     
-                end
-                
-            else
-                error('denominator of slots per pole must be 1 or 2, other values not yet supported')
-            end
-            
-            % generate the sample points
-            [design.CoreLoss(2+i).meshx, design.CoreLoss(2+i).meshy] = ...
-                meshgrid(design.CoreLoss(2+i).coreycoords,design.CoreLoss(2+i).corexcoords);
-
-            % Calculate the element areas
-            Ri = design.CoreLoss(2+i).meshx - design.CoreLoss(2+i).dx / 2;
-            Ro = design.CoreLoss(2+i).meshx + design.CoreLoss(2+i).dx / 2;
-            theta = design.CoreLoss(2+i).dy;
-            design.CoreLoss(2+i).dA = annularsecarea(Ri, Ro, theta);
-            design.CoreLoss(2+i).dA = repmat(reshape(design.CoreLoss(2+i).dA, size(design.CoreLoss(2+i).dA,1), 1, size(design.CoreLoss(2+i).dA,2)), [1, npos, 1]);
-
-            [design.CoreLoss(2+i).meshx, design.CoreLoss(2+i).meshy] = ...
-                pol2cart(design.CoreLoss(2+i).meshy, design.CoreLoss(2+i).meshx);
-            
-            design.CoreLoss(2+i).Bx = zeros([size(design.CoreLoss(2+i).meshx,1), npos, size(design.CoreLoss(2+i).meshy,2)]);
-            design.CoreLoss(2+i).By = zeros([size(design.CoreLoss(2+i).meshx,1), npos, size(design.CoreLoss(2+i).meshy,2)]);
-            design.CoreLoss(2+i).Bz = zeros([size(design.CoreLoss(2+i).meshx,1), npos, size(design.CoreLoss(2+i).meshy,2)]);
-            design.CoreLoss(2+i).Hy = zeros([size(design.CoreLoss(2+i).meshx,1), npos, size(design.CoreLoss(2+i).meshy,2)]);
-            design.CoreLoss(2+i).Hx = zeros([size(design.CoreLoss(2+i).meshx,1), npos, size(design.CoreLoss(2+i).meshy,2)]);
-            design.CoreLoss(2+i).Hz = zeros([size(design.CoreLoss(2+i).meshx,1), npos, size(design.CoreLoss(2+i).meshy,2)]);
-            
-        end
+        error ('FEMM not currently supported for this, use xfemm.')
     end
 
 end
