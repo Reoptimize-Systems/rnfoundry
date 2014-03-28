@@ -44,9 +44,9 @@ function [histloss, eddyloss, excessloss] = ...
 %
 % dB/dx * dx/dt = dB/dx * velocity
 %
-% [1] D. Lin, P. Zhou, W. N. Fu, Z. Badics, and Z. J. Cendes, “A Dynamic
+% [1] D. Lin, P. Zhou, W. N. Fu, Z. Badics, and Z. J. Cendes, â€œA Dynamic
 % Core Loss Model for Soft Ferromagnetic and Power Ferrite Materials in
-% Transient Finite Element Analysis,�? IEEE Transactions on Magnetics, vol.
+% Transient Finite Element Analysis,ï¿½? IEEE Transactions on Magnetics, vol.
 % 40, no. 2, pp. 1318--1321, Mar. 2004.
 
     if nargin == 9
@@ -73,23 +73,24 @@ function [histloss, eddyloss, excessloss] = ...
     % losses
     Cbeta = 4 .* quad(@(theta) cos(theta).^beta, 0, pi/2);
     
-    Hirrx = hirr_calc(Bx, beta, kh, Cbeta);
+    Hirrx = hirr_calc(Bx, dBxVdx, beta, kh, Cbeta, 0);
     
-    Hirry = hirr_calc(By, beta, kh, Cbeta);
+    Hirry = hirr_calc(By, dByVdx, beta, kh, Cbeta, 0);
     
-    Hirrz = hirr_calc(Bz, beta, kh, Cbeta);
+    Hirrz = hirr_calc(Bz, dBzVdx, beta, kh, Cbeta, 0);
     
     histloss = abs(Hirrx .* dBxVdx).^(2/beta) ...
                + abs(Hirry .* dByVdx).^(2/beta) ...
                + abs(Hirrz .* dBzVdx).^(2/beta);
-           
-	% replace infinite values with realmax
-	histloss(isinf(histloss)) = realmax;
         
     histloss = bsxfun(@times, dV, (histloss .^ (beta / 2)));
     
+    % sum along the third dimension of the array, this array dimension
+    % should correspond to the physical dimension in the y direction
     histloss = sum(histloss, 3);
     
+    % sum along the first dimension of the array, this array dimension
+    % should correspond to the physical dimension in the x direction
     histloss = sum(histloss, 1);
     
     % generate the part calculation of the eddy current losses for the
@@ -124,7 +125,7 @@ function [histloss, eddyloss, excessloss] = ...
 end
 
 
-function Hirr = hirr_calc(B, beta, kh, Cbeta)
+function Hirr = hirr_calc(B, dBVdx, beta, kh, Cbeta, Bdc)
 % calcualtes the irreversible component of magnetisation in a material
 %
 % Syntax
@@ -134,22 +135,28 @@ function Hirr = hirr_calc(B, beta, kh, Cbeta)
 % Input
 % 
 % 
+
+    if every(dBVdx == 0)
+        Hirr = zeros (size (B));
+    else
     
 %     % check for any dc component to the time varying field
 %     Bdc = mean(B,2);
     
-%     Bac = bsxfun(@minus, B, Bdc);
-    Bac = B;
+        Bac = bsxfun(@minus, B, Bdc);
+
+%    Bac = B;
     
-    Bm = max(abs(Bac),[],2);
+        Bm = max(abs(Bac),[],2);
     
-    % determine the angle of the EEL elipse
-    xtheta = bsxfun(@rdivide, Bac, Bm);
+        % determine the angle of the EEL elipse
+        xtheta = bsxfun(@rdivide, Bac, Bm);
     
-    % estimate Hirr
-    Hirr = abs( (kh ./ Cbeta) .* abs( bsxfun(@times, cos(asin(xtheta)), Bm) ).^(beta - 1) );
+        % estimate Hirr
+        Hirr = abs( (kh ./ Cbeta) .* abs( bsxfun(@times, cos(asin(xtheta)), Bm) ).^(beta - 1) );
     
-    Hirr (isnan (Hirr)) = 0;
+        Hirr (isnan (Hirr)) = 0;
+    end
     
 end
 
@@ -173,7 +180,7 @@ function Bgrad = bgrad(Bmat, xstep)
     
     % now construct a new set of polynomials which are the derivatives of
     % the originals
-    [breaks,coefs,npieces,order,targetdim] = unmkpp(pp);
+    [breaks,coefs,~,order,targetdim] = unmkpp(pp);
     
     % make the polynomials that describe the derivatives
     dpp = mkpp(breaks, bsxfun(@times, coefs(:,1:order-1), order-1:-1:1), targetdim);
@@ -192,3 +199,45 @@ function Bgrad = bgrad(Bmat, xstep)
 end
 
 
+function Hirr = hirr_calc(B, dBVdx, beta, kh, Cbeta, Bdc)
+% calcualtes the irreversible component of magnetisation in a material
+
+% 
+% When Bm is determined, theta is a function of B: theta = arcsin(B / Bm)
+% which is ranging from -pi/2 to pi/2, and is corresponding to the right
+% half ellipse for increasing B. When B is decreasing, theta is ranging
+% from pi/2 to 3*pi/2.
+% 
+% If B has a DC component Bdc, then
+% B = Bdc + Bm*sin(theta)
+% and therefore,
+% theta = arcsin((B-Bdc) / Bm)
+% where Bm = (Bmax - Bmin) / 2, Bdc = (Bmax + Bmin) / 2.
+    
+    if every(dBVdx == 0)
+        Hirr = zeros(size(B));
+    else
+        
+        if nargin < 6
+            % check for any dc component to the time varying field
+            Bdc = mean(B,2);
+        end
+    
+        % remove the dc component
+        Bnorm = bsxfun(@minus, B, Bdc);
+
+        % get the magnitude of the variation in the field
+        Bm = max(Bnorm,[],2);
+
+        % determine the angle of the EEL elipse
+        xtheta = bsxfun(@rdivide, Bnorm, Bm);
+
+        xtheta(dBVdx >= 0) = asin(xtheta(dBVdx >= 0));
+        xtheta(dBVdx < 0) = tau/2 - asin(xtheta(dBVdx < 0));
+
+        % estimate Hirr
+        Hirr = abs( (kh ./ Cbeta) .* abs( bsxfun(@times, Bm, cos(xtheta)) ).^(beta - 1) );
+        
+    end
+    
+end
