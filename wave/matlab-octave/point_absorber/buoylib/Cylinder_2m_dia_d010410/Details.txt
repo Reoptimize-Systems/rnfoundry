@@ -1,0 +1,9 @@
+cyl_d3103v4
+
+Axi-symmetric cylinder, with a draft of 1 m, a height above the free surface of 0.5 m. A diameter of 2 m. 
+
+Valid in heave and surge. Surge results for the alpha's and beta's not produced yet.
+
+Takes 50 frequencies between periods of 0.5 s and 6 s. (Frequencies 2 Hz to 0.167 Hz). 
+
+Resonant frequency at c. 0.4 Hz. 
