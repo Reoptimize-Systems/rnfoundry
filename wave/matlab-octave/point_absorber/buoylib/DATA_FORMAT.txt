@@ -1,0 +1,99 @@
+Here follows a summary of the contents of the buoy data files. In
+general these files contain data at multiple frequencies. However,
+the frequencies are specified as wave numbers. To convert from 
+wave number to angular frequency divide 
+
+************    .2    Excitation Files       *************
+
+The .2 file, usually named excitation_force_*.2, where * is replaced
+by some text contains the excitation forces at a number of frequencies,
+or rather different wave numbers, which is what is provided in the file.
+
+The excitation file contains the nondimensional excitation forces on 
+the buoy at each frequency.
+
+The excitation force of the body has been made dimensionless by
+dividing by the buoyancy force required to submerge the body one
+metre and the mass of the body, respectively. This has been done for
+ease of comparison between model scales. An example is presented
+in Bailey Thesis pg 30 Figure 2.4. 
+
+Column 3 tells you whether the line is for heave or surge. If this 
+contains 3 it is heave, if 1 it is surge. In each case then column
+6 contains the real excitation and column 7 the imaginary excitation
+forces. Column 1 is the wave number (k).
+
+To scale these to a given wave you must multiply by rho * g * A, where
+rho and g are the density and gravitational acceleration and A the 
+wave amplitude.
+
+
+************    .1   Hydro Coefficients      ***************  
+
+The .1 file, usually named hydro_coefficients_*.2, where * is replaced 
+by some text contains the added mass values for the buoy in heave and 
+surge at various frequncies (or rather wave numbers).
+
+If columns 2 and 3 both contain the value '3', the line contains the 
+added mass information for the buoy in heave in column 4, and the 
+wave number in column 1.
+
+If columns 2 and 3 both contain the value '3', the line contains the 
+added mass information for the buoy in surge in column 4, and the 
+wave number in column 1.
+
+
+***********    .mat  Heave Radiation         ****************
+
+The heave_radiation_*.mat file contains the 'alpha' and 'beta' 
+radiation coefficients for the buoy in heave. These are the 'alpha's 
+and 'beta's used in Prony's method as approximations to the 
+radiation forces convolution. There is normally around 20 values,
+although there can be more or less. The number of these that you
+use determines the accuracy of the approximation. These are not 
+related to the frequency/wave number.
+
+***********    .mat  Surge Radiation         ****************
+
+The surge_radiation_*.mat file contains the 'alpha' and 'beta' 
+radiation coefficients for the buoy in surge. These are the 'alpha's 
+and 'beta's used in Prony's method as approximations to the 
+radiation forces convolution. There is normally around 20 values,
+although there can be more or less. The number of these that you
+use determines the accuracy of the approximation. These are not 
+related to the frequency/wave number.
+
+***********    .mat  Buoy Parameters         ****************
+
+The buoy_parameters_*.mat file contains a numer of variables specifying
+various aspecs of the buoy. The follwing variables should be present:
+
+a: radius of the buoy
+
+amp: 
+
+draft: draft of the buoy at rest
+
+drag_coefficient: drag coefficient (just taken from lierature, do not
+                  place great faith in this)
+
+freq: resonant frequency in Hz
+
+g: acceleration due to gravity 
+
+mass_external: mass displaced by the buoy
+
+maxfreq: max frequency in Hz the hydro data is provided to
+
+minfreq: min frequency in Hz the hydro data is provided to
+
+phase:
+
+resfreq: resonant frequency in Hz
+
+rho: water density
+
+sigma: resonant freq in rad/s
+
+water_depth: water depth the buoy data was generated for
+

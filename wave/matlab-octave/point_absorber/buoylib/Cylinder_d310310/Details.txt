@@ -1,0 +1,15 @@
+cylinder_d1_draft1_heave only
+
+Only valid for heave.
+
+Cylinder (surface piercing), 1 meter draft, 0.5 meters radius.
+
+Assumptions for "cylinder_d1_draft1_heave only"
+Light and invisible tether and stator - all the mass in the cylinder
+	Semi-valid for heave motion
+Density evenly distributed in the cylinder
+
+Has origin of body fixed axis as on the free surface - doesn't effect results for heave [confirm].
+
+
+Works for waves with period (1/freq) of 0.5 to 6, for 30 equally spaced values.

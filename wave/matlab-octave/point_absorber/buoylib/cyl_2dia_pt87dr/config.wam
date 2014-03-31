@@ -1,0 +1,15 @@
+MAXSCR=5770 (assign a maximum block of RAM for scratch LHS)
+IALTFRC=2  (alternative form of the force file)
+IALTPOT=1  (alternative form of the potential file)
+ILOG=0
+IPOTEN=1
+IRR=0
+ISOR=0       (omit ISOR in POT file, include source formulation)
+ISOLVE=1     (use direct solver)
+IQUAD=0      (omit IQUAD in POT file, use single-node quadrature)
+IDIAG=0      (omit IDIAG in POT file, panel length based on area)
+ILOWHI=1      (higher-order panel method)
+IPERIO=1
+SCRATCH_PATH=C:\wamitv6\scratch\   (directory for scratch)
+USERID_PATH=C:\wamitv6\   (USERID.WAM directory)
+PANEL_SIZE=0.07
