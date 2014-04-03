@@ -1,11 +1,23 @@
 function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs)
-% produces a latex design report describing a slotted radial machine design
+% produces a slotted radial flux electrical machine design report in LaTeX
+% format, and optionally prduces the pdf using pdflatex
+%
+% designreport_RADIAL_SLOTTED can also be used to extend a report produced
+% by a higher level function by passing in the existing report strings.
 %
 % Syntax
 %
-% reportstrs = designreport_RADIAL_SLOTTED(design, simoptions)
-% reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs)
+% designreport_RADIAL_SLOTTED(design, simoptions)
+% designreport_RADIAL_SLOTTED(design, simoptions, reportstrs)
+% reportstrs = designreport_RADIAL_SLOTTED(...)
 %
+% 
+% Input
+%
+%
+% Output
+%
+%   reportstrs - cell array of strings containing the report
 %
 
     if nargin < 3

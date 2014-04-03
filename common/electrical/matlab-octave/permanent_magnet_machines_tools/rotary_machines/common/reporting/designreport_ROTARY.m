@@ -1,15 +1,39 @@
 function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, varargin)
-% produces strings containing a rotary machine design report
+% produces a rotary electrical machine design report in LaTeX format, and
+% optionally prduces the pdf using pdflatex
+%
+% designreport_ROTARY can also be used to extend a report produced by a
+% higher level function by passing in the existing report strings.
 %
 % Syntax
 %
-% reportstrs = designreport_ROTARY(design, simoptions, reportstrs)
-%
+% designreport_ROTARY(design, simoptions)
+% designreport_ROTARY(design, simoptions, reportstrs)
+% reportstrs = designreport_ROTARY(...)
 % 
+% Input
+%
+%
+% Output
+%
+%   reportstrs - cell array of strings containing the report
+%
 
     if nargin < 3
         reportstrs = {};
     end
+    
+    options.ReportDir = '';
+    if nargout == 0
+        options.MakePdf = true;
+        options.WriteOutReport = true;
+    else
+        options.MakePdf = false;
+        options.WriteOutReport = false;
+    end
+    options.ReportTemplatePath = fullfile(getmfilepath('designreport_AM'), 'design_report_template.tex');
+    
+    options = parseoptions(options, varargin);
     
     % generate table of design dimensions
     
