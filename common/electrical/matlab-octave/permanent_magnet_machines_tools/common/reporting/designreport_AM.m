@@ -2,10 +2,21 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
 % produces an electrical machine design report in LaTeX format, and
 % optionally prduces the pdf using pdflatex
 %
+% designreport_AM can also be used to extend a report produced by a
+% higher level function by passing in the existing report strings.
+%
 % Syntax
 %
-% [reportstrs] = designreport_AM(design, simoptions, type, reportstrs)
+% designreport_AM(design, simoptions)
+% designreport_AM(design, simoptions, reportstrs)
+% reportstrs = designreport_AM(...)
+% 
+% Input
 %
+%
+% Output
+%
+%   reportstrs - cell array of strings containing the report
 %
 
 % Created by Richard Crozier 2013
