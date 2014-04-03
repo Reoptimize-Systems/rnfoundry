@@ -1,5 +1,6 @@
-function [reportstrs] = designreport_AM(design, simoptions, type, reportstrs)
-% create a latex design report on a machine design
+function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin)
+% produces an electrical machine design report in LaTeX format, and
+% optionally prduces the pdf using pdflatex
 %
 % Syntax
 %
@@ -13,6 +14,18 @@ function [reportstrs] = designreport_AM(design, simoptions, type, reportstrs)
     if nargin < 4
         reportstrs = {};
     end
+
+    options.ReportDir = '';
+    if nargout == 0
+        options.MakePdf = true;
+        options.WriteOutReport = true;
+    else
+        options.MakePdf = false;
+        options.WriteOutReport = false;
+    end
+    options.ReportTemplatePath = fullfile(getmfilepath('designreport_AM'), 'design_report_template.tex');
+    
+    options = parseoptions(options, varargin);
     
 %% Winding Design
 
@@ -298,5 +311,37 @@ massandcoststrs;
     
     % append this section to the earlier report sections
     reportstrs = [reportstrs; sectionstrs];
+    
+    if options.WriteOutReport
+        
+        reportname = 'design_report';
+        
+        if isempty (options.ReportDir)
+            reportdir = fullfile (pwd, ['design_report_', datestr(now, 'dd-mm-yyyy_HH:MM:SS')]);
+        else
+            reportdir = options.ReportDir;
+        end
+
+        if exist(reportdir, 'file') ~= 7
+            mkdir(reportdir);
+        end
+        
+        % copy the design report template to the report directory
+        reporttexpath = fullfile(reportdir, [reportname, '.tex']);
+        copyfile(options.ReportTemplatePath, reporttexpath);
+        
+        % insert the generated report into the report template
+        strrepfile(reporttexpath, '##1##', cellstr2str (reportstrs));
+        
+        CC = onCleanup (@() cd(pwd));
+        cd (reportdir);
+        
+        if options.MakePdf
+            % make the report pdf, run twice
+            system(['pdflatex -interaction=nonstopmode -halt-on-error "', reportname,'"']);
+            system(['pdflatex -interaction=nonstopmode -halt-on-error "', reportname,'"']);
+        end
+        
+    end
     
 end

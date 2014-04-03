@@ -1,8 +1,39 @@
-function reportstrs = designreport_RADIAL(design, simoptions, reportstrs)
+function reportstrs = designreport_RADIAL(design, simoptions, reportstrs, varargin)
+% produces a radial flux electrical machine design report in LaTeX format,
+% and optionally prduces the pdf using pdflatex
+%
+% designreport_RADIAL can also be used to extend a report produced by a
+% higher level function by passing in the existing report strings.
+%
+% Syntax
+%
+% designreport_RADIAL(design, simoptions)
+% designreport_RADIAL(design, simoptions, reportstrs)
+% reportstrs = designreport_RADIAL(...)
+% 
+% Input
+%
+%
+% Output
+%
+%   reportstrs - cell array of strings containing the report
+%
 
     if nargin < 3
         reportstrs = {};
     end
+    
+    options.ReportDir = '';
+    if nargout == 0
+        options.MakePdf = true;
+        options.WriteOutReport = true;
+    else
+        options.MakePdf = false;
+        options.WriteOutReport = false;
+    end
+    options.ReportTemplatePath = fullfile(getmfilepath('designreport_AM'), 'design_report_template.tex');
+    
+    options = parseoptions(options, varargin);
     
     % generate table of design dimensions
     
@@ -73,7 +104,7 @@ radrotordimstablestrs;
 ];
 
     % append stuff common to all machines
-    radialreportstrs = designreport_ROTARY(design, simoptions, radialreportstrs);
+    radialreportstrs = designreport_ROTARY(design, simoptions, radialreportstrs, options);
     
     % append the report strings
     reportstrs = [ reportstrs;
