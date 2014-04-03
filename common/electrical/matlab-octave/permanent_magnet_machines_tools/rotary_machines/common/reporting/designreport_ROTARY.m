@@ -1,4 +1,4 @@
-function reportstrs = designreport_ROTARY(design, simoptions, reportstrs)
+function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, varargin)
 % produces strings containing a rotary machine design report
 %
 % Syntax
@@ -13,16 +13,22 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs)
     
     % generate table of design dimensions
     
+    if isfield(design, 'TorquePtoPeak')
+        TorquePtoPeak = design.TorquePtoPeak;
+    else
+        TorquePtoPeak = 'N/A';
+    end
+    
     if isfield(design, 'slm_coggingforce')
         maxcoggingf = slmpar(design.slm_coggingforce, 'maxfun');
     else
-        maxcoggingf = 0;
+        maxcoggingf = 'N/A';
     end
     
     if isfield(design, 'gforce')
         gforce = abs(design.gforce(1));
     else
-        gforce = 0;
+        gforce = 'N/A';
     end
     
     if isfield(design, 'FrequencyPeak')
@@ -39,9 +45,9 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs)
     
     % rotary machine properties
     tabledata = { ...
-        'Max PTO Torque (Nm)', design.TorquePtoPeak;
-        'Max Cogging Force (N)', maxcoggingf;
-        'Max Cogging Torque (Nm)', maxcoggingf * design.Rmm;
+        'Max PTO Torque (Nm)', TorquePtoPeak;
+        'Max Magnet Cogging Force (N)', maxcoggingf;
+        'Max Magnet Cogging Torque (Nm)', maxcoggingf * design.Rmm;
         'Max Estimated Electrical Frequency (Hz)', FrequencyPeak;
         'Torque Ripple Factor (\%)', TorqueRippleFactor;
         'Air Gap Closing Force Per Pole (N)', gforce;
@@ -94,7 +100,7 @@ rotarydimstablestrs;
 ];
 
     % append stuff common to all machines
-    radialreportstrs = designreport_AM(design, simoptions, [], rotaryreportstrs);
+    radialreportstrs = designreport_AM(design, simoptions, rotaryreportstrs, options);
     
     % append the report strings
     reportstrs = [ reportstrs;
