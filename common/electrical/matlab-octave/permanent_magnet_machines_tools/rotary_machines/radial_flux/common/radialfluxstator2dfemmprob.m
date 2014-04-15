@@ -55,7 +55,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstator2dfemmprob(s
 %
 % 'NWindingLayers' - integer number of axial coil layers in the design.
 %
-% 'SlotMaterial' - 
+% 'SlotMaterial' - index of the material in the FemmProblem.Materials
+%    structure containing the material to be used for the slots/coils
 %
 % 'SlotRegionMeshSize' - 
 %
