@@ -130,10 +130,12 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     elcount = elementcount_mfemm(FemmProblem);
     
     % make a single slot
-    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs, vertlinkinds] = ...
+    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs, vertlinkinds, toothlinkinds] = ...
             internalslotnodelinks( thetacoil, thetashoegap, ryoke/2, rcoil, ...
                                    rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol);
 
+    links = [ links, ismember(1:size(links,1),vertlinkinds)', ismember(1:size(links,1),toothlinkinds)' ];
+    
     coillabellocs = [];
     
     % we flip the node positions if we are drawing an internally facing
@@ -169,13 +171,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
 	% get the vertical links by finding those links where the difference in
     % y coordinates of the link nodes is not zero, these links must be made
     % into arc segments
-%     isvertlinks = abs(diff( [nodes(links(:,1)+1,1), nodes(links(:,2)+1,1)], 1, 2 )) < Inputs.Tol;
-    vertlinks = links(vertlinkinds,:);
+    vertlinks = links(vertlinkinds,1:2);
     angles = diff( [nodes(vertlinks(:,1)+1,2), nodes(vertlinks(:,2)+1,2)], 1, 2);
-    
-    % get the horizontal links, these will be segments
-    horizlinks = links;
-    horizlinks(vertlinkinds,:) = [];
     
     % correct vertical links which are in the wrong direction
     for i = 1:size(vertlinks,1)
@@ -187,6 +184,7 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     % convert angles to degrees
     angles = rad2deg(angles);
     vertlinks = fliplr(vertlinks);
+    links(vertlinkinds, 1:2) = vertlinks;
     
     % transform the node locations to convert the rectangulr region to the
     % desired arced region 
@@ -218,22 +216,52 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
                           thiscoillabellocs ];
                       
     end
-        
-    thisslotvertlinks = vertlinks + elcount.NNodes;
-    thisslothorizlinks = horizlinks + elcount.NNodes;
     
-    [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
-        
-    [FemmProblem, seginds] = addsegments_mfemm(FemmProblem, ...
-                                               thisslothorizlinks(:,1), ...
-                                               thisslothorizlinks(:,2));
-                                           
-    [FemmProblem, seginds] = addarcsegments_mfemm(FemmProblem, ...
-                                                  thisslotvertlinks(:,1), ...
-                                                  thisslotvertlinks(:,2), ...
-                                                  angles, ...
-                                                  'MaxSegDegrees', angles ./ 20);
+    % add a new group number for the stator iron
+    FemmProblem = addgroup_mfemm (FemmProblem, 'StatorIron');
+    statorirongp = getgroupnumber_mfemm(FemmProblem, 'StatorIron');
+
+    thisslotlinks = [links(:,1:2) + numel(FemmProblem.Nodes), links(:,3:end)];
     
+    [FemmProblem, ~, ~] = addnodes_mfemm(FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
+    
+    vcount = 1;
+    for i = 1:size(thisslotlinks,1)
+        
+        if thisslotlinks (i,3)
+            % vertical link that must be converted to an arc
+            if thisslotlinks (i,4)
+                
+               [FemmProblem, ~] = addarcsegments_mfemm(FemmProblem, ...
+                                                  thisslotlinks(i,1), ...
+                                                  thisslotlinks(i,2), ...
+                                                  angles(vcount), ...
+                                                  'MaxSegDegrees', angles(vcount) ./ 20, ...
+                                                  'InGroup', statorirongp);
+            else
+               [FemmProblem, ~] = addarcsegments_mfemm(FemmProblem, ...
+                                                  thisslotlinks(i,1), ...
+                                                  thisslotlinks(i,2), ...
+                                                  angles(vcount), ...
+                                                  'MaxSegDegrees', angles(vcount) ./ 20); 
+            end
+            vcount = vcount + 1;
+        else
+            % horizontal link
+            if thisslotlinks (i,4)
+                [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
+                                                      thisslotlinks(i,1), ...
+                                                      thisslotlinks(i,2), ...
+                                                      'InGroup', statorirongp);
+            else
+                [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
+                                                      thisslotlinks(i,1), ...
+                                                      thisslotlinks(i,2));
+            end
+        end
+        
+    end
+          
     if ~isempty(shoegaplabelloc)
         
         thisshoegaplabelloc = shoegaplabelloc * rotM;
@@ -258,25 +286,50 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
         
         thisslotsnodes = thisslotsnodes * rotM;
         
-        thisslotvertlinks = vertlinks + numel(FemmProblem.Nodes);
-        thisslothorizlinks = horizlinks + numel(FemmProblem.Nodes);
+        thisslotlinks = [links(:,1:2) + numel(FemmProblem.Nodes), links(:,3:end)];
         
         thisslotcornernodes = cornernodes + numel(FemmProblem.Nodes);
         
-        [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, ...
-                                                          thisslotsnodes(:,1), ...
-                                                          thisslotsnodes(:,2));
+        [FemmProblem] = addnodes_mfemm (FemmProblem, ...
+                                        thisslotsnodes(:,1), ...
+                                        thisslotsnodes(:,2));
         
-        [FemmProblem, seginds] = addsegments_mfemm(FemmProblem, ...
-                                                   thisslothorizlinks(:,1), ...
-                                                   thisslothorizlinks(:,2));
-        
-        [FemmProblem, seginds] = addarcsegments_mfemm(FemmProblem, ...
-                                                      thisslotvertlinks(:,1), ...
-                                                      thisslotvertlinks(:,2), ...
-                                                      angles, ...
-                                                      'MaxSegDegrees', angles ./ 20 );
-                                               
+        vcount = 1;
+        for ii = 1:size(thisslotlinks,1)
+
+            if thisslotlinks (ii,3)
+                % vertical link that must be converted to an arc
+                if thisslotlinks (ii,4)
+
+                   [FemmProblem, ~] = addarcsegments_mfemm(FemmProblem, ...
+                                                      thisslotlinks(ii,1), ...
+                                                      thisslotlinks(ii,2), ...
+                                                      angles(vcount), ...
+                                                      'MaxSegDegrees', angles(vcount) ./ 20, ...
+                                                      'InGroup', statorirongp);
+                else
+                   [FemmProblem, ~] = addarcsegments_mfemm(FemmProblem, ...
+                                                      thisslotlinks(ii,1), ...
+                                                      thisslotlinks(ii,2), ...
+                                                      angles(vcount), ...
+                                                      'MaxSegDegrees', angles(vcount) ./ 20); 
+                end
+                vcount = vcount + 1;
+            else
+                % horizontal link
+                if thisslotlinks (ii,4)
+                    [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
+                                                          thisslotlinks(ii,1), ...
+                                                          thisslotlinks(ii,2), ...
+                                                          'InGroup', statorirongp);
+                else
+                    [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
+                                                          thisslotlinks(ii,1), ...
+                                                          thisslotlinks(ii,2));
+                end
+            end
+
+        end                              
         
         if ~isempty(shoegaplabelloc)
             
