@@ -46,6 +46,8 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     % draw the positive part of the coil circuit
     coilBlockProps.Turns = design.CoilTurns;
     
+    statorirongp = getgroupnumber_mfemm(FemmProblem, 'StatorIron');
+    
 %     corexpos = -outermagsep/2 + design.g + design.tc;
 
     % add circuits for each winding phase
@@ -94,9 +96,12 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             
             % add arcs linking the outer segments
             FemmProblem = addarcsegments_mfemm(FemmProblem, ...
-                                               nodeids([2,3,4]), ...
-                                               nodeids([7,6,5]), ...
+                                               nodeids([3,4,2]), ...
+                                               nodeids([6,5,7]), ...
                                                rad2deg(repmat(2*design.thetap,1,3)));
+            
+            % put the stator iron segment in the right group
+            FemmProblem.ArcSegments(end).InGroup = statorirongp;
             
             % add segments with periodic boundaries on the outer parts
             [FemmProblem, boundind(1), boundnames{1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Stator Back Iron Periodic', 4);
@@ -104,7 +109,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Stator Outer Periodic', 4);
             [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Air Gap Periodic', 4);
 
-            segprops = struct('BoundaryMarker', boundnames);
+            segprops = struct('BoundaryMarker', boundnames, 'InGroup', {statorirongp, 0, 0, 0});
             
             % bottom segs
             FemmProblem = addsegments_mfemm(FemmProblem, ...
@@ -127,11 +132,13 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
             % bottom slot to edge
             FemmProblem = addarcsegments_mfemm(FemmProblem, nodeids(1), yokenodeids(1), ...
-                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2));
+                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2), ...
+                                               'InGroup', statorirongp);
 
             % top slot to edge
             FemmProblem = addarcsegments_mfemm(FemmProblem, nodeids(end), yokenodeids(4), ...
-                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2));
+                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2), ...
+                                               'InGroup', statorirongp);
 
             % Add block labels for the air gap
             [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, design.Rmo+design.g/2);
@@ -209,6 +216,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                 topnodeid = nodeids(1);
                 
                 arcangle = design.thetap;
+                statorironinds = [1, 2]; % TODO: this is probably not right
                 
             else
                 % add the nodes to the problem
@@ -220,17 +228,23 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                           nodeids([7,6,5]) ];
                 topnodeid = nodeids(8);
                 arcangle = 2*design.thetap;
+                statorironinds = 1;
             end
             
             % add arcs linking the outer segments
-            FemmProblem = addarcsegments_mfemm(FemmProblem, ...
+            [FemmProblem, arcseginds] = addarcsegments_mfemm(FemmProblem, ...
                                                links(1,:), ...
                                                links(2,:), ...
                                                rad2deg(repmat(arcangle,size(links))));
             
+            % put the stator iron arc segments in the right group
+            for i = 1:numel(statorironinds)
+                FemmProblem.ArcSegments(arcseginds(statorironinds(i))).InGroup = statorirongp;
+            end
+            
             if linktb
                 boundnames = repmat({''}, 4,1);
-                segprops = struct('BoundaryMarker', boundnames);
+                segprops = struct('BoundaryMarker', boundnames, 'InGroup', {statorirongp, 0, 0, 0});
             else
                 % add segments with periodic boundaries on the outer parts
                 [FemmProblem, boundind(1), boundnames{1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Stator Back Iron Periodic', 4);
@@ -238,7 +252,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                 [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Stator Outer Periodic', 4);
                 [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Air Gap Periodic', 4);
 
-                segprops = struct('BoundaryMarker', boundnames);
+                segprops = struct('BoundaryMarker', boundnames, 'InGroup', {statorirongp, 0, 0, 0});
 
                 % top segs
                 FemmProblem = addsegments_mfemm(FemmProblem, ...
@@ -271,11 +285,13 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             end
             % bottom slot to edge
             FemmProblem = addarcsegments_mfemm(FemmProblem, nodeids(1), yokenodeids(2), ...
-                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2));
+                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2), ...
+                                               'InGroup', statorirongp);
 
             % top slot to edge
             FemmProblem = addarcsegments_mfemm(FemmProblem, yokenodeids(3), topnodeid, ...
-                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2));
+                                               rad2deg(((2*pi/design.Qs)-design.thetac)/2), ...
+                                               'InGroup', statorirongp);
 
             % add a block label for the yoke and teeth
             [labelloc(1),labelloc(2)] = pol2cart(design.thetap, Rs);
