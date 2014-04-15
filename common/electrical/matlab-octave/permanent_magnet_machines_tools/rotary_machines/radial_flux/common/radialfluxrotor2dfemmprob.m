@@ -155,9 +155,10 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
                                                                        'MeshSize', Inputs.MagnetRegionMeshSize);
 
         if ~linktb1
-            % the last segment added will be the outermost segment, so give it the
+            % the last arc segment added will be the outermost segment, so give it the
             % proscribed A boundary
-            FemmProblem.Segments(end).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
+            FemmProblem.ArcSegments(end).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
+            FemmProblem.ArcSegments(end-1).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
         end
     end
     
@@ -182,9 +183,10 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
                                                                        'MeshSize', Inputs.MagnetRegionMeshSize);
 
         if ~linktb2
-            % Again, the last segment added should be the outermost boundary
+            % Again, the last arc segment added should be the outermost boundary
             % segment this time on the rhs, so give it the proscribed boundary condition
-            FemmProblem.Segments(end).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
+            FemmProblem.ArcSegments(end).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
+            FemmProblem.ArcSegments(end-1).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
         end
 
     end
