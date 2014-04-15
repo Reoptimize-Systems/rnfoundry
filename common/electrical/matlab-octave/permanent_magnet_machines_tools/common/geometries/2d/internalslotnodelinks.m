@@ -1,11 +1,11 @@
-function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] ...
+function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds] ...
     = internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, ylayers, tol, varargin)
 % creates a set of node, links and label locations for the points making up
 % the inside of a coil slot in an iron cored machine
 %
 % Syntax
 %
-% [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] = ...
+% [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds] = ...
 %        internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, layers, tol)
 %
 % Description
@@ -136,6 +136,14 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
 % coillabelloc - (n x 2) matrix of coil label locations. The number of rows
 %   will depend on the value of layers, with one label for every layer.
 %
+% vertlinkinds - vector of (one-based) indices of the links which should be 
+%   converted to arcs when using internalslotnodelinks to make a radial 
+%   design, e.g the outer tooth surface links.
+%
+% toothlinkinds - vector of indices of the links that make up the internal
+%   surface of the tooth, not including the links creating divisions in the
+%   cross-section of the slot of coils, or the marking the air region
+%   between the soes if there is a gap.
 %
 
 % Created by Richard Crozier 2012
@@ -209,7 +217,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
         
         midshoenode = 2;
         
-        vertlinks = [1, 2];
+        vertlinkinds = [1, 2];
+        
+        toothlinkinds = [];
                 
     else
         % there is a shoe on top of the tooth
@@ -268,20 +278,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
                 
                 midshoenode = 2;
                 
-                vertlinks = [ 1, size(links,1)];
-
-%                 if xshoebase > tol
-%                     % link the base of the shoes, the coil won't be in here
-%                     
-%                     links = [ links;
-%                               3, 0 ];
-%                           
-%                     shoegaplabelloc = tricenter( [xcore + xcoilbase + xcoilbody + xshoebase, 0], ...
-%                                                  [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
-%                                                  [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
-%                                                  'incenter', false)';
-%                     
-%                 end
+                vertlinkinds = [ 1, size(links,1)];
 
             else
                 % there is a blunt edge on the shoe
@@ -335,23 +332,13 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
                 
                 midshoenode = 3;
                 
-                vertlinks = [ 1, size(links,1)];
+                vertlinkinds = [ 1, size(links,1)];
                 
-%                 if (xshoebase - xshoegap) > tol
-%                     % link the base of the shoes, the coil won't be in here
-%                     
-%                     links = [ links;
-%                               5, 0 ];
-%                           
-%                     shoegaplabelloc = tricenter( [xcore + xcoilbase + xcoilbody + xshoebase - xshoegap, 0], ...
-%                                                  [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
-%                                                  [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
-%                                                  'incenter', false)';
-%                     
-%                 end
                 
             end
-
+            
+            % all the links are the tooth surface at this stage
+            toothlinkinds = links;
 
         else
             % we must acount for the space between shoes in the model 
@@ -402,20 +389,12 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
                 
                 midshoenode = 6;
                 
-                vertlinks = [ 1, size(links,1)-2];
+                vertlinkinds = [ 1, size(links,1)-2];
                 
-%                 if xshoebase > tol
-%                     % link the base of the shoes, the coil won't be in here
-%                     
-%                     links = [ links;
-%                               3, 0 ];
-%                           
-%                     shoegaplabelloc = tricenter( [xcore + xcoilbase + xcoilbody + xshoebase, 0], ...
-%                                                  [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
-%                                                  [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
-%                                                  'incenter', false)';
-%                     
-%                 end
+                % tooth links are all links except the links closing the
+                % air gap
+                toothlinkinds = 1:size(links,1);
+                toothlinkinds([size(links,1), size(links,1)-1]) = [];
                           
             else
                 % blunt edged shoes with gap
@@ -460,6 +439,10 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
                           [botshoenids(1:end-1)', botshoenids(2:end)'  ]; ... % join the curve nodes
                           botshoenids(end), 7 ];
 
+                % tooth links are all links except the links closing the
+                % air gap
+                toothlinkinds = 1:size(links,1);
+                
                 % make the shoe gap region
                 links = [ links; 
                           6, 2; 
@@ -477,24 +460,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
                 
                 midshoenode = 8;
                 
-                vertlinks = [ 1, 2 ];
+                vertlinkinds = [ 1, 2, size(links,1)-2 ];
                 
-%                 if (xshoebase - xshoegap) > tol
-%                     % link the base of the shoes, the coil won't be in here
-%                     
-%                     links = [ links;
-%                               4, 0 ];
-%                           
-%                     shoegaplabelloc = [ shoegaplabelloc; ...
-%                                         tricenter( [xcore + xcoilbase + xcoilbody + xshoebase - xshoegap, 0], ...
-%                                                    [xcore + xcoilbase + xcoilbody, ycoilshoe/2], ...
-%                                                    [xcore + xcoilbase + xcoilbody, -ycoilshoe/2], ...
-%                                                    'incenter', false)'; ...
-%                                       ];
-%                     
-%                 end
             end
-
 
         end
 
@@ -517,6 +485,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
           
     endbasenodeid = size (nodes, 1) - 1;
 
+    linksize = size(links,1);
+    
     links = [ links;
               startbasenodeid, startbasenodeid+1; 
               [(startbasenodeid+1:startbasenodeid+ncurvepnts-1)', (startbasenodeid+2:startbasenodeid+ncurvepnts)']
@@ -524,6 +494,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
               startbasenodeid, startbasenodeid+ncurvepnts+1;
               [(startbasenodeid+ncurvepnts+1:startbasenodeid+2*ncurvepnts-1)', (startbasenodeid+ncurvepnts+2:startbasenodeid+2*ncurvepnts)'] 
               startbasenodeid+2*ncurvepnts, endbasenodeid  ];
+    
+    % store the tooth surface link indices
+    toothlinkinds = [toothlinkinds, linksize+1:size(links,1)];
     
     % get the starting inner nodes for making links
     lastinnernodes = [ topinnershoenode, botinnershoenode ];
@@ -565,7 +538,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
             coillabelloc = [ xcore + xcoilbase + xcoilbody/2, ycoilshoe/4;
                              xcore + xcoilbase + xcoilbody/2, -ycoilshoe/4 ];
         else
-            % add a link creating the horizontal split
+            % just add links making the sides
             links = [ links; 
                       lastinnernodes(1), endbasenodeid - 1;
                       lastinnernodes(2),  endbasenodeid ];
@@ -573,6 +546,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
             % get a suitible position for the coil label         
             coillabelloc = [ xcore + (xcoilbase + xcoilbody)/2, 0 ];
         end
+        
+        % update the tooth links
+        toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
         
     else
         
@@ -640,6 +616,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
                               lastlayernodeids(1), topinnershoenode;
                               lastlayernodeids(2), botinnershoenode; ];
                     
+                    % update the tooth links
+                    toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+                    
                     % store the remaining area in the body available to
                     % a layer
                     layer_area_available = bodyarealeft;
@@ -674,6 +653,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
                               lastlayernodeids(1), thislayernodeids(1);
                               lastlayernodeids(2), thislayernodeids(2);
                               thislayernodeids(1), thislayernodeids(2) ];
+                          
+                    % update the tooth links
+                    toothlinkinds = [toothlinkinds, size(links, 1) - 2, size(links, 1) - 1];
 
                     coillabelloc = [ coillabelloc; lastlayerstartx + (x2-lastlayerstartx)/2, 0 ];
                     layersmade = layersmade + 1;
@@ -739,33 +721,6 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinks] .
         end
     
     end
-    
-    
-%     for i = 1:layers
-%         % move the layerpos to the top of the next layer
-%         layerpos = layerpos - xcoil/layers;
-%         
-%         % get the number of the next node
-%         nextnode = size(nodes, 1);
-% 
-%         % create coil layer
-%         nodes = [ nodes; 
-%                   layerpos, ycoil/2; 
-%                   layerpos, -ycoil/2 ];
-% 
-%         links = [ links; ...
-%                   lastinnernodes(1),  nextnode; ...
-%                   lastinnernodes(2), nextnode+1; ...
-%                   nextnode + 1, nextnode ];
-%               
-%         % store the new coil part nodes 
-%         lastinnernodes = [ nextnode, nextnode + 1 ];      
-%         
-%         % get a suitible position for the coil label         
-%         coillabelloc(i,1:2) = rectcentre( [layerpos, -ycoil/2], ...
-%                                           [layerpos + xcoil/layers, ycoil/2]);
-%         
-%     end
     
     cornernodes = [ lastinnernodes(2), botouternode, topouternode, lastinnernodes(1) ];
                    
