@@ -25,8 +25,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
     
     if design.CoilLayers == 1
         
-        % shfit to position from which we take the flux linkage data
-        design.intBdata.pos = design.intBdata.pos + maxflpos;
+        
         
         design.intAdata.intA = design.intAdata.slotIntA(design.intAdata.slotPos <= design.intAdata.slotPos(1)+2,1,1);
         if design.intAdata.pos(end) < design.intAdata.slotPos(1)+2
@@ -38,7 +37,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
         % fit slms to the integral data 
         intAslm = slmengine(design.intAdata.pos, design.intAdata.intA, ...
             'EndCon', 'periodic', ...
-            'knots', ciel(numel(design.intAdata.pos)/2), ...
+            'knots', ceil(numel(design.intAdata.pos)/2), ...
             'Plot', 'off');
         
         pos = linspace(0, 1, 1000);
@@ -53,6 +52,9 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
         
         [~,ind] = max(abs(fl));
 	    maxflpos = pos(ind);
+        
+        % fit to position from which we take the flux linkage data
+        design.intBdata.pos = design.intBdata.pos + maxflpos;
         
         design.psilookup = linspace(0, 2, 200);
         design.psilookup(2,:) = fluxlinkagefrmintAslm(intAslm, ...
