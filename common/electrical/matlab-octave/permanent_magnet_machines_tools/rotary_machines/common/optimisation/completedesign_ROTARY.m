@@ -89,7 +89,7 @@ function design = completedesign_ROTARY(design, simoptions)
         if design.CoilLayers == 2
             design.Qc = design.Qs;
         elseif design.CoilLayers == 1
-            design.Qc = design.Qc / 2;
+            design.Qc = design.Qs / 2;
         else
             error('Only coils with one or two layers are implemented.')
         end
