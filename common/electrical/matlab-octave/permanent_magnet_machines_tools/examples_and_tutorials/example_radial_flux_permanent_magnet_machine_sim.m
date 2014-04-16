@@ -71,7 +71,7 @@ design.Poles = 12;
 % Choose the number of Phases, the conventional 3
 design.Phases = 3;
 % The desired number of layers is stored in 'CoilLayers'
-design.CoilLayers = 2; 
+design.CoilLayers = 1; 
 % The type of winding is specified as a string, it can be 'overlapping' or
 % 'nonoverlapping'
 design.WindingType = 'overlapping';
@@ -267,6 +267,7 @@ plotslm( design.slm_fluxlinkage, {'dy'})
 
 x = linspace(-2, 4, 1000);
 y = periodicslmeval(x,design.slm_fluxlinkage,1);
+figure;
 plot( x, y );
 ylabel('Flux Linkage Derivative', 'FontSize', 14);
 xlabel('Position', 'FontSize', 14);
