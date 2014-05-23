@@ -633,8 +633,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     
                     % link up the sides
                     links = [ links;
-                              topbasenids(end), topinnershoenode;
-                              botbasenids(end), botinnershoenode; ];
+                              lastlayernodeids(1), topinnershoenode;
+                              lastlayernodeids(2), botinnershoenode; ];
 
                     % update the tooth links
                     toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
