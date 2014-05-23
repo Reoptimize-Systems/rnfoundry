@@ -139,6 +139,6 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
     end
 
     % run the GA
-    [mpgastate, mpgaoptions] = mpgafun2(mpgaoptions, 'ObjectiveArgs', ObjectiveArgs);
+    [mpgastate, mpgaoptions] = mpga(mpgaoptions, 'ObjectiveArgs', ObjectiveArgs);
     
 end
