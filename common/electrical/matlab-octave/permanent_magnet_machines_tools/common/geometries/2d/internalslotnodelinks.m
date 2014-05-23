@@ -612,7 +612,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
 
                 bodyarealeft = bodyarealeft + layer_area_available;
                 
-                if (windingarea > bodyarealeft) || (layersmade >= ylayers)
+                if (windingarea > bodyarealeft) || (layersmade >= ylayers) ...
 
                     % link up the sides
                     links = [ links;
@@ -628,6 +628,24 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     
                     % break out of the while loop
                     break;
+                    
+                elseif (xshoebase < tol) && (layersmade == (ylayers - 1))
+                    
+                    % link up the sides
+                    links = [ links;
+                              topbasenids(end), topinnershoenode;
+                              botbasenids(end), botinnershoenode; ];
+
+                    % update the tooth links
+                    toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+
+                    % put the remaining layer in the space between the last area
+                    % boundary and the top
+                    coillabelloc = [ coillabelloc; lastlayerstartx + ((xcore+xcoilbody+xcoilbase) - lastlayerstartx)/2, 0 ];
+
+                    % return as there is no shoe area to gobble
+                    cornernodes = [ lastinnernodes(2), botouternode, topouternode, lastinnernodes(1) ];
+                    return;
                     
                 else
                     % calculate the area of the body required to make up the
@@ -685,57 +703,45 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             return;
         end
         
-        
-        if xshoebase >= tol
-            
-            shoex = [ xcore + xcoil, shoex ];    
-            shoey = [ ycoilshoe/2, shoey ];
+        shoex = [ xcore + xcoil, shoex ];    
+        shoey = [ ycoilshoe/2, shoey ];
 
-            % gobble up the shoe area, creating layers as necessary
-            if windingarea < (layer_area_available + shoearea)
+        % gobble up the shoe area, creating layers as necessary
+        if windingarea < (layer_area_available + shoearea)
 
-                starttrapzind = 1;
+            starttrapzind = 1;
 
-                for ind = 2:numel (shoex)
-                    gobblearea = trapz (shoex(starttrapzind:ind), shoey(starttrapzind:ind)) + layer_area_available;
-                    if gobblearea >= windingarea
-                        % create a layer link and coil label location
+            for ind = 2:numel (shoex)
+                gobblearea = trapz (shoex(starttrapzind:ind), shoey(starttrapzind:ind)) + layer_area_available;
+                if gobblearea >= windingarea
+                    % create a layer link and coil label location
 
-                        links = [ links; topshoenids(ind-1), botshoenids(ind-1) ];
+                    links = [ links; topshoenids(ind-1), botshoenids(ind-1) ];
 
-                        coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(ind) - lastlayerstartx)/2, 0 ];
-                        layersmade = layersmade + 1;
-                        lastlayerstartx = shoex(ind);
-                        starttrapzind = ind;
-                        layer_area_available = 0;
-                    end
-                end
-
-                if ylayers - layersmade == 1
-                    % put the remaining layer in the remaining area
-                    coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(end) - lastlayerstartx)/2, 0 ];
-                elseif layersmade ~= ylayers
-                    error ('layer construction error')
-                end
-
-            else
-                if ylayers - layersmade == 1
-                    % put the remaining layer in the remaining area
-                    coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(end) - lastlayerstartx)/2, 0 ];
-                elseif layersmade ~= ylayers
-                    error ('layer construction error, ')
+                    coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(ind) - lastlayerstartx)/2, 0 ];
+                    layersmade = layersmade + 1;
+                    lastlayerstartx = shoex(ind);
+                    starttrapzind = ind;
+                    layer_area_available = 0;
                 end
             end
-            
+
+            if ylayers - layersmade == 1
+                % put the remaining layer in the remaining area
+                coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(end) - lastlayerstartx)/2, 0 ];
+            elseif layersmade ~= ylayers
+                error ('layer construction error')
+            end
+
         else
-            % put the remaining layer in the space between the last area
-            % boundary and the top
-            coillabelloc = [ coillabelloc; lastlayerstartx + ((xcore+xcoilbody+xcoilbase) - lastlayerstartx)/2, 0 ];
-            
-            % return as there is no shoe area to gobble
-            cornernodes = [ lastinnernodes(2), botouternode, topouternode, lastinnernodes(1) ];
-            return;
+            if ylayers - layersmade == 1
+                % put the remaining layer in the remaining area
+                coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(end) - lastlayerstartx)/2, 0 ];
+            elseif layersmade ~= ylayers
+                error ('layer construction error, ')
+            end
         end
+
     
     end
     
