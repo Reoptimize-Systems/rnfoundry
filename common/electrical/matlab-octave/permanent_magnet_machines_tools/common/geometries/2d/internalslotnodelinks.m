@@ -629,7 +629,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     % break out of the while loop
                     break;
                     
-                elseif (xshoebase < tol) && (layersmade == (ylayers - 1))
+                elseif ((xshoebase < tol) && (layersmade == (ylayers - 1))) ...
+                        || ((xshoebase - xshoegap) < tol && (layersmade == (ylayers - 1)))
                     
                     % link up the sides
                     links = [ links;
@@ -825,8 +826,8 @@ function [x, y, Qx, Qy, m, c] = basecurvepoints (xcore, xcoilbase, xcoilbody, yc
     curvelength = sum(rho);
     
     % choose appropriate number of points for femm to construct the curve,
-    % either one every half mm, or at least 3 points
-    npoints = max (3, min (ceil (curvelength/5e-4), 96));
+    % either one every half mm, or at least 5 points
+    npoints = max (5, min (ceil (curvelength/5e-4), 96));
     
     x = Qx(2:floor((numel(Qx)-2)/npoints):end-1);
     y = Qy(2:floor((numel(Qy)-2)/npoints):end-1);
