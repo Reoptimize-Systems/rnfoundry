@@ -22,6 +22,28 @@ plot ( [ coillabelloc(:,1) ], ...
        'xk' )
 hold off
 
+%% shoe blunt edge with gap
+
+ycoil = 1;
+yshoegap = 0.3 * ycoil;
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0.1;
+xshoegap = xshoebase;
+coillayers = 2;
+tol = 1e-5;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol);
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' )
+hold off
+
 %% Shoe sharp point with gap
 
 ycoil = 1;
@@ -96,7 +118,7 @@ xcore = 0.2;
 xcoil = 1.0;
 xshoebase = 0;
 xshoegap = 0;
-coillayers = 1;
+coillayers = 5;
 tol = 1e-5;
 
 [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] = ...
