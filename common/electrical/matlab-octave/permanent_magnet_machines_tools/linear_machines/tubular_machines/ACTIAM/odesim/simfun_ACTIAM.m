@@ -8,6 +8,8 @@ function [design, simoptions] = simfun_ACTIAM(design, simoptions)
 %
 % 
 
+    design = ratios2dimensions_ACTIAM (design);
+    
     % set up variables for calculation of the iron losses, if they have not
     % been supplied
     if ~isfield(design, 'CoreLoss')
