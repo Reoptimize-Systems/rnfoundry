@@ -7,10 +7,10 @@ function [design, simoptions] = simfun_ACTM(design, simoptions)
 % [design, simoptions] = simfun_ACTM(design, simoptions)
 %
 
-    [design, simoptions] = simfun_TM(design, simoptions);
-
     design = ratios2dimensions_ACTM(design);
     
+    [design, simoptions] = simfun_TM(design, simoptions);
+
     % Draw and analyse the machine
     design.FemmProblem = femmprob_ACTM(design);
     femmfilename = [tempname, '.fem'];
