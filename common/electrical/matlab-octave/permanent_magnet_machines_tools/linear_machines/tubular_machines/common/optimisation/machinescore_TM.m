@@ -28,10 +28,14 @@ function [score, design] = machinescore_TM(design, simoptions)
 
     % Need to multiply the machine cost by the number of machines
     simoptions.evaloptions.nmachines = simoptions.NoOfMachines;
+    
+    % calculate the component masses
+    [design, simoptions] = materialmasses_TM(design, simoptions);
+    
     if isfield(simoptions, 'BuoyParameters')
-        [cost, design] = costestimate_TM(design, simoptions.evaloptions, simoptions.BuoyParameters.mass_external);
+        [cost, design] = costestimate_TM(design, simoptions, simoptions.BuoyParameters.mass_external);
     else
-        [cost, design] = costestimate_TM(design, simoptions.evaloptions);
+        [cost, design] = costestimate_TM(design, simoptions);
     end
 
     % add any extra penalties required
