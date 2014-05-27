@@ -26,7 +26,7 @@ end
 
 function design = stripgenfields_ROTARY(design)
     
-    design = rmiffield(design, 'MaxTorquePto');
+    design = rmiffield(design, 'TorquePtoPeak');
     design = rmiffield(design, 'FirstSlotCenter');
     design = rmiffield(design, 'outermagsep');
     
