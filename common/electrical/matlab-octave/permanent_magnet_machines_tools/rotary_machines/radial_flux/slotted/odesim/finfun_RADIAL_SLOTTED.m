@@ -176,8 +176,10 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
     % make the cogging force slm 
     design = coggingforceslm(design);
     
-    % create the loss functions (for lossforces_AM)
-    design = makelossfcns_RADIAL_SLOTTED(design);
+    % create the loss functions (for lossforces_AM) if necessary
+    if ~isfield (design, 'CoreLossSLMs')
+        design = makelossfcns_RADIAL_SLOTTED(design);
+    end
     
     % estimate the masses of the components
     design = materialmasses_RADIAL_SLOTTED(design, simoptions);
