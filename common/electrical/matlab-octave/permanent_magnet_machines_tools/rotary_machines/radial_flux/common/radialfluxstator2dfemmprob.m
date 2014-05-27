@@ -58,22 +58,24 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstator2dfemmprob(s
 % 'SlotMaterial' - index of the material in the FemmProblem.Materials
 %    structure containing the material to be used for the slots/coils
 %
-% 'SlotRegionMeshSize' - 
+% 'SlotRegionMeshSize' - Mesh size for the slot regions, usually the coil
+%    cross-section. 
 %
-% 'ToothMaterial' - 
+% 'ShoeGapMaterial' - index of the material in the FemmProblem.Materials
+%    structure containing the material to be used for the gap between teeth
+%    shoes when the teeth have a shoe which ends in a blunt edge.
 %
-% 'ToothRegionMeshSize' - 
-%
-% 'ShoeGapMaterial' - 
-%
-% 'ShoeGapRegionMeshSize' - 
+% 'ShoeGapRegionMeshSize' - Mesh size for the gap between teeth shoes when
+%   the teeth have a shoe which ends in a blunt edge.
 %
 % 'NSlots' - integer value determining the number of slots to be drawn. If
 %   not supplied enough slots will be drawn to fill two Poles of the
 %   machine design. This options can be used to draw large or smaller
 %   simulations of the same design.
 %
-% 'Tol' - 
+% 'Tol' - tolerance at which to consider various dimensions to be zero, by
+%   default this is 1e-5. This is used to prevent meshes occuring with very
+%   large numbers of triangles.
 %
 % Output
 %
@@ -96,7 +98,7 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstator2dfemmprob(s
 %     [ 1st stator bottom slot inner coil layer x, 1st stator bottom left inner coil layer y ]
 %     [ 1st stator bottom left inner coil layer x, 1st stator bottom left inner coil layer y ]
 %
-% 
+
 
     if numel(drawnsides) ~= 2
         error('drawnsides must be a two element vector.')
@@ -106,8 +108,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstator2dfemmprob(s
     Inputs.FemmProblem = newproblem_mfemm('planar');
     Inputs.SlotMaterial = 1;
     Inputs.SlotRegionMeshSize = -1;
-    Inputs.ToothMaterial = 1;
-    Inputs.ToothRegionMeshSize = -1;
+%     Inputs.ToothMaterial = 1;
+%     Inputs.ToothRegionMeshSize = -1;
     Inputs.ShoeGapMaterial = 1;
     Inputs.ShoeGapRegionMeshSize = -1;
     Inputs.ShoeGroup = 0;
@@ -132,8 +134,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstator2dfemmprob(s
                       ryokecenter, 'i', ...
                       'NWindingLayers', Inputs.NWindingLayers, ...
                       'FemmProblem', FemmProblem, ...
-                      'ToothMaterial', Inputs.ToothMaterial, ...
-                      'ToothRegionMeshSize', Inputs.ToothRegionMeshSize, ...
+                      ... 'ToothMaterial', Inputs.ToothMaterial, ...
+                      ... 'ToothRegionMeshSize', Inputs.ToothRegionMeshSize, ...
                       'ShoeGapMaterial', Inputs.ShoeGapMaterial, ...
                       'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
                       'ShoeGroup', Inputs.ShoeGroup, ...
@@ -150,8 +152,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstator2dfemmprob(s
                       ryokecenter, 'o', ...
                       'NWindingLayers', Inputs.NWindingLayers, ...
                       'FemmProblem', FemmProblem, ...
-                      'ToothMaterial', Inputs.ToothMaterial, ...
-                      'ToothRegionMeshSize', Inputs.ToothRegionMeshSize, ...
+                      ... 'ToothMaterial', Inputs.ToothMaterial, ...
+                      ... 'ToothRegionMeshSize', Inputs.ToothRegionMeshSize, ...
                       'ShoeGapMaterial', Inputs.ShoeGapMaterial, ...
                       'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
                       'ShoeGroup', Inputs.ShoeGroup, ...
