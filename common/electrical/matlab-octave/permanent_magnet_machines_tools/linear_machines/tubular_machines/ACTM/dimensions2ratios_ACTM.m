@@ -91,7 +91,26 @@ function varargout = dimensions2ratios_ACTM(varargin)
 %   Ws1VhalfWs - Ratio of the width of the air region from the centre of
 %                the steel piece to half of the total width of the steel
 %                i.e. 2* Ws1 / Ws, see diagram.
-
+%
+% 
+% Field Dimensions Diagram
+%
+%    |         _______
+%    |        /       |
+%    |_______/        |
+%    |                |
+%    |________________|
+%    |                |
+%    |      Hmag      |
+%    |<-------------->|
+%    |________________|
+%    |<-----> Rs2     | ^
+% Ws1|_______   Ws2   | :
+% ^  |       \  ^     | : half Ws
+% :  |        \_:_____| ;
+%    <--------> Rs1
+%
+%
     if isstruct(varargin{1})
 
         design = varargin{1};
