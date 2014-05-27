@@ -46,7 +46,7 @@ function [mingap, maxstress, design] = evaluateinnerstructure_RADIAL_SLOTTED(des
     %% Add the forces
 
     % calculate the shear forces
-    shearforce = (design.MaxTorquePto / design.InnerStructure.Rsoo) / (2 * pi * design.InnerStructure.Rsoo * design.ls);
+    shearforce = (design.TorquePtoPeak / design.InnerStructure.Rsoo) / (2 * pi * design.InnerStructure.Rsoo * design.ls);
 
     % get the outer radial force
     radialforce = -polyvaln(design.p_gforce, design.g) / (design.InnerStructure.Rsoo * design.thetap * design.ls);
