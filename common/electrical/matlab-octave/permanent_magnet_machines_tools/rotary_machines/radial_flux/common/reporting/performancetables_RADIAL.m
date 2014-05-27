@@ -36,7 +36,8 @@ function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outf
 %       JCoilRms
 %       EnergyLoadTotal
 %       PowerPhaseRMean
-%       MaxTorquePto
+%       TorquePtoMean
+%       TorquePtoPeak
 %       PowerLossEddyMean
 %       PowerLossMean
 %       FrequencyPeak
