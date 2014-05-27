@@ -17,7 +17,29 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlV
 % Output
 %
 %   ptables - structure containing tables of output data at each
-%     corresponding combination of speed and loading
+%     corresponding combination of speed and loading. The fields of ptables
+%     will contain at least the following:
+%
+%       PowerLoadMean
+%       Efficiency
+%       IPhasePeak
+%       IPhaseRms
+%       ICoilPeak
+%       ICoilRms
+%       EMFPhasePeak
+%       EMFPhaseRms
+%       JCoilPeak
+%       JCoilRms
+%       EnergyLoadTotal
+%       PowerPhaseRMean
+%       TorquePtoMean
+%       TorquePtoPeak
+%       PowerLossEddyMean
+%       PowerLossMean
+%       FrequencyPeak
+%
+%     each table will be a (n x m) matrix where n is the number of speed
+%     points and m is the number of load ratio points supplied.
 %
 %
 

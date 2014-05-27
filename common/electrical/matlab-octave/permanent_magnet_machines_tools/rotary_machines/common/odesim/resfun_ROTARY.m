@@ -36,6 +36,8 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
         
         design.Efficiency = design.EnergyLoadTotal / design.EnergyInputTotal;
         
+        design.TorquePtoMean = contmean(T, results.Tqpto);
+        
     end
     
     % get the maximum force on the magnets
