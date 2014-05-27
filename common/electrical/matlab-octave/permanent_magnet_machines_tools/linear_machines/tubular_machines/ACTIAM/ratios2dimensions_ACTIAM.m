@@ -68,7 +68,10 @@ function varargout = ratios2dimensions_ACTIAM(varargin)
             design.RsiVRs0 = 0;
         end
         
-        [design.Wp, design.Wm, design.Ws, design.Ri, design.Ro, design.Ra, design.g, design.Rsi, design.Rso, design.Wc, design.Hc] = ratios2dimensions_ACTIAM(design.WmVWp, design.WpVRm, design.RiVRm, design.RoVRm, design.RaVRo, design.RsiVRso, design.RsoVRm, design.WcVWp, design.Rm);
+        [design.Wp, design.Wm, design.Ws, design.Ri, design.Ro, ...
+            design.Ra, design.g, design.Rsi, design.Rso, design.Wc, design.Hc] ...
+            = ratios2dimensions_ACTIAM(design.WmVWp, design.WpVRm, design.RiVRm, design.RoVRm,...
+                design.RaVRo, design.RsiVRso, design.RsoVRm, design.WcVWp, design.Rm);
         
         design.Hmag = design.Rm - design.Rso;
         
