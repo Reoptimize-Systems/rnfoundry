@@ -93,6 +93,24 @@ function varargout = ratios2dimensions_ACTM(varargin)
 %
 %   Ws2 - width of the air region 2 from the centre of the steel piece
 %
+% Field Dimensions Diagram
+%
+%    |         _______
+%    |        /       |
+%    |_______/        |
+%    |                |
+%    |________________|
+%    |                |
+%    |      Hmag      |
+%    |<-------------->|
+%    |________________|
+%    |<-----> Rs2     | ^
+% Ws1|_______   Ws2   | :
+% ^  |       \  ^     | : half Ws
+% :  |        \_:_____| ;
+%    <--------> Rs1
+%
+%
 
     if isstruct(varargin{1})
 
