@@ -1,4 +1,4 @@
-function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptions, multicoredir, istestrun, isfirstrun)
+function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptions, fieldbounds, multicoredir, istestrun, isfirstrun)
 %
 % A script to run common aspects of the mpga evaluation procedure
 %
@@ -92,7 +92,11 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
         multicoredir = fullfile(ngtrootdir, 'temp');
     end
 
-    ObjectiveArgs = {simoptions, multicoredir};
+    if ~isempty (fieldbounds)
+        ObjectiveArgs = {fieldbounds, simoptions, multicoredir};
+    else
+        ObjectiveArgs = {simoptions, multicoredir};
+    end
 
     if istestrun
         simoptions.DoPreLinSim = false;
@@ -103,7 +107,7 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
     FieldDR = feval(mpgaoptions.OBJ_F,[],1, simoptions, multicoredir);
 
     % compute SUBPOP, NIND depending on number of variables (defined in objective function)
-    mpgaoptions.NVAR = size(FieldDR,2);           % Get number of variables from objective function
+    mpgaoptions.NVAR = size(FieldDR,2);   % Get number of variables from objective function
 
     if istestrun
         % Number of subpopulations
