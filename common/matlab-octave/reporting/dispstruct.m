@@ -8,13 +8,19 @@ function dispstruct(s, colwid, tabwid)
 % Description
 %
 % dispstruct displays the contents of a strucuture at the command line in a
-% readable format. Only scalar structures can be displayed.
+% readable format. If an array of structures are supplied, they are
+% displayed in sequence.
+% 
 %
 % First all fields containing nonscalar numeric values or strings are
 % displayed as short one-line descriptions of their type and possibly a few
 % values of their contents, depending on their type. Next the scalar
 % members and strings are displayed as a multi-column table.
 %
+    
+    if ~isstruct(s)
+        error ('s should be a structure or array of structures');
+    end
 
     if nargin < 2
         colwid = 10;
@@ -25,7 +31,13 @@ function dispstruct(s, colwid, tabwid)
     end
     
     if ~isscalar(s)
-        error('only scalar structure arrays are supported')
+        % call dispstruct for each structure
+        for ind = 1:numel(s)
+            fprintf (1, 'Struct array index %d\n', ind);
+            dispstruct(s(ind), colwid, tabwid);
+            fprintf (1, '\n');
+        end
+        return;
     end
     
     fnames = fieldnames(s);
