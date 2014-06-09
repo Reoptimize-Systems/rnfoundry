@@ -575,6 +575,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     
                     links = [ links; topbasenids(ind), botbasenids(ind) ];
                     
+                    vertlinkinds = [vertlinkinds, size(links, 1)];
+                    
                     coillabelloc = [ coillabelloc; lastlayerstartx + (basex(ind) - lastlayerstartx)/2, 0 ];
                     layersmade = layersmade + 1;
                     
@@ -676,6 +678,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                               lastlayernodeids(2), thislayernodeids(2);
                               thislayernodeids(1), thislayernodeids(2) ];
                           
+                    vertlinkinds = [vertlinkinds, size(links, 1)];
+                          
                     % update the tooth links
                     toothlinkinds = [toothlinkinds, size(links, 1) - 2, size(links, 1) - 1];
 
@@ -718,6 +722,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     % create a layer link and coil label location
 
                     links = [ links; topshoenids(ind-1), botshoenids(ind-1) ];
+                    
+                    vertlinkinds = [vertlinkinds, size(links, 1)];
 
                     coillabelloc = [ coillabelloc; lastlayerstartx + (shoex(ind) - lastlayerstartx)/2, 0 ];
                     layersmade = layersmade + 1;
