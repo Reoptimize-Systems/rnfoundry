@@ -133,6 +133,8 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                             0, ...
                             'InGroup', Inputs.WrapperGroup);
         
+        
+        
         if linktb
             lastbotnodeid = elcount.NNodes - size(nodes,1) + 2;
             topnodeid = botnodeid;
@@ -156,7 +158,10 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                             elcount.NNodes - 2, ...
                                             topnodeid, ...
                                             'BoundaryMarker', FemmProblem.BoundaryProps(boundind).Name, ...
-                                            'InGroup', Inputs.WrapperGroup);        
+                                            'InGroup', Inputs.WrapperGroup);
+                                        
+            lastbotnodeid = elcount.NNodes - size(nodes,1);
+            
         end
         
         % Seg at bottom
