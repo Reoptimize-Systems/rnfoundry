@@ -2,6 +2,10 @@ function evaloptions = designandevaloptions_RADIAL_SLOTTED(evaloptions)
 % parses the evaloptions structure for the function for slotted radial flux
 % machines
 %
+% Syntax
+%
+% evaloptions = designandevaloptions_RADIAL_SLOTTED(evaloptions)
+%
 % Input:
 %
 %   evaloptions - optional structure containing various optional parameters for
