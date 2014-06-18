@@ -53,16 +53,16 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
 %
 %  x - width of the region in the x direction
 %
-%  y1 - rectangular region 1 height in y direction
+%  y1 - rectangular region A and B height in y direction
 %
-%  y2 - rectangular region 2 height in y direction
+%  y2 - height of rectangular region between A and B in y direction
 %
 %  xoffset - displacement of region center from zero in x direction
 %
 %  ydisp - displacement in the 'y' direction. The outer boundary of
 %    the geometry will not actually change, the gemoetry will be modified
 %    as though rotated on a cylindrical surface, wrapping around at the top
-%    and bottom
+%    and bottom. The ydisp units are the same as the y1 and y2 dimensions.
 %
 %  tol - optional tolerance at which distances bewteen elements are
 %    considered to be of size zero. If not supplied, 1e-5 is used.
