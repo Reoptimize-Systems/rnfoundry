@@ -1,7 +1,7 @@
 function [nodes, nodeids, links, rectcentres, spacecentres] = ...
     rectregionsyperiodic(x, y1, y2, xoffset, ydisp, tol, nodecount)
-% planarrectregionsperiodic: Generates node locations and segment joints
-% for the drawing of a periodic region made up of multiple rectangles
+% Generates node locations and segment joints for the drawing of a periodic
+% region made up of multiple rectangles
 %
 % Syntax
 %
