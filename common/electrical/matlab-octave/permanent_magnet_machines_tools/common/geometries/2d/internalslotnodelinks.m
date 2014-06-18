@@ -85,15 +85,18 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
 %
 % Input
 %
-%  ycoil - internal slot width in y direction
+%  ycoil - If a single number, the internal slot width in y direction. If
+%    a vector of two numbers, the first is the internal slot width at the
+%    shoe end of the tooth, the second the internal slot width at the base
+%    of the slot.
 % 
 %  yshoegap - distance between shoe tips in y direction. This can be any
-%    dimension from zero up to 
+%    dimension from zero up to ycoil at the shoe end.
 % 
 %  xcore - thickness of slot yoke in x direction (in practice this is the
 %    distance of the base of the drawn slot shape from the y-axis) 
 % 
-%  xcoil - internale slot height in y direction, if layers are specified
+%  xcoil - internal slot height in x direction, if layers are specified
 %    it is this dimension which is split into layers.
 % 
 %  xshoebase - thichness of the shoe at the point it meets the tooth yoke 
@@ -108,6 +111,31 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
 %  tol - tolerance determining whether certain dimensions are joined or
 %    not, e.g. whether yshoegap should be treated as zero. Default is 1e-5.
 %
+%  In addition several options can be supplied as parameter-value pairs.
+%  The possible optional arguments are:
+%
+%  CoilBaseFraction - fraction of the base at which curvature is present.
+%    The slot base is curved with a bezier curve starting at xcore and
+%    ending at an x position given by xcore + xcoil*CoilBaseFraction.
+%    Defaults to 0.05 if not supplied.
+%
+%  ShoeCurveControlFrac - factor controlling the 'curvature' of the tooth
+%    shoe, this is a value between 0 and 1. The exact effect of this number
+%    is complex, and depends on the geometry of the slot. However, in
+%    general a lower number results in a curve closer to a line draw
+%    directly from the shoe base to the shoe gap, whicle higher numbers
+%    aproximate a sharp right angle. Defaults to 0.5. 
+%
+%    N.B. the slot geometry affects this curve in the following way. If the
+%    position of the shoe gap node is below the intercept of the line
+%    formed by the edge of the slot and a vertical line at the shoe gap
+%    node, the resulting curve will bend outward from the inside of the
+%    slot. If the intercept is below the shoe gap node, the curve will bend
+%    into the slot.
+%
+%  SplitX - if there are layers in the y direction, the slot can be split
+%    into two in the x direction by setting this flag to true. Defaults to
+%    false. If true coil label locations are provide from bottom to top.
 %
 % Output
 %
