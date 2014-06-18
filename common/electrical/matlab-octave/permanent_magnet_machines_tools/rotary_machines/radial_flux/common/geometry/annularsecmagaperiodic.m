@@ -1,4 +1,5 @@
-function [FemmProblem, nodes, nodeids, links, magblockinds] = annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, varargin)
+function [FemmProblem, nodes, nodeids, links, magblockinds] = ...
+    annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, varargin)
 % generates a periodic magnets containing region with an annular sector
 % shape (i.e. a region bounded by two arcs and two straight lines, or a
 % sector of an annulus) suitible for modelling radial flux machines.
@@ -9,9 +10,90 @@ function [FemmProblem, nodes, nodeids, links, magblockinds] = annularsecmagaperi
 %           annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos)
 % [...] = annularsecmagaperiodic(..., 'Paramter', Value)
 %
-% Input
 %
-% 
+% Description
+%
+% annularsecmagaperiodic creates a periodic geometry of two magnets with
+% spaces in between, with a base position shown in the figure below.
+%
+%       ***************                                            
+%         *             *                                              
+%           *             * 
+%            ***************                                            
+%             *             *                                              
+%               *             *                                                                                          
+%                *             *                                              
+%                  *    Mag 2    *                                                                                     
+%                   *             *                                              
+%                    *             *                                              
+%                     *             *            
+%                      ***************                                                                                          
+%                       *             *                                              
+%                        *             *  .........................
+%                         *             *                ^
+%                         *             *                 :
+%                          *************** ..^.......      :                            
+%                          *             *   :             :
+%                          *             *    :             :                                                                          
+%                           *             *   : thetamag    :                                    
+%                           *    Mag 1    *    :             : thetapole             
+%                            *             *   :             :                                      
+%                            *             *   :             :            
+%                            *             * . v.........     :                                       
+%                             ***************                 :                                       
+%                             *             *                 :               
+%                             *             *                 v                
+%  x                          *************** ..............................                                       
+% r=0                         <------------->
+%  :                               rmag
+%  :                                :
+%  :                                :
+%  :            roffset             :
+%  :------------------------------->:
+%  :           
+%
+%
+% This geometry is drawn in a periodic way in the tangential direction,
+% 'wrapping' around at the top and bottom. 
+%
+% Inputs
+%
+%  FemmProblem - 
+%
+%  thetapole - 
+%
+%  thetamag,
+%
+%  rmag - 
+%
+%  roffset - 
+%
+%  pos - 
+%
+%  In addition, a number of optional parameters can be specified as
+%  parameter-value pairs. Possible parameter-value pairs are:
+%
+%  'MagDirections' - 
+%  'MagnetMaterial' - 
+%  'MagnetGroup' - 
+%  'SpaceMaterial' - 
+%  'SpaceGroup' - 
+%  'Tol' - 
+%  'MeshSize' - 
+%
+% Output
+%
+%  FemmProblem - 
+%
+%  nodes - 
+%
+%  nodeids - 
+%
+%  links - 
+%
+%  magblockinds - 
+%
+%
 
     Inputs.MagDirections = {'theta', 'theta+180'};
     Inputs.MagnetMaterial = 1;
