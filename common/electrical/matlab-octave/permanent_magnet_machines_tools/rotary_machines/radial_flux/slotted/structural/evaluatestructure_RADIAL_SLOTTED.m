@@ -7,14 +7,14 @@ function [design, simoptions] = evaluatestructure_RADIAL_SLOTTED(design, simopti
 %
 % 
 
-    if strcmp(design.StatorType, 'so')
+    if strcmp(design.ArmatureType, 'internal')
         Iomega = 0;
         Oomega = design.OmegaPeak;
-    elseif strcmp(design.StatorType, 'si')
+    elseif strcmp(design.ArmatureType, 'external')
         Iomega = 0;
         Oomega = design.OmegaPeak;
     else
-        error('Only ''so'' and ''si'' stator types supported.')
+        error('Only ''internal'' and ''external'' stator types supported.')
     end
     
     % evaluate the inner structure of the machine

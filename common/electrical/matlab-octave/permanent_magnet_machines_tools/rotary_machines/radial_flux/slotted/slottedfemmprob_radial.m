@@ -1,11 +1,15 @@
-function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmprob_radial(design, varargin)
+function [FemmProblem, coillabellocs, yokenodeids] = slottedfemmprob_radial(design, varargin)
 % creates a FemmProblem structure for a slotted radial flux permanent
 % magnet machine
 %
-% 
+% Syntax
+%
+% [FemmProblem, coillabellocs, yokenodeids] = slottedfemmprob_radial(design)
+% [FemmProblem, coillabellocs, yokenodeids] = slottedfemmprob_radial(..., 'Parameter', Value)
+%
 
     % First set up some default inputs
-    Inputs.StatorType = 'si';
+    Inputs.ArmatureType = 'external';
     Inputs.NWindingLayers = 1;
     Inputs.CoilCurrent = 0;
     Inputs.MagArrangement = 'NN';
@@ -23,6 +27,8 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
     Inputs.BackIronRegionMeshSize = choosemesharea_mfemm(min(design.tbi), 2*(design.Rbm*design.thetap), 1/10);
     Inputs.OuterRegionsMeshSize = [choosemesharea_mfemm(design.tm, (design.Rbo*design.thetap), 1/5), -1];
     Inputs.AirGapMeshSize = choosemesharea_mfemm(design.g, (design.Rmm*design.thetap), 1/10);
+    Inputs.DrawOuterRegions = true;
+    
     if design.tsg > 1e-5
         if design.tsb > 1e-5
             Inputs.ShoeGapRegionMeshSize = choosemesharea_mfemm(max(design.tsg, design.tsb), (design.Rmo*design.thetasg), 1/20);
@@ -55,23 +61,25 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
     
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
-    [FemmProblem, matinds] = addmaterials_mfemm(FemmProblem, ...
-        {design.MagnetMaterial, design.BackIronMaterial, design.YokeMaterial, design.CoilMaterial});
+    [FemmProblem, matinds] = addmaterials_mfemm (FemmProblem, ...
+        {design.GapMaterial, design.MagnetMaterial, design.BackIronMaterial, ...
+         design.YokeMaterial, design.CoilMaterial} );
                  
-    MagnetMatInd = matinds(1);
-    BackIronMatInd = matinds(2);
-    YokeMatInd = matinds(3);
-    CoilMatInd = matinds(4);
+    GapMatInd = matinds(1);
+    MagnetMatInd = matinds(2);
+    BackIronMatInd = matinds(3);
+    YokeMatInd = matinds(4);
+    CoilMatInd = matinds(5);
     
-    switch Inputs.StatorType
+    switch Inputs.ArmatureType
         
-        case 'si'
+        case 'external'
             % single inner facing stator
             drawnrotors = [false, true];
             rrotor = design.Rmo;
             drawnstatorsides = [1, 0];
             Rs = design.Rmo + design.g + design.tc + design.tsb + design.ty/2;
-        case 'so'
+        case 'internal'
             % single outer facing stator
             drawnrotors = [true, false];
             rrotor = design.Rmi;
@@ -89,7 +97,7 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
             error('not yet supported');
             
         otherwise
-            error('Unrecognised StatorType option.')
+            error('Unrecognised ArmatureType option.')
                 
     end
 
@@ -100,8 +108,8 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
         'MagArrangement', Inputs.MagArrangement, ...
         'MagnetMaterial', MagnetMatInd, ...
         'BackIronMaterial', BackIronMatInd, ...
-        'OuterRegionsMaterial', 1, ... % Air
-        'MagnetSpaceMaterial', 1, ... % Air
+        'OuterRegionsMaterial', GapMatInd, ... % ususally Air
+        'MagnetSpaceMaterial', GapMatInd, ... % usually Air
         'MagnetGroup', Inputs.MagnetGroup, ...
         'MagnetSpaceGroup', Inputs.MagnetSpaceGroup, ...
         'BackIronGroup', Inputs.RotorBackIronGroup, ...
@@ -119,7 +127,7 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
         'FemmProblem', FemmProblem, ...
         ... 'ToothMaterial', YokeMatInd, ...
         ... 'ToothRegionMeshSize', Inputs.YokeRegionMeshSize, ...
-        'ShoeGapMaterial', 1, ...
+        'ShoeGapMaterial', GapMatInd, ...
         'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
         'ShoeGroup', Inputs.ArmatureBackIronGroup, ...
         'Tol', Inputs.Tol);
@@ -137,7 +145,8 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
                                                 YokeMatInd, ...
                                                 CoilMatInd, ...
                                                 Inputs.ArmatureBackIronGroup, ...
-                                                linktb );
+                                                linktb, ...
+                                                GapMatInd, ...
+                                                Inputs.DrawOuterRegions );
 
-outermagsep=[];
 end

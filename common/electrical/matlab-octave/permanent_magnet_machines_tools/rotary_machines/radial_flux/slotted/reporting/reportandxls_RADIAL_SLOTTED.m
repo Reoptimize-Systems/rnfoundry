@@ -89,7 +89,7 @@ function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, 
     
     solution = fpproc (ansfilename);
     
-    if strcmp(design.StatorType, 'so')
+    if strcmp(design.ArmatureType, 'internal')
         
         [xl,yl] = pol2cart(2 * design.thetap, design.Rbo);
         x = 0.8 * xl;
@@ -97,7 +97,7 @@ function [reporttexpath, reportdir, reportname, reportstr, xlsfilename, design, 
         w = 1.05 * design.Rbo;
         h = w;
         
-    elseif strcmp(design.StatorType, 'si')
+    elseif strcmp(design.ArmatureType, 'external')
         
         [xl,yl] = pol2cart(2 * design.thetap, design.Ryo);
         x = 0.8 * xl;

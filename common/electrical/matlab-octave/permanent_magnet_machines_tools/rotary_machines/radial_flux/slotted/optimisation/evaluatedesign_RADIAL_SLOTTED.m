@@ -130,9 +130,9 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     armirongroup = 2;
         
     % Draw the sim 
-    [sdesign.FemmProblem, sdesign.outermagsep, sdesign.coillabellocs, sdesign.yokenodeids] = ...
+    [sdesign.FemmProblem, sdesign.coillabellocs, sdesign.yokenodeids] = ...
                         slottedfemmprob_radial(sdesign, ...
-                            'StatorType', sdesign.StatorType, ...
+                            'ArmatureType', sdesign.ArmatureType, ...
                             'NWindingLayers', sdesign.CoilLayers, ...
                             'Position', 0, ...
                             'ArmatureBackIronGroup', armirongroup, ...
@@ -156,21 +156,14 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         solution = fpproc(ansfilename);
         solution.smoothon();
 
-        % get the peak flux density in the airgap close to the stator
-        % surface
-        [x, y] = pol2cart(linspace(0, sdesign.thetap, 100), sdesign.Rso+sdesign.FEMMTol);
-        p = solution.getpointvalues(x, y);
-
-%         maxB = max( sqrt( p(2,:).^2 + p(3,:).^2 ) );
-        
         % get the cross-sectional area of the armature iron for
         % calcuation of material masses later
         solution.clearblock();
         solution.groupselectblock(armirongroup);
         sdesign.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
         
+        % get the peak flux linkage
         temp = solution.getcircuitprops('1');
-        
         peakfl = temp(3);
         
         % estimate the coil resistance

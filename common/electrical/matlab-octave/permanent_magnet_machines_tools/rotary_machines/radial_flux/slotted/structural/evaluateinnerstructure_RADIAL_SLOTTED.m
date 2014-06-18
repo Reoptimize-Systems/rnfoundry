@@ -14,7 +14,7 @@ function [mingap, maxstress, design] = evaluateinnerstructure_RADIAL_SLOTTED(des
     
     faeprob = mechfaesorprob;
     
-    if strcmp(design.StatorType, 'so')
+    if strncmpi(design.ArmatureType, 'internal', 1)
         design.InnerStructure.Rsoi = design.Ryi;
 	    design.InnerStructure.Rsoo = design.Ryo;                                     
     else
