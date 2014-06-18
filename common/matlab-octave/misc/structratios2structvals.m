@@ -7,6 +7,85 @@ function s = structratios2structvals(s, ratiofields, base, splitchar)
 % 
 % s = structratios2structvals(s, ratiofields, base, splitchar)
 %
+% Description
+%
+% structratios2structvals takes in a structure containing fields
+% representing ratios, and a base value, and converts the ratios to values
+% in appropriately named fields in the same structure. By default the
+% ratios are supplied in the form n, where the 'V' character splits
+% the quantities making up the ration. The conversion is done recursively
+% following the chain of ratios.
+%
+% For example:
+%
+% s.bVa = 1;
+% s.cVb = 2;
+% s.dVb = 3;
+% s.eVd = 10;
+% s.a = 5;
+% 
+% ratiofields = {'bVa', 'cVb', 'dVb', 'eVd'};
+% base = 'a';
+% s = structratios2structvals(s, ratiofields, base)
+%
+% s = 
+% 
+%     bVa: 1.0000e+000
+%     cVb: 2.0000e+000
+%     dVb: 3.0000e+000
+%     eVd: 10.0000e+000
+%       a: 5.0000e+000
+%       b: 5.0000e+000
+%       c: 10.0000e+000
+%       d: 15.0000e+000
+%       e: 150.0000e+000
+% 
+% The splitting character can be any character or string, if the
+% 'splitchar' optional input is supplied. e.g.
+%
+% s.bVERSUSa = 1;
+% s.cVERSUSb = 2;
+% s.dVERSUSb = 3;
+% s.eVERSUSd = 10;
+% s.a = 5;
+% 
+% ratiofields = {'bVERSUSa', 'cVERSUSb', 'dVERSUSb', 'eVERSUSd'};
+% base = 'a';
+% splitchar = 'VERSUS';
+% s = structratios2structvals(s, ratiofields, base, splitchar)
+% 
+% s = 
+% 
+%       bVERSUSa: 1.0000e+000
+%       cVERSUSb: 2.0000e+000
+%       dVERSUSb: 3.0000e+000
+%       eVERSUSd: 10.0000e+000
+%              a: 5.0000e+000
+%      bbVERSUSa: 1.0000e+000
+%     ccVERSUSbb: 2.0000e+000
+%     ddVERSUSbb: 3.0000e+000
+%     eeVERSUSdd: 10.0000e+000
+%              b: 5.0000e+000
+%              c: 10.0000e+000
+%              d: 15.0000e+000
+%              e: 150.0000e+000
+%
+% Input
+%
+%  s - structure containing the fields to be evaluated
+%
+%  ratiofields - cell array of strings containing the names of the fields
+%    to be converted from ratios to quantities
+%
+%  base - string containing field name containing base value for ratios
+%
+%  splitchar - optional string containing the character or string splitting
+%    the numerator and denominator in the ratiofields
+%
+% Output
+%
+%  s - the input structure, but with the calculated output fields added
+%
 
     % do some error checking on the input
     if ischar(ratiofields)
