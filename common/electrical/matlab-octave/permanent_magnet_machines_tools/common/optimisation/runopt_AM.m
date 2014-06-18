@@ -1,6 +1,6 @@
 function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptions, fieldbounds, multicoredir, istestrun, isfirstrun)
-%
-% A script to run common aspects of the mpga evaluation procedure
+% run an electrical machine optimisation, allow easy test runs of small
+% populations to be performed
 %
 
     if nargin < 3
