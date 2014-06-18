@@ -80,7 +80,9 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
 %    position (either to the left or right) down the rows of the matrix.
 %    Wrappers with thicknesses less than a tolerance are not added. The
 %    default tolerance is 1e-5, but this value can be changed using the
-%    appropriate optional parameter value pair (see below).
+%    appropriate optional parameter value pair (see below). If
+%    wrapperthickness is a column vector the same thicknesses are used on
+%    both sides.
 %
 %  In addition, a number of optional parameters can be specified as
 %  parameter-value pairs. Possible parameter-value pairs are:
