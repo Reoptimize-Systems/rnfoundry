@@ -1,6 +1,8 @@
-function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, linktb] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, wrapperthickness, varargin)
-% creates a FemmProblem geometry of a radial section of an annulus with
-% periodic edges
+function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, linktb] = ...
+    wrappedannularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, wrapperthickness, varargin)
+% creates a FemmProblem geometry of a radial section containing two magnets
+% optionally wrapped with additional layers and with periodic edges
+%
 %
 % Syntax
 %
@@ -8,6 +10,127 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
 %   wrappedannularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, ...
 %         roffset, pos, wrapperthickness, 'param', value, ...)
 %
+% Description
+%
+% wrappedannularsecmagaperiodic creates a periodic geometry of two magnets
+% with spaces in between, with a base position shown in the figure below.
+% In addition, any number of annular sectors can be added either to inside
+% or outside of the main region (like wrappers for the main region).
+%                       
+%             ********
+%      *******        *                                    
+%    **   *             *                                              
+%     *     *             * 
+%       *    ***************                                            
+%        *    *             *                                              
+%          *    *             *                                                                                          
+%           *    *             *                                              
+%             *    *    Mag 2    *                                                                                     
+%              *    *             *                                              
+%               *    *             *                                              
+%                *    *             *            
+%                 *    ***************                                                                                          
+%                  /    *             *                                              
+%                 / *    *             *  .........................
+%                /   *    *             *                ^
+%               /    *    *             *                 :
+%              /      *    *************** ..^.......      :                            
+%             /       *    *             *   :             :
+%            /         *    *             *   :             :                                                                          
+%           /          *    *             *   : thetamag    :                                    
+%          /            *   *    Mag 1    *    :             : thetapole             
+%   single internal     *    *             *   :             :                                      
+%   wrapper example     *    *             *   :             :            
+%                       *    *             * . v.........     :                                       
+%                        *    ***************                 :                                       
+%                        *    *             *                 :               
+%                        *    *             *                 v                
+%  x                     ******************** ..............................                                       
+% r=0                         <------------->
+%  :                               rmag
+%  :                                :
+%  :                                :
+%  :            roffset             :
+%  :------------------------------->:
+%  :           
+%
+%
+% This geometry is drawn in a periodic way in the tangential direction,
+% 'wrapping' around at the top and bottom. 
+%
+% Inputs
+%
+%  FemmProblem - FemmProblem structure to which the geometry will be added
+%
+%  thetapole - pole width in radians
+%
+%  thetamag - magnet width in radians
+%
+%  rmag - radial thickness of the magnets
+%
+%  roffset - radial displacement of the magnet centers from the center
+%
+%  pos - the angular position of the magnets
+%
+%  wrapperthickness - either an (n x 2) matrix or column vector of wrapper
+%    thicknesses. If an (n x 2) matrix. the first column specifies the
+%    thickness of any desired wrapper on the left of the magnets, and the
+%    second column the thickness of wrappers on the right hand side. The
+%    wrappers are added moving progressively further from the magnet
+%    position (either to the left or right) down the rows of the matrix.
+%    Wrappers with thicknesses less than a tolerance are not added. The
+%    default tolerance is 1e-5, but this value can be changed using the
+%    appropriate optional parameter value pair (see below).
+%
+%  In addition, a number of optional parameters can be specified as
+%  parameter-value pairs. Possible parameter-value pairs are:
+%
+%  'MagDirections' - either a 2 element numeric vector, or a 2 element cell
+%    array of strings. If numeric, these are the directions in degrees of
+%    the magnet magnetisation. If a cell array of strings, these are
+%    evaluated in the FEMM or xfemm lua interpreter to yield the magnet
+%    direction in the magnet region elements. Variables that can be used in
+%    these strings are:
+%
+%    'theta': angle in degrees of a line connecting the center of each
+%             element with the origin 
+%
+%    'R'    : length of a line connecting the center of each element with the
+%             origin
+%
+%    'x'    : x position of each element
+%
+%    'y'    : y position of each elements
+% 
+%    The default is {'theta', 'theta+180'}, resulting in radially
+%    magnetized magnets of opposite polarity.
+%
+%  'MagnetMaterial' - 
+%
+%  'MagnetGroup' - 
+%
+%  'SpaceMaterial' - 
+%
+%  'SpaceGroup' - 
+%
+%  'Tol' - 
+%
+%  'MeshSize' - 
+%
+% Output
+%
+%  FemmProblem - 
+%
+%  nodes - 
+%
+%  nodeids - 
+%
+%  links - 
+%
+%  magblockinds - 
+%
+%
+
 
     Inputs.MagDirections = {'theta', 'theta+180'};
     Inputs.MagnetMaterial = 1;
@@ -99,9 +222,9 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
         error('wrapperthickness must be a scaler or a (1 x 2) vector or (n x 2) matrix')
     end
     
-    if anyalldims(wrapperthickness < 0)
-        error('wrapper thicknesses must all be greater that 0')
-    end
+%     if anyalldims(wrapperthickness < 0)
+%         error('wrapper thicknesses must all be greater that 0')
+%     end
     
     elcount = elementcount_mfemm(FemmProblem);
     
