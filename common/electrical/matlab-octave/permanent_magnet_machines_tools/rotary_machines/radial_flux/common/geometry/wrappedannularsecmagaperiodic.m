@@ -8,7 +8,9 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
 %
 % [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids] = ...
 %   wrappedannularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, ...
-%         roffset, pos, wrapperthickness, 'param', value, ...)
+%                                 roffset, pos, wrapperthickness)
+%
+% [...] = wrappedannularsecmagaperiodic(..., 'param', value, ...)
 %
 % Description
 %
