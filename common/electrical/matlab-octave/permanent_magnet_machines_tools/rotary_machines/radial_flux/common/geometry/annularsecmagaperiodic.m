@@ -58,27 +58,51 @@ function [FemmProblem, nodes, nodeids, links, magblockinds] = ...
 %
 % Inputs
 %
-%  FemmProblem - 
+%  FemmProblem - FemmProblem structure to which the geometry will be added
 %
-%  thetapole - 
+%  thetapole - pole width in radians
 %
-%  thetamag,
+%  thetamag - magnet width in radians
 %
-%  rmag - 
+%  rmag - radial thickness of the magnets
 %
-%  roffset - 
+%  roffset - radial displacement of the magnet centers from the center
 %
-%  pos - 
+%  pos - the angular position of the magnets
 %
 %  In addition, a number of optional parameters can be specified as
 %  parameter-value pairs. Possible parameter-value pairs are:
 %
-%  'MagDirections' - 
+%  'MagDirections' - either a 2 element numeric vector, or a 2 element cell
+%    array of strings. If numeric, these are the directions in degrees of
+%    the magnet magnetisation. If a cell array of strings, these are
+%    evaluated in the FEMM or xfemm lua interpreter to yield the magnet
+%    direction in the magnet region elements. Variables that can be used in
+%    these strings are:
+%
+%    'theta': angle in degrees of a line connecting the center of each
+%             element with the origin 
+%
+%    'R'    : length of a line connecting the center of each element with the
+%             origin
+%
+%    'x'    : x position of each element
+%
+%    'y'    : y position of each elements
+% 
+%    The default is {'theta', 'theta+180'}, resulting in radially
+%    magnetized magnets of opposite polarity.
+%
 %  'MagnetMaterial' - 
+%
 %  'MagnetGroup' - 
+%
 %  'SpaceMaterial' - 
+%
 %  'SpaceGroup' - 
+%
 %  'Tol' - 
+%
 %  'MeshSize' - 
 %
 % Output
