@@ -787,15 +787,12 @@ function [x, y, Qx, Qy] = shoecurvepoints (shoecontrolfrac, xcore, xcoil, xshoeb
     
     [Qx, Qy] = bezierpoints(Px,Py,100);
     
-    % calculate the length of each curve segment
-    [~,rho] = cart2pol (Qx(2:end) - Qx(1:end-1), Qy(2:end) - Qy(1:end-1));
-    
     % calculate the total length of the curve
-    curvelength = sum(rho);
+    curvelength = sum(magn ([Qx(2:end); Qy(2:end)] - [Qx(1:end-1); Qy(1:end-1)]));
     
     % choose appropriate number of points for femm to construct the curve,
     % either one every half mm, or at least 3 points
-    npoints = max (3, min (ceil (curvelength/5e-4), 96));
+    npoints = max (3, min (ceil (curvelength/5e-4), 20));
     
     x = Qx(2:floor((numel(Qx)-2)/npoints):end-1);
     y = Qy(2:floor((numel(Qy)-2)/npoints):end-1);
@@ -825,15 +822,12 @@ function [x, y, Qx, Qy, m, c] = basecurvepoints (xcore, xcoilbase, xcoilbody, yc
     
     [Qx, Qy] = bezierpoints(Px,Py,100);
     
-    % calculate the length of each curve segment
-    [~,rho] = cart2pol (Qx(2:end) - Qx(1:end-1), Qy(2:end) - Qy(1:end-1));
-    
     % calculate the total length of the curve
-    curvelength = sum(rho);
+    curvelength = sum(magn ([Qx(2:end); Qy(2:end)] - [Qx(1:end-1); Qy(1:end-1)]));
     
     % choose appropriate number of points for femm to construct the curve,
     % either one every half mm, or at least 5 points
-    npoints = max (5, min (ceil (curvelength/5e-4), 96));
+    npoints = max (5, min (ceil (curvelength/5e-4), 20));
     
     x = Qx(2:floor((numel(Qx)-2)/npoints):end-1);
     y = Qy(2:floor((numel(Qy)-2)/npoints):end-1);
