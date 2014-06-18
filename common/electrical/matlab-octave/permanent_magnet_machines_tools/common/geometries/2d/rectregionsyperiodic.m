@@ -1,6 +1,14 @@
-function [nodes, nodeids, links, rectcentres, spacecentres] = rectregionsyperiodic(x, y1, y2, xoffset, ydisp, tol, nodecount)
+function [nodes, nodeids, links, rectcentres, spacecentres] = ...
+    rectregionsyperiodic(x, y1, y2, xoffset, ydisp, tol, nodecount)
 % planarrectregionsperiodic: Generates node locations and segment joints
 % for the drawing of a periodic region made up of multiple rectangles
+%
+% Syntax
+%
+% [nodes, nodeids, links, rectcentres, spacecentres] = ...
+%       rectregionsyperiodic(x, y1, y2, xoffset, ydisp, tol, nodecount)
+% 
+% Description
 %
 % The base condition of the rectangles is as shown below. It is assumed
 % that there is an infinite series of this pattern in both directions. 
@@ -26,15 +34,61 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = rectregionsyperiod
 %              *             *   |                                                                                        
 %              *             *   | y1                                          
 %              *      A      *   |                                     
-%              *             *   |                                           
-%              *             *   |
-%              *             *   v                                          
-%              ***************                                             
-%              *             *  
-%              *             *  
+%              *             *   |               y                           
+%              *             *   |              / \
+%              *             *   v               |                          
+%              ***************                   |                         
+%              *             *                   |_____\
+%              *             *                         / x
 %              ***************                                            
 %              <------------->
 %                     x
+%
+% This geometry is drawn in a periodic way in the y direction, 'wrapping'
+% around at the top and bottom. The 'A' and 'B' rectangles will always be
+% present, but the number of 'spaces' between these may vary depending on
+% the tolerance and specified position in the y direction.
+%
+% Inputs
+%
+%  x - width of the region in the x direction
+%
+%  y1 - rectangular region 1 height in y direction
+%
+%  y2 - rectangular region 2 height in y direction
+%
+%  xoffset - displacement of region center from zero in x direction
+%
+%  ydisp - displacement in the 'y' direction. The outer boundary of
+%    the geometry will not actually change, the gemoetry will be modified
+%    as though rotated on a cylindrical surface, wrapping around at the top
+%    and bottom
+%
+%  tol - optional tolerance at which distances bewteen elements are
+%    considered to be of size zero. If not supplied, 1e-5 is used.
+%
+%  nodecount - optional starting count for the node ids used to specify the
+%    links between nodes. This number will be added to all the link
+%    numbers. Defaults to zero if not supplied.  
+%
+% Output
+%
+%  nodes - (n x 2) matrix of x and y coordinates of the geometry
+%
+%  nodeids -  vector of id numbers for the nodes in nodes
+%
+%  links - (m x 2) matrix of links bewteen nodes specified as the two id
+%    numbers of the nodes
+%
+%  rectcentres - (p x 2) matrix of x and y coordinates of the centers of
+%    the 'A' and 'B' rectangles, or their component parts (can be split
+%    into two when 'wrapped')
+%
+%  spacecentres - (p x 2) matrix of x and y coordinates of the centers of
+%    the spaces between the 'A' and 'B' rectangles.
+%
+%
+
 
     if nargin < 6 || isempty(tol)
         tol = 1e-5;
