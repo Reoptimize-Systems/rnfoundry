@@ -1,7 +1,7 @@
 function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                             Inputs, magcornerids, Rs, coillabellocs, yokenodeids, ...
                             ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd, ...
-                            YokeGroup, linktb)
+                            YokeGroup, linktb, GapMatInd, drawouterregions)
 % Constructs common aspects of a slotted mfemm radial flux FemmProblem
 % structure
 %
@@ -9,7 +9,8 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 %
 % FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 %                             Inputs, gapedgenodes, Rs, coillabellocs, yokenodeids, ...
-%                             ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd)
+%                             ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd
+%                             YokeGroup, linktb, GapMatInd, drawouterregions)
 %
 %  
 % Description
@@ -61,9 +62,10 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
     edgenodes = [];
     
-    switch Inputs.StatorType
+    % Beware all ye who enter here!!
+    switch Inputs.ArmatureType
         
-        case 'si'
+        case 'external'
             % single inner facing stator (magnets inside, stator outside)
             
             routerregion = [2*design.tm, 10*design.tm]; 
@@ -93,12 +95,12 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
             % add the nodes to the problem
             [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, edgenodes(2:9,1), edgenodes(2:9,2));
-            
+
             % add arcs linking the outer segments
             FemmProblem = addarcsegments_mfemm(FemmProblem, ...
-                                               nodeids([3,4,2]), ...
-                                               nodeids([6,5,7]), ...
-                                               rad2deg(repmat(2*design.thetap,1,3)));
+                                               nodeids(2), ...
+                                               nodeids(7), ...
+                                               rad2deg(repmat(2*design.thetap,1,1)));
             
             % put the stator iron segment in the right group
             FemmProblem.ArcSegments(end).InGroup = statorirongp;
@@ -144,7 +146,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, design.Rmo+design.g/2);
 
             FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(1).Name, ...
+                                    'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
                                     'MaxArea', Inputs.AirGapMeshSize);
 
             % add a block label for the yoke and teeth
@@ -153,22 +155,36 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
                                                                  yokeBlockProps);
                                         
-            % Add block labels for the outer air regions
-            [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, Rs + design.ty/2 + routerregion(1)/2);
+            if drawouterregions
+                
+                % add arcs linking the outer segments
+                FemmProblem = addarcsegments_mfemm(FemmProblem, ...
+                                                   nodeids([3,4]), ...
+                                                   nodeids([6,5]), ...
+                                                   rad2deg(repmat(2*design.thetap,1,2)));
 
-            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(1).Name, ...
-                                    'MaxArea', Inputs.OuterRegionsMeshSize(1));
+                % Add block labels for the outer air regions
+                [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, Rs + design.ty/2 + routerregion(1)/2);
+
+                FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
+                                        'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
+                                        'MaxArea', Inputs.OuterRegionsMeshSize(1));
+
+                [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, Rs + design.ty/2 + routerregion(1) + routerregion(2)/2);
+
+                FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
+                                        'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
+                                        'MaxArea', Inputs.OuterRegionsMeshSize(2));
+                                    
+            else
+                % remove the nodes that would have been used to make the
+                % outer regions
+                FemmProblem.Nodes(nodeinds(3:6)) = [];
+            end
+
                                 
-            [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, Rs + design.ty/2 + routerregion(1) + routerregion(2)/2);
-
-            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(1).Name, ...
-                                    'MaxArea', Inputs.OuterRegionsMeshSize(2));
-
-                                
-        case 'so'
-            % single outer facing stator
+        case 'internal'
+            % single outer facing stator (stator inside, magnets outside)
             
             routerregion = [0.8*design.Ryi, 0.5*design.Ryi]; 
             
@@ -243,7 +259,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             end
             
             if linktb
-                boundnames = repmat({''}, 4,1);
+                boundnames = repmat({''}, 1,4);
                 segprops = struct('BoundaryMarker', boundnames, 'InGroup', {statorirongp, 0, 0, 0});
             else
                 % add segments with periodic boundaries on the outer parts
@@ -271,7 +287,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             [labelloc(1),labelloc(2)] = pol2cart(design.thetap, design.Rmi-design.g/2);
 
             FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(1).Name, ...
+                                    'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
                                     'MaxArea', Inputs.AirGapMeshSize);
 
             % bottom gap corner to bottom core corner
@@ -304,14 +320,14 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                                             routerregion(1) + (Rs - design.ty/2 - routerregion(1))/2 );
 
             FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(1).Name, ...
+                                    'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
                                     'MaxArea', Inputs.OuterRegionsMeshSize(1));
                                 
             [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, ...
                                                     routerregion(2) + (routerregion(1) - routerregion(2))/2);
 
             FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(1).Name, ...
+                                    'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
                                     'MaxArea', Inputs.OuterRegionsMeshSize(2));
                                 
             if linktb
@@ -331,7 +347,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             error('not yet supported');
             
         otherwise
-            error('Unrecognised StatorType option.')
+            error('Unrecognised ArmatureType option.')
                 
     end
 

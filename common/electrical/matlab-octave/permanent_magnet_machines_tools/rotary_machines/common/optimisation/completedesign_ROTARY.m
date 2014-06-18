@@ -8,13 +8,30 @@ function design = completedesign_ROTARY(design, simoptions)
 % 
 % Description
 %
-% 
-
-% Stator slot/coil/winding terminology is based on that presented in:
+% completedesign_ROTARY performs some design completion tasks common to all
+% rotary machines. Most notably it completes the winding specification
+% based on a minimum spec provided in the design structure. The winding is
+% described using the following variables:
 %
-% J. J. Germishuizen and M. J. Kamper, "Classification of symmetrical
-% non-overlapping three-phase windings," in The XIX International
-% Conference on Electrical Machines - ICEM 2010, 2010, pp. 1-6.
+%  yp - Average coil pitch as defined by (Qs/Poles)
+%  yd - Actual coil pitch as defined by round(yp) +/- k
+%  Qs  -  total number of stator slots in machine
+%  Qc  -  total number of winding coils in machine 
+%  q  -  number of slots per pole and phase
+%  qn  -  numerator of q
+%  qd  -  denominator of q
+%  qc - number of coils per pole and phase
+%  qcn  -  numerator of qc
+%  qcd  -  denominator of qc
+%  Qcb - basic winding (the minimum number of coils required to make up a 
+%    repetitive segment of the machine that can be modelled using symmetry)
+%  pb - the number of poles corresponding to the basic winding in Qcb
+%
+% This pole/slot/coil/winding terminology is based on that presented in
+% [1].
+%
+% Machine windings can be single or double layered, in which case:
+%
 % Single layer
 %   q = 2qc
 %   Qs = 2Qc
@@ -22,16 +39,34 @@ function design = completedesign_ROTARY(design, simoptions)
 %   q = qc
 %   Qs = Qc
 %
-% yp - Average coil pitch as defined by (Qs/Poles)
-% yd - Actual coil pitch as defined by round(yp) +/- k
-% Qs  -  total number of stator slots in machine
-% Qc  -  total number of winding coils in machine 
-% q  -  number of slots per pole and phase, (1)
-% qn  -  numerator of q
-% qd  -  denominator of q
-% qc - number of coils per pole and phase, (2)
-% qcn  -  numerator of qc
-% qcd  -  denominator of qc
+% To specify a winding, the 'minimum spec' that must be provided is based on
+% a combination of some or all of the following variables:
+%
+%  Phases - The number of phases in the machine
+%  Poles - The number of magnetic poles in the machine
+%  NBasicWindings - the number of basic winding segments in the machine
+%  qc - number of coils per pole and phase (as a fraction object)
+%  Qc - total number of coils (in all phases) in the machine
+%
+% Any of the following combinations may be supplied to specify the winding:
+%
+%   Poles, Phases, Qc
+%   Poles, Phases, qc
+%   qc, Phases, NBasicWindings
+%
+% These variables must be provided as fields in the design structure. If
+% 'qc' is supplied, it must be an object of the class 'fr'. This is a class
+% designed for handling fractions. See the help for the ''fr'' class for
+% further information.
+% 
+% See also: fr.m
+%
+% [1] J. J. Germishuizen and M. J. Kamper, "Classification of symmetrical
+% non-overlapping three-phase windings," in The XIX International
+% Conference on Electrical Machines - ICEM 2010, 2010, pp. 1-6.
+%
+
+
 
     % check the minimum set of winding specification
     if all(isfield(design, {'Qc', 'Phases', 'Poles'})) && ~isfield (design, 'qc')
@@ -47,6 +82,11 @@ function design = completedesign_ROTARY(design, simoptions)
         error( ['You must specify either the fields ''qc'', ''Phases'' and ''NBasicWindings''', ...
                 ' or ''qc'', ''Phases'' and ''Poles'', or all of these for the winding design specification'] )
             
+    end
+    
+    if ~isa (design.qc, 'fr')
+        error ('PMROTARY:qcnotfr', ...
+               'The qc winding spec variable must be an object of the ''fr'' (fraction) class.');
     end
         
     % get the "basic winding" (the smallest repetitive segment of the
@@ -116,9 +156,14 @@ function design = completedesign_ROTARY(design, simoptions)
         end
     end
     
+    % calculate the pole pitch in radians
     design.thetap = 2*pi / design.Poles;
     
     design.NCoilsPerPhase = design.Qc / design.Phases;
+    
+    if design.pb > design.Poles
+        error ('ROTARY:badwinding', 'Impossible winding design, basic winding poles greater than total number of poles.')
+    end
     
 end
 

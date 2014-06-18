@@ -141,7 +141,7 @@ design.ls = 0.6;
 % "facing" outwards, i.e. with the slots pointing outwards and with a rotor
 % on the outside, or we can have the opposite arrangement with an internal
 % rotor and internally facing stator. 
-design.StatorType = 'so';
+design.ArmatureType = 'internal';
 
 % We must also specify some materials in the machine
 design.MagnetMaterial = 'NdFeB 32 MGOe';

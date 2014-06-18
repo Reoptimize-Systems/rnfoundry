@@ -4,7 +4,7 @@
 
 clear design simoptions 
 
-design.StatorType = 'so';
+design.ArmatureType = 'internal';
 design.Poles = 2;
 design.Phases = 3;
 design.CoilLayers = 2;
@@ -31,7 +31,7 @@ design.Rmo = 0.5;
 design.Rmi = 0.5;
 design.ls = 0.3;
 
-if strcmp(design.StatorType, 'si')
+if strcmp(design.ArmatureType, 'external')
     design.Rmo = 0.5;
     design.Rmi = design.Rmi - design.tm;
     design.Rmm = mean([design.Rmi, design.Rmo]);
@@ -44,7 +44,7 @@ if strcmp(design.StatorType, 'si')
     design.Ryi = design.Rco;
     design.Ryo = design.Rco + design.ty;
     design.Rym = mean([design.Ryi, design.Ryo]);
-elseif strcmp(design.StatorType, 'so')
+elseif strcmp(design.ArmatureType, 'internal')
     design.Rmi = 0.5;
     design.Rmo = design.Rmi + design.tm;
     design.Rmm = mean([design.Rmi, design.Rmo]);

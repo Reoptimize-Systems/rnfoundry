@@ -19,7 +19,7 @@ function [design, simoptions] = simfun_RADIAL(design, simoptions)
     
     % by default we will use a single sided external rotor and internal
     % outward facing stator
-    design = setfieldifabsent(design, 'StatorType', 'so');
+    design = setfieldifabsent(design, 'ArmatureType', 'internal');
     
     % set some default mesh size options
     simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'YokeRegionMeshSize', ...

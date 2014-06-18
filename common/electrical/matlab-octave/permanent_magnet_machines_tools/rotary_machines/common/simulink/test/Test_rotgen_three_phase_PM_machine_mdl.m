@@ -4,7 +4,7 @@
 
 clear data
 
-data.design.StatorType = 'so';
+data.design.ArmatureType = 'internal';
 data.design.Poles = 2;
 data.design.Phases = 3;
 data.design.CoilLayers = 2;
@@ -30,7 +30,7 @@ data.design.Rmo = 0.5;
 data.design.Rmi = 0.5;
 data.design.ls = 0.3;
 
-if strcmp(data.design.StatorType, 'si')
+if strcmp(data.design.ArmatureType, 'external')
     data.design.Rmo = 0.5;
     data.design.Rmi = data.design.Rmi - data.design.tm;
     data.design.Rmm = mean([data.design.Rmi, data.design.Rmo]);
@@ -43,7 +43,7 @@ if strcmp(data.design.StatorType, 'si')
     data.design.Ryi = data.design.Rco;
     data.design.Ryo = data.design.Rco + data.design.ty;
     data.design.Rym = mean([data.design.Ryi, data.design.Ryo]);
-elseif strcmp(data.design.StatorType, 'so')
+elseif strcmp(data.design.ArmatureType, 'internal')
     data.design.Rmi = 0.5;
     data.design.Rmo = data.design.Rmi + data.design.tm;
     data.design.Rmm = mean([data.design.Rmi, data.design.Rmo]);

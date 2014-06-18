@@ -185,12 +185,12 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
     design = materialmasses_RADIAL_SLOTTED(design, simoptions);
     
     % estimate the rotor inertia (approximating as a hollow cylinder)
-    if (strcmp(design.StatorType, 'so'))
+    if (strcmp(design.ArmatureType, 'internal'))
         design.RotorMomentOfInertia = 0.5 * design.RotorMass * (design.Rmi^2 + design.Rbo^2);
-    elseif (strcmp(design.StatorType, 'si'))
+    elseif (strcmp(design.ArmatureType, 'external'))
         design.RotorMomentOfInertia = 0.5 * design.RotorMass * (design.Rbi^2 + design.Rmo^2);
     else
-        error('Unrecognised stator type, only ''so'' and ''si'' supported.')
+        error('Unrecognised stator type, only ''internal'' and ''external'' supported.')
     end
     
     % do the normal stuff

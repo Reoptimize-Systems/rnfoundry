@@ -12,7 +12,7 @@ function [maxzdef, maxstress, design] = evaluateinnerstructure_RF(design, simopt
         omega = 0;
     end
     
-    if strcmp(design.StatorType, 'so')
+    if strcmp(design.ArmatureType, 'internal')
         
         % create the inner structure mesh
         [fens,gcells,labels] = innerstructuremesh_RF( design.Rsii, ...
