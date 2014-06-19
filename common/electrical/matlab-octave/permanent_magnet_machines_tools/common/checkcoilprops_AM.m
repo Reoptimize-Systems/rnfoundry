@@ -34,7 +34,8 @@ function design = checkcoilprops_AM(design)
 % Copyright Richard Crozier 2011-2013
 
     if ~isfield(design, 'CoilArea') && all(isfield(design, {'Hc', 'Wc'}))
-        % Determine the cross-sectional area of the coil
+        % Determine the cross-sectional area of the coil, assuming it's a
+        % box shape
         if isfield(design, 'CoilLayers')
             layerheight = design.Hc / design.CoilLayers;
             design.CoilArea = layerheight * design.Wc;
