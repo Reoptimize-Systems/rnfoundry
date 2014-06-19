@@ -104,7 +104,7 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
     end
 
     % Get boundaries of objective function
-    FieldDR = feval(mpgaoptions.OBJ_F,[],1, simoptions, multicoredir);
+    FieldDR = feval(mpgaoptions.OBJ_F,[],1,ObjectiveArgs{:});
 
     % compute SUBPOP, NIND depending on number of variables (defined in objective function)
     mpgaoptions.NVAR = size(FieldDR,2);   % Get number of variables from objective function
@@ -113,7 +113,7 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
         % Number of subpopulations
         mpgaoptions.SUBPOP = 1;                       
         % Number of individuals per subpopulations
-        mpgaoptions.NIND = 4;    
+        mpgaoptions.NIND = 4;
         % Max number of generations
         mpgaoptions.MAXGEN = 3; 
     else
@@ -127,20 +127,20 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
         mpgaoptions = setfieldifabsent(mpgaoptions, 'MIGGEN', ceil(mpgaoptions.MAXGEN / 15)); 
     end
 
-    mpgaoptions.MUTR = 2 / mpgaoptions.NVAR;  % Mutation rate depending on NVAR
+    mpgaoptions = setfieldifabsent(mpgaoptions, 'MUTR', 2 / mpgaoptions.NVAR);  % Mutation rate depending on NVAR
 
     mpgaoptions.STEP = 1;
     mpgaoptions.DISPLAYMODE = 2;
 
-    % allow the setting of a new multicore dir
-    if ~isfirstrun
-        temp = load(mpgaoptions.FILENAME);
-        if ~strcmpi(temp.mpgastate.ObjectiveArgs{2}, multicoredir)
-            % replace the multicore directory
-            temp.mpgastate.ObjectiveArgs{2} = multicoredir;
-            save(mpgaoptions.FILENAME, '-struct', 'temp');
-        end
-    end
+%     % allow the setting of a new multicore dir
+%     if ~isfirstrun
+%         temp = load(mpgaoptions.FILENAME);
+%         if ~strcmpi(temp.mpgastate.ObjectiveArgs{end}, multicoredir)
+%             % replace the multicore directory
+%             temp.mpgastate.ObjectiveArgs{end} = multicoredir;
+%             save(mpgaoptions.FILENAME, '-struct', 'temp');
+%         end
+%     end
 
     % run the GA
     [mpgastate, mpgaoptions] = mpga(mpgaoptions, 'ObjectiveArgs', ObjectiveArgs);
