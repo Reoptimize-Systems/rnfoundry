@@ -8,6 +8,12 @@ function [score, design, simoptions] = systempenalties_ROTARY(design, simoptions
 %
 % 
 
+    % support legacy code
+    if isfield (simoptions, 'EfficiencyPenFactor') ...
+            && ~isfield (simoptions, 'min_Efficiency_penfactor')
+        simoptions.min_Efficiency_penfactor = simoptions.EfficiencyPenFactor;
+    end
+
     % efficiency penalty
     design.EfficiencyPenalty = 0;
 
@@ -17,15 +23,15 @@ function [score, design, simoptions] = systempenalties_ROTARY(design, simoptions
             
             optimiumEfficiency = design.RlVRp / (design.RlVRp + 1);
 
-            simoptions = setfieldifabsent(simoptions, 'EfficiencyPenFactor', [1, 0]);
+            simoptions = setfieldifabsent(simoptions, 'min_Efficiency_penfactor', [1, 0]);
 
-            if isscalar(simoptions.EfficiencyPenFactor)
-                simoptions.EfficiencyPenFactor = [simoptions.EfficiencyPenFactor, 0];
+            if isscalar(simoptions.min_Efficiency_penfactor)
+                simoptions.min_Efficiency_penfactor = [simoptions.min_Efficiency_penfactor, 0];
             end
 
             design.EfficiencyPenalty = ...
-                simoptions.EfficiencyPenFactor(1) * (optimiumEfficiency-abs(design.Efficiency)) ...
-                  + (simoptions.EfficiencyPenFactor(2) * (optimiumEfficiency-abs(design.Efficiency)))^2;
+                simoptions.min_Efficiency_penfactor(1) * (optimiumEfficiency-abs(design.Efficiency)) ...
+                  + (simoptions.min_Efficiency_penfactor(2) * (optimiumEfficiency-abs(design.Efficiency)))^2;
 
             score = score + design.EfficiencyPenalty;
             
