@@ -29,6 +29,11 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
     if nargin < 6
         separatesimfun = true;
     end
+    
+    if isscalar( simoptions.evaloptions.spawnslaves)
+        simoptions.evaloptions.spawnslaves = ...
+            [ simoptions.evaloptions.spawnslaves, simoptions.evaloptions.spawnslaves ];
+    end
         
     % First get the FEA data for each design
     for i = 1:size(Chrom,1)
@@ -65,6 +70,7 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
     settings.debugMode = 0;
     settings.showWarnings = 1;
     simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'maxattempts', 3);
+    simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'allowheld', 10);
         
     if separatesimfun
         
@@ -97,7 +103,7 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
 
         if ~ispc
 
-            if simoptions.evaloptions.spawnslaves
+            if simoptions.evaloptions.spawnslaves(1)
                 % use the mcorecondormatlabslavespawn function to automatically
                 % spawn matlab processes to do the work
                 fprintf(1, 'spawnslaves true for FEA\n');
@@ -119,12 +125,15 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
                     'password', simoptions.evaloptions.condorpassword, ...
                     'starttime', simoptions.evaloptions.starttime, ...
                     'endtime', simoptions.evaloptions.endtime, ...
-                    'pausetime', 20, ... % time between Condor jobs starting
+                    'pausetime', 5, ... % time between Condor jobs starting
                     'startuptime', 3*60, ... % time matlab takes to start
                     'sharedir', settings.multicoreDir, ...
                     'matlicencebuffer', simoptions.evaloptions.matlicencebuffer, ...
                     'deletepausetime', 60, ...
-                    'maxslaves', simoptions.evaloptions.maxslaves);
+                    'maxslaves', simoptions.evaloptions.maxslaves, ...
+                    'initialwait', 10*60, ... % wait 10 mins after the first slave launch before respawning
+                    'allowheld', simoptions.evaloptions.allowheld ...
+                    );
 
             end
 
@@ -160,7 +169,7 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
     
     settings.multicoreDir = fullfile(multicoredir, simoptions.evaloptions.MCoreODEDir);
 
-    if simoptions.evaloptions.spawnslaves
+    if simoptions.evaloptions.spawnslaves(2)
         % use the mcorecondormatlabslavespawn function to automatically
         % spawn matlab processes to do the work
         
@@ -182,12 +191,15 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
             'password', simoptions.evaloptions.condorpassword, ...
             'starttime', simoptions.evaloptions.starttime, ...
             'endtime', simoptions.evaloptions.endtime, ...
-            'pausetime', 20, ... % time between Condor jobs starting
+            'pausetime', 5, ... % time between Condor jobs starting
             'startuptime', 3*60, ... % time matlab takes to start
             'sharedir', settings.multicoreDir, ...
             'matlicencebuffer', simoptions.evaloptions.matlicencebuffer, ...
             'deletepausetime', 60, ...
-            'maxslaves', simoptions.evaloptions.maxslaves);
+            'maxslaves', simoptions.evaloptions.maxslaves, ...
+            'initialwait', 10*60, ... % wait 10 mins after the first slave launch before respawning
+            'allowheld', simoptions.evaloptions.allowheld ...
+            );
 
     end
     
