@@ -11,16 +11,18 @@ function design = test_design_RADIAL_SLOTTED (armtype)
     design.CoilLayers = 2;
     design.Qc = design.Phases * design.Poles;
     if design.CoilLayers == 1
-        design.Qs = design.Phases * 2 * design.Qc;
+        design.Qs = 2 * design.Qc;
     elseif design.CoilLayers == 2
-        design.Qs = design.Phases * 1 * design.Qc;
+        design.Qs = 1 * design.Qc;
     end
     design.qc = fr (design.Qc, design.Poles * design.Phases);
     design.yd = 4;
     design.thetap = 2*pi/design.Poles;
     design.thetam = design.thetap * 0.8;
-    design.thetac = (2*pi / design.Qs) * 0.85;
-    design.thetasg = design.thetac * 0.95;
+    design.thetacg = (2*pi / design.Qs) * 0.7;
+    design.thetacy = (2*pi / design.Qs) * 0.9;
+    design.thetac = [design.thetacg, design.thetacy];
+    design.thetasg = design.thetacg * 0.95;
     design.tm = 0.0010;
     design.tbi = 0.001;
     design.ty = 0.001;
@@ -61,7 +63,7 @@ function design = test_design_RADIAL_SLOTTED (armtype)
         design.Rym = mean([design.Ryi, design.Ryo]);
     end
 
-    design.Dc = design.Rcm * design.thetac / 100;
+    design.Dc = design.Rcm * mean (design.thetac) / 100;
     design.CoilFillFactor = 0.7;
 
     design.Hc = design.tc / design.CoilLayers;

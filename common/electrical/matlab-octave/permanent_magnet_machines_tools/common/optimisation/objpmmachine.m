@@ -19,19 +19,19 @@ function ObjVal = objpmmachine(Chrom, rtn_type, simoptions, multicoredir)
 %
 %    simoptions - structure that must contain at least the fields:
 %
-%       FieldBounds: (n x 2) matrix of lower and upper bounds for the
-%         variables subject to the optimisation.
+%      FieldBounds: (n x 2) matrix of lower and upper bounds for the
+%        variables subject to the optimisation.
 %
-%       Chrom2DesignFcn: String or function handle for the function to be
-%         used to convert the chromosomal representation of the design into
-%         a full design. Note that this function is never evaluated in
-%         parallel, always in a loop for the full chromosome locally.
-%         Therefore you should reserve any intensive computation for the
-%         DesignEvaluationFcn (see below). Chrom2DesignFcn must have the
-%         calling syntax:
+%      Chrom2DesignFcn: String or function handle for the function to be
+%        used to convert the chromosomal representation of the design into
+%        a full design. Note that this function is never evaluated in
+%        parallel, always in a loop for the full chromosome locally.
+%        Therefore you should reserve any intensive computation for the
+%        DesignEvaluationFcn (see below). Chrom2DesignFcn must have the
+%        calling syntax:
 %
-%       DesignEvaluationFcn: String or function handle for the function to
-%         be used to evaluate the designs created by the Chrom2DesignFcn.
+%      DesignEvaluationFcn: String or function handle for the function to
+%        be used to evaluate the designs created by the Chrom2DesignFcn.
 %
 %    multicoredir - (optional) The evaluation can be performed in parallel
 %      using the Multicore package. This argument sets the directory for

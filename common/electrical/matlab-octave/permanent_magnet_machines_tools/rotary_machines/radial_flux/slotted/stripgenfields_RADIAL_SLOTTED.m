@@ -1,14 +1,22 @@
 function design = stripgenfields_RADIAL_SLOTTED(design)
     
-    design = rmiffield(design, 'RsoVRmi');
-    design = rmiffield(design, 'RstbVRso');
-    design = rmiffield(design, 'tsgVtsb');
-    design = rmiffield(design, 'RyoVRstb');
-    design = rmiffield(design, 'RyiVRyo');
-    design = rmiffield(design, 'RtsgVRso');
-    design = rmiffield(design, 'thetamVthetap');
-    design = rmiffield(design, 'thetacVthetas');
-    design = rmiffield(design, 'thetasgVthetac');
+    if strcmp (design.ArmatureType, 'internal')
+        
+        design = rmiffield(design, 'RaoVRmi');
+        design = rmiffield(design, 'RstbVRao');
+        design = rmiffield(design, 'tsgVtsb');
+        design = rmiffield(design, 'RyoVRstb');
+        design = rmiffield(design, 'RyiVRyo');
+        design = rmiffield(design, 'RtsgVRso');
+        design = rmiffield(design, 'thetamVthetap');
+        design = rmiffield(design, 'thetacVthetas');
+        design = rmiffield(design, 'thetasgVthetac');
+    
+    elseif strcmp (design.ArmatureType, 'internal')
+        
+    else
+        error ()
+    end
     
     design = stripgenfields_RADIAL(design);
     

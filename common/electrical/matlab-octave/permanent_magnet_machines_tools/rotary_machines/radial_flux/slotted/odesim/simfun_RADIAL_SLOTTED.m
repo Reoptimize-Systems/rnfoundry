@@ -29,11 +29,11 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 % qcn  -  numerator of qc
 % qcd  -  denominator of qc
 
-    design.Hc = design.tc;
-    
-    % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
-    % winding slot
-    design.Wc = design.thetac * design.Rcm;
+%     design.Hc = design.tc;
+%     
+%     % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
+%     % winding slot
+%     design.Wc = design.thetac * design.Rcm;
     
     if design.ypd ~= 1 && design.ypd ~= 2
     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
@@ -46,6 +46,11 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
          design.CoreLoss.Pq ] = m36assheared26gagecorelossdata(false);
     end
     
+    % placeholder for coil cross-sectional area, this is extracted from the
+    % FEA below, this avoids checkcoilprops_AM changing it
+    design.CoilArea = nan;
+    
+    % call the common radial simulation function
     [design, simoptions] = simfun_RADIAL(design, simoptions);
     
     if design.tsg > 1e-5
@@ -165,6 +170,9 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                 solution.clearblock();
                 solution.groupselectblock(armirongroup);
                 design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
+                
+                % get the cross-sectional area of the coil winding bundle
+                design.CoilArea = solution.blockintegral ( 5, design.coillabellocs(1,1), design.coillabellocs(1,2) );
                 
             end
             
