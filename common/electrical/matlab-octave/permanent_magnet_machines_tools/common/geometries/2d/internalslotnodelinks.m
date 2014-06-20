@@ -683,10 +683,18 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     % remaining required winding area
                     At = windingarea - layer_area_available;
 
+                    y1 = mxplusc (m, c, x1);
+                    
                     % find the roots of the polynomial to get the position of x
-                    arearoots = roots ([ m/2, c, -(At + (m/2)*x1 + c*x1)]);
+                    arearoots = roots ([ m/2, ...
+                                         (y1 + c -m*x1)/2, ...
+                                         (-y1*x1 - c*x1)/2 - At ]);
+                                     
+                    % there will be two valid roots, choose the one which
+                    % gives positive y2
+                    y2 = mxplusc(m,c,arearoots);
 
-                    x2 = arearoots(arearoots > 0);
+                    x2 = arearoots(y2>0);
 
                     if isempty (x2)
                         error ('Impossible coil shape');
