@@ -201,6 +201,7 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
     design.Rcm = mean([design.Rci, design.Rco]);
     design.Rbm = mean([design.Rbo, design.Rbi]);
     design.Rym = mean([design.Ryi, design.Ryo]);
+    design.thetac = [design.thetacg, design.thetacy];
     
     [design.NCoilsPerPhase,~] = rat(fr(design.Qc,design.Phases));
     
@@ -221,7 +222,7 @@ function design = completeexternal (design)
                     'tsgVtsb'; 
                     'thetamVthetap';
                     'thetacVthetas'; 
-                    'thetasgVthetac'; 
+                    'thetasgVthetacg'; 
                     'lsVtm'; };
                     
     dimfields1 = { 'Ryo';
@@ -233,7 +234,8 @@ function design = completeexternal (design)
                    'Rbi';
                    'tsg';
                    'thetam';
-                   'thetac';
+                   'thetacg';
+                   'thetacy';
                    'thetasg'; 
                    'ls'; };
 
@@ -246,7 +248,8 @@ function design = completeexternal (design)
                    'tbi';
                    'tsg';
                    'thetam';
-                   'thetac';
+                   'thetacg';
+                   'thetacy';
                    'thetasg'; 
                    'ls'; };
 
@@ -257,8 +260,9 @@ function design = completeexternal (design)
         % process the angular ratios, thetas is calculated in
         % completedesign_RADIAL.m based on the number of slots
         design.thetam = design.thetamVthetap * design.thetap;
-        design.thetac = design.thetacVthetas * design.thetas;
-        design.thetasg = design.thetasgVthetac * design.thetac;
+        design.thetacg = design.thetacgVthetas * design.thetas;
+        design.thetacy = design.thetacyVthetas * design.thetas;
+        design.thetasg = design.thetasgVthetacg * design.thetacg;
         % the shoe tip length
         design.tsb = design.Rai - design.Rtsb;
         design.tsg = design.tsgVtsb * design.tsb;
@@ -306,8 +310,9 @@ function design = completeexternal (design)
         
         % thetap and thetas are calculated in completedesign_RADIAL
         design.thetamVthetap = design.thetam / design.thetap;
-        design.thetacVthetas = design.thetac / design.thetas;
-        design.thetasgVthetac = design.thetasg / design.thetac;
+        design.thetacgVthetas = design.thetacg / design.thetas;
+        design.thetacyVthetas = design.thetacy / design.thetas;
+        design.thetasgVthetacg = design.thetasg / design.thetacg;
         design.lsVtm = design.ls / design.tm;
 
     elseif all(isfield(design, dimfields2))
@@ -337,8 +342,9 @@ function design = completeexternal (design)
         
         % thetap and thetas are calculated in completedesign_RADIAL
         design.thetamVthetap = design.thetam / design.thetap;
-        design.thetacVthetas = design.thetac / design.thetas;
-        design.thetasgVthetac = design.thetasg / design.thetac;
+        design.thetacgVthetas = design.thetacg / design.thetas;
+        design.thetacyVthetas = design.thetacy / design.thetas;
+        design.thetasgVthetacg = design.thetasg / design.thetacg;
         design.lsVtm = design.ls / design.tm;
 
     else
@@ -363,8 +369,9 @@ function design = completeinternal (design)
                     'RyiVRyo'; 
                     'tsgVtsb'; 
                     'thetamVthetap';
-                    'thetacVthetas'; 
-                    'thetasgVthetac'; 
+                    'thetacgVthetas';
+                    'thetacyVthetas';
+                    'thetasgVthetacg'; 
                     'lsVtm'; };
                     
     dimfields1 = { 'Rbo';
@@ -376,7 +383,8 @@ function design = completeinternal (design)
                    'Ryi';
                    'tsg';
                    'thetam';
-                   'thetac';
+                   'thetacg';
+                   'thetacy';
                    'thetasg'; 
                    'ls'; };
 
@@ -389,7 +397,8 @@ function design = completeinternal (design)
                    'tbi';
                    'tsg';
                    'thetam';
-                   'thetac';
+                   'thetacg';
+                   'thetacy';
                    'thetasg'; 
                    'ls'; };
 
@@ -400,8 +409,10 @@ function design = completeinternal (design)
         % process the angular ratios, thetas is calculated in
         % completedesign_RADIAL.m based on the number of slots
         design.thetam = design.thetamVthetap * design.thetap;
-        design.thetac = design.thetacVthetas * design.thetas;
-        design.thetasg = design.thetasgVthetac * design.thetac;
+        
+        design.thetacg = design.thetacgVthetas * design.thetas;
+        design.thetacy = design.thetacyVthetas * design.thetas;
+        design.thetasg = design.thetasgVthetacg * design.thetacg;
         % the shoe tip length
         design.tsb = design.Rao - design.Rtsb;
         design.tsg = design.tsgVtsb * design.tsb;
@@ -446,8 +457,9 @@ function design = completeinternal (design)
         design.tsgVtsb = design.tsg / design.tsb;
         
         design.thetamVthetap = design.thetam / design.thetap;
-        design.thetacVthetas = design.thetac / design.thetas;
-        design.thetasgVthetac = design.thetasg / design.thetac;
+        design.thetacgVthetas = design.thetacg / design.thetas;
+        design.thetacyVthetas = design.thetacy / design.thetas;
+        design.thetasgVthetacg = design.thetasg / design.thetacg;
         design.lsVtm = design.ls / design.tm;
 
     elseif all(isfield(design, dimfields2))
@@ -474,8 +486,9 @@ function design = completeinternal (design)
         design.tsgVtsb = design.tsg / design.tsb;
         
         design.thetamVthetap = design.thetam / design.thetap;
-        design.thetacVthetas = design.thetac / design.thetas;
-        design.thetasgVthetac = design.thetasg / design.thetac;
+        design.thetacgVthetas = design.thetacg / design.thetas;
+        design.thetacyVthetas = design.thetacy / design.thetas;
+        design.thetasgVthetacg = design.thetasg / design.thetacg;
         design.lsVtm = design.ls / design.tm;
 
     else

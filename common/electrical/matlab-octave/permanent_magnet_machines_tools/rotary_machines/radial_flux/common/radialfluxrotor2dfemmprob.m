@@ -20,6 +20,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
     Inputs.BackIronRegionMeshSize = -1;
     Inputs.OuterRegionsMeshSize = [-1, -1];
     Inputs.Tol = 1e-5;
+    Inputs.DrawOuterRegions = true;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     

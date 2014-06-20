@@ -52,7 +52,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     
     if strcmp(design.ArmatureType, 'external')
 
-        error('Stator Type ''external'' not yet supported.')
+        design = chrom2design_external_arm (design, simoptions);
 
     elseif strcmp(design.ArmatureType, 'internal')
 
@@ -67,7 +67,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     end
     
     design.Hc = design.tc;
-    design.Wc = design.thetac * design.Rcm;
+    design.Wc = design.thetacg * design.Rcm;
     
     design = preprocsystemdesign_RADIAL(design, simoptions);
 
@@ -98,15 +98,16 @@ function design = chrom2design_external_arm (design, simoptions)
     design.RmiVRmo = Chrom(7);
     design.RbiVRmi = Chrom(8);
     design.thetamVthetap = Chrom(9);
-    design.thetacVthetas = Chrom(10);
-    design.thetasgVthetac = Chrom(11);
-    design.lsVtm = Chrom(12);
-    design.NBasicWindings = round(Chrom(13));
-    design.DcAreaFac = Chrom(14);
-    design.BranchFac = Chrom(15);
+    design.thetacgVthetas = Chrom(10);
+    design.thetacyVthetas = Chrom(11);
+    design.thetasgVthetac = Chrom(12);
+    design.lsVtm = Chrom(13);
+    design.NBasicWindings = round(Chrom(14));
+    design.DcAreaFac = Chrom(15);
+    design.BranchFac = Chrom(16);
     
-    if numel(Chrom) > 15
-        design.MagnetSkew = Chrom(16);
+    if numel(Chrom) > 16
+        design.MagnetSkew = Chrom(17);
     end
 
 %         factors = factor2(design.NBasicWindings)';
@@ -166,7 +167,7 @@ function design = chrom2design_external_arm (design, simoptions)
         tsbangle = rad2deg(atan( y / x ));
 
         if design.tsg < 1e-5
-            x = ((design.thetac - design.thetasg)/2) * (design.Rao - design.tsb);
+            x = ((design.thetacg - design.thetasg)/2) * (design.Rao - design.tsb);
             y = design.tsb;
             tsgangle = rad2deg(atan( y / x ));
         else
@@ -243,15 +244,16 @@ function design = chrom2design_internal_arm (design, simoptions)
     design.RyoVRtsb = Chrom(7);
     design.RyiVRyo = Chrom(8);
     design.thetamVthetap = Chrom(9);
-    design.thetacVthetas = Chrom(10);
-    design.thetasgVthetac = Chrom(11);
-    design.lsVtm = Chrom(12);
-    design.NBasicWindings = round(Chrom(13));
-    design.DcAreaFac = Chrom(14);
-    design.BranchFac = Chrom(15);
+    design.thetacgVthetas = Chrom(10);
+    design.thetacyVthetas = Chrom(11);
+    design.thetasgVthetacg = Chrom(12);
+    design.lsVtm = Chrom(13);
+    design.NBasicWindings = round(Chrom(14));
+    design.DcAreaFac = Chrom(15);
+    design.BranchFac = Chrom(16);
     
-    if numel(Chrom) > 15
-        design.MagnetSkew = Chrom(16);
+    if numel(Chrom) > 16
+        design.MagnetSkew = Chrom(17);
     end
 
 %         factors = factor2(design.NBasicWindings)';
@@ -308,13 +310,13 @@ function design = chrom2design_internal_arm (design, simoptions)
 
     if design.tsb > 0 && (design.tsg < design.tsb)
 
-        x = ((design.thetac - design.thetasg)/2) * (design.Rao - design.tsb);
+        x = ((design.thetacg - design.thetasg)/2) * (design.Rao - design.tsb);
         y = design.tsb - design.tsg;
 
         tsbangle = rad2deg(atan( y / x ));
 
         if design.tsg < 1e-5
-            x = ((design.thetac - design.thetasg)/2) * (design.Rao - design.tsb);
+            x = ((design.thetacg - design.thetasg)/2) * (design.Rao - design.tsb);
             y = design.tsb;
             tsgangle = rad2deg(atan( y / x ));
         else
@@ -391,8 +393,8 @@ end
 %     design.RyoVRtsb = design.Ryo / design.Rtsb;
 %     design.RyiVRyo = design.Ryi / design.Ryo;
 %     design.thetamVthetap = design.thetam / design.thetap;
-%     design.thetacVthetas = design.thetac / design.thetas;
-%     design.thetasgVthetac = design.thetasg / design.thetac;
+%     design.thetacgVthetas = design.thetacg / design.thetas;
+%     design.thetasgVthetacg = design.thetasg / design.thetacg;
 %     design.lsVtm = design.ls / design.tm;
 % 
 % end

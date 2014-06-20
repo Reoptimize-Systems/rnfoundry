@@ -24,10 +24,10 @@ function [design, simoptions] = simfun_RADIAL(design, simoptions)
     % set some default mesh size options
     simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'YokeRegionMeshSize', ...
                                        mean( [choosemesharea_mfemm(design.ty, 2*(design.Rym*design.thetap), 1/10), ...
-                                        choosemesharea_mfemm(design.tc, (design.Rcm*(design.thetas-design.thetac)), 1/10)] ) );
+                                        choosemesharea_mfemm(design.tc, (design.Rcm*(design.thetas-max(design.thetac))), 1/10)] ) );
                                     
     simoptions.femmmeshoptions = setfieldifabsent(simoptions.femmmeshoptions, 'CoilRegionMeshSize', ...
-                                    choosemesharea_mfemm(design.tc, (design.Rcm*design.thetac)) );
+                                    choosemesharea_mfemm(design.tc, (design.Rcm*mean(design.thetac))) );
     
     
 end

@@ -37,10 +37,10 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
     
     Inputs.OuterRegionsMeshSize = [choosemesharea_mfemm(design.tm, design.Rmm*design.thetam, 1/10), -1];
     Inputs.AirGapMeshSize = choosemesharea_mfemm(design.g, design.Rmm*design.thetap, 1/50);
-    Inputs.ShoeGapRegionMeshSize = choosemesharea_mfemm(design.tsg, design.Rcm*(design.thetas-design.thetac)/2, 1/50);
+    Inputs.ShoeGapRegionMeshSize = choosemesharea_mfemm(design.tsg, design.Rcm*(design.thetas-mean(design.thetac))/2, 1/50);
     Inputs.YokeRegionMeshSize = min( choosemesharea_mfemm(design.ty, 2*design.Rym*design.thetap, 1/40), ...
-                                     choosemesharea_mfemm(design.tc, design.Rcm*design.thetac, 1/40)  );
-    Inputs.CoilRegionMeshSize = choosemesharea_mfemm(design.tc, design.Rcm*design.thetac);
+                                     choosemesharea_mfemm(design.tc, design.Rcm*mean(design.thetac), 1/40)  );
+    Inputs.CoilRegionMeshSize = choosemesharea_mfemm(design.tc, design.Rcm*mean(design.thetac));
     Inputs.Tol = 1e-5;
     Inputs.NSlots = 2*design.Phases;
     Inputs.DrawOuterRegions = true;
@@ -193,6 +193,6 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
                                                  Inputs.ArmatureBackIronGroup, ...
                                                  linktb, ...
                                                  GapMatInd, ...
-                                                 DrawOuterRegions);             
+                                                 Inputs.DrawOuterRegions);             
 
 end
