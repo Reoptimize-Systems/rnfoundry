@@ -14,16 +14,16 @@ function length = isotrapzcoilmtl(w1, w2, h, t)
 %                 *                                          *              
 %   ............. *       *****************************      *              
 %           ^      *     *                             *     *              
-%           ¦       *    *                             *    *               
-%           ¦        *    *                           *    *                
-%           ¦         *    *                         *    *                 
-%           ¦          *    *                       *    *                  
-%        h  ¦           *    *               ----> *    *<---- t   
-%           ¦            *    *                   *    *                    
-%           ¦             *    *                 *    *                     
-%           ¦              *    *               *    *                      
-%           ¦               *    *             *    *                       
-%           ¦                *    *           *    *                        
+%           ï¿½       *    *                             *    *               
+%           ï¿½        *    *                           *    *                
+%           ï¿½         *    *                         *    *                 
+%           ï¿½          *    *                       *    *                  
+%        h  ï¿½           *    *               ----> *    *<---- t   
+%           ï¿½            *    *                   *    *                    
+%           ï¿½             *    *                 *    *                     
+%           ï¿½              *    *               *    *                      
+%           ï¿½               *    *             *    *                       
+%           ï¿½                *    *           *    *                        
 %           v                 *    *         *    *                         
 %    ........................  *     *******     *                          
 %                               *    :     :    *                           
@@ -49,7 +49,7 @@ function length = isotrapzcoilmtl(w1, w2, h, t)
 %
 
     % calculate the length of the non-parallel sides
-    sidelen = sqrt( (h+t).^2 - (((w1+t) - (w2+t)) ./ 2)^2 );
+    sidelen = sqrt( (h+t).^2 - (((w1+t) - (w2+t)) ./ 2).^2 );
     
     % now calculate the turn length
     length = (2 .* sidelen) + w1 + w2 + (2*t) + (pi .* t);
