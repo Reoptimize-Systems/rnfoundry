@@ -70,6 +70,10 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
 
         % see if libf2c is installed as a system library 
         [~,ldconfout] = system('ldconfig -p | grep libf2c');
+        
+        res = f2cdocontinue ();
+        
+        if ~res, return;
 
         libfilename = 'libf2cx64.a';
         if (isempty(ldconfout) && ~exist(libfilename, 'file')) || forcef2clibrecompile
@@ -87,6 +91,10 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
         % see if libf2c is installed as a system library 
         [~,ldconfout] = system('ldconfig -p | grep libf2c');
 
+        res = f2cdocontinue ();
+        
+        if ~res, return;
+        
         libfilename = 'libf2cx86.a';
         if (isempty(ldconfout) && ~exist(libfilename, 'file'))  || forcef2clibrecompile
             cd(fullfile(libfiledir, 'libf77'));
@@ -209,5 +217,23 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
 %copyfile('~/Postgrad_Research/fortran/mexlsei/mexlsei.mexw64', '/home/s0237326/Postgrad_Research/MATLAB_Scripts/subversion/matlab/Useful_Functions/mlsei/')
 %
 %[x, rnorme, rnorml, mode] = mlsei(A, b, Mineq, rhsineq, Meq, rhseq)
+
+end
+
+
+function res = f2cdocontinue ()
+
+    S = input ( sprintf( ...
+['f2c is not installed in your system, it is advisable to quit and install it\n', ...
+ 'using your packaging system. Otherwise mexlsei_setup will now attempt to build \n', ...
+ 'f2c and libf2c from source before continuing.\n', ...
+ '\n', ...
+ 'Do you wish to continue? (Y/n)'] ))
+ 
+    if strcmpi (S, 'n')
+        res = false;
+    else
+        res = true;
+    end
 
 end
