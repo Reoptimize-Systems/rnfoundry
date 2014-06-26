@@ -12,7 +12,7 @@ function varargout = addaxisplot(varargin)
 %  axh = get(cah,'userdata');
   axh = getaddaxisdata(cah,'axisdata');  
   
-  if nargin>=3 & ~isstr(varargin{3}) 
+  if nargin>=3 & ~ischar(varargin{3}) 
     plotaxis = varargin{3};
     indkeep = setdiff(1:nargin,3);
     [varargintemp{1:nargin-1}] = deal(varargin{indkeep});
