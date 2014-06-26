@@ -298,7 +298,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     % now recalculate coil resistance
     design.MTL = rectcoilmtl( design.ls, ...
                               design.yd * design.thetas * design.Rcm, ...
-                              design.thetac * design.Rcm );
+                              mean(design.thetac) * design.Rcm );
 
     design.CoilResistance = 1.7e-8 * design.CoilTurns * design.MTL ./ (pi * (design.Dc/2)^2);
     
