@@ -16,7 +16,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %   The following optional fields may be supplied:
 %
 %   odesolver - function handle or string specifying the ode solver to use,
-%     for Matlab defaults to 0de15s if not supplied, and ode2r for Octave
+%     for Matlab defaults to ode15s if not supplied, and ode2r for Octave
 %
 %   TODO: complete the options description here
 %
