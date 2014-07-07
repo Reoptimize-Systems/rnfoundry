@@ -59,9 +59,6 @@ function [design, simoptions] = simfun_AM(design, simoptions)
     % set the magnet coercivity if not present
     design = setfieldifabsent( design, 'HcMag', 979000);
     
-    % set the magnet skew to zero by default
-    design = setfieldifabsent(design, 'MagnetSkew', 0);
-    
     % default temperature (used for resistance calculations is 20 degrees)
     simoptions = setfieldifabsent(simoptions, 'Temperature', 20);
     
