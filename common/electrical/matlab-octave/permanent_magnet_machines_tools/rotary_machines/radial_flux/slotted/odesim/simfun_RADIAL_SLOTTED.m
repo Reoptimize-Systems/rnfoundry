@@ -2,15 +2,101 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 % generates simulation data for a radial flux slotted machine in
 % preparation for a time series ode simulation
 %
+% Syntax
+%
+% [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
+%
+% Description
+%
+% The machine design is specified in the fields of the 'design' structure.
+%
+% The design can be for either an internal or external armature. This is
+% specified in the field 'ArmatureType' which must contain a string, either
+% 'internal' or 'external'. Any unambiguous substring is also acceptable,
+% e.g 'e' or'i', or 'ext', or 'in'.
+%
+% Both internal and external armature designs must have the following fields:
+%
+%    tsg - thickness of shoe in radial direction at shoe gap
+%
+%    thetam - angular pitch of magnet in radians
+%
+%    thetac - angular pitch of coil slot, this can be a single value or two 
+%      values. If two values, it is the pitch at the base (close to armature 
+%      yoke) and top (close to slot opening) of the slot respectively. If this 
+%      is a single value, the same pitch is used for both the base and the top.
+%
+%    thetasg - angular pitch of the coil slot opening between shoes.
+%
+%    ls - stack length (depth 'into the page' of simulation)
 % 
+% In general, all dimensions which refer to a radial measurement from the
+% center of the machine are prefixed with the capital letter 'R'.
+%
+% For an INTERNAL ARMATURE machine, the design structure must also contain
+% all the fields:
+%
+%    Rbo - radial distance to outer back iron surface
+%
+%    Rmo - radial distance to outer magnet surface
+%
+%    Rmi - radial distance to inner magnet surface
+%
+%    Rao - radial distance to armature outer surface (surface of teeth or coils)
+%
+%    Rtsb - radial distance to tooth shoe base
+%
+%    Ryi - radial distance to armature yoke inner surface
+%
+%    Ryo - radial distance to armature yoke outer surface
 %
 %
-
-% Stator slot/coil/winding terminology is based on that presented in:
+% For an EXTERNAL ARMATURE machine, the design structure must also contain the 
+% fields:
 %
-% J. J. Germishuizen and M. J. Kamper, "Classification of symmetrical
-% non-overlapping three-phase windings," in The XIX International
-% Conference on Electrical Machines - ICEM 2010, 2010, pp. 1-6.
+%    Ryo - radial distance to armature yoke outer surface
+%
+%    Ryi - radial distance to armature yoke inner surface
+%
+%    Rtsb - radial distance to tooth shoe base
+%
+%    Rai - radial distance to armature inner surface (surface of teeth or coils)
+%
+%    Rmi - radial distance to inner magnet surface
+%
+%    Rmo - radial distance to outer magnet surface
+%
+%    Rbi - radial distance to back iron inner surface
+%
+%
+% This completes the specification of the physical dimentions of the
+% armature and field. Alternative methods of specifying the dimensions (such as 
+% as a set of dimensionless ratios) are possible which can be easily converted 
+% to this form using the helper function completedesign_RADIAL_SLOTTED.m. See 
+% the help for  completedesign_RADIAL_SLOTTED for more details.
+%
+% In addition, a winding specification must be supplied. The winding is
+% described using the following variables:
+%
+%  yp - Average coil pitch as defined by (Qs/Poles)
+%  yd - Actual coil pitch as defined by round(yp) +/- k
+%  Qs  -  total number of stator slots in machine
+%  Qc  -  total number of winding coils in machine 
+%  q  -  number of slots per pole and phase
+%  qn  -  numerator of q
+%  qd  -  denominator of q
+%  qc - number of coils per pole and phase
+%  qcn  -  numerator of qc
+%  qcd  -  denominator of qc
+%  Qcb - basic winding (the minimum number of coils required to make up a 
+%    repetitive segment of the machine that can be modelled using symmetry)
+%  pb - the number of poles corresponding to the basic winding in Qcb
+%
+% This pole/slot/coil/winding terminology is based on that presented in
+% [1].
+%
+% Machine windings can be single or double layered, in which case:
+%
 % Single layer
 %   q = 2qc
 %   Qs = 2Qc
@@ -18,22 +104,37 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %   q = qc
 %   Qs = Qc
 %
-% yp - Average coil pitch as defined by (Qs/Poles)
-% yd - Actual coil pitch as defined by round(yp) +/- k
-% Qs  -  number of stator slots
-% Qc  -  number of winding coils
-% q  -  number of slots per pole and phase, (1)
-% qn  -  numerator of q
-% qd  -  denominator of q
-% qc - number of coils per pole and phase, (2)
-% qcn  -  numerator of qc
-% qcd  -  denominator of qc
+% To specify a winding, the 'minimum spec' that must be provided is based on
+% a combination of some or all of the following fields:
+%
+%  Phases - The number of phases in the machine
+%  Poles - The number of magnetic poles in the machine
+%  NBasicWindings - the number of basic winding segments in the machine
+%  qc - number of coils per pole and phase (as a fraction object)
+%  Qc - total number of coils (in all phases) in the machine
+%
+% Any of the following combinations may be supplied to specify the winding:
+%
+%   Poles, Phases, Qc
+%   Poles, Phases, qc
+%   qc, Phases, NBasicWindings
+%
+% These variables must be provided as fields in the design structure. If
+% 'qc' is supplied, it must be an object of the class 'fr'. This is a class
+% designed for handling fractions. See the help for the ''fr'' class for
+% further information.
+%
+%
+% [1] J. J. Germishuizen and M. J. Kamper, "Classification of symmetrical
+% non-overlapping three-phase windings," in The XIX International
+% Conference on Electrical Machines - ICEM 2010, 2010, pp. 1-6.
+%
+%
+% See also: completedesign_RADIAL_SLOTTED.m, simfun_RADIAL.m, simfun_ROTARY.m
+%           simfun_AM.m, fr.m
+%
+%
 
-%     design.Hc = design.tc;
-%     
-%     % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
-%     % winding slot
-%     design.Wc = design.thetac * design.Rcm;
     
     if design.ypd ~= 1 && design.ypd ~= 2
     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
