@@ -26,90 +26,154 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
 % For an INTERNAL ARMATURE machine, the design structure must also contain
 % either all the fields:
 %
-%    RmoVRbo - 
-%    RmiVRmo - 
-%    RsoVRmi -  
-%    RtsbVRao - 
-%    RyoVRtsb - 
-%    RyiVRyo -  
-%    tsgVtsb -  
-%    thetamVthetap - 
-%    thetacVthetas -  
-%    thetasgVthetac -  
-%    lsVtm - 
+%    Rbo - radial distance to outer back iron surface
 %
-% or all the fields:
+%    Rmo - radial distance to outer magnet surface
+%
+%    Rmi - radial distance to inner magnet surface
+%
+%    Rao - radial distance to armature outer surface (surface of teeth or coils)
+%
+%    Rtsb - radial distance to tooth shoe base
+%
+%    Ryi - radial distance to armature yoke inner surface
+%
+%    Ryo - radial distance to armature yoke outer surface
+%
+%    tsg - thickness of shoe in radial direction at shoe gap
+%
+%    thetam -  angular pitch of magnet in radians
+%
+%    thetacg - coil inner slot pitch in radians at the end of the coil closest 
+%      to the slot opening
+%
+%    thetacy - coil inner slot pitch in radians at the end of the coil closest 
+%      to the yoke
+%
+%    thetasg - angular pitch of the coil slot opening between shoes
+%
+%    ls - stack length (depth 'into the page' of simulation)
+%
+% or all the fields below, which represent ratios of the previous dimensions:
 %
 %    Rbo - radial distance to outer back iron surface
-%    Rmo - radial distance to outer magnet surface
-%    Rmi - radial distance to inner magnet surface
-%    Rao - radial distance to 
-%    Rtsb - radial distance to 
-%    Ryo -  radial distance to 
-%    Ryi - radial distance to 
-%    tsg - 
-%    thetam - 
-%    thetac - 
-%    thetasg -  
-%    ls - 
+%    RmoVRbo - Rmo to Rbo ratio
+%    RmiVRmo - Rmi to Rmo ratio
+%    RsoVRmi -  Rso to Rmi ratio
+%    RtsbVRao - Rtsb to Rao ratio
+%    RyoVRtsb - Ryo to Rtsb ratio
+%    RyiVRyo -  Ryi to Ryo ratio
+%    tsgVtsb -  tsg to tsb ratio
+%    thetamVthetap - thetam to thetap ratio
+%    thetasgVthetacg -  thetasg to thetacg ratio
+%    thetasgVthetacy -  thetasg to thetacy ratio
+%    lsVtm - ls to tm ratio
 %
 % or all the fields
 %
-%    Rbo - 
-%    g - 
-%    ty - 
-%    tm - 
-%    tc - 
-%    tsb - 
-%    tbi - 
-%    tsg - 
-%    thetam - 
-%    thetac - 
-%    thetasg -  
-%    ls - 
+%    Rbo - radial distance to outer back iron surface
+%
+%    g - air gap length
+%
+%    ty - yoke thickness in radial direction
+%
+%    tm - magnet thickness in radial direction
+%
+%    tc - length of coil body in radial direction
+%
+%    tsb - slot shoe base thickness in radial direction
+%
+%    tbi - thickness of the back iron in radial direction
+%
+%    tsg - thickness of shoe in radial direction at shoe gap
+%
+%    thetam -  angular pitch of magnet in radians
+%
+%    thetacg - coil inner slot pitch in radians at the end of the coil closest 
+%      to the slot opening
+%
+%    thetacy - coil inner slot pitch in radians at the end of the coil closest 
+%      to the yoke
+%
+%    thetasg - angular pitch of the coil slot opening between shoes
+%
+%    ls - stack length (depth 'into the page' of simulation)
 %
 % For an EXTERNAL ARMATURE machine, the design structure must also contain
 % either all the fields:
 %
-%    RyiVRyo - 
-%    RtsbVRyi - 
-%    RaiVRtsb - 
-%    RmoVRai - 
-%    RmiVRmo - 
-%    RbiVRmi - 
-%    tsgVtsb -  
-%    thetamVthetap - 
-%    thetacVthetas -  
-%    thetasgVthetac -  
-%    lsVtm - 
+%    Ryo - radial distance to armature yoke outer surface
+%
+%    Ryi - radial distance to armature yoke inner surface
+%
+%    Rtsb - radial distance to tooth shoe base
+%
+%    Rai - radial distance to armature inner surface (surface of teeth or coils)
+%
+%    Rmi - radial distance to inner magnet surface
+%
+%    Rmo - radial distance to outer magnet surface
+%
+%    Rbi - radial distance to back iron inner surface
+%
+%    tsg - thickness of shoe in radial direction at shoe gap
+%
+%    thetam -  angular pitch of magnet in radians
+%
+%    thetacg - coil inner slot pitch in radians at the end of the coil closest 
+%      to the slot opening
+%
+%    thetacy - coil inner slot pitch in radians at the end of the coil closest 
+%      to the yoke
+%
+%    thetasg - angular pitch of the coil slot opening between shoes
+%
+%    ls - stack length (depth 'into the page' of simulation)
 % 
 % or all the fields:
 %
-%    Ryo - 
-%    Ryi - 
-%    Rtsb - 
-%    Rai - 
-%    Rmi - 
-%    Rmo -  
-%    Rbi - 
-%    tsg - 
-%    thetam - 
-%    thetasg -  
-%    ls -  
+%    Ryo - radial distance to armature yoke outer surface
+%    RyiVRyo - Ryi to Ryo
+%    RtsbVRyi - Rtsb to Ryi ratio
+%    RaiVRtsb - Rai to Rtsb ratio
+%    RmoVRai - Rmo to Rai ratio
+%    RmiVRmo - Rmi to Rmo ratio
+%    RbiVRmi - Rbi to Rmi ratio
+%    tsgVtsb - tsg to tsb ratio
+%    thetamVthetap - thetam to thetap ratio
+%    thetasgVthetacg - thetasg to thetacg ratio
+%    thetasgVthetacy - thetasg to thetacy ratio
+%    lsVtm - ls to tm ratio
 %
 % or all the fields:
 %
-%    Ryo - 
-%    g - 
-%    ty - 
-%    tm - 
-%    tc - 
-%    tsb - 
-%    tbi - 
-%    tsg - 
-%    thetam - 
-%    thetasg -  
-%    ls - 
+%    Ryo - radial distance to armature yoke outer surface
+%
+%    g - air gap length
+%
+%    ty - yoke thickness in radial direction
+%
+%    tm - magnet thickness in radial direction
+%
+%    tc - length of coil body in radial direction
+%
+%    tsb - slot base thickness in radial direction
+%
+%    tbi - thickness of the back iron in radial direction
+%
+%    tsg - thickness of shoe in radial direction at shoe gap
+%
+%    thetam - angular pitch of magnet in radians
+%
+%    thetacg - coil inner slot pitch in radians at the end of the coil closest 
+%      to the slot opening
+%
+%    thetacy - coil inner slot pitch in radians at the end of the coil closest 
+%      to the yoke
+%
+%    thetasg - angular pitch of the coil slot opening between shoes
+%
+%    ls - stack length (depth 'into the page' of simulation)
 %
 % This completes the specification of the physical dimentions of the
 % armature and field.
@@ -167,7 +231,8 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
 %
 % 
 %
-% See also: fr.m, completedesign_RADIAL.m, completedesign_ROTARY.m
+% See also: fr.m, completedesign_RADIAL.m, completedesign_ROTARY.m, 
+%           completedesign_AM.m
 %
 % [1] J. J. Germishuizen and M. J. Kamper, "Classification of symmetrical
 % non-overlapping three-phase windings," in The XIX International
