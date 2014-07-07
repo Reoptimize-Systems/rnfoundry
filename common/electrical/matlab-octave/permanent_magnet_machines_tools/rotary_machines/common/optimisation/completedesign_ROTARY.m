@@ -26,6 +26,7 @@ function design = completedesign_ROTARY(design, simoptions)
 %  Qcb - basic winding (the minimum number of coils required to make up a 
 %    repetitive segment of the machine that can be modelled using symmetry)
 %  pb - the number of poles corresponding to the basic winding in Qcb
+%  CoilLayers - the number of layers in the coil slot
 %
 % This pole/slot/coil/winding terminology is based on that presented in
 % [1].
@@ -50,22 +51,41 @@ function design = completedesign_ROTARY(design, simoptions)
 %
 % Any of the following combinations may be supplied to specify the winding:
 %
-%   Poles, Phases, Qc
-%   Poles, Phases, qc
-%   qc, Phases, NBasicWindings
+%   Poles, Phases, Qc, CoilLayers
+%   Poles, Phases, qc, CoilLayers
+%   qc, Phases, NBasicWindings, CoilLayers
 %
 % These variables must be provided as fields in the design structure. If
 % 'qc' is supplied, it must be an object of the class 'fr'. This is a class
 % designed for handling fractions. See the help for the ''fr'' class for
-% further information.
+% further information. If CoilLayers is not supplied, it defaults to 1.
 % 
-% See also: fr.m
+% completedesign_ROTARY also adds further default design options common to all pm
+% machines if they are not already present in the design structure. The
+% following fields will be added to 'design' if they are not already present:
+%
+%  CoilLayers - default is 1
+%
+%  MagnetSkew - determines the amount of magnet skewwing as a ratio of a pole
+%   width (i.e. it is expected to be between 0 and 1). Defaults to zero if not
+%   supplied.
+%
+%  NStrands - number of strands making up the wire in the coils. Defaults to 1
+%   if not supplied.
+%
+%  NStages - number of stages making up the machine. Defaults to 1 if not
+%   supplied
+%
+% Not all machine types may make use of all the default options set here.
+%
 %
 % [1] J. J. Germishuizen and M. J. Kamper, "Classification of symmetrical
 % non-overlapping three-phase windings," in The XIX International
 % Conference on Electrical Machines - ICEM 2010, 2010, pp. 1-6.
 %
-
+%
+% See also: fr.m, completedesign_AM.m
+%
 
     % perform processing common to all machines
     design = completedesign_AM(design, simoptions);
