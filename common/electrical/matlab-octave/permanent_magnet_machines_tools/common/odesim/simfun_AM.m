@@ -46,16 +46,6 @@ function [design, simoptions] = simfun_AM(design, simoptions)
     
     design = setfieldifabsent(design, 'TemperatureBase', 20);
     
-    % use single layered coils by default
-    design = setfieldifabsent(design, 'CoilLayers', 1);
-    
-    % use single-stranded conductors by default
-    design = setfieldifabsent(design, 'NStrands', 1);
-    
-    % check the number of stages in the design
-    design = setfieldifabsent(design, 'NStages', 1);
-    design = setfieldifabsent(design, 'sides', design.NStages);
-    
     % set the magnet coercivity if not present
     design = setfieldifabsent( design, 'HcMag', 979000);
     
