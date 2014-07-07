@@ -67,7 +67,9 @@ function design = completedesign_ROTARY(design, simoptions)
 %
 
 
-
+    % perform processing common to all machines
+    design = completedesign_AM(design, simoptions);
+    
     % check the minimum set of winding specification
     if all(isfield(design, {'Qc', 'Phases', 'Poles'})) && ~isfield (design, 'qc')
         % create qc fraction
