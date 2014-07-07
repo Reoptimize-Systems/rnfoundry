@@ -8,7 +8,15 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %
 % Description
 %
-% The machine design is specified in the fields of the 'design' structure.
+% simfun_RADIAL_SLOTTED takes a slotted radial flux machine design, specified in 
+% the fields of a structure and performs a series of electromagnetic simulation
+% to obtain  data on the machine performance. In addition, various other 
+% calculations are  performed such as estimating the resistance and inductance 
+% etc. The results of the calcualtions are added as fields to the design 
+% structure, which is returned with the appended fields. Also expected to be
+% provided is a simoptions structure containing fields which specify various
+% options and settings determining what simulation data will be gathered. More
+% information on the simoptions fields is given later in this help.
 %
 % The design can be for either an internal or external armature. This is
 % specified in the field 'ArmatureType' which must contain a string, either
@@ -91,6 +99,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %  Qcb - basic winding (the minimum number of coils required to make up a 
 %    repetitive segment of the machine that can be modelled using symmetry)
 %  pb - the number of poles corresponding to the basic winding in Qcb
+%  CoilLayers - number of layers in the winding
 %
 % This pole/slot/coil/winding terminology is based on that presented in
 % [1].
@@ -112,18 +121,69 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %  NBasicWindings - the number of basic winding segments in the machine
 %  qc - number of coils per pole and phase (as a fraction object)
 %  Qc - total number of coils (in all phases) in the machine
+%  CoilLayers - the number of layers in the coil, either 1 or 2
 %
 % Any of the following combinations may be supplied to specify the winding:
 %
-%   Poles, Phases, Qc
-%   Poles, Phases, qc
-%   qc, Phases, NBasicWindings
+%   Poles, Phases, Qc, CoilLayers
+%   Poles, Phases, qc, CoilLayers
+%   qc, Phases, NBasicWindings, CoilLayers
 %
 % These variables must be provided as fields in the design structure. If
 % 'qc' is supplied, it must be an object of the class 'fr'. This is a class
 % designed for handling fractions. See the help for the ''fr'' class for
 % further information.
 %
+% In addition some further design option fields may be specified if desired:
+%
+%   NStrands               1
+%
+%   NStages                1
+%
+%   MagnetSkew             0
+%
+%   FEMMTol - tolerance used in FEA drawings to determine if components are
+%    separate. Defaults to 1e-5 if not supplied.
+%
+%   WireResistivityBase    1.7e-8
+%
+%   AlphaResistivity       3.93e-3
+%
+%   TemperatureBase        20
+%
+%
+% SIMOPTIONS 
+%
+% Also expected to be provided is a structure containing various simulation
+% options.
+%
+%
+%  usefemm - optional flag to allow forcing the use of FEMM for FEA simulation 
+%   rather than mfemm. If true FEMM will be used, otherwise, mfemm will be used
+%   if it is available. Defaults to false if not supplied.
+%
+%  quietfemm - optional flag determining if output to the command line from
+%   mfemm should be suppressed. Defaults to true if not supplied.
+%
+%  GetVariableGapForce - optional flag determining if a series of force 
+%   simulations with various air gap sizes will be performed. Must be supplied.
+%
+%  NForcePoints - optional number of gap sizes to use if GetVariableGapForce is
+%   true. Defaults to 4 if not supplied. The force positions will be linearly
+%   spaced from zero air gap (plus a small toperance value) to twice the air gap
+%   length.
+%
+%  femmmeshoptions - 
+%
+%  SkipMainFEA - optional flag which allows skipping the main fea simulations.
+%   This can be desirable when only coil winding configurations change etc.
+%   Defaults to false if not supplied.
+%
+%  SkipInductanceFEA - optional flag which allows skipping the inductance fea
+%   simulations. This can be desirable when only coil winding configurations
+%   change etc. Defaults to false if not supplied.
+%
+%  
 %
 % [1] J. J. Germishuizen and M. J. Kamper, "Classification of symmetrical
 % non-overlapping three-phase windings," in The XIX International
@@ -134,7 +194,6 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %           simfun_AM.m, fr.m
 %
 %
-
     
     if design.ypd ~= 1 && design.ypd ~= 2
     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
@@ -172,173 +231,177 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     % integral of the vector potential in a slot over a half pole of
     % displacement, giving a quarter of the wave period
     
-    nfeapos = 10;
-%     design.FirstSlotCenter = design.thetap + (design.thetap / slotsperpole / 2);
-    design.FirstSlotCenter = 0;
-    design.feapos = linspace(0, 1, nfeapos);
+    if ~simoptions.SkipMainFEA
+    
+        nfeapos = 10;
+    %     design.FirstSlotCenter = design.thetap + (design.thetap / slotsperpole / 2);
+        design.FirstSlotCenter = 0;
+        design.feapos = linspace(0, 1, nfeapos);
 
-    design.intAdata.slotPos = [];
-    design.intAdata.slotIntA = [];
-    design.intBdata.slotPos = [];
-    design.intBdata.slotIntB = [];
-    
-    femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
-    
-    % determine a unit vector pointing in the direction normal to the air
-    % gap half way between the Poles for the purpose of extracting the
-    % air-gap closing forces
-    [gvector(1), gvector(2)] = pol2cart(design.thetap,1);
-    gvector = unit(gvector);
-    
-    % determine a unit vector pointing in the direction tangential to the
-    % radius half way between the Poles for the purpose of extracting
-    % the cogging forces
-    %
-    % The dot product of orthogonal vectors is zero. In two dimensions the
-    % slopes of perpendicular lines are negative reciprocals. Switch the x
-    % and y coefficients and change the sign of one of them.
-    % 
-    % For vector V1 = <a, b>, the reciprocal V2 = <b, -a>. Now make it a
-    % unit vector by dividing by the magnitude.
-    coggingvector = unit([gvector(2), -gvector(1)]);
-    
-    armirongroup = 2;
+        design.intAdata.slotPos = [];
+        design.intAdata.slotIntA = [];
+        design.intBdata.slotPos = [];
+        design.intBdata.slotIntB = [];
         
-    for i = 1:numel(design.feapos)
-
-        % Draw the sim, i.e by creating the FemmProblem structure
-        [design.FemmProblem, design.coillabellocs, design.yokenodeids] = ...
-                            slottedfemmprob_radial(design, ...
-                                'ArmatureType', design.ArmatureType, ...
-                                'NWindingLayers', design.CoilLayers, ...
-                                'Position', (design.feapos(i)+1) * design.thetap + design.FirstSlotCenter, ...
-                                'ArmatureBackIronGroup', armirongroup, ...
-                                'MagnetRegionMeshSize', simoptions.femmmeshoptions.MagnetRegionMeshSize, ...
-                                'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
-                                'OuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
-                                'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
-                                'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
-                                'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
-                                'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
-
-        % write the fem file to disk
-        writefemmfile(femfilename, design.FemmProblem);
-        % analyse the problem
-        ansfilename = analyse_mfemm(femfilename, ...
-                                    simoptions.usefemm, ...
-                                    simoptions.quietfemm);
-                            
+        femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
         
-        if (exist('fpproc_interface_mex', 'file')==3) && ~simoptions.usefemm
+        % determine a unit vector pointing in the direction normal to the air
+        % gap half way between the Poles for the purpose of extracting the
+        % air-gap closing forces
+        [gvector(1), gvector(2)] = pol2cart(design.thetap,1);
+        gvector = unit(gvector);
+        
+        % determine a unit vector pointing in the direction tangential to the
+        % radius half way between the Poles for the purpose of extracting
+        % the cogging forces
+        %
+        % The dot product of orthogonal vectors is zero. In two dimensions the
+        % slopes of perpendicular lines are negative reciprocals. Switch the x
+        % and y coefficients and change the sign of one of them.
+        % 
+        % For vector V1 = <a, b>, the reciprocal V2 = <b, -a>. Now make it a
+        % unit vector by dividing by the magnitude.
+        coggingvector = unit([gvector(2), -gvector(1)]);
+        
+        armirongroup = 2;
             
-            solution = fpproc(ansfilename);
-            % activate field smoothing so values are interpolated across
-            % mesh elements
-            solution.smoothon();
-            
-            if i == 1
-                design = corelosssetup(design, design.feapos, solution);
-            end
-            
-            % get the integral of the vector potential in a slot, if two
-            % layers get both layers
-            design = slotintAdata(design, simoptions, design.feapos(i), solution);
-            
-            design = slotintBdata(design, simoptions, design.feapos(i), solution);
+        for i = 1:numel(design.feapos)
 
-            for ii = 1:numel(design.CoreLoss)
+            % Draw the sim, i.e by creating the FemmProblem structure
+            [design.FemmProblem, design.coillabellocs, design.yokenodeids] = ...
+                                slottedfemmprob_radial(design, ...
+                                    'ArmatureType', design.ArmatureType, ...
+                                    'NWindingLayers', design.CoilLayers, ...
+                                    'Position', (design.feapos(i)+1) * design.thetap + design.FirstSlotCenter, ...
+                                    'ArmatureBackIronGroup', armirongroup, ...
+                                    'MagnetRegionMeshSize', simoptions.femmmeshoptions.MagnetRegionMeshSize, ...
+                                    'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
+                                    'OuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
+                                    'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
+                                    'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
+                                    'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
+                                    'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
+
+            % write the fem file to disk
+            writefemmfile(femfilename, design.FemmProblem);
+            % analyse the problem
+            ansfilename = analyse_mfemm(femfilename, ...
+                                        simoptions.usefemm, ...
+                                        simoptions.quietfemm);
+                                
+            
+            if (exist('fpproc_interface_mex', 'file')==3) && ~simoptions.usefemm
                 
-                p = solution.getpointvalues( design.CoreLoss(ii).meshx(:), ...
-                                             design.CoreLoss(ii).meshy(:) );
+                solution = fpproc(ansfilename);
+                % activate field smoothing so values are interpolated across
+                % mesh elements
+                solution.smoothon();
+                
+                if i == 1
+                    design = corelosssetup(design, design.feapos, solution);
+                end
+                
+                % get the integral of the vector potential in a slot, if two
+                % layers get both layers
+                design = slotintAdata(design, simoptions, design.feapos(i), solution);
+                
+                design = slotintBdata(design, simoptions, design.feapos(i), solution);
 
-                design.CoreLoss(ii).By(:,i,:) = reshape(p(2,:)', size(design.CoreLoss(ii).meshx));
-                design.CoreLoss(ii).Bx(:,i,:) = reshape(p(3,:)', size(design.CoreLoss(ii).meshx));
+                for ii = 1:numel(design.CoreLoss)
+                    
+                    p = solution.getpointvalues( design.CoreLoss(ii).meshx(:), ...
+                                                 design.CoreLoss(ii).meshy(:) );
 
-            end
-            
-            if i == 1
-                % get the forces
+                    design.CoreLoss(ii).By(:,i,:) = reshape(p(2,:)', size(design.CoreLoss(ii).meshx));
+                    design.CoreLoss(ii).Bx(:,i,:) = reshape(p(3,:)', size(design.CoreLoss(ii).meshx));
+
+                end
+                
+                if i == 1
+                    % get the forces
+                    solution.clearblock();
+                    solution.groupselectblock(1)
+                    
+                    design.gforce = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+                                         gvector);
+                                    
+                    design.gvar = design.g;
+                    
+                    % get the cross-sectional area of the armature iron for
+                    % calcuation of material masses later
+                    solution.clearblock();
+                    solution.groupselectblock(armirongroup);
+                    design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
+                    
+                    % get the cross-sectional area of the coil winding bundle
+                    design.CoilArea = solution.blockintegral ( 5, design.coillabellocs(1,1), design.coillabellocs(1,2) );
+                    
+                end
+                
+                % get the cogging forces
                 solution.clearblock();
                 solution.groupselectblock(1)
                 
-                design.gforce = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-                                     gvector);
-                                
-                design.gvar = design.g;
+                design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+                                             coggingvector);
+
+                design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
                 
-                % get the cross-sectional area of the armature iron for
-                % calcuation of material masses later
-                solution.clearblock();
-                solution.groupselectblock(armirongroup);
-                design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
+                % explicitly call the delete method on the solution
+                delete(solution);
+                clear solution;
                 
-                % get the cross-sectional area of the coil winding bundle
-                design.CoilArea = solution.blockintegral ( 5, design.coillabellocs(1,1), design.coillabellocs(1,2) );
+            else
+                if i == 1
+                    design = corelosssetup(design, design.feapos, ansfilename);
+                end
                 
-            end
-            
-            % get the cogging forces
-            solution.clearblock();
-            solution.groupselectblock(1)
-            
-            design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-                                         coggingvector);
+                % open the solution in FEMM
+                opendocument(ansfilename);
 
-            design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
-            
-            % explicitly call the delete method on the solution
-            delete(solution);
-            clear solution;
-            
-        else
-            if i == 1
-                design = corelosssetup(design, design.feapos, ansfilename);
-            end
-            
-            % open the solution in FEMM
-            opendocument(ansfilename);
+                % get the integral of the vector potential in a slot, if two
+                % layers get both layers
+                design = slotintAdata(design, simoptions, design.feapos(i));
 
-            % get the integral of the vector potential in a slot, if two
-            % layers get both layers
-            design = slotintAdata(design, simoptions, design.feapos(i));
+                design = slotintBdata(design, simoptions, design.feapos(i));
 
-            design = slotintBdata(design, simoptions, design.feapos(i));
+                for ii = 1:numel(design.CoreLoss)
+                    
+                    p = mo_getpointvalues( design.CoreLoss(ii).meshx(:), ...
+                                           design.CoreLoss(ii).meshy(:) );
 
-            for ii = 1:numel(design.CoreLoss)
+                    design.CoreLoss(ii).By(:,i,:) = reshape(p(:,2), size(design.CoreLoss(ii).meshx));
+                    design.CoreLoss(ii).Bx(:,i,:) = reshape(p(:,3), size(design.CoreLoss(ii).meshx));
+
+                end
                 
-                p = mo_getpointvalues( design.CoreLoss(ii).meshx(:), ...
-                                       design.CoreLoss(ii).meshy(:) );
+                if i == 1
+                    % get the forces
+                    mo_clearblock();
+                    mo_groupselectblock(1);
+                    design.gforce = dot([mo_blockintegral(18)/2, mo_blockintegral(19)/2], ...
+                                        gvector);
+                    design.gvar = design.g;
+                    
+                    % get the cross-sectional area of the armature iron for
+                    % calcuation of material masses later
+                    mo_clearblock();
+                    mo_groupselectblock(armirongroup);
+                    design.ArmatureIronAreaPerPole = mo_blockintegral(5)/2;
+                    
+                end
 
-                design.CoreLoss(ii).By(:,i,:) = reshape(p(:,2), size(design.CoreLoss(ii).meshx));
-                design.CoreLoss(ii).Bx(:,i,:) = reshape(p(:,3), size(design.CoreLoss(ii).meshx));
-
-            end
-            
-            if i == 1
-                % get the forces
-                mo_clearblock();
-                mo_groupselectblock(1);
-                design.gforce = dot([mo_blockintegral(18)/2, mo_blockintegral(19)/2], ...
-                                    gvector);
-                design.gvar = design.g;
-                
-                % get the cross-sectional area of the armature iron for
-                % calcuation of material masses later
-                mo_clearblock();
-                mo_groupselectblock(armirongroup);
-                design.ArmatureIronAreaPerPole = mo_blockintegral(5)/2;
+                mo_close;
                 
             end
-
-            mo_close;
             
-        end
+            % clean up the FEA files
+            delete(femfilename);
+            delete(ansfilename);
         
-        % clean up the FEA files
-        delete(femfilename);
-        delete(ansfilename);
-    
-    end
+        end
+
+    end % ~SkipMainFEA
     
     % now get more force points
     pos = linspace(design.FEMMTol - design.g, 0, simoptions.NForcePoints-1);
@@ -351,50 +414,54 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     end
     design.gvar = [design.gvar, design.g + pos];
     
-    % perform an inductance sim
-    Lcurrent = inductancesimcurrent(design.CoilArea, design.CoilTurns);
-    [InductanceFemmProblem, Lcoillabellocs] = slottedLfemmprob_radial(design, ...
-        'ArmatureType', design.ArmatureType, ...
-        'NWindingLayers', design.CoilLayers, ...
-        'CoilCurrent', Lcurrent, ...
-        'MagnetRegionMeshSize', simoptions.femmmeshoptions.MagnetRegionMeshSize, ...
-        'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
-        'OuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
-        'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
-        'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
-        'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
-        'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
+    if ~simoptions.SkipInductanceFEA
     
-    % write the fem file to disk
-    writefemmfile(femfilename, InductanceFemmProblem);
-    % analyse the problem
-    ansfilename = analyse_mfemm(femfilename, ...
-                                simoptions.usefemm, ...
-                                simoptions.quietfemm);
+        % perform an inductance sim
+        Lcurrent = inductancesimcurrent(design.CoilArea, design.CoilTurns);
+        [InductanceFemmProblem, Lcoillabellocs] = slottedLfemmprob_radial(design, ...
+            'ArmatureType', design.ArmatureType, ...
+            'NWindingLayers', design.CoilLayers, ...
+            'CoilCurrent', Lcurrent, ...
+            'MagnetRegionMeshSize', simoptions.femmmeshoptions.MagnetRegionMeshSize, ...
+            'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
+            'OuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
+            'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
+            'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
+            'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
+            'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
+        
+        % write the fem file to disk
+        writefemmfile(femfilename, InductanceFemmProblem);
+        % analyse the problem
+        ansfilename = analyse_mfemm(femfilename, ...
+                                    simoptions.usefemm, ...
+                                    simoptions.quietfemm);
+        
+        if exist('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
+            solution = fpproc(ansfilename);
+            [design.CoilResistance, design.CoilInductance] = solution.circuitRL('1');
+            % get the mutual inductance by dividing the flux in a neighbouring
+            % phase by the applied current in the first phase
+            temp = solution.getcircuitprops('2');
+            % explicitly call the delete method on the solution
+            delete(solution);
+            clear solution;
+        else
+            opendocument(ansfilename);
+            % Now get the resistance and inductance of the machine coils
+            [design.CoilResistance, design.CoilInductance] = RandLfromFEMMcircuit('1');
+            % get the mutual inductance by dividing the flux in a neighbouring
+            % phase by the applied current in the first phase
+            temp = mo_getcircuitproperties('2');
+            mo_close;
+        end
+        design.CoilInductance(2) = abs(temp(3)) / Lcurrent;
+        
+        % clean up the FEA files
+        delete(femfilename);
+        delete(ansfilename);
     
-    if exist('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
-        solution = fpproc(ansfilename);
-        [design.CoilResistance, design.CoilInductance] = solution.circuitRL('1');
-        % get the mutual inductance by dividing the flux in a neighbouring
-        % phase by the applied current in the first phase
-        temp = solution.getcircuitprops('2');
-        % explicitly call the delete method on the solution
-        delete(solution);
-        clear solution;
-    else
-        opendocument(ansfilename);
-        % Now get the resistance and inductance of the machine coils
-        [design.CoilResistance, design.CoilInductance] = RandLfromFEMMcircuit('1');
-        % get the mutual inductance by dividing the flux in a neighbouring
-        % phase by the applied current in the first phase
-        temp = mo_getcircuitproperties('2');
-        mo_close;
-    end
-    design.CoilInductance(2) = abs(temp(3)) / Lcurrent;
-    
-    % clean up the FEA files
-    delete(femfilename);
-    delete(ansfilename);
+    end % ~simoptions.SkipInductanceFEA
     
     % now recalculate coil resistance
     design.MTL = rectcoilmtl( design.ls, ...
