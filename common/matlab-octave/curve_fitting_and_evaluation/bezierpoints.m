@@ -8,12 +8,11 @@ function [Qx, Qy] = bezierpoints(Px,Py,n)
 % % % --------------------------------
 % % % Author: Dr. Murtaza Khan
 % % % Email : drkhanmurtaza@gmail.com
+% % % Modified By Richard Crozier
 % % % --------------------------------
 
     dt  =  1/n;
-    t = (1:n) * dt;
-    Qx(1) = Px(1); % Qx at t = 0
-    Qy(1) = Py(1); % Qy at t = 0
+    t = (2:n-1) * dt;
     
     order = numel(Px)-1;
 
@@ -26,8 +25,8 @@ function [Qx, Qy] = bezierpoints(Px,Py,n)
             Px1 = Px(2);
             Py1 = Py(2);
             
-            Qx = [Qx, Px0 + t.*(Px1 - Px0)];
-            Qy = [Qy, Py0 + t.*(Py1 - Py0)];
+            Qx = [Px(1), Px0 + t.*(Px1 - Px0), Px(end)];
+            Qy = [Py(1), Py0 + t.*(Py1 - Py0), Py(end)];
 
         case 2
             
@@ -38,8 +37,8 @@ function [Qx, Qy] = bezierpoints(Px,Py,n)
             Px2 = Px(3);
             Py2 = Py(3);
 
-            Qx = [Qx, ((1 - t).^2) .*Px0 + 2.*(1 - t).*t.*Px1 + (t.^2).*Px2];
-            Qy = [Qy, ((1 - t).^2) .*Py0 + 2.*(1 - t).*t.*Py1 + (t.^2).*Py2];
+            Qx = [Px(1), ((1 - t).^2) .*Px0 + 2.*(1 - t).*t.*Px1 + (t.^2).*Px2, Px(end)];
+            Qy = [Py(1), ((1 - t).^2) .*Py0 + 2.*(1 - t).*t.*Py1 + (t.^2).*Py2, Py(end)];
             
         case 3
             % Equation of cubic Bezier Curve, utilizes Horner's rule for efficient computation.
@@ -62,18 +61,12 @@ function [Qx, Qy] = bezierpoints(Px,Py,n)
             cx0 = Px0;
             cy0 = Py0;
 
-            Qx = [Qx, ((cx3 .* t + cx2) .* t + cx1) .* t + cx0];
-            Qy = [Qy, ((cy3 .* t + cy2) .* t + cy1) .* t + cy0];
+            Qx = [Px(1), ((cx3 .* t + cx2) .* t + cx1) .* t + cx0, Px(end)];
+            Qy = [Py(1), ((cy3 .* t + cy2) .* t + cy1) .* t + cy0, Py(end)];
 
-        %     for i = 1:n  
-        %         t = i*dt;
-        %         Qx(i+1) = ((cx3*t+cx2)*t+cx1)*t + cx0;
-        %         Qy(i+1) = ((cy3*t+cy2)*t+cy1)*t + cy0;    
-        %     end
         otherwise
             
             error('Bezier curves higher than order three not supported');
-
 
     end
 
