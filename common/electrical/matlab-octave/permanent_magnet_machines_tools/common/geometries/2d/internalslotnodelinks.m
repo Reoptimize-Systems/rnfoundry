@@ -1,4 +1,4 @@
-function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds] ...
+function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] ...
     = internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, ylayers, tol, varargin)
 % creates a set of node, links and label locations for the points making up
 % the inside of a coil slot in an iron cored machine
@@ -171,20 +171,25 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
 % toothlinkinds - vector of indices of the links that make up the internal
 %   surface of the tooth, not including the links creating divisions in the
 %   cross-section of the slot of coils, or the marking the air region
-%   between the soes if there is a gap.
+%   between the shoes if there is a gap.
 %
 
 % Created by Richard Crozier 2012
 
     if nargin == 0 && nargout == 1
         % return function handles to subfunctions for testing purposes
-        nodes = {@shoecurvepoints, @basecurvepoints};
+        nodes = {@shoecurvepoints, @basecurvepoints, @inscurvepoints};
         return;
     end
     
     options.CoilBaseFraction = 0.05;
     options.ShoeCurveControlFrac = 0.5;
     options.SplitX = false;
+    options.MaxBaseCurvePoints = 20;
+    options.MaxShoeCurvePoints = 20;
+    options.MinBaseCurvePoints = 5;
+    options.MinShoeCurvePoints = 5;
+    options.InsulationThickness = 0;
     
     options = parseoptions (options, varargin);
     
@@ -204,8 +209,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     
     xcoilbody = xcoil - xcoilbase;
     
-    % there are no shoes so return an empty label
+    % initialise empty label locations
     shoegaplabelloc = [];
+    inslabelloc = [];
     
     if yshoegap > ycoil
         yshoegap = ycoil;
@@ -231,6 +237,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
         
         links = [ 1, 2;
                   2, 0 ];
+                  
+        nshoecurvepts = 0;
               
         shoex = [];
         shoey = [];
@@ -266,7 +274,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
  
                 % calculate intermediate points between the shoe and top of
                 % coil region which create a curved surface
-                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                [shoex, shoey, shoeQx, shoeQy, shoePx, shoePy] ...
+                               = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                   [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                                                    xcore, ...
                                                    xcoil, ...
                                                    xshoebase, ...
@@ -275,7 +285,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                                                    ycoilshoe, ...
                                                    yshoegap );
                                  
-                ncurvepnts = numel(shoex);
+                nshoecurvepts = numel(shoex);
                 
                 % the top shoe nodes
                 nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
@@ -286,8 +296,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                           shoex', shoey'; ...
                           shoex', -shoey' ];                       
                 
-                topshoenids = 5:4+ncurvepnts;
-                botshoenids = 5+ncurvepnts:4+2*ncurvepnts;
+                topshoenids = 5:4+nshoecurvepts;
+                botshoenids = 5+nshoecurvepts:4+2*nshoecurvepts;
                 
                 links = [ 2, 1; ...
                           0, topshoenids(1); ...
@@ -316,7 +326,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                 
                 % calculate intermediate points between the shoe and top of
                 % coil region which create a curved surface
-                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                [shoex, shoey, shoeQx, shoeQy, shoePx, shoePy] ...
+                               = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                   [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                                                    xcore, ...
                                                    xcoil, ...
                                                    xshoebase, ...
@@ -325,7 +337,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                                                    ycoilshoe, ...
                                                    yshoegap );
 
-                ncurvepnts = numel(shoex);
+                nshoecurvepts = numel(shoex);
                 
                 nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
                           xcore + xcoilbase + xcoilbody + xshoebase, ycoilshoe/2; ...
@@ -339,8 +351,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                           shoex', shoey';
                           shoex', -shoey'];
 
-                topshoenids = 6:5+ncurvepnts;
-                botshoenids = 6+ncurvepnts:5+2*ncurvepnts;
+                topshoenids = 6:5+nshoecurvepts;
+                botshoenids = 6+nshoecurvepts:5+2*nshoecurvepts;
                 
                 links = [ 2, 1;
                           2, 3;
@@ -373,16 +385,18 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             if xshoegap < tol
                 % the tip of the shoe ends in a sharp point
 
-                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
-                                                                   xcore, ...
-                                                                   xcoil, ...
-                                                                   xshoebase, ...
-                                                                   xshoegap, ...
-                                                                   ycoilbase, ...
-                                                                   ycoilshoe, ...
-                                                                   yshoegap );
+                [shoex, shoey, shoeQx, shoeQy, shoePx, shoePy] ...
+                               = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                   [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
+                                                   xcore, ...
+                                                   xcoil, ...
+                                                   xshoebase, ...
+                                                   xshoegap, ...
+                                                   ycoilbase, ...
+                                                   ycoilshoe, ...
+                                                   yshoegap );
                                             
-                ncurvepnts = numel(shoex);
+                nshoecurvepts = numel(shoex);
                 
                 % the top shoe nodes
                 nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
@@ -395,8 +409,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                           shoex', shoey'; ...
                           shoex', -shoey' ];
                       
-                topshoenids = 7:6+ncurvepnts;
-                botshoenids = 7+ncurvepnts:6+2*ncurvepnts;
+                topshoenids = 7:6+nshoecurvepts;
+                botshoenids = 7+nshoecurvepts:6+2*nshoecurvepts;
                 
                 links = [ 1, 2;
                           0, topshoenids(1); 
@@ -429,7 +443,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                 
                 % calculate intermediate points between the shoe and top of
                 % coil region which create a curved surface
-                [shoex, shoey, shoeQx, shoeQy] = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                [shoex, shoey, shoeQx, shoeQy, shoePx, shoePy] ...
+                               = shoecurvepoints ( options.ShoeCurveControlFrac, ...
+                                                   [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                                                    xcore, ...
                                                    xcoil, ...
                                                    xshoebase, ...
@@ -438,7 +454,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                                                    ycoilshoe, ...
                                                    yshoegap );
 
-                ncurvepnts = numel(shoex);
+                nshoecurvepts = numel(shoex);
                 
                 % there is a blunt edge on the shoe
                 nodes = [ xcore + xcoilbase + xcoilbody, ycoilshoe/2; ...
@@ -453,8 +469,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                           shoex', shoey';
                           shoex', -shoey' ];    
                       
-                topshoenids = 9:8+ncurvepnts;
-                botshoenids = 9+ncurvepnts:8+2*ncurvepnts;
+                topshoenids = 9:8+nshoecurvepts;
+                botshoenids = 9+nshoecurvepts:8+2*nshoecurvepts;
                 
                 links = [ 2, 1;
                           5, 6;
@@ -497,9 +513,11 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     end
     
     % make the curve at the base of the slot
-    [basex, basey, baseQx, baseQy, m, c] = basecurvepoints (xcore, xcoilbase, xcoilbody, ycoilbase, ycoilshoe);
+    [basex, basey, baseQx, baseQy, m, c, basePx, basePy] = basecurvepoints ( ...
+                    [ options.MinBaseCurvePoints, options.MaxBaseCurvePoints ], ...
+                    xcore, xcoilbase, xcoilbody, ycoilbase, ycoilshoe );
     
-    ncurvepnts = numel (basex);
+    nbasecurvepnts = numel (basex);
     
     % this will be the id of the next node we add, the (xcore, 0) node
     startbasenodeid = size (nodes, 1);
@@ -517,11 +535,11 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     
     links = [ links;
               startbasenodeid, startbasenodeid+1; 
-              [(startbasenodeid+1:startbasenodeid+ncurvepnts-1)', (startbasenodeid+2:startbasenodeid+ncurvepnts)']
-              startbasenodeid+ncurvepnts, endbasenodeid - 1;
-              startbasenodeid, startbasenodeid+ncurvepnts+1;
-              [(startbasenodeid+ncurvepnts+1:startbasenodeid+2*ncurvepnts-1)', (startbasenodeid+ncurvepnts+2:startbasenodeid+2*ncurvepnts)'] 
-              startbasenodeid+2*ncurvepnts, endbasenodeid  ];
+              [(startbasenodeid+1:startbasenodeid+nbasecurvepnts-1)', (startbasenodeid+2:startbasenodeid+nbasecurvepnts)']
+              startbasenodeid+nbasecurvepnts, endbasenodeid - 1;
+              startbasenodeid, startbasenodeid+nbasecurvepnts+1;
+              [(startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts-1)', (startbasenodeid+nbasecurvepnts+2:startbasenodeid+2*nbasecurvepnts)'] 
+              startbasenodeid+2*nbasecurvepnts, endbasenodeid  ];
     
     % store the tooth surface link indices
     toothlinkinds = [toothlinkinds, linksize+1:size(links,1)];
@@ -535,8 +553,126 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     % of the winding to simplify finding the area under curves etc
     basex = [xcore, basex, xcore+xcoilbase];
     basey = [0, basey, ycoilbase/2];
-    topbasenids = [(startbasenodeid:startbasenodeid+ncurvepnts), endbasenodeid - 1];
-	botbasenids = [startbasenodeid, (startbasenodeid+ncurvepnts+1:startbasenodeid+2*ncurvepnts), endbasenodeid];
+    topbasenids = [(startbasenodeid:startbasenodeid+nbasecurvepnts), endbasenodeid - 1];
+	botbasenids = [startbasenodeid, (startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts), endbasenodeid];
+    
+    if options.InsulationThickness > 0
+    
+        % create the shoe curve inulation points and links
+    
+        if xshoebase < tol
+        
+            nnodes = size (nodes,1);
+            nlinks = size (links,1);
+            
+            % add an inner insulation node at the 
+            nodes = [ nodes; ...
+                      xcore + xcoilbase + xcoilbody, ycoilshoe/2 - options.InsulationThickness;
+                      xcore + xcoilbase + xcoilbody, -ycoilshoe/2 + options.InsulationThickness;
+                      xcore + xcoilbase + xcoilbody - options.InsulationThickness, 0; ];
+                          
+            links = [ links;
+                      [ 1, 2; 2, 0] + nlinks ];
+                      
+            nshoecurvepts = 0;
+                  
+            shoex = [];
+            shoey = [];
+            topshoenids = [];
+            botshoenids = [];
+
+            topinnershoenode = 0 + nnodes;
+            botinnershoenode = 1 + nnodes;
+            
+            topouternode = 0 + nnodes;
+            botouternode = 1 + nnodes;
+            
+            midshoenode = 2 + nnodes;
+            
+            vertlinkinds = [1, 2] + nlinks;
+        
+        else
+        
+            % get the shoe insulation curve points
+            [shoex, shoey, shoeQx, shoeQy] = inscurvepoints ( ...
+                            [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
+                            shoeQx, shoeQy, shoePx, shoePy, ...
+                            options.InsulationThickness );
+                            
+            nshoecurvepts = numel (shoex);
+                            
+            nodes = [ nodes; ...
+                      xcore + xcoilbase + xcoilbody + xshoebase - xshoegap - options.InsulationThickness, 0 ; ];
+                      
+            nnodes = size(nodes, 1);
+            
+            nodes = [ nodes; ...
+                      shoex', shoey';
+                      shoex', -shoey' ];
+                      
+            topshoenids = nnodes:nnodes-1+nshoecurvepts;
+            botshoenids = topshoenids(end)+1:topshoenids(end)+nshoecurvepts;
+            midshoenode = nnodes - 1;
+            topinnershoenode = topshoenids(1);
+            botinnershoenode = botshoenids(1);
+            
+            links = [ links;
+                      [topshoenids(1:end-1)', topshoenids(2:end)' ]; ... % join the curve nodes
+                      topshoenids(end), midshoenode; ...
+                      midshoenode, botshoenids(end); ...
+                      [botshoenids(1:end-1)', botshoenids(2:end)' ]; ];
+            
+        end
+        
+        % we must replace basex and basey with the internal insulation basex and
+        % basey, and link up the tooth sides. 
+        links = [ links; 
+                  lastinnernodes(1), endbasenodeid - 1;
+                  lastinnernodes(2),  endbasenodeid ];
+                      
+        % reduce the intercept of the slot side curve, to match the insulation
+        % thickness
+        c = c - options.InsulationThickness;
+        
+        % get the insulation curve points
+        [basex, basey, baseQx, baseQy] = inscurvepoints ( ...
+                        [ options.MinBaseCurvePoints, options.MaxBaseCurvePoints ], ...
+                        baseQx, baseQy, basePx, basePy, ...
+                        options.InsulationThickness );
+                        
+        nbasecurvepnts = numel (basex);
+        
+        % this will be the id of the next node we add, the
+        %  (xcore + options.InsulationThickness, 0) node
+        startbasenodeid = size (nodes, 1);
+        
+        nodes = [ nodes;
+                  xcore + options.InsulationThickness, 0; 
+                  basex', basey'; 
+                  basex', -basey'; ];
+              
+        endbasenodeid = startbasenodeid+nbasecurvepnts;
+
+        linksize = size(links,1);
+        
+        % add the insulation base links
+        links = [ links;
+                  startbasenodeid, startbasenodeid+1; 
+                  [ (startbasenodeid+1:startbasenodeid+nbasecurvepnts-1)', ...
+                    (startbasenodeid+2:startbasenodeid+nbasecurvepnts)']
+                  startbasenodeid, startbasenodeid+nbasecurvepnts+1;
+                  [ (startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts-1)', ...
+                    (startbasenodeid+nbasecurvepnts+2:startbasenodeid+2*nbasecurvepnts)'] ...
+                ];
+                
+        basex = [xcore + options.InsulationThickness, basex];
+        basey = [0, basey];
+        topbasenids = (startbasenodeid:startbasenodeid+nbasecurvepnts);
+        botbasenids = [startbasenodeid, (startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts)];
+        
+        inslabelloc = [xcore + options.InsulationThickness/2, 0];
+        
+    end
     
     basearea = trapz (basex, basey);
     bodyarea = trapzarea ( ycoilbase, ycoilshoe, xcoilbody ) / 2;
@@ -793,7 +929,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
 end
 
 
-function [x, y, Qx, Qy] = shoecurvepoints (shoecontrolfrac, xcore, xcoil, xshoebase, xshoegap, ycoilbase, ycoilgap, yshoegap)
+function [x, y, Qx, Qy, Px, Py] = shoecurvepoints (shoecontrolfrac, minmaxpnts, xcore, xcoil, xshoebase, xshoegap, ycoilbase, ycoilgap, yshoegap, tinsulate)
 % creates a curve based on a quadratic Bezier curve with three control
 % points
 %
@@ -828,14 +964,75 @@ function [x, y, Qx, Qy] = shoecurvepoints (shoecontrolfrac, xcore, xcoil, xshoeb
     
     % choose appropriate number of points for femm to construct the curve,
     % either one every half mm, or at least 3 points
-    npoints = max (3, min (ceil (curvelength/5e-4), 20));
+    npoints = max (minmaxpnts(1), min (ceil (curvelength/5e-4), minmaxpnts(2)));
     
     x = Qx(2:floor((numel(Qx)-2)/npoints):end-1);
     y = Qy(2:floor((numel(Qy)-2)/npoints):end-1);
     
 end
 
-function [x, y, Qx, Qy, m, c] = basecurvepoints (xcore, xcoilbase, xcoilbody, ycoilbase, ycoilgap)
+function [insx, insy, insQx, insQy] = inscurvepoints (minmaxpnts, Qx, Qy, Px, Py, tins)
+% creates a curve slightly inset from an existing bezier curve
+ 
+    % calculate the total length of the curve
+    curvelength = [0,0];
+    
+    sectionlengths = magn ([Qx(2:end); Qy(2:end)] - [Qx(1:end-1); Qy(1:end-1)]);
+    
+    startinsind = 1;
+    endinsind = numel (sectionlengths);
+    for ind = 1:numel (sectionlengths)
+    
+        curvelength = [ curvelength(1) + sectionlengths(ind), ...
+                        curvelength(2) + sectionlengths(end-ind+1) ];
+        
+        if curvelength(1) <= tins
+            startinsind = ind+1;
+        end
+        
+        if curvelength(2) <= tins
+            endinsind = numel(Qx) - ind;
+        end
+    
+    end
+    
+    curvelength = sum (sectionlengths);
+    
+    % choose appropriate number of points for femm to construct the curve,
+    % either one every half mm, or at least 3 points
+    npoints = max (minmaxpnts(1), min (ceil (curvelength/5e-4), minmaxpnts(2)));
+    
+    % create a rotation matrix, to rotate the tangents 90 degrees
+    rotangle = -tau/4;
+
+    rotM = [ cos(rotangle)  sin(rotangle); 
+             -sin(rotangle) cos(rotangle) ];
+      
+    n = numel (Qx);
+    dt = 1/n;
+    t = (0:n-1) * dt;
+
+    P = [ Px; Py ];
+
+    % the derivative of a qudratic bezier curve
+    dQ = bsxfun (@times, 2 .* (1 - t), (P(:,2) - P(:,1))) ...
+         + bsxfun (@times, 2 .* t, (P(:,3) - P(:,2)));
+
+    normdQ = unit([ dQ(2,:); -dQ(1,:)]);
+    
+    normalshift = normdQ * tins;    
+             
+    % get locations at Qx and Qy, but shifted inward along a line perpendicular
+    % to the tangent by the insulation thickness
+    insQx = Qx + normalshift(1,:);
+    insQy = Qy + normalshift(2,:);
+    
+    insx = insQx(startinsind:floor((numel(insQx)-2)/npoints):endinsind);
+    insy = insQy(startinsind:floor((numel(insQy)-2)/npoints):endinsind);
+    
+end
+
+function [x, y, Qx, Qy, m, c, Px, Py] = basecurvepoints (minmaxpnts, xcore, xcoilbase, xcoilbody, ycoilbase, ycoilgap)
 
     % get the start and end points of the curve, which are the first and
     % third control points
@@ -863,7 +1060,7 @@ function [x, y, Qx, Qy, m, c] = basecurvepoints (xcore, xcoilbase, xcoilbody, yc
     
     % choose appropriate number of points for femm to construct the curve,
     % either one every half mm, or at least 5 points
-    npoints = max (5, min (ceil (curvelength/5e-4), 20));
+    npoints = max (minmaxpnts(1), min (ceil (curvelength/5e-4), minmaxpnts(2)));
     
     x = Qx(2:floor((numel(Qx)-2)/npoints):end-1);
     y = Qy(2:floor((numel(Qy)-2)/npoints):end-1);
