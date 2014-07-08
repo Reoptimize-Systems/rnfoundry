@@ -22,6 +22,30 @@ plot ( [ coillabelloc(:,1) ], ...
        'xk' )
 hold off
 
+%% shoe blunt edge with gap with insulation
+
+ycoil = [0.5, 1.2];
+yshoegap = 0.3 * ycoil(1);
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0.1;
+xshoegap = 0.8 * xshoebase;
+coillayers = 2;
+tol = 1e-5;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+                          'InsulationThickness', 0.02);
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' )
+plot ( inslabelloc(1), inslabelloc(2), 'xm');
+hold off
+
 %% shoe blunt edge with gap
 
 ycoil = 1;
@@ -144,9 +168,29 @@ xcore = 0.2;
 xcoil = 1.0;
 xshoebase = 0.1;
 xshoegap = 0.8 * xshoebase;
+xcoilbase = 0.1 * xcoil;
+xcoilbody = xcoil - xcoilbase;
 
 % shoecurvepoints
 shoecontrolfrac = 0.5;
-[x, y] = feval (handles{1}, shoecontrolfrac, xcore, xcoil, xshoebase, xshoegap, ycoilbase, ycoilgap, yshoegap);
+[x, y, Qx, Qy, Px, Py] = feval (handles{1}, shoecontrolfrac, xcore, xcoil, xshoebase, xshoegap, ycoilbase, ycoilgap, yshoegap);
 
-plot (x, y);
+plot (x, y, 'LineWidth', 2);
+
+% inscurvepoints
+tins = 0.01;
+[insx, insy, insQx, insQy] = feval (handles{3}, Qx, Qy, Px, Py, tins);
+
+hold all
+
+plot (insx, insy, 'LineWidth', 2);
+
+hold off
+
+[x, y, Qx, Qy, m, c, Px, Py] = feval (handles{2}, xcore, xcoilbase, xcoilbody, ycoilbase, ycoilgap);
+[insx, insy, insQx, insQy] = feval (handles{3}, Qx, Qy, Px, Py, tins);
+plot (x, y, 'LineWidth', 2);
+hold all
+plot (insx, insy, 'LineWidth', 2);
+hold off
+axis equal
