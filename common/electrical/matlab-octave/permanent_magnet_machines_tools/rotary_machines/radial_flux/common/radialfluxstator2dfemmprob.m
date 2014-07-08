@@ -1,5 +1,5 @@
 function [FemmProblem, outernodes, coillabellocs] = radialfluxstator2dfemmprob(slots, Poles, ryokecenter, thetapole, thetacoil, thetashoegap, ryoke, rcoil, rshoebase, rshoegap, drawnsides, varargin)
-% creates a femm problem description of an axial flux toothed armature
+% creates a femm problem description of an radial flux toothed armature
 %
 % Syntax
 %
