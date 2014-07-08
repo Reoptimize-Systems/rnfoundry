@@ -73,8 +73,6 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
 
     Inputs.NWindingLayers = 1;
     Inputs.FemmProblem = newproblem_mfemm('planar');
-%     Inputs.ToothMaterial = 1;
-%     Inputs.ToothRegionMeshSize = -1;
     Inputs.ShoeGapMaterial = 1;
     Inputs.ShoeGapRegionMeshSize = -1;
     Inputs.ShoeGroup = 1;
