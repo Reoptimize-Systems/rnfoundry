@@ -2,8 +2,8 @@
 
 %% shoe blunt edge with gap
 
-ycoil = 1;
-yshoegap = 0.3 * ycoil;
+ycoil =  0.5 + (0.5) * rand (1, 2);
+yshoegap = 0.3 * ycoil(1);
 
 xcore = 0.2;
 xcoil = 1.0;
@@ -48,8 +48,8 @@ hold off
 
 %% shoe blunt edge with gap
 
-ycoil = 1;
-yshoegap = 0.3 * ycoil;
+ycoil =  0.5 + (0.5) * rand (1, 2);
+yshoegap = 0.3 * ycoil(1);
 
 xcore = 0.2;
 xcoil = 1.0;
@@ -68,10 +68,34 @@ plot ( [ coillabelloc(:,1) ], ...
        'xk' )
 hold off
 
+%% shoe blunt edge with gap with insulation
+
+ycoil = 0.5 + (0.5) * rand (1, 2);
+yshoegap = 0.3 * ycoil(1);
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0.1;
+xshoegap = xshoebase;
+coillayers = 2;
+tol = 1e-5;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+                          'InsulationThickness', 0.02);
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' )
+plot ( inslabelloc(1), inslabelloc(2), 'xm');
+hold off
+
 %% Shoe sharp point with gap
 
-ycoil = 1;
-yshoegap = 0.3 * ycoil;
+ycoil =  0.5 + (0.5) * rand (1, 2);
+yshoegap = 0.3 * ycoil(1);
 
 xcore = 0.2;
 xcoil = 1.0;
@@ -90,9 +114,58 @@ plot ( [ coillabelloc(:,1) ], ...
        'xk' )
 hold off
 
+%% Shoe sharp point with gap with insulation
+
+ycoil =  0.5 + (0.5) * rand (1, 2);
+yshoegap = 0.3 * ycoil(1);
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0.1;
+xshoegap = 0;
+coillayers = 1;
+tol = 1e-5;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+                          'InsulationThickness', 0.02);
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' )
+plot ( inslabelloc(1), inslabelloc(2), 'xm');
+hold off
+
+
 %% shoe blunt edge joined tips
 
-ycoil = 1;
+ycoil =  0.5 + (0.5) * rand (1, 2);
+yshoegap = 0;
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0.1;
+xshoegap = 0.8 * xshoebase;
+coillayers = 1;
+tol = 1e-5;
+coillayers = 1;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+        'SplitX', true, 'CoilBaseFraction', 0.7);
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' )
+hold off
+
+%% shoe blunt edge joined tips with insulation
+
+ycoil =  0.5 + (0.5) * rand (1, 2);
 yshoegap = 0;
 
 xcore = 0.2;
@@ -102,26 +175,29 @@ xshoegap = 0.8 * xshoebase;
 coillayers = 1;
 tol = 1e-5;
 
-[nodes, links, cornernodes, shoegaplabelloc, coillabelloc] = ...
-    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, 'SplitX', true);
-
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+                          'InsulationThickness', 0.02);
+                          
 plotnodelinks(nodes, links);
 hold on
 plot ( [ coillabelloc(:,1) ], ...
        [ coillabelloc(:,2) ], ...
-       'xk' )
+       'xk' );
+plot ( inslabelloc(1), inslabelloc(2), 'xm');
 hold off
+
 
 %% Shoe sharp point joined tips
 
-ycoil = 1;
+ycoil = 0.5 + (0.5) * rand (1, 2);
 yshoegap = 0;
 
 xcore = 0.2;
 xcoil = 1.0;
 xshoebase = 0.5;
 xshoegap = 0;
-coillayers = 20;
+coillayers = 4;
 tol = 1e-5;
 
 [nodes, links, cornernodes, shoegaplabelloc, coillabelloc] = ...
@@ -133,9 +209,34 @@ plot ( [ coillabelloc(:,1) ], ...
        [ coillabelloc(:,2) ], ...
        'xk' )
 hold off
-%%
 
-ycoil = 1;
+%% Shoe sharp point joined tips with insulation
+
+ycoil = 0.5 + (0.5) * rand (1, 2);
+yshoegap = 0;
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0.5;
+xshoegap = 0;
+coillayers = 4;
+tol = 1e-5;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+                          'CoilBaseFraction', 0, 'InsulationThickness', 0.02);
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' );
+plot ( inslabelloc(1), inslabelloc(2), 'xm');
+hold off
+
+%% No shoe with gap
+
+ycoil = 0.5 + (0.5) * rand (1, 2);
 yshoegap = 0;
 
 xcore = 0.2;
@@ -153,6 +254,30 @@ hold on
 plot ( [ coillabelloc(:,1) ], ...
        [ coillabelloc(:,2) ], ...
        'xk' )
+hold off
+
+%% No shoe with gap with insulation
+
+ycoil = 0.5 + (0.5) * rand (1, 2);
+yshoegap = 0;
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0;
+xshoegap = 0;
+coillayers = 5;
+tol = 1e-5;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] = ...
+    internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+                          'InsulationThickness', 0.02);
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' );
+plot ( inslabelloc(1), inslabelloc(2), 'xm');
 hold off
 
 %% Subfunctions

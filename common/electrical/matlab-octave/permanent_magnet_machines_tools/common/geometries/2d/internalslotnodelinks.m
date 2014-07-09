@@ -278,7 +278,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                                = shoecurvepoints ( options.ShoeCurveControlFrac, ...
                                                    [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                                                    xcore, ...
-                                                   xcoil, ...
+                                                   xcoilbase, ...
+                                                   xcoilbody, ...
                                                    xshoebase, ...
                                                    xshoegap, ...
                                                    ycoilbase, ...
@@ -330,7 +331,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                                = shoecurvepoints ( options.ShoeCurveControlFrac, ...
                                                    [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                                                    xcore, ...
-                                                   xcoil, ...
+                                                   xcoilbase, ...
+                                                   xcoilbody, ...
                                                    xshoebase, ...
                                                    xshoegap, ...
                                                    ycoilbase, ...
@@ -378,7 +380,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             end
             
             % all the links are the tooth surface at this stage
-            toothlinkinds = links;
+            toothlinkinds = 1:size(links,1);
 
         else
             % we must acount for the space between shoes in the model 
@@ -389,7 +391,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                                = shoecurvepoints ( options.ShoeCurveControlFrac, ...
                                                    [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                                                    xcore, ...
-                                                   xcoil, ...
+                                                   xcoilbase, ...
+                                                   xcoilbody, ...
                                                    xshoebase, ...
                                                    xshoegap, ...
                                                    ycoilbase, ...
@@ -447,7 +450,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                                = shoecurvepoints ( options.ShoeCurveControlFrac, ...
                                                    [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                                                    xcore, ...
-                                                   xcoil, ...
+                                                   xcoilbase, ...
+                                                   xcoilbody, ...
                                                    xshoebase, ...
                                                    xshoegap, ...
                                                    ycoilbase, ...
@@ -529,17 +533,17 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
               xcore+xcoilbase, ycoilbase/2;
               xcore+xcoilbase, -ycoilbase/2 ];
           
-    endbasenodeid = size (nodes, 1) - 1;
+    endbasenodeid = [ size(nodes, 1) - 1, size(nodes, 1) - 2];
 
     linksize = size(links,1);
     
     links = [ links;
               startbasenodeid, startbasenodeid+1; 
               [(startbasenodeid+1:startbasenodeid+nbasecurvepnts-1)', (startbasenodeid+2:startbasenodeid+nbasecurvepnts)']
-              startbasenodeid+nbasecurvepnts, endbasenodeid - 1;
+              startbasenodeid+nbasecurvepnts, endbasenodeid(2);
               startbasenodeid, startbasenodeid+nbasecurvepnts+1;
               [(startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts-1)', (startbasenodeid+nbasecurvepnts+2:startbasenodeid+2*nbasecurvepnts)'] 
-              startbasenodeid+2*nbasecurvepnts, endbasenodeid  ];
+              startbasenodeid+2*nbasecurvepnts, endbasenodeid(1)  ];
     
     % store the tooth surface link indices
     toothlinkinds = [toothlinkinds, linksize+1:size(links,1)];
@@ -553,10 +557,14 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     % of the winding to simplify finding the area under curves etc
     basex = [xcore, basex, xcore+xcoilbase];
     basey = [0, basey, ycoilbase/2];
-    topbasenids = [(startbasenodeid:startbasenodeid+nbasecurvepnts), endbasenodeid - 1];
-	botbasenids = [startbasenodeid, (startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts), endbasenodeid];
+    topbasenids = [(startbasenodeid:startbasenodeid+nbasecurvepnts), endbasenodeid(2)];
+	botbasenids = [startbasenodeid, (startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts), endbasenodeid(1)];
     
     if options.InsulationThickness > 0
+    
+        % reduce the intercept of the slot side curve, to match the insulation
+        % thickness
+        c = c - options.InsulationThickness;
     
         % create the shoe curve inulation points and links
     
@@ -567,12 +575,12 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             
             % add an inner insulation node at the 
             nodes = [ nodes; ...
-                      xcore + xcoilbase + xcoilbody, ycoilshoe/2 - options.InsulationThickness;
-                      xcore + xcoilbase + xcoilbody, -ycoilshoe/2 + options.InsulationThickness;
+                      xcore + xcoilbase + xcoilbody - options.InsulationThickness, mxplusc(m, c, xcore + xcoilbase + xcoilbody - options.InsulationThickness); ...
+                      xcore + xcoilbase + xcoilbody - options.InsulationThickness, -mxplusc(m, c, xcore + xcoilbase + xcoilbody - options.InsulationThickness); ...
                       xcore + xcoilbase + xcoilbody - options.InsulationThickness, 0; ];
                           
             links = [ links;
-                      [ 1, 2; 2, 0] + nlinks ];
+                      [ 1, 2; 2, 0] + nnodes ];
                       
             nshoecurvepts = 0;
                   
@@ -598,11 +606,22 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                             [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                             shoeQx, shoeQy, shoePx, shoePy, ...
                             options.InsulationThickness );
+                  
+            crossinginds = find (shoey < -shoey);
+            
+            if ~isempty (crossinginds)
+                
+                shoex = shoex (1:crossinginds(1)-1);
+                shoey = shoey (1:crossinginds(1)-1);
+                
+                nodes = [ nodes; ...
+                          shoex(end), 0 ; ];
+            else
+                nodes = [ nodes; ...
+                          xcore + xcoilbase + xcoilbody + xshoebase - xshoegap - options.InsulationThickness, 0 ; ];
+            end
                             
             nshoecurvepts = numel (shoex);
-                            
-            nodes = [ nodes; ...
-                      xcore + xcoilbase + xcoilbody + xshoebase - xshoegap - options.InsulationThickness, 0 ; ];
                       
             nnodes = size(nodes, 1);
             
@@ -624,15 +643,11 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             
         end
         
-        % we must replace basex and basey with the internal insulation basex and
-        % basey, and link up the tooth sides. 
+        % we must link up the tooth sides and replace basex and basey with the 
+        % internal insulation basex and basey 
         links = [ links; 
-                  lastinnernodes(1), endbasenodeid - 1;
-                  lastinnernodes(2),  endbasenodeid ];
-                      
-        % reduce the intercept of the slot side curve, to match the insulation
-        % thickness
-        c = c - options.InsulationThickness;
+                  lastinnernodes(1), endbasenodeid(2);
+                  lastinnernodes(2),  endbasenodeid(1) ];
         
         % get the insulation curve points
         [basex, basey, baseQx, baseQy] = inscurvepoints ( ...
@@ -651,7 +666,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                   basex', basey'; 
                   basex', -basey'; ];
               
-        endbasenodeid = startbasenodeid+nbasecurvepnts;
+        endbasenodeid = [ startbasenodeid+2*nbasecurvepnts, startbasenodeid+nbasecurvepnts ];
 
         linksize = size(links,1);
         
@@ -671,6 +686,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
         botbasenids = [startbasenodeid, (startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts)];
         
         inslabelloc = [xcore + options.InsulationThickness/2, 0];
+        
+        lastinnernodes = [topinnershoenode, botinnershoenode];
         
     end
     
@@ -695,8 +712,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             % add a link creating the sides and a horizontal split
             links = [ links; 
                       startbasenodeid, midshoenode;
-                      lastinnernodes(1), endbasenodeid - 1;
-                      lastinnernodes(2),  endbasenodeid ];
+                      lastinnernodes(1), endbasenodeid(2);
+                      lastinnernodes(2),  endbasenodeid(1) ];
             
             % get a suitible position for the coil labels
             coillabelloc = [ xcore + xcoilbase + xcoilbody/2, ycoilshoe/4;
@@ -704,8 +721,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
         else
             % just add links making the sides
             links = [ links; 
-                      lastinnernodes(1), endbasenodeid - 1;
-                      lastinnernodes(2),  endbasenodeid ];
+                      lastinnernodes(1), endbasenodeid(2);
+                      lastinnernodes(2),  endbasenodeid(1) ];
                   
             % get a suitible position for the coil label         
             coillabelloc = [ xcore + (xcoilbase + xcoilbody)/2, 0 ];
@@ -717,6 +734,11 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
         cornernodes = [ lastinnernodes(2), botouternode, topouternode, lastinnernodes(1) ];
         
     else
+    
+        if options.SplitX
+            error ('RENEWNET:internalslotnodelinks:badoption', ...
+                   'Option ''SplitX'' is incompatible with coillayers > 1');
+        end
         
         layersmade = 0;
         
@@ -744,7 +766,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     coillabelloc = [ coillabelloc; lastlayerstartx + (basex(ind) - lastlayerstartx)/2, 0 ];
                     layersmade = layersmade + 1;
                     
-                    layer_area_available = basearea - gobblearea;
+                    layer_area_available = windingarea - gobblearea;
                     starttrapzind = ind;
                     lastlayerstartx = basex(ind);
                 else
@@ -773,7 +795,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             while 1
                 
                 bodyarealeft = trapzarea ( mxplusc (m, c, x1)*2, ...
-                                           mxplusc (m, c, xcore + xcoil)*2, ...
+                                           mxplusc (m, c, xcore + xcoilbase + xcoilbody)*2, ...
                                            (xcore + xcoil) - x1 ) / 2;
 
                 bodyarealeft = bodyarealeft + layer_area_available;
@@ -880,8 +902,9 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             return;
         end
         
-        shoex = [ xcore + xcoil, shoex ];    
-        shoey = [ ycoilshoe/2, shoey ];
+        shoex = [ xcore + xcoil, shoex ];
+        shoey = [ ycoilshoe/2 - options.InsulationThickness, shoey ];
+
 
         % gobble up the shoe area, creating layers as necessary
         if windingarea < (layer_area_available + shoearea)
@@ -929,20 +952,20 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
 end
 
 
-function [x, y, Qx, Qy, Px, Py] = shoecurvepoints (shoecontrolfrac, minmaxpnts, xcore, xcoil, xshoebase, xshoegap, ycoilbase, ycoilgap, yshoegap, tinsulate)
+function [x, y, Qx, Qy, Px, Py] = shoecurvepoints (shoecontrolfrac, minmaxpnts, xcore, xcoilbase, xcoilbody, xshoebase, xshoegap, ycoilbase, ycoilgap, yshoegap, tinsulate)
 % creates a curve based on a quadratic Bezier curve with three control
 % points
 %
 % 
 
     % get the slope at the start of the curve of the shoe
-    cp1 = [xcore+xcoil, ycoilgap/2];
+    cp1 = [xcore+xcoilbase+xcoilbody, ycoilgap/2];
  
     % get the slope at the point where the curve ends at the shoe gap
-    cp3 = [xcore+xcoil+xshoebase-xshoegap, yshoegap/2];
+    cp3 = [xcore+xcoilbase+xcoilbody+xshoebase-xshoegap, yshoegap/2];
     
     % first get line equation
-    leftslope = ((ycoilgap - ycoilbase)/2) / (xcoil);
+    leftslope = ((ycoilgap - ycoilbase)/2) / (xcoilbody);
     c = cp1(2) - leftslope * cp1(1);
     % get intercept
     yint = leftslope * cp3(1) + c;
