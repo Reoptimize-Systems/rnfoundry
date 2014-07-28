@@ -83,16 +83,24 @@ function regexprepfile(filename,exp,repstr)
             error('Error opening search file.');
         end
 
+        changecount = 0;
+        
         while 1
             tline = fgets(origfid);
             
             if tline ~= -1
                 
                 for ii = 1:numel(exp)
-                    tline = regexprep(tline, exp{ii}, repstr{ii});
+                    newtline = regexprep(tline, exp{ii}, repstr{ii});
                 end
                 
-                fprintf(tempfid, '%s', tline);
+                if ~strcmp (tline, newtline)
+                
+                    fprintf(tempfid, '%s', newtline);
+                
+                    changecount = changecount + 1;
+                    
+                end
                 
             else
                 tempstatus = fclose(tempfid);
@@ -111,12 +119,14 @@ function regexprepfile(filename,exp,repstr)
             end
         end
         
-        % now copy over the new file to the original location
-        [status,message,messageid] = copyfile(tempfilename, fullfile(pathstr, [name, ext]));
-        
-        % if there was a problem rethrow the error
-        if status == 0
-            rethrow(struct('message', message, 'identifier', messageid));
+        if changecount > 0
+            % copy over the new file to the original location
+            [status,message,messageid] = copyfile(tempfilename, fullfile(pathstr, [name, ext]));
+            
+            % if there was a problem rethrow the error
+            if status == 0
+                rethrow(struct('message', message, 'identifier', messageid));
+            end
         end
         
         try
