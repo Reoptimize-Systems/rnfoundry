@@ -1,5 +1,5 @@
 function [histloss, eddyloss, excessloss] = ...
-    softferrolossrectregionpartcalc(Bx, By, Bz, Hx, Hy, Hz, kc, ke, beta, dx, dy, dz)
+    softferrolossrectregionpartcalc(Bx, By, Bz, kc, kh, ke, beta, dx, dy, dz)
 % part calculates the values of the hysteresis, eddy current and excess
 % loss in a cuboidal region of soft ferromagnetic material
 %
@@ -75,9 +75,9 @@ function [histloss, eddyloss, excessloss] = ...
 
 % Copyright Richard Crozier 2012-2013
 
-    if nargin == 11
+    if nargin == 8
         dV = dy; % 11th arg is actually volume of elements
-    elseif nargin == 12
+    elseif nargin == 10
         dV = dx .* dy .* dz; % dimensions of elements provided
     else
         error('Incorrect number of arguments.')
@@ -94,9 +94,24 @@ function [histloss, eddyloss, excessloss] = ...
     % generate the part calculation of the hysteresis losses for the
     % region, these must be multiplied by the velocity to get the actual
     % losses
-    histloss = abs(Hx .* dBxVdx).^(2/beta) ...
-               + abs(Hy .* dByVdx).^(2/beta) ...
-               + abs(Hz .* dBzVdx).^(2/beta);
+    Cbeta = 4 .* quad(@(theta) cos(theta).^beta, 0, pi/2);
+    
+    Hirrx = hirr_calc(Bx, dBxVdx, beta, kh, Cbeta, 0);
+    
+    Hirry = hirr_calc(By, dByVdx, beta, kh, Cbeta, 0);
+    
+    Hirrz = hirr_calc(Bz, dBzVdx, beta, kh, Cbeta, 0);
+    
+    histloss = abs(Hirrx .* dBxVdx).^(2./beta) ...
+               + abs(Hirry .* dByVdx).^(2./beta) ...
+               + abs(Hirrz .* dBzVdx).^(2./beta);
+    
+%     % generate the part calculation of the hysteresis losses for the
+%     % region, these must be multiplied by the velocity to get the actual
+%     % losses
+%     histloss = abs(Hx .* dBxVdx).^(2./beta) ...
+%                + abs(Hy .* dByVdx).^(2./beta) ...
+%                + abs(Hz .* dBzVdx).^(2./beta);
         
     histloss = dV .* (histloss .^ (beta / 2));
     
@@ -130,3 +145,37 @@ function [histloss, eddyloss, excessloss] = ...
 end
 
 
+function Hirr = hirr_calc(B, dBVdx, beta, kh, Cbeta, Bdc)
+% calcualtes the irreversible component of magnetisation in a material
+%
+% Syntax
+%
+% Hirr = hirr_calc(B, beta, kh, Cbeta)
+%
+% Input
+% 
+% 
+
+    if every(dBVdx == 0)
+        Hirr = zeros (size (B));
+    else
+    
+%     % check for any dc component to the time varying field
+%     Bdc = mean(B,2);
+    
+        Bac = bsxfun(@minus, B, Bdc);
+
+%    Bac = B;
+    
+        Bm = max(abs(Bac),[],2);
+    
+        % determine the angle of the EEL elipse
+        xtheta = bsxfun(@rdivide, Bac, Bm);
+    
+        % estimate Hirr
+        Hirr = abs( (kh ./ Cbeta) .* abs( bsxfun(@times, cos(asin(xtheta)), Bm) ).^(beta - 1) );
+    
+        Hirr (isnan (Hirr)) = 0;
+    end
+    
+end
