@@ -36,10 +36,10 @@ function strreppath(S1, S2, varargin)
     if isempty(Inputs.topdir)
         thepath = path2cell(path);
     else
-        if ~ischar(topdir)
+        if ~ischar(Inputs.topdir)
             error('topdir must be a string');
         end
-        if exist(topdir, 'file') ~= 7
+        if exist(Inputs.topdir, 'file') ~= 7
             error('supplied directory name does not exist.')
         end
         thepath = path2cell(genpath(Inputs.topdir));
@@ -47,7 +47,7 @@ function strreppath(S1, S2, varargin)
     
     for indi = 1:numel(thepath)
 
-        mfiles = dir([ thepath{indi}, '\*.', Inputs.ext ]);
+        mfiles = dir(fullfile (thepath{indi}, ['*.', Inputs.ext ]));
 
         for indii = 1:numel(mfiles)
             % replace string(s) in file using strrepfile
