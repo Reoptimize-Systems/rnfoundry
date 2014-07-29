@@ -38,7 +38,7 @@ function [FemmProblem, outermagsep, coillabellocs, yokenodeids] = slottedfemmpro
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
     [FemmProblem, matinds] = addmaterials_mfemm(FemmProblem, ...
-        {design.MagnetMaterial, design.BackIronMaterial, design.YokeMaterial, design.CoilMaterial});
+        {design.MagSimMaterials.Magnet, design.MagSimMaterials.FieldIron, design.MagSimMaterials.ArmatureIron, design.MagSimMaterials.CoilWinding});
                  
     MagnetMatInd = matinds(1);
     BackIronMatInd = matinds(2);

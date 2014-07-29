@@ -36,10 +36,10 @@ design.Phases = 1;
 
 design.HcMag = mgoe2hc(br2mgoe(1.32));
 
-design.MagnetMaterial = 'NdFeB 32 MGOe';
+design.MagSimMaterials.Magnet = 'NdFeB 32 MGOe';
 
-design.BackIronMaterial = '1117 Steel';
-design.CoilMaterial = '36 AWG';
+design.MagSimMaterials.FieldIron = '1117 Steel';
+design.MagSimMaterials.CoilWinding = '36 AWG';
 
 
 pos = linspace(0.5, 1.5, 15);

@@ -144,10 +144,10 @@ design.ls = 0.6;
 design.ArmatureType = 'internal';
 
 % We must also specify some materials in the machine
-design.MagnetMaterial = 'NdFeB 32 MGOe';
-design.BackIronMaterial = '1117 Steel';
-design.YokeMaterial = design.BackIronMaterial;
-design.CoilMaterial = '36 AWG';
+design.MagSimMaterials.Magnet = 'NdFeB 32 MGOe';
+design.MagSimMaterials.FieldIron = '1117 Steel';
+design.MagSimMaterials.ArmatureIron = design.MagSimMaterials.FieldIron;
+design.MagSimMaterials.CoilWinding = '36 AWG';
 
 % for convenience, a function is provided to complete a lot of design
 % parameters of the machine from the variables provided above. This

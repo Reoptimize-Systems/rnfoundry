@@ -35,9 +35,9 @@ design.CoilTurns = 250;
 
 % FemmProblem.Materials = Matlib([1, 47, 2]);
 
-design.MagnetMaterial = 'NdFeB 32 MGOe';
-design.BackIronMaterial = '1117 Steel';
-design.CoilMaterial = '36 AWG';
+design.MagSimMaterials.Magnet = 'NdFeB 32 MGOe';
+design.MagSimMaterials.FieldIron = '1117 Steel';
+design.MagSimMaterials.CoilWinding = '36 AWG';
 
 design.RlVRp = 10;
 
