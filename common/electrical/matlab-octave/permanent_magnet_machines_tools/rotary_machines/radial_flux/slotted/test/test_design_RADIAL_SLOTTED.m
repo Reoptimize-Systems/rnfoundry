@@ -71,10 +71,10 @@ function design = test_design_RADIAL_SLOTTED (armtype)
 
     design.NCoilsPerPhase = design.Qc / design.Phases;
 
-    design.MagnetMaterial = 'NdFeB 40 MGOe';
-    design.BackIronMaterial = '1117 Steel';
-    design.YokeMaterial = design.BackIronMaterial;
-    design.CoilMaterial = '36 AWG';
-    design.GapMaterial = 'Air';
+    design.MagSimMaterials.Magnet = 'NdFeB 40 MGOe';
+    design.MagSimMaterials.FieldIron = '1117 Steel';
+    design.MagSimMaterials.ArmatureIron = design.MagSimMaterials.FieldIron;
+    design.MagSimMaterials.CoilWinding = '36 AWG';
+    design.MagSimMaterials.Gap = 'Air';
 
 end

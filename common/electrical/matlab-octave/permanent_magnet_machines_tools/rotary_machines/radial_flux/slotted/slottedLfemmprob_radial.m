@@ -54,8 +54,8 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
     [FemmProblem, matinds] = addmaterials_mfemm(FemmProblem, ...
-        {design.GapMaterial, design.MagnetMaterial, design.BackIronMaterial, ...
-         design.YokeMaterial, design.CoilMaterial});
+        {design.MagSimMaterials.Gap, design.MagSimMaterials.Magnet, design.MagSimMaterials.FieldIron, ...
+         design.MagSimMaterials.ArmatureIron, design.MagSimMaterials.CoilWinding});
     
     GapMatInd = matinds(1);
 %     MagnetMatInd = matinds(1);

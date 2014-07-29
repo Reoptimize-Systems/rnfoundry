@@ -68,10 +68,10 @@ design.CoilTurns = 250;
 
 design.NCoilsPerPhase = design.Qc / design.Phases;
 
-design.MagnetMaterial = 'NdFeB 32 MGOe';
-design.BackIronMaterial = '1117 Steel';
-design.YokeMaterial = design.BackIronMaterial;
-design.CoilMaterial = '36 AWG';
+design.MagSimMaterials.Magnet = 'NdFeB 32 MGOe';
+design.MagSimMaterials.FieldIron = '1117 Steel';
+design.MagSimMaterials.ArmatureIron = design.MagSimMaterials.FieldIron;
+design.MagSimMaterials.CoilWinding = '36 AWG';
 
 design.RlVRp = 10;
 

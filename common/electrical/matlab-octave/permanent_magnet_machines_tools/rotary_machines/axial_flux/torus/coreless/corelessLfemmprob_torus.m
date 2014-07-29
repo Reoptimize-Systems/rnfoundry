@@ -42,8 +42,8 @@ function [FemmProblem, outermagsep] = corelessLfemmprob_torus(design, varargin)
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
     FemmProblem = addmaterials_mfemm( FemmProblem, ...
-                             matstr2matstruct_mfemm( {design.MagnetMaterial, ...
-                                                      design.BackIronMaterial} ));
+                             matstr2matstruct_mfemm( {design.MagSimMaterials.Magnet, ...
+                                                      design.MagSimMaterials.FieldIron} ));
     
     % draw the torus rotor according to the spec in the design strucure
     [FemmProblem, outermagsep, innerstagewidth] = torusrotor2dfemmprob( ...
@@ -147,7 +147,7 @@ function [FemmProblem, outermagsep] = corelessLfemmprob_torus(design, varargin)
         
         % add the coil material which should be present in the design
         % structure
-        FemmProblem.Materials = [FemmProblem.Materials, matstr2matstruct_mfemm(design.CoilMaterial)];
+        FemmProblem.Materials = [FemmProblem.Materials, matstr2matstruct_mfemm(design.MagSimMaterials.CoilWinding)];
         
         % define the block properties of the coil region
         BlockProps.BlockType = FemmProblem.Materials(end).Name;
