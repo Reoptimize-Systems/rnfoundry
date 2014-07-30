@@ -1,4 +1,4 @@
-function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmprob(...
+function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstatorhalf2dfemmprob(...
     slots, Poles, thetapole, thetacoil, thetashoegap, ryoke, rcoil, rshoebase, rshoegap, roffset, side, varargin)
 % draw internal parts of a slotted stator for a radial flux machine
 %
@@ -66,6 +66,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
 %  'CoilBaseFraction'
 %  'ShoeCurveControlFrac'
 %  'SplitX'
+%  'CoilInsulationThickness'
+%  'DrawCoilInsulation'
 %
 % Output
 %
@@ -82,6 +84,8 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     Inputs.CoilBaseFraction = 0.05;
     Inputs.ShoeCurveControlFrac = 0.5;
     Inputs.SplitX = false;
+    Inputs.DrawCoilInsulation = false;
+    Inputs.CoilInsulationThickness = 0;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -125,10 +129,20 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     
     elcount = elementcount_mfemm(FemmProblem);
     
+    if Inputs.DrawCoilInsulation
+        insulationthickness = Inputs.CoilInsulationThickness;
+    else
+        insulationthickness = 0;
+    end
+    
     % make a single slot
-    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs, vertlinkinds, toothlinkinds] = ...
+    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs, vertlinkinds, toothlinkinds, inslabellocs] = ...
             internalslotnodelinks( thetacoil, thetashoegap, ryoke/2, rcoil, ...
-                                   rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol);
+                                   rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol, ...
+                                   'CoilBaseFraction', Inputs.CoilBaseFraction, ...
+                                   'InsulationThickness', insulationthickness, ...
+                                   'ShoeCurveControlFrac', Inputs.ShoeCurveControlFrac, ...
+                                   'YScale', roffset + ryoke + rcoil/2  );
 
     links = [ links, ismember(1:size(links,1),vertlinkinds)', ismember(1:size(links,1),toothlinkinds)' ];
     
@@ -148,6 +162,10 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
             firstcoillabellocs(:,1) = -firstcoillabellocs(:,1);
         end
         
+        if ~isempty (inslabellocs)
+            inslabellocs(:,1) = -inslabellocs(:,1);
+        end
+        
         % rearrange the corner nodes to preserve clockwise ordering
         % starting from bottom left
         cornernodes = [cornernodes(2), cornernodes(1), cornernodes(4), cornernodes(3)]; 
@@ -164,9 +182,11 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
         firstcoillabellocs(:,1) = firstcoillabellocs(:,1) + roffset;
     end
     
-	% get the vertical links by finding those links where the difference in
-    % y coordinates of the link nodes is not zero, these links must be made
-    % into arc segments
+    if ~isempty(inslabellocs)
+        inslabellocs(:,1) = inslabellocs(:,1) + roffset;
+    end
+    
+	% convert vertical links to arc segments
     vertlinks = links(vertlinkinds,1:2);
     angles = diff( [nodes(vertlinks(:,1)+1,2), nodes(vertlinks(:,2)+1,2)], 1, 2);
     
@@ -177,19 +197,25 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
             angles(i) = abs(angles(i));
         end
     end
+    
     % convert angles to degrees
     angles = rad2deg(angles);
     vertlinks = fliplr(vertlinks);
     links(vertlinkinds, 1:2) = vertlinks;
     
-    % transform the node locations to convert the rectangulr region to the
+    % transform the node locations to convert the rectangular region to the
     % desired arced region 
     [nodes(:,1), nodes(:,2)] = pol2cart(nodes(:,2), nodes(:,1));
     if ~isempty(shoegaplabelloc)
         [shoegaplabelloc(:,1), shoegaplabelloc(:,2)] = pol2cart(shoegaplabelloc(:,2),shoegaplabelloc(:,1));
     end
+    
     [firstcoillabellocs(:,1), firstcoillabellocs(:,2)] = pol2cart(firstcoillabellocs(:,2),firstcoillabellocs(:,1));
-
+    
+    if ~isempty(inslabellocs)
+        [inslabellocs(:,1), inslabellocs(:,2)] = pol2cart(inslabellocs(:,2),inslabellocs(:,1));
+    end
+    
     % store the nodes at the bottom of all the slots
     bottomnodes = cornernodes([4,3]) + elcount.NNodes;  
     lastslotcornernodes = cornernodes + elcount.NNodes;    
@@ -202,7 +228,13 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
             
     % move in the y direction to the first slot position
     thisslotsnodes = thisslotsnodes * rotM;
-
+    
+    originslabellocs = inslabellocs;
+    
+    if ~isempty (originslabellocs)
+        inslabellocs = originslabellocs * rotM;
+    end
+    
     if ~isempty(firstcoillabellocs)
         
         thiscoillabellocs = firstcoillabellocs * rotM;
@@ -210,70 +242,73 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
         % get the coil label location
         coillabellocs = [ coillabellocs; ...
                           thiscoillabellocs ];
-                      
+
     end
     
     % add a new group number for the stator iron
     FemmProblem = addgroup_mfemm (FemmProblem, 'StatorIron');
-    statorirongp = getgroupnumber_mfemm(FemmProblem, 'StatorIron');
+    statorirongp = getgroupnumber_mfemm (FemmProblem, 'StatorIron');
 
+    % TODO: put iron and insulation in different groups
+%    ironinds = setdiff(1:size(links,1),inslinkinds);
     thisslotlinks = [links(:,1:2) + numel(FemmProblem.Nodes), links(:,3:end)];
     
-    [FemmProblem, ~, ~] = addnodes_mfemm(FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
+    [FemmProblem, ~, ~] = addnodes_mfemm (FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
     
     vcount = 1;
-    for i = 1:size(thisslotlinks,1)
+    for ii = 1:size(thisslotlinks,1)
         
-        if thisslotlinks (i,3)
+        if thisslotlinks (ii,3)
             % vertical link that must be converted to an arc
-            if thisslotlinks (i,4)
+            if thisslotlinks (ii,4)
                 
-               [FemmProblem, ~] = addarcsegments_mfemm(FemmProblem, ...
-                                                  thisslotlinks(i,1), ...
-                                                  thisslotlinks(i,2), ...
+               [FemmProblem, ~] = addarcsegments_mfemm (FemmProblem, ...
+                                                  thisslotlinks(ii,1), ...
+                                                  thisslotlinks(ii,2), ...
                                                   angles(vcount), ...
                                                   'MaxSegDegrees', angles(vcount) ./ 20, ...
                                                   'InGroup', statorirongp);
             else
-               [FemmProblem, ~] = addarcsegments_mfemm(FemmProblem, ...
-                                                  thisslotlinks(i,1), ...
-                                                  thisslotlinks(i,2), ...
+               [FemmProblem, ~] = addarcsegments_mfemm (FemmProblem, ...
+                                                  thisslotlinks(ii,1), ...
+                                                  thisslotlinks(ii,2), ...
                                                   angles(vcount), ...
                                                   'MaxSegDegrees', angles(vcount) ./ 20); 
             end
             vcount = vcount + 1;
         else
             % horizontal link
-            if thisslotlinks (i,4)
+            if thisslotlinks (ii,4)
                 [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
-                                                      thisslotlinks(i,1), ...
-                                                      thisslotlinks(i,2), ...
+                                                      thisslotlinks(ii,1), ...
+                                                      thisslotlinks(ii,2), ...
                                                       'InGroup', statorirongp);
             else
                 [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
-                                                      thisslotlinks(i,1), ...
-                                                      thisslotlinks(i,2));
+                                                      thisslotlinks(ii,1), ...
+                                                      thisslotlinks(ii,2));
             end
         end
         
     end
           
-    if ~isempty(shoegaplabelloc)
+    if ~isempty (shoegaplabelloc)
         
         thisshoegaplabelloc = shoegaplabelloc * rotM;
         
         for ind = 1:size(thisshoegaplabelloc,1)
-            FemmProblem = addblocklabel_mfemm(FemmProblem, thisshoegaplabelloc(ind,1), thisshoegaplabelloc(ind,2), ...
+            FemmProblem = addblocklabel_mfemm (FemmProblem, thisshoegaplabelloc(ind,1), thisshoegaplabelloc(ind,2), ...
                                                 'BlockType', FemmProblem.Materials(Inputs.ShoeGapMaterial).Name, ...
-                                                'MaxArea', Inputs.ShoeGapRegionMeshSize);
+                                                'MaxArea', Inputs.ShoeGapRegionMeshSize );
         end
         
     end
     
-    
     % draw the rest of the slots, making copies of the original slot's
     % nodes and links, adding in the labels, and linking them together
     for i = 2:numel(slotpos)
+    
+        slotinsgp = getgroupnumber_mfemm (FemmProblem, ['StatorSlot_', int2str(i)]);
         
         thisslotsnodes = nodes;
         
@@ -281,6 +316,10 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
                 sin(slotpos(i)) -cos(slotpos(i))]; 
         
         thisslotsnodes = thisslotsnodes * rotM;
+        
+        if ~isempty (inslabellocs)
+            inslabellocs = [ inslabellocs; originslabellocs * rotM ];
+        end
         
         thisslotlinks = [links(:,1:2) + numel(FemmProblem.Nodes), links(:,3:end)];
         
@@ -388,7 +427,66 @@ function [FemmProblem, outernodes, coillabellocs] = radialfluxstatorhalf2dfemmpr
     % we will return the outer corner node ids for later use
     outernodes = [bottomnodes, lastslotcornernodes([2,1])];
     
+    
+    % ---------------    Nested functions   -------------------- %
+    
+    
+%    % nested function for drawing single slots
+%    function drawslot ()
+%    
+%        vcount = 1;
+%        for i = 1:size(thisslotlinks,1)
+%            
+%            if thisslotlinks (i,3)
+%                % vertical link that must be converted to an arc
+%                if thisslotlinks (i,4)
+%                    
+%                   [FemmProblem, ~] = addarcsegments_mfemm (FemmProblem, ...
+%                                                      thisslotlinks(i,1), ...
+%                                                      thisslotlinks(i,2), ...
+%                                                      angles(vcount), ...
+%                                                      'MaxSegDegrees', angles(vcount) ./ 20, ...
+%                                                      'InGroup', statorirongp);
+%                else
+%                   [FemmProblem, ~] = addarcsegments_mfemm (FemmProblem, ...
+%                                                      thisslotlinks(i,1), ...
+%                                                      thisslotlinks(i,2), ...
+%                                                      angles(vcount), ...
+%                                                      'MaxSegDegrees', angles(vcount) ./ 20); 
+%                end
+%                vcount = vcount + 1;
+%            else
+%                % horizontal link
+%                if thisslotlinks (i,4)
+%                    [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
+%                                                          thisslotlinks(i,1), ...
+%                                                          thisslotlinks(i,2), ...
+%                                                          'InGroup', statorirongp);
+%                else
+%                    [FemmProblem, ~] = addsegments_mfemm (FemmProblem, ...
+%                                                          thisslotlinks(i,1), ...
+%                                                          thisslotlinks(i,2));
+%                end
+%            end
+%            
+%        end
+%              
+%        if ~isempty (shoegaplabelloc)
+%            
+%            thisshoegaplabelloc = shoegaplabelloc * rotM;
+%            
+%            for ind = 1:size(thisshoegaplabelloc,1)
+%                FemmProblem = addblocklabel_mfemm (FemmProblem, thisshoegaplabelloc(ind,1), thisshoegaplabelloc(ind,2), ...
+%                                                    'BlockType', FemmProblem.Materials(Inputs.ShoeGapMaterial).Name, ...
+%                                                    'MaxArea', Inputs.ShoeGapRegionMeshSize );
+%            end
+%            
+%        end      
+%    
+%    end
+    
 end
+
 
 function angle = chordpoints2angle(x1,y1,x2,y2)
 

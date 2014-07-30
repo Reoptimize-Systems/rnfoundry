@@ -95,18 +95,18 @@ design.AlphaRho20Wire = 3.93e-3;
 % FemmProblem.Materials = Matlib([1, 47, 2]);
 
 % initially insert 32 MGOe magnet material from library
-design.MagSimMaterials.Magnet = 'NdFeB 32 MGOe';
+design.MagFEASimMaterials.Magnet = 'NdFeB 32 MGOe';
 % but force a change to the coercive value to be the same as protype spec
 % from data sheet (nominal Hcb for Sintered neodymium-iron-boron NdFeB
 % magnet N38M)
 design.HcMag = 915e3;
-% design.MagSimMaterials.FieldIron = '1117 Steel';
+% design.MagFEASimMaterials.FieldBackIron = '1117 Steel';
 % don't know what material is back iron yet, use an electrical (Silicon
 % Iron) steel M-27 Steel from FEMM library until known
-design.MagSimMaterials.FieldIron = 'M-27 Steel';
+design.MagFEASimMaterials.FieldBackIron = 'M-27 Steel';
 % use any wire type, is not used in resistance calc, use wire diameter
 % specified in design.Dc for that
-design.MagSimMaterials.CoilWinding = '36 AWG';
+design.MagFEASimMaterials.ArmatureCoil = '36 AWG';
 
 % setup simulation options
 simoptions = simsetup_ROTARY(design, 'simfun_TORUS_CORELESS', 'finfun_TORUS_CORELESS', ...

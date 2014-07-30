@@ -347,6 +347,10 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 
                 design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
                 
+%                if simoptions.getintermagflux
+%                    design.InterMagFlux = getintermagflux (design, solution);
+%                end
+                
                 % explicitly call the delete method on the solution
                 delete(solution);
                 clear solution;
@@ -674,3 +678,12 @@ function design = corelosssetup(design, feapos, solution)
 
 end
 
+
+
+%function flux = getintermagflux (design, solution)
+%
+%    % 
+%    
+%    annularsecarea ()
+%
+%end

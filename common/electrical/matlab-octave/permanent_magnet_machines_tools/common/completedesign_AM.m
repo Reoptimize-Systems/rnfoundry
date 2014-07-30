@@ -29,15 +29,18 @@ function design = completedesign_AM(design, simoptions)
 %
 
     % set the magnet skew to zero by default
-    design = setfieldifabsent(design, 'MagnetSkew', 0);
+    design = setfieldifabsent (design, 'MagnetSkew', 0);
 
     % use single layered coils by default
-    design = setfieldifabsent(design, 'CoilLayers', 1);
+    design = setfieldifabsent (design, 'CoilLayers', 1);
+    
+    % no coil insulation by default
+    design = setfieldifabsent (design, 'CoilInsulationThickness', 0);
     
     % use single-stranded conductors by default
-    design = setfieldifabsent(design, 'NStrands', 1);
+    design = setfieldifabsent (design, 'NStrands', 1);
     
     % check the number of stages in the design
-    design = setfieldifabsent(design, 'NStages', 1);
+    design = setfieldifabsent (design, 'NStages', 1);
     
 end

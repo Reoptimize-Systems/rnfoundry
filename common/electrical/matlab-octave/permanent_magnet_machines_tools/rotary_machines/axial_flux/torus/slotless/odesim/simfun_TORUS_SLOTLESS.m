@@ -37,7 +37,7 @@ function [design, simoptions] = simfun_TORUS_SLOTLESS(design, simoptions)
                                                 'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize);
 
         % get the material properties of the back Iron
-        backironmatstruct = matstr2matstruct_mfemm(design.MagSimMaterials.FieldIron);
+        backironmatstruct = matstr2matstruct_mfemm(design.MagFEASimMaterials.FieldBackIron);
         
         % copy the permeability and resistivity to the appropriate field in
         % the design structure for calculation of losses later

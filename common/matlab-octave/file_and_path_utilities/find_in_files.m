@@ -80,7 +80,7 @@ function usages = find_in_files(exp, topdir, dodisplay)
         fprintf(1, 'Found %d occurances of pattern %s in files:\n', nusages, exp); 
         if nusages > 0
             for i = 1:nusages
-                fprintf(1, '%s  | line: %d  |  %s', usages{i,1}, usages{i,2}, usages{i,3});
+                fprintf(1, '%s  | line: %d  |  %s\n', usages{i,1}, usages{i,2}, usages{i,3});
             end
         end
         

@@ -30,8 +30,8 @@ function [FemmProblem, outermagsep] = slotlesseddyfemmprob_torus(design, RPM, va
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
     FemmProblem.Materials = [FemmProblem.Materials, ...
-                             matstr2matstruct_mfemm( {design.MagSimMaterials.Magnet, ...
-                                                      design.MagSimMaterials.FieldIron} )];
+                             matstr2matstruct_mfemm( {design.MagFEASimMaterials.Magnet, ...
+                                                      design.MagFEASimMaterials.FieldBackIron} )];
     
     BackironMatInd = elcount.NMaterials + 2;
     

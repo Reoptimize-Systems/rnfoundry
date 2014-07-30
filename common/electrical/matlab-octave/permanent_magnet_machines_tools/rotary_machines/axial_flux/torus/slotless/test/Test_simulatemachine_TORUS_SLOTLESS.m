@@ -40,9 +40,9 @@ design.CoilsPerBranch = 4;
 
 % FemmProblem.Materials = Matlib([1, 47, 2]);
 
-design.MagSimMaterials.Magnet = 'NdFeB 32 MGOe';
-design.MagSimMaterials.FieldIron = '1117 Steel';
-design.MagSimMaterials.CoilWinding = '36 AWG';
+design.MagFEASimMaterials.Magnet = 'NdFeB 32 MGOe';
+design.MagFEASimMaterials.FieldBackIron = '1117 Steel';
+design.MagFEASimMaterials.ArmatureCoil = '36 AWG';
 
 % setup simulation options
 simoptions = simsetup_ROTARY(design, 'simfun_TORUS_SLOTLESS', 'finfun_TORUS_SLOTLESS', ...

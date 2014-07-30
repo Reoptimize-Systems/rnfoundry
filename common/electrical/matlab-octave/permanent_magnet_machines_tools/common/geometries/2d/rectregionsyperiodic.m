@@ -73,12 +73,16 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
 %
 % Output
 %
-%  nodes - (n x 2) matrix of x and y coordinates of the geometry
+%  nodes - (n x 2) matrix of x and y coordinates of the geometry. The nodes are
+%    added in sequence starting from the bottom left node, followed by the 
+%    bottom right node, then the next lowest left node and right node and so on
 %
 %  nodeids -  vector of id numbers for the nodes in nodes
 %
 %  links - (m x 2) matrix of links bewteen nodes specified as the two id
-%    numbers of the nodes
+%    numbers of the nodes. The first link is always the horizontal link between
+%    nodes 1 and 2 at the bottom of the geometry, and the last link is always
+%    the horizontal link between the final two nodes at the top of the geometry.
 %
 %  rectcentres - (p x 2) matrix of x and y coordinates of the centers of
 %    the 'A' and 'B' rectangles, or their component parts (can be split
@@ -291,7 +295,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                  xycoords(1:4,:); 
                  topnodes];
              
-        links = [0,1; 1,3; 3,2; 2,0; 3,5; 2,4; 4,5; 5,7; 7,6; 6,4; 7,9; 6,8; 8,9];
+        links = [0,1; 1,3; 3,2; 2,0; 3,5; 2,4; 4,5; 5,7; 7,6; 6,4; 6,8; 7,9; 8,9];
         
         rectcentres = rectcentre( [nodes(1,:); nodes(5,:)], ...
                                   [nodes(4,:); nodes(8,:)] );
@@ -345,7 +349,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                  xycoords(5:6,:);
                  topnodes];
              
-        links = [0,1; 1,3; 3,2; 2,0; 3,5; 2,4; 4,5; 5,7; 7,6; 6,4; 7,9; 6,8; 8,9];
+        links = [0,1; 1,3; 3,2; 2,0; 3,5; 2,4; 4,5; 5,7; 7,6; 6,4; 6,8; 7,9; 8,9];
         
         rectcentres = rectcentre( [nodes(3,:); nodes(7,:)], ...
                                   [nodes(6,:); nodes(10,:)] );    
@@ -400,7 +404,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                  xycoords(1:2,:);
                  topnodes];
              
-        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 9,11; 8,10; 10,11 ];
+        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 8,10; 9,11; 10,11 ];
             
         rectcentres = rectcentre( [nodes(1,:); nodes(9,:); nodes(5,:)], ...
                                   [nodes(4,:); nodes(12,:); nodes(8,:)] );
@@ -455,7 +459,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                  xycoords(5:6,:);
                  topnodes];
              
-        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 9,11; 8,10; 10,11 ];        
+        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 8,10; 9,11; 10,11 ];        
         
         rectcentres = rectcentre( [nodes(1,:); nodes(9,:); nodes(5,:)], ...
                                   [nodes(4,:); nodes(12,:); nodes(8,:)] );
@@ -506,7 +510,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                   xycoords(1:8,:);
                   topnodes ];
               
-        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 9,11; 8,10; 10,11 ];
+        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 8,10; 9,11; 10,11 ];
         
         rectcentres = rectcentre( [nodes(3,:); nodes(7,:)], ...
                                   [nodes(6,:); nodes(10,:)] );    
@@ -558,7 +562,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                   xycoords(1:4,:);
                   topnodes ];
               
-        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 9,11; 8,10; 10,11 ];
+        links = [ 0,1; 1,3; 0,2; 2,3; 3,5; 5,4; 4,2; 5,7; 4,6; 6,7; 7,9; 9,8; 8,6; 8,10; 9,11; 10,11 ];
         
         rectcentres = rectcentre( [nodes(3,:); nodes(7,:)], ...
                                   [nodes(6,:); nodes(10,:)] );    
