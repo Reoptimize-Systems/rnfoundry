@@ -16,10 +16,11 @@ function [FemmProblem, nodes, nodeids, links, magblockinds] = ...
 % annularsecmagaperiodic creates a periodic geometry of two magnets with
 % spaces in between, with a base position shown in the figure below.
 %
-%       ***************                                            
+%             ********
+%       ******        *                                    
 %         *             *                                              
-%           *             * 
-%            ***************                                            
+%           *        ****** 
+%            *********     *                                            
 %             *             *                                              
 %               *             *                                                                                          
 %                *             *                                              
@@ -34,7 +35,7 @@ function [FemmProblem, nodes, nodeids, links, magblockinds] = ...
 %                         *             *                 :
 %                          *************** ..^.......      :                            
 %                          *             *   :             :
-%                          *             *    :             :                                                                          
+%                           *             *   :             :                                                                          
 %                           *             *   : thetamag    :                                    
 %                           *    Mag 1    *    :             : thetapole             
 %                            *             *   :             :                                      

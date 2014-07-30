@@ -1,4 +1,4 @@
-function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin)
+function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(design, varargin)
 % creates a FemmProblem structure for a slotted radial flux permanent
 % magnet machine for an inductance simulation
 %
@@ -44,6 +44,8 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
     Inputs.Tol = 1e-5;
     Inputs.NSlots = 2*design.Phases;
     Inputs.DrawOuterRegions = true;
+    Inputs.CoilInsRegionMeshSize = -1;
+    Inputs.DrawCoilInsulation = false;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -54,8 +56,8 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
     [FemmProblem, matinds] = addmaterials_mfemm(FemmProblem, ...
-        {design.MagSimMaterials.Gap, design.MagSimMaterials.Magnet, design.MagSimMaterials.FieldIron, ...
-         design.MagSimMaterials.ArmatureIron, design.MagSimMaterials.CoilWinding});
+        {design.MagFEASimMaterials.AirGap, design.MagFEASimMaterials.Magnet, design.MagFEASimMaterials.FieldBackIron, ...
+         design.MagFEASimMaterials.ArmatureYoke, design.MagFEASimMaterials.ArmatureCoil});
     
     GapMatInd = matinds(1);
 %     MagnetMatInd = matinds(1);
@@ -124,48 +126,24 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
         'BackIronRegionMeshSize', Inputs.BackIronRegionMeshSize, ...
         'OuterRegionsMeshSize', Inputs.OuterRegionsMeshSize, ...
         'Position', Inputs.Position, ...
-        'Tol', Inputs.Tol);
+        'Tol', Inputs.Tol, ...
+        'DrawOuterRegions', Inputs.DrawOuterRegions );
+
+
+    if numel (design.tc) > 1
+        coilbasefrac = design.tc(2) / design.tc(1);
+    else
+        coilbasefrac = 0.05;
+    end
     
-    % find all nodes that are not at the very top and bottom and remove
-    % them. The segments they are attached to will be removed as well
-% %     nodeids = [];
-%     for i = 1:numel(FemmProblem.Nodes)
-% %         if FemmProblem.Nodes(i).Coords(2) > 0 && ...
-% %            FemmProblem.Nodes(i).Coords(2) < (2*design.taupm - eps(2*design.taupm))
-% %             
-% %             nodeids = [nodeids, i - 1];
-% %             
-% %         end
-% 
-%         FemmProblem.Nodes(i).Coords(2) = FemmProblem.Nodes(i).Coords(2) * scalefactor;
-%     end
-                
-%     FemmProblem = removenodes_mfemm(FemmProblem, nodeids);
-%     
-%     % move all remaining nodes at a position greater than zero so that they
-%     % are at the top of the slots
-%     newypos = Inputs.NSlots*design.taupm/slotsperpole;
-%     
-%     for i = 1:numel(FemmProblem.Nodes)
-%         if FemmProblem.Nodes(i).Coords(2) > 0
-%             FemmProblem.Nodes(i).Coords(2) = newypos;
-%         end
-%     end
-%     
-%     newlabypos = newypos / 2;
-    
-%     for i = 1:numel(FemmProblem.BlockLabels)
-% %         if FemmProblem.BlockLabels(i).Coords(2) > 0
-% %             FemmProblem.BlockLabels(i).Coords(2) = newlabypos;
-% %         end
-% 
-%         FemmProblem.BlockLabels(i).Coords(2) = FemmProblem.BlockLabels(i).Coords(2) * scalefactor;
-%         
-%     end
-    
+    if isfield (design, 'ShoeCurveControlFrac')
+        shoecurvefrac = design.ShoeCurveControlFrac;
+    else
+        shoecurvefrac = 0.5;
+    end
     
     % draw the stator slots for all stages
-    [FemmProblem, yokenodeids, coillabellocs] = radialfluxstator2dfemmprob( ...
+    [FemmProblem, yokenodeids, coillabellocs, inslabellocs] = radialfluxstator2dfemmprob ( ...
         design.Qs, design.Poles, Rs, design.thetap, design.thetac, ...
         design.thetasg, design.ty, design.tc, design.tsb, design.tsg, drawnstatorsides, ...
         'NWindingLayers', Inputs.NWindingLayers, ...
@@ -174,7 +152,11 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
         'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
         'ShoeGroup', Inputs.ArmatureBackIronGroup, ...
         'Tol', Inputs.Tol, ...
-        'NSlots', Inputs.NSlots);
+        'NSlots', Inputs.NSlots, ...
+        'DrawCoilInsulation', Inputs.DrawCoilInsulation, ...
+        'CoilInsulationThickness', design.CoilInsulationThickness, ...
+        'CoilBaseFraction', coilbasefrac, ...
+        'ShoeCurveControlFrac', shoecurvefrac );
     
     
     % link the rotor stages along the top and bottom, add antiperiodic
@@ -185,14 +167,13 @@ function [FemmProblem, coillabellocs] = slottedLfemmprob_radial(design, varargin
                                                  magcornerids, ...
                                                  Rs, ...
                                                  coillabellocs, ...
+                                                 inslabellocs, ...
                                                  yokenodeids, ...
                                                  Ldesign.thetap, ...
                                                  BackIronMatInd, ...
                                                  YokeMatInd, ...
                                                  CoilMatInd, ...
-                                                 Inputs.ArmatureBackIronGroup, ...
-                                                 linktb, ...
                                                  GapMatInd, ...
-                                                 Inputs.DrawOuterRegions);             
+                                                 linktb );             
 
 end

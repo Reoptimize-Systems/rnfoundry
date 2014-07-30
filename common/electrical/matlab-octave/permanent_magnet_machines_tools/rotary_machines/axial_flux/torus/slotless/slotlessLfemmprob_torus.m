@@ -30,8 +30,8 @@ function [FemmProblem, outermagsep] = slotlessLfemmprob_torus(design, varargin)
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
     FemmProblem.Materials = [FemmProblem.Materials, ...
-                             matstr2matstruct_mfemm( {design.MagSimMaterials.Magnet, ...
-                                                      design.MagSimMaterials.FieldIron} )];
+                             matstr2matstruct_mfemm( {design.MagFEASimMaterials.Magnet, ...
+                                                      design.MagFEASimMaterials.FieldBackIron} )];
     
     BackironMatInd = elcount.NMaterials + 2;
     
@@ -132,7 +132,7 @@ function [FemmProblem, outermagsep] = slotlessLfemmprob_torus(design, varargin)
 
             % add the coil material which should be present in the design
             % structure
-            FemmProblem.Materials = [FemmProblem.Materials, matstr2matstruct_mfemm(design.MagSimMaterials.CoilWinding)];
+            FemmProblem.Materials = [FemmProblem.Materials, matstr2matstruct_mfemm(design.MagFEASimMaterials.ArmatureCoil)];
 
             % define the block properties of the coil regions
             coil1BlockProps.BlockType = FemmProblem.Materials(end).Name;

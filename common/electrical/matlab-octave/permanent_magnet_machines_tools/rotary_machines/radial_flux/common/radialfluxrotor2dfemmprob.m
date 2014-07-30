@@ -138,9 +138,13 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
         
         % there will be three wrapper thicknesses on either side, the back
         % iron, and some air region
-        outerwrapperthickness = [ 0, rbackiron;
-                                  0, 2*(rbackiron + rmag);
-                                  0, 4*(rbackiron + rmag) ];
+        outerwrapperthickness = [ 0, rbackiron; ];
+        
+        if Inputs.DrawOuterRegions
+            outerwrapperthickness = [ outerwrapperthickness;
+                                      0, 2*(rbackiron + rmag);
+                                      0, 4*(rbackiron + rmag) ];
+        end
 
         % draw the outer rotor parts
         [FemmProblem, ~, ~, ~, nodeids1, linktb1] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, ...
@@ -155,7 +159,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
                                                                        'Tol', Inputs.Tol, ...
                                                                        'MeshSize', Inputs.MagnetRegionMeshSize);
 
-        if ~linktb1
+        if Inputs.DrawOuterRegions && ~linktb1
             % the last arc segment added will be the outermost segment, so give it the
             % proscribed A boundary
             FemmProblem.ArcSegments(end).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
@@ -167,10 +171,13 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
         % an inner rotor
         
         % mirror the wrapper thicknesses on the other side
-        innerwrapperthickness = [ rbackiron, 0;
-                                  (roffset(2) * 0.2), 0;
-                                  (roffset(2)-(roffset(2) * 0.2)) * 0.5, 0 ];
-
+        innerwrapperthickness = [ rbackiron, 0; ];
+        if Inputs.DrawOuterRegions
+            innerwrapperthickness = [ innerwrapperthickness;
+                                      (roffset(2) * 0.2), 0;
+                                      (roffset(2)-(roffset(2) * 0.2)) * 0.5, 0 ];
+        end
+        
         [FemmProblem, ~, ~, ~, nodeids2, linktb2] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, ...
                                                                        thetamag, rmag, roffset(2), ...
                                                                        Inputs.Position, innerwrapperthickness, ...
@@ -183,7 +190,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
                                                                        'Tol', Inputs.Tol, ...
                                                                        'MeshSize', Inputs.MagnetRegionMeshSize);
 
-        if ~linktb2
+        if Inputs.DrawOuterRegions && ~linktb2
             % Again, the last arc segment added should be the outermost boundary
             % segment this time on the rhs, so give it the proscribed boundary condition
             FemmProblem.ArcSegments(end).BoundaryMarker = FemmProblem.BoundaryProps(boundind).Name;
@@ -213,7 +220,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
         
     end
              
-    if ~isempty(Inputs.OuterRegionsMaterial)
+    if Inputs.DrawOuterRegions && ~isempty(Inputs.OuterRegionsMaterial)
         
         % Add the outer region block lables
         if drawnrotors(1)

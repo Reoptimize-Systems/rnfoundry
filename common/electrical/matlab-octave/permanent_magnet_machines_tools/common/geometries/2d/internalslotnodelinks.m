@@ -1,4 +1,4 @@
-function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] ...
+function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc, inslinkinds] ...
     = internalslotnodelinks(ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, ylayers, tol, varargin)
 % creates a set of node, links and label locations for the points making up
 % the inside of a coil slot in an iron cored machine
@@ -190,6 +190,7 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     options.MinBaseCurvePoints = 5;
     options.MinShoeCurvePoints = 5;
     options.InsulationThickness = 0;
+    options.YScale = 1;
     
     options = parseoptions (options, varargin);
     
@@ -226,6 +227,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     else
         error ('ycoil must contain only one or two elements');
     end
+    
+    inslinkinds = [];
         
     if xshoebase < tol
         % there is no shoe in this case, so just make a line for the
@@ -564,14 +567,16 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     
         % reduce the intercept of the slot side curve, to match the insulation
         % thickness
-        c = c - options.InsulationThickness;
-    
+        c = c - options.InsulationThickness/options.YScale;
+        
+        % get the number of existing links, useful for several calcs
+        linksize = size (links,1);
+        
         % create the shoe curve inulation points and links
     
         if xshoebase < tol
         
             nnodes = size (nodes,1);
-            nlinks = size (links,1);
             
             % add an inner insulation node at the 
             nodes = [ nodes; ...
@@ -605,8 +610,12 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             [shoex, shoey, shoeQx, shoeQy] = inscurvepoints ( ...
                             [ options.MinShoeCurvePoints, options.MaxShoeCurvePoints ], ...
                             shoeQx, shoeQy, shoePx, shoePy, ...
-                            options.InsulationThickness );
+                            options.InsulationThickness, options.YScale );
                   
+            
+%            shoex = shoex(shoey(1)*options.YScale - shoey*options.YScale >= options.InsulationThickness);
+%            shoey = shoey(shoey(1)*options.YScale - shoey*options.YScale >= options.InsulationThickness);
+            
             crossinginds = find (shoey < -shoey);
             
             if ~isempty (crossinginds)
@@ -619,6 +628,11 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             else
                 nodes = [ nodes; ...
                           xcore + xcoilbase + xcoilbody + xshoebase - xshoegap - options.InsulationThickness, 0 ; ];
+            end
+            
+            if isempty (shoex)
+                shoex = xcore + xcoilbase + xcoilbody - options.InsulationThickness;
+                shoey = mxplusc(m, c, xcore + xcoilbase + xcoilbody - options.InsulationThickness);
             end
                             
             nshoecurvepts = numel (shoex);
@@ -643,18 +657,35 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             
         end
         
+        % add the new insulation links to the list
+        inslinkinds = [ inslinkinds, linksize+1:size(links,1) ];
+        
+        linksize = size (links,1);
+        
         % we must link up the tooth sides and replace basex and basey with the 
         % internal insulation basex and basey 
         links = [ links; 
                   lastinnernodes(1), endbasenodeid(2);
                   lastinnernodes(2),  endbasenodeid(1) ];
+                  
+        toothlinkinds = [toothlinkinds, linksize+1:size(links,1)];
         
         % get the insulation curve points
         [basex, basey, baseQx, baseQy] = inscurvepoints ( ...
                         [ options.MinBaseCurvePoints, options.MaxBaseCurvePoints ], ...
                         baseQx, baseQy, basePx, basePy, ...
-                        options.InsulationThickness );
+                        options.InsulationThickness, options.YScale );
                         
+        basex = basex(basey(end)*options.YScale - basey*options.YScale >= options.InsulationThickness);
+        basey = basey(basey(end)*options.YScale - basey*options.YScale >= options.InsulationThickness);
+                        
+        crossinginds = find (basey > mxplusc(m, c, basex));
+        
+        if ~isempty (crossinginds)
+            basex = basex (1:crossinginds(1)-1);
+            basey = basey (1:crossinginds(1)-1);
+        end
+            
         nbasecurvepnts = numel (basex);
         
         % this will be the id of the next node we add, the
@@ -680,6 +711,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                     (startbasenodeid+nbasecurvepnts+2:startbasenodeid+2*nbasecurvepnts)'] ...
                 ];
                 
+        inslinkinds = [ inslinkinds, linksize+1:size(links,1) ];
+                
         basex = [xcore + options.InsulationThickness, basex];
         basey = [0, basey];
         topbasenids = (startbasenodeid:startbasenodeid+nbasecurvepnts);
@@ -700,6 +733,8 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
     
     % calculate the area of one winding layer, given the number of layers
     windingarea = totalarea / ylayers;
+    
+    linksize = size(links,1);
     
     if ylayers == 1
         % simple case, there is only one layer per slot, winding fills the
@@ -728,8 +763,12 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
             coillabelloc = [ xcore + (xcoilbase + xcoilbody)/2, 0 ];
         end
         
-        % update the tooth links
-        toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+        % update the link lists as appropriate
+        if options.InsulationThickness > 0
+            inslinkinds = [inslinkinds, size(links, 1) - 1, size(links, 1)];
+        else
+            toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+        end
         
         cornernodes = [ lastinnernodes(2), botouternode, topouternode, lastinnernodes(1) ];
         
@@ -807,8 +846,12 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                               lastlayernodeids(1), topinnershoenode;
                               lastlayernodeids(2), botinnershoenode; ];
                     
-                    % update the tooth links
-                    toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+                    % update the link lists
+                    if options.InsulationThickness > 0
+                        inslinkinds = [inslinkinds, size(links, 1) - 1, size(links, 1)];
+                    else
+                        toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+                    end
                     
                     % store the remaining area in the body available to
                     % a layer
@@ -825,8 +868,12 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                               lastlayernodeids(1), topinnershoenode;
                               lastlayernodeids(2), botinnershoenode; ];
 
-                    % update the tooth links
-                    toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+                    % update the link lists
+                    if options.InsulationThickness > 0
+                        inslinkinds = [inslinkinds, size(links, 1) - 1, size(links, 1)];
+                    else
+                        toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+                    end
 
                     % put the remaining layer in the space between the last area
                     % boundary and the top
@@ -874,8 +921,12 @@ function [nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds
                           
                     vertlinkinds = [vertlinkinds, size(links, 1)];
                           
-                    % update the tooth links
-                    toothlinkinds = [toothlinkinds, size(links, 1) - 2, size(links, 1) - 1];
+                    % update the link lists
+                    if options.InsulationThickness > 0
+                        inslinkinds = [inslinkinds, size(links, 1) - 1, size(links, 1)];
+                    else
+                        toothlinkinds = [toothlinkinds, size(links, 1) - 1, size(links, 1)];
+                    end
 
                     coillabelloc = [ coillabelloc; lastlayerstartx + (x2-lastlayerstartx)/2, 0 ];
                     layersmade = layersmade + 1;
@@ -994,7 +1045,7 @@ function [x, y, Qx, Qy, Px, Py] = shoecurvepoints (shoecontrolfrac, minmaxpnts, 
     
 end
 
-function [insx, insy, insQx, insQy] = inscurvepoints (minmaxpnts, Qx, Qy, Px, Py, tins)
+function [insx, insy, insQx, insQy] = inscurvepoints (minmaxpnts, Qx, Qy, Px, Py, tins, yscale)
 % creates a curve slightly inset from an existing bezier curve
  
     % calculate the total length of the curve
@@ -1002,7 +1053,7 @@ function [insx, insy, insQx, insQy] = inscurvepoints (minmaxpnts, Qx, Qy, Px, Py
     
     sectionlengths = magn ([Qx(2:end); Qy(2:end)] - [Qx(1:end-1); Qy(1:end-1)]);
     
-    startinsind = 1;
+    startinsind = 2;
     endinsind = numel (sectionlengths);
     for ind = 1:numel (sectionlengths)
     
@@ -1048,7 +1099,7 @@ function [insx, insy, insQx, insQy] = inscurvepoints (minmaxpnts, Qx, Qy, Px, Py
     % get locations at Qx and Qy, but shifted inward along a line perpendicular
     % to the tangent by the insulation thickness
     insQx = Qx + normalshift(1,:);
-    insQy = Qy + normalshift(2,:);
+    insQy = Qy + normalshift(2,:)/yscale;
     
     insx = insQx(startinsind:floor((numel(insQx)-2)/npoints):endinsind);
     insy = insQy(startinsind:floor((numel(insQy)-2)/npoints):endinsind);

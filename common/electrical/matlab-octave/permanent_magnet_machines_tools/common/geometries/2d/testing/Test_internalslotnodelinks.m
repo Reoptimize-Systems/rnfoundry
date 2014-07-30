@@ -92,6 +92,31 @@ plot ( [ coillabelloc(:,1) ], ...
 plot ( inslabelloc(1), inslabelloc(2), 'xm');
 hold off
 
+%% shoe blunt edge with gap with insulation with high shoe control frac
+
+ycoil = [ 0.2, 1.5 ];
+yshoegap = 0.9 * ycoil(1);
+
+xcore = 0.2;
+xcoil = 1.0;
+xshoebase = 0.1;
+xshoegap = 0.5 * xshoebase;
+coillayers = 2;
+tol = 1e-5;
+
+[nodes, links, cornernodes, shoegaplabelloc, coillabelloc, vertlinkinds, toothlinkinds, inslabelloc] = ...
+    internalslotnodelinks (ycoil, yshoegap, xcore, xcoil, xshoebase, xshoegap, coillayers, tol, ...
+                           'InsulationThickness', 0.02, ...
+                           'ShoeCurveControlFrac', 0.95 );
+
+plotnodelinks(nodes, links);
+hold on
+plot ( [ coillabelloc(:,1) ], ...
+       [ coillabelloc(:,2) ], ...
+       'xk' )
+plot ( inslabelloc(1), inslabelloc(2), 'xm');
+hold off
+
 %% Shoe sharp point with gap
 
 ycoil =  0.5 + (0.5) * rand (1, 2);
@@ -279,6 +304,7 @@ plot ( [ coillabelloc(:,1) ], ...
        'xk' );
 plot ( inslabelloc(1), inslabelloc(2), 'xm');
 hold off
+
 
 %% Subfunctions
 

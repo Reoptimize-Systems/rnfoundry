@@ -44,10 +44,10 @@ design.CoilLayers = 1;
 design.Hc = design.tc / design.CoilLayers;
 design.CoilTurns = 250;
 
-design.MagSimMaterials.Magnet = 'NdFeB 32 MGOe';
-design.MagSimMaterials.FieldIron = '1117 Steel';
-design.MagSimMaterials.ArmatureIron = design.MagSimMaterials.FieldIron;
-design.MagSimMaterials.CoilWinding = '36 AWG';
+design.MagFEASimMaterials.Magnet = 'NdFeB 32 MGOe';
+design.MagFEASimMaterials.FieldBackIron = '1117 Steel';
+design.MagFEASimMaterials.ArmatureYoke = design.MagFEASimMaterials.FieldBackIron;
+design.MagFEASimMaterials.ArmatureCoil = '36 AWG';
 
 design.RlVRp = 10;
 

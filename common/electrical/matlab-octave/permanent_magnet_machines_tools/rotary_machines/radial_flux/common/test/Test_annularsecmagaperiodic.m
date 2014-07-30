@@ -1,4 +1,4 @@
-% Test_planarrectmagaperiodic
+% Test_annularsecmagaperiodic
 
 
 %% cases

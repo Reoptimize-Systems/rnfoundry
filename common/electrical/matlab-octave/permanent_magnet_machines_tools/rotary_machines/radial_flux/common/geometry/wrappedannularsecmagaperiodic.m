@@ -22,8 +22,8 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
 %             ********
 %      *******        *                                    
 %    **   *             *                                              
-%     *     *             * 
-%       *    ***************                                            
+%     *     *        ****** 
+%       *    *********     *                                            
 %        *    *             *                                              
 %          *    *             *                                                                                          
 %           *    *             *                                              

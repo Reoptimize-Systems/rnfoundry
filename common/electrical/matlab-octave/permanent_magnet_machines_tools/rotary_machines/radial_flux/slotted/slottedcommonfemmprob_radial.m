@@ -1,7 +1,7 @@
 function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
-                            Inputs, magcornerids, Rs, coillabellocs, yokenodeids, ...
-                            ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd, ...
-                            YokeGroup, linktb, GapMatInd, drawouterregions)
+                            Inputs, magcornerids, Rs, coillabellocs, inslabellocs, ...
+                            yokenodeids, ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd, ...
+                            GapMatInd, linktb )
 % Constructs common aspects of a slotted mfemm radial flux FemmProblem
 % structure
 %
@@ -10,7 +10,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 % FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 %                             Inputs, gapedgenodes, Rs, coillabellocs, yokenodeids, ...
 %                             ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd
-%                             YokeGroup, linktb, GapMatInd, drawouterregions)
+%                             Inputs.ArmatureBackIronGroup, linktb, GapMatInd, drawouterregions)
 %
 %  
 % Description
@@ -29,7 +29,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     yokeBlockProps.BlockType = FemmProblem.Materials(BackIronMatInd).Name;
     yokeBlockProps.MaxArea = Inputs.BackIronRegionMeshSize;
     yokeBlockProps.InCircuit = '';
-    yokeBlockProps.InGroup = YokeGroup;
+    yokeBlockProps.InGroup = Inputs.ArmatureBackIronGroup;
 
     % Prototype an array of segprops structures
     SegProps.MaxSideLength = -1;
@@ -49,8 +49,6 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     
     statorirongp = getgroupnumber_mfemm(FemmProblem, 'StatorIron');
     
-%     corexpos = -outermagsep/2 + design.g + design.tc;
-
     % add circuits for each winding phase
     for i = 1:design.Phases
         if i == 1
@@ -155,7 +153,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
                                                                  yokeBlockProps);
                                         
-            if drawouterregions
+            if Inputs.DrawOuterRegions
                 
                 % add arcs linking the outer segments
                 FemmProblem = addarcsegments_mfemm(FemmProblem, ...
@@ -179,7 +177,8 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             else
                 % remove the nodes that would have been used to make the
                 % outer regions
-                FemmProblem.Nodes(nodeinds(3:6)) = [];
+%                FemmProblem.Nodes(nodeinds(3:6)) = [];
+                FemmProblem = deletenode_mfemm (FemmProblem, nodeinds(3:6)-1);
             end
 
                                 
@@ -351,22 +350,6 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                 
     end
 
-    % join up the air gaps at the top and bottom
-
-%     % bottom right gap corner to bottom right core corner
-%     FemmProblem.Segments(end+1) = newsegment_mfemm(gapcornernodeids(2), outeryokenodeids(2), ...
-%                             'BoundaryMarker', FemmProblem.BoundaryProps(boundind(3)).Name);
-% 
-%     % top right gap corner to top right core corner
-%     FemmProblem.Segments(end+1) = newsegment_mfemm(gapcornernodeids(3), outeryokenodeids(3), ...
-%                             'BoundaryMarker', FemmProblem.BoundaryProps(boundind(3)).Name);
-% 
-%     % close the tooth and air boundaries to complete the core
-%     FemmProblem = addsegments_mfemm(FemmProblem, yokenodeids(i,1:4), outeryokenodeids(1:4));  
-
-%         corexpos = corexpos + innerstagewidth;
-
-
     % add block labels for the coils
     row = 1;
 
@@ -498,6 +481,31 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
 %             slotnums = circshift(slotnums, );
 
+    end
+    
+    if Inputs.DrawCoilInsulation
+    
+       if strncmpi (Inputs.SimType, 'm', 1)
+           [FemmProblem, matinds] = addmaterials_mfemm (FemmProblem, {design.MagFEASimMaterials.CoilInsulation} );
+       elseif strncmpi (Inputs.SimType, 'h', 1)
+           [FemmProblem, matinds] = addmaterials_mfemm (FemmProblem, {design.HeatFEASimMaterials.CoilInsulation} );
+       end
+    
+        % add the coil insulation block labels
+        coilinsBlockProps.BlockType = FemmProblem.Materials(matinds).Name;
+        coilinsBlockProps.MaxArea = Inputs.CoilInsRegionMeshSize;
+        coilinsBlockProps.InCircuit = '';
+        coilinsBlockProps.InGroup = Inputs.CoilGroup;
+    
+        % add insulation labels if requested
+    
+        for indi = 1:size (inslabellocs)
+            FemmProblem = addblocklabel_mfemm( FemmProblem, ...
+                                               inslabellocs(indi,1), ...
+                                               inslabellocs(indi,2), ...
+                                               coilinsBlockProps );
+        end
+        
     end
         
     
