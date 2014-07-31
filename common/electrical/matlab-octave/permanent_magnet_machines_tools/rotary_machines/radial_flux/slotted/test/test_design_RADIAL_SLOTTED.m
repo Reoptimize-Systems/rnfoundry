@@ -70,6 +70,8 @@ function design = test_design_RADIAL_SLOTTED (armtype)
     design.CoilTurns = 25;
 
     design.NCoilsPerPhase = design.Qc / design.Phases;
+    
+    design.CoilInsulationThickness = 1e-3;
 
     design.MagFEASimMaterials.Magnet = 'NdFeB 40 MGOe';
     design.MagFEASimMaterials.FieldBackIron = '1117 Steel';
@@ -80,7 +82,7 @@ function design = test_design_RADIAL_SLOTTED (armtype)
     
     design.HeatFEASimMaterials.Magnet = 'Iron, Pure';
     design.HeatFEASimMaterials.FieldBackIron = 'Iron, Pure';
-    design.HeatFEASimMaterials.ArmatureYoke = design.MagFEASimMaterials.FieldBackIron;
+    design.HeatFEASimMaterials.ArmatureYoke = design.HeatFEASimMaterials.FieldBackIron;
     design.HeatFEASimMaterials.ArmatureCoil = 'Copper, Pure';
     design.HeatFEASimMaterials.AirGap = 'Water';
     design.HeatFEASimMaterials.CoilInsulation = 'Water';
