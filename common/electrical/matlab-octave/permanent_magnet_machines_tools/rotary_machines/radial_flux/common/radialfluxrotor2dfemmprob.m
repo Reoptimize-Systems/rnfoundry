@@ -62,7 +62,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
     
     if numel(Inputs.OuterRegionsMeshSize) ~= 2
         error('AXIALFLUXOUTERROTOR2DFEMMPROB:badoutermeshspec', ...
-            'OuterRegionsMeshSize must be a two element vector')
+            'OuterRegionsMeshSize must be a two element vector');
     end
     
     if strncmpi(Inputs.PolarisationType, 'constant', 1);
@@ -80,7 +80,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
             otherwise
                 
                 error('ROTARY:radiafluxrotor:badtype', ...
-                    'Unknown magnet arrangement specification, should be NN or NS.')
+                    'Unknown magnet arrangement specification, should be NN or NS.');
                 
         end
     
