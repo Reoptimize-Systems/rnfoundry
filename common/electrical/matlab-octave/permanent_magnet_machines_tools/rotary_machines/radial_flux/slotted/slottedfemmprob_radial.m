@@ -53,10 +53,14 @@ function [FemmProblem, coillabellocs, yokenodeids, inslabellocs] = slottedfemmpr
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
+    FemmProblem = Inputs.FemmProblem;
+    
     if isempty (Inputs.MaterialsLibrary)
         if strncmpi (Inputs.SimType, 'Magnetics', 1)
+            FemmProblem.ProbInfo.Domain = 'Magnetics';
             Inputs.MaterialsLibrary = fullfile(fileparts (which ('matstr2matstruct_mfemm')), '..', 'matlib.mat');
         elseif strncmpi (Inputs.SimType, 'HeatFlow', 1)
+            FemmProblem.ProbInfo.Domain = 'HeatFlow';
             Inputs.MaterialsLibrary = fullfile(fileparts (which ('matstr2matstruct_mfemm')), '..', 'heatlib.mat');
         else
             error ('Unrecognised SimType');
@@ -70,8 +74,6 @@ function [FemmProblem, coillabellocs, yokenodeids, inslabellocs] = slottedfemmpr
                                      Inputs.RotorAnglePosition);
     
     Inputs.NSlots = 2*design.Qs/design.Poles;
-    
-    FemmProblem = Inputs.FemmProblem;
     
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
