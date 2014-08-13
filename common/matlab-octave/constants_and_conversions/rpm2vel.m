@@ -1,6 +1,11 @@
 function vel = rpm2vel(rpm, r)
 % converts a revolutions per minute to a tangential velocity at a given
 % radius 
+%
+% Syntax
+%
+% vel = rpm2vel(rpm, r)
+%
 
 % Created by Richard Crozier 
 
