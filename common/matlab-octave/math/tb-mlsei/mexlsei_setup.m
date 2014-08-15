@@ -71,9 +71,10 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
         % see if libf2c is installed as a system library 
         [~,ldconfout] = system('ldconfig -p | grep libf2c');
         
-        res = f2cdocontinue ();
-        
-        if ~res, return;
+        if isempty (ldconfout)
+            res = f2cdocontinue ();
+            if ~res, return; end
+        end
 
         libfilename = 'libf2cx64.a';
         if (isempty(ldconfout) && ~exist(libfilename, 'file')) || forcef2clibrecompile
@@ -91,9 +92,12 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
         % see if libf2c is installed as a system library 
         [~,ldconfout] = system('ldconfig -p | grep libf2c');
 
-        res = f2cdocontinue ();
+        if isempty (ldconfout)
+            res = f2cdocontinue ();
+            if ~res, return; end
+        end
         
-        if ~res, return;
+        if ~res, return; end
         
         libfilename = 'libf2cx86.a';
         if (isempty(ldconfout) && ~exist(libfilename, 'file'))  || forcef2clibrecompile
@@ -106,7 +110,7 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
             libfiledir = '';
         end
 
-    end
+    end 
 
     % change back to mexlsei_setup directory
     cd(rootdir);
@@ -142,8 +146,8 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
                 [ '\n\n', ...
                 'void MAIN__()\n', ...
                 '{\n', ...
-                '//fprintf(stderr,"If this appears, F2C is in conflict with C\\n");\n', ...
-                '//exit(10);\n'...
+                '/*fprintf(stderr,"If this appears, F2C is in conflict with C\\n");\n', ...
+                'exit(10);*/\n'...
                 'return;', ...
                 '}', ...
                 ] );
@@ -228,7 +232,7 @@ function res = f2cdocontinue ()
  'using your packaging system. Otherwise mexlsei_setup will now attempt to build \n', ...
  'f2c and libf2c from source before continuing.\n', ...
  '\n', ...
- 'Do you wish to continue? (Y/n)'] ))
+ 'Do you wish to continue? (Y/n)'] ));
  
     if strcmpi (S, 'n')
         res = false;
