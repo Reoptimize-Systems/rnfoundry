@@ -69,9 +69,13 @@ function [design, simoptions] = simfun_AM(design, simoptions)
     simoptions = setfieldifabsent(simoptions, 'usefemm', false);
 	simoptions = setfieldifabsent(simoptions, 'quietfemm', true);
     
-    % Determine the area of the coil, and the find either the number of
-    % turns, coil wire diameter if required
-    design = checkcoilprops_AM(design);
+    simoptions = setfieldifabsent(simoptions, 'SkipCheckCoilProps', false);
+    
+    if ~simoptions.SkipCheckCoilProps
+        % Determine the area of the coil, and the find either the number of
+        % turns, coil wire diameter if required
+        design = checkcoilprops_AM(design);
+    end
     
     % If loss data is supplied, fit the loss function coefficients to it,
     % this loss data is expected to be in the form of three vectors
@@ -80,7 +84,8 @@ function [design, simoptions] = simfun_AM(design, simoptions)
     if isfield(design, 'CoreLoss')
         % check the required data fields are present before attempting the
         % fit
-        if all(isfield(design.CoreLoss, {'fq', 'Bq', 'Pq'}))
+        if all(isfield(design.CoreLoss, {'fq', 'Bq', 'Pq'})) ...
+             && ~all(isfield (design.CoreLoss, {'kh', 'kc', 'ke', 'beta'}))
             
             for clind = 1:numel(design.CoreLoss)
                 
