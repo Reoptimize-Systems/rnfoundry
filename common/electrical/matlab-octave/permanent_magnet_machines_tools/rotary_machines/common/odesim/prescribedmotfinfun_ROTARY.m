@@ -16,7 +16,9 @@ function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, f
 %    covering the displacement equivalent to the number of Poles in
 %    polecount at the RPM in the 'RPM' field. A linear ramp up in speed from
 %    zero to the specified RPM is prepended to this simulation to avoid
-%    large currents due to inductances.
+%    large currents due to inductances. By default this ramp lasts for 2% of 
+%    the specified PoleCount, but this can be modified by setting the 
+%    RampPoles field in the simoptions structure.
 %
 %   finfun is a function handle or string containing a function name which
 %     is the preprocessing function for the design. 
@@ -32,39 +34,18 @@ function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, f
     end
     
     if all(isfield(simoptions, {'PoleCount', 'RPM'}))
-        
+
+        simoptions = setfieldifabsent (simoptions, 'RampPoles', ceil (simoptions.PoleCount * 2/100));
+
         simoptions = simsetup_ROTARY(design, simoptions.simfun, simoptions.finfun, ...
                                 'RPM', simoptions.RPM, ...
                                 'PoleCount', simoptions.PoleCount, ...
-                                'RampPoles', 5, ...
+                                'RampPoles', simoptions.RampPoles, ...
                                 'odeevfun', 'prescribedmotode_linear', ...
                                 'simoptions', simoptions);
-                          
-        
-%         % add a linear speed ramp up over 5 Poles to reduce the starting
-%         % currents due to inductance
-%         nramppoles = 5;
-%         rampa = simoptions.omegaT(1)^2 / (2 * nramppoles * design.PoleWidth);
-%         rampTmax = simoptions.omegaT(1) / rampa;
-%         rampT = linspace(0, rampTmax, 15);
-%         rampomegaT = rampa .* rampT;
-%         rampthetaT = 0.5 * rampa .* rampT.^2;
-%         
-%         simoptions.omegaT = [rampomegaT(1:end-1), simoptions.omegaT];
-%         simoptions.thetaT = [rampthetaT(1:end-1), simoptions.thetaT + rampthetaT(end)];
-%         simoptions.drivetimes = [rampT(1:end-1), simoptions.drivetimes + rampT(end)];
-%         
-%         simoptions.tspan = simoptions.drivetimes([1, end]);
-% 
-%         simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / (40 * simoptions.PoleCount);
-%         
-%         % construct a piecewise polynomial interpolation of the position
-%         % and velocity data
-%         simoptions.pp_thetaT = interp1(simoptions.drivetimes,simoptions.thetaT,'cubic','pp');
-%         simoptions.pp_omegaT = interp1(simoptions.drivetimes,simoptions.omegaT,'cubic','pp');
-%        
+
     end
-    
+
 %     simoptions.abstol = repmat(0.001, 1, design.Phases);
-        
+
 end
