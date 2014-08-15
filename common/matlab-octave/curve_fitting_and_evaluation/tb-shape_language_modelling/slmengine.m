@@ -2373,30 +2373,33 @@ elseif isempty(Mineq)
   coef = lse(Mdes,rhs,full(Meq),rhseq);
   
 else
+    
+if exist ('lsqlin', 'file')
 % ------  original
-%   % use lsqlin. first, set the options
-%   options = optimset('lsqlin');
-%   if prescription.Verbosity > 1
-%     options.Display = 'final';
-%   else
-%     options.Display = 'off';
-%   end
-%   % the Largescale solver will not allow general constraints,
-%   % either equality or inequality
-%   options.LargeScale='off';
-% 
-%   % and solve
-%   [coef,junk,junk,exitflag,junk,lambda] = ...
-%     lsqlin(Mdes,rhs,Mineq,rhsineq,Meq,rhseq,[],[],[],options); %#ok
-% 
-% % was there a feasible solution?
-%   if exitflag == -2 || exitflag == -3
-%     coef = nan(size(coef));
-%   end
-% -----  original  
-% -----  new
+  % use lsqlin. first, set the options
+  options = optimset('lsqlin');
+  if prescription.Verbosity > 1
+    options.Display = 'final';
+  else
+    options.Display = 'off';
+  end
+  % the Largescale solver will not allow general constraints,
+  % either equality or inequality
+  options.LargeScale='off';
 
-  [coef, rnorme, rnorml, exitflag] = mlsei(Mdes, rhs, Mineq, rhsineq, Meq, rhseq);                                               
+  % and solve
+  [coef,~,~,exitflag,~,lambda] = ...
+    lsqlin(Mdes,rhs,Mineq,rhsineq,Meq,rhseq,[],[],[],options); %#ok
+
+% was there a feasible solution?
+  if exitflag == -2 || exitflag == -3
+    coef = nan(size(coef));
+  end
+% -----  original  
+
+else
+% -----  new
+  [coef, ~, ~, exitflag] = mlsei(Mdes, rhs, Mineq, rhsineq, Meq, rhseq);                                               
 
 % was there a feasible solution?
   if exitflag == -2 || exitflag == -3
@@ -2404,6 +2407,7 @@ else
   end
   
 % -----  new
+end
 
 end
 % ========================================================
