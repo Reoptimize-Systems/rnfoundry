@@ -128,10 +128,14 @@ design.g = 3/1000;
 % magnet pitch in radians
 design.thetam = (2*pi / design.Poles) * 0.8;
 % coil slot opening pitch in radians ( space a coil has to fit in a slot )
-design.thetac = (2*pi / design.Poles / design.Phases) * 0.85;
+% at the slot end closest to the air gap
+design.thetacg = (2*pi / design.Poles / design.Phases) * 0.7;
+% coil slot opening pitch in radians ( space a coil has to fit in a slot )
+% at the slot end closest to the armeture yoke
+design.thetacy = (2*pi / design.Poles / design.Phases) * 0.8;
 % the pitch in radians of gap between the shoes that partially cover the
 % slot openings
-design.thetasg = design.thetac * 0.8;
+design.thetasg = design.thetacg * 0.8;
 % stack length of the machine, the depth along the cylindrical axis of the
 % machine
 design.ls = 0.6;
@@ -143,7 +147,10 @@ design.ls = 0.6;
 % rotor and internally facing stator. 
 design.ArmatureType = 'internal';
 
-% We must also specify some materials in the machine
+% We must also specify some materials in the machine, these can either be
+% names of materials already existing in the materials library, or
+% materials structures in the same format as those in the materials library
+design.MagFEASimMaterials.AirGap = 'Air';
 design.MagFEASimMaterials.Magnet = 'NdFeB 32 MGOe';
 design.MagFEASimMaterials.FieldBackIron = '1117 Steel';
 design.MagFEASimMaterials.ArmatureYoke = design.MagFEASimMaterials.FieldBackIron;
@@ -307,13 +314,13 @@ plotfemmproblem(design.FemmProblem);
 % more on these later.
 simoptions = simsetup_ROTARY( design, [], [], ...
                               'Rpm', 25, ...
-                              'TSpan', [0 10], ...
+                              'TSpan', [0 120], ...
                               'simoptions', simoptions );
 
 % With the simulation options set up in the simoptions structure we can use
 % the common simulation function simulatemachine_AM to actually perform the
 % simulation, and post-processes the results
-
+simoptions.reltol = 1e-6;
  [T, Y, results, design, simoptions] = simulatemachine_AM( design, ...
                                                            simoptions, ...
                                                            simoptions.simfun, ...
