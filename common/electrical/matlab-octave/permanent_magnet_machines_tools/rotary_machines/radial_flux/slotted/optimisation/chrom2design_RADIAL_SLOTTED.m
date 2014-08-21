@@ -14,6 +14,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     options.Phases = 3;
     % number of coils per pole and phase
     options.qc = fr(3,3);
+    options.yd = 1;
     % grid resistance to phase resistance ratio
     options.RlVRp = 10;
     % coil fill factor
@@ -46,17 +47,18 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     design.CoilFillFactor = options.CoilFillFactor;
     design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
+    design.yd = options.yd;
     design.RlVRp = options.RlVRp;
     design.CoilLayers = options.CoilLayers;
 %     design.ModuleFac = options.ModuleFac;
     
     if strcmp(design.ArmatureType, 'external')
 
-        design = chrom2design_external_arm (design, simoptions);
+        design = chrom2design_external_arm (design, simoptions, Chrom, options);
 
     elseif strcmp(design.ArmatureType, 'internal')
 
-        design = chrom2design_internal_arm (design, simoptions);
+        design = chrom2design_internal_arm (design, simoptions, Chrom, options);
         
     end
     
@@ -66,8 +68,8 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
        design.lsVtm = design.ls / design.tm;
     end
     
-    design.Hc = design.tc;
-    design.Wc = design.thetacg * design.Rcm;
+    design.Hc = design.tc(1);
+    design.Wc = mean([design.thetacg * design.Rci, design.thetacy * design.Rco]);
     
     design = preprocsystemdesign_RADIAL(design, simoptions);
 
@@ -85,7 +87,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     
 end
 
-function design = chrom2design_external_arm (design, simoptions)
+function design = chrom2design_external_arm (design, simoptions, Chrom, options)
 
        
     % convert machine ratios to actual dimensions
@@ -123,20 +125,20 @@ function design = chrom2design_external_arm (design, simoptions)
 
     design = completedesign_RADIAL_SLOTTED(design, simoptions);
 
-    if (design.tsb > 0) && (design.tsb / design.tc) > options.Max_tsbVtc
+    if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc
         % shift the shoe base inward
-        rshift = (design.tsb - (design.tc*options.Max_tsbVtc));
+        rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc));
         design.Rtsb = design.Rtsb - rshift;
-        design.tsb = design.tc*options.Max_tsbVtc;
+        design.tsb = design.tc(1)*options.Max_tsbVtc;
         % recalculate the shoe gap size
         design.tsg = design.tsb * design.tsgVtsb;
         design.Rtsg = design.Rai + design.tsg;
         design = updatedims_exteral_arm(design);
     end
 
-    if design.tc > options.Max_tc
+    if design.tc(1) > options.Max_tc
         % move the stator yoke inwards to reduce the size of the slot
-        rshift = (design.tc - options.Max_tc);
+        rshift = (design.tc(1) - options.Max_tc);
         design.Ryi = design.Ryi - rshift;
         design.Ryo = design.Ryo - rshift;
         design = updatedims_exteral_arm(design);
@@ -214,7 +216,7 @@ function design = updatedims_exteral_arm(design)
 
     % lengths in radial direction
     design.ty = design.Ryo - design.Ryi;
-    design.tc = design.Rco - design.Rci;
+    design.tc(1) = design.Rco - design.Rci;
     design.tsb = design.Rtsb - design.Rai;
     design.g = design.Rai - design.Rmi;
     design.tm = design.Rmo - design.Rmi;
@@ -232,7 +234,7 @@ function design = updatedims_exteral_arm(design)
 end
 
 
-function design = chrom2design_internal_arm (design, simoptions)
+function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
 
     % convert machine ratios to actual dimensions
     design.Rbo = Chrom(1);
@@ -269,20 +271,20 @@ function design = chrom2design_internal_arm (design, simoptions)
 
     design = completedesign_RADIAL_SLOTTED(design, simoptions);
 
-    if (design.tsb > 0) && (design.tsb / design.tc) > options.Max_tsbVtc
+    if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc
         % shift the shoe base outward
-        rshift = (design.tsb - (design.tc*options.Max_tsbVtc));
+        rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc));
         design.Rtsb = design.Rtsb + rshift;
-        design.tsb = design.tc*options.Max_tsbVtc;
+        design.tsb = design.tc(1)*options.Max_tsbVtc;
         % recalculate the shoe gap size
         design.tsg = design.tsb * design.tsgVtsb;
         design.Rtsg = design.Rao - design.tsg;
         design = updatedims_interal_arm(design);
     end
 
-    if design.tc > options.Max_tc
+    if design.tc(1) > options.Max_tc
         % move the stator yoke outwards to reduce the size of the slot
-        rshift = (design.tc - options.Max_tc);
+        rshift = (design.tc(1) - options.Max_tc);
         design.Ryi = design.Ryi + rshift;
         design.Ryo = design.Ryo + rshift;
         design = updatedims_interal_arm(design);
@@ -363,7 +365,7 @@ function design = updatedims_interal_arm(design)
 
     % lengths in radial direction
     design.ty = design.Ryo - design.Ryi;
-    design.tc = design.Rco - design.Rci;
+    design.tc(1) = design.Rco - design.Rci;
     design.tsb = design.Rao - design.Rtsb;
     design.g = design.Rmi - design.Rao;
     design.tm = design.Rmo - design.Rmi;
