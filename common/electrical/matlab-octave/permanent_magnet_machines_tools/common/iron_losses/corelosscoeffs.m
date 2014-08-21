@@ -1,4 +1,21 @@
 function [kh, kc, ke, beta] = corelosscoeffs (grade, gage, varargin)
+% returns Steinmitz core loss coefficients for various grades of lamination
+% materials
+%
+% Syntax
+%
+% [kh, kc, ke, beta] = corelosscoeffs (grade, gage)
+% [kh, kc, ke, beta] = corelosscoeffs (..., 'Parameter', Value, ...)
+% 
+%
+% Possible parameter-value pairs:
+%
+%  LimitFreqs - 2 element vector containing an upper and lower limit on the
+%    frequencies to be used in the fit.
+%
+%  Processing - 
+%
+%  InterpolateMissing - 
 
     Inputs.LimitFreqs = [-inf, inf];
     Inputs.AddZeros = false;
