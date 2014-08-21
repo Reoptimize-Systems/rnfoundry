@@ -8,6 +8,9 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
 %
 % 
 
+    simoptions = setfieldifabsent (simoptions, 'evaloptions', ...
+                                    designandevaloptions_RADIAL_SLOTTED() );
+    
     % get the unique slot positions in case some are duplicated, this is
     % required as interp1 is used on this data later, and it requires
     % unique data points
