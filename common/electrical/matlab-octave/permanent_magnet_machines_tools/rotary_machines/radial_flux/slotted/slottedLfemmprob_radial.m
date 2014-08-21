@@ -39,8 +39,8 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
     Inputs.AirGapMeshSize = choosemesharea_mfemm(design.g, design.Rmm*design.thetap, 1/50);
     Inputs.ShoeGapRegionMeshSize = choosemesharea_mfemm(design.tsg, design.Rcm*(design.thetas-mean(design.thetac))/2, 1/50);
     Inputs.YokeRegionMeshSize = min( choosemesharea_mfemm(design.ty, 2*design.Rym*design.thetap, 1/40), ...
-                                     choosemesharea_mfemm(design.tc, design.Rcm*mean(design.thetac), 1/40)  );
-    Inputs.CoilRegionMeshSize = choosemesharea_mfemm(design.tc, design.Rcm*mean(design.thetac));
+                                     choosemesharea_mfemm(design.tc(1), design.Rcm*mean(design.thetac), 1/40)  );
+    Inputs.CoilRegionMeshSize = choosemesharea_mfemm(design.tc(1), design.Rcm*mean(design.thetac));
     Inputs.Tol = 1e-5;
     Inputs.NSlots = 2*design.Phases;
     Inputs.DrawOuterRegions = true;
@@ -78,13 +78,13 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
             drawnrotors = [false, true];
             rrotor = design.Rmo;
             drawnstatorsides = [1, 0];
-            Rs = design.Rmo + design.g + design.tc + design.tsb + design.ty/2;
+            Rs = design.Rmo + design.g + design.tc(1) + design.tsb + design.ty/2;
         case 'internal'
             % single outer facing stator
             drawnrotors = [true, false];
             rrotor = design.Rmo;
             drawnstatorsides = [0, 1]; 
-            Rs = design.Rmi - design.g - design.tc - design.tsb - design.ty/2;
+            Rs = design.Rmi - design.g - design.tc(1) - design.tsb - design.ty/2;
         case 'di'
             % double internal stator (mags on outside)
 %             drawnrotors = [true, true];
@@ -145,7 +145,7 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
     % draw the stator slots for all stages
     [FemmProblem, yokenodeids, coillabellocs, inslabellocs] = radialfluxstator2dfemmprob ( ...
         design.Qs, design.Poles, Rs, design.thetap, design.thetac, ...
-        design.thetasg, design.ty, design.tc, design.tsb, design.tsg, drawnstatorsides, ...
+        design.thetasg, design.ty, design.tc(1), design.tsb, design.tsg, drawnstatorsides, ...
         'NWindingLayers', Inputs.NWindingLayers, ...
         'FemmProblem', FemmProblem, ...
         'ShoeGapMaterial', GapMatInd, ...
