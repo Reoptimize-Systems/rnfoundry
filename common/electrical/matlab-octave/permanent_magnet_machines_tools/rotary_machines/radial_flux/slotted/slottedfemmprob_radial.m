@@ -1,11 +1,11 @@
-function [FemmProblem, coillabellocs, yokenodeids, inslabellocs] = slottedfemmprob_radial(design, varargin)
+function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
 % creates a FemmProblem structure for a slotted radial flux permanent
 % magnet machine
 %
 % Syntax
 %
-% [FemmProblem, coillabellocs, yokenodeids] = slottedfemmprob_radial(design)
-% [FemmProblem, coillabellocs, yokenodeids] = slottedfemmprob_radial(..., 'Parameter', Value)
+% [FemmProblem, coillabellocs] = slottedfemmprob_radial(design)
+% [FemmProblem, coillabellocs] = slottedfemmprob_radial(..., 'Parameter', Value)
 %
 
     % First set up some default inputs
@@ -13,6 +13,10 @@ function [FemmProblem, coillabellocs, yokenodeids, inslabellocs] = slottedfemmpr
     Inputs.NWindingLayers = 1;
     Inputs.CoilCurrent = 0;
     Inputs.MagArrangement = 'NN';
+    Inputs.PolarisationType = 'constant';
+    if isfield (design, 'MagnetPolarisation') && ischar (design.MagnetPolarisation)
+        Inputs.PolarisationType = design.MagnetPolarisation;
+    end
     Inputs.FemmProblem = newproblem_mfemm('planar', 'Depth', design.ls, 'MinAngle', 15);
     Inputs.Position = 0;
     Inputs.FractionalPolePosition = [];
@@ -140,6 +144,7 @@ function [FemmProblem, coillabellocs, yokenodeids, inslabellocs] = slottedfemmpr
         design.thetap, design.thetam, design.tm, design.tbi, drawnrotors, rrotor, ...
         'FemmProblem', FemmProblem, ...
         'MagArrangement', Inputs.MagArrangement, ...
+        'PolarisationType', Inputs.PolarisationType, ...
         'MagnetMaterial', MagnetMatInd, ...
         'BackIronMaterial', BackIronMatInd, ...
         'OuterRegionsMaterial', GapMatInd, ... % ususally Air
