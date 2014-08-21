@@ -67,7 +67,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     sdesign = design;
     ssimoptions = simoptions;
     
-    sdesign.Hc = sdesign.tc;
+    sdesign.Hc = sdesign.tc(1);
         
     % number of slots per pole and phase
     if ~isfield(sdesign, 'qc')
@@ -119,6 +119,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         sdesign.CoreLoss(2) = sdesign.CoreLoss(1);
     end
     
+    ssimoptions.SkipCheckCoilProps = true;
     [sdesign, ssimoptions] = simfun_RADIAL(sdesign, ssimoptions);
     
     ssimoptions.femmmeshoptions = setfieldifabsent(ssimoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', -1);
@@ -128,9 +129,15 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
     
     armirongroup = 2;
-        
+    
+    rmcoilturns = false;
+    if ~isfield(sdesign, 'CoilTurns')
+        sdesign.CoilTurns = 1;
+        rmcoilturns = true;
+    end
+    
     % Draw the sim 
-    [sdesign.FemmProblem, sdesign.coillabellocs, sdesign.yokenodeids] = ...
+    [sdesign.FemmProblem, sdesign.coillabellocs] = ...
                         slottedfemmprob_radial(sdesign, ...
                             'ArmatureType', sdesign.ArmatureType, ...
                             'NWindingLayers', sdesign.CoilLayers, ...
@@ -144,13 +151,18 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
                             'YokeRegionMeshSize', ssimoptions.femmmeshoptions.YokeRegionMeshSize, ...
                             'CoilRegionMeshSize', ssimoptions.femmmeshoptions.CoilRegionMeshSize);
 
+    if rmcoilturns
+        sdesign = rmfield(sdesign, 'CoilTurns');
+    end
+    
     % write the fem file to disk
     writefemmfile(femfilename, sdesign.FemmProblem);
     % analyse the problem
     ansfilename = analyse_mfemm(femfilename, ...
                                 simoptions.usefemm, ...
                                 simoptions.quietfemm);
-
+                            
+	
     if (exist('fpproc_interface_mex', 'file')==3) && ~ssimoptions.usefemm
 
         solution = fpproc(ansfilename);
@@ -166,6 +178,8 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         temp = solution.getcircuitprops('1');
         peakfl = temp(3);
         
+        % get the cross-sectional area of the coil winding bundle
+        sdesign.CoilArea = solution.blockintegral ( 5, sdesign.coillabellocs(1,1), sdesign.coillabellocs(1,2) );
         % estimate the coil resistance
 %         [design.CoilResistance, design.CoilInductance] = solution.circuitRL('1');
         
@@ -175,10 +189,16 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
 
     end
     
+    sdesign = checkcoilprops_AM(sdesign);
+    
+    if rmcoilturns
+       peakfl = peakfl * sdesign.CoilTurns;
+    end
+    
     % now calculate coil resistance
     sdesign.MTL = rectcoilmtl( sdesign.ls, ...
                                sdesign.yd * sdesign.thetas * sdesign.Rcm, ...
-                               sdesign.thetac * sdesign.Rcm );
+                               mean([sdesign.thetacg, sdesign.thetacy] * sdesign.Rcm) );
 
     sdesign.CoilResistance = 1.7e-8 * sdesign.CoilTurns * sdesign.MTL ./ (pi * (sdesign.Dc/2)^2);
     
@@ -221,5 +241,6 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     sdesign.Efficiency = 0.9 * (sdesign.LoadResistance / (sdesign.CoilResistance + sdesign.LoadResistance));
     sdesign.TorqueRippleFactor = 0.2;
     sdesign.VoltagePercentTHD = 50;
+    sdesign.TemperaturePeak = ssimoptions.max_TemperaturePeak - 1;
     
 end
