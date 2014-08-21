@@ -68,6 +68,7 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     Inputs.torquefcnargs = {};
     Inputs.simoptions = struct();
     Inputs.RampPoles = [];
+    Inputs.MinPointsPerPole = 20;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -142,6 +143,9 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     
         simoptions.omegaT = repmat(Inputs.AngularVelocity, 1, ninterppoints);
         
+        % choose a suitible max time step, if not done so already
+        simoptions = setfieldifabsent (simoptions, 'maxstep', maxstep (design, simoptions, Inputs.MinPointsPerPole));
+        
     end
        
     % simulation is not specified as a single velocity of some kind
@@ -157,9 +161,8 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
 
     end
     
-    
     if isfield(simoptions, 'omegaT')
-        % v = dx / dt, so integrate to get the velocity
+        % v = dx / dt, so integrate to get the position
         simoptions.thetaT = cumtrapz(simoptions.drivetimes, simoptions.omegaT);
     end
 
@@ -185,7 +188,7 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     simoptions.tspan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
     
     % if an initial ramp up in speed has been specified, construct it
-    if ~isempty(Inputs.RampPoles)
+    if ~isempty(Inputs.RampPoles) && Inputs.RampPoles > 0
         
         % add a linear speed ramp up over the specified number of poles,
         % typically to reduce the starting currents due to inductance
@@ -202,7 +205,8 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
 
         simoptions.tspan = simoptions.drivetimes([1, end]);
 
-        simoptions.maxstep = (simoptions.tspan(end) - simoptions.tspan(end-1)) / (40 * Inputs.RampPoles);
+        simoptions = setfieldifabsent (simoptions, 'maxstep', ...
+            (simoptions.tspan(end) - simoptions.tspan(end-1)) / (Inputs.MinPointsPerPole * Inputs.RampPoles) );
         
     end
     
@@ -212,3 +216,15 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     simoptions.pp_omegaT = interp1(simoptions.drivetimes,simoptions.omegaT,'cubic','pp');
 
 end
+
+
+function dT = maxstep (design, simoptions, pperpole)
+% choose a suitible max allowed time step
+
+    maxOmega = max(simoptions.omegaT);
+    
+    dT = design.PoleWidth / maxOmega / pperpole;
+
+end
+
+
