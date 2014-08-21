@@ -49,12 +49,13 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlV
     outfields = {'PowerLossIronMean'};
     
     % set up the simulation functions
-    simoptions.simfun = 'simfun_RADIAL_SLOTTED';
-    simoptions.finfun = 'prescribedmotfinfun_RADIAL_SLOTTED';
-    simoptions.odeevfun = 'prescribedmotodetorquefcn_ROTARY';
-    simoptions.torquefcn = 'torquefcn_ROTARY';
-    simoptions.resfun = 'prescribedmotresfun_ROTARY';
-    
+    simoptions = setfieldifabsent (simoptions, 'simfun', 'simfun_RADIAL_SLOTTED');
+    simoptions = setfieldifabsent (simoptions, 'finfun', 'prescribedmotfinfun_RADIAL_SLOTTED');
+    simoptions = setfieldifabsent (simoptions, 'odeevfun', 'prescribedmotodetorquefcn_ROTARY');
+    simoptions = setfieldifabsent (simoptions, 'torquefcn', 'torquefcn_ROTARY');
+    simoptions = setfieldifabsent (simoptions, 'resfun', 'prescribedmotresfun_ROTARY');
+    simoptions = setfieldifabsent (simoptions, 'PoleCount', 300);
+     
     % call the common radial performance tables function
     ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields);
     
