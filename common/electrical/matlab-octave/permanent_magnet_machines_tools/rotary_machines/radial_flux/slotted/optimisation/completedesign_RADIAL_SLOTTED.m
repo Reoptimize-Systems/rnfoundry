@@ -251,11 +251,11 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
     % on the specified stator type
     if strncmpi(design.ArmatureType, 'external', 1)
         
-        design = completeexternal (design);
+        design = completeexternalarmature (design);
         
     elseif strncmpi(design.ArmatureType, 'internal', 1)
         
-        design = completeinternal (design);
+        design = completeinternalarmature (design);
         
     else
         error('Unrecognised armature type.')
@@ -275,7 +275,7 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
     
 end
 
-function design = completeexternal (design)
+function design = completeexternalarmature (design)
 
                 
     ratiofields = { 'RyiVRyo';
@@ -286,7 +286,8 @@ function design = completeexternal (design)
                     'RbiVRmi';
                     'tsgVtsb'; 
                     'thetamVthetap';
-                    'thetacVthetas'; 
+                    'thetacgVthetas'; 
+                    'thetacyVthetas';
                     'thetasgVthetacg'; 
                     'lsVtm'; };
                     
@@ -324,15 +325,15 @@ function design = completeexternal (design)
 
         % process the angular ratios, thetas is calculated in
         % completedesign_RADIAL.m based on the number of slots
-        design.thetam = design.thetamVthetap * design.thetap;
-        design.thetacg = design.thetacgVthetas * design.thetas;
-        design.thetacy = design.thetacyVthetas * design.thetas;
-        design.thetasg = design.thetasgVthetacg * design.thetacg;
+%        design.thetam = design.thetamVthetap * design.thetap;
+%        design.thetacg = design.thetacgVthetas * design.thetas;
+%        design.thetacy = design.thetacyVthetas * design.thetas;
+%        design.thetasg = design.thetasgVthetacg * design.thetacg;
         % the shoe tip length
         design.tsb = design.Rai - design.Rtsb;
         design.tsg = design.tsgVtsb * design.tsb;
 
-        design.Rco = design.Ryo;
+        design.Rco = design.Ryi;
         design.Rci = design.Rtsb;
         design.Rbo = design.Rmi;
         design.Rtsg = design.Rai + design.tsg;
@@ -340,10 +341,15 @@ function design = completeexternal (design)
         % calculate the lengths
         design.ty = design.Ryo - design.Ryi;
         design.tc = design.Rco - design.Rci;
+        
+        if isfield (design, 'Rcb')
+            design.tc(2) = design.Rco - design.Rcb;
+        end
+        
         design.tsb = design.Rtsb - design.Rai;
         design.g = design.Rai - design.Rmi;
-        design.tm = design.Rmi - design.Rmo;
-        design.tbi = design.Rbi - design.Rbo;
+        design.tm = design.Rmo - design.Rmi;
+        design.tbi = design.Rbo - design.Rbi;
 
         % finally calculate the stack length
         design.ls = design.lsVtm * design.tm;
@@ -363,6 +369,10 @@ function design = completeexternal (design)
         design.Rtsg = design.Rai + design.tsg;
         
         design.tc = design.Rco - design.Rci;
+        
+        if isfield (design, 'Rcb')
+            design.tc(2) = design.Rco - design.Rcb;
+        end
         
         % complete the ratios
         design.RyiVRyo = design.Ryi / design.Ryo;
@@ -385,7 +395,7 @@ function design = completeexternal (design)
         % The dimensions are present already, specified using lengths,
         % calculate the radial dimensions
         design.Ryi = design.Ryo - design.ty;
-        design.Rtsb = design.Ryi - design.tc;
+        design.Rtsb = design.Ryi - design.tc(1);
         design.Rai = design.Rtsb - design.tsb;
         design.Rmo = design.Rai - design.g;
         design.Rmi = design.Rmo - design.tm;
@@ -393,6 +403,11 @@ function design = completeexternal (design)
         
         design.Rco = design.Ryi;
         design.Rci = design.Rtsb;
+        
+        if numel (design.tc) > 1
+            design.Rcb = design.Rco - design.tc(2);
+        end
+        
         design.Rbo = design.Rmi;
         design.Rtsg = design.Rai + design.tsg;
         
@@ -424,7 +439,7 @@ function design = completeexternal (design)
 end
 
 
-function design = completeinternal (design)
+function design = completeinternalarmature (design)
 
     ratiofields = { 'RmoVRbo';
                     'RmiVRmo';
@@ -490,6 +505,11 @@ function design = completeinternal (design)
         % calculate the lengths
         design.ty = design.Ryo - design.Ryi;
         design.tc = design.Rco - design.Rci;
+        
+        if isfield (design, 'Rcb')
+            design.tc(2) = design.Rco - design.Rcb;
+        end
+        
         design.tsb = design.Rao - design.Rtsb;
         design.g = design.Rmi - design.Rao;
         design.tm = design.Rmo - design.Rmi;
@@ -534,7 +554,7 @@ function design = completeinternal (design)
         design.Rmi = design.Rmo - design.tm;
         design.Rao = design.Rmi - design.g;
         design.Rtsb = design.Rao - design.tsb;
-        design.Ryo = design.Rtsb - design.tc; 
+        design.Ryo = design.Rtsb - design.tc(1); 
         design.Ryi = design.Ryo - design.ty;
 
         design.Rco = design.Rtsb;
@@ -559,10 +579,10 @@ function design = completeinternal (design)
     else
         % something's missing
         error( 'RENEWNET:pmmachines:slottedradspec', ...
-               'For a slotted radial flux design with internal armature you must have the\nfields %s OR %s OR %s in the design structure.', ...
+               'For a slotted radial flux design with internal armature you must have the\nfields %s\n OR %s\n OR %s in the design structure.', ...
                sprintf('%s, ', ratiofields{:}), ...
                sprintf('%s, ', dimfields1{:}), ...
-               sprintf('%s, ', dimfields2{:}))
+               sprintf('%s, ', dimfields2{:}));
     end
 
 end
