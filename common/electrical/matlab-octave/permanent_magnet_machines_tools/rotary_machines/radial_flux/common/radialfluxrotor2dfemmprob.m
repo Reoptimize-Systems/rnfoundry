@@ -174,8 +174,8 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
         innerwrapperthickness = [ rbackiron, 0; ];
         if Inputs.DrawOuterRegions
             innerwrapperthickness = [ innerwrapperthickness;
-                                      (roffset(2) * 0.2), 0;
-                                      (roffset(2)-(roffset(2) * 0.2)) * 0.5, 0 ];
+                                      (roffset(2)-rbackiron) * 0.2, 0;
+                                      (roffset(2)-rbackiron) * 0.3, 0 ];
         end
         
         [FemmProblem, ~, ~, ~, nodeids2, linktb2] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, ...
