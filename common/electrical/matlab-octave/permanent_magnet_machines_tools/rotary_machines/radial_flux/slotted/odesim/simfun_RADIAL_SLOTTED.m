@@ -201,14 +201,16 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 
     if ~isfield(design, 'CoreLoss')
         % CoreLoss will be the armature back iron data
-        [design.CoreLoss.fq, ...
-         design.CoreLoss.Bq, ...
-         design.CoreLoss.Pq ] = m36assheared26gagecorelossdata(false);
+        [ design.CoreLoss.kh, ...
+          design.CoreLoss.kc, ...
+          design.CoreLoss.ke, ...
+          design.CoreLoss.beta ] = corelosscoeffs ('M-36', '26');
     end
     
-    % placeholder for coil cross-sectional area, this is extracted from the
-    % FEA below, this avoids checkcoilprops_AM changing it
-    design.CoilArea = nan;
+    % We don't check the coil turns etc at this stage (done by default in 
+    % simfun_RADIAL) as we don't yet know the coil cross-sectional area, this is
+    % done later below
+    simoptions.SkipCheckCoilProps = true;
     
     % call the common radial simulation function
     [design, simoptions] = simfun_RADIAL(design, simoptions);
@@ -268,7 +270,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         for i = 1:numel(design.feapos)
 
             % Draw the sim, i.e by creating the FemmProblem structure
-            [design.FemmProblem, design.coillabellocs, design.yokenodeids] = ...
+            [design.FemmProblem, design.coillabellocs] = ...
                                 slottedfemmprob_radial(design, ...
                                     'ArmatureType', design.ArmatureType, ...
                                     'NWindingLayers', design.CoilLayers, ...
@@ -418,6 +420,9 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     end
     design.gvar = [design.gvar, design.g + pos];
     
+    % make sure the winding properties (number of turns etc.) are up to date
+    design = checkcoilprops_AM(design);
+    
     if ~simoptions.SkipInductanceFEA
     
         % perform an inductance sim
@@ -434,12 +439,10 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
             'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
             'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
         
-        % write the fem file to disk
-        writefemmfile(femfilename, InductanceFemmProblem);
         % analyse the problem
-        ansfilename = analyse_mfemm(femfilename, ...
-                                    simoptions.usefemm, ...
-                                    simoptions.quietfemm);
+        [ansfilename, femfilename] = analyse_mfemm(InductanceFemmProblem, ...
+                                                   simoptions.usefemm, ...
+                                                   simoptions.quietfemm);
         
         if exist('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
             solution = fpproc(ansfilename);
@@ -677,13 +680,3 @@ function design = corelosssetup(design, feapos, solution)
     end
 
 end
-
-
-
-%function flux = getintermagflux (design, solution)
-%
-%    % 
-%    
-%    annularsecarea ()
-%
-%end
