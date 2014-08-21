@@ -96,4 +96,6 @@ function design = completedesign_RADIAL(design, simoptions)
     % calculate the slot pitch
     design.thetas = 2*pi / design.Qs;
     
+    design.PoleWidth = design.thetap;
+    
 end
