@@ -136,15 +136,15 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     end
     
     % make a single slot
-    [nodes, links, cornernodes, shoegaplabelloc, firstcoillabellocs, vertlinkinds, toothlinkinds, inslabellocs] = ...
-            internalslotnodelinks( thetacoil, thetashoegap, ryoke/2, rcoil, ...
+%info.cornernodes, info.shoegaplabelloc, info.coillabelloc, info.vertlinkinds, info.toothlinkinds
+    [nodes, links, slotinfo] = internalslotnodelinks( thetacoil, thetashoegap, ryoke/2, rcoil, ...
                                    rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol, ...
                                    'CoilBaseFraction', Inputs.CoilBaseFraction, ...
                                    'InsulationThickness', insulationthickness, ...
                                    'ShoeCurveControlFrac', Inputs.ShoeCurveControlFrac, ...
                                    'YScale', roffset + ryoke + rcoil/2  );
 
-    links = [ links, ismember(1:size(links,1),vertlinkinds)', ismember(1:size(links,1),toothlinkinds)' ];
+    links = [ links, ismember(1:size(links,1),slotinfo.vertlinkinds)', ismember(1:size(links,1),slotinfo.toothlinkinds)' ];
     
     coillabellocs = [];
     
@@ -154,40 +154,40 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
         
         nodes(:,1) = -nodes(:,1);
         
-        if ~isempty(shoegaplabelloc)
-            shoegaplabelloc(:,1) = -shoegaplabelloc(:,1);
+        if ~isempty(slotinfo.shoegaplabelloc)
+            slotinfo.shoegaplabelloc(:,1) = -slotinfo.shoegaplabelloc(:,1);
         end
         
-        if ~isempty(firstcoillabellocs)
-            firstcoillabellocs(:,1) = -firstcoillabellocs(:,1);
+        if ~isempty(slotinfo.coillabelloc)
+            slotinfo.coillabelloc(:,1) = -slotinfo.coillabelloc(:,1);
         end
         
-        if ~isempty (inslabellocs)
-            inslabellocs(:,1) = -inslabellocs(:,1);
+        if ~isempty (slotinfo.inslabelloc)
+            slotinfo.inslabelloc(:,1) = -slotinfo.inslabelloc(:,1);
         end
         
         % rearrange the corner nodes to preserve clockwise ordering
         % starting from bottom left
-        cornernodes = [cornernodes(2), cornernodes(1), cornernodes(4), cornernodes(3)]; 
+        slotinfo.cornernodes = [slotinfo.cornernodes(2), slotinfo.cornernodes(1), slotinfo.cornernodes(4), slotinfo.cornernodes(3)]; 
     end
     
     % add the specified offset in the radial direction
     nodes(:,1) = nodes(:,1) + roffset;
 
-    if ~isempty(shoegaplabelloc)
-        shoegaplabelloc(:,1) = shoegaplabelloc(:,1) + roffset;
+    if ~isempty(slotinfo.shoegaplabelloc)
+        slotinfo.shoegaplabelloc(:,1) = slotinfo.shoegaplabelloc(:,1) + roffset;
     end
 
-    if ~isempty(firstcoillabellocs)
-        firstcoillabellocs(:,1) = firstcoillabellocs(:,1) + roffset;
+    if ~isempty(slotinfo.coillabelloc)
+        slotinfo.coillabelloc(:,1) = slotinfo.coillabelloc(:,1) + roffset;
     end
     
-    if ~isempty(inslabellocs)
-        inslabellocs(:,1) = inslabellocs(:,1) + roffset;
+    if ~isempty(slotinfo.inslabelloc)
+        slotinfo.inslabelloc(:,1) = slotinfo.inslabelloc(:,1) + roffset;
     end
     
 	% convert vertical links to arc segments
-    vertlinks = links(vertlinkinds,1:2);
+    vertlinks = links(slotinfo.vertlinkinds,1:2);
     angles = diff( [nodes(vertlinks(:,1)+1,2), nodes(vertlinks(:,2)+1,2)], 1, 2);
     
     % correct vertical links which are in the wrong direction
@@ -201,24 +201,24 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     % convert angles to degrees
     angles = rad2deg(angles);
     vertlinks = fliplr(vertlinks);
-    links(vertlinkinds, 1:2) = vertlinks;
+    links(slotinfo.vertlinkinds, 1:2) = vertlinks;
     
     % transform the node locations to convert the rectangular region to the
     % desired arced region 
     [nodes(:,1), nodes(:,2)] = pol2cart(nodes(:,2), nodes(:,1));
-    if ~isempty(shoegaplabelloc)
-        [shoegaplabelloc(:,1), shoegaplabelloc(:,2)] = pol2cart(shoegaplabelloc(:,2),shoegaplabelloc(:,1));
+    if ~isempty(slotinfo.shoegaplabelloc)
+        [slotinfo.shoegaplabelloc(:,1), slotinfo.shoegaplabelloc(:,2)] = pol2cart(slotinfo.shoegaplabelloc(:,2),slotinfo.shoegaplabelloc(:,1));
     end
     
-    [firstcoillabellocs(:,1), firstcoillabellocs(:,2)] = pol2cart(firstcoillabellocs(:,2),firstcoillabellocs(:,1));
+    [slotinfo.coillabelloc(:,1), slotinfo.coillabelloc(:,2)] = pol2cart(slotinfo.coillabelloc(:,2),slotinfo.coillabelloc(:,1));
     
-    if ~isempty(inslabellocs)
-        [inslabellocs(:,1), inslabellocs(:,2)] = pol2cart(inslabellocs(:,2),inslabellocs(:,1));
+    if ~isempty(slotinfo.inslabelloc)
+        [slotinfo.inslabelloc(:,1), slotinfo.inslabelloc(:,2)] = pol2cart(slotinfo.inslabelloc(:,2),slotinfo.inslabelloc(:,1));
     end
     
     % store the nodes at the bottom of all the slots
-    bottomnodes = cornernodes([4,3]) + elcount.NNodes;  
-    lastslotcornernodes = cornernodes + elcount.NNodes;    
+    bottomnodes = slotinfo.cornernodes([4,3]) + elcount.NNodes;  
+    lastslotcornernodes = slotinfo.cornernodes + elcount.NNodes;    
     
     % draw the first slot linking it to the bottom of the domain
     thisslotsnodes = nodes;
@@ -229,15 +229,15 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     % move in the y direction to the first slot position
     thisslotsnodes = thisslotsnodes * rotM;
     
-    originslabellocs = inslabellocs;
+    originslabellocs = slotinfo.inslabelloc;
     
     if ~isempty (originslabellocs)
-        inslabellocs = originslabellocs * rotM;
+        slotinfo.inslabelloc = originslabellocs * rotM;
     end
     
-    if ~isempty(firstcoillabellocs)
+    if ~isempty(slotinfo.coillabelloc)
         
-        thiscoillabellocs = firstcoillabellocs * rotM;
+        thiscoillabellocs = slotinfo.coillabelloc * rotM;
         
         % get the coil label location
         coillabellocs = [ coillabellocs; ...
@@ -292,9 +292,9 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
         
     end
           
-    if ~isempty (shoegaplabelloc)
+    if ~isempty (slotinfo.shoegaplabelloc)
         
-        thisshoegaplabelloc = shoegaplabelloc * rotM;
+        thisshoegaplabelloc = slotinfo.shoegaplabelloc * rotM;
         
         for ind = 1:size(thisshoegaplabelloc,1)
             FemmProblem = addblocklabel_mfemm (FemmProblem, thisshoegaplabelloc(ind,1), thisshoegaplabelloc(ind,2), ...
@@ -317,13 +317,13 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
         
         thisslotsnodes = thisslotsnodes * rotM;
         
-        if ~isempty (inslabellocs)
-            inslabellocs = [ inslabellocs; originslabellocs * rotM ];
+        if ~isempty (slotinfo.inslabelloc)
+            slotinfo.inslabelloc = [ slotinfo.inslabelloc; originslabellocs * rotM ];
         end
         
         thisslotlinks = [links(:,1:2) + numel(FemmProblem.Nodes), links(:,3:end)];
         
-        thisslotcornernodes = cornernodes + numel(FemmProblem.Nodes);
+        thisslotcornernodes = slotinfo.cornernodes + numel(FemmProblem.Nodes);
         
         [FemmProblem] = addnodes_mfemm (FemmProblem, ...
                                         thisslotsnodes(:,1), ...
@@ -366,9 +366,9 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
 
         end                              
         
-        if ~isempty(shoegaplabelloc)
+        if ~isempty(slotinfo.shoegaplabelloc)
             
-            thisshoegaplabelloc = shoegaplabelloc * rotM;
+            thisshoegaplabelloc = slotinfo.shoegaplabelloc * rotM;
             
             for ind = 1:size(thisshoegaplabelloc,1)
                 
@@ -416,7 +416,7 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
         % store the top nodes of the slot for the next loop
         lastslotcornernodes = thisslotcornernodes;     
         
-        thiscoillabellocs = firstcoillabellocs * rotM;
+        thiscoillabellocs = slotinfo.coillabelloc * rotM;
         
         % get the coil label location
         coillabellocs = [ coillabellocs; ...
@@ -426,6 +426,9 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     
     % we will return the outer corner node ids for later use
     outernodes = [bottomnodes, lastslotcornernodes([2,1])];
+    
+    inslabellocs = slotinfo.inslabelloc;
+    
     
     
     % ---------------    Nested functions   -------------------- %
@@ -471,9 +474,9 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
 %            
 %        end
 %              
-%        if ~isempty (shoegaplabelloc)
+%        if ~isempty (slotinfo.shoegaplabelloc)
 %            
-%            thisshoegaplabelloc = shoegaplabelloc * rotM;
+%            thisshoegaplabelloc = slotinfp.shoegaplabelloc * rotM;
 %            
 %            for ind = 1:size(thisshoegaplabelloc,1)
 %                FemmProblem = addblocklabel_mfemm (FemmProblem, thisshoegaplabelloc(ind,1), thisshoegaplabelloc(ind,2), ...
