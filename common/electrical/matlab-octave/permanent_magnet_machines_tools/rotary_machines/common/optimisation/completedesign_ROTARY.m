@@ -117,47 +117,38 @@ function design = completedesign_ROTARY(design, simoptions)
     % is the smallest part that can be modelled using symmetric boundaries
     [design.Qcb,design.pb] = rat(design.qc * design.Phases);
     
-    % ensure a magnetically neutral rotor by having at least 2 poles in the
-    % basic winding segment
-    if design.pb == 1
-        design.pb = 2;
-        design.Qcb = 2 * design.Qcb;
-    end
-    
     if ~isfield(design, 'Poles') && isfield(design, 'NBasicWindings')
         % multiply the basic winding by the desired number to get the full
         % winding, this therefore sizes ths machine, also determining the
-        % number of Poles, this options is useful for optimisation routines
+        % number of Poles, this option is useful for optimisation routines
+        
+        % ensure a magnetically neutral rotor by having an even number of 
+        % poles
+        if design.pb == 1 && ~iseven(design.NBasicWindings)
+            design.NBasicWindings = design.NBasicWindings + 1;
+        end
+    
         design.Qc = design.Qcb *  design.NBasicWindings;
         design.Poles = design.pb *  design.NBasicWindings;
         
-        % determine the total number of slots in the machine
-        if design.CoilLayers == 2
-            design.Qs = design.Qc;
-        elseif design.CoilLayers == 1
-            design.Qs = 2 * design.Qc;
-        else
-            error('Only coils with one or two layers are implemented.')
-        end
-        
     else        
-         % determine the number of slots 
-        [design.Qs,~] = rat(design.qc * design.Phases * design.Poles);
+         % determine the number of coils 
+        [design.Qc,~] = rat(design.qc * design.Phases * design.Poles);
         
         % calculate the number of basic windings in the design
         design.NBasicWindings = design.Poles / design.pb;
         
-        % determine the total number of coils in the machine
-        if design.CoilLayers == 2
-            design.Qc = design.Qs;
-        elseif design.CoilLayers == 1
-            design.Qc = design.Qs / 2;
-        else
-            error('Only coils with one or two layers are implemented.')
-        end
-        
     end
     
+    % determine the total number of slots in the machine
+    if design.CoilLayers == 2
+        design.Qs = design.Qc;
+    elseif design.CoilLayers == 1
+        design.Qs = 2 * design.Qc;
+    else
+        error('Only coils with one or two layers are implemented.')
+    end
+        
     % get the numerator and denominator of qc
     [design.qcn,design.qcd] = rat(design.qc);
     
