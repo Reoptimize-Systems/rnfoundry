@@ -46,6 +46,7 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
     Inputs.DrawOuterRegions = true;
     Inputs.CoilInsRegionMeshSize = -1;
     Inputs.DrawCoilInsulation = false;
+    Inputs.MaterialsLibrary = '';
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -55,15 +56,19 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
     
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
-    [FemmProblem, matinds] = addmaterials_mfemm(FemmProblem, ...
-        {design.MagFEASimMaterials.AirGap, design.MagFEASimMaterials.Magnet, design.MagFEASimMaterials.FieldBackIron, ...
-         design.MagFEASimMaterials.ArmatureYoke, design.MagFEASimMaterials.ArmatureCoil});
+    [FemmProblem, matinds] = addmaterials_mfemm (FemmProblem, ...
+            { design.MagFEASimMaterials.AirGap, ...
+              design.MagFEASimMaterials.Magnet, ...
+              design.MagFEASimMaterials.FieldBackIron, ...
+              design.MagFEASimMaterials.ArmatureYoke, ...
+              design.MagFEASimMaterials.ArmatureCoil }, ...
+             'MaterialsLibrary', Inputs.MaterialsLibrary ); 
     
     GapMatInd = matinds(1);
-%     MagnetMatInd = matinds(1);
-    BackIronMatInd = matinds(2);
-    YokeMatInd = matinds(3);
-    CoilMatInd = matinds(4);
+%     MagnetMatInd = matinds(2);
+    BackIronMatInd = matinds(3);
+    YokeMatInd = matinds(4);
+    CoilMatInd = matinds(5);
     
     if GapMatInd ~= 1
         warning('SLOTTEDLFEMMPROB_TORUS:magspacenotair', ...
