@@ -1,4 +1,4 @@
-function [loadSuccessful, sem, functionHandles, parameters, nresultargs] = ...
+function [loadSuccessful, sem, functionHandles, parameters, nresultargs, workingFile] = ...
             loadslaveparams(parameterFileName, debugMode, showWarnings, slaveID)
 % loadslaveparams: Loads the function handles and input variables created
 % by startmulticoremaster for use by startmulticoreslave2
@@ -40,6 +40,10 @@ function [loadSuccessful, sem, functionHandles, parameters, nresultargs] = ...
 
     % load and delete last parameter file
     loadSuccessful = true;
+    
+    % generate the working file name, the parameter file name will be
+    % renamed to this on successful load of the parmeters file
+    workingFile = strrep(parameterFileName, 'parameters', 'working');
 
     if existfile(parameterFileName)
 
@@ -66,7 +70,10 @@ function [loadSuccessful, sem, functionHandles, parameters, nresultargs] = ...
 
         % Check that the variables and function handles have in fact
         % been loaded correctly from the parameter file
-        if loadSuccessful && (~exist('functionHandles', 'var') || ~exist('parameters', 'var') || ~exist('nresultargs', 'var'))
+        if loadSuccessful && (~exist('functionHandles', 'var') ...
+                                || ~exist('parameters', 'var') ...
+                                || ~exist('nresultargs', 'var'))
+                            
             % if they haven't set loadSuccessful to false and display
             % some info if showWarnings is set to true
             loadSuccessful = false;
@@ -87,10 +94,12 @@ function [loadSuccessful, sem, functionHandles, parameters, nresultargs] = ...
             end
         end
 
+        % Move the parameter file to the working file location
+        moveSuccessful = movefile(parameterFileName, workingFile); %% file access %%
         % Remove the parameter file from the multicore directory
-        deleteSuccessful = mbdelete2(parameterFileName, showWarnings); %% file access %%
-        if ~deleteSuccessful
-            % If deletion is not successful it can happen that other slaves or
+%         deleteSuccessful = mbdelete2(parameterFileName, showWarnings); %% file access %%
+        if ~moveSuccessful
+            % If move is not successful it can happen that other slaves or
             % the master also use these parameters. To avoid this, ignore the
             % loaded parameters
             loadSuccessful = false;
@@ -113,6 +122,5 @@ function [loadSuccessful, sem, functionHandles, parameters, nresultargs] = ...
     if debugMode
         disp('Finished in loadslaveparams')
     end
-        
 
 end
