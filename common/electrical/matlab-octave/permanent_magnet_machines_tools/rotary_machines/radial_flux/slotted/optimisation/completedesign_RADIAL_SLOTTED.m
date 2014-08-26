@@ -325,12 +325,13 @@ function design = completeexternalarmature (design)
 
         % process the angular ratios, thetas is calculated in
         % completedesign_RADIAL.m based on the number of slots
-%        design.thetam = design.thetamVthetap * design.thetap;
-%        design.thetacg = design.thetacgVthetas * design.thetas;
-%        design.thetacy = design.thetacyVthetas * design.thetas;
-%        design.thetasg = design.thetasgVthetacg * design.thetacg;
+        design.thetam = design.thetamVthetap * design.thetap;
+        design.thetacg = design.thetacgVthetas * design.thetas;
+        design.thetacy = design.thetacyVthetas * design.thetas;
+        design.thetasg = design.thetasgVthetacg * design.thetacg;
+        
         % the shoe tip length
-        design.tsb = design.Rai - design.Rtsb;
+        design.tsb = design.Rtsb - design.Rai;
         design.tsg = design.tsgVtsb * design.tsb;
 
         design.Rco = design.Ryi;
@@ -347,7 +348,7 @@ function design = completeexternalarmature (design)
         end
         
         design.tsb = design.Rtsb - design.Rai;
-        design.g = design.Rai - design.Rmi;
+        design.g = design.Rai - design.Rmo;
         design.tm = design.Rmo - design.Rmi;
         design.tbi = design.Rbo - design.Rbi;
 
@@ -489,10 +490,10 @@ function design = completeinternalarmature (design)
         % process the angular ratios, thetas is calculated in
         % completedesign_RADIAL.m based on the number of slots
         design.thetam = design.thetamVthetap * design.thetap;
-        
         design.thetacg = design.thetacgVthetas * design.thetas;
         design.thetacy = design.thetacyVthetas * design.thetas;
         design.thetasg = design.thetasgVthetacg * design.thetacg;
+        
         % the shoe tip length
         design.tsb = design.Rao - design.Rtsb;
         design.tsg = design.tsgVtsb * design.tsb;
