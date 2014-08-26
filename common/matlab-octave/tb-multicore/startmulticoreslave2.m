@@ -271,7 +271,7 @@ function startmulticoreslave2(multicoreDir, quitmode, quitdatenum, IDfilestart, 
         if ~isempty(parameterFileName)
 
             % Attempt to load the parameters and function handles
-            [loadSuccessful, sem, functionHandles, parameters, nresultargs] = ...
+            [loadSuccessful, sem, functionHandles, parameters, nresultargs, workingFile] = ...
                 loadslaveparams(parameterFileName, debugMode, showWarnings, slaveID);
 
             % remove semaphore and continue if loading was not successful
@@ -287,9 +287,6 @@ function startmulticoreslave2(multicoreDir, quitmode, quitdatenum, IDfilestart, 
             % Still using the semaphore of the parameter file above.
             workingIDFileName = strrep(parameterFileName, 'parameters', sprintf('%d_', slaveID));
 
-            workingFile = strrep(parameterFileName, 'parameters', 'working');
-            generateemptyfile(workingFile);
-            
 %             cleanupinfo.WorkingFile = workingFile;
             
             if debugMode
