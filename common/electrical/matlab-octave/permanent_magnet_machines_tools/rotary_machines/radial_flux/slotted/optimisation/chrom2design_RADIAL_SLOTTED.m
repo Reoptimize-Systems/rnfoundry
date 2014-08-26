@@ -38,6 +38,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % minimum permitted air gap
     options.Min_g = 0.5/1000;
     options.Max_tsbVtc = 0.1;
+    options.tc1Vtc2 = 0.1;
     
     % parse the input options, replacing defaults
     options = parseoptions(options, varargin);
@@ -59,6 +60,30 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     elseif strcmp(design.ArmatureType, 'internal')
 
         design = chrom2design_internal_arm (design, simoptions, Chrom, options);
+        
+    end
+    
+    % set the size of the slot base
+    design.tc(2) = design.tc(1) * options.tc1Vtc2;
+    
+    % prevent too wide slots
+    % first get line equation of slot side
+    m = ((design.thetacg - design.thetacy)/2) / (design.tc(1) - design.tc(2));
+    % get intercept with the yoke
+    c = design.thetacg/2 - m * design.tc(1);
+    
+    if c > ((design.thetas-2e-5) / 2)
+        % the slots will overlap  each other in this case
+        
+        % find the slope which means slots do not overlap
+        m = ((design.thetacg - (design.thetas-2e-5))/2) / design.tc(1);
+        % make the intercept thetas at the coil base end (inner yoke
+        % surface)
+        c = (design.thetas-2e-5) / 2;
+        design.thetacy = 2 * (m .* design.tc(2) + c);
+        % udate ratios etc
+        design.thetacyVthetas = design.thetacy / design.thetas;
+        design.thetac = [design.thetacg, design.thetacy];
         
     end
     
@@ -102,7 +127,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     design.thetamVthetap = Chrom(9);
     design.thetacgVthetas = Chrom(10);
     design.thetacyVthetas = Chrom(11);
-    design.thetasgVthetac = Chrom(12);
+    design.thetasgVthetacg = Chrom(12);
     design.lsVtm = Chrom(13);
     design.NBasicWindings = round(Chrom(14));
     design.DcAreaFac = Chrom(15);
@@ -124,7 +149,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
 %         design.NModules = factors(NearestFacStruct.columnindex, NearestFacStruct.rowindex);
 
     design = completedesign_RADIAL_SLOTTED(design, simoptions);
-
+    % check if the shoe base is too big relative to the coil body height
     if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc
         % shift the shoe base inward
         rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc));
@@ -135,7 +160,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.Rtsg = design.Rai + design.tsg;
         design = updatedims_exteral_arm(design);
     end
-
+    % check if the coil slot height is greater than the maximum allowed
     if design.tc(1) > options.Max_tc
         % move the stator yoke inwards to reduce the size of the slot
         rshift = (design.tc(1) - options.Max_tc);
@@ -143,7 +168,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.Ryo = design.Ryo - rshift;
         design = updatedims_exteral_arm(design);
     end
-
+    % check if the yoke thickness is too big relative to the magnet thickness
     if (design.ty / design.tm) > options.Max_tyVtm
         % move the stator yoke internal radius inwards to reduce the
         % thickness of the yoke
@@ -151,7 +176,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.Ryo = design.Ryo - rshift;
         design = updatedims_exteral_arm(design);
     end
-
+    % check if the magnet thickness is greater than the maximum allowed
     if design.tm > options.Max_tm
         rshift = design.tm - options.Max_tm;
         design.tm = options.Max_tm;
@@ -160,34 +185,34 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design = updatedims_exteral_arm(design);
     end
 
-    % here we handle the 
+    % check if the configuration of the shoe will cause too small triangles
+    % to be created in the mesh
     if design.tsb > 0 && (design.tsg < design.tsb)
-
-        x = ((design.thetac - design.thetasg)/2) * (design.Rao - design.tsb);
-        y = design.tsb - design.tsg;
-
-        tsbangle = rad2deg(atan( y / x ));
+        
+%         x = ((design.thetac(1) - design.thetasg)/2) * design.Rtsb;
+%         y = design.tsb - design.tsg;
+% 
+%         tsbangle = rad2deg(atan( y / x ));
 
         if design.tsg < 1e-5
-            x = ((design.thetacg - design.thetasg)/2) * (design.Rao - design.tsb);
+            x = ((design.thetacg - design.thetasg)/2) * design.Rtsb;
             y = design.tsb;
             tsgangle = rad2deg(atan( y / x ));
         else
             tsgangle = inf;
         end
 
-        if tsbangle < 15 || tsgangle < 15
-
-            rshift = design.tsb;
+        if tsgangle < 15
+            % remove the shoe altogether
+%             rshift = design.tsb;
             design.tsb = 0;
             design.tsg = 0;
-            design.Ryi = design.Ryi + rshift;
-            design.Ryo = design.Ryo + rshift;
-            design.Rci = design.Ryo;
-            design.Rco = design.Rco + rshift;
-            design.Rao = design.Rco;
-            design.Rtsb = design.Rco;
-            design.Rtsg = design.Rco;
+%             design.Ryi = design.Ryi - rshift;
+%             design.Ryo = design.Ryo + rshift;
+            design.Rtsb = design.Rci;
+%             design.Rco = design.Ryi;
+%             design.Rao = design.Rco;
+            design.Rai = design.Rtsb;
 
             design = updatedims_exteral_arm(design);
         end
@@ -210,15 +235,15 @@ end
 function design = updatedims_exteral_arm(design)
 
     % some additional radial variables
-    design.Rco = design.Rtsb;
-    design.Rci = design.Ryi;
+    design.Rci = design.Rtsb;
+    design.Rco = design.Ryi;
     design.Rbo = design.Rmi;
 
     % lengths in radial direction
     design.ty = design.Ryo - design.Ryi;
     design.tc(1) = design.Rco - design.Rci;
     design.tsb = design.Rtsb - design.Rai;
-    design.g = design.Rai - design.Rmi;
+    design.g = design.Rai - design.Rmo;
     design.tm = design.Rmo - design.Rmi;
     design.tbi = design.Rbo - design.Rbi;
 
@@ -230,7 +255,24 @@ function design = updatedims_exteral_arm(design)
     design.Rcm = mean([design.Rci, design.Rco]);
     design.Rbm = mean([design.Rbo, design.Rbi]);
     design.Rym = mean([design.Ryi, design.Ryo]);
+    
+    % update the ratios
+    design.RyiVRyo = design.Ryi / design.Ryo;
+    design.RtsbVRyi = design.Rtsb / design.Ryi;
+    design.RaiVRtsb = design.Rai / design.Rtsb;
+    design.RmoVRai = design.Rmo / design.Rai;
+    design.RmiVRmo = design.Rmi / design.Rmo;
+    design.RbiVRmi = design.Rbi / design.Rmi;
+    design.tsgVtsb = design.tsg / design.tsb;
 
+    % thetap and thetas are calculated in completedesign_RADIAL
+    design.thetamVthetap = design.thetam / design.thetap;
+    design.thetacgVthetas = design.thetacg / design.thetas;
+    design.thetacyVthetas = design.thetacy / design.thetas;
+    design.thetasgVthetacg = design.thetasg / design.thetacg;
+    design.lsVtm = design.ls / design.tm;
+    design.thetac = [design.thetacg, design.thetacy];
+    
 end
 
 
