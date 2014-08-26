@@ -31,7 +31,7 @@ function design = checkcoilprops_AM(design)
 %   conductor.
 %
 
-% Copyright Richard Crozier 2011-2013
+% Copyright Richard Crozier 2011-2014
 
     if ~isfield(design, 'CoilArea') && all(isfield(design, {'Hc', 'Wc'}))
         % Determine the cross-sectional area of the coil, assuming it's a
@@ -42,11 +42,6 @@ function design = checkcoilprops_AM(design)
         else
             design.CoilArea = design.Hc * design.Wc;
         end
-    end
-    
-    % support old field name for the number of turns (Ntot)
-    if ~isfield(design, 'CoilTurns') && isfield(design, 'Ntot')
-        design.CoilTurns = design.Ntot;
     end
     
     if ~isfield(design, 'CoilFillFactor') && ~all(isfield(design, {'Dc', 'CoilTurns'}))
@@ -81,12 +76,7 @@ function design = checkcoilprops_AM(design)
             'You have not supplied enough fields to determine the coil winding properties.')
         
     end
-    
-    % support legacy code with Ntot field 
-    if ~isfield(design, 'Ntot')
-        design.Ntot = design.CoilTurns;
-    end
-    
+
     % calculate the conductor cross-sectional area
     design = setfieldifabsent(design, 'ConductorArea', pi*(design.Dc/2)^2);
     
