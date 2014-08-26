@@ -23,7 +23,7 @@ function [dpsidxRF, EMF, FF, ForceVec, xE, vE, design] = machineodesim_linear_mv
     vE = dot(unitv, [vBh, vBs]);
 
     % Get the EMF and forces using the core machine simulation function
-    [FF, FA, EMF, dpsidxRF, design] = coremachinesim_linear(design, simoptions, xF, xE, vF, vE, Icoils);
+    [FF, FA, EMF, dpsidxRF, design] = machineodesim_AM(design, simoptions, xF, xE, vF, vE, Icoils);
 
     %  Calculating the proportion that the machine forces are producing on
     %  surge and in heave. Do this by multiplying unit vector in direction
