@@ -87,15 +87,15 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
                  'included in the design structure, but not both. ',...
                  'Setting all coils to be in parallel']);
         
-        % we assume all coils in parallel
-        design.Branches = design.PowerPoles;
-        design.CoilsPerBranch = 1;
+        % we assume all coils in series
+        design.Branches = 1;
+        design.CoilsPerBranch = design.NCoilsPerPhase;
         
     else
         
-        % we assume all coils in parallel
-        design.Branches = design.PowerPoles;
-        design.CoilsPerBranch = 1;
+        % we assume all coils in series
+        design.Branches = 1;
+        design.CoilsPerBranch = design.NCoilsPerPhase;
         
     end
     
