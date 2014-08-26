@@ -106,7 +106,7 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv] = machinesim_linear(desig
     vE = dot(unitv, [vBh, vBs]);
 
     % Get the EMF and forces using the core machine simulation function
-    [Feff, Freac, EMF, dpsidxF] = coremachinesim_linear(design, simoptions, xE, 0, vE, 0, Icoils);
+    [Feff, Freac, EMF, dpsidxF] = machineodesim_AM(design, simoptions, xE, 0, vE, 0, Icoils);
 
     % If the translator is at the maximum allowed displacement and
     % continuing to move in that direction, add a retarding force to slow

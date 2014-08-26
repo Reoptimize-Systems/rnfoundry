@@ -1,15 +1,14 @@
-function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = coremachinesim_linear(design, simoptions, xEF, xRE, vEF, vRE, Icoils)
-% core linear machine simulation function, calculates the EMF and force due
-% to the currents in the coils of a linear machine
+function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, simoptions, xEF, xRE, vEF, vRE, Icoils)
+% core permanent magnet machine dynamic ode simulation function
 %
 % Syntax
 %
-% [FEF, FRE, EMF, dpsidxCRTF, design] = coremachinesim_linear(design, simoptions, xEF, xRE, vEF, vRE, Icoils)
+% [FEF, FRE, EMF, dpsidxCRTF, design] = machineodesim_AM(design, simoptions, xEF, xRE, vEF, vRE, Icoils)
 %
 % Description
 %
-% coremachinesim_linear calculates the coil emfs and forces on the coils in
-% the Phases of a linear machine. 
+% machineodesim_AM calculates the coil emfs and forces/torques on the coils
+% in the phases of a permanent magnet machine.
 %
 % Input
 %
@@ -107,7 +106,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = coremachinesim_linear(design
 %           machineodesim_linear_mvgfield
 %
 
-% Copyright Richard Crozier 2009 - 2012
+% Copyright Richard Crozier 2009 - 2014
 
     % Calculate the position of the field relative to the armature. For
     % both parts positive displacement is in the same direction as positive
@@ -180,7 +179,8 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = coremachinesim_linear(design
     % 
     
     % original
-    FEF = -design.FieldDirection * sum(Icoils(:) .* dpsidxCRTF(:)) .* design.NCoilsPerPhase .* design.NStages .* simoptions.NoOfMachines;
+    FEF = -design.FieldDirection * sum(Icoils(:) .* dpsidxCRTF(:)) ...
+                .* design.NCoilsPerPhase .* design.NStages .* simoptions.NoOfMachines;
 
     % the force on the reactor is the reverse of the effector
     FRE = -FEF;
