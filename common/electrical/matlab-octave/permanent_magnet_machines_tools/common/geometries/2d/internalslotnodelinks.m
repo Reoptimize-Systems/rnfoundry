@@ -596,9 +596,6 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
             topinnershoenode = 0 + nnodes;
             botinnershoenode = 1 + nnodes;
             
-            topouternode = 0 + nnodes;
-            botouternode = 1 + nnodes;
-            
             midshoenode = 2 + nnodes;
             
             info.vertlinkinds = [info.vertlinkinds, [1, 2] + linksize];
