@@ -1,4 +1,4 @@
-function design = preprocsystemdesign_AM(design, simoptions, coilsperphase)
+function design = preprocsystemdesign_AM(design, simoptions, activecoilsperphase)
 % processes some common aspects of electrical machine designs in
 % preparation for evaluation by a GA
 
@@ -16,7 +16,7 @@ function design = preprocsystemdesign_AM(design, simoptions, coilsperphase)
     end
     
     % determine an appropriate coil configuration
-    [design.Branches, design.CoilsPerBranch] = coilconfig_linear(coilsperphase, design.BranchFac);
+    [design.Branches, design.CoilsPerBranch] = coilconfig_linear(activecoilsperphase, design.BranchFac);
 
 end
 
