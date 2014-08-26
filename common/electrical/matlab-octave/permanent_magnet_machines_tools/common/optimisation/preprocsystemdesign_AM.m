@@ -16,7 +16,7 @@ function design = preprocsystemdesign_AM(design, simoptions, activecoilsperphase
     end
     
     % determine an appropriate coil configuration
-    [design.Branches, design.CoilsPerBranch] = coilconfig_linear(activecoilsperphase, design.BranchFac);
+    [design.Branches, design.CoilsPerBranch] = branchfac2coilconfig_AM(activecoilsperphase, design.BranchFac);
 
 end
 
