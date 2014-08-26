@@ -38,7 +38,7 @@ function varargout = prescribedmotodetorquefcn_ROTARY(t, x, design, simoptions)
     % determine the machine outputs
     % Get the EMF and forces using the core machine simulation function
     [Tqeff, Tqreac, EMF, dpsidthetaR, design] = ...
-        coremachinesim_linear(design, simoptions, thetaE, 0, omegaE, 0, Icoils);
+        machineodesim_AM(design, simoptions, thetaE, 0, omegaE, 0, Icoils);
     
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
