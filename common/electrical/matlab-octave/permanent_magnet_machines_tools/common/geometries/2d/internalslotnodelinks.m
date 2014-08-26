@@ -510,7 +510,7 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
                 
                 midshoenode = 8;
                 
-                info.vertlinkinds = [ 1, 2, size(links,1)-2 ];
+                info.vertlinkinds = [ 1, 2, size(links,1)-2, size(links,1)-1, size(links,1)-0 ];
                 
             end
 
@@ -601,7 +601,7 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
             
             midshoenode = 2 + nnodes;
             
-            info.vertlinkinds = [1, 2] + nlinks;
+            info.vertlinkinds = [1, 2] + linksize;
         
         else
         
@@ -684,6 +684,13 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
             basex = basex (1:crossinginds(1)-1);
             basey = basey (1:crossinginds(1)-1);
         end
+        
+        crossinginds = find (basey <= 0);
+        
+        if ~isempty (crossinginds)
+            basex = basex (crossinginds(end)+1:end);
+            basey = basey (crossinginds(end)+1:end);
+        end
             
         nbasecurvepnts = numel (basex);
         
@@ -692,7 +699,7 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
         startbasenodeid = size (nodes, 1);
         
         nodes = [ nodes;
-                  xcore + options.InsulationThickness, 0; 
+                  basex(1), 0; 
                   basex', basey'; 
                   basex', -basey'; ];
               
@@ -1120,7 +1127,7 @@ function [x, y, Qx, Qy, m, c, Px, Py] = basecurvepoints (minmaxpnts, xcore, xcoi
     
     % place the control point at the intercept. This should ensure that the
     % curve joins smoothly at both ends with the rest of the coil surface
-    cp2 = [xcore, yint];
+    cp2 = [xcore, max(ycoilbase/100,yint)];
     
     % construct the control points for the Bezier curve
     Px = [cp1(1), cp2(1), cp3(1)]; 
