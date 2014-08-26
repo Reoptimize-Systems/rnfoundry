@@ -204,13 +204,20 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         [ design.CoreLoss.kh, ...
           design.CoreLoss.kc, ...
           design.CoreLoss.ke, ...
-          design.CoreLoss.beta ] = corelosscoeffs ('M-36', '26');
+          design.CoreLoss.beta ] = corelosscoeffs ('M-36', '26', 'InterpolateMissing', false);
     end
     
     % We don't check the coil turns etc at this stage (done by default in 
     % simfun_RADIAL) as we don't yet know the coil cross-sectional area, this is
     % done later below
     simoptions.SkipCheckCoilProps = true;
+    rmcoilturns = false;
+    if ~isfield (design, 'CoilTurns');
+        % set the coil turns to 1 temporarily to keep the drawing functions
+        % happy
+        design.CoilTurns = 1;
+        rmcoilturns = true;
+    end
     
     % call the common radial simulation function
     [design, simoptions] = simfun_RADIAL(design, simoptions);
@@ -421,6 +428,9 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     design.gvar = [design.gvar, design.g + pos];
     
     % make sure the winding properties (number of turns etc.) are up to date
+    if rmcoilturns
+        design = rmfield (design, 'CoilTurns');
+    end
     design = checkcoilprops_AM(design);
     
     if ~simoptions.SkipInductanceFEA
