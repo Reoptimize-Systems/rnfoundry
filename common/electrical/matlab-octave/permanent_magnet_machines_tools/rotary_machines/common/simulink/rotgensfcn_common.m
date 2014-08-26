@@ -29,7 +29,7 @@ function [EMF, torque, flux, design] = rotgensfcn_common(design, simoptions, the
     
     % Calculate the EMF and force at the reference point
     [Tqeff, Tqreac, EMF, dpsidthetaR, design, pos] = ...
-        coremachinesim_linear(design, simoptions, theta, 0, omega, 0, Icoils);
+        machineodesim_AM(design, simoptions, theta, 0, omega, 0, Icoils);
     
     EMF = EMF .* design.CoilsPerBranch;
     
