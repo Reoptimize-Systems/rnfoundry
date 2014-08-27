@@ -241,6 +241,26 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     % set the size of the slot base
     design.tc(2) = design.tc(1) * options.tc1Vtc2;
     design.Rcb = design.Rco - design.tc(2);
+    
+    % check the angle of slot straight side is not too small
+    slotsideangle = atan ((design.tc(1) - design.tc(2)) ...
+                                    / abs(((design.thetacg*design.Rci) - (design.thetacy*design.Rco))/2));
+                                
+	if slotsideangle < deg2rad (5)
+        % make the slot height bigger to increase the angle
+        newtc = ( tan (deg2rad (5)) ...
+                           * abs( ((design.thetacg*design.Rci) - (design.thetacy*design.Rco))/2) ) ...
+                         / (1 - options.tc1Vtc2 );
+        
+        rshift = newtc - design.tc(1);
+        design.tc(1) = newtc;
+        design.tc(2) = design.tc(1) * options.tc1Vtc2;
+        design.Ryi = design.Ryi + rshift;
+        design.Ryo = design.Ryo + rshift;
+        design.Rcb = design.Ryi - design.tc(2);
+        
+        design = updatedims_exteral_arm(design);
+    end
         
 end
 
@@ -254,6 +274,9 @@ function design = updatedims_exteral_arm(design)
     % lengths in radial direction
     design.ty = design.Ryo - design.Ryi;
     design.tc(1) = design.Rco - design.Rci;
+    if isfield (design, 'Rcb')
+        design.tc(2) = design.Rco - design.Rcb;
+    end
     design.tsb = design.Rtsb - design.Rai;
     design.g = design.Rai - design.Rmo;
     design.tm = design.Rmo - design.Rmi;
@@ -407,6 +430,10 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
         design = updatedims_interal_arm(design);
     end
         
+    % set the size of the slot base
+    design.tc(2) = design.tc(1) * options.tc1Vtc2;
+    design.Rcb = design.Rci + design.tc(2);
+    
 end
 
 
