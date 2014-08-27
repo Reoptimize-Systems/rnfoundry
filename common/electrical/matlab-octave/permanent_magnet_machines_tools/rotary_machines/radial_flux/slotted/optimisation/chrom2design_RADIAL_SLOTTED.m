@@ -29,6 +29,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     options.CoilLayers = 2;
     % maximum permitted radial coil height
     options.Max_tc = 0.2;
+    options.Min_tc = [];
     % maximum permitted radial magnet height
     options.Max_tm = 0.05;
     % maximum stack length
@@ -62,9 +63,6 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
         design = chrom2design_internal_arm (design, simoptions, Chrom, options);
         
     end
-    
-    % set the size of the slot base
-    design.tc(2) = design.tc(1) * options.tc1Vtc2;
     
     % prevent too wide slots
     % first get line equation of slot side
@@ -137,18 +135,9 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.MagnetSkew = Chrom(17);
     end
 
-%         factors = factor2(design.NBasicWindings)';
-% 
-%         % now determine the number of modules to use
-%         modulecomp = design.ModuleFac * design.NBasicWindings;
-% 
-%         NearestFacStruct = ipdm(modulecomp, factors, ...
-%                                 'Subset', 'NearestNeighbor', ...
-%                                 'Result', 'Structure');
-% 
-%         design.NModules = factors(NearestFacStruct.columnindex, NearestFacStruct.rowindex);
-
     design = completedesign_RADIAL_SLOTTED(design, simoptions);
+    
+    
     % check if the shoe base is too big relative to the coil body height
     if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc
         % shift the shoe base inward
@@ -160,6 +149,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.Rtsg = design.Rai + design.tsg;
         design = updatedims_exteral_arm(design);
     end
+    
     % check if the coil slot height is greater than the maximum allowed
     if design.tc(1) > options.Max_tc
         % move the stator yoke inwards to reduce the size of the slot
@@ -168,6 +158,24 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.Ryo = design.Ryo - rshift;
         design = updatedims_exteral_arm(design);
     end
+    
+    if isempty (options.Min_tc)
+        options.Min_tc = 0.05 * mean(design.thetac) * design.Rcm;
+        
+        if isfield (design, 'CoilInsulationThickness')
+            options.Min_tc = options.Min_tc + 3*design.CoilInsulationThickness;
+        end
+    end
+    
+    % check if the coil slot height is greater than the maximum allowed
+    if design.tc(1) < options.Min_tc
+        % move the stator yoke outwards to increase the size of the slot
+        rshift = (options.Min_tc - design.tc(1));
+        design.Ryi = design.Ryi + rshift;
+        design.Ryo = design.Ryo + rshift;
+        design = updatedims_exteral_arm(design);
+    end
+    
     % check if the yoke thickness is too big relative to the magnet thickness
     if (design.ty / design.tm) > options.Max_tyVtm
         % move the stator yoke internal radius inwards to reduce the
@@ -229,6 +237,10 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         
         design = updatedims_exteral_arm(design);
     end
+    
+    % set the size of the slot base
+    design.tc(2) = design.tc(1) * options.tc1Vtc2;
+    design.Rcb = design.Rco - design.tc(2);
         
 end
 
