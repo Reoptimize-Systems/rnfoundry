@@ -697,8 +697,14 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
         %  (xcore + options.InsulationThickness, 0) node
         startbasenodeid = size (nodes, 1);
         
+        if isempty (basex)
+            midbaseinsx = xcore + options.InsulationThickness;
+        else
+            midbaseinsx = basex(1);
+        end
+        
         nodes = [ nodes;
-                  basex(1), 0; 
+                  midbaseinsx, 0; 
                   basex', basey'; 
                   basex', -basey'; ];
               
@@ -718,7 +724,7 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
                 
         info.inslinkinds = [ info.inslinkinds, linksize+1:size(links,1) ];
                 
-        basex = [xcore + options.InsulationThickness, basex];
+        basex = [midbaseinsx, basex];
         basey = [0, basey];
         topbasenids = (startbasenodeid:startbasenodeid+nbasecurvepnts);
         botbasenids = [startbasenodeid, (startbasenodeid+nbasecurvepnts+1:startbasenodeid+2*nbasecurvepnts)];
@@ -729,7 +735,12 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
         
     end
     
-    basearea = trapz (basex, basey);
+    if numel(basex) < 2
+        basearea = 0;
+    else
+        basearea = trapz (basex, basey);
+    end
+    
     bodyarea = trapzarea ( ycoilbase, ycoilshoe, xcoilbody ) / 2;
     shoearea = trapz ([ xcore+xcoil, shoex, xcore+xcoil+xshoebase-xshoegap ], ...
                       [ ycoilbase/2, shoey, yshoegap ] );
