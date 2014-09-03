@@ -15,7 +15,7 @@ function [score, design, simoptions] = systempenalties_AM(design, simoptions, sc
     end
 
     % efficiency penalty
-    design.EfficiencyPenalty = 0;
+    design.OptimInfo.EfficiencyPenalty = 0;
 
     if isfield(simoptions, 'addEfficiencyPenalty') 
         
@@ -33,7 +33,7 @@ function [score, design, simoptions] = systempenalties_AM(design, simoptions, sc
                 simoptions.min_Efficiency_penfactor(1) * (optimiumEfficiency-abs(design.Efficiency)) ...
                   + (simoptions.min_Efficiency_penfactor(2) * (optimiumEfficiency-abs(design.Efficiency)))^2;
 
-            score = score + design.EfficiencyPenalty;
+            score = score + design.OptimInfo.EfficiencyPenalty;
             
         end
         
@@ -41,6 +41,6 @@ function [score, design, simoptions] = systempenalties_AM(design, simoptions, sc
     
     % apply excessive temperature penalty
     [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'TemperaturePeak', design.BaseScore, score);
+        addpenalty_AM(design, simoptions, 'upper', 'TemperaturePeak', design.OptimInfo.BaseScore, score);
 
 end

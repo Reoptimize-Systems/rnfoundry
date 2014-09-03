@@ -90,8 +90,8 @@ function [score, design, simoptions] = structuralpenalties_AM(design, simoptions
             if design.MaxDeflection > simoptions.maxAllowedDeflection
                 
                 design.maxAllowedDeflectionPenalty = ...
-                    simoptions.maxAllowedDeflectionPenFactor(1) * design.BaseScore * (design.MaxDeflection/simoptions.maxAllowedDeflection) + ...
-                     1 * design.BaseScore * (simoptions.maxAllowedDeflectionPenFactor(2) * design.MaxDeflection/simoptions.maxAllowedDeflection)^2;
+                    simoptions.maxAllowedDeflectionPenFactor(1) * design.OptimInfo.BaseScore * (design.MaxDeflection/simoptions.maxAllowedDeflection) + ...
+                     1 * design.OptimInfo.BaseScore * (simoptions.maxAllowedDeflectionPenFactor(2) * design.MaxDeflection/simoptions.maxAllowedDeflection)^2;
 
                 score = score + design.maxAllowedDeflectionPenalty;
                 

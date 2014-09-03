@@ -12,13 +12,16 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
             if design.RotorMass > simoptions.maxAllowedRotorMass
                 
                 design.maxAllowedRotorMassPenalty = ...
-                    10 * design.BaseScore * (design.RotorMass/simoptions.maxAllowedRotorMass) + ...
-                     1 * design.BaseScore * (10 * design.RotorMass/simoptions.maxAllowedRotorMass)^2;
+                    10 * design.OptimInfo.BaseScore * (design.RotorMass/simoptions.maxAllowedRotorMass) + ...
+                     1 * design.OptimInfo.BaseScore * (10 * design.RotorMass/simoptions.maxAllowedRotorMass)^2;
 
                 score = score + design.maxAllowedRotorMassPenalty;
                 
             end
         end
+    else
+        [score, design, simoptions] = ...
+            addpenalty_AM(design, simoptions, 'upper', 'RotorMass', design.OptimInfo.BaseScore, score);
     end
 
     design.maxAllowedRotorModuleMassPenalty = 0;
@@ -29,13 +32,16 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
             if design.RotorModuleMass > simoptions.maxAllowedRotorModuleMass
                 
                 design.maxAllowedRotorModuleMassPenalty = ...
-                    10 * design.BaseScore * (design.RotorModuleMass/simoptions.maxAllowedRotorModuleMass) + ...
-                     1 * design.BaseScore * (10 * design.RotorModuleMass/simoptions.maxAllowedRotorModuleMass)^2;
+                    10 * design.OptimInfo.BaseScore * (design.RotorModuleMass/simoptions.maxAllowedRotorModuleMass) + ...
+                     1 * design.OptimInfo.BaseScore * (10 * design.RotorModuleMass/simoptions.maxAllowedRotorModuleMass)^2;
 
                 score = score + design.maxAllowedRotorModuleMassPenalty;
                 
             end
         end
+    else
+        [score, design, simoptions] = ...
+            addpenalty_AM(design, simoptions, 'upper', 'RotorModuleMass', design.OptimInfo.BaseScore, score);
     end
 
     % exceeding max stator mass
@@ -46,13 +52,16 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
             if design.StatorMass > simoptions.maxAllowedStatorMass
                 
                 design.maxAllowedStatorMassPenalty = ...
-                    10 * design.BaseScore * (design.StatorMass/simoptions.maxAllowedStatorMass) + ...
-                     1 * design.BaseScore * (10 * design.StatorMass/simoptions.maxAllowedStatorMass)^2;
+                    10 * design.OptimInfo.BaseScore * (design.StatorMass/simoptions.maxAllowedStatorMass) + ...
+                     1 * design.OptimInfo.BaseScore * (10 * design.StatorMass/simoptions.maxAllowedStatorMass)^2;
 
                 score = score + design.maxAllowedStatorMassPenalty;
                 
             end
         end
+    else
+        [score, design, simoptions] = ...
+            addpenalty_AM(design, simoptions, 'upper', 'StatorMass', design.OptimInfo.BaseScore, score);
     end
 
     design.maxAllowedStatorModuleMassPenalty = 0;
@@ -60,16 +69,19 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
     % exceeding max stator module mass
     if isfield(simoptions, 'maxAllowedStatorModuleMass')
         if ~isempty(simoptions.maxAllowedStatorModuleMass)
-            if design.RotorModuleMass > simoptions.maxAllowedStatorModuleMass
+            if design.StatorModuleMass > simoptions.maxAllowedStatorModuleMass
                 
                 design.maxAllowedStatorModuleMassPenalty = ...
-                    10 * design.BaseScore * (design.StatorModuleMass/simoptions.maxAllowedStatorModuleMass) + ...
-                     1 * design.BaseScore * (10 * design.StatorModuleMass/simoptions.maxAllowedStatorModuleMass)^2;
+                    10 * design.OptimInfo.BaseScore * (design.StatorModuleMass/simoptions.maxAllowedStatorModuleMass) + ...
+                     1 * design.OptimInfo.BaseScore * (10 * design.StatorModuleMass/simoptions.maxAllowedStatorModuleMass)^2;
 
                 score = score + design.maxAllowedStatorModuleMassPenalty;
                 
             end
         end
+    else
+        [score, design, simoptions] = ...
+            addpenalty_AM(design, simoptions, 'upper', 'StatorModuleMass', design.OptimInfo.BaseScore, score);
     end
     
     
