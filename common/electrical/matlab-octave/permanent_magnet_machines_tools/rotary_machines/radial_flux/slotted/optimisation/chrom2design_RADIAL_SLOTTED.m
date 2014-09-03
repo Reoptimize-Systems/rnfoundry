@@ -8,8 +8,11 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
 %
 %
 
-% Copyright 2012-2013 Richard Crozier
+% Copyright 2012-2014 Richard Crozier
 
+
+    % Default design parameters
+    
     % number of Phases
     options.Phases = 3;
     % number of coils per pole and phase
@@ -17,16 +20,20 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     options.yd = 1;
     % grid resistance to phase resistance ratio
     options.RlVRp = 10;
+    % ratio of mid slot height to slot base size
+    options.tc1Vtc2 = 0.1;
     % coil fill factor
     options.CoilFillFactor = 0.65;
     % branch factor, determines number of parallel and series coils
     options.BranchFac = 0;
-%     options.ModuleFac = 0;
     % stator type, determines if we have an outer facing or inner facing
     % stator
     options.ArmatureType = 'internal';
     % number of coil layers
     options.CoilLayers = 2;
+    
+    % Default constraints on geometry
+    
     % maximum permitted radial coil height
     options.Max_tc = 0.2;
     options.Min_tc = [];
@@ -36,15 +43,19 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     options.Max_ls = 4;
     % maximum ratio of ty to tm
     options.Max_tyVtm = 3;
+    % max ratio of tbi to tm
+    options.Max_tbiVtm = 4;
+    % max permitted ratio of shoe base height to total slot height
+    options.Max_tsbVtc = 0.9;
     % minimum permitted air gap
     options.Min_g = 0.5/1000;
-    options.Max_tsbVtc = 0.1;
-    options.tc1Vtc2 = 0.1;
+
     
     % parse the input options, replacing defaults
     options = parseoptions(options, varargin);
     
-    % copy the resulting options into the appropriate places
+    % copy the design parameter options into the appropriate places in the
+    % design structure
     design.ArmatureType = options.ArmatureType;
     design.CoilFillFactor = options.CoilFillFactor;
     design.Phases = max(1, round(options.Phases));
@@ -52,7 +63,6 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     design.yd = options.yd;
     design.RlVRp = options.RlVRp;
     design.CoilLayers = options.CoilLayers;
-%     design.ModuleFac = options.ModuleFac;
     
     if strcmp(design.ArmatureType, 'external')
 
@@ -178,12 +188,24 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     
     % check if the yoke thickness is too big relative to the magnet thickness
     if (design.ty / design.tm) > options.Max_tyVtm
-        % move the stator yoke internal radius inwards to reduce the
+        % move the stator yoke internal radius outwards to reduce the
         % thickness of the yoke
         rshift = design.ty - (design.tm * options.Max_tyVtm);
         design.Ryo = design.Ryo - rshift;
+        
         design = updatedims_exteral_arm(design);
     end
+    
+    % check if the back iron thickness is too big relative to the magnet
+    % thickness
+    if (design.tbi / design.tm) > options.Max_tbiVtm
+        % move the stator yoke internal radius inwards to reduce the
+        % thickness of the yoke
+        rshift = design.tbi - (design.tm * options.Max_tbiVtm);
+        design.Rbi = design.Rbi + rshift;
+        design = updatedims_exteral_arm(design);
+    end
+    
     % check if the magnet thickness is greater than the maximum allowed
     if design.tm > options.Max_tm
         rshift = design.tm - options.Max_tm;
@@ -212,14 +234,9 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
 
         if tsgangle < 15
             % remove the shoe altogether
-%             rshift = design.tsb;
             design.tsb = 0;
             design.tsg = 0;
-%             design.Ryi = design.Ryi - rshift;
-%             design.Ryo = design.Ryo + rshift;
             design.Rtsb = design.Rci;
-%             design.Rco = design.Ryi;
-%             design.Rao = design.Rco;
             design.Rai = design.Rtsb;
 
             design = updatedims_exteral_arm(design);
@@ -245,8 +262,8 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     % check the angle of slot straight side is not too small
     slotsideangle = atan ((design.tc(1) - design.tc(2)) ...
                                     / abs(((design.thetacg*design.Rci) - (design.thetacy*design.Rco))/2));
-                                
-	if slotsideangle < deg2rad (5)
+                               
+    if slotsideangle < deg2rad (5)
         % make the slot height bigger to increase the angle
         newtc = ( tan (deg2rad (5)) ...
                            * abs( ((design.thetacg*design.Rci) - (design.thetacy*design.Rco))/2) ) ...
@@ -257,6 +274,21 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.tc(2) = design.tc(1) * options.tc1Vtc2;
         design.Ryi = design.Ryi + rshift;
         design.Ryo = design.Ryo + rshift;
+        design.Rcb = design.Ryi - design.tc(2);
+        
+        design = updatedims_exteral_arm(design);
+    end
+    
+    % check the angle of the base is not too small
+    slotbaseangle = 2 * (atan ((design.thetacy/2) * (design.Rco - design.tc(2)) / design.tc(2)));
+    minangle = 10;
+    if slotbaseangle < deg2rad (minangle)
+        % move the slot base to make the angle at least 10 degrees
+        tau_cy = design.Rcb * design.thetacy;
+        
+        newtc2 = tau_cy/2 / tan(deg2rad (minangle/2));
+        
+        design.tc(2) = newtc2;
         design.Rcb = design.Ryi - design.tc(2);
         
         design = updatedims_exteral_arm(design);
