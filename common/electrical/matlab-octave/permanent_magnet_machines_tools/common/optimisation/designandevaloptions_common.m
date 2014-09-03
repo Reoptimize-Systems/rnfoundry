@@ -16,7 +16,7 @@ function evaloptions = designandevaloptions_common(evaloptions)
     
     % If the evaloptions structure is supplied, we check each possible
     % optional values and set any not supplied to the default value
-    evaloptions = setfieldifabsent(evaloptions, 'MagnetCost', 80);
+    evaloptions = setfieldifabsent(evaloptions, 'MagnetCost', 65);
     
     evaloptions = setfieldifabsent(evaloptions, 'CopperCost', 10);
     

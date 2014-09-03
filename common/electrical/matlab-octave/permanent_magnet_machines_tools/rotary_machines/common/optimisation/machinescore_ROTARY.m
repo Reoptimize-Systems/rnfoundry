@@ -16,7 +16,7 @@ function [score, design, simoptions] = machinescore_ROTARY(design, simoptions)
     % not supplied
     [score, design] = feval(simoptions.basescorefcn, design, simoptions);
     
-    design.BaseScore = score;
+    design.OptimInfo.BaseScore = score;
     
     [score, design, simoptions]= electricalpenalties_AM(design, simoptions, score);
 

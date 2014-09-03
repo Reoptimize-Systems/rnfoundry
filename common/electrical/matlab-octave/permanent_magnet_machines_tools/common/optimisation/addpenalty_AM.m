@@ -59,7 +59,7 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
             penfieldname = ['max_', quantityfname, '_penalty'];
             
             % exceeding max allowed value of quantity
-            design.(penfieldname) = 0;
+            design.OptimInfo.(penfieldname) = 0;
 
             if isfield(simoptions, limitfieldname)
                 
@@ -73,11 +73,11 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
                             simoptions.(penfactfieldname) = [simoptions.(penfactfieldname), 0];
                         end
 
-                        design.(penfieldname) = ...
+                        design.OptimInfo.(penfieldname) = ...
                             simoptions.(penfactfieldname)(1) * base_score * (design.(quantityfname) / simoptions.(limitfieldname))  ...
                              + base_score * (simoptions.(penfactfieldname)(2) * design.(quantityfname) / simoptions.(limitfieldname))^2;
 
-                        score = score + design.(penfieldname);
+                        score = score + design.OptimInfo.(penfieldname);
 
                     end
                     
@@ -93,7 +93,7 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
             penfactfieldname = ['min_', quantityfname, '_penfactor'];
             penfieldname = ['min_', quantityfname, '_penalty'];
     
-            design.(penfieldname) = 0;
+            design.OptimInfo.(penfieldname) = 0;
 
             if isfield(simoptions, limitfieldname)
                 
@@ -109,11 +109,11 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
 
                         quantdiff = simoptions.(limitfieldname) - design.(quantityfname);
                         
-                        design.(penfieldname) = ...
+                        design.OptimInfo.(penfieldname) = ...
                             simoptions.(penfactfieldname)(1) * base_score * (1 + abs(quantdiff/simoptions.(limitfieldname))) ...
                               + base_score * (simoptions.(penfactfieldname)(2) * (1 + abs(quantdiff/simoptions.(limitfieldname))))^2;
 
-                        score = score + design.(penfieldname);
+                        score = score + design.OptimInfo.(penfieldname);
 
                     end
                     

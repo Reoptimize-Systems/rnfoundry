@@ -41,9 +41,9 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         % Construct initial design structure
         [design, psimoptions] = feval(preprocfcn, simoptions, Chrom(i,:));
 
-        design.i = i;
-        
-        design.Chrom = Chrom(i,:);
+        % store the design chromsome and index for later use
+        design.OptimInfo.ChromInd = i;
+        design.OptimInfo.Chrom = Chrom(i,:);
 
         psimoptions = rmiffield(psimoptions, 'filenamebase');
         

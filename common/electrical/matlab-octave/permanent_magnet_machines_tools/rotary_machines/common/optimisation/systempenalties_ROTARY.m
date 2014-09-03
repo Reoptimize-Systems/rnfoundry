@@ -12,6 +12,6 @@ function [score, design, simoptions] = systempenalties_ROTARY(design, simoptions
     
     % torque ripple penalty
     [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'TorqueRippleFactor', design.BaseScore, score);
+        addpenalty_AM(design, simoptions, 'upper', 'TorqueRippleFactor', design.OptimInfo.BaseScore, score);
 
 end
