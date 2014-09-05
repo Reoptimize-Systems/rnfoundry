@@ -91,18 +91,19 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
     if ~exist('multicoredir', 'var')
         multicoredir = fullfile(ngtrootdir, 'temp');
     end
-
+    
+    if istestrun
+        simoptions.DoPreLinSim = false;
+        simoptions.ForceFullSim = true;
+    end
+    
+%% CANNOT MODIFY SIMOPTIONS OR OTHER OBJECTIVE ARGS BELOW THIS POINT    
     if ~isempty (fieldbounds)
         ObjectiveArgs = {fieldbounds, simoptions, multicoredir};
     else
         ObjectiveArgs = {simoptions, multicoredir};
     end
-
-    if istestrun
-        simoptions.DoPreLinSim = false;
-    %     simoptions.tspan = [0,15];
-    end
-
+    
     % Get boundaries of objective function
     FieldDR = feval(mpgaoptions.OBJ_F,[],1,ObjectiveArgs{:});
 
@@ -131,16 +132,6 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
 
     mpgaoptions.STEP = 1;
     mpgaoptions.DISPLAYMODE = 2;
-
-%     % allow the setting of a new multicore dir
-%     if ~isfirstrun
-%         temp = load(mpgaoptions.FILENAME);
-%         if ~strcmpi(temp.mpgastate.ObjectiveArgs{end}, multicoredir)
-%             % replace the multicore directory
-%             temp.mpgastate.ObjectiveArgs{end} = multicoredir;
-%             save(mpgaoptions.FILENAME, '-struct', 'temp');
-%         end
-%     end
 
     % run the GA
     [mpgastate, mpgaoptions] = mpga(mpgaoptions, 'ObjectiveArgs', ObjectiveArgs);
