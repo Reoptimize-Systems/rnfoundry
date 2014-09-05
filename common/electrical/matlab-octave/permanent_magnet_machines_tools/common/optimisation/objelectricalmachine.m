@@ -51,7 +51,7 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
 
     end
 
-    fprintf(1, '\nBeginning evaluation of population (first function).\n');
+    fprintf(1, '\nBeginning evaluation of population at %s.\n', datestr (now));
 
     % Determines whether the master performs work or only coordinates
     settings.masterIsWorker    = simoptions.evaloptions.masterIsWorkerSimFun;
@@ -74,7 +74,7 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         
     if separatesimfun
         
-        fprintf(1, '\nBeginning evaluation of population (first function).\n');
+        fprintf(1, 'Beginning evaluation of population (first function) at %s.\n', datestr (now));
 
         % Determines whether the master performs work or only coordinates
         settings.masterIsWorker    = simoptions.evaloptions.masterIsWorkerSimFun;
@@ -112,7 +112,9 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
                 simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'endtime', [8,0,0]);
                 simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'maxslaves', 100);
                 simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlicencebuffer', 10);
-
+                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorlogdirectory', ...
+                                            fullfile(fileparts(which('condorslavesubmitwrite')), 'Output'));
+                
                 % set up the mcorecondormatlabslavespawn monitor function, called
                 % by the multicore master process each time it looks for new files
                 % to check if new matlab slaves should be spawned or not
@@ -132,8 +134,8 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
                     'deletepausetime', 60, ...
                     'maxslaves', simoptions.evaloptions.maxslaves, ...
                     'initialwait', 10*60, ... % wait 10 mins after the first slave launch before respawning
-                    'allowheld', simoptions.evaloptions.allowheld ...
-                    );
+                    'allowheld', simoptions.evaloptions.allowheld, ...
+                    'condorlogdirectory', simoptions.evaloptions.condorlogdirectory );
 
             end
 
@@ -178,6 +180,8 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'endtime', [8,0,0]);
         simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'maxslaves', 100);
         simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlicencebuffer', 10);
+        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorlogdirectory', ...
+                                            fullfile(fileparts(which('condorslavesubmitwrite')), 'Output'));
         
         % set up the mcorecondormatlabslavespawn monitor function, called
         % by the multicore master process each time it looks for new files
@@ -198,7 +202,8 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
             'deletepausetime', 60, ...
             'maxslaves', simoptions.evaloptions.maxslaves, ...
             'initialwait', 10*60, ... % wait 10 mins after the first slave launch before respawning
-            'allowheld', simoptions.evaloptions.allowheld ...
+            'allowheld', simoptions.evaloptions.allowheld, ...
+            'condorlogdirectory', simoptions.evaloptions.condorlogdirectory ...
             );
 
     end
@@ -207,7 +212,7 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
 %         evalfcn = str2func(evalfcn);
 %     end
 
-    fprintf(1, '\nBeginning evaluation of population (Second function).\n');
+    fprintf(1, 'Beginning evaluation of population (second function) at %s.\n', datestr (now));
     
     if simoptions.evaloptions.waitforotherode
         waits = 0;
