@@ -67,48 +67,45 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     sdesign = design;
     ssimoptions = simoptions;
     
-    sdesign.Hc = sdesign.tc(1);
-        
-    % number of slots per pole and phase
-    if ~isfield(sdesign, 'qc')
-        sdesign.qc = fr(sdesign.Qs, sdesign.Phases * sdesign.Poles);
-    else
-        [sdesign.Qs,~] = rat(sdesign.qc * sdesign.Phases * sdesign.Poles);
-    end
-    
-    % get the pitch of a whole slot in radians
-    sdesign.thetas = (2*pi / sdesign.Qs);
-    
-    % slot pitch at the mean slot height
-    sdesign.tausm = sdesign.thetas * sdesign.Rcm;
-    
-    % get the numerator and denominator of qc
-    [sdesign.qcn,sdesign.qcd] = rat(sdesign.qc);
-    
-    % Average coil pitch as defined by (Qs/Poles)
-    sdesign.yp = fr(sdesign.Qs, sdesign.Poles);
-    
-    % get the numerator and denominator of the coil pitch in slots
-    [sdesign.ypn,sdesign.ypd] = rat(sdesign.yp);
-    
-    % calculate the actual coil pitch in slots if not supplied
-    if ~isfield(sdesign, 'yd')
-        if sdesign.ypd == 1
-            % the coil pitch in slots will be the same as the numerator of
-            % yp, being an integral slot winding
-            sdesign.yd = sdesign.ypn;
-        else
-            error('You must specify the coil pitch in fractional slot windings.')
-        end
-    end
-    
-    if sdesign.ypd ~= 1 && sdesign.ypd ~= 2
-    	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
-    end
-
-    % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
-    % winding slot
-    sdesign.Wc = sdesign.thetac * sdesign.Rcm;
+%     sdesign.Hc = sdesign.tc(1);
+%         
+%     % number of slots per pole and phase
+%     if ~isfield(sdesign, 'qc')
+%         sdesign.qc = fr(sdesign.Qs, sdesign.Phases * sdesign.Poles);
+%     else
+%         [sdesign.Qs,~] = rat(sdesign.qc * sdesign.Phases * sdesign.Poles);
+%     end
+%     
+%     % slot pitch at the mean slot height
+%     sdesign.tausm = sdesign.thetas * sdesign.Rcm;
+%     
+%     % get the numerator and denominator of qc
+%     [sdesign.qcn,sdesign.qcd] = rat(sdesign.qc);
+%     
+%     % Average coil pitch as defined by (Qs/Poles)
+%     sdesign.yp = fr(sdesign.Qs, sdesign.Poles);
+%     
+%     % get the numerator and denominator of the coil pitch in slots
+%     [sdesign.ypn,sdesign.ypd] = rat(sdesign.yp);
+%     
+%     % calculate the actual coil pitch in slots if not supplied
+%     if ~isfield(sdesign, 'yd')
+%         if sdesign.ypd == 1
+%             % the coil pitch in slots will be the same as the numerator of
+%             % yp, being an integral slot winding
+%             sdesign.yd = sdesign.ypn;
+%         else
+%             error('You must specify the coil pitch in fractional slot windings.')
+%         end
+%     end
+%     
+%     if sdesign.ypd ~= 1 && sdesign.ypd ~= 2
+%     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
+%     end
+% 
+%     % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
+%     % winding slot
+%     sdesign.Wc = sdesign.thetac * sdesign.Rcm;
     
     if ~isfield(sdesign, 'CoreLoss')
         % CoreLoss will be the armature back iron data
