@@ -668,17 +668,22 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
                   
         info.toothlinkinds = [info.toothlinkinds, linksize+1:size(links,1)];
         
+        coilbasex = basex;
+        coilbasey = basey;
+        
         % get the insulation curve points
         [basex, basey, baseQx, baseQy] = inscurvepoints ( ...
                         [ options.MinBaseCurvePoints, options.MaxBaseCurvePoints ], ...
                         baseQx, baseQy, basePx, basePy, ...
                         options.InsulationThickness, options.YScale );
-                        
+
+        % remove points which result in too thick insulation
         basex = basex(basey(end)*options.YScale - basey*options.YScale >= options.InsulationThickness);
         basey = basey(basey(end)*options.YScale - basey*options.YScale >= options.InsulationThickness);
-                        
+
+        % attempt to prevent points going over the 
         crossinginds = find (basey > mxplusc(m, c, basex));
-        
+
         if ~isempty (crossinginds)
             basex = basex (1:crossinginds(1)-1);
             basey = basey (1:crossinginds(1)-1);
@@ -690,18 +695,20 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
             basex = basex (crossinginds(end)+1:end);
             basey = basey (crossinginds(end)+1:end);
         end
-            
+        
+        if isempty (basex)
+            basex = coilbasex(end);
+            basey = coilbasey(end) - (options.YScale* options.InsulationThickness);
+            midbaseinsx = xcore + options.InsulationThickness;
+        else
+            midbaseinsx = basex(1);
+        end
+        
         nbasecurvepnts = numel (basex);
         
         % this will be the id of the next node we add, the
         %  (xcore + options.InsulationThickness, 0) node
         startbasenodeid = size (nodes, 1);
-        
-        if isempty (basex)
-            midbaseinsx = xcore + options.InsulationThickness;
-        else
-            midbaseinsx = basex(1);
-        end
         
         nodes = [ nodes;
                   midbaseinsx, 0; 
