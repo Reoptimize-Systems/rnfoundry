@@ -21,7 +21,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % grid resistance to phase resistance ratio
     options.RlVRp = 10;
     % ratio of mid slot height to slot base size
-    options.tc1Vtc2 = 0.1;
+    options.tc2Vtc1 = 0.1;
     % coil fill factor
     options.CoilFillFactor = 0.65;
     % branch factor, determines number of parallel and series coils
@@ -37,16 +37,18 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % maximum permitted radial coil height
     options.Max_tc = 0.2;
     options.Min_tc = [];
+    % maximum permitted slot base height
+    options.Max_tsb = 0.2;
     % maximum permitted radial magnet height
     options.Max_tm = 0.05;
     % maximum stack length
     options.Max_ls = 4;
-    % maximum ratio of ty to tm
-    options.Max_tyVtm = 3;
-    % max ratio of tbi to tm
-    options.Max_tbiVtm = 4;
+%     % maximum ratio of ty to tm
+%     options.Max_tyVtm = inf;
+%     % max ratio of tbi to tm
+%     options.Max_tbiVtm = inf;
     % max permitted ratio of shoe base height to total slot height
-    options.Max_tsbVtc = 0.9;
+    options.Max_tsbVtc1 = 0.9;
     % minimum permitted air gap
     options.Min_g = 0.5/1000;
 
@@ -95,12 +97,6 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
         
     end
     
-    % prevent overly deep stack lengths
-    if design.ls > options.Max_ls
-       design.ls = options.Max_ls;
-       design.lsVtm = design.ls / design.tm;
-    end
-    
     design.Hc = design.tc(1);
     design.Wc = mean([design.thetacg * design.Rci, design.thetacy * design.Rco]);
     
@@ -125,18 +121,18 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
        
     % convert machine ratios to actual dimensions
     design.Ryo = Chrom(1);
-    design.RyiVRyo = Chrom(2);
-    design.RtsbVRyi = Chrom(3);
-    design.RaiVRtsb = Chrom(4);
+    tyVtm = Chrom(2);
+    tcVMax_tc = Chrom(3);
+    tsbVMax_tsb = Chrom(4);
     design.tsgVtsb = Chrom(5);
-    design.RmoVRai = Chrom(6);
-    design.RmiVRmo = Chrom(7);
-    design.RbiVRmi = Chrom(8);
+    g = Chrom(6);
+    tmVMax_tm = Chrom(7);
+    tbiVtm = Chrom(8);
     design.thetamVthetap = Chrom(9);
     design.thetacgVthetas = Chrom(10);
     design.thetacyVthetas = Chrom(11);
     design.thetasgVthetacg = Chrom(12);
-    design.lsVtm = Chrom(13);
+    lsVMax_ls = Chrom(13);
     design.NBasicWindings = round(Chrom(14));
     design.DcAreaFac = Chrom(15);
     design.BranchFac = Chrom(16);
@@ -144,16 +140,67 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     if numel(Chrom) > 16
         design.MagnetSkew = Chrom(17);
     end
+    
+    % 
+    design.g = g;
+    design.tc(1) = tcVMax_tc * options.Max_tc;
+    design.tm = tmVMax_tm * options.Max_tm;
+    if design.tm < 1e-3
+        design.tm = 1e-3;
+    end
+    design.tsb = tsbVMax_tsb * options.Max_tsb;
+%     design.tsg = design.tsgVtsb * design.tsb;
+    design.tbi = tbiVtm * design.tm;
+    if design.tbi < 1e-3
+        design.tbi = 1e-3;
+    end
+    design.ty = tyVtm * design.tm;
+    if design.ty < 1e-3
+        design.ty = 1e-3;
+    end
+    design.ls = lsVMax_ls * options.Max_ls;
+    design.Ryi = design.Ryo - design.ty;
+    design.RyiVRyo = design.Ryi / design.Ryo;
+    design.Rtsb = design.Ryi - design.tc(1);
+    design.RtsbVRyi = design.Rtsb / design.Ryi;
+    design.Rai = design.Rtsb - design.tsb;
+    design.RaiVRtsb = design.Rai / design.Rtsb;
+    design.Rmo = design.Rai - design.g;
+    design.RmoVRai = design.Rmo / design.Rai;
+    design.Rmi = design.Rmo - design.tm;
+    design.RmiVRmo = design.Rmi / design.Rmo;
+    design.Rbi = design.Rmi - design.tbi;
+    design.RbiVRmi = design.Rbi / design.Rmi;
+    design.lsVtm = design.ls / design.tm;
+    
+    if design.Rbi * 0.5 < 1e-4;
+        rshift = 1e-4;
+        if design.Rbi < 0
+            rshift = rshift + abs(design.Rbi);
+        end
+        design.Rbi = design.Rbi + rshift;
+        design.Rmi = design.Rmi + rshift;
+        design.Rmo = design.Rbi + rshift;
+        design.Rai = design.Rai + rshift;
+        design.Rtsb = design.Rtsb + rshift;
+        design.Ryi = design.Ryi + rshift;
+        design.Ryo = design.Ryo + rshift;
+        design.RyiVRyo = design.Ryi / design.Ryo;
+        design.RtsbVRyi = design.Rtsb / design.Ryi;
+        design.RaiVRtsb = design.Rai / design.Rtsb;
+        design.RmoVRai = design.Rmo / design.Rai;
+        design.RmiVRmo = design.Rmi / design.Rmo;
+        design.RbiVRmi = design.Rbi / design.Rmi;
+    end
 
     design = completedesign_RADIAL_SLOTTED(design, simoptions);
     
-    
     % check if the shoe base is too big relative to the coil body height
-    if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc
+    if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc1
         % shift the shoe base inward
-        rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc));
+        rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc1));
         design.Rtsb = design.Rtsb - rshift;
-        design.tsb = design.tc(1)*options.Max_tsbVtc;
+        design.tsb = design.tc(1)*options.Max_tsbVtc1;
         % recalculate the shoe gap size
         design.tsg = design.tsb * design.tsgVtsb;
         design.Rtsg = design.Rai + design.tsg;
@@ -177,7 +224,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         end
     end
     
-    % check if the coil slot height is greater than the maximum allowed
+    % check if the coil slot height is smaler than the minimum allowed
     if design.tc(1) < options.Min_tc
         % move the stator yoke outwards to increase the size of the slot
         rshift = (options.Min_tc - design.tc(1));
@@ -186,34 +233,34 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design = updatedims_exteral_arm(design);
     end
     
-    % check if the yoke thickness is too big relative to the magnet thickness
-    if (design.ty / design.tm) > options.Max_tyVtm
-        % move the stator yoke internal radius outwards to reduce the
-        % thickness of the yoke
-        rshift = design.ty - (design.tm * options.Max_tyVtm);
-        design.Ryo = design.Ryo - rshift;
-        
-        design = updatedims_exteral_arm(design);
-    end
-    
-    % check if the back iron thickness is too big relative to the magnet
-    % thickness
-    if (design.tbi / design.tm) > options.Max_tbiVtm
-        % move the stator yoke internal radius inwards to reduce the
-        % thickness of the yoke
-        rshift = design.tbi - (design.tm * options.Max_tbiVtm);
-        design.Rbi = design.Rbi + rshift;
-        design = updatedims_exteral_arm(design);
-    end
-    
-    % check if the magnet thickness is greater than the maximum allowed
-    if design.tm > options.Max_tm
-        rshift = design.tm - options.Max_tm;
-        design.tm = options.Max_tm;
-        design.Rmi = design.Rmi + rshift;
-        design.Rbi = design.Rbi + rshift;
-        design = updatedims_exteral_arm(design);
-    end
+%     % check if the yoke thickness is too big relative to the magnet thickness
+%     if (design.ty / design.tm) > options.Max_tyVtm
+%         % move the stator yoke internal radius outwards to reduce the
+%         % thickness of the yoke
+%         rshift = design.ty - (design.tm * options.Max_tyVtm);
+%         design.Ryo = design.Ryo - rshift;
+%         
+%         design = updatedims_exteral_arm(design);
+%     end
+%     
+%     % check if the back iron thickness is too big relative to the magnet
+%     % thickness
+%     if (design.tbi / design.tm) > options.Max_tbiVtm
+%         % move the stator yoke internal radius inwards to reduce the
+%         % thickness of the yoke
+%         rshift = design.tbi - (design.tm * options.Max_tbiVtm);
+%         design.Rbi = design.Rbi + rshift;
+%         design = updatedims_exteral_arm(design);
+%     end
+%     
+%     % check if the magnet thickness is greater than the maximum allowed
+%     if design.tm > options.Max_tm
+%         rshift = design.tm - options.Max_tm;
+%         design.tm = options.Max_tm;
+%         design.Rmi = design.Rmi + rshift;
+%         design.Rbi = design.Rbi + rshift;
+%         design = updatedims_exteral_arm(design);
+%     end
 
     % check if the configuration of the shoe will cause too small triangles
     % to be created in the mesh
@@ -256,7 +303,7 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     end
     
     % set the size of the slot base
-    design.tc(2) = design.tc(1) * options.tc1Vtc2;
+    design.tc(2) = design.tc(1) * options.tc2Vtc1;
     design.Rcb = design.Rco - design.tc(2);
     
     % check the angle of slot straight side is not too small
@@ -267,11 +314,11 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         % make the slot height bigger to increase the angle
         newtc = ( tan (deg2rad (5)) ...
                            * abs( ((design.thetacg*design.Rci) - (design.thetacy*design.Rco))/2) ) ...
-                         / (1 - options.tc1Vtc2 );
+                         / (1 - options.tc2Vtc1 );
         
         rshift = newtc - design.tc(1);
         design.tc(1) = newtc;
-        design.tc(2) = design.tc(1) * options.tc1Vtc2;
+        design.tc(2) = design.tc(1) * options.tc2Vtc1;
         design.Ryi = design.Ryi + rshift;
         design.Ryo = design.Ryo + rshift;
         design.Rcb = design.Ryi - design.tc(2);
@@ -380,11 +427,11 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
 
     design = completedesign_RADIAL_SLOTTED(design, simoptions);
 
-    if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc
+    if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc1
         % shift the shoe base outward
-        rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc));
+        rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc1));
         design.Rtsb = design.Rtsb + rshift;
-        design.tsb = design.tc(1)*options.Max_tsbVtc;
+        design.tsb = design.tc(1)*options.Max_tsbVtc1;
         % recalculate the shoe gap size
         design.tsg = design.tsb * design.tsgVtsb;
         design.Rtsg = design.Rao - design.tsg;
@@ -463,7 +510,7 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
     end
         
     % set the size of the slot base
-    design.tc(2) = design.tc(1) * options.tc1Vtc2;
+    design.tc(2) = design.tc(1) * options.tc2Vtc1;
     design.Rcb = design.Rci + design.tc(2);
     
 end
