@@ -77,6 +77,8 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
                                      Inputs.FractionalPolePosition, ...
                                      Inputs.RotorAnglePosition);
     
+    Inputs.NSlots = 2*design.Qs/design.Poles;
+    
     % Convert the material names to materials structures from the materials
     % library, if this has not already been done.
     if strncmpi (Inputs.SimType, 'Magnetics', 1)
