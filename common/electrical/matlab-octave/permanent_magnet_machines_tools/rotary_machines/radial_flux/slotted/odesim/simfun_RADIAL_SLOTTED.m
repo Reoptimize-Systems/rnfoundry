@@ -270,9 +270,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         % 
         % For vector V1 = <a, b>, the reciprocal V2 = <b, -a>. Now make it a
         % unit vector by dividing by the magnitude.
-        coggingvector = unit([gvector(2), -gvector(1)]);
-        
-        armirongroup = 2;
+%         coggingvector = unit([gvector(2), -gvector(1)]);
             
         for i = 1:numel(design.feapos)
 
@@ -282,7 +280,6 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                                     'ArmatureType', design.ArmatureType, ...
                                     'NWindingLayers', design.CoilLayers, ...
                                     'Position', (design.feapos(i)+1) * design.thetap + design.FirstSlotCenter, ...
-                                    'ArmatureBackIronGroup', armirongroup, ...
                                     'MagnetRegionMeshSize', simoptions.femmmeshoptions.MagnetRegionMeshSize, ...
                                     'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
                                     'OuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
@@ -329,7 +326,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                 if i == 1
                     % get the forces
                     solution.clearblock();
-                    solution.groupselectblock(1)
+                    solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
+                                                 design.FemmProblem.Groups.BackIron ]);
                     
                     design.gforce = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
                                          gvector);
@@ -339,7 +337,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                     % get the cross-sectional area of the armature iron for
                     % calcuation of material masses later
                     solution.clearblock();
-                    solution.groupselectblock(armirongroup);
+                    solution.groupselectblock(design.FemmProblem.Groups.ArmatureBackIron);
                     design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
                     
                     % get the cross-sectional area of the coil winding bundle
@@ -349,16 +347,19 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                 
                 % get the cogging forces
                 solution.clearblock();
-                solution.groupselectblock(1)
+                solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
+                                             design.FemmProblem.Groups.BackIron ]);
                 
-                design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-                                             coggingvector);
-
-                design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
+%                 design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+%                                              coggingvector);
+% 
+%                 design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
                 
 %                if simoptions.getintermagflux
 %                    design.InterMagFlux = getintermagflux (design, solution);
 %                end
+
+                design.RawCoggingTorque(i) = design.Poles(1) * (solution.blockintegral (22) / 2);
                 
                 % explicitly call the delete method on the solution
                 delete(solution);
@@ -399,10 +400,26 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                     % get the cross-sectional area of the armature iron for
                     % calcuation of material masses later
                     mo_clearblock();
-                    mo_groupselectblock(armirongroup);
+                    mo_groupselectblock(design.FemmProblem.Groups.ArmatureBackIron);
                     design.ArmatureIronAreaPerPole = mo_blockintegral(5)/2;
                     
                 end
+                
+                % get the cogging forces
+                mo_clearblock();
+                mo_groupselectblock (design.FemmProblem.Groups.Magnet);
+                mo_groupselectblock (design.FemmProblem.Groups.BackIron);
+                
+%                 design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+%                                              coggingvector);
+% 
+%                 design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
+                
+%                if simoptions.getintermagflux
+%                    design.InterMagFlux = getintermagflux (design, solution);
+%                end
+
+                design.RawCoggingTorque(i) = design.Poles(1) * (mo_blockintegral (22) / 2);
 
                 mo_close;
                 
@@ -661,10 +678,10 @@ function design = corelosssetup(design, feapos, solution)
         % it's an xfemm fpproc object
 
         % get the volume of each element under consideration
-        design.CoreLoss(1).dV = solution.getgroupareas (2) .* design.ls;
+        design.CoreLoss(1).dV = solution.getgroupareas (design.FemmProblem.Groups.ArmatureBackIron) .* design.ls;
         
         % get the location we will use to estimate the flux in the element
-        temp = solution.getgroupcentroids (2);
+        temp = solution.getgroupcentroids (design.FemmProblem.Groups.ArmatureBackIron);
         design.CoreLoss(1).meshx = temp(:,1);
         design.CoreLoss(1).meshy = temp(:,2);
         
