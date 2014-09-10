@@ -27,8 +27,8 @@ for i=1:numel(FRAC),
   D=FRAC(i).denom;
 
   % assume K,N,D are all same type
-  if isa(K,'double') && max(abs([K,N,D]))>=bitmax
-    warning('one of the fraction components is a double exceeding bitmax; results may be inaccurate - use vpi-based fractions instead');
+  if isa(K,'double') && max(abs([K,N,D]))>=flintmax
+    warning('one of the fraction components is a double exceeding flintmax; results may be inaccurate - use vpi-based fractions instead');
   end;
 
   s=sign(D);
