@@ -77,7 +77,7 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     Inputs.FemmProblem = newproblem_mfemm('planar');
     Inputs.ShoeGapMaterial = 1;
     Inputs.ShoeGapRegionMeshSize = -1;
-    Inputs.ShoeGroup = 1;
+    Inputs.ArmatureIronGroup = 1;
     Inputs.SlotPositions = [];
     Inputs.NSlots = [];
     Inputs.Tol = 1e-5;
@@ -246,8 +246,8 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     end
     
     % add a new group number for the stator iron
-    FemmProblem = addgroup_mfemm (FemmProblem, 'StatorIron');
-    statorirongp = getgroupnumber_mfemm (FemmProblem, 'StatorIron');
+    FemmProblem = addgroup_mfemm (FemmProblem, 'StatorIronOutline');
+    statorirongp = getgroupnumber_mfemm (FemmProblem, 'StatorIronOutline');
 
     % TODO: put iron and insulation in different groups
 %    ironinds = setdiff(1:size(links,1),inslinkinds);
