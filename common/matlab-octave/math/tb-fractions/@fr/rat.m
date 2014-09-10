@@ -51,7 +51,7 @@ if nargout==3,
   varargout{2}=N;
   varargout{3}=D;
 else
-  varargout{1}=N+K*D;
+  varargout{1}=N+K.*D;
   varargout{2}=D;
 end;
     
