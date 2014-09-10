@@ -178,6 +178,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
     
     % make the cogging force slm 
     design = coggingforceslm(design);
+    design.CoggingTorquePeak = slmpar(design.slm_coggingtorque, 'maxfun');
     
     % create the loss functions (for lossforces_AM) if necessary
     if ~isfield (design, 'CoreLossSLMs')
@@ -213,7 +214,7 @@ function design = coggingforceslm(design)
     end
     
     % account for magnet skew in the cogging forces
-    normcoggingfslm = slmengine(design.feapos, design.coggingforce ./ design.ls, ...
+    normcoggingTorqueslm = slmengine(design.feapos, design.RawCoggingTorque ./ design.ls, ...
             'EndCon', 'periodic', ...
             'knots', numel(design.feapos), ...
             'Plot', 'off');
@@ -223,13 +224,13 @@ function design = coggingforceslm(design)
 
     pos = linspace(0, 2, 100);
     
-    % calculate the flux linkage contributed by each magnet section
-    coggingf = periodicslmeval( bsxfun(@plus, pos, skewoffset), normcoggingfslm, 0, false );
+    % calculate the force contributed by each magnet section
+    coggingTorque = periodicslmeval( bsxfun(@plus, pos, skewoffset), normcoggingTorqueslm, 0, false );
 
-    % calculate the total flux linkage in the coil   
-    coggingf = (design.ls/skew(2)) * sum(coggingf,1);
+    % calculate the total cogging force  
+    coggingTorque = (design.ls/skew(2)) * sum(coggingTorque,1);
     
-    design.slm_coggingforce = slmengine(pos, coggingf, ...
+    design.slm_coggingtorque = slmengine(pos, coggingTorque, ...
             'EndCon', 'periodic', ...
             'knots', 20, ...
             'Plot', 'off');
