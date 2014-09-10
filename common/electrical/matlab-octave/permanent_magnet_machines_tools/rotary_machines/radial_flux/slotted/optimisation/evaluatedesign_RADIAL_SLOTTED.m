@@ -239,5 +239,6 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     sdesign.TorqueRippleFactor = 0.2;
     sdesign.VoltagePercentTHD = 50;
     sdesign.TemperaturePeak = ssimoptions.max_TemperaturePeak - 1;
+    sdesign.CoggingTorquePeak = 0;
     
 end
