@@ -25,8 +25,7 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
     Inputs.MagnetSpaceGroup = 0;
     Inputs.RotorBackIronGroup = [];
     Inputs.CoilGroup = 0;
-    Inputs.ShoeGroup = 0;
-    Inputs.ArmatureBackIronGroup = 0;
+    Inputs.ArmatureBackIronGroup = [];
     Inputs.MagnetRegionMeshSize = choosemesharea_mfemm(design.tm, design.Rmm*design.thetam, 1/40);
     
     if min(design.tbi > 0)
@@ -51,6 +50,10 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
     Inputs = parse_pv_pairs(Inputs, varargin);
     
     FemmProblem = Inputs.FemmProblem;
+    
+    if isempty(Inputs.ArmatureBackIronGroup)
+        [FemmProblem, Inputs.ArmatureBackIronGroup] = addgroup_mfemm(FemmProblem, 'ArmatureBackIron');
+    end
     
     slotsperpole = design.Qs / design.Poles;
     
@@ -155,7 +158,7 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
         'FemmProblem', FemmProblem, ...
         'ShoeGapMaterial', GapMatInd, ...
         'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
-        'ShoeGroup', Inputs.ArmatureBackIronGroup, ...
+        'ArmatureIronGroup', Inputs.ArmatureBackIronGroup, ...
         'Tol', Inputs.Tol, ...
         'NSlots', Inputs.NSlots, ...
         'DrawCoilInsulation', Inputs.DrawCoilInsulation, ...

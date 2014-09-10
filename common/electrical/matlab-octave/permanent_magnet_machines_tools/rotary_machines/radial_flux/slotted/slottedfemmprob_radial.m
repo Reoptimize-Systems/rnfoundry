@@ -25,8 +25,7 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
     Inputs.MagnetSpaceGroup = [];
     Inputs.RotorBackIronGroup = [];
     Inputs.CoilGroup = 0;
-    Inputs.ShoeGroup = 0;
-    Inputs.ArmatureBackIronGroup = 0;
+    Inputs.ArmatureBackIronGroup = [];
     Inputs.MagnetRegionMeshSize = choosemesharea_mfemm(design.tm, (design.Rmm*design.thetam), 1/10);
     Inputs.BackIronRegionMeshSize = choosemesharea_mfemm(min(design.tbi), 2*(design.Rbm*design.thetap), 1/10);
     Inputs.OuterRegionsMeshSize = [choosemesharea_mfemm(design.tm, (design.Rbo*design.thetap), 1/5), -1];
@@ -58,6 +57,10 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
     Inputs = parse_pv_pairs(Inputs, varargin);
     
     FemmProblem = Inputs.FemmProblem;
+    
+    if isempty(Inputs.ArmatureBackIronGroup)
+        [FemmProblem, Inputs.ArmatureBackIronGroup] = addgroup_mfemm(FemmProblem, 'ArmatureBackIron');
+    end
     
     if isempty (Inputs.MaterialsLibrary)
         if strncmpi (Inputs.SimType, 'Magnetics', 1)
@@ -179,7 +182,7 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
         'FemmProblem', FemmProblem, ...
         'ShoeGapMaterial', GapMatInd, ...
         'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
-        'ShoeGroup', Inputs.ArmatureBackIronGroup, ...
+        'ArmatureIronGroup', Inputs.ArmatureBackIronGroup, ...
         'Tol', Inputs.Tol, ...
         'DrawCoilInsulation', Inputs.DrawCoilInsulation, ...
         'CoilInsulationThickness', design.CoilInsulationThickness, ...
