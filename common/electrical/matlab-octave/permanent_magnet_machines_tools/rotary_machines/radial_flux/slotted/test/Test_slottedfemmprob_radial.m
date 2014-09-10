@@ -46,3 +46,24 @@ design.CoilInsulationThickness = 2/10000;
                              'DrawOuterRegions', false );
                              
 openprobleminfemm_mfemm (FemmProblem);
+
+
+%%
+
+design = test_design_RADIAL_SLOTTED ();
+design = completedesign_RADIAL_SLOTTED (design);
+
+design.qc = fr (1,4);
+design.yd = 1;
+design.NBasicWindings = 10;
+design.CoilLayers = 1;
+design = rmfield (design, {'Qs', 'Qc', 'Poles', 'g', 'thetap', 'thetam', 'Ryi', 'Rai', 'Rmo', 'Rmi'});
+design = completedesign_RADIAL_SLOTTED (design);
+
+[FemmProblem, coillabellocs] = ...
+    slottedfemmprob_radial ( design, ...
+                             'ArmatureType', design.ArmatureType, ...
+                             'DrawCoilInsulation', false, ...
+                             'DrawOuterRegions', true );
+                             
+openprobleminfemm_mfemm (FemmProblem);
