@@ -47,7 +47,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     % draw the positive part of the coil circuit
     coilBlockProps.Turns = design.CoilTurns;
     
-    statorirongp = getgroupnumber_mfemm(FemmProblem, 'StatorIron');
+    statorirongp = getgroupnumber_mfemm(FemmProblem, 'StatorIronOutline');
     
     % add circuits for each winding phase
     for i = 1:design.Phases
