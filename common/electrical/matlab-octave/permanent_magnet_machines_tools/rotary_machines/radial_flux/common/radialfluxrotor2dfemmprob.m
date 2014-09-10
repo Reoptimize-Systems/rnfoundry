@@ -24,40 +24,40 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
-    if isempty(Inputs.MagnetGroup) && isempty(Inputs.MagnetSpaceGroup) ...
-            && isempty(Inputs.BackIronGroup) && isempty(Inputs.OuterRegionGroup)
-        
-        if drawnrotors(1) && drawnrotors(2)
-            Inputs.MagnetGroup = [1,2];
-        else
-            Inputs.MagnetGroup = [1,1];
-        end
-        Inputs.MagnetSpaceGroup = Inputs.MagnetGroup;
-        Inputs.BackIronGroup = Inputs.MagnetGroup;
-        Inputs.OuterRegionGroup = Inputs.MagnetGroup;
-        
-    end
-    
+    FemmProblem = Inputs.FemmProblem;
+   
     if isscalar(Inputs.MagnetGroup) 
         Inputs.MagnetGroup = repmat(Inputs.MagnetGroup, 1, 2);
+    elseif isempty(Inputs.MagnetGroup)
+        
+        [FemmProblem, Inputs.MagnetGroup] = addgroup_mfemm(FemmProblem, 'Magnet');
+         
+        if drawnrotors(1) && drawnrotors(2)
+            Inputs.MagnetGroup = [Inputs.MagnetGroup,Inputs.MagnetGroup+1];
+        else
+            Inputs.MagnetGroup = repmat(Inputs.MagnetGroup, 1, 2);
+        end
     end
     
     if isscalar(Inputs.MagnetSpaceGroup) 
         Inputs.MagnetSpaceGroup = repmat(Inputs.MagnetSpaceGroup, 1, 2);
-    elseif isempty(Inputs.OuterRegionGroup)
-        Inputs.MagnetSpaceGroup = zeros(1, 2);
+    elseif isempty(Inputs.MagnetSpaceGroup)
+        [FemmProblem, Inputs.MagnetSpaceGroup] = addgroup_mfemm(FemmProblem, 'MagnetSpace');
+        Inputs.MagnetSpaceGroup = repmat(Inputs.MagnetSpaceGroup, 1, 2);
     end
     
     if isscalar(Inputs.BackIronGroup) 
         Inputs.BackIronGroup = repmat(Inputs.BackIronGroup, 1, 2);
     elseif isempty(Inputs.BackIronGroup)
-        Inputs.BackIronGroup = Inputs.MagnetGroup;
+        [FemmProblem, Inputs.BackIronGroup] = addgroup_mfemm(FemmProblem, 'BackIron');
+        Inputs.BackIronGroup = repmat(Inputs.BackIronGroup, 1, 2);
     end
     
     if isscalar(Inputs.OuterRegionGroup) 
         Inputs.OuterRegionGroup = repmat(Inputs.OuterRegionGroup, 1, 2);
     elseif isempty(Inputs.OuterRegionGroup)
-        Inputs.OuterRegionGroup = zeros(1, 2);
+        [FemmProblem, Inputs.OuterRegionGroup] = addgroup_mfemm(FemmProblem, 'BackIronOuterRegion');
+        Inputs.OuterRegionGroup = repmat(Inputs.OuterRegionGroup, 1, 2);
     end
     
     if numel(Inputs.OuterRegionsMeshSize) ~= 2
@@ -124,7 +124,6 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
                                      Inputs.FractionalPolePosition, ...
                                      Inputs.RotorAnglePosition);
     
-	FemmProblem = Inputs.FemmProblem;
     
     % Add a proscribed A boundary we will use for the outer regions
     % boundary types
