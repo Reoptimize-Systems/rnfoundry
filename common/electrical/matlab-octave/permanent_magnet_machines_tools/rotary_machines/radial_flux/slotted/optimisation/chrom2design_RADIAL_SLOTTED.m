@@ -73,7 +73,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     elseif strcmp(design.ArmatureType, 'internal')
 
         design = chrom2design_internal_arm (design, simoptions, Chrom, options);
-        
+
     end
     
     % prevent too wide slots
@@ -97,11 +97,6 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
         
     end
     
-    design.Hc = design.tc(1);
-    design.Wc = mean([design.thetacg * design.Rci, design.thetacy * design.Rco]);
-    
-    design = preprocsystemdesign_RADIAL(design, simoptions);
-
     % recall completedesign_RADIAL_SLOTTED  to recalculate the design dims
     % and ratios in case they have been modified
     
@@ -113,6 +108,11 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     design = rmfield (design, 'RmiVRmo');
     design = rmfield (design, 'g');
     design = completedesign_RADIAL_SLOTTED (design, simoptions);
+    
+    design.Hc = design.tc(1) + design.tsb;
+    design.Wc = mean([design.thetacg * design.Rci, design.thetacy * design.Rco]);
+    
+    design = preprocsystemdesign_RADIAL(design, simoptions);
     
 end
 
