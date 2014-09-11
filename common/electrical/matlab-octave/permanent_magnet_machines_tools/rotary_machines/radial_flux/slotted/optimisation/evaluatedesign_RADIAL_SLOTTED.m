@@ -139,7 +139,6 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
                             'ArmatureType', sdesign.ArmatureType, ...
                             'NWindingLayers', sdesign.CoilLayers, ...
                             'Position', 0, ...
-                            'ArmatureBackIronGroup', armirongroup, ...
                             'MagnetRegionMeshSize', ssimoptions.femmmeshoptions.MagnetRegionMeshSize, ...
                             'BackIronRegionMeshSize', ssimoptions.femmmeshoptions.BackIronRegionMeshSize, ...
                             'OuterRegionsMeshSize', ssimoptions.femmmeshoptions.OuterRegionsMeshSize, ...
@@ -155,10 +154,19 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     % write the fem file to disk
     writefemmfile(femfilename, sdesign.FemmProblem);
     % analyse the problem
-    ansfilename = analyse_mfemm(femfilename, ...
-                                simoptions.usefemm, ...
-                                simoptions.quietfemm);
-                            
+    try
+        ansfilename = analyse_mfemm(femfilename, ...
+                                    simoptions.usefemm, ...
+                                    simoptions.quietfemm);
+    catch err
+        if strncmp (err.message, 'Material properties have not been defined', 41)
+            warning (err.message);
+            [sdesign, ssimoptions] = badscore (sdesign, ssimoptions);
+            return;
+        else
+            rethrow (err);
+        end
+    end
 	
     if (exist('fpproc_interface_mex', 'file')==3) && ~ssimoptions.usefemm
 
@@ -168,7 +176,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         % get the cross-sectional area of the armature iron for
         % calcuation of material masses later
         solution.clearblock();
-        solution.groupselectblock(armirongroup);
+        solution.groupselectblock(sdesign.FemmProblem.Groups.ArmatureBackIron);
         sdesign.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
         
         % get the peak flux linkage
@@ -240,5 +248,27 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     sdesign.VoltagePercentTHD = 50;
     sdesign.TemperaturePeak = ssimoptions.max_TemperaturePeak - 1;
     sdesign.CoggingTorquePeak = 0;
+    
+end
+
+function [sdesign, ssimoptions] = badscore (sdesign, ssimoptions)
+
+	sdesign.JCoilRms = 2 * ssimoptions.max_JCoilRms;
+    sdesign.EMFPhaseRms = 5 * ssimoptions.max_EMFPhaseRms;
+    sdesign.PowerLoadMean = 2 * ssimoptions.max_PowerLoadMean;
+    sdesign.TemperaturePeak = 2 * ssimoptions.max_TemperaturePeak;
+    sdesign.TorqueRippleFactor = 2 * ssimoptions.max_TorqueRippleFactor;
+    sdesign.VoltagePercentTHD = 2 * ssimoptions.max_VoltagePercentTHD;
+    sdesign.CoggingTorquePeak = 2 * ssimoptions.max_CoggingTorquePeak;
+    sdesign.Efficiency = 0.5;
+    
+    % now calculate coil resistance
+    sdesign.MTL = rectcoilmtl( sdesign.ls, ...
+                               sdesign.yd * sdesign.thetas * sdesign.Rcm, ...
+                               mean([sdesign.thetacg, sdesign.thetacy] * sdesign.Rcm) );
+                           
+    sdesign.CoilTurns = 1;
+    sdesign.ArmatureIronAreaPerPole = 1;
+    ssimoptions = setfieldifabsent(ssimoptions, 'basescorefcn', 'costscore_AM');
     
 end
