@@ -22,9 +22,9 @@ function res = ironlossfitfcn(fitvars,f,B,coreloss)
 % coefficient and ke is the excess, or anomalous loss coefficient. See [1]
 % for more information on this function and its use.
 %
-% [1] G. Bertotti, “General properties of power losses in soft
-% ferromagnetic materials,” IEEE Transactions on Magnetics, vol. 24, no. 1,
-% pp. 621–630, 1988.
+% [1] G. Bertotti, General properties of power losses in soft
+% ferromagnetic materials, IEEE Transactions on Magnetics, vol. 24, no. 1,
+% pp. 621-630, 1988.
 %
 % Input
 %
