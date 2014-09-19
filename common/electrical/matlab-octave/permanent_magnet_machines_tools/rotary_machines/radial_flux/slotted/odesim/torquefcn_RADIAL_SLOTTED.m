@@ -15,6 +15,6 @@ function [Torque, TorqueBD] = torquefcn_RADIAL_SLOTTED(design, simoptions, theta
     TorqueBD(end+1) =  periodicslmeval(thetaR,design.slm_coggingtorque,0,false);
     
     % add it to the total torque
-    Torque = Torque + TorqueBD(end);
+%     Torque = Torque + TorqueBD(end);
 
 end
