@@ -24,30 +24,43 @@ function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs
         reportstrs = {};
     end
     
+
+    tabledata = { ...
+        '$R_{yi}$', 'Inner armature yoke radius. [mm]', design.Ryi * 1000;
+        '$R_{yo}$', 'Outer armature yoke radius. [mm]', design.Ryo * 1000;
+        '$R_{ym}$', 'Mean armature yoke radius. [mm]', design.Rym * 1000;
+        '$R_{ci}$', 'Inner coil radius. [mm]', design.Rci * 1000;
+        '$R_{co}$', 'Outer coil radius. [mm]', design.Rco * 1000;
+        '$R_{cm}$', 'Mean coil radius. [mm]', design.Rcm * 1000;
+        '$R_{tsb}$', 'Tooth shoe surface radius [mm]', design.Rtsb * 1000;
+        '$y_d$', 'Coil pitch in slots. (No. Of Slots)', design.yd;
+        '$\theta_{c}$', 'Coil pitch. [rad]', design.yd*design.thetas;
+        '$\tau_{c}$', 'Coil pitch at mean coil radius. [mm]', design.yd*design.thetas*design.Rcm * 1000;
+        '$\theta_{s}$', 'Slot centers pitch angle. [rad]', design.thetas;
+        '$\theta_{sg}$', 'Slot opening angle. [rad]', design.thetasg;
+        '$\tau_{sg}$', 'Slot opening pitch. [mm]', design.thetasg * design.Rtsg * 1000;
+        '$t_c$', 'Coil slot height in the radial direction. [mm]', design.tc(1) * 1000;
+        '$t_{cb}$', 'Coil slot base height in the radial direction. [mm]', design.tc(2) * 1000;
+        '$t_y$', 'Coil yoke thickness in the radial direction. [mm]', design.ty * 1000;
+        '$t_{sb}$', 'Coil shoe thickness where shoe meets tooth. [mm]', design.tsb * 1000;
+        '$t_{sg}$', 'Coil shoe thickness at coil slot opening. [mm]', design.tsg * 1000;
+        '$\theta_{cg}$', 'Internal slot pitch angle at gap end. [rad]', design.thetacg;
+        '$\tau_{cg}$', 'Internal slot pitch at gap end. [mm]', design.thetacg.*design.Rtsb * 1000;
+        '$\theta_{cy}$', 'Internal slot pitch angle at yoke end (coil base). [rad]', design.thetacy;
+        '$\tau_{cg}$', 'Internal slot pitch at gap end. [mm]', design.thetacg.*design.Rtsb * 1000;
+    };
+    
     % make up report on things specific to radial slotted
     % radial flux armature dimensions
-    tabledata = { ...
-        '$R_{yi}$', 'Inner armature yoke radius. (m)', design.Ryi;
-        '$R_{yo}$', 'Outer armature yoke radius. (m)', design.Ryo;
-        '$R_{ym}$', 'Mean armature yoke radius. (m)', design.Rym;
-        '$R_{ci}$', 'Inner coil radius. (m)', design.Rci;
-        '$R_{co}$', 'Outer coil radius. (m)', design.Rco;
-        '$R_{cm}$', 'Mean coil radius. (m)', design.Rcm;
-        '$R_{tsb}$', 'Tooth shoe surface radius (m)', design.Rtsb;
-        '$\theta_{cg}$', 'Internal slot pitch angle at gap end. (rad)', design.thetacg;
-        '$\tau_{cg}$', 'Internal slot pitch at gap end. (m)', design.thetacg.*design.Rtsb;
-        '$\theta_{cy}$', 'Internal slot pitch angle at yoke end. (rad)', design.thetacy;
-        ...'$\tau_{cy}$', 'Internal slot pitch at yoke end. (m)', design.thetacy.*design.Ryo;
-        '$y_d$', 'Coil pitch in slots. (No. Of Slots)', design.yd;
-        '$\theta_{c}$', 'Coil pitch. (rad)', design.yd*design.thetas;
-        '$\tau_{c}$', 'Coil pitch at mean coil radius. (m)', design.yd*design.thetas*design.Rcm;
-        '$\theta_{s}$', 'Slot centers pitch angle. (rad)', design.thetas;
-        '$\theta_{sg}$', 'Slot opening angle. (rad)', design.thetasg;
-        '$t_c$', 'Coil slot height in the radial direction. (m)', design.tc;
-        '$t_y$', 'Coil yoke thickness in the radial direction. (m)', design.ty;
-        '$t_{sb}$', 'Coil shoe thickness where shoe meets tooth. (m)', design.tsb;
-        '$t_{sg}$', 'Coil shoe thickness at coil slot opening. (m)', design.tsg;
-    };
+    if strncmpi (design.ArmatureType, 'e', 1)
+
+        tabledata = [ tabledata; { '$\tau_{cy}$', 'Internal slot pitch at yoke end (coil base). [mm]', design.thetacy.*design.Ryi * 1000 } ];
+
+    elseif strncmpi (design.ArmatureType, 'i', 1)
+
+        tabledata = [ tabledata; {'$\tau_{cy}$', 'Internal slot pitch at yoke end (coil base). [mm]', design.thetacy.*design.Ryo * 1000 } ];
+
+    end
 
     % generate the LaTex table of the outputs
     colheadings = {};
@@ -89,6 +102,18 @@ radarmdimstablestrs;
 '\end{tabular}';
 '}';
 '\caption{Armature dimensions.}';
+'\end{table}';
+'\begin{table}[htb]';
+'\centerline{';
+'\begin{tabular}{ll}'
+'\toprule';
+'Component & Material \\';
+'\midrule';
+['Armature Iron &', design.MagFEASimMaterials.ArmatureYoke.Name, '\\'];
+'\bottomrule';
+'\end{tabular}';
+'}';
+'\caption{Armature materials.}';
 '\end{table}';
 '% FloatBarrier requires the placeins package';
 '\FloatBarrier{}';
