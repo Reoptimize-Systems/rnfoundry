@@ -40,13 +40,19 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     
 %% Winding Design
 
+    [coils, poles] = rat(fr(design.Qc,design.Poles));
+
     tabledata = { ...
-        '$N_T$', 'Coil Turns', design.CoilTurns;
-        '$N_s$', 'Strands Per Turn', design.NStrands;
+        '$p$', 'Total number of poles (number of magnets)', design.Poles;
+        ''   , 'Number of pole pairs', design.Poles/2;
+        '$N_{ph}$', 'Number of phases', design.Phases;
         '$Q_c$', 'Total Number of Coils', design.Phases * design.NCoilsPerPhase; 
+        '', 'Ratio of coils to poles', [int2str(coils) ':' int2str(poles)];
         '$N_{cp}$', 'Coils Per Phase', design.NCoilsPerPhase;
         '$Q_s$', 'Total Number of Slots', design.Phases * design.NCoilsPerPhase * 2;
-        '$D_c$', 'Copper Wire Diameter', design.Dc;
+        '$N_T$', 'Coil Turns', design.CoilTurns;
+        '$N_s$', 'Strands Per Turn', design.NStrands;
+        '$D_c$', 'Copper Wire Diameter [mm]', design.Dc*1000;
         '', 'Parallel Branches', design.Branches;
         '', 'Series Coils Per Branch', design.CoilsPerBranch;
     };
@@ -94,6 +100,12 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     else
         VoltagePercentTHD = 'N/A';
     end
+    
+    if isfield (design, 'FrequencyPeak')
+        FrequencyPeak = design.FrequencyPeak;
+    else
+        FrequencyPeak = 'N/A';
+    end
 
     tabledata = { ...
         'Peak Phase Current (A)', design.IPhasePeak(1), 'RMS Coil Current (A)', design.IPhaseRms(1);
@@ -106,7 +118,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         'Peak Flux Linkage (Wb)', slmpar(design.slm_fluxlinkage, 'maxfun'), 'Efficiency', design.Efficiency;
         'Mean Winding Losses (kW)', design.PowerPhaseRMean/1000, 'Mean Iron Losses (kW)', PowerLossIronMean;
         'Mean Winding Eddy Losses (kW)', PowerLossEddyMean, 'Mean Input Power (kW)', design.PowerInputMean/1e3;
-        'Voltage THD (\%)', VoltagePercentTHD, [], [];
+        'Voltage THD (\%)', VoltagePercentTHD, 'Peak Electrical Frequency', FrequencyPeak;
     };
 
     % generate the LaTex table of the outputs
@@ -143,7 +155,6 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         'Structural Material Cost (Euro/kg)', simoptions.evaloptions.StructMaterialCost;
         'Epoxy Cost (Euro/kg)', simoptions.evaloptions.EpoxyCost;
         'Capacity/Load Factor', simoptions.evaloptions.CapacityFactor;
-        
     };
 
     % generate the LaTex table of the outputs
@@ -206,7 +217,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         'Armature Iron Mass (kg)', design.ArmatureIronMass, 'Armature Iron Cost (kEuro)', design.ArmatureIronCost ./1e3;
         'Power Converter Rating (kW)', design.PowerConverterRatingkW, 'Power Converter Cost (kEuro)', design.PowerConverterCost;
         'Total Cost (kEuro)', design.CostEstimate./1e3, 'Cost Per kWhr (Euro Cent/kWhr)', design.CostPerkWhr * 100;
-        'Amortised Cost Per kWhr (Euro Cent/kWhr)', design.BaseScore, [], []; ...
+        'Amortised Cost Per kWhr (Euro Cent/kWhr)', design.OptimInfo.BaseScore, [], []; ...
     };
 
     % generate the LaTex table of the outputs
@@ -285,7 +296,7 @@ simoutputstrs;
     ['The calculated machine parameters, such as material masses, volumes, ', ...
     'costs etc. The material costs used to generate the component costs are ', ...
     'shown in Table \ref{tab:designreport_AM_matcosts}. The component masses and estimated costs are ', ...
-    'shown in Table \ref{tab:designreport_AM_compcosts}'];
+    'shown in Table \ref{tab:designreport_AM_compcosts}.'];
 '\begin{table}[htb]';
 '\centerline{';
 '\begin{tabular}{ll}';

@@ -39,21 +39,21 @@ function reportstrs = designreport_RADIAL(design, simoptions, reportstrs, vararg
     
     % radial flux rotor dimensions
     tabledata = { ...
-        '$R_{mi}$', 'Inner Magnet radius. (m)', design.Rmi;
-        '$R_{mo}$', 'Outer Magnet radius. (m)', design.Rmo;
-        '$R_{mm}$', 'Mean magnet radius. (m)', design.Rmm;
-        '$R_{bi}$', 'Inner field back iron radius. (m)', design.Rbi;
-        '$R_{bo}$', 'Outer field back iron radius. (m)', design.Rbo;
+        '$R_{mi}$', 'Inner Magnet radius. (mm)', design.Rmi*1000;
+        '$R_{mo}$', 'Outer Magnet radius. (mm)', design.Rmo*1000;
+        '$R_{mm}$', 'Mean magnet radius. (mm)', design.Rmm*1000;
+        '$R_{bi}$', 'Inner field back iron radius. (mm)', design.Rbi*1000;
+        '$R_{bo}$', 'Outer field back iron radius. (mm)', design.Rbo*1000;
         'g', 'Air gap (mm)', design.g * 1000;
-        '$t_m$',    'Magnet thickness in radial direction. (m)', design.tm;
-        '$t_{bi}$', 'Back Iron thinckness in radial direction. (m)', design.tbi;
+        '$t_m$',    'Magnet thickness in radial direction. (mm)', design.tm*1000;
+        '$t_{bi}$', 'Back Iron thinckness in radial direction. (mm)', design.tbi*1000;
         '$\theta_{p}$', 'Pole pitch angle. (rad)', design.thetap;
         '$\theta_{m}$', 'Magnet pitch angle. (rad)', design.thetam;
         '$\theta_{p}$', 'Pole pitch angle. (degrees)', rad2deg(design.thetap);
         '$\theta_{m}$', 'Magnet pitch angle. (degrees)', rad2deg(design.thetam);
-        '$\tau_{pm}$', 'Pole pitch at mean magnet radius. (m)', design.thetap*design.Rmm;
-        '$\tau_{mm}$', 'Magnet pitch at mean magnet radius. (m)', design.thetam*design.Rmm;
-        '$l_s$',    'Stack length. (m)', design.ls;
+        '$\tau_{pm}$', 'Pole pitch at mean magnet radius. (mm)', design.thetap*design.Rmm*1000;
+        '$\tau_{mm}$', 'Magnet pitch at mean magnet radius. (mm)', design.thetam*design.Rmm*1000;
+        '$l_s$',    'Stack length. (mm)', design.ls*1000;
         '', 'Magnet Skew (Fraction of Pole)', design.MagnetSkew(1);
     };
 
@@ -96,6 +96,19 @@ radrotordimstablestrs;
 '\end{tabular}';
 '}';
 '\caption{Field dimensions.}';
+'\end{table}';
+'\begin{table}[htb]';
+'\centerline{';
+'\begin{tabular}{ll}'
+'\toprule';
+'Component & Material \\';
+'\midrule';
+['Field Back Iron &', design.MagFEASimMaterials.FieldBackIron.Name, '\\'];
+['Magnet &', design.MagFEASimMaterials.Magnet.Name, '\\'];
+'\bottomrule';
+'\end{tabular}';
+'}';
+'\caption{Field materials.}';
 '\end{table}';
 '% FloatBarrier requires the placeins package';
 '\FloatBarrier{}';
