@@ -1,6 +1,6 @@
 function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, finfun)
 % performs postprocessing of a machine design in preparation for a rotary
-% proescribed motion simulation
+% prescribed motion ode simulation
 %
 % Syntax
 %
@@ -27,6 +27,10 @@ function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, f
 %
 % 
 
+    % ensure any existing ode absolute tolerances are stripped so only the
+    % values set in finfun, if any, are used
+    simoptions = rmiffield(simoptions, 'abstol');
+    
     if ~all(isfield(design, {'slm_psidot'}))
         % In this case we assume we have not already run the finalisation
         % code on this design and must do so
