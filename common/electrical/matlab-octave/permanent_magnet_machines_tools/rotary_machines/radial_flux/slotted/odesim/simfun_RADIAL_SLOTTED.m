@@ -242,10 +242,11 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     
     if ~simoptions.SkipMainFEA
     
-        nfeapos = 10;
+        simoptions = setfieldifabsent (simoptions, 'NMagFEAPositions', 10);
+        
     %     design.FirstSlotCenter = design.thetap + (design.thetap / slotsperpole / 2);
         design.FirstSlotCenter = 0;
-        design.feapos = linspace(0, 1, nfeapos);
+        design.feapos = linspace(0, 1, simoptions.NMagFEAPositions);
 
         design.intAdata.slotPos = [];
         design.intAdata.slotIntA = [];
