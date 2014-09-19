@@ -138,11 +138,15 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
         % there will be three wrapper thicknesses on either side, the back
         % iron, and some air region
         outerwrapperthickness = [ 0, rbackiron; ];
-        
+        wrappergroups = [ nan, Inputs.BackIronGroup(1); ];
         if Inputs.DrawOuterRegions
             outerwrapperthickness = [ outerwrapperthickness;
                                       0, 2*(rbackiron + rmag);
                                       0, 4*(rbackiron + rmag) ];
+                                  
+            wrappergroups = [ wrappergroups; 
+                              nan, Inputs.OuterRegionGroup(1); 
+                              nan, Inputs.OuterRegionGroup(1) ];
         end
 
         % draw the outer rotor parts
@@ -154,7 +158,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
                                                                        'SpaceMaterial', Inputs.MagnetSpaceMaterial, ...
                                                                        'SpaceGroup', Inputs.MagnetSpaceGroup(1), ...
                                                                        'MagnetGroup', Inputs.MagnetGroup(1), ...
-                                                                       'WrapperGroup', Inputs.BackIronGroup(1), ...
+                                                                       'WrapperGroup', wrappergroups, ...
                                                                        'Tol', Inputs.Tol, ...
                                                                        'MeshSize', Inputs.MagnetRegionMeshSize);
 
@@ -171,11 +175,18 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
         
         % mirror the wrapper thicknesses on the other side
         innerwrapperthickness = [ rbackiron, 0; ];
+        wrappergroups = [ Inputs.BackIronGroup(2), nan; ];
         if Inputs.DrawOuterRegions
             innerwrapperthickness = [ innerwrapperthickness;
                                       (roffset(2)-rbackiron) * 0.2, 0;
                                       (roffset(2)-rbackiron) * 0.3, 0 ];
+            wrappergroups = [ wrappergroups; 
+                              Inputs.OuterRegionGroup(2), nan; 
+                              Inputs.OuterRegionGroup(2), nan ];
         end
+        
+        
+                          
         
         [FemmProblem, ~, ~, ~, nodeids2, linktb2] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, ...
                                                                        thetamag, rmag, roffset(2), ...
@@ -185,7 +196,7 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
                                                                        'SpaceMaterial', Inputs.MagnetSpaceMaterial, ...
                                                                        'SpaceGroup', Inputs.MagnetSpaceGroup(2), ...
                                                                        'MagnetGroup', Inputs.MagnetGroup(2), ...
-                                                                       'WrapperGroup', Inputs.BackIronGroup(2), ...
+                                                                       'WrapperGroup', wrappergroups, ...
                                                                        'Tol', Inputs.Tol, ...
                                                                        'MeshSize', Inputs.MagnetRegionMeshSize);
 
