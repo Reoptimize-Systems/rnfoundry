@@ -3,13 +3,13 @@ function [Torque, TorqueBD] = torquefcn_ROTARY(design, simoptions, thetaE, omega
 %
 % Syntax
 %
-% Force = forcefcn_ROTARY(design, simoptions, xT, vT, xBh, xBs, vBh, vBs)
+% [Torque, TorqueBD] = torquefcn_ROTARY(design, simoptions, thetaE, omegaE, EMF, Iphases)
 %
 % 
 
     thetaR = thetaE ./ design.PoleWidth;
     
-    [TqLtot, TqLiron, TqLeddy] = losstorques_ROTARY(design, simoptions, thetaR, omegaE);
+    [~, TqLiron, TqLeddy] = losstorques_ROTARY(design, simoptions, thetaR, omegaE);
     
     TorqueBD = [0, 0, TqLiron, TqLeddy];
     
