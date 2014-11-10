@@ -3,7 +3,7 @@ function xycoords = rotate2D (xycoords, rotangle, refpoint)
 %
 % Syntax
 %
-% xycoords = rotate2D (xycoords, refpoint)
+% xycoords = rotate2D (xycoords, rotangle, refpoint)
 %
 % Input
 %
