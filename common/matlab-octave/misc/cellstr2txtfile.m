@@ -1,5 +1,6 @@
 function cellstr2txtfile(file, strs)
-% write all strings ain a cell array to a text file
+% write all strings in a cell array to a text file, each string will be
+% separated by a newline character
 %
 % Syntax
 %
