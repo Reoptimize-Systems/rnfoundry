@@ -12,7 +12,7 @@ function design = stripgenfields_RADIAL_SLOTTED(design)
         design = rmiffield(design, 'thetacVthetas');
         design = rmiffield(design, 'thetasgVthetac');
     
-    elseif strcmp (design.ArmatureType, 'internal')
+    elseif strcmp (design.ArmatureType, 'external')
         
     else
         error ()
