@@ -278,18 +278,18 @@ end
 function design = completeexternalarmature (design)
 
                 
-    ratiofields = { 'RyiVRyo';
-                    'RtsbVRyi';
-                    'RaiVRtsb';
-                    'RmoVRai';
-                    'RmiVRmo';
-                    'RbiVRmi';
-                    'tsgVtsb'; 
-                    'thetamVthetap';
-                    'thetacgVthetas'; 
-                    'thetacyVthetas';
-                    'thetasgVthetacg'; 
-                    'lsVtm'; };
+    ratiofields = { 'RyiVRyo', 0, 1.0;
+                    'RtsbVRyi', 0, 1.0;
+                    'RaiVRtsb', 0, 1.0;
+                    'RmoVRai', 0, 1.0;
+                    'RmiVRmo', 0, 1.0;
+                    'RbiVRmi', 0, 1.0;
+                    'tsgVtsb', 0, 1.0;
+                    'thetamVthetap', 0, 1.0;
+                    'thetacgVthetas', 0, 1.0;
+                    'thetacyVthetas', 0, 1.0;
+                    'thetasgVthetacg', 0, 1.0;
+                    'lsVtm', 0, inf; };
                     
     dimfields1 = { 'Ryo';
                    'Ryi';
@@ -436,24 +436,26 @@ function design = completeexternalarmature (design)
                sprintf('%s, ', dimfields1{:}), ...
                sprintf('%s, ', dimfields2{:}))
     end
+    
+    checkdesignratios_AM (design, ratiofields);
 
 end
 
 
-function design = completeinternalarmature (design)
+function [design, ratiofields] = completeinternalarmature (design)
 
-    ratiofields = { 'RmoVRbo';
-                    'RmiVRmo';
-                    'RaoVRmi'; 
-                    'RtsbVRao';
-                    'RyoVRtsb';
-                    'RyiVRyo'; 
-                    'tsgVtsb'; 
-                    'thetamVthetap';
-                    'thetacgVthetas';
-                    'thetacyVthetas';
-                    'thetasgVthetacg'; 
-                    'lsVtm'; };
+    ratiofields = { 'RmoVRbo', 0, 1.0;
+                    'RmiVRmo', 0, 1.0;
+                    'RaoVRmi', 0, 1.0;
+                    'RtsbVRao', 0, 1.0;
+                    'RyoVRtsb', 0, 1.0;
+                    'RyiVRyo', 0, 1.0;
+                    'tsgVtsb', 0, 1.0;
+                    'thetamVthetap', 0, 1.0;
+                    'thetacgVthetas', 0, 1.0;
+                    'thetacyVthetas', 0, 1.0;
+                    'thetasgVthetacg', 0, 1.0;
+                    'lsVtm', 0, inf };
                     
     dimfields1 = { 'Rbo';
                    'Rmo';
@@ -483,7 +485,7 @@ function design = completeinternalarmature (design)
                    'thetasg'; 
                    'ls'; };
 
-    if all(isfield(design, ratiofields))
+    if all(isfield(design, ratiofields(:,1)))
         % convert the ratio set to actual dimensions
         design = structratios2structvals(design, ratiofields(1:6), 'Rbo', 'V');
 
@@ -585,5 +587,7 @@ function design = completeinternalarmature (design)
                sprintf('%s, ', dimfields1{:}), ...
                sprintf('%s, ', dimfields2{:}));
     end
+    
+    checkdesignratios_AM (design, ratiofields);
 
 end
