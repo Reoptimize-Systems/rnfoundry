@@ -191,12 +191,14 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
     % estimate the rotor inertia (approximating as a hollow cylinder)
     if (strcmp(design.ArmatureType, 'internal'))
         design.RotorMomentOfInertia = 0.5 * design.RotorMass * (design.Rmi^2 + design.Rbo^2);
+        design.ForcePerAreaToothSurface = design.gforce .* design.Poles ./ (design.Rao * (2 * pi * (1 - design.thetasg/design.thetas)) * design.ls);
     elseif (strcmp(design.ArmatureType, 'external'))
         design.RotorMomentOfInertia = 0.5 * design.RotorMass * (design.Rbi^2 + design.Rmo^2);
+        design.ForcePerAreaToothSurface = design.gforce .* design.Poles ./ (design.Rai * (2 * pi * (1 - design.thetasg/design.thetas)) * design.ls);
     else
         error('Unrecognised stator type, only ''internal'' and ''external'' supported.')
     end
-    
+
     % do the normal stuff
     
     % call finfun_RADIAL
