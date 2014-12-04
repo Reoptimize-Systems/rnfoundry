@@ -1,6 +1,6 @@
 function cellstrs = trynesteddict (dictname, nestednames, assignment)
 
-nname = py.nesteddictname (nestednames);
+nname = pytools.nesteddictname (nestednames);
 
 cellstrs = { ...
         'try:';
