@@ -8,7 +8,7 @@ function cellstrs = design2pydict_RADIAL (design)
     spa = @(var, val) sprintf ('structdims["Field"]["%s"] = %10.8g', var, val);
     
     cellstrs = [cellstrs;
-py.trynesteddict('structdims', {'Field', 'Rbi'}, sprintf('%10.8g * 1000', design.Rbi)); 
+pytools.trynesteddict('structdims', {'Field', 'Rbi'}, sprintf('%10.8g * 1000', design.Rbi)); 
 { ...
  spm('Rbo', design.Rbo);
 [spm('Rmi', design.Rmi), ' * 1.001'];
