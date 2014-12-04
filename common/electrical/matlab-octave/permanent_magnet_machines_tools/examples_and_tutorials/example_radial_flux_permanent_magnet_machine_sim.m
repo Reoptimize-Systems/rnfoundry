@@ -8,7 +8,7 @@
 %
 %
 % A machine design is always defined using fields of a structure which we
-% usually name 'design'. Throughout the toolbox this is the name used. In
+% usually named 'design'. Throughout the toolbox this is the name used. In
 % this example we will set up a simulation of a radial flux permanent
 % magnet machine, and take a look at what is actually produced by the
 % toolbox. 
@@ -71,10 +71,10 @@ design.Poles = 12;
 % Choose the number of Phases, the conventional 3
 design.Phases = 3;
 % The desired number of layers is stored in 'CoilLayers'
-design.CoilLayers = 1; 
+design.CoilLayers = 2;
 % The type of winding is specified as a string, it can be 'overlapping' or
 % 'nonoverlapping'
-design.WindingType = 'overlapping';
+% design.WindingType = 'overlapping';
 % Next we can specify the winding by stating the ratio of coils to Poles
 % and slots. This value must be a fraction object, which is created as
 % below. To simplify things we will use one coil per pole and phase, but
