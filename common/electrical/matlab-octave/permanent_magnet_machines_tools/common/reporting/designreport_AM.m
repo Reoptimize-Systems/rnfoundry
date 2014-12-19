@@ -51,6 +51,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         '$N_{cp}$', 'Coils Per Phase', design.NCoilsPerPhase;
         '$Q_s$', 'Total Number of Slots', design.Phases * design.NCoilsPerPhase * 2;
         '$N_T$', 'Coil Turns', design.CoilTurns;
+        '$f_c$', 'Copper Fill Factor', design.CoilFillFactor;
         '$N_s$', 'Strands Per Turn', design.NStrands;
         '$D_c$', 'Copper Wire Diameter [mm]', design.Dc*1000;
         '', 'Parallel Branches', design.Branches;
