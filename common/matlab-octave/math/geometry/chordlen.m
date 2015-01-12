@@ -13,7 +13,7 @@ function len = chordlen (r, theta)
 %   len - the chord length
 %
 
-    if any (theta(:) <= 0 || theta(:) > 180)
+    if any (theta(:) <= 0 | theta(:) > 180)
         error ('theta must be between 0 and 180')
     end
     
