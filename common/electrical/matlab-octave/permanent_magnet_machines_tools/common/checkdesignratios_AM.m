@@ -8,7 +8,7 @@ function design = checkdesignratios_AM (design, ratiospec, dumpstruct)
     emax = @(fn) fprintf (1, 'Ratio field %s exceeded the specified maximum possible allowed\n', fn);
     emin = @(fn) fprintf (1, 'Ratio field %s is below the specified minimum possible allowed\n', fn);
     
-    results = checkstructratios (design, ratiospec, dumpstruct);
+    results = checkstructratios (design, ratiospec);
     
     for ind = 1:size (ratiospec, 1)
         
