@@ -44,7 +44,7 @@ function result = checkstructratios (S, ratiospec)
         
         if isfield (S, ratiospec{ind,1})
             
-            if  S.(ratiospec{ind,1}) < ratiospec{ind,2}
+            if  S.(ratiospec{ind,1}) < (ratiospec{ind,2} - 2*eps(ratiospec{ind,2}))
                 
                 result(ind) = result(ind) + 1;
                 
@@ -53,11 +53,11 @@ function result = checkstructratios (S, ratiospec)
                 
             end
             
-            if  S.(ratiospec{ind,1}) > ratiospec{ind,3}
+            if  S.(ratiospec{ind,1}) > (ratiospec{ind,3} + 2*2*eps(ratiospec{ind,2}))
                 
                 result(ind) = result(ind) + 2;
                 
-                fprintf (1, 'Struct Ratio %s was %f, which was less than the specified min possible allowed (%f)\n', ...
+                fprintf (1, 'Struct Ratio %s was %f, which was more than the specified max possible allowed (%f)\n', ...
                             ratiospec{ind,1}, ratiospec{ind,3}, S.(ratiospec{ind,1}));
                 
             end
