@@ -26,7 +26,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     slotsperpole = design.Qs / design.Poles;
 
     % define the block properties of the core region
-    yokeBlockProps.BlockType = FemmProblem.Materials(BackIronMatInd).Name;
+    yokeBlockProps.BlockType = FemmProblem.Materials(YokeMatInd).Name;
     yokeBlockProps.MaxArea = Inputs.BackIronRegionMeshSize;
     yokeBlockProps.InCircuit = '';
     yokeBlockProps.InGroup = Inputs.ArmatureBackIronGroup;
