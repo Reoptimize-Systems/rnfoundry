@@ -27,10 +27,10 @@ function [thetaT, omegaT] = prescribedmotomegatheta(t, simoptions)
 % See also: prescribedmotodetorquefcn_ROTARY
 %
 
-% Created by Richard Crozier 2012
+% Created by Richard Crozier 2012-2015
 
-    thetaT = ppval(simoptions.pp_thetaT, t);
+    thetaT = ppuval(t, simoptions.pp_thetaT);
     
-    omegaT = ppval(simoptions.pp_omegaT, t);
+    omegaT = ppuval(t, simoptions.pp_omegaT);
 
 end
