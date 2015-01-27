@@ -76,12 +76,6 @@ function y = periodicslmeval(x, slm, evalmode, checkinputs)
 %            Note 4: Inverse of points which fall above the
 %            maximum or below the minimum value of the function
 %            will be returned as a NaN.
-%
-% checkinputs - (OPTIONAL) boolean determning whether the inputs are
-%            checked for errors, or assumed to be correct. Error checking
-%            can take significant time. Inputs will be checked if this
-%            value is true, or assumed to be correct if it is false.
-%            Default is true.
 %            
 %
 % Arguments: (output)
@@ -91,16 +85,14 @@ function y = periodicslmeval(x, slm, evalmode, checkinputs)
 %            size as x.
 %
 
-% Created by Richard Crozier 2012
+% Created by Richard Crozier 2012-2015
 
     if nargin < 3
         evalmode = 0;
     end
     
-    if nargin < 4
-        checkinputs = true;
-    end
+    xmod = slm.x(1)+mod(x-slm.x(1), slm.period);
 
-    y = slmeval(slm.x(1)+mod(x-slm.x(1), slm.x(end) - slm.x(1)), slm, evalmode, checkinputs);
-
+    y = mexslmeval (xmod, slm.knots, slm.coef, evalmode);
+    
 end

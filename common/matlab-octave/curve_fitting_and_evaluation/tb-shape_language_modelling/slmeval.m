@@ -116,7 +116,17 @@ function y = slmeval(x,slm,evalmode,checkinput)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 % POSSIBILITY OF SUCH DAMAGE.
 % ------------------           licence           --------------------
-
+    
+    persistent usemexslmeval
+    
+    if isempty(usemexslmeval)
+        if exist ('mexslmeval', 'file')
+            usemexslmeval = true;
+        else
+            usemexslmeval = false;
+        end
+    end
+    
     if nargin < 4
         
         checkinput = true;
@@ -172,7 +182,7 @@ function y = slmeval(x,slm,evalmode,checkinput)
                 x = min(knots(end),max(x,knots(1)));
 
                 % and use histc to bin the points.
-                [junk,xbin] = histc(x,knots);
+                [~,xbin] = histc(x,knots);
 
                 % any point which falls at the top end, is said to
                 % be in the last bin.
@@ -239,6 +249,8 @@ function y = slmeval(x,slm,evalmode,checkinput)
             end
 
         case 3
+            
+                
             nx = numel(x);
             dx = diff(knots);
             if checkinput
@@ -255,52 +267,70 @@ function y = slmeval(x,slm,evalmode,checkinput)
                 % we need to treat the inverse more carefully
                 xbin = zeros(nx,1);
             else
-                % clip the points first
-                x = min(knots(end),max(x,knots(1)));
+                if ~usemexslmeval
+                    % clip the points first
+                    x = min(knots(end),max(x,knots(1)));
 
-                % and use histc to bin the points.
-                [junk,xbin] = histc(x,knots);
+                    % and use histc to bin the points.
+                    [~,xbin] = histc(x,knots);
 
-                % any point which falls at the top end is said to
-                % be in the last bin.
-                xbin(xbin==nk)=nk-1;
+                    % any point which falls at the top end is said to
+                    % be in the last bin.
+                    xbin(xbin==nk)=nk-1;
+                end
             end
             
             % Evaluation mode:
             switch evalmode
                 case 0
-                    % f(x)
-                    t = (x-knots(xbin))./dx(xbin);
-                    t2 = t.^2;
-                    t3 = t.^3;
-                    s2 = (1-t).^2;
-                    s3 = (1-t).^3;
-                    y = (-slm.coef(xbin,2).*(s3-s2) + ...
-                        slm.coef(xbin+1,2).*(t3-t2)).*dx(xbin) + ...
-                        slm.coef(xbin,1).*(3*s2-2*s3) + ...
-                        slm.coef(xbin+1,1).*(3*t2-2*t3);
+                    if usemexslmeval
+                        y = mexslmeval (x, knots, slm.coef, 0);
+                    else
+                        % f(x)
+                        t = (x-knots(xbin))./dx(xbin);
+                        t2 = t.^2;
+                        t3 = t.^3;
+                        s2 = (1-t).^2;
+                        s3 = (1-t).^3;
+                        y = (-slm.coef(xbin,2).*(s3-s2) + ...
+                            slm.coef(xbin+1,2).*(t3-t2)).*dx(xbin) + ...
+                            slm.coef(xbin,1).*(3*s2-2*s3) + ...
+                            slm.coef(xbin+1,1).*(3*t2-2*t3);
+                    end
                 case 1
-                    % first derivative for the cubic case
-                    t = (x-knots(xbin))./dx(xbin);
-                    t2 = t.^2;
-                    s = 1-t;
-                    s2 = (1-t).^2;
-                    y = -slm.coef(xbin,2).*(-3*s2+2*s) + ...
-                        slm.coef(xbin+1,2).*(3*t2-2*t) + ...
-                        (slm.coef(xbin,1).*(-6*s+6*s2) + ...
-                        slm.coef(xbin+1,1).*(6*t-6*t2))./dx(xbin);
+                    if usemexslmeval
+                        y = mexslmeval (x, knots, slm.coef, 1);
+                    else
+                        % first derivative for the cubic case
+                        t = (x-knots(xbin))./dx(xbin);
+                        t2 = t.^2;
+                        s = 1-t;
+                        s2 = (1-t).^2;
+                        y = -slm.coef(xbin,2).*(-3*s2+2*s) + ...
+                            slm.coef(xbin+1,2).*(3*t2-2*t) + ...
+                            (slm.coef(xbin,1).*(-6*s+6*s2) + ...
+                            slm.coef(xbin+1,1).*(6*t-6*t2))./dx(xbin);
+                    end
                 case 2
-                    % second derivative of a cubic
-                    t = (x-knots(xbin))./dx(xbin);
-                    s = 1-t;
-                    y = (-slm.coef(xbin,2).*(6*s - 2) + ...
-                        slm.coef(xbin+1,2).*(6*t - 2))./dx(xbin) + ...
-                        (slm.coef(xbin,1).*(6 - 12*s) + ...
-                        slm.coef(xbin+1,1).*(6 - 12*t))./(dx(xbin).^2);
+                    if usemexslmeval
+                        y = mexslmeval (x, knots, slm.coef, 2);
+                    else
+                        % second derivative of a cubic
+                        t = (x-knots(xbin))./dx(xbin);
+                        s = 1-t;
+                        y = (-slm.coef(xbin,2).*(6*s - 2) + ...
+                            slm.coef(xbin+1,2).*(6*t - 2))./dx(xbin) + ...
+                            (slm.coef(xbin,1).*(6 - 12*s) + ...
+                            slm.coef(xbin+1,1).*(6 - 12*t))./(dx(xbin).^2);
+                    end
                 case 3
-                    % third derivative
-                    y = 6*(slm.coef(xbin,2) + slm.coef(xbin+1,2))./(dx(xbin).^2) + ...
-                        12*(slm.coef(xbin,1) - slm.coef(xbin+1,1))./(dx(xbin).^3);
+                    if usemexslmeval
+                        y = mexslmeval (x, knots, slm.coef, 3);
+                    else
+                        % third derivative
+                        y = 6*(slm.coef(xbin,2) + slm.coef(xbin+1,2))./(dx(xbin).^2) + ...
+                            12*(slm.coef(xbin,1) - slm.coef(xbin+1,1))./(dx(xbin).^3);
+                    end
                 case -1
                     % functional inverse
                     % here the problem of which bin we fall into is not
@@ -387,6 +417,7 @@ function y = slmeval(x,slm,evalmode,checkinput)
                     % anything else
                     error('Evalmode must be one of [0 1 2 3 -1]')
             end
+
         case 0
             % piecewise constant function (discontinuous at the knots)
             % verify that coef is the right size
@@ -409,7 +440,7 @@ function y = slmeval(x,slm,evalmode,checkinput)
 
                         % which knot interval does each point fall in?
                         % and use histc to bin the points.
-                        [junk,xbin] = histc(x,knots);
+                        [~,xbin] = histc(x,knots);
 
                         % any point which falls at the top end, is said to
                         % be in the last bin.
@@ -464,12 +495,12 @@ nx = length(x);
 db = diff(binedges);
 if all(db>0)
     % increasing bins
-    [junk,bind] = histc(x,binedges);
+    [~,bind] = histc(x,binedges);
     bind(bind==nb)=nb-1;
 
 elseif all(db<0)
     % decreasing sequence of edges
-    [junk,bind] = histc(-x,-binedges);
+    [~,bind] = histc(-x,-binedges);
     bind(bind==nb)=nb-1;
 
 else
