@@ -85,6 +85,11 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
     end
     
     
+    % total mass constraint
+    [score, design, simoptions] = ...
+            addpenalty_AM(design, simoptions, 'upper', 'TotalMass', design.OptimInfo.BaseScore, score);
+    
+    
 end
 
 
