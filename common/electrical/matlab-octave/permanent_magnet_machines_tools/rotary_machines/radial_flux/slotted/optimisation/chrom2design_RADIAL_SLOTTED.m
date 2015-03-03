@@ -118,7 +118,7 @@ end
 
 function design = chrom2design_external_arm (design, simoptions, Chrom, options)
 
-       
+
     % convert machine ratios to actual dimensions
     design.Ryo = Chrom(1);
     tyVtm = Chrom(2);
@@ -141,24 +141,29 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
         design.MagnetSkew = Chrom(17);
     end
     
-    % 
+    design.ls = lsVMax_ls * options.Max_ls;
+    
     design.g = g;
     design.tc(1) = tcVMax_tc * options.Max_tc;
+    
     design.tm = tmVMax_tm * options.Max_tm;
     if design.tm < 1e-3
         design.tm = 1e-3;
     end
+    
     design.tsb = tsbVMax_tsb * options.Max_tsb;
 %     design.tsg = design.tsgVtsb * design.tsb;
+
     design.tbi = tbiVtm * design.tm;
     if design.tbi < 1e-3
         design.tbi = 1e-3;
     end
+    
     design.ty = tyVtm * design.tm;
     if design.ty < 1e-3
         design.ty = 1e-3;
     end
-    design.ls = lsVMax_ls * options.Max_ls;
+    
     design.Ryi = design.Ryo - design.ty;
     design.RyiVRyo = design.Ryi / design.Ryo;
     design.Rtsb = design.Ryi - design.tc(1);
@@ -173,14 +178,18 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     design.RbiVRmi = design.Rbi / design.Rmi;
     design.lsVtm = design.ls / design.tm;
     
-    if design.Rbi * 0.5 < 1e-4;
-        rshift = 1e-4;
+    if design.Rbi < 1e-4;
+        if design.Rbi < 0
+            rshift = -design.Rbi + 1e-4;
+        else
+            rshift = 1e-4;
+        end
         if design.Rbi < 0
             rshift = rshift + abs(design.Rbi);
         end
         design.Rbi = design.Rbi + rshift;
         design.Rmi = design.Rmi + rshift;
-        design.Rmo = design.Rbi + rshift;
+        design.Rmo = design.Rmo + rshift;
         design.Rai = design.Rai + rshift;
         design.Rtsb = design.Rtsb + rshift;
         design.Ryi = design.Ryi + rshift;
