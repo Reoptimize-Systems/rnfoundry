@@ -53,7 +53,7 @@ function [kh, kc, ke, beta] = corelosscoeffs (grade, gage, varargin)
         Xo = [0.02, 0.0001, 0.001, 1.5];
 
         options = LMFnlsq('default');
-        options = LMFnlsq(options, 'Display', 5000, 'XTol', 1e-12, 'FunTol', 1e-12, 'MaxIter', 200000);
+        options = LMFnlsq(options, 'Display', 0, 'XTol', 1e-12, 'FunTol', 1e-12, 'MaxIter', 200000);
 
         % fit values of kh, kc, ke and beta using ironlossfitfcn
         xf = LMFnlsq( @(fitvars) ironlossfitfcn(fitvars, fq, Bq, Pq), Xo, options );
