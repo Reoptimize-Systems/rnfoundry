@@ -178,8 +178,8 @@ function [FemmProblem, magcornernodeids, linktb] = radialfluxrotor2dfemmprob(the
         wrappergroups = [ Inputs.BackIronGroup(2), nan; ];
         if Inputs.DrawOuterRegions
             innerwrapperthickness = [ innerwrapperthickness;
-                                      (roffset(2)-rbackiron) * 0.2, 0;
-                                      (roffset(2)-rbackiron) * 0.3, 0 ];
+                                      (roffset(2)-rbackiron-rmag/2) * 0.2, 0;
+                                      (roffset(2)-rbackiron-rmag/2) * 0.3, 0 ];
             wrappergroups = [ wrappergroups; 
                               Inputs.OuterRegionGroup(2), nan; 
                               Inputs.OuterRegionGroup(2), nan ];
