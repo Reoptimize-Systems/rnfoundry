@@ -437,7 +437,7 @@ function design = completeexternalarmature (design)
                sprintf('%s, ', dimfields2{:,1}))
     end
     
-    checkdesignratios_AM (design, ratiofields, true);
+ %   checkdesignratios_AM (design, ratiofields, true);
 
 end
 
@@ -588,6 +588,6 @@ function [design, ratiofields] = completeinternalarmature (design)
                sprintf('%s, ', dimfields2{:,1}));
     end
     
-    checkdesignratios_AM (design, ratiofields, true);
+%    checkdesignratios_AM (design, ratiofields, true);
 
 end
