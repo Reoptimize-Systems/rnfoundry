@@ -1,8 +1,10 @@
 function Def = BeamDeflectionSuperY1(Yvars, Ivars, E, x, IMethod, beamMethod)
-% function: BeamDeflectionSuper
-%
-% Function for calculating the deflection of a beam using the superposition
+% Calculates the deflection of a beam using the superposition
 % of two or more loads
+%
+% Syntax
+%
+% Def = BeamDeflectionSuperY1(Yvars, Ivars, E, x, IMethod, beamMethod)
 %
 % Input:
 %
