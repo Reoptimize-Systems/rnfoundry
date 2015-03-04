@@ -5,8 +5,11 @@ function mexppval_setup()
     cd(getmfilepath (mfilename));
 
     % compiling ppmval
-    mex ppmval.cpp interpUtil.cpp
-    % compiling ppuval
-    mex ppuval.cpp interpUtil.cpp
-    
+    try
+        mex ppmval.cpp interpUtil.cpp;
+        % compiling ppuval
+        mex ppuval.cpp interpUtil.cpp;
+    catch
+        warning ('Unable to compile mex functions ppmval and ppuval. Do you have a compiler setup?');
+    end
 end
