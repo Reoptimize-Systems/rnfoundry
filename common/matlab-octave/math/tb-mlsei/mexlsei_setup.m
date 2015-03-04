@@ -214,14 +214,6 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
     % restore the current directory
     cd(origdir);
     
-%%
-
-%load Test_lsei.mat
-%
-%copyfile('~/Postgrad_Research/fortran/mexlsei/mexlsei.mexw64', '/home/s0237326/Postgrad_Research/MATLAB_Scripts/subversion/matlab/Useful_Functions/mlsei/')
-%
-%[x, rnorme, rnorml, mode] = mlsei(A, b, Mineq, rhsineq, Meq, rhseq)
-
 end
 
 
