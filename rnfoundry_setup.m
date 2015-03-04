@@ -6,6 +6,8 @@ function rnfoundry_setup (varargin)
     Inputs.ForceMexLseiCFileCreation = false;
     % slm fitting tool related
     Inputs.ForceMexSLMSetup = false;
+    % mex ppval related
+    Inputs.ForceMexPPValSetup = false;
     % xfemm related
     Inputs.PreventXFemmCheck = false;
     if ispc
@@ -16,26 +18,42 @@ function rnfoundry_setup (varargin)
         Inputs.XFemmDownloadSource = '';
     end
 
-    % set up the matlab path
+    % set up the matlab path first to get access to a load of utility
+    % function we can then use
     thisfilepath = fileparts (which ('rnfoundry_setup'));
     addpath(genpath (thisfilepath));
     
     % now parse the pv pairs
     Inputs = parse_pv_pairs (Inputs, varargin);
     
-    if Inputs.ForceMexLseiSetup || ~exist ('mexlsei_setup', 'file')
+    if ~isoctave
+        cc = mex.getCompilerConfigurations('C++');
+        
+        if numel (cc) == 0
+           warning ( ['The renewnet foundry code will have best performance if ' ...
+                      'you have set up a C++ compiler for matlab using "mex -setup". ' ...
+                      'No C++ compiler seems to have been set up on your system yet. ' ... 
+                      'You may wish to set this up and re-run rnfoundry_setup.']) 
+        end
+    end
+    
+    if Inputs.ForceMexLseiSetup || (exist ('mexlsei', 'file') ~= 3)
         mexlsei_setup ( Inputs.ForceMesLseiF2cLibRecompile, ...
                         Inputs.ForceMexLseiCFileCreation );
     end
     
-    if Inputs.ForceMexSLMSetup || ~exist ('mexslmeval_setup', 'file')
+    if Inputs.ForceMexSLMSetup || (exist ('mexslmeval', 'file') ~= 3)
         mexslmeval_setup ();
+    end
+    
+    if Inputs.ForceMexPPValSetup || (exist ('mexppval', 'file') ~= 3)
+        mexppval_setup();
     end
     
     % check for the existence of xfemm package
     if ~Inputs.PreventXFemmCheck
         
-        if ~exist ('mexfmesher', 'file')
+        if exist ('mexfmesher', 'file') ~= 3
             
             response = '';
             while ~(strcmpi (response, 'Y') || strcmpi (response, 'N') )
