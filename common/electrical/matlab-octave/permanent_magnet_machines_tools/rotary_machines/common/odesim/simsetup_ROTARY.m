@@ -212,8 +212,8 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     
     % construct a piecewise polynomial interpolation of the position
     % and velocity data
-    simoptions.pp_thetaT = interp1(simoptions.drivetimes,simoptions.thetaT,'cubic','pp');
-    simoptions.pp_omegaT = interp1(simoptions.drivetimes,simoptions.omegaT,'cubic','pp');
+    simoptions.pp_thetaT = interp1 (simoptions.drivetimes,simoptions.thetaT,'pchip','pp');
+    simoptions.pp_omegaT = interp1 (simoptions.drivetimes,simoptions.omegaT,'pchip','pp');
 
 end
 
