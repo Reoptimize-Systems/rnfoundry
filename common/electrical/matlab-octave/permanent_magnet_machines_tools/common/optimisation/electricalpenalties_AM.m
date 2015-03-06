@@ -61,19 +61,19 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
         if isfield(simoptions, 'maxAllowedJrmsPenFactor')
             simoptions.max_JCoilRms_penfactor = simoptions.maxAllowedJrmsPenFactor;
         end
+        
     end
     
     % apply the target mean load power penalty
     [score, design, simoptions] = ...
         addpenalty_AM(design, simoptions, 'upper', 'JCoilRms', design.OptimInfo.BaseScore, score);
 
-    design.maxAllowedJpeakpenalty = 0;
-
     % exceeding max allowed peak current density
-    
     % support legacy code with old penalty name
     if isfield(simoptions, 'maxAllowedJpeak') ...
             && ~isfield(simoptions, 'max_JCoilPeak')
+        
+        design.maxAllowedJpeakpenalty = 0;
         
         simoptions.max_JCoilPeak = simoptions.maxAllowedJpeak;
         
