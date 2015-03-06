@@ -2333,6 +2333,16 @@ slm.stats = modelstatistics(slmstats,Mdes,y,coef);
 function [coef,lambda] = solve_slm_system(RP,Mdes,rhs,Mreg,rhsreg,Meq,rhseq,Mineq,rhsineq,prescription)
 % solves the final linear system of equations for the model coefficients 
 
+persistent havelsqlin;
+
+if isempty (havelsqlin)
+    if exist ('lsqlin', 'file') == 2
+        havelsqlin = true;
+    else
+        havelsqlin = false;
+    end
+end
+
 if prescription.Verbosity > 1
   % Linear solve parameters
   disp('=========================================')
@@ -2374,7 +2384,7 @@ elseif isempty(Mineq)
   
 else
     
-if exist ('lsqlin', 'file')
+if havelsqlin
 % ------  original
   % use lsqlin. first, set the options
   options = optimset('lsqlin');
