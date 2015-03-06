@@ -1,4 +1,18 @@
 function rnfoundry_setup (varargin)
+% setup function for the RenewNet Foundry. Sets paths and attempts to
+% compile mexfunctions for best performance of the tools
+%
+% Syntax
+%
+% rnfoundry_setup ()
+% rnfoundry_setup ('Parameter', value)
+%
+% Input
+%
+% rnfoundry_setup can be called with no arguments, of for finer control,
+% with a number of Parameter-Value pairs.
+%
+%
 
     % mexlsei related
     Inputs.ForceMexLseiSetup = false;
