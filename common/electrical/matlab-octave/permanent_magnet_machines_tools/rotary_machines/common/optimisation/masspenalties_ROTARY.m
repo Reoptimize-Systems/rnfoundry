@@ -1,12 +1,18 @@
 function [score, design] = masspenalties_ROTARY(design, simoptions, score)
+% applied penalties for exceeding the desired mass of various component of
+% a rotary generator
+%
+% Syntax
+%
+% [score, design] = masspenalties_ROTARY(design, simoptions, score)
+%
+
 
     if nargin < 3
         score = 0;
     end
     
     % exceeding max allowed rotor mass
-    design.maxAllowedRotorMassPenalty = 0;
-
     if isfield(simoptions, 'maxAllowedRotorMass')
         if ~isempty(simoptions.maxAllowedRotorMass)
             if design.RotorMass > simoptions.maxAllowedRotorMass
@@ -23,8 +29,6 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
         [score, design, simoptions] = ...
             addpenalty_AM(design, simoptions, 'upper', 'RotorMass', design.OptimInfo.BaseScore, score);
     end
-
-    design.maxAllowedRotorModuleMassPenalty = 0;
 
     % exceeding max allowed rotor module mass
     if isfield(simoptions, 'maxAllowedRotorModuleMass')
@@ -45,8 +49,6 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
     end
 
     % exceeding max stator mass
-    design.maxAllowedStatorMassPenalty = 0;
-
     if isfield(simoptions, 'maxAllowedStatorMass')
         if ~isempty(simoptions.maxAllowedStatorMass)
             if design.StatorMass > simoptions.maxAllowedStatorMass
@@ -63,8 +65,6 @@ function [score, design] = masspenalties_ROTARY(design, simoptions, score)
         [score, design, simoptions] = ...
             addpenalty_AM(design, simoptions, 'upper', 'StatorMass', design.OptimInfo.BaseScore, score);
     end
-
-    design.maxAllowedStatorModuleMassPenalty = 0;
 
     % exceeding max stator module mass
     if isfield(simoptions, 'maxAllowedStatorModuleMass')
