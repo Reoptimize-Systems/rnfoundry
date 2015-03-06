@@ -15,12 +15,6 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
     % pre-screen the design to see if a full simulation is worth it
     [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions);
     
-    % estimate the masses of the components
-    sdesign = materialmasses_RADIAL_SLOTTED(sdesign, ssimoptions);
-    
-    % generate a score for the machine
-    [prescore, sdesign, ssimoptions] = machinescore_RADIAL_SLOTTED(sdesign, ssimoptions);
-    
     simoptions = setfieldifabsent(simoptions, 'ForceFullSim', false);
     simoptions = setfieldifabsent(simoptions, 'DoStructEval', false);
     
@@ -36,8 +30,14 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
         Y = [];
         results = [];
         
+        % estimate the masses of the components
+        sdesign = materialmasses_RADIAL_SLOTTED(sdesign, ssimoptions);
+        
+        % generate a score for the machine
+        [prescore, sdesign, ssimoptions] = machinescore_RADIAL_SLOTTED(sdesign, ssimoptions);
+        
         % make the score bigger to encourage getting into the full test zone
-        score = prescore * 2; 
+        score = prescore * 3; 
         design = sdesign;
         simoptions = ssimoptions;
         
@@ -116,9 +116,14 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         sdesign.CoreLoss(2) = sdesign.CoreLoss(1);
     end
     
+    % do some common design processing things, but skipping calculations of
+    % coil properties
     ssimoptions.SkipCheckCoilProps = true;
     [sdesign, ssimoptions] = simfun_RADIAL(sdesign, ssimoptions);
     
+    % we are going to perform a single FEA simulation of the design to
+    % extract some basic info about it to make a simple evaluation of the
+    % performance
     ssimoptions.femmmeshoptions = setfieldifabsent(ssimoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', -1);
     ssimoptions.femmmeshoptions = setfieldifabsent(ssimoptions.femmmeshoptions, 'YokeRegionMeshSize', -1);
     ssimoptions.femmmeshoptions = setfieldifabsent(ssimoptions.femmmeshoptions, 'CoilRegionMeshSize', -1);
@@ -133,7 +138,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         rmcoilturns = true;
     end
     
-    % Draw the sim 
+    % Draw the sim at position 0
     [sdesign.FemmProblem, sdesign.coillabellocs] = ...
                         slottedfemmprob_radial(sdesign, ...
                             'ArmatureType', sdesign.ArmatureType, ...
@@ -193,6 +198,8 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         error('Not yet implemented')
 
     end
+    % tidy up the fea files
+    delete (femfilename); delete (ansfilename); 
     
     sdesign = checkcoilprops_AM(sdesign);
     
@@ -206,9 +213,9 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
                                mean([sdesign.thetacg, sdesign.thetacy] * sdesign.Rcm) );
 
     sdesign.CoilResistance = 1.7e-8 * sdesign.CoilTurns * sdesign.MTL ./ (pi * (sdesign.Dc/2)^2);
-    
+
 %     sdesign.PhaseResistance = sdesign.CoilResistance * sdesign.CoilsPerBranch / sdesign.Branches;
-    
+
 %     ssimoptions = simsetup_ROTARY(design, ssimoptions.simfun, ssimoptions.finfun, ...
 %                                 'RPM', ssimoptions.RPM, ...
 %                                 'PoleCount', ssimoptions.PoleCount, ...
