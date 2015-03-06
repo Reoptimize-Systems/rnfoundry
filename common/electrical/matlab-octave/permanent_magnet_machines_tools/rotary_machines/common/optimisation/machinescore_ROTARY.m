@@ -1,5 +1,5 @@
 function [score, design, simoptions] = machinescore_ROTARY(design, simoptions)
-% determines a score for a rotary type maelectrical machine
+% determines a score for a rotary type electrical machine
 %
 % Syntax
 %
