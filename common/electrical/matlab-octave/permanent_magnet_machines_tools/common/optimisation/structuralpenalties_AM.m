@@ -57,6 +57,7 @@ function [score, design, simoptions] = structuralpenalties_AM(design, simoptions
         score = 0;
     end
     
+    % TODO: modernise the deflection penalty application process 
     % exceeding max allowed rotor mass
     design.maxAllowedDeflectionPenalty = 0;
 
