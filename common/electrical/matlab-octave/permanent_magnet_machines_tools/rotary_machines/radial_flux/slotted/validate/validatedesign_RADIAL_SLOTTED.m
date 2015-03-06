@@ -114,14 +114,18 @@ function reportvalidation (design, simoptions)
   	displaytable(data,colheadings,wid,fms);
     
     if isfield (simoptions, 'RPM')
+        
+        fprintf (1, '\nAt simulation RPM of %f:\n\n', simoptions.RPM);
+        
         for ind = 3:numel (colheadings)
             if isfield (design, colheadings{ind})
+                simpleval = design.Validation.(colheadings{ind})(design.Validation.RPM <= simoptions.RPM*1.001 & design.Validation.RPM > simoptions.RPM*0.999);
                 fprintf (1, 'Full %s: %g, Simple %s: %g, Percent Difference: %g\n', ...
                     colheadings{ind}, ...
                     design.(colheadings{ind}), ...
                     colheadings{ind}, ...
-                    design.Validation.(colheadings{ind})(design.Validation.RPM == simoptions.RPM), ...
-                    100 *(design.Validation.(colheadings{ind})(design.Validation.RPM == simoptions.RPM) - design.(colheadings{ind}))/ design.(colheadings{ind}) );
+                    simpleval(1), ...
+                    100 * (simpleval(1) - design.(colheadings{ind}))/ design.(colheadings{ind}) );
             end
         end
     end
