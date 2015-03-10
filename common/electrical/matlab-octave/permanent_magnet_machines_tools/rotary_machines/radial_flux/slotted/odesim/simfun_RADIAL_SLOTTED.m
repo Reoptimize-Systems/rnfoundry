@@ -467,6 +467,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         design = rmfield (design, 'CoilTurns');
     end
     design = checkcoilprops_AM(design);
+    design.FemmDirectFluxLinkage = design.FemmDirectFluxLinkage * design.CoilTurns;
     
     if ~simoptions.SkipInductanceFEA
     
