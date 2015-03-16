@@ -1,4 +1,4 @@
-function Def = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
+function [Def, I] = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
 % calulates the deflection of a beam about the x-axis using formulas from
 % 'Roark's Formulas for stress and strain'
 %
@@ -26,7 +26,7 @@ function Def = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
 %   IMethod - string describing the method by which the second moment of 
 %     inertia is to be calculated. These should correspond to the
 %     appropriate table in Roark's Formulas for Stress & Strain. If not one
-%     of the listed functions, MomentOfArea will interpret this as a
+%     of the listed functions, MomentOfInertiaX will interpret this as a
 %     function name and attmpt to evaluate the named function using IVars
 %     as the input parameters. Aliases with human understandable names are
 %     also available for most sections. Currently, the following sections
@@ -54,11 +54,13 @@ function Def = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
 %     the positions specified in 'x', calulated according to 'IMethod' and
 %     'beamMethod'.
 %            
+%   I - moment of inertia calculated for the beam
+%
 %
 % See also: roark8.MomentOfInertiaX
 %
 
-    I = roark8.MomentOfInertiaX(Ivars, IMethod);
+    I = roark8.MomentOfInertiaX (Ivars, IMethod);
     
     switch beamMethod
         
