@@ -4,7 +4,7 @@ function THD = emfthd_AM(slm_fluxlinkage)
 %
 % Syntax
 %
-% THD = thd_AM(slm_fluxlinkage)
+% THD = emfthd_AM (slm_fluxlinkage)
 %
 % Inputs
 %
@@ -12,12 +12,27 @@ function THD = emfthd_AM(slm_fluxlinkage)
 %       waveform
 %
 
-    % get the fundumental frequency and its harmonics from the slm object
-    % fitted to the flux lnkage with displacement
-    [fundamental_power, harmonics_power] = decomposeemf(slm_fluxlinkage);
+%     % get the fundumental frequency and its harmonics from the slm object
+%     % fitted to the flux lnkage with displacement
+%     [fundamental_power, harmonics_power] = decomposeemf(slm_fluxlinkage);
+% 
+%     % Calculate % THD as a ratio of square roots of the total harmonic
+%     % power to the fundumental power
+%     THD = 100 * sqrt(harmonics_power) / sqrt(fundamental_power);
 
-    % Calculate % THD as a ratio of square roots of the total harmonic
-    % power to the fundumental power
-    THD = 100 * sqrt(harmonics_power) / sqrt(fundamental_power);
+    % select the number of periods over which to sample
+    periods = 20;
+    % choose the sampling frequency, there will be Fs samples per period
+    Fs = 2048;
+    % calculate the number of sample points to use
+    N = periods * Fs;
+    
+    % generate the vector of sample positions
+    x = linspace(0, slm_fluxlinkage.period * periods, N);
+
+    % get the voltage waveform at the sample points
+    normdphidx = periodicslmeval(x, slm_fluxlinkage, 1);
+    
+    THD = 100 * (10^( thd (normdphidx, Fs, 10)/20 ));
 
 end
