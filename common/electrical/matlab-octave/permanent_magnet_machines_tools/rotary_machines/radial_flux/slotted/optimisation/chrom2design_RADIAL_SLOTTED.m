@@ -8,7 +8,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
 %
 %
 
-% Copyright 2012-2014 Richard Crozier
+% Copyright 2012-2015 Richard Crozier
 
 
     % Default design parameters
@@ -96,6 +96,47 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
         design.thetac = [design.thetacg, design.thetacy];
         
     end
+    
+    % set a minimum wire diameter of 0.5mm, if not already set
+    simoptions = setfieldifabsent(simoptions, ...
+                    'MinWireDiameter',  0.5/1000);
+    
+    % set default behaviour regarding whether to allow wire diamters which
+    % can't fit through the slot opening. By default this is prevented.
+	simoptions = setfieldifabsent(simoptions, ...
+                    'PreventWireDiameterGreaterThanSlotOpening',  true);
+    
+	if simoptions.PreventWireDiameterGreaterThanSlotOpening
+        % check the wire can fit through the slot opening, taing action to
+        % allow it to if required, and setting the max possible wire size
+        % to an appropriate size
+        if (0.5*design.thetasg*design.Rai) > simoptions.MinWireDiameter
+            % set a max wire diameter which allow the wire to fit through the
+            % slot opening
+            simoptions = setfieldifabsent (simoptions, ...
+                            'MaxWireDiameter', 0.5*design.thetasg*design.Rai);
+        else
+            % the slot opening is already smaller than the smallest possible
+            % wire size, therefore we must make the slot opening just big
+            % enough to allow at least the minimum wire size through, and set
+            % an appropriate max wire size
+            design.thetasg = 2*simoptions.MinWireDiameter / design.Rai;
+            design.thetasgVthetacg = design.thetasg / design.thetacg;
+            % check the slot opening is not greater than the coil width at
+            % the opening end
+            if design.thetasgVthetacg > 1
+                % if it is, set it to the max possible, there is not much
+                % more that can be done short of changing the whole design
+                % of the coil. Should this prove to be an issue, an
+                % optimisation penalty can be introduced for this case.
+                design.thetasgVthetacg = 1.0;
+                design.thetasg = design.thetasgVthetacg * design.thetacg;
+            end
+
+            simoptions = setfieldifabsent (simoptions, ...
+                            'MaxWireDiameter', simoptions.MinWireDiameter*1.001);
+        end
+	end
     
     % recall completedesign_RADIAL_SLOTTED  to recalculate the design dims
     % and ratios in case they have been modified
