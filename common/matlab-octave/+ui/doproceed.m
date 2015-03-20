@@ -3,7 +3,7 @@ function tf = doproceed (msg, default)
 %
 % Syntax
 %
-% tf = doproceed (msg, default)
+% tf = ui.doproceed (msg, default)
 %
 % Input
 %
