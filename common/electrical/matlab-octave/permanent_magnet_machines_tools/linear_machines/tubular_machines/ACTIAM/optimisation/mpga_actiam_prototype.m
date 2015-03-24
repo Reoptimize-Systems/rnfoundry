@@ -46,7 +46,7 @@ SAVEMODE = 1;
 % [Best, IndAll, Chrom, ObjV] = mpgafun(OBJ_F, GGAP, INSR, XOVR, SP, MIGR, MIGGEN, TERMEXACT, SEL_F,...
 %     XOV_F, MUT_F, SUBPOP, NIND, MAXGEN, MUTR, STEP, DISPLAYMODE, SAVEMODE)
 
-filename = fullfile(fundir('mpga_actiam_prototype'), 'objactiam_prototype_output_4.mat');
+filename = fullfile(getmfilepath('mpga_actiam_prototype'), 'objactiam_prototype_output_4.mat');
 
 resumeFile = 'objactiam_prototype_output_4.mat';
 
