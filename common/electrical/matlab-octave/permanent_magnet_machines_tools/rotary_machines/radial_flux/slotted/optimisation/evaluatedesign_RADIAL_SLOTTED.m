@@ -276,6 +276,7 @@ function [sdesign, ssimoptions] = badscore (sdesign, ssimoptions)
     sdesign.VoltagePercentTHD = 2 * ssimoptions.max_VoltagePercentTHD;
     sdesign.CoggingTorquePeak = 2 * ssimoptions.max_CoggingTorquePeak;
     sdesign.Efficiency = 0.5;
+    sdesign.ArmatureToothFluxDensityPeak = 2 * ssimoptions.max_ArmatureToothFluxDensityPeak;
     
     % now calculate coil resistance
     sdesign.MTL = rectcoilmtl( sdesign.ls, ...
