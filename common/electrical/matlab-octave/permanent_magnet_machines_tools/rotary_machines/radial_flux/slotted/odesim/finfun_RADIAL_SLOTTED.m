@@ -200,6 +200,8 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
     else
         error ('Unrecognised stator type, only ''internal'' and ''external'' supported.')
     end
+    
+    design.ArmatureToothFluxDensityPeak = max (design.ArmatureToothFluxDensity);
 
     % do the normal stuff
     
