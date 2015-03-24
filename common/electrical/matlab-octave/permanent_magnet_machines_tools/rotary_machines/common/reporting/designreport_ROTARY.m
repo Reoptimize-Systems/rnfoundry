@@ -43,6 +43,12 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, vararg
         TorquePtoPeak = 'N/A';
     end
     
+    if isfield(design, 'TorquePtoMean')
+        TorquePtoMean = design.TorquePtoMean;
+    else
+        TorquePtoMean = 'N/A';
+    end
+    
     if isfield (design, 'CoggingTorquePeak')
         maxcoggingtq = design.CoggingTorquePeak;
     elseif isfield(design, 'slm_coggingtorque')
@@ -80,10 +86,11 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, vararg
     % rotary machine properties
     tabledata = { ...
         'Max PTO Torque (Nm)', TorquePtoPeak;
+        'Mean PTO Torque (Nm)', TorquePtoMean;
+        'Torque Ripple Factor (\% of Mean)', TorqueRippleFactor;
         'Max Cogging Torque (Nm)', maxcoggingtq;
         'Max Cogging Force at air gap (N)', maxcoggingf;
         'Max Estimated Electrical Frequency (Hz)', FrequencyPeak;
-        'Torque Ripple Factor (\%)', TorqueRippleFactor;
         'Air Gap Closing Force Per Pole (N)', gforce;
     };
 
