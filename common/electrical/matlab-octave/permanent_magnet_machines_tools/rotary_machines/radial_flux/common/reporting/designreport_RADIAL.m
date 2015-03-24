@@ -46,7 +46,7 @@ function reportstrs = designreport_RADIAL(design, simoptions, reportstrs, vararg
         '$R_{bo}$', 'Outer field back iron radius. (mm)', design.Rbo*1000;
         'g', 'Air gap (mm)', design.g * 1000;
         '$t_m$',    'Magnet thickness in radial direction. (mm)', design.tm*1000;
-        '$t_{bi}$', 'Back Iron thinckness in radial direction. (mm)', design.tbi*1000;
+        '$t_{bi}$', 'Back Iron thickness in radial direction. (mm)', design.tbi*1000;
         '$\theta_{p}$', 'Pole pitch angle. (rad)', design.thetap;
         '$\theta_{m}$', 'Magnet pitch angle. (rad)', design.thetam;
         '$\theta_{p}$', 'Pole pitch angle. (degrees)', rad2deg(design.thetap);
@@ -55,6 +55,7 @@ function reportstrs = designreport_RADIAL(design, simoptions, reportstrs, vararg
         '$\tau_{mm}$', 'Magnet pitch at mean magnet radius. (mm)', design.thetam*design.Rmm*1000;
         '$l_s$',    'Stack length. (mm)', design.ls*1000;
         '', 'Magnet Skew (Fraction of Pole)', design.MagnetSkew(1);
+        '', 'Magnet Skew Angle (Degrees)', rad2deg(design.MagnetSkew(1) * design.thetap);
     };
 
     % generate the LaTex table of the outputs
