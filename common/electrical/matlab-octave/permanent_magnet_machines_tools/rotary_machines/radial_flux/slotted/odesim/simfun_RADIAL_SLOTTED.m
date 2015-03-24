@@ -319,6 +319,14 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                     design = corelosssetup (design, design.feapos, solution);
                 end
                 
+                % get the peak flux density in the armature back iron along
+                % center line of a tooth
+                NBpnts = 100;
+                [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Rai, design.Ryo, NBpnts));
+                Bmag = magn (solution.getb (x, y));
+                
+                design.ArmatureToothFluxDensity(i) = max (Bmag);
+                
                 % get the integral of the vector potential in a slot, if two
                 % layers get both layers
                 design = slotintAdata(design, simoptions, design.feapos(i), solution);
