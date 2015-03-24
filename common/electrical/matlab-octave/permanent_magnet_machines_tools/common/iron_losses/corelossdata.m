@@ -25,9 +25,9 @@ function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
       case '29'
       
           if strncmpi (Inputs.Processing, 'A', 1)
-              lossperlb = getgage29assheared (grade);
+              [lossperkg, freqs, tesla] = getgage29assheared (grade);
           elseif strncmpi (Inputs.Processing, 'S', 1)
-              lossperlb = getgage29SRA (grade);
+              [lossperkg, freqs, tesla] = getgage29SRA (grade);
           else
               error ('Unrecognised processing type.');
           end
@@ -35,9 +35,9 @@ function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
       case '26'
       
           if strncmpi (Inputs.Processing, 'A', 1)
-              lossperlb = getgage26assheared (grade);
+              [lossperkg, freqs, tesla] = getgage26assheared (grade);
           elseif strncmpi (Inputs.Processing, 'S', 1)
-              lossperlb = getgage26SRA (grade);
+              [lossperkg, freqs, tesla] = getgage26SRA (grade);
           else
               error ('Unrecognised processing type.');
           end
@@ -45,12 +45,16 @@ function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
       case '24'
     
           if strncmpi (Inputs.Processing, 'A', 1)
-              lossperlb = getgage24assheared (grade);
+              [lossperkg, freqs, tesla] = getgage24assheared (grade);
           elseif strncmpi (Inputs.Processing, 'S', 1)
-              lossperlb = getgage24SRA (grade);
+              [lossperkg, freqs, tesla] = getgage24SRA (grade);
           else
               error ('Unrecognised processing type.');
           end
+          
+      case '50A'
+          
+          [lossperkg, freqs, tesla] = getgage50Aassheared (grade);
           
       otherwise
       
@@ -58,12 +62,8 @@ function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
           
     end
     
-    lossperkg = lossperlb * 2.2;
-
     matdensity = 7700; % kg / m^3
-    freqs = [10,20,30,50,60,100,150,200,300,400,600,1000,1500,2000;];
-    tesla = [0.100000000000000;0.200000000000000;0.400000000000000;0.700000000000000;1;1.20000000000000;1.30000000000000;1.40000000000000;1.50000000000000;1.55000000000000;1.60000000000000;1.65000000000000;1.70000000000000;];
-
+    
     losspervol = lossperkg .* matdensity; % (P / kg) * (kg / m^3) = P / m^3
     
     if Inputs.InterpolateMissing
@@ -115,7 +115,48 @@ function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
 end
 
 
-function lossperlb = getgage29assheared (grade)
+
+function [lossperkg, freqs, tesla] = getgage50Aassheared (grade)
+
+    freqs = [50, 100, 200, 400, 1000, 2500 ];
+    tesla = 0.1:0.1:1.8;
+    
+    switch grade
+        
+        case 'M310'
+            
+            lossperkg = [ 0.03 0.05 0.12 0.34 1.62 6.31;
+                          0.08 0.20 0.50 1.36 5.63 21.8;
+                          0.17 0.40 1.04 2.83 11.5 45.9;
+                          0.27 0.66 1.73 4.75 19.5 80.2;
+                          0.40 0.97 2.56 7.14 29.7 128;
+                          0.53 1.32 3.54 10.0 42.6 193;
+                          0.68 1.72 4.67 13.5 58.4 279;
+                          0.85 2.16 5.96 17.5 77.8 390;
+                          1.03 2.65 7.42 22.1 101  526;
+                          1.23 3.19 9.07 27.4 130  695;
+                          1.45 3.78 10.9 33.6 163  nan;
+                          1.71 4.44 13.0 40.7 nan  nan;
+                          2.00 5.22 15.3 48.6 nan  nan;
+                          2.40 6.17 18.0 58.0 nan  nan;
+                          2.83 7.31 21.1 68.5 nan  nan;
+                          3.25 nan  nan  nan  nan  nan;
+                          3.57 nan  nan  nan  nan  nan;
+                          3.86 nan  nan  nan  nan  nan ];
+
+        otherwise
+        
+            error ('Unrecognised grade/no data for grade and gage combination');
+        
+    end
+    
+end
+
+
+function [lossperkg, freqs, tesla] = getgage29assheared (grade)
+
+    freqs = [10,20,30,50,60,100,150,200,300,400,600,1000,1500,2000;];
+    tesla = [0.10;0.20;0.40;0.70;1;1.2;1.3;1.4;1.5;1.55;1.6;1.65;1.7;];
 
     switch grade
     
@@ -173,12 +214,18 @@ function lossperlb = getgage29assheared (grade)
             error ('Unrecognised grade/no data for grade and gage combination');
         
     end
+    
+    lossperkg = lossperlb * 2.2;
+    
 end
 
 
 
-function lossperlb = getgage29SRA (grade)
+function [lossperkg, freqs, tesla] = getgage29SRA (grade)
 
+    freqs = [10,20,30,50,60,100,150,200,300,400,600,1000,1500,2000;];
+    tesla = [0.10;0.20;0.40;0.70;1;1.2;1.3;1.4;1.5;1.55;1.6;1.65;1.7;];
+    
     switch grade
     
         case 'M-19'
@@ -236,11 +283,17 @@ function lossperlb = getgage29SRA (grade)
             error ('Unrecognised grade/no data for grade and gage combination');
         
     end
+    
+    lossperkg = lossperlb * 2.2;
+    
 end
 
 
-function lossperlb = getgage26assheared (grade)
+function [lossperkg, freqs, tesla] = getgage26assheared (grade)
 
+    freqs = [10,20,30,50,60,100,150,200,300,400,600,1000,1500,2000;];
+    tesla = [0.10;0.20;0.40;0.70;1;1.2;1.3;1.4;1.5;1.55;1.6;1.65;1.7;];
+    
     switch grade
     
         case 'M-19'
@@ -280,12 +333,18 @@ function lossperlb = getgage26assheared (grade)
             error ('Unrecognised grade/no data for grade and gage combination');
         
     end
+    
+    lossperkg = lossperlb * 2.2;
+    
 end
 
 
 
-function lossperlb = getgage26SRA (grade)
+function [lossperkg, freqs, tesla] = getgage26SRA (grade)
 
+    freqs = [10,20,30,50,60,100,150,200,300,400,600,1000,1500,2000;];
+    tesla = [0.10;0.20;0.40;0.70;1;1.2;1.3;1.4;1.5;1.55;1.6;1.65;1.7;];
+    
     switch grade
     
         case 'M-19'
@@ -325,10 +384,16 @@ function lossperlb = getgage26SRA (grade)
             error ('Unrecognised grade/no data for grade and gage combination');
         
     end
+    
+    lossperkg = lossperlb * 2.2;
+    
 end
 
-function lossperlb = getgage24assheared (grade)
+function [lossperkg, freqs, tesla] = getgage24assheared (grade)
 
+    freqs = [10,20,30,50,60,100,150,200,300,400,600,1000,1500,2000;];
+    tesla = [0.10;0.20;0.40;0.70;1;1.2;1.3;1.4;1.5;1.55;1.6;1.65;1.7;];
+    
     switch grade
     
         case 'M-19'
@@ -352,9 +417,12 @@ function lossperlb = getgage24assheared (grade)
             error ('Unrecognised grade/no data for grade and gage combination');
         
     end
+    
+    lossperkg = lossperlb * 2.2;
+    
 end
 
-function lossperlb = getgage24SRA (grade)
+function [lossperkg, freqs, tesla] = getgage24SRA (grade)
 
     error ('Unrecognised grade/no data for grade and gage combination');
 
