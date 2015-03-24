@@ -23,16 +23,27 @@ function I = MomentOfInertiaX(IVars, IMethod)
 %
 %           method string options             IVars
 %
-%     'A1.2', 'Rectangular'           [ b, d ]
-%     'A1.3', 'BoxSection'            [ b, d, di, bi ]
-%     'A1.6', 'IBeam'                 [ b, t, tw, d ]
-%     'A1.15', 'SolidCircle'          [ R ]
-%     'A1.16', 'Annulus'              [ R, Ri ]
-%     'A1.17', 'ThinAnnulus'          [ R, t ]
+%     'A1.2', 'Rectangular'             [ d, b ]
+%     'A1.3', 'BoxSection',             
+%           'HollowRectangle'           [ d, b, di, bi ]
+%     'A1.6', 'IBeam'                   [ b, t, tw, d ]
+%     'A1.15', 'SolidCircle','Circle'   [ R ]
+%     'A1.16', 'Annulus'                [ R, Ri ]
+%     'A1.17', 'ThinAnnulus'            [ R, t ]
 %     'A1.21', 'HollowCircleSector',
-%           'AnnularSector'           [ R, t, alpha ]
-%     'polygon'                        n x 2 x p matrix 
-% 
+%           'AnnularSector'             [ R, t, alpha ]
+%     'polygon'                         n x 2 x p matrix 
+%
+%     The 'polygon' options allows you to supply one or more sets of
+%     coordinates representing the border of a closed polygon. These must
+%     be the points of the polygon going clockwise around the shape. In the
+%     simplest case, a single (n x 2) matrix may be supplied, where each
+%     row is an x and y coordinate. Multiple sets of polygons can be
+%     supplied using the third dimension of the matrix. Polygons with
+%     different numbers of coordinates can be used by filling with NaN
+%     values. Rows in each coordinate matrix containing Nan values are
+%     ignored.
+%
 % Output:
 %
 %   I - (n x 1) column vector of values of I, the second moment of area of 
@@ -48,7 +59,7 @@ function I = MomentOfInertiaX(IVars, IMethod)
             % Rectangular
             I = Table1r2I_1(IVars);
             
-        case {'A1.3', 'BoxSection'}
+        case {'A1.3', 'BoxSection', 'HollowRectangle'}
             % Hollow Rectangle
             I = Table1r3I_1(IVars);
         
@@ -56,7 +67,7 @@ function I = MomentOfInertiaX(IVars, IMethod)
             % I-Beam
             I = Table1r6I_1(IVars);
 
-        case {'A1.15', 'SolidCircle'}
+        case {'A1.15', 'SolidCircle', 'Circle'}
             % Solid Circle
             I = Table1r14I_1(IVars);
 
@@ -76,7 +87,8 @@ function I = MomentOfInertiaX(IVars, IMethod)
 
             % use polygeom to calculate the area properties
             for ind = 1:size(IVars, 3)
-                [ ~, INER, ~ ] = polygeom( IVars(:,1,ind), IVars(:,2,ind) );
+                thisvars = vars ( (~isnan (vars(:,1,ind)) & ~isnan (vars(:,1,ind))),:,ind);
+                [ ~, INER, ~ ] = polygeom( thisvars(:,1), thisvars(:,2) );
                 I(ind,1) = INER(4);
             end
 
