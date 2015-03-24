@@ -14,4 +14,8 @@ function [score, design, simoptions] = machinescore_RADIAL_SLOTTED(design, simop
     [score, design, simoptions] = ...
         addpenalty_AM(design, simoptions, 'upper', 'CoggingTorquePeak', design.OptimInfo.BaseScore, score);
     
+    % add penalty for excessive flux density in the armature tooth
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'ArmatureToothFluxDensityPeak', design.OptimInfo.BaseScore, score);
+    
 end
