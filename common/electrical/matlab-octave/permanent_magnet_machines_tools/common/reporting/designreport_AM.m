@@ -107,6 +107,12 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     else
         FrequencyPeak = 'N/A';
     end
+    
+    if isfield (design, 'ShearStressMean')
+        ShearStressMean = design.ShearStressMean;
+    else
+        ShearStressMean = 'N\A';
+    end
 
     tabledata = { ...
         'Peak Phase Current (A)', design.IPhasePeak(1), 'RMS Coil Current (A)', design.IPhaseRms(1);
@@ -120,6 +126,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         'Mean Winding Losses (kW)', design.PowerPhaseRMean/1000, 'Mean Iron Losses (kW)', PowerLossIronMean;
         'Mean Winding Eddy Losses (kW)', PowerLossEddyMean, 'Mean Input Power (kW)', design.PowerInputMean/1e3;
         'Voltage THD (\%)', VoltagePercentTHD, 'Peak Electrical Frequency', FrequencyPeak;
+        'Mean Air Gap Shear Stress (kN/m\textsuperscript{2})', ShearStressMean/1000, '', '';
     };
 
     % generate the LaTex table of the outputs
@@ -139,7 +146,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         error('Temporary file could not be opened.');
     end
     
-    displaytable(tabledata, colheadings, [50,15, 50, 15], fms, rowheadings, fid, colsep, rowending);
+    displaytable(tabledata, colheadings, [53, 15, 53, 15], fms, rowheadings, fid, colsep, rowending);
     
     % close the file
     fclose(fid);
