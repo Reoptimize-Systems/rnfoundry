@@ -193,6 +193,14 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         % estimate the coil resistance
 %         [design.CoilResistance, design.CoilInductance] = solution.circuitRL('1');
         
+        % get the peak flux density in the armature back iron along
+        % center line of a tooth
+        NBpnts = 100;
+        [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), linspace (sdesign.Rai, sdesign.Ryo, NBpnts));
+        Bmag = magn (solution.getb (x, y));
+
+        sdesign.ArmatureToothFluxDensityPeak = max (Bmag);
+        
     else
         % open the solution in FEMM
         error('Not yet implemented')
