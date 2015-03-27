@@ -30,28 +30,28 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         separatesimfun = true;
     end
     
-    if isscalar( simoptions.evaloptions.spawnslaves)
+    if isscalar (simoptions.evaloptions.spawnslaves)
         simoptions.evaloptions.spawnslaves = ...
             [ simoptions.evaloptions.spawnslaves, simoptions.evaloptions.spawnslaves ];
     end
         
     % First get the FEA data for each design
-    for i = 1:size(Chrom,1)
+    for i = 1:size (Chrom,1)
 
         % Construct initial design structure
-        [design, psimoptions] = feval(preprocfcn, simoptions, Chrom(i,:));
+        [design, psimoptions] = feval (preprocfcn, simoptions, Chrom(i,:));
 
         % store the design chromsome and index for later use
         design.OptimInfo.ChromInd = i;
-        design.OptimInfo.Chrom = Chrom(i,:);
+        design.OptimInfo.Chrom = Chrom (i,:);
 
-        psimoptions = rmiffield(psimoptions, 'filenamebase');
+        psimoptions = rmiffield (psimoptions, 'filenamebase');
         
         parameterCell{i,1} = {design, psimoptions};
 
     end
 
-    fprintf(1, '\nBeginning evaluation of population at %s.\n', datestr (now));
+    fprintf (1, '\nBeginning evaluation of population at %s.\n', datestr (now));
 
     % Determines whether the master performs work or only coordinates
     settings.masterIsWorker    = simoptions.evaloptions.masterIsWorkerSimFun;
@@ -69,12 +69,12 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
     settings.postProcessUserData = {};
     settings.debugMode = 0;
     settings.showWarnings = 1;
-    simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'maxattempts', 3);
-    simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'allowheld', 10);
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'maxattempts', 3);
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'allowheld', 10);
         
     if separatesimfun
         
-        fprintf(1, 'Beginning evaluation of population (first function) at %s.\n', datestr (now));
+        fprintf (1, 'Beginning evaluation of population (first function) at %s.\n', datestr (now));
 
         % Determines whether the master performs work or only coordinates
         settings.masterIsWorker    = simoptions.evaloptions.masterIsWorkerSimFun;
@@ -88,16 +88,16 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         % multicore evaluations at once in the same directory
         settings.clearExistingFiles = false;
         
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'MCoreFEADir', 'FEA');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreFEADir', 'FEA');
 
-        settings.multicoreDir = fullfile(multicoredir, simoptions.evaloptions.MCoreFEADir);
+        settings.multicoreDir = fullfile (multicoredir, simoptions.evaloptions.MCoreFEADir);
 
         % quit any slaves in the ODE directory, as we may be some time
-    %     quitallslaves( fullfile(multicoredir, 'ODE') );
+    %     quitallslaves ( fullfile(multicoredir, 'ODE') );
 
         if simoptions.evaloptions.waitforotherfea
-            while numel(dir(fullfile(settings.multicoreDir, 'parameters_*'))) > 0
-                pause(20);
+            while numel (dir (fullfile (settings.multicoreDir, 'parameters_*'))) > 0
+                pause (20);
             end
         end
 
@@ -106,26 +106,26 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
             if simoptions.evaloptions.spawnslaves(1)
                 % use the mcorecondormatlabslavespawn function to automatically
                 % spawn matlab processes to do the work
-                fprintf(1, 'spawnslaves true for FEA\n');
+                fprintf (1, 'spawnslaves true for FEA\n');
                 % set some default spawning settings if not supplied
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'starttime', [18,0,0]);
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'endtime', [8,0,0]);
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'maxslaves', 100);
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorlogdirectory', ...
-                                            fullfile(fileparts(which('condorslavesubmitwrite')), 'Output'));
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorhost', 'local');
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorusername', '');
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorpassword', '');
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlicencebuffer', 10);
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlabhost', '');
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlabport', '');
-                simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlabpassword', '');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'starttime', [18,0,0]);
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'endtime', [8,0,0]);
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'maxslaves', 100);
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorlogdirectory', ...
+                                            fullfile (fileparts (which ('condorslavesubmitwrite')), 'Output'));
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorhost', 'local');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorusername', '');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorpassword', '');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlicencebuffer', 10);
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabhost', '');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabport', '');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabpassword', '');
                 
                 % set up the mcorecondormatlabslavespawn monitor function, called
                 % by the multicore master process each time it looks for new files
                 % to check if new matlab slaves should be spawned or not
                 settings.monitorFunction = @mcorecondormatlabslavespawn;
-                settings.monitorUserData = struct('condorhost', simoptions.evaloptions.condorhost, ...
+                settings.monitorUserData = struct ('condorhost', simoptions.evaloptions.condorhost, ...
                     'matlabhost', simoptions.evaloptions.matlabhost, ...
                     'matlabport', simoptions.evaloptions.matlabport, ...
                     'matlabpassword', simoptions.evaloptions.matlabpassword, ...
@@ -148,12 +148,12 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         end
 
         % save the intermediate values in case of errors
-        save(['pre_', 'mcoresimfun_AM', '_output.mat'])
+        save (fullfile (settings.multicoreDir, ['pre_', 'mcoresimfun_AM', '_output.mat']));
 
-        parameterCell = mcoreobjfcneval('mcoresimfun_AM', parameterCell, ...
-                                        settings, simoptions.evaloptions.maxattempts, ...
-                                        'ErrorUserFcn', @mcoreerrormail, ...
-                                        'TryLocalEval', true);
+        parameterCell = mcoreobjfcneval ('mcoresimfun_AM', parameterCell, ...
+                                         settings, simoptions.evaloptions.maxattempts, ...
+                                         'ErrorUserFcn', @mcoreerrormail, ...
+                                         'TryLocalEval', true);
     end
     
     settings.masterIsWorker = simoptions.evaloptions.masterIsWorkerEvFun;
@@ -165,41 +165,38 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
     % multicore evaluations at once in the same directory
     settings.clearExistingFiles = false;
 
-    %settings.multicoreDir =
-    %'C:\Users\Public\Documents\multicore_users\Matlab\Temp';
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreODEDir', 'ODE');
+    
+    settings.multicoreDir = fullfile (multicoredir, simoptions.evaloptions.MCoreODEDir);
 
     % save the intermediate values in case of errors
-    if ischar(evalfcn)
-        save(['pre_', evalfcn, '_output.mat'])
+    if ischar (evalfcn)
+        save (fullfile (settings.multicoreDir, ['pre_', evalfcn, '_output.mat']))
     end
-
-    simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'MCoreODEDir', 'ODE');
-    
-    settings.multicoreDir = fullfile(multicoredir, simoptions.evaloptions.MCoreODEDir);
 
     if simoptions.evaloptions.spawnslaves(2)
         % use the mcorecondormatlabslavespawn function to automatically
         % spawn matlab processes to do the work
         
         % set some default spawning settings if not supplied
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'starttime', [18,0,0]);
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'endtime', [8,0,0]);
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'maxslaves', 100);
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorlogdirectory', ...
-                                            fullfile(fileparts(which('condorslavesubmitwrite')), 'Output'));
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorhost', 'local');
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorusername', '');
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'condorpassword', '');
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlicencebuffer', 10);
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlabhost', '');
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlabport', '');
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'matlabpassword', '');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'starttime', [18,0,0]);
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'endtime', [8,0,0]);
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'maxslaves', 100);
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorlogdirectory', ...
+                                            fullfile (fileparts (which ('condorslavesubmitwrite')), 'Output'));
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorhost', 'local');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorusername', '');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condorpassword', '');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlicencebuffer', 10);
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabhost', '');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabport', '');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabpassword', '');
         
         % set up the mcorecondormatlabslavespawn monitor function, called
         % by the multicore master process each time it looks for new files
         % to check if new matlab slaves should be spawned or not
         settings.monitorFunction = @mcorecondormatlabslavespawn;
-        settings.monitorUserData = struct('condorhost', simoptions.evaloptions.condorhost, ...
+        settings.monitorUserData = struct ('condorhost', simoptions.evaloptions.condorhost, ...
             'matlabhost', simoptions.evaloptions.matlabhost, ...
             'matlabport', simoptions.evaloptions.matlabport, ...
             'matlabpassword', simoptions.evaloptions.matlabpassword, ...
@@ -220,20 +217,20 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
 
     end
     
-%     if ischar(evalfcn)
-%         evalfcn = str2func(evalfcn);
+%     if ischar (evalfcn)
+%         evalfcn = str2func (evalfcn);
 %     end
 
-    fprintf(1, 'Beginning evaluation of population (second function) at %s.\n', datestr (now));
+    fprintf (1, 'Beginning evaluation of population (second function) at %s.\n', datestr (now));
     
     if simoptions.evaloptions.waitforotherode
         waits = 0;
         while 1
             % check for parameter files, but ignoring semaphore files
-            pfiles = dir(fullfile(settings.multicoreDir, 'parameters_*'));
+            pfiles = dir (fullfile (settings.multicoreDir, 'parameters_*'));
             seminds = [];
-            for ind = 1:numel(pfiles)
-                if ~isempty(strfind(pfiles(ind).name, 'semaphore'));
+            for ind = 1:numel (pfiles)
+                if ~isempty (strfind (pfiles(ind).name, 'semaphore'));
                     seminds = [seminds, ind];
                 end
             end
@@ -246,12 +243,12 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
             
             % wait for a little while before checking again
             if waits <= 1
-                fprintf(1, 'Waiting for other ODE to complete.\n');
+                fprintf (1, 'Waiting for other ODE to complete.\n');
             elseif waits >= 10
                 waits = 0;
             end
             
-            pause(20);
+            pause (20);
             
             waits = waits + 1;
             
@@ -259,28 +256,28 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         
     end
     
-    ObjVal = mcoreobjfcneval(evalfcn, parameterCell, settings, ...
-                             simoptions.evaloptions.maxattempts, ...
-                             'ErrorUserFcn', @condorslavesoutofmemerr, ...
-                             'TryLocalEval', true);
+    ObjVal = mcoreobjfcneval (evalfcn, parameterCell, settings, ...
+                              simoptions.evaloptions.maxattempts, ...
+                              'ErrorUserFcn', @condorslavesoutofmemerr, ...
+                              'TryLocalEval', true);
 
-    ObjVal = reshape(cell2mat(ObjVal),[],1);
+    ObjVal = reshape (cell2mat (ObjVal),[],1);
 
-    displayresults(Chrom, ObjVal)
+    displayresults (Chrom, ObjVal)
     
 end
 
 
-function displayresults(Chrom, ObjVal)
+function displayresults (Chrom, ObjVal)
 % displays the objective values for the chromosome on the command line
 
-    for i = 2:2:size(Chrom,1)
-        fprintf(1, 'Ind %d, Score: %f\tInd %d, Score: %f\n', i-1, ObjVal(i-1), i, ObjVal(i));
+    for i = 2:2:size (Chrom,1)
+        fprintf (1, 'Ind %d, Score: %f\tInd %d, Score: %f\n', i-1, ObjVal(i-1), i, ObjVal(i));
     end
     
-    if i < size(Chrom,1)
+    if i < size (Chrom,1)
         i = i + 1;
-        fprintf(1, 'Ind %d, Score: %f\n', i, ObjVal(i));
+        fprintf (1, 'Ind %d, Score: %f\n', i, ObjVal(i));
     end
 
 end
