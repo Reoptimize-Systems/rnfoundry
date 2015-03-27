@@ -18,7 +18,10 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove)
 %
 % refactor_fcn_name(fcnname, newfcnname, topdir) performs the same action
 % but searching the folder provided in 'topdir' and all it's subdirectories
-% rather than the entire Matlab path.
+% rather than the entire Matlab path. If topdir is the string 'allbutroot'
+% all direcotries on the path will be searched, which are not
+% sibdirectories of the matlab root path (as returned by matlabroot.m). In
+% practice this means built-in toolbox directories will be ignored.
 %
 % refactor_fcn_name(fcnname, newfcnname, topdir, domove) performs the same
 % action but the 'domove' flag determines whether the function file is
@@ -29,40 +32,45 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove)
 % See also: regexprepfile
 %
 
-% Created by Richard Crozier 2013
+% Copyright Richard Crozier 2013-2015
 
 
-    if ~ischar(fcnname)
-        error('fcnname must be a string');
+    if ~ischar (fcnname)
+        error ('fcnname must be a string');
     end
     
-    if ~ischar(newfcnname)
-        error('newfcnname must be a string');
+    if ~ischar (newfcnname)
+        error ('newfcnname must be a string');
     end
     
     % refactor_fcn_name
-    loc = which(fcnname);
+    loc = which (fcnname);
     
-    if isempty(loc)
+    if isempty (loc)
         warning('fcnname is not a function or class on the path')
     end
     
-    [pathstr, ~, ext] = fileparts(which(fcnname));
+    [pathstr, ~, ext] = fileparts (which (fcnname));
     
     if isempty(strcmpi(ext, '.m'))
        warning('function is not an m-file on the path.') 
     end
     
-    if nargin < 3 || isempty(topdir)
-        thepath = path2cell(path);
+    if nargin < 3 || isempty (topdir)
+        thepath = path2cell (path);
     else
-        if ~ischar(topdir)
-            error('topdir must be a string');
+        if ~ischar (topdir)
+            error ('topdir must be a string');
         end
-        if exist(topdir, 'file') ~= 7
-            error('supplied directory name does not exist.')
+        if strcmpi (topdir, 'allbutroot')
+            thepath = path2cell (path);
+            thepath(strncmpi (thepath, matlabroot, numel (matlabroot))) = [];
+        else
+            if exist (topdir, 'file') ~= 7
+                error ('supplied directory name does not exist.')
+            end
+            thepath = path2cell (genpath (topdir));
         end
-        thepath = path2cell(genpath(topdir));
     end
 
     if nargin < 4
