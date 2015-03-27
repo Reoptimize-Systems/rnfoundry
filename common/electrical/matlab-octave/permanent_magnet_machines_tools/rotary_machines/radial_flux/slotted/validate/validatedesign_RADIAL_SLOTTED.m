@@ -29,7 +29,7 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
                  'FEMM simulation:']), '\n\n']);
     
     % Draw the sim at position 0
-    design.Validation.FemmSingleFL.FemmProblem = slottedfemmprob_radial (design, ...
+    design.Validation.FemmSingleFLAltInductance.FemmProblem = slottedfemmprob_radial (design, ...
                             'ArmatureType', design.ArmatureType, ...
                             'NWindingLayers', design.CoilLayers, ...
                             'Position', pos, ...
@@ -42,7 +42,7 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
                             'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
     
     % write the fem file to disk
-    writefemmfile (femfilename, design.Validation.FemmSingleFL.FemmProblem);
+    writefemmfile (femfilename, design.Validation.FemmSingleFLAltInductance.FemmProblem);
     % analyse the problem
     ansfilename = analyse_mfemm (femfilename, ...
                                  simoptions.usefemm, ...
@@ -57,7 +57,7 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
 
         % get the flux linkage in this position
         temp = solution.getcircuitprops('1');
-        design.Validation.FemmSingleFL.FluxLinkage = temp(3);
+        design.Validation.FemmSingleFLAltInductance.FluxLinkage = temp(3);
 
     else
         % open the solution in FEMM
@@ -78,33 +78,72 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
     
     design.Validation.CoilInductance = inductancefromreluctnet (design);
     design.Validation.PhaseInductance = design.Validation.CoilInductance * design.CoilsPerBranch / design.Branches;
+    
+    fprintf (1, [textwrap2(['Comparison of FEMM and reluctance network Inductnaces:']), '\n\n']);
+    fprintf (1, 'FEMM Coil Inductance: %4.3f mH, Reluctance Coil Inductance %4.3f mH\n', ...
+        design.CoilInductance(1)*1000, design.Validation.CoilInductance*1000);
+    fprintf (1, 'FEMM Phase Inductance: %4.3f mH, Reluctance Phase Inductance %4.3f mH\n\n', ...
+        design.PhaseInductance(1)*1000, design.Validation.PhaseInductance*1000);
 
     % calculate the phase impedance
     Zphase = design.PhaseResistance(1) + design.LoadResistance(1) ...
                 + (1i.*design.Validation.ElectricalOmega.*design.Validation.PhaseInductance);
-    design.Validation.PhaseImpedance = Zphase;
+            
+    design.Validation.FemmSingleFLAltInductance.PhaseImpedance = Zphase;
 
-    design.Validation.FemmSingleFL.EMFCoilPeak = peakemfest_ROTARY(abs(design.Validation.FemmSingleFL.FluxLinkage), design.Validation.Omega, design.Poles / 2);
+    design.Validation.FemmSingleFLAltInductance.EMFCoilPeak = peakemfest_ROTARY(abs(design.Validation.FemmSingleFLAltInductance.FluxLinkage), design.Validation.Omega, design.Poles / 2);
     
-    design.Validation.FemmSingleFL.EMFCoilRms = design.Validation.FemmSingleFL.EMFCoilPeak / sqrt(2);
+    design.Validation.FemmSingleFLAltInductance.EMFCoilRms = design.Validation.FemmSingleFLAltInductance.EMFCoilPeak / sqrt(2);
     
-    design.Validation.FemmSingleFL.EMFPhasePeak = design.CoilsPerBranch * design.Validation.FemmSingleFL.EMFCoilPeak;
+    design.Validation.FemmSingleFLAltInductance.EMFPhasePeak = design.CoilsPerBranch * design.Validation.FemmSingleFLAltInductance.EMFCoilPeak;
     
-    design.Validation.FemmSingleFL.EMFPhaseRms = design.Validation.FemmSingleFL.EMFPhasePeak ./ sqrt(2);
+    design.Validation.FemmSingleFLAltInductance.EMFPhaseRms = design.Validation.FemmSingleFLAltInductance.EMFPhasePeak ./ sqrt(2);
     
-    design.Validation.FemmSingleFL.IPhasePeak = design.Validation.FemmSingleFL.EMFPhasePeak ./ abs (Zphase);
-    design.Validation.FemmSingleFL.ICoilPeak = design.Validation.FemmSingleFL.IPhasePeak ./ design.Branches;
+    design.Validation.FemmSingleFLAltInductance.IPhasePeak = design.Validation.FemmSingleFLAltInductance.EMFPhasePeak ./ abs (Zphase);
+    design.Validation.FemmSingleFLAltInductance.ICoilPeak = design.Validation.FemmSingleFLAltInductance.IPhasePeak ./ design.Branches;
     
-    design.Validation.FemmSingleFL.IPhaseRms = design.Validation.FemmSingleFL.EMFPhaseRms ./ real (Zphase);
-    design.Validation.FemmSingleFL.ICoilRms = design.Validation.FemmSingleFL.IPhaseRms ./ design.Branches;
+    design.Validation.FemmSingleFLAltInductance.IPhaseRms = design.Validation.FemmSingleFLAltInductance.EMFPhaseRms ./ abs (Zphase);
+    design.Validation.FemmSingleFLAltInductance.ICoilRms = design.Validation.FemmSingleFLAltInductance.IPhaseRms ./ design.Branches;
     
-    design.Validation.FemmSingleFL.PowerLoadMean = design.Validation.FemmSingleFL.IPhaseRms.^2 * design.LoadResistance * design.Phases;
+    design.Validation.FemmSingleFLAltInductance.PowerLoadMean = design.Validation.FemmSingleFLAltInductance.IPhaseRms.^2 * design.LoadResistance * design.Phases;
     
-    design.Validation.FemmSingleFL.JCoilRms = design.Validation.FemmSingleFL.ICoilRms / design.ConductorArea;
+    design.Validation.FemmSingleFLAltInductance.JCoilRms = design.Validation.FemmSingleFLAltInductance.ICoilRms / design.ConductorArea;
     
-    design.Validation.FemmSingleFL.JCoilPeak = design.Validation.FemmSingleFL.ICoilPeak / design.ConductorArea;
+    design.Validation.FemmSingleFLAltInductance.JCoilPeak = design.Validation.FemmSingleFLAltInductance.ICoilPeak / design.ConductorArea;
     
-    design.Validation.FemmSingleFL.Efficiency = design.LoadResistance / (design.CoilResistance + design.LoadResistance);
+    design.Validation.FemmSingleFLAltInductance.Efficiency = design.LoadResistance / (design.CoilResistance + design.LoadResistance);
+    
+    
+    % calculate the phase impedance
+    Zphase = design.PhaseResistance(1) + design.LoadResistance(1) ...
+                + (1i.*design.Validation.ElectricalOmega.*design.PhaseInductance(1));
+            
+	design.Validation.FemmSingleFLFEMMInductance.FluxLinkage = design.Validation.FemmSingleFLAltInductance.FluxLinkage;
+    
+    design.Validation.FemmSingleFLFEMMInductance.PhaseImpedance = Zphase;
+    
+    design.Validation.FemmSingleFLFEMMInductance.EMFCoilPeak = peakemfest_ROTARY(abs(design.Validation.FemmSingleFLFEMMInductance.FluxLinkage), design.Validation.Omega, design.Poles / 2);
+    
+    design.Validation.FemmSingleFLFEMMInductance.EMFCoilRms = design.Validation.FemmSingleFLFEMMInductance.EMFCoilPeak / sqrt(2);
+    
+    design.Validation.FemmSingleFLFEMMInductance.EMFPhasePeak = design.CoilsPerBranch * design.Validation.FemmSingleFLFEMMInductance.EMFCoilPeak;
+    
+    design.Validation.FemmSingleFLFEMMInductance.EMFPhaseRms = design.Validation.FemmSingleFLFEMMInductance.EMFPhasePeak ./ sqrt(2);
+    
+    design.Validation.FemmSingleFLFEMMInductance.IPhasePeak = design.Validation.FemmSingleFLFEMMInductance.EMFPhasePeak ./ abs (Zphase);
+    design.Validation.FemmSingleFLFEMMInductance.ICoilPeak = design.Validation.FemmSingleFLFEMMInductance.IPhasePeak ./ design.Branches;
+    
+    design.Validation.FemmSingleFLFEMMInductance.IPhaseRms = design.Validation.FemmSingleFLFEMMInductance.EMFPhaseRms ./ abs (Zphase);
+    design.Validation.FemmSingleFLFEMMInductance.ICoilRms = design.Validation.FemmSingleFLFEMMInductance.IPhaseRms ./ design.Branches;
+    
+    design.Validation.FemmSingleFLFEMMInductance.PowerLoadMean = design.Validation.FemmSingleFLFEMMInductance.IPhaseRms.^2 * design.LoadResistance * design.Phases;
+    
+    design.Validation.FemmSingleFLFEMMInductance.JCoilRms = design.Validation.FemmSingleFLFEMMInductance.ICoilRms / design.ConductorArea;
+    
+    design.Validation.FemmSingleFLFEMMInductance.JCoilPeak = design.Validation.FemmSingleFLFEMMInductance.ICoilPeak / design.ConductorArea;
+    
+    design.Validation.FemmSingleFLFEMMInductance.Efficiency = design.LoadResistance / (design.CoilResistance + design.LoadResistance);
+    
     
     
     if isfield (design, 'FemmDirectFluxLinkage')
@@ -122,7 +161,7 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
         design.Validation.FemmOrigDirectFL.IPhasePeak = design.Validation.FemmOrigDirectFL.EMFPhasePeak ./ abs (Zphase);
         design.Validation.FemmOrigDirectFL.ICoilPeak = design.Validation.FemmOrigDirectFL.IPhasePeak / design.Branches;
 
-        design.Validation.FemmOrigDirectFL.IPhaseRms = design.Validation.FemmOrigDirectFL.EMFPhaseRms ./ real (Zphase);
+        design.Validation.FemmOrigDirectFL.IPhaseRms = design.Validation.FemmOrigDirectFL.EMFPhaseRms ./ abs (Zphase);
         design.Validation.FemmOrigDirectFL.ICoilRms = design.Validation.FemmOrigDirectFL.IPhaseRms / design.Branches;
 
         design.Validation.FemmOrigDirectFL.PowerLoadMean = design.Validation.FemmOrigDirectFL.IPhaseRms.^2 * design.LoadResistance * design.Phases;
@@ -158,17 +197,31 @@ function L = inductancefromreluctnet (design)
                  'validation routine is based on a reluctance network ' ...
                  'only valid for a tooth-wound coil.']), '\n']);
     
-    mu = mu_0 () * 1000;
+    mu = mu_0 () * 3000;
     
-    R_gm = (design.g + design.tm) / (mu * design.ls * design.Rai * (design.thetas - design.thetasg));
+    % using ari gap reluctance calculation method from [1]
+    %
+    % [1] A Balakrishnan A, "Air-Gap Reluctance and Inductance Calculations
+    % for Mag Ckts Using a Schwarz–Christoffel Trans"
+    %
+    wc = design.Rai * (design.thetas - design.thetasg);
+    la = design.g + design.tm;
+    h = design.tsb + sum(design.tc);
     
-    R_TH = (design.Ryo - design.Rai) / (2 * mu * (design.ls * design.Rcm * mean([design.thetacy, design.thetacg])));
+    R_gm = 1 / (mu_0 * ((wc / la) + (4/pi)*(1 + log (pi * h / (4 * la))))) / design.ls;
     
-    R_YH = (design.Rym * design.thetas) / (mu * design.ls * design.ty);
+%     R_gm = (design.g + design.tm) ...
+%         / (mu_0 * design.ls * design.Rai * (design.thetas - design.thetasg + (design.thetasg/4)));
     
-    R_biH = (mu * design.Rbm * design.thetas) / (mu * design.ls * design.tbi);
+    R_TH = (design.Ryo - design.Rai) ...
+        / (2 * mu_0 * design.MagFEASimMaterials.ArmatureYoke.Mu_x * (design.ls * design.Rcm * (design.thetas - mean([design.thetacy, design.thetacg]))));
     
-    L = design.CoilTurns / (4* R_TH + 3*R_gm + 2*R_YH + 2*R_biH);
+    R_YH = (design.Rym * design.thetas) ...
+        / (mu_0 * design.MagFEASimMaterials.ArmatureYoke.Mu_x * design.ls * design.ty);
+    
+    R_biH = (design.Rbm * design.thetas) / (mu * design.ls * design.tbi);
+    
+    L = design.CoilTurns^2 / (R_TH + 1.25*R_gm + 0.5*R_YH + 0.5*R_biH);
 
 end
 
@@ -182,7 +235,6 @@ function reportvalidation (design, simoptions)
                     'EMFCoilPeak', ...
                     'EMFCoilRms', ...
                     'EMFPhasePeak', ...
-                    'EMFPhasePeak', ...
                     'EMFPhaseRms', ...
                     'IPhasePeak', ...
                     'ICoilPeak', ...
@@ -193,15 +245,18 @@ function reportvalidation (design, simoptions)
                     'PowerLoadMean' };
                 
 	veldata = [ design.Validation.RPM(:), design.Validation.Omega(:) ];
-                
-	if isfield (design.Validation, 'FemmSingleFL')
+    
+	if isfield (design.Validation, 'FemmSingleFLAltInductance')
         
-        fprintf (1, textwrap2('Validation results based on single new FEMM simulation with the flux linkage extracted directly from this single simulation:'));
+        fprintf (1, textwrap2(['Validation results based on single new FEMM ', ...
+            'simulation with the flux linkage extracted directly from this ', ...
+            'single simulation, using the Inductance calculated ', ...
+            'using a reluctance network approach:']));
         fprintf (1, '\n\n');
         
         data = [];
         for ind = 3:numel (colheadings)
-            data = [ data, design.Validation.FemmSingleFL.(colheadings{ind})(:) ];
+            data = [ data, design.Validation.FemmSingleFLAltInductance.(colheadings{ind})(:) ];
         end
 
         wid = 10;
@@ -215,7 +270,7 @@ function reportvalidation (design, simoptions)
 
             for ind = 3:numel (colheadings)
                 if isfield (design, colheadings{ind})
-                    simpleval = design.Validation.FemmSingleFL.(colheadings{ind})(design.Validation.RPM <= simoptions.RPM*1.001 & design.Validation.RPM > simoptions.RPM*0.999);
+                    simpleval = design.Validation.FemmSingleFLAltInductance.(colheadings{ind})(design.Validation.RPM <= simoptions.RPM*1.001 & design.Validation.RPM > simoptions.RPM*0.999);
                     fprintf (1, 'Full %s: %g, Simple %s: %g, Percent Difference: %g\n', ...
                         colheadings{ind}, ...
                         design.(colheadings{ind}), ...
@@ -227,11 +282,56 @@ function reportvalidation (design, simoptions)
         end
         
     else
-        warning ('Field design.Validation.FemmSingleFL not found');
+        warning ('Field design.Validation.FemmSingleFLAltInductance not found');
+    end
+    
+    
+    if isfield (design.Validation, 'FemmSingleFLFEMMInductance')
+        
+        fprintf (1, '\n');
+        
+        fprintf (1, textwrap2(['Validation results based on single new FEMM ', ...
+            'simulation with the flux linkage extracted directly from this ', ...
+            'single simulation, using the Inductance previously calculated ', ...
+            'using FEA:']));
+        
+        fprintf (1, '\n\n');
+        
+        data = [];
+        for ind = 3:numel (colheadings)
+            data = [ data, design.Validation.FemmSingleFLFEMMInductance.(colheadings{ind})(:) ];
+        end
+        
+        wid = 10;
+        fms = {'.2g'};
+        
+        displaytable([veldata, data], colheadings, wid, fms);
+        
+        if isfield (simoptions, 'RPM')
+            
+            fprintf (1, '\nAt simulation RPM of %6.2f:\n\n', simoptions.RPM);
+            
+            for ind = 3:numel (colheadings)
+                if isfield (design, colheadings{ind})
+                    simpleval = design.Validation.FemmSingleFLFEMMInductance.(colheadings{ind})(design.Validation.RPM <= simoptions.RPM*1.001 & design.Validation.RPM > simoptions.RPM*0.999);
+                    fprintf (1, 'Full %s: %g, Simple %s: %g, Percent Difference: %g\n', ...
+                        colheadings{ind}, ...
+                        design.(colheadings{ind}), ...
+                        colheadings{ind}, ...
+                        simpleval(1), ...
+                        100 * (simpleval(1) - design.(colheadings{ind}))/ design.(colheadings{ind}) );
+                end
+            end
+        end
+        
+    else
+        warning ('Field design.Validation.FemmSingleFLAltInductance not found');
     end
     
     
     if isfield (design.Validation, 'FemmOrigDirectFL')
+        
+        fprintf (1, '\n');
         
         fprintf (1, textwrap2('Validation using maximum value of flux linkage values taken direct from FEMM simulations done in main simfun:'));
         fprintf (1, '\n\n');
