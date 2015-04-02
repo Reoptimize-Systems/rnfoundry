@@ -360,6 +360,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                                     
                     design.gvar = design.g;
                     
+                    design.PerPoleAirGapClosingForce = design.gforce;
+                    
                     % get the cross-sectional area of the armature iron for
                     % calcuation of material masses later
                     solution.clearblock();
