@@ -1,4 +1,4 @@
-function [Def, I] = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
+function [Def, I, thetaA, MA, RA, yA] = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
 % calulates the deflection of a beam about the x-axis using formulas from
 % 'Roark's Formulas for stress and strain'
 %
@@ -56,6 +56,7 @@ function [Def, I] = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
 %            
 %   I - moment of inertia calculated for the beam
 %
+%   thetaA, MA, RA, yA
 %
 % See also: roark8.MomentOfInertiaX
 %
@@ -67,57 +68,57 @@ function [Def, I] = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
         case {'8.1.1d', 'LFRFP', 'lfrfp'}
             % R6 T3.1d
             % Left end fixed, right end fixed, point load
-            Def = Table3r1dDef(Yvars, E, I, x);
+            Def = Table3r1dDef (Yvars, E, I, x);
         
         case {'8.1.1e', 'LSRSP', 'lsrsp'}
             % R6 T3.1e
             % Left end Simply Supported, right end simply supported,
             % point load
-            Def = Table3r1eDef(Yvars, E, I, x);
+            Def = Table3r1eDef (Yvars, E, I, x);
         
         case {'8.1.1f', 'LGRSP', 'lgrsp'}
             % R6 T3.1f
             % Left end guided, right end simply supported,
             % point load
-            Def = Table3r1fDef(Yvars, E, I, x);
+            Def = Table3r1fDef (Yvars, E, I, x);
         
         case {'8.1.2a', 'LURFD', 'lurfd'}
             % R6 T3.2a
             % Left end free, right end fixed, distributed force
-            Def = Table3r2aDef(Yvars, E, I, x);
+            Def = Table3r2aDef (Yvars, E, I, x);
             
         case {'8.1.2d', 'LFRFD', 'lfrfd'}
             % R6 T3.2a
             % Left end fixed, right end fixed, distributed force
-            Def = Table3r2dDef(Yvars, E, I, x);
+            Def = Table3r2dDef (Yvars, E, I, x);
             
         case {'8.1.2e', 'LSRSD', 'lsrsd'}
             % R6 T3.2e
             % Left end Simply Supported, right end simply supported,
             % distributed force
-            Def = Table3r2eDef(Yvars, E, I, x);
+            [Def, thetaA, MA, RA, yA] = Table3r2eDef (Yvars, E, I, x);
             
         case {'8.1.4d', 'LFRFA', 'lfrfa'}
             % R6 T3.4d
             % Left end fixed, right end fixed, externally created angular
             % displacement
-            Def = Table3r4dDef(Yvars, E, I, x);
+            Def = Table3r4dDef (Yvars, E, I, x);
             
         case {'8.8.2e', 'LSRSDAL', 'lsrsdal'}
             % R6 T10.2e
             % Left end Simply Supported, right end simply supported,
             % distributed force and axial load
-            Def = Table10r2eDef(Yvars, E, I, x);
+            Def = Table10r2eDef (Yvars, E, I, x);
             
         case {'8.8.2f', 'LGRSDAL', 'lgrsdal'}
             % R6 10.2f
             % Left end guided, right end simply supported,
             % distributed force and axial load
-            Def = Table10r2fDef(Yvars, E, I, x);
+            Def = Table10r2fDef (Yvars, E, I, x);
             
         otherwise
             
-            Def = feval(beamMethod, Yvars, E, I, x);
+            Def = feval (beamMethod, Yvars, E, I, x);
 
     end
     

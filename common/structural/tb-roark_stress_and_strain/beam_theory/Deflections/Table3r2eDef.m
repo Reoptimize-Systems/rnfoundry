@@ -1,4 +1,4 @@
-function Def = Table3r2eDef(Yvars, E, I, x)
+function [Def, thetaA, MA, RA, yA] = Table3r2eDef (Yvars, E, I, x)
 % function: Table3r2eDef
 % 
 % Calculates the deflection of a beam with its left end simply supported
@@ -26,8 +26,8 @@ function Def = Table3r2eDef(Yvars, E, I, x)
 %   Def - (n x 1) column vector of values of the deflection at the
 %   corresponding x position
 %
-    if size(Yvars,2) > 4
-        error('Yvars has too many columns, Yvars must be a (n x 4) matrix')
+    if size (Yvars,2) > 4
+        error ('Yvars has too many columns, Yvars must be a (n x 4) matrix')
     end
     
     wa = Yvars(:,1);
@@ -45,15 +45,20 @@ function Def = Table3r2eDef(Yvars, E, I, x)
     
     thetaA = thetaA - ((wl-wa) ./ (360 .* E .* l.* I)).*((l-a).^2) .*( (7.*(l.^2)) + (6.*l.*a) - (3.*(a.^2)));
     
-    Def = zeros(size(thetaA,1),length(x));
+    Def = zeros (size (thetaA,1),length(x));
     
     for j = 1:size(thetaA,1)
         for i = 1:length(x) 
             % Calculate the resulting deflection in each case using the
             % generic formula with MA = 0 (for simply supported) and yA =
             % zero (no initial deflection)
-            Def(j,i) = GenericYDefDistribLoad(thetaA(j,1), 0, RA(j,1), wa(j,1), wl(j,1), x(i), l(j), a(j), 0, E, I);
+            Def(j,i) = GenericYDefDistribLoad (thetaA(j,1), 0, RA(j,1), wa(j,1), wl(j,1), x(i), l(j), a(j), 0, E, I);
         end
+    end
+    
+    if nargin > 1
+        MA = zeros (size (thetaA));
+        yA = zeros (size (thetaA));
     end
 
 end
