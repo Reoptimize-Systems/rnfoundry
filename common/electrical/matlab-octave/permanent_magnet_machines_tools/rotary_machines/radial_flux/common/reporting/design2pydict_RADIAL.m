@@ -11,7 +11,7 @@ function cellstrs = design2pydict_RADIAL (design)
 pytools.trynesteddict('structdims', {'Field', 'Rbi'}, sprintf('%10.8g * 1000', design.Rbi)); 
 { ...
  spm('Rbo', design.Rbo);
-[spm('Rmi', design.Rmi), ' * 1.001'];
+[spm('Rmi', design.Rmi), ' * 1.0'];
  spm('Rmo', design.Rmo);
 }];
 
