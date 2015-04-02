@@ -111,9 +111,21 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     if isfield (design, 'ShearStressMean')
         ShearStressMean = design.ShearStressMean;
     else
-        ShearStressMean = 'N\A';
+        ShearStressMean = 'N/A';
     end
 
+    if isfield (design, 'AirGapClosingStress')
+        AirGapClosingStress = design.AirGapClosingStress;
+    else
+        AirGapClosingStress = 'N/A';
+    end
+    
+    if isfield (design, 'PerPoleAirGapClosingForce')
+        PerPoleAirGapClosingForce = design.PerPoleAirGapClosingForce;
+    else
+        PerPoleAirGapClosingForce = 'N/A';
+    end
+    
     tabledata = { ...
         'Peak Phase Current (A)', design.IPhasePeak(1), 'RMS Coil Current (A)', design.IPhaseRms(1);
         'Peak Coil Current (A)', design.ICoilPeak(1), 'RMS Coil Current (A)', design.ICoilRms(1);                            
@@ -126,7 +138,8 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         'Mean Winding Losses (kW)', design.PowerPhaseRMean/1000, 'Mean Iron Losses (kW)', PowerLossIronMean;
         'Mean Winding Eddy Losses (kW)', PowerLossEddyMean, 'Mean Input Power (kW)', design.PowerInputMean/1e3;
         'Voltage THD (\%)', VoltagePercentTHD, 'Peak Electrical Frequency', FrequencyPeak;
-        'Mean Air Gap Shear Stress (kN/m\textsuperscript{2})', ShearStressMean/1000, '', '';
+        'Mean Air Gap Shear Stress (kN/m\textsuperscript{2})', ShearStressMean/1000, 'Air-Gap Closing Stress (kN/m\textsuperscript{2})', AirGapClosingStress;
+        'Per-Pole Gap Closing Force (N)', PerPoleAirGapClosingForce, '', '';
     };
 
     % generate the LaTex table of the outputs
