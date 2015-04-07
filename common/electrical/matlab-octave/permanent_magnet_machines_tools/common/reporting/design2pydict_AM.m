@@ -16,8 +16,9 @@ cellstrs = { ...
    'structdims["Field"] = {}';
 spm('ls', design.ls);
 spd('Poles', design.Poles);
+spd('Qc', design.Qc);
 spFa('MagnetSkew', design.MagnetSkew);
-spFd('NMagsPerPole', 10);
+spFd('NSkewMagnetsPerPole', design.NSkewMagnetsPerPole);
 };
 
 
