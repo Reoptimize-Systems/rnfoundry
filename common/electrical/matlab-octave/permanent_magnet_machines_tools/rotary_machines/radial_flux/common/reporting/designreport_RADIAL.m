@@ -56,6 +56,7 @@ function reportstrs = designreport_RADIAL(design, simoptions, reportstrs, vararg
         '$l_s$',    'Stack length. (mm)', design.ls*1000;
         '', 'Magnet Skew (Fraction of Pole)', design.MagnetSkew(1);
         '', 'Magnet Skew Angle (Degrees)', rad2deg(design.MagnetSkew(1) * design.thetap);
+        '', 'Number of Magnets Per Pole for Skew', design.NSkewMagnetsPerPole;
     };
 
     % generate the LaTex table of the outputs
