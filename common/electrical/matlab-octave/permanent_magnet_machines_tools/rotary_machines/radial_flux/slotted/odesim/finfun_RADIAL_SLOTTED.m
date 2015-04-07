@@ -24,7 +24,6 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
     design.intAdata.pos = design.intAdata.slotPos(design.intAdata.slotPos <= design.intAdata.slotPos(1)+2);
     
     coilpitch = design.thetas * design.yd / design.thetap;
-%     maxflpos = 0.5 + (design.thetas/2 + design.FirstSlotCenter)/design.thetap;
     
     if design.CoilLayers == 1
         
@@ -53,7 +52,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                     1, ...
                                     design.CoilArea, ...
                                     0, ...
-                                    design.MagnetSkew );
+                                    [design.MagnetSkew, design.NSkewMagnetsPerPole] );
         
         [~,ind] = max(abs(fl));
 	    maxflpos = pos(ind);
@@ -69,7 +68,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                                         1, ...
                                                         design.CoilArea, ...
                                                         maxflpos, ...
-                                                        design.MagnetSkew );
+                                                        [design.MagnetSkew, design.NSkewMagnetsPerPole] );
 
         design.intBdata.intB1 = design.intBdata.slotIntB(design.intBdata.slotPos <= design.intBdata.slotPos(1)+2,1:2,1);
         if design.intBdata.pos(end) < design.intBdata.slotPos(1)+2
@@ -130,7 +129,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                      1, ...
                                      design.CoilArea, ...
                                      0, ...
-                                     design.MagnetSkew );
+                                     [design.MagnetSkew, design.NSkewMagnetsPerPole] );
         
         [~,ind] = max(abs(fl));
 	    maxflpos = pos(ind(1));
@@ -145,7 +144,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                                         1, ...
                                                         design.CoilArea, ...
                                                         maxflpos, ...
-                                                        design.MagnetSkew );
+                                                        [design.MagnetSkew, design.NSkewMagnetsPerPole] );
          
         design.intBdata.intB1 = design.intBdata.slotIntB(design.intBdata.slotPos <= design.intBdata.slotPos(1)+2,1:2,1);
         design.intBdata.intB2 = design.intBdata.slotIntB(design.intBdata.slotPos <= design.intBdata.slotPos(1)+2,3:4,1);
@@ -214,10 +213,7 @@ function design = coggingforceslm(design)
 % creates a cogging force slm    
 
     skew = design.MagnetSkew;
-    
-    if numel(skew) < 2
-        skew(2) = 10;
-    end
+    skew(2) = design.NSkewMagnetsPerPole;
     
     % account for magnet skew in the cogging forces
     normcoggingTorqueslm = slmengine (design.feapos, design.RawCoggingTorque ./ design.ls, ...
