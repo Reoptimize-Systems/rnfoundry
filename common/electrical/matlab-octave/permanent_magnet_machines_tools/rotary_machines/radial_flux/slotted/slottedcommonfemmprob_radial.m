@@ -1,7 +1,7 @@
-function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
+function [FemmProblem, info] = slottedcommonfemmprob_radial(FemmProblem, design, ...
                             Inputs, magcornerids, Rs, coillabellocs, inslabellocs, ...
                             yokenodeids, ymidpoint, BackIronMatInd, YokeMatInd, CoilMatInd, ...
-                            GapMatInd, linktb )
+                            GapMatInd, linktb, XShift, YShift )
 % Constructs common aspects of a slotted mfemm radial flux FemmProblem
 % structure
 %
@@ -23,6 +23,8 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 % than direct use.
 %
 
+    elcount = elementcount_mfemm (FemmProblem);
+    
     slotsperpole = design.Qs / design.Poles;
 
     % define the block properties of the core region
@@ -51,11 +53,11 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     
     % add circuits for each winding phase
     for i = 1:design.Phases
-        if i == 1
-            FemmProblem = addcircuit_mfemm(FemmProblem, num2str(i), 'TotalAmps_re', Inputs.CoilCurrent);
-        else
-            FemmProblem = addcircuit_mfemm(FemmProblem, num2str(i));
+        cname = num2str(i);
+        if ~hascircuit_mfemm (FemmProblem, cname)
+            FemmProblem = addcircuit_mfemm (FemmProblem, cname);
         end
+        FemmProblem = setcircuitcurrent (FemmProblem, cname, Inputs.CoilCurrent(i));
     end
 
     edgenodes = [];
@@ -92,71 +94,82 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                                                         ); 
 
             % add the nodes to the problem
-            [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, edgenodes(2:9,1), edgenodes(2:9,2));
+            [FemmProblem, nodeinds, nodeids] = addnodes_mfemm (FemmProblem, edgenodes(2:9,1), edgenodes(2:9,2));
 
             % add arcs linking the outer segments
-            FemmProblem = addarcsegments_mfemm(FemmProblem, ...
-                                               nodeids(2), ...
-                                               nodeids(7), ...
-                                               rad2deg(repmat(2*design.thetap,1,1)));
+            FemmProblem = addarcsegments_mfemm (FemmProblem, ...
+                                                nodeids(2), ...
+                                                nodeids(7), ...
+                                                rad2deg(repmat(2*design.thetap,1,1)));
             
             % put the stator iron segment in the right group
             FemmProblem.ArcSegments(end).InGroup = statorirongp;
             
             % add segments with periodic boundaries on the outer parts
-            [FemmProblem, boundind(1), boundnames{1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Stator Back Iron Periodic', 4);
-            [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Stator Outer Periodic', 4);
-            [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Stator Outer Periodic', 4);
-            [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm(FemmProblem, 'Radial Air Gap Periodic', 4);
+            [FemmProblem, boundind(1), boundnames{1}] = addboundaryprop_mfemm (FemmProblem, 'Radial Stator Back Iron Periodic', 4);
+            [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm (FemmProblem, 'Radial Stator Outer Periodic', 4);
+            [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm (FemmProblem, 'Radial Stator Outer Periodic', 4);
+            [FemmProblem, boundind(end+1), boundnames{end+1}] = addboundaryprop_mfemm (FemmProblem, 'Radial Air Gap Periodic', 4);
 
-            segprops = struct('BoundaryMarker', boundnames, 'InGroup', {statorirongp, 0, 0, 0});
+            segprops = struct ('BoundaryMarker', boundnames, 'InGroup', {statorirongp, 0, 0, 0});
             
             % bottom segs
-            FemmProblem = addsegments_mfemm(FemmProblem, ...
-                                            nodeids([1,2,3]), ...
-                                            nodeids([2,3,4]), ...
-                                            segprops(1:3));
+            [FemmProblem, info.BottomSegInds] = addsegments_mfemm (FemmProblem, ...
+                                                                   nodeids(1), ...
+                                                                   nodeids(2), ...
+                                                                   segprops(1));
             % top segs
-            FemmProblem = addsegments_mfemm(FemmProblem, ...
-                                            nodeids([8,7,6]), ...
-                                            nodeids([7,6,5]), ...
-                                            segprops(1:3));
+            [FemmProblem, info.TopSegInds] = addsegments_mfemm (FemmProblem, ...
+                                                                nodeids(8), ...
+                                                                nodeids(7), ...
+                                                                segprops(1));
             
             % bottom gap corner to bottom core corner
-            FemmProblem = addsegments_mfemm(FemmProblem, nodeids(1), magcornerids(1), ...
+            [FemmProblem, info.BottomSegInds(end+1)] = addsegments_mfemm (FemmProblem, nodeids(1), magcornerids(1), ...
                                                'BoundaryMarker', boundnames{4});
 
             % top gap corner to top core corner
-            FemmProblem = addsegments_mfemm(FemmProblem, nodeids(end), magcornerids(2), ...
+            [FemmProblem, info.TopSegInds(end+1)] = addsegments_mfemm (FemmProblem, nodeids(end), magcornerids(2), ...
                                                'BoundaryMarker', boundnames{4});
 
             % bottom slot to edge
-            FemmProblem = addarcsegments_mfemm(FemmProblem, nodeids(1), yokenodeids(1), ...
-                                               rad2deg(((2*pi/design.Qs)-design.thetac(1))/2), ...
-                                               'InGroup', statorirongp);
+            FemmProblem = addarcsegments_mfemm (FemmProblem, nodeids(1), yokenodeids(1), ...
+                                                rad2deg(((2*pi/design.Qs)-design.thetac(1))/2), ...
+                                                'InGroup', statorirongp);
 
             % top slot to edge
-            FemmProblem = addarcsegments_mfemm(FemmProblem, yokenodeids(4), nodeids(end), ...
-                                               rad2deg(((2*pi/design.Qs)-design.thetac(1))/2), ...
-                                               'InGroup', statorirongp);
+            FemmProblem = addarcsegments_mfemm (FemmProblem, yokenodeids(4), nodeids(end), ...
+                                                rad2deg(((2*pi/design.Qs)-design.thetac(1))/2), ...
+                                                'InGroup', statorirongp);
 
             % Add block labels for the air gap
-            [labelloc(1),labelloc(2)]  = pol2cart(design.thetap, design.Rmo+design.g/2);
+            [labelloc(1),labelloc(2)]  = pol2cart (design.thetap, design.Rmo+design.g/2);
 
-            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
+            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm (labelloc(1,1), labelloc(1,2), ...
                                     'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
                                     'MaxArea', Inputs.AirGapMeshSize);
 
             % add a block label for the yoke and teeth
-            [labelloc(1),labelloc(2)] = pol2cart(design.thetap, Rs);
+            [labelloc(1),labelloc(2)] = pol2cart (design.thetap, Rs);
 
-            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm(labelloc(1,1), labelloc(1,2), ...
+            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm (labelloc(1,1), labelloc(1,2), ...
                                                                  yokeBlockProps);
                                         
             if Inputs.DrawOuterRegions
                 
+                % bottom segs
+                [FemmProblem, info.BottomSegInds(end+1:end+2)] = addsegments_mfemm(FemmProblem, ...
+                                                nodeids([2,3]), ...
+                                                nodeids([3,4]), ...
+                                                segprops(2:3));
+                % top segs
+                [FemmProblem, info.TopSegInds(end+1:end+2)] = addsegments_mfemm(FemmProblem, ...
+                                                nodeids([7,6]), ...
+                                                nodeids([6,5]), ...
+                                                segprops(2:3));
+                
                 % add arcs linking the outer segments
-                FemmProblem = addarcsegments_mfemm(FemmProblem, ...
+                FemmProblem = addarcsegments_mfemm (FemmProblem, ...
                                                    nodeids([3,4]), ...
                                                    nodeids([6,5]), ...
                                                    rad2deg(repmat(2*design.thetap,1,2)));
@@ -177,8 +190,8 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
             else
                 % remove the nodes that would have been used to make the
                 % outer regions
-%                FemmProblem.Nodes(nodeinds(3:6)) = [];
                 FemmProblem = deletenode_mfemm (FemmProblem, nodeinds(3:6)-1);
+                
             end
 
                                 
@@ -270,14 +283,14 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                 segprops = struct('BoundaryMarker', boundnames, 'InGroup', {statorirongp, 0, 0, 0});
 
                 % top segs
-                FemmProblem = addsegments_mfemm(FemmProblem, ...
+                [FemmProblem, info.TopSegInds] = addsegments_mfemm(FemmProblem, ...
                                                 nodeids([8,7,6]), ...
                                                 nodeids([7,6,5]), ...
                                                 segprops(1:3));
             end
             
             % bottom segs
-            FemmProblem = addsegments_mfemm(FemmProblem, ...
+            [FemmProblem, info.BottomSegInds] = addsegments_mfemm(FemmProblem, ...
                                             nodeids([1,2,3]), ...
                                             nodeids([2,3,4]), ...
                                             segprops(1:3));
@@ -290,12 +303,12 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
                                     'MaxArea', Inputs.AirGapMeshSize);
 
             % bottom gap corner to bottom core corner
-            FemmProblem = addsegments_mfemm(FemmProblem, nodeids(1), magcornerids(1), ...
+            [FemmProblem, info.BottomSegInds(end+1)] = addsegments_mfemm(FemmProblem, nodeids(1), magcornerids(1), ...
                                                'BoundaryMarker', boundnames{4});
 
             if ~linktb
                 % top gap corner to top core corner
-                FemmProblem = addsegments_mfemm(FemmProblem, topnodeid, magcornerids(2), ...
+                [FemmProblem, info.TopSegInds(end+1)] = addsegments_mfemm(FemmProblem, topnodeid, magcornerids(2), ...
                                                    'BoundaryMarker', boundnames{4});
             end
             % bottom slot to edge
@@ -353,56 +366,59 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
     % add block labels for the coils
     row = 1;
 
-    circnums = zeros(Inputs.NSlots, 1);
+    % create an array to hold the coil information for every slot in the
+    % drawing
+    circnums = zeros(design.Qcb*(3-design.CoilLayers), 1);
+    % enumerate the machine phases
     temp = (1:design.Phases)';
 
     if design.yd == 1
-
-        % short pitched winding
-        for ii = 1:2:Inputs.NSlots
-
+        % short pitched (concentrated) winding, adjacent slots hold the
+        % same winding
+        for ii = 1:2:numel(circnums)
+            % go through every slot in the drawing getting the phase lying
+            % in that slot
             circnums(ii) = temp(1);
 
-            if  ii < numel(circnums)
-
+            if  ii < numel (circnums)
+                % for a slot pitch of 1, the neighbouring slot will have
+                % the other side of the phase in it
                 circnums(ii+1) = temp(1);
-
             end
-
-            temp = circshift(temp, 1);
+            % rotate the phase list to get to the next one
+            temp = circshift (temp, [1, 0]);
 
         end
 
     else
-
         % otherwise next slot contains the next phase, and so on in
         % sequence
-        for ii = 1:Inputs.NSlots
+        for ii = 1:numel(circnums)
 
             circnums(ii) = temp(1);
 
-            temp = circshift(temp, 1);
+            temp = circshift(temp, [1,0]);
 
         end
 
-
     end
 
+    % create a matrix to hold the information for all layers
     docircname = zeros(numel(circnums), Inputs.NWindingLayers);
 
     if design.yd == 1
 
-        for ii = 1:2:2*design.Phases
+        for ii = 1:2:size (docircname,1)
 
             if ii <= numel(circnums)
 
-                docircname(ii, :) = [1, zeros(1, Inputs.NWindingLayers-1)];
+                docircname(ii,:) = [1, zeros(1, Inputs.NWindingLayers-1)];
 
             end
 
-            if ii+design.yd <= numel(circnums)
+            if ii+design.yd <= numel (circnums)
 
-                docircname(ii+design.yd, :) = [zeros(1, Inputs.NWindingLayers-1), -1];
+                docircname(ii+design.yd,:) = [zeros(1, Inputs.NWindingLayers-1), -1];
 
             end
 
@@ -410,23 +426,27 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 
     else
 
-        for ii = 1:design.Phases
+        for ii = 1:size (docircname,1)
 
-            if ii <= numel(circnums)
+            if ii <= numel (circnums)
 
-                docircname(ii, :) = [1, zeros(1, Inputs.NWindingLayers-1)];
+                docircname(ii,:) = [1, zeros(1, Inputs.NWindingLayers-1)];
 
             end
 
-            if ii+design.yd <= numel(circnums)
+            if ii+design.yd <= numel (circnums)
 
-                docircname(ii+design.yd, :) = [zeros(1, Inputs.NWindingLayers-1), -1];
+                docircname(ii+design.yd,:) = [zeros(1, Inputs.NWindingLayers-1), -1];
 
             end
 
         end
 
     end
+    
+    % rotate the specification to the desired starting point
+    docircname = circshift (docircname, [-(Inputs.StartSlot-1), 0]);
+    circnums = circshift (circnums, [-(Inputs.StartSlot-1), 0]);
 
 %         circslotcount = 1;
 
@@ -434,54 +454,7 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
 %         nextlayer = 1;
 %         layers = (1:Inputs.NWindingLayers)';
 
-    for k = 1:Inputs.NSlots
 
-        for n = 1:Inputs.NWindingLayers
-
-            if k <= 2*design.Phases && docircname(k,n) ~= 0
-
-                % only put the circuit in the first set of phase coils
-                coilBlockProps.InCircuit = num2str(circnums(k));
-                coilBlockProps.Turns = coilBlockProps.Turns * docircname(k,n);
-
-            else
-
-                % only put the circuit in the first set of phase coils
-                coilBlockProps.InCircuit = '';
-
-            end 
-
-            FemmProblem = addblocklabel_mfemm( FemmProblem, ...
-                                               coillabellocs(row,1), ...
-                                               coillabellocs(row,2), ...
-                                               coilBlockProps);
-
-%                 row = row + 1;
-            if row+(Inputs.NSlots*Inputs.NWindingLayers) <= size(coillabellocs,1)
-                FemmProblem = addblocklabel_mfemm( FemmProblem, ...
-                                                   coillabellocs(row+(Inputs.NSlots*Inputs.NWindingLayers),1), ...
-                                                   coillabellocs(row,2), ...
-                                                   coilBlockProps );
-            end
-            
-            coilBlockProps.Turns = abs(coilBlockProps.Turns);
-            coilBlockProps.InCircuit = '';
-
-            row = row + 1;
-
-        end
-
-%             nextlayer = circshift(layers, -1);
-
-%             nextlayer = nextlayer(1);
-
-%             circslotcount = circslotcount + 1;
-
-%             circnums = circshift(circnums, 1);
-
-%             slotnums = circshift(slotnums, );
-
-    end
     
     if Inputs.DrawCoilInsulation
     
@@ -512,5 +485,72 @@ function FemmProblem = slottedcommonfemmprob_radial(FemmProblem, design, ...
         
     end
         
+    % shift all new nodes and block labels in X and Y if requested
+    if XShift ~= 0 || YShift ~= 0
+        
+        newelcount = elementcount_mfemm (FemmProblem);
+        
+        nodeids = (elcount.NNodes):(newelcount.NNodes-1);
+        
+        FemmProblem = translatenodes_mfemm(FemmProblem, XShift, YShift, nodeids);
+        
+        blockids = (elcount.NBlockLabels):(newelcount.NBlockLabels-1);
+                 
+        FemmProblem = translateblocklabels_mfemm(FemmProblem, XShift, YShift, blockids);
+        
+    end
+    
+
+    for k = 1:Inputs.NSlots
+
+        for n = 1:Inputs.NWindingLayers
+
+            if Inputs.AddAllCoilsToCircuits || (k <= 2*design.Phases && docircname(k,n) ~= 0)
+
+                % only put the circuit in the first set of phase coils
+                coilBlockProps.InCircuit = num2str(circnums(1));
+                coilBlockProps.Turns = coilBlockProps.Turns * docircname(1,n);
+
+            else
+
+                % only put the circuit in the first set of phase coils
+                coilBlockProps.InCircuit = '';
+
+            end 
+
+            FemmProblem = addblocklabel_mfemm( FemmProblem, ...
+                                               coillabellocs(row,1), ...
+                                               coillabellocs(row,2), ...
+                                               coilBlockProps);
+
+%                 row = row + 1;
+            if row+(Inputs.NSlots*Inputs.NWindingLayers) <= size(coillabellocs,1)
+                FemmProblem = addblocklabel_mfemm( FemmProblem, ...
+                                                   coillabellocs(row+(Inputs.NSlots*Inputs.NWindingLayers),1), ...
+                                                   coillabellocs(row,2), ...
+                                                   coilBlockProps );
+            end
+            
+            coilBlockProps.Turns = abs(coilBlockProps.Turns);
+            coilBlockProps.InCircuit = '';
+
+            row = row + 1;
+
+        end
+        
+        docircname = circshift (docircname, [-1, 0]);
+        circnums = circshift (circnums, [-1, 0]);
+
+%             nextlayer = circshift(layers, -1);
+
+%             nextlayer = nextlayer(1);
+
+%             circslotcount = circslotcount + 1;
+
+%             circnums = circshift(circnums, 1);
+
+%             slotnums = circshift(slotnums, );
+
+    end
     
 end

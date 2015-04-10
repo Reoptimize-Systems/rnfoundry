@@ -246,7 +246,9 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     end
     
     % add a new group number for the stator iron
-    FemmProblem = addgroup_mfemm (FemmProblem, 'StatorIronOutline');
+    if ~isfield (FemmProblem.Groups, 'StatorIronOutline')
+        FemmProblem = addgroup_mfemm (FemmProblem, 'StatorIronOutline');
+    end
     statorirongp = getgroupnumber_mfemm (FemmProblem, 'StatorIronOutline');
 
     % TODO: put iron and insulation in different groups

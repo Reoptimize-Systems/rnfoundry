@@ -8,13 +8,13 @@ function [FemmProblem, nodes, nodeids, links, magblockinds] = ...
 % Syntax
 %
 % [FemmProblem, nodes, nodeids, links] = ...
-%           annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos)
-% [...] = annularsecmagaperiodic(..., 'Paramter', Value)
+%           polyholemagperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos)
+% [...] = polyholemagperiodic(..., 'Paramter', Value)
 %
 %
 % Description
 %
-% annularsecmagaperiodic creates a periodic geometry of two magnets with
+% polyholemagperiodic creates a periodic geometry of two magnets with
 % spaces in between, with a base position shown in the figure below.
 %
 %             ********

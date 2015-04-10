@@ -1,4 +1,4 @@
-function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstator2dfemmprob(slots, Poles, ryokecenter, thetapole, thetacoil, thetashoegap, ryoke, rcoil, rshoebase, rshoegap, drawnsides, varargin)
+function [FemmProblem, info] = radialfluxstator2dfemmprob(slots, Poles, ryokecenter, thetapole, thetacoil, thetashoegap, ryoke, rcoil, rshoebase, rshoegap, drawnsides, varargin)
 % creates a femm problem description of an radial flux toothed armature
 %
 % Syntax
@@ -125,19 +125,23 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     Inputs.CoilInsulationThickness = 0;
     Inputs.CoilBaseFraction = 0.05;
     Inputs.ShoeCurveControlFrac = 0.5;
+    Inputs.XShift = 0;
+    Inputs.YShift = 0;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
     FemmProblem = Inputs.FemmProblem;
     
+    elcount = elementcount_mfemm (FemmProblem);
+    
     Inputs = rmfield(Inputs, 'FemmProblem');
 
-    coillabellocs = [];
+    info.CoilLabelLocations = [];
     
     if drawnsides(1)
 
         % draw inner internally facing side
-        [FemmProblem, outercornernodes, outercoillabellocs, inslabellocs] = ...
+        [FemmProblem, outercornernodes, outercoillabellocs, info.InsulationLabelLocations] = ...
             radialfluxstatorhalf2dfemmprob(slots, Poles, thetapole, thetacoil, ...
                       thetashoegap, ryoke, rcoil, rshoebase, rshoegap, ...
                       ryokecenter, 'i', ...
@@ -156,7 +160,7 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     if drawnsides(2)
         
         % draw outer externally facing side
-        [FemmProblem, innercornernodes, innercoillabellocs, inslabellocs] = ...
+        [FemmProblem, innercornernodes, innercoillabellocs, info.InsulationLabelLocations] = ...
             radialfluxstatorhalf2dfemmprob(slots, Poles, thetapole, thetacoil, ...
                       thetashoegap, ryoke, rcoil, rshoebase, rshoegap, ...
                       ryokecenter, 'o', ...
@@ -174,15 +178,36 @@ function [FemmProblem, outernodes, coillabellocs, inslabellocs] = radialfluxstat
     end
     
     if drawnsides(1) && drawnsides(2)
-        outernodes =  [innercornernodes(1), outercornernodes(2), outercornernodes(3), innercornernodes(4)];
-        coillabellocs = [innercoillabellocs; outercoillabellocs];
+        info.OuterNodes =  [innercornernodes(1), outercornernodes(2), outercornernodes(3), innercornernodes(4)];
+        info.CoilLabelLocations = [innercoillabellocs; outercoillabellocs];
     elseif drawnsides(1)
-        outernodes =  outercornernodes;
-        coillabellocs = outercoillabellocs;
+        info.OuterNodes =  outercornernodes;
+        info.CoilLabelLocations = outercoillabellocs;
     elseif drawnsides(2)
-        outernodes =  innercornernodes;
-        coillabellocs = innercoillabellocs;
+        info.OuterNodes =  innercornernodes;
+        info.CoilLabelLocations = innercoillabellocs;
     else
+        
+    end
+    
+    % shift all new nodes and block labels in X and Y if requested
+    if Inputs.XShift ~= 0 || Inputs.YShift ~= 0
+        
+        newelcount = elementcount_mfemm (FemmProblem);
+        
+        nodeids = (elcount.NNodes):(newelcount.NNodes-1);
+        
+        FemmProblem = translatenodes_mfemm(FemmProblem, Inputs.XShift, Inputs.YShift, nodeids);
+        
+        blockids = (elcount.NBlockLabels):(newelcount.NBlockLabels-1);
+                 
+        FemmProblem = translateblocklabels_mfemm(FemmProblem, Inputs.XShift, Inputs.YShift, blockids);
+        
+        info.CoilLabelLocations = bsxfun (@plus, info.CoilLabelLocations, [Inputs.XShift, Inputs.YShift]);
+        
+        if ~isempty (info.InsulationLabelLocations)
+            info.InsulationLabelLocations = bsxfun (@plus, info.InsulationLabelLocations, [Inputs.XShift, Inputs.YShift]);
+        end
         
     end
           
