@@ -55,10 +55,10 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                     [design.MagnetSkew, design.NSkewMagnetsPerPole] );
         
         [~,ind] = max(abs(fl));
-	    maxflpos = pos(ind);
+	    design.MagSimFEAPeakFluxLinkagePosition = pos(ind);
         
         % fit to position from which we take the flux linkage data
-        design.intBdata.pos = design.intBdata.pos + maxflpos;
+        design.intBdata.pos = design.intBdata.pos + design.MagSimFEAPeakFluxLinkagePosition;
         
         design.psilookup = linspace (0, 2, 200);
         design.psilookup(2,:) = fluxlinkagefrmintAslm ( intAslm, ...
@@ -67,7 +67,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                                         design.CoilTurns, ...
                                                         1, ...
                                                         design.CoilArea, ...
-                                                        maxflpos, ...
+                                                        design.MagSimFEAPeakFluxLinkagePosition, ...
                                                         [design.MagnetSkew, design.NSkewMagnetsPerPole] );
 
         design.intBdata.intB1 = design.intBdata.slotIntB(design.intBdata.slotPos <= design.intBdata.slotPos(1)+2,1:2,1);
@@ -132,7 +132,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                      [design.MagnetSkew, design.NSkewMagnetsPerPole] );
         
         [~,ind] = max(abs(fl));
-	    maxflpos = pos(ind(1));
+	    design.MagSimFEAPeakFluxLinkagePosition = pos(ind(1));
         
         % again remember that the depth is 1 due to the prior scaling
         % (see comment above)
@@ -143,7 +143,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
                                                         design.CoilTurns, ...
                                                         1, ...
                                                         design.CoilArea, ...
-                                                        maxflpos, ...
+                                                        design.MagSimFEAPeakFluxLinkagePosition, ...
                                                         [design.MagnetSkew, design.NSkewMagnetsPerPole] );
          
         design.intBdata.intB1 = design.intBdata.slotIntB(design.intBdata.slotPos <= design.intBdata.slotPos(1)+2,1:2,1);
@@ -173,7 +173,7 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
         design.intBdata.intB2(:,2) = periodicslmeval (design.intBdata.pos+coilpitch, intBslm, 0, false);
         
         % shift to position from which we take the flux linkage data
-        design.intBdata.pos = design.intBdata.pos + maxflpos;
+        design.intBdata.pos = design.intBdata.pos + design.MagSimFEAPeakFluxLinkagePosition;
         
     end
     
