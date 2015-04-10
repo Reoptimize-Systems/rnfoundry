@@ -1,4 +1,4 @@
-function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, linktb] = ...
+function [FemmProblem, wrapperthickness, info] = ...
     wrappedannularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, wrapperthickness, varargin)
 % creates a FemmProblem geometry of a radial section containing two magnets
 % optionally wrapped with additional layers and with periodic edges
@@ -172,36 +172,44 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
     planarrectmagaperiodicInputs = struct2pvpairs(planarrectmagaperiodicInputs);
     
     % first draw periodic magnet regions
-    [FemmProblem, nodes, nodeids, links, magblockinds] = ...
-        annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, planarrectmagaperiodicInputs{:});
+    [FemmProblem, nodes, ~, annulsecinfo] = annularsecmagaperiodic ( FemmProblem, ...
+                                                             thetapole, ...
+                                                             thetamag, ...
+                                                             rmag, ...
+                                                             roffset, ...
+                                                             pos, ...
+                                                             planarrectmagaperiodicInputs{:} );
+                                                         
+	info = annulsecinfo;
+    info.LinkTopBottom = linktb;
     
-    if linktb
+    if info.LinkTopBottom
         % remove the segment linking the nodes at the 'top' of the drawing
         FemmProblem.Segments(numel(FemmProblem.Segments)) = [];
         % change the segments linking to the last two nodes to be added to
         % be linked instead to the first two nodes
         seglinks = getseglinks_mfemm(FemmProblem);
         for ind = 1:size(seglinks,1)
-            if seglinks(ind,1) == nodeids(end-1)
-                FemmProblem.Segments(ind).n0 = nodeids(1);
-            elseif seglinks(ind,2) == nodeids(end-1)
-                FemmProblem.Segments(ind).n1 = nodeids(1);
-            elseif seglinks(ind,1) == nodeids(end)
-                FemmProblem.Segments(ind).n0 = nodeids(2);
-            elseif seglinks(ind,2) == nodeids(end)
-                FemmProblem.Segments(ind).n1 = nodeids(2);
+            if seglinks(ind,1) == info.NodeIDs(end-1)
+                FemmProblem.Segments(ind).n0 = info.NodeIDs(1);
+            elseif seglinks(ind,2) == info.NodeIDs(end-1)
+                FemmProblem.Segments(ind).n1 = info.NodeIDs(1);
+            elseif seglinks(ind,1) == info.NodeIDs(end)
+                FemmProblem.Segments(ind).n0 = info.NodeIDs(2);
+            elseif seglinks(ind,2) == info.NodeIDs(end)
+                FemmProblem.Segments(ind).n1 = info.NodeIDs(2);
             end
         end
         seglinks = getarclinks_mfemm(FemmProblem);
         for ind = 1:size(seglinks,1)
-            if seglinks(ind,1) == nodeids(end-1)
-                FemmProblem.ArcSegments(ind).n0 = nodeids(1);
-            elseif seglinks(ind,2) == nodeids(end-1)
-                FemmProblem.ArcSegments(ind).n1 = nodeids(1);
-            elseif seglinks(ind,1) == nodeids(end)
-                FemmProblem.ArcSegments(ind).n0 = nodeids(2);
-            elseif seglinks(ind,2) == nodeids(end)
-                FemmProblem.ArcSegments(ind).n1 = nodeids(2);
+            if seglinks(ind,1) == info.NodeIDs(end-1)
+                FemmProblem.ArcSegments(ind).n0 = info.NodeIDs(1);
+            elseif seglinks(ind,2) == info.NodeIDs(end-1)
+                FemmProblem.ArcSegments(ind).n1 = info.NodeIDs(1);
+            elseif seglinks(ind,1) == info.NodeIDs(end)
+                FemmProblem.ArcSegments(ind).n0 = info.NodeIDs(2);
+            elseif seglinks(ind,2) == info.NodeIDs(end)
+                FemmProblem.ArcSegments(ind).n1 = info.NodeIDs(2);
             end
         end
         % remove the unnecessary final 2 nodes
@@ -211,16 +219,16 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
     % Now correct the magnet angles which are specified as numeric values,
     % and therefore represent angles relative to a normal pointing in the
     % direction of the magnet block label
-    for ind = 1:size(magblockinds, 1)
-        if ~isempty(FemmProblem.BlockLabels(magblockinds(ind)).MagDir) ...
-                && isscalar(FemmProblem.BlockLabels(magblockinds(ind)).MagDir) ...
-                && isempty(FemmProblem.BlockLabels(magblockinds(ind)).MagDirFctn)
+    for ind = 1:size(info.MagnetBlockInds, 1)
+        if ~isempty(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir) ...
+                && isscalar(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir) ...
+                && isempty(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDirFctn)
             
-            [maglabeltheta, ~] = cart2pol(FemmProblem.BlockLabels(magblockinds(ind)).Coords(1), ...
-                                    FemmProblem.BlockLabels(magblockinds(ind)).Coords(2));
+            [maglabeltheta, ~] = cart2pol(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).Coords(1), ...
+                                    FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).Coords(2));
                 
-            FemmProblem.BlockLabels(magblockinds(ind)).MagDir = ...
-                FemmProblem.BlockLabels(magblockinds(ind)).MagDir + rad2deg(maglabeltheta);
+            FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir = ...
+                FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir + rad2deg(maglabeltheta);
         
         end
     end
@@ -238,7 +246,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
     
     elcount = elementcount_mfemm(FemmProblem);
     
-    innercentres = zeros(size(wrapperthickness)) * NaN;
+    info.InnerCentres = zeros(size(wrapperthickness)) * NaN;
     
     % wrapperthickness(1,1) is the first inner region thickness
     if wrapperthickness(1,1) > Inputs.Tol
@@ -268,7 +276,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
         
         
         
-        if linktb
+        if info.LinkTopBottom
             lastbotnodeid = elcount.NNodes - size(nodes,1) + 2;
             topnodeid = botnodeid;
             botboundarymarker = '';
@@ -282,29 +290,32 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                 'InGroup', Inputs.WrapperGroup(1,1));
 
             % add a new periodic boundary for the top and bottom of the region
-            [FemmProblem, boundind] = addboundaryprop_mfemm(FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
+            [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
 
-            botboundarymarker = FemmProblem.BoundaryProps(boundind).Name;
+            botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
             
             % Seg with Periodic boundary at top
-            FemmProblem = addsegments_mfemm(FemmProblem, ...
+            [FemmProblem, segind] = addsegments_mfemm(FemmProblem, ...
                                             elcount.NNodes - 2, ...
                                             topnodeid, ...
-                                            'BoundaryMarker', FemmProblem.BoundaryProps(boundind).Name, ...
+                                            'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
                                             'InGroup', Inputs.WrapperGroup(1,1));
+                                        
+            info.TopSegInd = [info.TopSegInd, segind];
                                         
             lastbotnodeid = elcount.NNodes - size(nodes,1);
             
         end
         
         % Seg at bottom
-        FemmProblem = addsegments_mfemm(FemmProblem, ...
+        [FemmProblem, segind] = addsegments_mfemm(FemmProblem, ...
                                         lastbotnodeid, ...
                                         botnodeid, ...
                                         'BoundaryMarker', botboundarymarker, ...
                                         'InGroup', Inputs.WrapperGroup(1,1));
 
-
+        info.BottomSegInd = [info.BottomSegInd, segind];
+        
         % Add a node at the mid-point of the wrapper, the purpose of this
         % is to ensure an arc segmetn is never more than 180 degrees which
         % causes problems
@@ -328,7 +339,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                             rad2deg(thetapole), ...
                                             'InGroup', Inputs.WrapperGroup(1,1) );
                     
-        [innercentres(1,1), innercentres(1,2)] = pol2cart(thetapole, innerrad+wrapperthickness(1,1)/2);
+        [info.InnerCentres(1,1), info.InnerCentres(1,2)] = pol2cart(thetapole, innerrad+wrapperthickness(1,1)/2);
         
     else
         % Set the region thickness to be exactly zero so this can be tested
@@ -357,7 +368,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                 0, ...
                                 'InGroup', Inputs.WrapperGroup(i,1));
    
-            if linktb
+            if info.LinkTopBottom
                 topnodeid = botnodeid;
                 botboundarymarker = '';
             else
@@ -370,26 +381,30 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                     'InGroup', Inputs.WrapperGroup(i,1));
 
                 % add a new periodic boundary for the top and bottom of the region
-                [FemmProblem, boundind] = addboundaryprop_mfemm(FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
+                [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
 
-                botboundarymarker = FemmProblem.BoundaryProps(boundind).Name;
+                botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
                 
                 % Seg with Periodic boundary at top
-                FemmProblem = addsegments_mfemm(FemmProblem, ...
+                [FemmProblem, segind] = addsegments_mfemm(FemmProblem, ...
                                                 lasttopnodeid, ...
                                                 topnodeid, ...
                                                 'BoundaryMarker', botboundarymarker, ...
                                                 'InGroup', Inputs.WrapperGroup(i,1));
+                                            
+                info.TopSegInd = [info.TopSegInd, segind];
 
             end
             
             % Seg at bottom
-            FemmProblem = addsegments_mfemm(FemmProblem, ...
+            [FemmProblem, segind] = addsegments_mfemm(FemmProblem, ...
                                             lastbotnodeid, ...
                                             botnodeid, ...
-                                            'BoundaryMarker', FemmProblem.BoundaryProps(boundind).Name, ...
+                                            'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
                                             'InGroup', Inputs.WrapperGroup(i,1));
 
+            info.BottomSegInd = [info.BottomSegInd, segind];
+            
             % Add a node at the mid-point of the wrapper, the purpose of this
             % is to ensure an arc segmetn is never more than 180 degrees which
             % causes problems
@@ -413,7 +428,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                                 rad2deg(thetapole), ...
                                                 'InGroup', Inputs.WrapperGroup(i,1) );
             
-            [innercentres(i,1), innercentres(i,2)] = pol2cart(thetapole, innerrad+wrapperthickness(i,1)/2);
+            [info.InnerCentres(i,1), info.InnerCentres(i,2)] = pol2cart(thetapole, innerrad+wrapperthickness(i,1)/2);
             
         else
             wrapperthickness(i,1) = 0;
@@ -421,7 +436,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
         
     end
     
-    outercentres = zeros(size(wrapperthickness)) * NaN;
+    info.OuterCentres = zeros(size(wrapperthickness)) * NaN;
     
     % wrapperthickness(1,2) is the first outer region thickness
     if wrapperthickness(1,2) > Inputs.Tol
@@ -435,7 +450,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                      0, ...
                                      'InGroup', Inputs.WrapperGroup(1,2));
 
-        if linktb
+        if info.LinkTopBottom
             lastbotnodeid = elcount.NNodes - size(nodes,1) + 3;
             topnodeid = botnodeid;
             botboundarymarker = '';
@@ -449,27 +464,31 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
 
             % add a new periodic boundary for the top and bottom of the
             % region
-            [FemmProblem, boundind] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
+            [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
 
-            botboundarymarker = FemmProblem.BoundaryProps(boundind).Name;
+            botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
             
             % Seg with Periodic boundary at top
-            FemmProblem = addsegments_mfemm( FemmProblem, ...
+            [FemmProblem, segind] = addsegments_mfemm( FemmProblem, ...
                                              elcount.NNodes - 1, ...
                                              topnodeid, ...
-                                             'BoundaryMarker', FemmProblem.BoundaryProps(boundind).Name, ...
+                                             'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
                                              'InGroup', Inputs.WrapperGroup(1,2) );
+                                         
+            info.TopSegInd = [info.TopSegInd, segind];
         
             lastbotnodeid = elcount.NNodes - size(nodes,1) + 1;
         end
         
         % Seg at bottom
-        FemmProblem = addsegments_mfemm( FemmProblem, ...
+        [FemmProblem, segind] = addsegments_mfemm( FemmProblem, ...
                                          lastbotnodeid, ...
                                          botnodeid, ...
                                          'BoundaryMarker', botboundarymarker, ...
                                          'InGroup', Inputs.WrapperGroup(1,2));
 
+        info.BottomSegInd = [info.BottomSegInd, segind];
+        
         % Add a node at the mid-point of the wrapper, the purpose of this
         % is to ensure an arc segment is never more than 180 degrees which
         % causes problems
@@ -493,7 +512,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                             rad2deg(thetapole), ...
                                             'InGroup', Inputs.WrapperGroup(1,2) );
 
-        [outercentres(1,1), outercentres(1,2)] = pol2cart(thetapole, outerrad-wrapperthickness(1,2)/2);
+        [info.OuterCentres(1,1), info.OuterCentres(1,2)] = pol2cart(thetapole, outerrad-wrapperthickness(1,2)/2);
         
     else
         % Set the region thickness to be exactly zero so this can be tested
@@ -518,7 +537,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                          0, ...
                                          'InGroup', Inputs.WrapperGroup(i,2));
 
-            if linktb
+            if info.LinkTopBottom
                 topnodeid = botnodeid;
                 botboundarymarker = '';
             else
@@ -531,25 +550,30 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
 
                 % add a new periodic boundary for the top and bottom of the
                 % region
-                [FemmProblem, boundind] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
+                [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
 
-                botboundarymarker = FemmProblem.BoundaryProps(boundind).Name;
+                botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
                 
                 % Seg with Periodic boundary at top
-                FemmProblem = addsegments_mfemm( FemmProblem, ...
+                [FemmProblem, segind] = addsegments_mfemm( FemmProblem, ...
                                                  lasttopnodeid, ...
                                                  topnodeid, ...
-                                                 'BoundaryMarker', FemmProblem.BoundaryProps(boundind).Name, ...
+                                                 'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
                                                  'InGroup', Inputs.WrapperGroup(i,2) );
+                                             
+                info.TopSegInd = [info.TopSegInd, segind];
+                
             end
             
             % Seg at bottom
-            FemmProblem = addsegments_mfemm( FemmProblem, ...
+            [FemmProblem, segind] = addsegments_mfemm( FemmProblem, ...
                                              lastbotnodeid, ...
                                              botnodeid, ...
                                              'BoundaryMarker', botboundarymarker, ...
                                              'InGroup', Inputs.WrapperGroup(i,2) );
 
+            info.BottomSegInd = [info.BottomSegInd, segind];
+            
             % Add a node at the mid-point of the wrapper, the purpose of this
             % is to ensure an arc segmetn is never more than 180 degrees which
             % causes problems
@@ -573,7 +597,7 @@ function [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids, li
                                                 rad2deg(thetapole), ...
                                                 'InGroup', Inputs.WrapperGroup(i,2) );
             
-            [outercentres(i,1), outercentres(i,2)] = pol2cart(thetapole, outerrad-wrapperthickness(i,2)/2);
+            [info.OuterCentres(i,1), info.OuterCentres(i,2)] = pol2cart(thetapole, outerrad-wrapperthickness(i,2)/2);
             
         else
             wrapperthickness(i,2) = 0;
