@@ -282,8 +282,8 @@ function lambda = fluxlinkagefrmintAslm (intAslm, coilpitch, pos, nturns, depth,
     skewoffset = linspace (-skew(1)/2, skew(1)/2, skew(2))';
 
     % calculate the flux linkage contributed by each magnet section
-    lambda = periodicslmeval ( bsxfun (@plus, pos+offset, skewoffset), intAslm(slminds(1)), 0, false ) ...
-              - periodicslmeval ( bsxfun (@plus, pos+offset+coilpitch, skewoffset), intAslm(slminds(2)), 0, false );
+    lambda = -periodicslmeval ( bsxfun (@plus, pos+offset, skewoffset), intAslm(slminds(1)), 0, false ) ...
+              + periodicslmeval ( bsxfun (@plus, pos+offset+coilpitch, skewoffset), intAslm(slminds(2)), 0, false );
 
     % calculate the total flux linkage in the coil   
     lambda = nturns * (depth/skew(2)) * sum(lambda,1) / coilarea;
