@@ -16,7 +16,9 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
 
     femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
 
-    if isfield (design, 'FemmDirectFluxLinkage')
+    if isfield (design, 'MagSimFEAPeakFluxLinkagePosition')
+        pos = design.MagSimFEAPeakFluxLinkagePosition*design.thetap;
+    elseif isfield (design, 'FemmDirectFluxLinkage')
         [~,maxflind] = max (abs (design.FemmDirectFluxLinkage));
         pos = (design.feapos(maxflind)+1) * design.thetap + design.FirstSlotCenter;
     else
@@ -30,6 +32,7 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
     
     % Draw the sim at position 0
     design.Validation.FemmSingleFLAltInductance.FemmProblem = slottedfemmprob_radial (design, ...
+                            'NPolePairs', 1, ...
                             'ArmatureType', design.ArmatureType, ...
                             'NWindingLayers', design.CoilLayers, ...
                             'Position', pos, ...
