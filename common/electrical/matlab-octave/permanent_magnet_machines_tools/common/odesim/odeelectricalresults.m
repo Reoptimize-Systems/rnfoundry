@@ -45,6 +45,11 @@ function design = odeelectricalresults(T, Iphase, EMF, design, simoptions)
         design.PowerSystemMean = design.PowerPhaseRMean + design.PowerLoadMean;
         
         design.PowerLoadPeak = max(loadPower);
+        
+        design.PowerFactorEstimate = (design.Phases ...
+                                        .* design.IPhaseRms.^2 ...
+                                        .* (design.PhaseResistance(end)+design.LoadResistance)) ...
+                                      ./ (design.Phases * design.EMFPhaseRms * design.IPhaseRms);
 
 %         
 %         Y = fft(y,251);
