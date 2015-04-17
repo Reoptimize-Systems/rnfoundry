@@ -3,11 +3,11 @@ function cellstrs = design2pydict_RADIAL_SLOTTED (design)
     cellstrs = design2pydict_RADIAL (design);
     
     % create a function for copy-paste convenience
-    spm = @(var, val) sprintf ('structdims["Armature"]["%s"] = %10.8g * 1000', var, val);
-    spa = @(var, val) sprintf ('structdims["Armature"]["%s"] = %10.8g', var, val);
+    spm = @(var, val) sprintf ('structdims["Armature"]["%s"] = %.17e * 1000', var, val);
+    spa = @(var, val) sprintf ('structdims["Armature"]["%s"] = %.17e', var, val);
 
 cellstrs = [cellstrs;
-pytools.trynesteddict('structdims', {'Armature', 'Rai'}, sprintf('%10.8g * 1000', design.Rai)); 
+pytools.trynesteddict('structdims', {'Armature', 'Rai'}, sprintf('%.17e * 1000', design.Rai)); 
 { ...
 spm('Rtsg', design.Rtsg);
 spm('Rci', design.Rci);
