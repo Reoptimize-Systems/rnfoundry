@@ -1,14 +1,14 @@
 function [Def, I, thetaA, MA, RA, yA] = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
-% calulates the deflection of a beam about the x-axis using formulas from
+% calculates the deflection of a beam about the x-axis using formulas from
 % 'Roark's Formulas for stress and strain'
 %
 % Syntax 
 %
-% Def = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
+% Def = roark8.BeamDeflectionX (Ivars, Yvars, E, x, IMethod, beamMethod)
 %
 % Input
 %
-%   Ivars - (n x p) matrix of values necessary for caluculating the
+%   Ivars - (n x p) matrix of values necessary for calculating the
 %     second moment of inertia according to the method described in
 %     'IMethod'. See the appropriate function for details of the required
 %     variables, and exact format of Ivars.
