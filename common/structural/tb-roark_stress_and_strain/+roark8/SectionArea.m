@@ -65,6 +65,10 @@ function A = SectionArea (vars, method)
             % I-Beam
             A = Table1r6Area(vars);
 
+        case {'A1.8', 'UnequalAngle', 'LProfile'}
+            % Unequal-Legged Angle (L profile)
+            A = roark.Sections.Areas.UnequalLegAngle (vars);
+            
         case {'A1.15', 'SolidCircle', 'Circle'}
             % Solid Circle
             A = Table1r14Area(vars);

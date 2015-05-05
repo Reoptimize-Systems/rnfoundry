@@ -87,7 +87,7 @@ function I = MomentOfInertiaX(IVars, IMethod)
 
             % use polygeom to calculate the area properties
             for ind = 1:size(IVars, 3)
-                thisvars = vars ( (~isnan (vars(:,1,ind)) & ~isnan (vars(:,1,ind))),:,ind);
+                thisvars = IVars ( (~isnan (IVars(:,1,ind)) & ~isnan (IVars(:,1,ind))),:,ind);
                 [ ~, INER, ~ ] = polygeom( thisvars(:,1), thisvars(:,2) );
                 I(ind,1) = INER(4);
             end
