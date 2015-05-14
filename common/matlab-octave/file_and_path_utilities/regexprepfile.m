@@ -94,12 +94,11 @@ function regexprepfile(filename,exp,repstr)
                     newtline = regexprep(tline, exp{ii}, repstr{ii});
                 end
                 
+                % print the new line to the file (may be unchanged)
+                fprintf(tempfid, '%s', newtline);
+                
                 if ~strcmp (tline, newtline)
-                
-                    fprintf(tempfid, '%s', newtline);
-                
                     changecount = changecount + 1;
-                    
                 end
                 
             else

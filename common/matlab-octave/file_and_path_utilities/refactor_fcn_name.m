@@ -1,4 +1,4 @@
-function refactor_fcn_name(fcnname, newfcnname, topdir, domove)
+function refactor_fcn_name(fcnname, newfcnname, topdir, domove, stripvc)
 % refactor the name of a function, changing all references to the function
 % name in the path and moving the function file to the new named file
 %
@@ -77,9 +77,27 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove)
         domove = true;
     end
     
+    if nargin < 5
+        stripvc = true;
+    end
+    
+    if stripvc
+        rminds = [];
+        vclist = {'.svn', '.hg', '.git', '.cvs'};
+        for indi = 1:numel(thepath)
+            for indii = 1:numel(vclist)
+                if ~isempty ( strfind (thepath{indi}, vclist{indii}) )
+                    rminds = [rminds, indi];
+                    break;
+                end
+            end
+        end
+        thepath(rminds) = [];
+    end
+    
     for indi = 1:numel(thepath)
 
-        mfiles = dir([ thepath{indi}, '\*.m' ]);
+        mfiles = dir(fullfile (thepath{indi}, '*.m'));
 
         for indii = 1:numel(mfiles)
             % replace string in file using regexprepfile, with a regex
