@@ -47,7 +47,7 @@ function I = MomentOfInertiaX(IVars, IMethod)
 % Output:
 %
 %   I - (n x 1) column vector of values of I, the second moment of area of 
-%     the cross-section about the x axis, calulated according to 'IMethod'
+%     the cross-section about the x axis, calculated according to 'IMethod'
 %
 %
 % See also: roark8.MomentOfInertiaY

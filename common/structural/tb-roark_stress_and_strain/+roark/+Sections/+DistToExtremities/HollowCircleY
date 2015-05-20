@@ -1,0 +1,18 @@
+function y_c = HollowCircleY (vars)
+% Calculates the maximum distance from the neutral axis to the extremities,
+% as calculated in 'Roark's Formulas Stress & Strain'
+%
+% Input: 
+%   
+%   IVars - (n x 2) matrix, the first column contains values of R, the
+%   outer radius, the second contains values of Ri, the inner radius.
+%
+% Output:
+%
+%   I - (n x 1) column vector of values of I, the moment of inertia for a
+%   beam with hollow circular cross-section
+%
+
+    y_c = vars (:,1);
+    
+end
