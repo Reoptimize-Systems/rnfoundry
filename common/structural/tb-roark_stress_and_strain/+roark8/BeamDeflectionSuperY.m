@@ -1,4 +1,4 @@
-function Def = BeamDeflectionSuperY(Yvars, Ivars, E, x, IMethod, beamMethod)
+function Def = BeamDeflectionSuperY (Yvars, Ivars, E, x, IMethod, beamMethod)
 % Calculates the deflection of a beam in the Y axis using the superposition
 % of two or more load cases
 %
@@ -74,12 +74,12 @@ function Def = BeamDeflectionSuperY(Yvars, Ivars, E, x, IMethod, beamMethod)
         
         Def = zeros (size (x));
         for i = 1:length(beamMethod)
-            Def = Def + roark8.BeamDeflectionY (Ivars, Yvars{i,1}(1,:), E, x, IMethod, beamMethod{i});
+            Def = Def + roark8.BeamDeflectionSuperY (Ivars, Yvars{i}, E, x, IMethod, beamMethod{i});
         end
 
     elseif ischar(beamMethod)
 
-        Def = sum(roark8.BeamDeflectionY (Ivars, Yvars, E, x, IMethod, beamMethod),1);
+        Def = sum (roark8.BeamDeflectionY (Ivars, Yvars, E, x, IMethod, beamMethod),1);
 
     else  
         error('beamMethod must be either a single string or cell array of strings of the same size as Yvars')
