@@ -16,7 +16,7 @@ function [ geom, iner, cpmo ] = polygeom( x, y )
 %         at angles ang1,ang2.
 %     ang1 and ang2 are in radians.
 %     J is centroidal polar moment.  J = I1 + I2 = Iuu + Ivv
-
+%
 % H.J. Sommer III - 02.05.14 - tested under MATLAB v5.2
 %
 % sample data
