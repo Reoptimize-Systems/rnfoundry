@@ -24,11 +24,10 @@ function M = GenericMomentConcntdLoad(MA, RA, W, x, a)
 %
 %   M - moment 
 %
-    if x < a
-        stepfun = 0;
-    else
-        stepfun = (x-a);
-    end
+    stepfun = zeros (size(x));
+    
+    stepfun(x>=a) = x(x>=a) - a(x>=a);
     
     M = MA + RA .* x - W .* stepfun;
+    
 end
