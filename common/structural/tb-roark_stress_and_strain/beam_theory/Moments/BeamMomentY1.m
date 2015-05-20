@@ -57,7 +57,7 @@ function Mom = BeamMomentY1(Ivars, Yvars, E, x, IMethod, beamMethod)
 %             % Left end fixed, right end fixed, externally created angular
 %             % displacement
 %             Mom = Table3r4dMom(Yvars, E, I, x);
-            
+
         case '10.2e'
             % Left end Simply Supported, right end simply supported,
             % distributed force and axial load
