@@ -45,7 +45,7 @@ function Mom = BeamMomentX (Yvars, x, beamMethod, Ivars, IMethod, E)
     switch beamMethod
 
         case {'8.1.1a', 'LURFP', 'lurfp'}
-            % Left end free, right end fixed,
+            % Left end free (unsupported), right end fixed,
             % point load
             Mom = roark.Beams.ConcLoad.LURF.BendingMoment (Yvars, x);
             
