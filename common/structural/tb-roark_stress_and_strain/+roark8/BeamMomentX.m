@@ -43,7 +43,12 @@ function Mom = BeamMomentX (Yvars, x, beamMethod, Ivars, IMethod, E)
 %
 
     switch beamMethod
-        
+
+        case {'8.1.1a', 'LURFP', 'lurfp'}
+            % Left end free, right end fixed,
+            % point load
+            Mom = roark.Beams.ConcLoad.LURF.BendingMoment (Yvars, x);
+            
         case {'8.1.1e', 'LSRSP', 'lsrsp'}
             % R6 T3.1e
             % Left end Simply Supported, right end simply supported,
@@ -63,6 +68,11 @@ function Mom = BeamMomentX (Yvars, x, beamMethod, Ivars, IMethod, E)
             I = roark8.MomentOfInertiaX (Ivars, IMethod);
             
             Mom = Table10r2eMom (Yvars, E, I, x);
+            
+        case {'8.1.3a', 'LURFM', 'lurfm'}
+            % Left end free, right end fixed,
+            % applied moment
+            Mom = roark.Beams.ConcMoment.LURF.BendingMoment (Yvars, x);
             
         otherwise
             

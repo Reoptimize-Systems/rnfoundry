@@ -1,4 +1,4 @@
-function I = MomentOfInertiaX(IVars, IMethod)
+function I = MomentOfInertiaX (IVars, IMethod)
 % calculates the second moment of inertia of a beam about the x axis.
 %
 % Syntax
@@ -69,7 +69,7 @@ function I = MomentOfInertiaX(IVars, IMethod)
 
         case {'A1.15', 'SolidCircle', 'Circle'}
             % Solid Circle
-            I = Table1r14I_1(IVars);
+            I = roark.Sections.MomentOfInertia.SolidCircleX (IVars);
 
         case {'A1.16', 'Annulus'}
             % Hollow Circle

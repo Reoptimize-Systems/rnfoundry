@@ -33,9 +33,9 @@ function Mom = BendingMoment (Yvars, x)
     % Calculate the bending moment at A
     MA = roark.Beams.ConcLoad.LGRS.MA (W, l, a);
     
-    Mom = zeros (size (MA,1), length (x));
+    Mom = zeros (size (Yvars,1), length (x));
     
-    for j = 1:size (MA,1)
+    for j = 1:size (Yvars,1)
         for i = 1:length (x)  
             % Calculate the resulting moment in each case using the
             % common formula

@@ -1,4 +1,4 @@
-function [Def, I, thetaA, MA, RA, yA] = BeamDeflectionX(Ivars, Yvars, E, x, IMethod, beamMethod)
+function [Def, I, thetaA, MA, RA, yA] = BeamDeflectionX (Ivars, Yvars, E, x, IMethod, beamMethod)
 % calculates the deflection of a beam about the x-axis using formulas from
 % 'Roark's Formulas for stress and strain'
 %
@@ -65,6 +65,11 @@ function [Def, I, thetaA, MA, RA, yA] = BeamDeflectionX(Ivars, Yvars, E, x, IMet
     
     switch beamMethod
         
+        case {'8.1.1a', 'LURFP', 'lurfp'}
+            % Left end Simply Supported, right end simply supported,
+            % point load
+            Def = roark.Beams.ConcLoad.LURF.Deflection (Yvars, E, I, x);
+            
         case {'8.1.1d', 'LFRFP', 'lfrfp'}
             % R6 T3.1d
             % Left end fixed, right end fixed, point load
@@ -96,7 +101,12 @@ function [Def, I, thetaA, MA, RA, yA] = BeamDeflectionX(Ivars, Yvars, E, x, IMet
             % R6 T3.2e
             % Left end Simply Supported, right end simply supported,
             % distributed force
-            [Def, thetaA, MA, RA, yA] = Table3r2eDef (Yvars, E, I, x);
+            [Def, thetaA, MA, RA, yA] = roark.Beams.DistribLoad.LSRS.Deflection (Yvars, E, I, x);
+            
+        case {'8.1.3a', 'LURFM', 'lurfm'}
+
+            % Left end free, right end fixed, distributed force
+            [Def, thetaA, MA, RA, yA] = roark.Beams.ConcMoment.LURF.Deflection (Yvars, E, I, x);            
             
         case {'8.1.4d', 'LFRFA', 'lfrfa'}
             % R6 T3.4d
