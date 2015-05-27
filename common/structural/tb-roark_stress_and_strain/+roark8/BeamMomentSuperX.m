@@ -1,4 +1,4 @@
-function Mom = BeamMomentSuperX (Yvars, x, beamMethod, Ivars, IMethod, E)
+function Mom = BeamMomentSuperX (Yvars, x, beamMethod, varargin)
 % calculates the moments in a beam using the superposition of two or more
 % loads
 %
@@ -35,6 +35,8 @@ function Mom = BeamMomentSuperX (Yvars, x, beamMethod, Ivars, IMethod, E)
 %     evaluating the parameters in Yvars. These will correspond to the
 %     appropriate table in Roark's Formulas for Stress & Strain.
 %
+% Some cases require additional arguments:
+%
 %   Ivars - An (1 x p) row vector of values necessary for calculating the
 %     second moment of inertia according to the method described in
 %     'IMethod'. See the appropriate function for details of the required
@@ -57,12 +59,12 @@ function Mom = BeamMomentSuperX (Yvars, x, beamMethod, Ivars, IMethod, E)
 
         Mom = zeros (size (x));
         for i = 1:length(beamMethod)
-            Mom = Mom + roark8.BeamMomentSuperX (Yvars{i}, x, beamMethod{i}, Ivars, IMethod, E);
+            Mom = Mom + roark8.BeamMomentSuperX (Yvars{i}, x, beamMethod{i}, varargin{:});
         end
 
     elseif ischar(beamMethod)
 
-        Mom = sum (roark8.BeamMomentX (Yvars, x, beamMethod, Ivars, IMethod, E),1);
+        Mom = sum (roark8.BeamMomentX (Yvars, x, beamMethod, varargin{:}),1);
 
     else
         error('beamMethod must be either a single string or cell array of strings of the same size as Yvars')

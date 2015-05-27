@@ -1,15 +1,13 @@
-function [Def, thetaA, MA, RA, yA] = Table3r2eDef (Yvars, E, I, x)
-% function: Table3r2eDef
-% 
+function [Def, thetaA, MA, RA, yA] = Deflection (Yvars, E, I, x)
 % Calculates the deflection of a beam with its left end simply supported
 % and its right end simply supported, undergoing a linearly distributed
-% load, as calculated in 'Roark's Formulas Stress & Strain 6th edition' in
-% table 3, page 104 row 2e.
+% load, as calculated in 'Roark's Formulas Stress & Strain'.
 %
 % Input: 
 %   
 %   Yvars - (n x 1) column vector of values of R, the radius of the
-%          circular cross-section:
+%     circular cross-section:
+%
 %          Yvars(:,1) - wa, unit load at 'a'
 %          Yvars(:,2) - wl, unit load at M_B, the end of the beam
 %          Yvars(:,3) - l, length of the beam
@@ -24,7 +22,7 @@ function [Def, thetaA, MA, RA, yA] = Table3r2eDef (Yvars, E, I, x)
 % Output:
 %
 %   Def - (n x 1) column vector of values of the deflection at the
-%   corresponding x position
+%     corresponding x position
 %
     if size (Yvars,2) > 4
         error ('Yvars has too many columns, Yvars must be a (n x 4) matrix')
@@ -52,7 +50,7 @@ function [Def, thetaA, MA, RA, yA] = Table3r2eDef (Yvars, E, I, x)
             % Calculate the resulting deflection in each case using the
             % generic formula with MA = 0 (for simply supported) and yA =
             % zero (no initial deflection)
-            Def(j,i) = GenericYDefDistribLoad (thetaA(j,1), 0, RA(j,1), wa(j,1), wl(j,1), x(i), l(j), a(j), 0, E, I);
+            Def(j,i) = roark.Beams.DistribLoad.Deflection (thetaA(j,1), 0, RA(j,1), wa(j,1), wl(j,1), x(i), l(j), a(j), 0, E, I);
         end
     end
     

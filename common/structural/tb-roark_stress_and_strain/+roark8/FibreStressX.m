@@ -45,9 +45,9 @@ function sigma = FibreStressX (Ivars, Yvars, x, IMethod, beamMethod, E)
         Mom = roark8.BeamMomentSuperX (Yvars, x, beamMethod, Ivars, IMethod, E);
     end
     
-    I = roark8.MomentOfInertiaX (IVars, IMethod);
+    I = roark8.MomentOfInertiaX (Ivars, IMethod);
     
-    y_c = roark8.DistanceToExtremetiesX (IVars, IMethod);
+    y_c = roark8.DistanceToExtremetiesX (Ivars, IMethod);
     
     sigma = -Mom .* y_c ./ I;
     

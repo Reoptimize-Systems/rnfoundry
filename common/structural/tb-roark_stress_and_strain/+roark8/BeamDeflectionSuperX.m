@@ -1,4 +1,4 @@
-function Def = BeamDeflectionSuperX (Yvars, Ivars, E, x, IMethod, beamMethod)
+function Def = BeamDeflectionSuperX (Ivars, Yvars, E, x, IMethod, beamMethod)
 % Calculates the deflection of a beam in the X axis using the superposition
 % of two or more load cases
 %
@@ -70,7 +70,7 @@ function Def = BeamDeflectionSuperX (Yvars, Ivars, E, x, IMethod, beamMethod)
 %     'IMethod' and 'beamMethod'.
 %    
 
-    if iscellstr(beamMethod) && size(Yvars, 1) == numel(beamMethod)
+    if iscellstr(beamMethod) && numel(Yvars) == numel(beamMethod)
         
         Def = zeros (size (x));
         for i = 1:numel(beamMethod)

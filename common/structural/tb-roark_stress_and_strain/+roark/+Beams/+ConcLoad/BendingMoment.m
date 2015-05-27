@@ -1,4 +1,4 @@
-function M = ConcentratedLoad (MA, RA, W, x, a)
+function M = BendingMoment (MA, RA, W, x, a)
 % Calculates the moments in a beam with a concentrated intermediate loading
 % using the generic deflection formula for concentrated loads described in
 % 'Roark's Formulas Stress & Strain'. You are required to supply

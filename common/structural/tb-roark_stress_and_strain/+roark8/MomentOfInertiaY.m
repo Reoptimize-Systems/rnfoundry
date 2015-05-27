@@ -1,4 +1,4 @@
-function I = MomentOfInertiaY(IVars, IMethod)
+function I = MomentOfInertiaY (IVars, IMethod)
 % calcualtes the second moment of inertia of a section about the Y axis.
 %
 % Syntax
@@ -57,7 +57,7 @@ function I = MomentOfInertiaY(IVars, IMethod)
 
         case {'A1.15', 'SolidCircle'}
             % Solid Circle: same as I_1
-            I = Table1r14I_2(IVars);
+            I = roark.Sections.MomentOfInertia.SolidCircleY (IVars);
 
         case {'A1.16', 'Annulus'}
             % Hollow Circle: same as I_1
