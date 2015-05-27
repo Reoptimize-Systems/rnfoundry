@@ -463,7 +463,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     
     % get more force points if requested
     pos = linspace (0, 0.9*design.g, simoptions.NForcePoints-1);
-    pos(end) = 0.95*design.g;
+    pos(end+1) = 0.95*design.g;
     
     if simoptions.GetVariableGapForce
         design.gforce = [0, closingforce_RADIAL_SLOTTED(design, pos)];
