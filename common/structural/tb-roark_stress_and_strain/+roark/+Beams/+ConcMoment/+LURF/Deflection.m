@@ -6,21 +6,22 @@ function [Def, thetaA, MA, RA, yA] = Deflection (Yvars, E, I, x)
 % Input: 
 %   
 %   Yvars - (n x 1) column vector of values of R, the radius of the
-%          circular cross-section:
-%          Yvars(:,1) - M0, unit load at 'a'
+%     circular cross-section:
+%          Yvars(:,1) - M0, applied moment at point 'a'
 %          Yvars(:,2) - l, length of the beam
-%          Yvars(:,3) - a, distance from M_A at which 'wa' is applied 
+%          Yvars(:,3) - a, distance from M_A at which 'M0' is applied 
 %
 %   E - Young's modulus of the beam material
 %
 %   I - second moment of inertia of the beam cross-section
 %
-%   x - row vector of position values at which the deflection is to be calculated 
+%   x - row vector of position values at which the deflection is to be
+%     calculated
 %
 % Output:
 %
 %   Def - (n x 1) column vector of values of the deflection at the
-%   corresponding x position
+%     corresponding x position
 %
     if size (Yvars,2) > 4
         error ('Yvars has too many columns, Yvars must be a (n x 4) matrix')

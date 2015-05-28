@@ -1,27 +1,26 @@
 function M = BendingMoment (MA, RA, M0, x, a)
 % Calculates the moments in a beam with an applied concentrated
-% intermediate moment using the generic deflection formula for concentrated
-% loads described in 'Roark's Formulas Stress & Strain'. You are required
-% to supply information such as the reaction force and moments etc. See
-% Roark for a full description of the inputs below.
+% intermediate moment using the generic described in 'Roark's Formulas
+% Stress & Strain'. You are required to supply information such as the
+% reaction force and moments etc. See Roark for a full description of the
+% inputs below.
 %
 % Input: 
 %   
-%   MA - applied couple (moment) at point A
+%   MA - applied couple (moment) at end A
 %
-%   RA - Reaction force at point A
+%   RA - Reaction force at end A
 %
 %   M0 - Applied moment at 'a'
 %
-%   x - matrix of position values at which the deflection is to be calculated 
+%   x - matrix of position values at which the deflection is to be
+%     calculated
 %
-%   l - length of the beam
-%
-%   a - distance from M_A at which 'W' is applied 
+%   a - distance from M_A at which 'M0' is applied 
 %
 % Output:
 %
-%   M - moment 
+%   M - moment at each point in x
 %
 
     stepfun = zeros (size (x));

@@ -1,8 +1,7 @@
 function yDef = Deflection (thetaA, MA, RA, W, x, a, yA, E, I)
-% GenericYDefConcntdLoad: Calculates the deflection of a beam with some
-% concentrated loading using the generic deflection formula for distributed
-% loads described in Table 3, row header row 1 on page 100 in 'Roark's
-% Formulas Stress & Strain 6th edition'. You are required to supply
+% Calculates the deflection of a beam with some concentrated loading using
+% the generic deflection formula for distributed loads described in
+% 'Roark's Formulas Stress & Strain'. You are required to supply
 % information such as the reaction force and moments etc. See Roark for a
 % full description of the inputs below.
 %
@@ -18,8 +17,6 @@ function yDef = Deflection (thetaA, MA, RA, W, x, a, yA, E, I)
 %   W - Load at 'a'
 %
 %   x - matrix of position values at which the deflection is to be calculated 
-%
-%   l - length of the beam
 %
 %   a - distance from M_A at which 'wa' is applied 
 %
@@ -40,7 +37,8 @@ function yDef = Deflection (thetaA, MA, RA, W, x, a, yA, E, I)
     end
     
     yDef = yA + (thetaA .* x)...
-        + ((MA*(x^2))./(2*E*I))...
-        + (RA .* (x.^3) ./ (6.*E.*I))...
-        - (stepfun.*W./(6.*E.*I));
+        + ( MA .* realpow (x,2) ./ (2.*E.*I) )...
+        + ( RA .* realpow (x,3) ./ (6.*E.*I) )...
+        - ( stepfun .* W ./ (6.*E.*I) );
+    
 end
