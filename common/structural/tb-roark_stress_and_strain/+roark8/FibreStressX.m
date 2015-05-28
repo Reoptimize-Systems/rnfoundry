@@ -24,18 +24,19 @@ function sigma = FibreStressX (Ivars, Yvars, x, IMethod, beamMethod, E)
 %   beamMethod - string describing the method by which the beam deflection
 %     is to be calculated. These should correspond to the appropriate table
 %     in Roark's Formulas for Stress & Strain.
-%
+% 
 %   IMethod - string describing the method by which the second moment of
 %     inertia is to be calculated. These should correspond to the
 %     appropriate table in Roark's Formulas for Stress & Strain. Only
 %     required for some cases.
 %
-%   E - Young's modulus of the beam material, only required in some cases
+%   E - (optional) Young's modulus of the beam material, only required in
+%    some cases (e.g. combined axail and lateral loading of columns)
 %
 % Output
 %
 %   sigma - (n x 1) column vector of values of the maximum fibre stress in
-%     a beam, at the positions specified in 'x', calulated according to
+%     a beam, at the positions specified in 'x', calculated according to
 %     'IMethod' and 'beamMethod'.
 %
 
@@ -47,6 +48,8 @@ function sigma = FibreStressX (Ivars, Yvars, x, IMethod, beamMethod, E)
     
     I = roark8.MomentOfInertiaX (Ivars, IMethod);
     
+    % get the largest distance from the centriod to the extremeties of the
+    % section in the y direction
     y_c = roark8.DistanceToExtremetiesX (Ivars, IMethod);
     
     sigma = -Mom .* y_c ./ I;
