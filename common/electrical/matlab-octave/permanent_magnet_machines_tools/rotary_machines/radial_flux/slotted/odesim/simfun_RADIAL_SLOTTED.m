@@ -355,12 +355,13 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                     solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
                                                  design.FemmProblem.Groups.BackIron ]);
                     
-                    design.gforce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-                                          gvector);
-                                    
-                    design.gvar = design.g;
+%                     design.gforce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+%                                           gvector);
+%                                     
+%                     design.gvar = design.g;
                     
-                    design.PerPoleAirGapClosingForce = design.gforce;
+                    design.PerPoleAirGapClosingForce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+                                                            gvector);
                     
                     % get the cross-sectional area of the armature iron for
                     % calcuation of material masses later
