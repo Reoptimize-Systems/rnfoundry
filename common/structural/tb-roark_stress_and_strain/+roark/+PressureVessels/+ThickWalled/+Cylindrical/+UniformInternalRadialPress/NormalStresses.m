@@ -1,4 +1,4 @@
-function sigma = UniformInternalPress (vars)
+function sigma = NormalStresses (vars)
 % Calculates normal stresses in the longitudinal, circumferential and
 % radial directions for a thick walled cylinder with a a uniform internal
 % pressure in all directions, for a disk or a shell. This function is based
