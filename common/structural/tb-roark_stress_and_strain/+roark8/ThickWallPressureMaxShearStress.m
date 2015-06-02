@@ -26,9 +26,9 @@ function sigma = ThickWallPressureMaxShearStress (vars, method)
         case {'13.5.1.1a', 'UniformInternalRadialPress'}
             % Uniform internal radial pressure q, longitudinal pressure
             % zero or externally balanced; for a disk or a shell
-            sigma = roark.PressureVessels.ThickWalled.Cylindrical.MaxStresses.UniformInternalRadialPress (vars);
+            sigma = roark.PressureVessels.ThickWalled.Cylindrical.UniformInternalRadialPress.MaxShearStress (vars);
             
-        case {'13.5.1.1c'}
+        case {'13.5.1.1c', 'UniformExternalPressLongZero'}
             % Uniform external pressure, zero or externally balanced
             % longitudinal pressure
             sigma = Table32r1cMaxShearStress(vars);

@@ -1,5 +1,5 @@
 function sigma = ThickWallPressureStresses (vars, method)
-% Calculating the dnormal stresses in a thick walled pressure vessel.
+% Calculating the normal stresses in a thick walled pressure vessel.
 %
 % Input:
 %
@@ -17,20 +17,20 @@ function sigma = ThickWallPressureStresses (vars, method)
 %     respectively.
 %
     switch method
-        case {'13.5.1.1a', 'UniformInternalPress'}
+        case {'13.5.1.1a', 'UniformInternalRadialPress'}
             % Uniform internal radial pressure q, longitudinal pressure
             % zero or externally balanced; for a disk or a shell
-            sigma = roark.PressureVessels.ThickWalled.Cylindrical.Stresses.UniformInternalPress (vars);
+            sigma = roark.PressureVessels.ThickWalled.Cylindrical.UniformInternalRadialPress.NormalStresses (vars);
         
-        case {'13.5.1.1b', 'UniformInternalPressEndsCapped'}
+        case {'13.5.1.1b', 'UniformInternalRadialPressEndsCapped'}
             % Uniform internal radial pressure q in all directions, ends
             % capped, for a disk or shell
-            sigma = roark.PressureVessels.ThickWalled.Cylindrical.Stresses.UniformInternalPressEndsCapped (vars);
+            sigma = roark.PressureVessels.ThickWalled.Cylindrical.UniformInternalRadialPressEndsCapped.NormalStresses (vars);
         
         case {'13.5.1.1c', 'UniformExternalPressLongZero'}
             % Uniform external radial pressure q, longitudinal pressure
             % zero or externally balanced; for a disk or a shell
-            sigma = roark.PressureVessels.ThickWalled.Cylindrical.Stresses.UniformExternalPressLongZero (vars);
+            sigma = roark.PressureVessels.ThickWalled.Cylindrical.UniformExternalPressLongZero.NormalStresses (vars);
         
         case {'13.5.1.1e'}
             % Uniform radial body force from delta
