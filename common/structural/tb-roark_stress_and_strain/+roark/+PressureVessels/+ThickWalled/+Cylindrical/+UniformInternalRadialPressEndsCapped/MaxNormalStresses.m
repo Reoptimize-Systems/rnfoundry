@@ -1,4 +1,4 @@
-function sigma = NormalStresses (vars)
+function sigma = MaxNormalStresses (vars)
 % Calculates normal stresses in the longitudinal, circumferential and
 % radial directions for a thick walled cylinder with a a uniform internal
 % pressure in all directions with the ends capped for a disk or a shell.
@@ -31,7 +31,8 @@ function sigma = NormalStresses (vars)
         q = vars(:,1);
         a = vars(:,2);
         b = vars(:,3);
-        r = vars(:,4);
+        
+        r = b;
         
         % Sigma_1 the longitudinal normal stresses
         sigma = zeros (size(vars,1),3); % q .* b.^2 ./ (a.^2 - b.^2);

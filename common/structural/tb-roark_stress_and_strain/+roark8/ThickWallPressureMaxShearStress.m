@@ -7,10 +7,10 @@ function sigma = ThickWallPressureMaxShearStress (vars, method)
 %
 % Input:
 %
-%   vars - (n x p) column vector of values necessary for caluculating the
+%   vars - (n x p) column vector of values necessary for calculating the
 %     stresses according to the method described in 'method'
 %
-%   method - string describing the method by which the pressure is to be
+%   method - string describing the method by which the stress is to be
 %     calculated. These should correspond to the appropriate table in
 %     Roark's Formulas for Stress & Strain.
 % 
@@ -44,7 +44,11 @@ function sigma = ThickWallPressureMaxShearStress (vars, method)
             
         otherwise
             
-            feval(method, vars);
+            if isa (method, 'function_handle') || (ischar (method) && exist (method, 'file'))
+                feval(method, vars);
+            else
+                error ('method not recognised, may not yet be implemented');
+            end
             
     end
     
