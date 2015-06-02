@@ -1,4 +1,4 @@
-function sigma = ThickWallPressureStresses (vars, method)
+function sigma = ThickWallPressureNormalStresses (vars, method)
 % Calculating the normal stresses in a thick walled pressure vessel.
 %
 % Input:
