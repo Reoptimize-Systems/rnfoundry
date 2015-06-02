@@ -532,7 +532,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                                design.yd * design.thetas * design.Rcm, ...
                                mean (design.thetac) * design.Rcm );
 
-    design.CoilResistance = 1.7e-8 * design.CoilTurns * design.MTL ./ (pi * (design.Dc/2)^2);
+    design.CoilResistance = wireresistancedc ('round', design.Dc, design.MTL*design.CoilTurns);
     
 end
 
