@@ -58,23 +58,27 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     
     simoptions = setfieldifabsent(simoptions, 'basescorefcn', 'costscore_AM');
 
-    if max(design.psilookup(1,:)) - min(design.psilookup(1,:)) <= 1
-        % psilookup is provided over one pole, replicate the data to cover
-        % two Poles
-        flpos = [design.psilookup(1,:), design.psilookup(1,end) + design.psilookup(1,2:end)];  
-        fl = [ design.psilookup(2,:), fliplr(design.psilookup(2,1:end-1))];
+    if ~isfield (design, 'slm_fluxlinkage')
         
-    else
-        flpos = design.psilookup(1,:);  
-        fl = design.psilookup(2,:);
-    end
+        if max(design.psilookup(1,:)) - min(design.psilookup(1,:)) <= 1
+            % psilookup is provided over one pole, replicate the data to cover
+            % two Poles
+            flpos = [design.psilookup(1,:), design.psilookup(1,end) + design.psilookup(1,2:end)];  
+            fl = [ design.psilookup(2,:), fliplr(design.psilookup(2,1:end-1))];
 
-    % fit a periodic slm to the flux linkage against the normalised
-    % positions
-    design.slm_fluxlinkage = slmengine(flpos, fl, ...
-            'EndCon', 'periodic', ...
-            'knots', max(50, min(20, ceil(numel(design.psilookup)/1.5))), ...
-            'Plot', 'off');
+        else
+            flpos = design.psilookup(1,:);  
+            fl = design.psilookup(2,:);
+        end
+
+        % fit a periodic slm to the flux linkage against the normalised
+        % positions
+        design.slm_fluxlinkage = slmengine(flpos, fl, ...
+                'EndCon', 'periodic', ...
+                'knots', max(50, min(20, ceil(numel(design.psilookup)/1.5))), ...
+                'Plot', 'off');
+            
+    end
     
     % calculate the percentage total harmonic distortion in the voltage
     % waveform produced
@@ -117,7 +121,7 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     % that a larger sim already has some tolerances specified in this field
     % which is used in simulatemachine_AM to set the absolute tolerances of
     % the ODE solver
-    simoptions.abstol = [simoptions.abstol, repmat(minIofinterest, 1, design.Phases)];
+    simoptions.abstol = [simoptions.abstol(:).', repmat(minIofinterest, 1, design.Phases)];
     
     % run a function to display the machine design if it is supplied
     if isfield(simoptions, 'DisplayDesignFcn')
