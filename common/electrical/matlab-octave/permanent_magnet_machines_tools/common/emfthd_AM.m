@@ -33,6 +33,14 @@ function THD = emfthd_AM(slm_fluxlinkage)
     % get the voltage waveform at the sample points
     normdphidx = periodicslmeval(x, slm_fluxlinkage, 1);
     
-    THD = 100 * (10^( thd (normdphidx, Fs, 10)/20 ));
+    Nharmonics = 10;
+    
+    if isoctave ()
+        [~, ~, ~, ~, THDdb] = prettyFFT(normdphidx,Fs,Nharmonics,true,true);
+    else
+        THDdb = thd (normdphidx, Fs, Nharmonics);
+    end
+    
+    THD = 100 * (10^( THDdb/20 ));
 
 end
