@@ -462,16 +462,18 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 
     end % ~SkipMainFEA
     
-    % get more force points if requested
-    pos = linspace (0, 0.9*design.g, simoptions.NForcePoints-1);
-    pos(end+1) = 0.95*design.g;
-    
+
     if simoptions.GetVariableGapForce
+        % get more force points if requested
+        pos = linspace (0, 0.9*design.g, simoptions.NForcePoints-1);
+        pos(end+1) = 0.95*design.g;
+    
         design.gforce = [0, closingforce_RADIAL_SLOTTED(design, pos)];
-    else
-        design.gforce = [0, zeros(1, numel (pos))];
+%     else
+%         design.gforce = [0, zeros(1, numel (pos))];
+        design.gvar = [0, pos];
     end
-    design.gvar = [0, pos];
+%     design.gvar = [0, pos];
     
     % make sure the winding properties (number of turns etc.) are up to date
     if rmcoilturns
