@@ -1,7 +1,12 @@
 function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
 % calculates various machine properties using an alternative method to
 % validate the results of 
-    
+%
+% Syntax
+%
+% design = validatedesign_RADIAL_SLOTTED(design, simoptions)
+%
+% 
 
     fprintf (1, [textwrap2(['Beginning validation of radial flux slotted ' ...
                  'permanent magnet machine design. Currently only tooth-wound ' ...
