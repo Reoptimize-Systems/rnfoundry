@@ -52,7 +52,7 @@ function rnfoundry_setup (varargin)
     end
     
     if Inputs.ForceMexLseiSetup || (exist ('mexlsei', 'file') ~= 3)
-        mexlsei_setup ( Inputs.ForceMesLseiF2cLibRecompile, ...
+        mexlsei_setup ( Inputs.ForceMexLseiF2cLibRecompile, ...
                         Inputs.ForceMexLseiCFileCreation );
     end
     
