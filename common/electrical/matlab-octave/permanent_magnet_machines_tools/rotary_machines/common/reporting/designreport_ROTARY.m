@@ -91,7 +91,7 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, vararg
         'Max Cogging Torque (Nm)', maxcoggingtq;
         'Max Cogging Force at air gap (N)', maxcoggingf;
         'Max Estimated Electrical Frequency (Hz)', FrequencyPeak;
-        'Air Gap Closing Force Per Pole (N)', gforce;
+        'Air Gap Closing Force Per Pole (N)', design.PerPoleAirGapClosingForce;
     };
 
     % generate the LaTex table of the outputs
