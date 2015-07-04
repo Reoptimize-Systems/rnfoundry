@@ -10,6 +10,10 @@ function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
 
     simoptions = setfieldifabsent (simoptions, 'evaloptions', ...
                                     designandevaloptions_RADIAL_SLOTTED() );
+                                
+	% sort the intA data in ascending position order
+    [design.intAdata.slotPos, idx] = sort (design.intAdata.slotPos);
+    design.intAdata.slotIntA = design.intAdata.slotIntA(idx,:,:);
     
     % get the unique slot positions in case some are duplicated, this is
     % required as interp1 is used on this data later, and it requires
