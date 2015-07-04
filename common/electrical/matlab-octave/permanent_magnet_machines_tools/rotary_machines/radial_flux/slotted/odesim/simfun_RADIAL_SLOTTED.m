@@ -322,7 +322,11 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                 % get the peak flux density in the armature back iron along
                 % center line of a tooth
                 NBpnts = 100;
-                [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Rai, design.Ryo, NBpnts));
+                if strcmpi (design.ArmatureType, 'external')
+                    [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Rai, design.Ryo, NBpnts));
+                elseif strcmpi (design.ArmatureType, 'internal')
+                    [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Ryi, design.Rao, NBpnts));
+                end
                 Bmag = magn (solution.getb (x, y));
                 
                 design.ArmatureToothFluxDensity(i) = max (Bmag);
@@ -653,6 +657,8 @@ function design = slotintAdata (design, simoptions, feapos, solution)
                     design.coillabellocs((1:2:(size(design.coillabellocs,1)))+1,1)];
               
         for i = 1:size (slotypos,1)
+            
+            solution.smoothon ()
 
             if exist ('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
                 % vector potential in slot on left hand side outer
@@ -693,9 +699,9 @@ function design = slotintAdata (design, simoptions, feapos, solution)
     design.intAdata.slotPos = [design.intAdata.slotPos; 
                               (-thetaslotypos./design.thetap) + design.FirstSlotCenter + feapos];
     
-    % sort the data in ascending position order
-    [design.intAdata.slotPos, idx] = sort (design.intAdata.slotPos);
-    design.intAdata.slotIntA = design.intAdata.slotIntA(idx,:,:);
+%     % sort the data in ascending position order
+%     [design.intAdata.slotPos, idx] = sort (design.intAdata.slotPos);
+%     design.intAdata.slotIntA = design.intAdata.slotIntA(idx,:,:);
     
 end
 
