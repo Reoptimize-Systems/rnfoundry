@@ -40,7 +40,7 @@ function Mom = BendingMoment (Yvars, x)
         for i = 1:length (x)  
             % Calculate the resulting moment in each case using the
             % generic formula
-            Mom(j,i) = roark.Beams.ConcLoad.BendingMoment (MA(j), RA(j), W(j), x(i), a(j));
+            Mom(j,i) = roark.Beams.ConcLoad.BendingMoment (MA, RA(j), W(j), x(i), a(j));
         end
     end
     
