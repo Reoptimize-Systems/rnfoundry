@@ -463,7 +463,7 @@ function [FemmProblem, info] = slottedcommonfemmprob_radial(FemmProblem, design,
 
             if ii <= numel (circnums)
 
-                docircname(ii,:) = [1, zeros(1, Inputs.NWindingLayers-1)];
+                docircname(ii,:) = [1, -ones(1, Inputs.NWindingLayers-1)];
 
             end
 
@@ -564,7 +564,7 @@ function [FemmProblem, info] = slottedcommonfemmprob_radial(FemmProblem, design,
                                                    coilBlockProps );
             end
             
-            coilBlockProps.Turns = abs(coilBlockProps.Turns);
+            coilBlockProps.Turns = abs(design.CoilTurns);
             coilBlockProps.InCircuit = '';
 
             row = row + 1;
