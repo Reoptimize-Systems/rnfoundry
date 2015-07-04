@@ -44,7 +44,7 @@ function reportstrs = designreport_RADIAL(design, simoptions, reportstrs, vararg
         '$R_{mm}$', 'Mean magnet radius. (mm)', design.Rmm*1000;
         '$R_{bi}$', 'Inner field back iron radius. (mm)', design.Rbi*1000;
         '$R_{bo}$', 'Outer field back iron radius. (mm)', design.Rbo*1000;
-        'g', 'Air gap (mm)', design.g * 1000;
+        '$g$', 'Air gap (mm)', design.g * 1000;
         '$t_m$',    'Magnet thickness in radial direction. (mm)', design.tm*1000;
         '$t_{bi}$', 'Back Iron thickness in radial direction. (mm)', design.tbi*1000;
         '$\theta_{p}$', 'Pole pitch angle. (rad)', design.thetap;
