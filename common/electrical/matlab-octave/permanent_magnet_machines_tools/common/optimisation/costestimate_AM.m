@@ -75,8 +75,8 @@ function design = costestimate_AM(design, simoptions)
     end
     
     if isfield(design, 'StructMaterialMass')
-        design.StructureCost = design.StructMaterialMass * simoptions.evaloptions.StructMaterialCost;
-        design.CostEstimate = design.CostEstimate + design.StructureCost;
+        design.StructuralCost = design.StructMaterialMass * simoptions.evaloptions.StructMaterialCost;
+        design.CostEstimate = design.CostEstimate + design.StructuralCost;
     end
 
     if isfield(design, 'FieldIronMass')
