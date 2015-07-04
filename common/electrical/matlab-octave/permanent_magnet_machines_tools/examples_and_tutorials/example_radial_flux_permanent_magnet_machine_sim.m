@@ -65,9 +65,9 @@
 % confuse us, i.e. any existing design and simoptions structure
 clear design simoptions
 
-% we will design a 12-pole machine, so it will have 12 magnets, and 6
+% we will design a 4-pole machine, so it will have 4 magnets, and 2
 % pole-pairs
-design.Poles = 12;
+design.Poles = 4;
 % Choose the number of Phases, the conventional 3
 design.Phases = 3;
 % The desired number of layers is stored in 'CoilLayers'
@@ -80,7 +80,9 @@ design.CoilLayers = 2;
 % below. To simplify things we will use one coil per pole and phase, but
 % many other ratios are possible, see the help for "fr" (run "help fr" at
 % the command prompt) for more information on using fractions objects
-design.qc = fr(1,1);
+design.qc = fr(36,design.Poles*design.Phases);
+% Specify the coil slot pitch in radians
+design.yd = 4;
 % We must also specify a fill factor for the coils, this is the wire fill
 % factor acheived
 design.CoilFillFactor = 0.6;
@@ -89,7 +91,7 @@ design.CoilFillFactor = 0.6;
 % calculated, and vice-versa. The wire diameter is specified in the field
 % "Dc" and the number of turns in the field "CoilTurns". In this case we
 % will specify the number of turns
-design.CoilTurns = 500;
+design.CoilTurns = 200;
 % The number of series coils, or parallel branches of coils in a phase is
 % controlled with the fields 'CoilsPerBranch' or 'Branches'. We must set
 % one or both of these fields. Here we will use all coils in series by
@@ -110,48 +112,50 @@ design.Branches = 1;
 % for plotting/viewing later.
 
 % The outer radius of the rotor back iron
-design.Rbo = 0.5;
+design.Ryo = 95e-3;
 % The height of the magnets in the radial direction
-design.tm = 0.005;
+design.tm = 6.3e-3;
 % The thickness of the rotor back iron
-design.tbi = 0.01;
+design.tbi = 29.9523e-3;
 % The thickness of the stator yoke (the part which the slots sit on)
-design.ty = 0.015;
+design.ty = 17.4e-3;
 % The radial height of a slot opening
-design.tc = 0.03;
+design.tc = 16.4960e-003;
+design.tc(2) = 2.1995e-003;
 % The height of the slot shoe at the point it joins the slot wall
-design.tsb = 0.01;
+design.tsb = 2.604e-3;
 % The height of the slot shoe at the point it joins the slot wall
-design.tsg = 0.003; 
+design.tsg = 1.7364e-3;
 % The radial air gap length between rotor and stator
-design.g = 3/1000;
+design.g = 2e-3;
 % magnet pitch in radians
-design.thetam = (2*pi / design.Poles) * 0.8;
+design.thetam = (tau / design.Poles) * 0.667;
 % coil slot opening pitch in radians ( space a coil has to fit in a slot )
 % at the slot end closest to the air gap
-design.thetacg = (2*pi / design.Poles / design.Phases) * 0.7;
+design.thetacg = 84.7661e-003;
 % coil slot opening pitch in radians ( space a coil has to fit in a slot )
 % at the slot end closest to the armeture yoke
-design.thetacy = (2*pi / design.Poles / design.Phases) * 0.8;
+design.thetacy = 93.0181e-003;
 % the pitch in radians of gap between the shoes that partially cover the
 % slot openings
-design.thetasg = design.thetacg * 0.8;
+design.thetasg = 38.6622e-003;
 % stack length of the machine, the depth along the cylindrical axis of the
 % machine
-design.ls = 0.6;
+design.ls = 88.9e-3;
 
 % next we tell the simulation what type of stator/rotor arrangement we
 % have. There are two options at the moment, either a stator on the inside
-% "facing" outwards, i.e. with the slots pointing outwards and with a rotor
+% (internal), i.e. with the slots pointing outwards and with a rotor
 % on the outside, or we can have the opposite arrangement with an internal
-% rotor and internally facing stator. 
-design.ArmatureType = 'internal';
+% rotor and internally facing stator (external). 
+design.ArmatureType = 'external';
+design.MagnetPolarisation = 'radial';
 
 % We must also specify some materials in the machine, these can either be
 % names of materials already existing in the materials library, or
 % materials structures in the same format as those in the materials library
 design.MagFEASimMaterials.AirGap = 'Air';
-design.MagFEASimMaterials.Magnet = 'NdFeB 32 MGOe';
+design.MagFEASimMaterials.Magnet = 'NdFeB 40 MGOe';
 design.MagFEASimMaterials.FieldBackIron = '1117 Steel';
 design.MagFEASimMaterials.ArmatureYoke = design.MagFEASimMaterials.FieldBackIron;
 design.MagFEASimMaterials.ArmatureCoil = '36 AWG';
@@ -201,19 +205,15 @@ simoptions.GetVariableGapForce = false;
 % density in the slots at multiple positions.
 
 figure;
-[AX,H1,H2] = plotyy( design.intAdata.slotPos, design.intAdata.slotIntA(:,1), ... 
+[AX,H1,H2] = plotyy( design.intAdata.slotPos, design.intAdata.slotIntA(:,1) * 1e6, ... 
                      design.intBdata.slotPos, design.intBdata.slotIntB(:,1) );
 set(H1,'LineStyle','none');
 set(H2,'LineStyle','none');
 set(H1,'Marker','x');
 set(H2,'Marker','x');
-set(H1,'Color','r')
-set(H2,'Color','b')
 xlabel('Slot Position', 'fontsize', 14);
-set(get(AX(1),'Ylabel'),'String','Vector Potential Integral') 
-set(get(AX(2),'Ylabel'),'String','Flux Density Integral') 
-set(get(AX(1),'Ylabel'), 'fontsize', 14);
-set(get(AX(2),'Ylabel'), 'fontsize', 14);
+ylabel(AX(1),'Vector Potential Integral', 'fontsize', 14) 
+ylabel(AX(2),'Flux Density Integral', 'fontsize', 14) 
 
 % By convention the postprocessing functions begin with "finfun_" and the
 % postprocessing function for the slotted radial flux machine is named
@@ -307,14 +307,14 @@ plotfemmproblem(design.FemmProblem);
 % existing simoptions structure
 %
 % The simulation we set up is a fixed speed simulation at 15 rad/s from t =
-% 0 to 10 seconds. There are many other simulation types that can be set up
+% 0 to 1 seconds. There are many other simulation types that can be set up
 % using simsetup_ROTARY, see the help for this function for more examples.
 %
 % Note the second and third arguments for simsetup_ROTARY are empty here,
 % more on these later.
 simoptions = simsetup_ROTARY( design, [], [], ...
-                              'Rpm', 25, ...
-                              'TSpan', [0 120], ...
+                              'Rpm', 1800, ...
+                              'TSpan', [0 1.0], ...
                               'RampPoles', 20, ...
                               'simoptions', simoptions );
 
