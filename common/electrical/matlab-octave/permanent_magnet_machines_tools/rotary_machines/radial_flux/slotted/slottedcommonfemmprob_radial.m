@@ -398,95 +398,95 @@ function [FemmProblem, info] = slottedcommonfemmprob_radial(FemmProblem, design,
 
     % add block labels for the coils
     row = 1;
-
-    % create an array to hold the coil information for every slot in the
-    % drawing
-    circnums = zeros(design.Qcb*(3-design.CoilLayers), 1);
-    % enumerate the machine phases
-    temp = (1:design.Phases)';
-
-    if design.yd == 1
-        % short pitched (concentrated) winding, adjacent slots hold the
-        % same winding
-        for ii = 1:2:numel(circnums)
-            % go through every slot in the drawing getting the phase lying
-            % in that slot
-            circnums(ii) = temp(1);
-
-            if  ii < numel (circnums)
-                % for a slot pitch of 1, the neighbouring slot will have
-                % the other side of the phase in it
-                circnums(ii+1) = temp(1);
-            end
-            % rotate the phase list to get to the next one
-            temp = circshift (temp, [1, 0]);
-
-        end
-
-    else
-        % otherwise next slot contains the next phase, and so on in
-        % sequence
-        for ii = 1:numel(circnums)
-
-            circnums(ii) = temp(1);
-
-            temp = circshift(temp, [1,0]);
-
-        end
-
-    end
-
-    % create a matrix to hold the information for all layers
-    docircname = zeros(numel(circnums), Inputs.NWindingLayers);
-
-    if design.yd == 1
-
-        for ii = 1:2:size (docircname,1)
-
-            if ii <= numel(circnums)
-
-                docircname(ii,:) = [1, zeros(1, Inputs.NWindingLayers-1)];
-
-            end
-
-            if ii+design.yd <= numel (circnums)
-
-                docircname(ii+design.yd,:) = [zeros(1, Inputs.NWindingLayers-1), -1];
-
-            end
-
-        end
-
-    else
-
-        for ii = 1:size (docircname,1)
-
-            if ii <= numel (circnums)
-
-                docircname(ii,:) = [1, -ones(1, Inputs.NWindingLayers-1)];
-
-            end
-
-            if ii+design.yd <= numel (circnums)
-
-                docircname(ii+design.yd,:) = [zeros(1, Inputs.NWindingLayers-1), -1];
-
-            end
-
-        end
-
-    end
-    
-    % rotate the specification to the desired starting point
-    docircname = circshift (docircname, [-(Inputs.StartSlot-1), 0]);
-    circnums = circshift (circnums, [-(Inputs.StartSlot-1), 0]);
-
-%         circslotcount = 1;
-
-%         slotnums = (1:Inputs.NSlots)';
-%         nextlayer = 1;
-%         layers = (1:Inputs.NWindingLayers)';
-
+% 
+%     % create an array to hold the coil information for every slot in the
+%     % drawing
+%     circnums = zeros(design.Qcb*(3-design.CoilLayers), 1);
+%     % enumerate the machine phases
+%     temp = (1:design.Phases)';
+% 
+%     if design.yd == 1
+%         % short pitched (concentrated) winding, adjacent slots hold the
+%         % same winding
+%         for ii = 1:2:numel(circnums)
+%             % go through every slot in the drawing getting the phase lying
+%             % in that slot
+%             circnums(ii) = temp(1);
+% 
+%             if  ii < numel (circnums)
+%                 % for a slot pitch of 1, the neighbouring slot will have
+%                 % the other side of the phase in it
+%                 circnums(ii+1) = temp(1);
+%             end
+%             % rotate the phase list to get to the next one
+%             temp = circshift (temp, [1, 0]);
+% 
+%         end
+% 
+%     else
+%         % otherwise next slot contains the next phase, and so on in
+%         % sequence
+%         for ii = 1:numel(circnums)
+% 
+%             circnums(ii) = temp(1);
+% 
+%             temp = circshift(temp, [1,0]);
+% 
+%         end
+% 
+%     end
+% 
+%     % create a matrix to hold the information for all layers
+%     docircname = zeros(numel(circnums), Inputs.NWindingLayers);
+% 
+%     if design.yd == 1
+% 
+%         for ii = 1:2:size (docircname,1)
+% 
+%             if ii <= numel(circnums)
+% 
+%                 docircname(ii,:) = [1, zeros(1, Inputs.NWindingLayers-1)];
+% 
+%             end
+% 
+%             if ii+design.yd <= numel (circnums)
+% 
+%                 docircname(ii+design.yd,:) = [zeros(1, Inputs.NWindingLayers-1), -1];
+% 
+%             end
+% 
+%         end
+% 
+%     else
+% 
+%         for ii = 1:size (docircname,1)
+% 
+%             if ii <= numel (circnums)
+% 
+%                 docircname(ii,:) = [1, -ones(1, Inputs.NWindingLayers-1)];
+% 
+%             end
+% 
+%             if ii+design.yd <= numel (circnums)
+% 
+%                 docircname(ii+design.yd,:) = [zeros(1, Inputs.NWindingLayers-1), -1];
+% 
+%             end
+% 
+%         end
+% 
+%     end
+%     
+%     % rotate the specification to the desired starting point
+%     docircname = circshift (docircname, [-(Inputs.StartSlot-1), 0]);
+%     circnums = circshift (circnums, [-(Inputs.StartSlot-1), 0]);
+% 
+% %         circslotcount = 1;
+% 
+% %         slotnums = (1:Inputs.NSlots)';
+% %         nextlayer = 1;
+% %         layers = (1:Inputs.NWindingLayers)';
+% 
 
     
     if Inputs.DrawCoilInsulation
@@ -534,45 +534,48 @@ function [FemmProblem, info] = slottedcommonfemmprob_radial(FemmProblem, design,
     end
     
 
-    for k = 1:Inputs.NSlots
+    for slotn = 1:Inputs.NSlots
 
-        for n = 1:Inputs.NWindingLayers
+        for layern = 1:Inputs.NWindingLayers
 
-            if Inputs.AddAllCoilsToCircuits || (k <= 2*design.Phases && docircname(k,n) ~= 0)
+%             if Inputs.AddAllCoilsToCircuits || (k <= 2*design.Phases && docircname(k,n) ~= 0)
+% 
+%                 % only put the circuit in the first set of phase coils
+%                 coilBlockProps.InCircuit = num2str(circnums(1));
+%                 coilBlockProps.Turns = coilBlockProps.Turns * docircname(1,n);
+% 
+%             else
+% 
+%                 % only put the circuit in the first set of phase coils
+%                 coilBlockProps.InCircuit = '';
+% 
+%             end 
 
-                % only put the circuit in the first set of phase coils
-                coilBlockProps.InCircuit = num2str(circnums(1));
-                coilBlockProps.Turns = coilBlockProps.Turns * docircname(1,n);
-
-            else
-
-                % only put the circuit in the first set of phase coils
-                coilBlockProps.InCircuit = '';
-
-            end 
-
+            coilBlockProps.InCircuit = num2str(abs(design.WindingLayout.Phases(slotn,layern)));
+            coilBlockProps.Turns = design.CoilTurns * sign (design.WindingLayout.Phases(slotn,layern));
+            
             FemmProblem = addblocklabel_mfemm( FemmProblem, ...
                                                coillabellocs(row,1), ...
                                                coillabellocs(row,2), ...
                                                coilBlockProps);
 
 %                 row = row + 1;
-            if row+(Inputs.NSlots*Inputs.NWindingLayers) <= size(coillabellocs,1)
-                FemmProblem = addblocklabel_mfemm( FemmProblem, ...
-                                                   coillabellocs(row+(Inputs.NSlots*Inputs.NWindingLayers),1), ...
-                                                   coillabellocs(row,2), ...
-                                                   coilBlockProps );
-            end
-            
-            coilBlockProps.Turns = abs(design.CoilTurns);
-            coilBlockProps.InCircuit = '';
-
+%             if row+(Inputs.NSlots*Inputs.NWindingLayers) <= size(coillabellocs,1)
+%                 FemmProblem = addblocklabel_mfemm( FemmProblem, ...
+%                                                    coillabellocs(row+(Inputs.NSlots*Inputs.NWindingLayers),1), ...
+%                                                    coillabellocs(row,2), ...
+%                                                    coilBlockProps );
+%             end
+%             
+%             coilBlockProps.Turns = abs(design.CoilTurns);
+%             coilBlockProps.InCircuit = '';
+% 
             row = row + 1;
 
         end
-        
-        docircname = circshift (docircname, [-1, 0]);
-        circnums = circshift (circnums, [-1, 0]);
+%         
+%         docircname = circshift (docircname, [-1, 0]);
+%         circnums = circshift (circnums, [-1, 0]);
 
 %             nextlayer = circshift(layers, -1);
 
