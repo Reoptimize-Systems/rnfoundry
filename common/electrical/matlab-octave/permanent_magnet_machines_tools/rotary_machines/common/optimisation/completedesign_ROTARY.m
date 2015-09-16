@@ -143,11 +143,15 @@ function design = completedesign_ROTARY(design, simoptions)
     % determine the total number of slots in the machine
     if design.CoilLayers == 2
         design.Qs = design.Qc;
+        [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles, 0);
     elseif design.CoilLayers == 1
         design.Qs = 2 * design.Qc;
+        [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles, 1);
     else
         error('Only coils with one or two layers are implemented.')
     end
+    
+    design.WindingLayout = struct ('Coils', coillayout, 'Phases', phaselayout);
         
     % get the numerator and denominator of qc
     [design.qcn,design.qcd] = rat(design.qc);
@@ -179,5 +183,144 @@ function design = completedesign_ROTARY(design, simoptions)
     end
     
 end
+
+
+% function [star, angle, layout] = starofslots3ph (Q, t, p, yq)
+% 
+%     alpha_se = 2 * pi / Q * p;  % Slot electrical angle
+%     alpha_ph = 2 * pi / Q * t;  % Angle between two adiacent phasor (or star spoke)
+% 
+%     % fractpart = modf (param , &intpart);
+%     epsilon = 0;
+%     if ( Q/(6*t) == (Q+0.0)/(6*t)) % shift of the angle if there is overlapping with the sector
+%         epsilon = - alpha_ph / 4;
+%     end
+% 
+%     % First an array with all the angle and the sequence of label is create.
+%     %  Then the angle are sorted in order to achieve the correct sequence of spoke labels.
+%     %  At the same time, also the array of label are sorted.
+%     %  initialise matrices to hold winding info
+%     star = (1:Q)';
+%     angle = nan * ones (Q,1);
+%     for ind = 1:Q         
+%         % Create the array of phasor angles
+%         angle(ind) = alpha_se * (ind-1)+epsilon;
+%     end
+% 
+%     % Put all the angles in the rang [0 2*pi]
+%     for ind = 1:Q          
+%         while (angle(ind) >= 2 * pi) 
+%             angle(ind) = angle(ind) - 2 * pi;
+%         end
+%         
+%         if abs(angle(ind)-2*pi) < 0.001
+%             % makes 0 the angle ~ 2pi
+%             angle(ind) = 0; 
+%         end
+%     end
+% 
+%     swap_angle = 0;
+%     swap_star = 0;
+%     for indi = 1:Q          % < Sorting of the arrays
+%         for indii = indi:Q
+%             if (angle(indii) < angle(indi))
+%                 
+%                 swap_angle = angle(indi);
+%                 angle(indi) = angle(indii);
+%                 angle(indii) = swap_angle;
+%                 
+%                 swap_star = star(indi);
+%                 star(indi) = star(indii);
+%                 star(indii) = swap_star;
+%                 
+%             end
+%         end
+%     end
+%     layout = slot_matrix (star, angle);
+% end
+
+
+% function layout = slot_matrix (Q, star, angle)
+% 
+% % %  Clean up of the previous data
+% %     layout.mat_A.clear();
+% %     layout.mat_B.clear();
+% %     layout.mat_C.clear();
+% %     layout.coils_A.clear();
+% %     layout.coils_B.clear();
+% %     layout.coils_C.clear();
+% % 
+% %     %  slot matrix initialization
+% %     for(int i=0; i<Q; ++i)
+% % 
+% %         layout.mat_A.push_back(0); % both the layer
+% %         layout.mat_B.push_back(0);
+% %         layout.mat_C.push_back(0);
+% %     end
+%     
+%     layout.mat_A = zeros (Q,1);
+%     layout.mat_B = layout.mat_A;
+%     layout.mat_C = layout.mat_A;
+% 
+% 
+% %  Subdivision of the star in the six sector
+% %  and coil arrays population
+%     cos_30 = cos(pi/6);
+%     layout.coils_A = [];
+%     layout.coils_B = [];
+%     layout.coils_C = [];
+%     
+%     for ind = 1:Q
+% 
+%         index = star(ind) + yq;
+%         
+%         if (index > Q)
+%             index = index - Q;
+%         end
+% 
+%         if (cos(angle(ind)) > cos_30)
+%             layout.coils_A(end+1,1:5) = [star(ind),index,1,1,1];   % A+
+%         end
+%         
+%         if (cos(angle(ind)) < -cos_30)
+%             layout.coils_A(end+1,1:5) = [index,star(ind),1,1,-1];   % A-
+%         end
+%         
+%         if ( (cos(angle(ind)) < 0) && (sin(angle(ind)) > 0.5) )
+%             layout.coils_B(end+1,1:5) = [star(ind),index,1,1,1];   % B+
+%         end
+%         
+%         if ( (cos(angle(ind)) > 0) && (sin(angle(ind)) <-0.5) )
+%             layout.coils_B(end+1,1:5) = [index,star(ind),1,1,-1];   % B-
+%         end
+%         
+%         if ( (cos(angle(ind)) < 0) && (sin(angle(ind)) <-0.5) )
+%             layout.coils_C(end+1,1:5) = [star(ind),index,1,1,1];   % C+
+%         end
+%         
+%         if ( (cos(angle(ind)) > 0) && (sin(angle(ind)) > 0.5) )
+%             layout.coils_C(end+1,1:5) = [index,star(ind),1,1,-1];   % C-
+%         end
+% 
+%     end
+% 
+% %  Slot matrix computation
+%     % coil_3ph (int start, int end, int n, int id_wire, int _sec ) {
+%     for ind = 1:size(layout.coils_A,1)
+%         layout.mat_A(layout.coils_A(ind,1)) = layout.mat_A(layout.coils_A(ind,1)) + 0.5;% layout.coils_A(ind).nc;
+%         layout.mat_A(layout.coils_A(ind,2)) = layout.mat_A(layout.coils_A(ind,2)) - 0.5;% layout.coils_A(ind).nc;
+%     end
+% 
+%     for ind = 1:size(layout.coils_B,1)
+%         layout.mat_B(layout.coils_B(ind,1)) = layout.mat_B(layout.coils_B(ind,1)) + 0.5;% layout.coils_A(ind).nc;
+%         layout.mat_B(layout.coils_B(ind,2)) = layout.mat_B(layout.coils_B(ind,2)) - 0.5;% layout.coils_A(ind).nc;
+%     end
+% 
+%     for ind = 1:size(layout.coils_C,1)
+%         layout.mat_C(layout.coils_C(ind,1)) = layout.mat_C(layout.coils_C(ind,1)) + 0.5;% layout.coils_A(ind).nc;
+%         layout.mat_C(layout.coils_C(ind,2)) = layout.mat_C(layout.coils_C(ind,2)) - 0.5;% layout.coils_A(ind).nc;
+%     end
+% 
+% end
 
 
