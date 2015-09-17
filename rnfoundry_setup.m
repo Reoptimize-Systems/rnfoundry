@@ -25,9 +25,9 @@ function rnfoundry_setup (varargin)
     % xfemm related
     Inputs.PreventXFemmCheck = false;
     if ispc
-        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Beta_1.0/xfemm_mingw_win64.zip/download';
+        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.5/xfemm_v1_5_mingw_win64.zip/download';
     elseif isunix
-        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Beta_1.0/xfemm_linux64.tar.gz/download';
+        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.5/xfemm_v1_5_linux64.tar.gz/download';
     else
         Inputs.XFemmDownloadSource = '';
     end
@@ -62,6 +62,11 @@ function rnfoundry_setup (varargin)
     
     if Inputs.ForceMexPPValSetup || (exist ('mexppval', 'file') ~= 3)
         mexppval_setup();
+    end
+    
+    if Inputs.ForceMexPPValSetup || (exist ('mexmPhaseWL', 'file') ~= 3)
+        mmake ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+        mmake ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
     end
     
     % check for the existence of xfemm package
