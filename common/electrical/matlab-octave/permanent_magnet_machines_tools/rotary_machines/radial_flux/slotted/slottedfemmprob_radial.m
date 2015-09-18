@@ -92,7 +92,7 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
     Inputs.DrawingType = '2PoleMagnetRotation';
     Inputs.BoundaryPositions = 1;
     Inputs.ArmatureType = 'external';
-    Inputs.NWindingLayers = 1;
+    Inputs.NWindingLayers = nan;
     Inputs.CoilCurrent = zeros (1,design.Phases);
     Inputs.MagArrangement = 'NN';
     Inputs.PolarisationType = 'constant';
@@ -143,6 +143,15 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
     Inputs.NSlots = Inputs.NPolePairs*2*design.Qs/design.Poles;
     
     Inputs = parse_pv_pairs (Inputs, varargin);
+    
+    if isnan(Inputs.NWindingLayers)
+        if isfield (design, 'CoilLayers')
+            Inputs.NWindingLayers = design.CoilLayers;
+        else
+            Inputs.NWindingLayers = 1;
+            warning ('Number of winding layers not specified, using 1.');
+        end
+    end
     
     FemmProblem = Inputs.FemmProblem;
     
