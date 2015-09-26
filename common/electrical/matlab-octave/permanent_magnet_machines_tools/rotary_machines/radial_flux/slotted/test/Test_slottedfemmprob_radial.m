@@ -18,8 +18,8 @@ design.MagFEASimMaterials.CoilInsulation = 'Air';
                              'ArmatureType', design.ArmatureType, ...
                              'DrawCoilInsulation', true );
 
-
-openprobleminfemm_mfemm (FemmProblem);
+plotfemmproblem (FemmProblem);
+% openprobleminfemm_mfemm (FemmProblem);
 
 %%
 

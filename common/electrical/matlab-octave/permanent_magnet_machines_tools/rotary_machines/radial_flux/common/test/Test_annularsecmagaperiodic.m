@@ -70,15 +70,25 @@ thetamag = thetapole * 0.8;
 rmag = 0.02;
 roffset = 0.5;
 
-[FemmProblem, nodes, nodeids, links] = annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos);
+[FemmProblem, nodes, links, info] = annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos);
 
-% plotnodelinks(nodes, links)
+plotfemmproblem (FemmProblem);
 
-filename = 'test.fem';
+%%
+FemmProblem = newproblem_mfemm('planar');
 
-writefemmfile(filename, FemmProblem)
+%   Materials
+Matlib = parsematlib_mfemm(fullfile(fileparts(which('mfemm_parsematlib.m')), 'matlib.dat'));
 
-openfemm;
+FemmProblem.Materials = Matlib([1, 47, 2]);
 
-opendocument(fullfile(pwd, filename))
+thetapole = 2*pi / 20; 
+thetamag = thetapole * 0.8;
+rmag = 0.02;
+roffset = 0.5;
 
+[FemmProblem, nodes, links, info] = annularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, ...
+    'NPolePairs', 2, 'MagnetMaterial', 3);
+
+plotfemmproblem (FemmProblem);
+% openprobleminfemm_mfemm (FemmProblem)

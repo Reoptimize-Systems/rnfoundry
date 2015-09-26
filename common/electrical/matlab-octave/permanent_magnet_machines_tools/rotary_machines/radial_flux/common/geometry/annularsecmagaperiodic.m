@@ -128,8 +128,17 @@ function [FemmProblem, nodes, links, info] = ...
     Inputs.Tol = 1e-5;
     Inputs.MeshSize = -1;
     Inputs.BoundName = '';
+    Inputs.NPolePairs = 1;
 
     Inputs = parse_pv_pairs (Inputs, varargin);
+    
+    if numel(Inputs.MagDirections) ~= 2*Inputs.NPolePairs
+        if numel (Inputs.MagDirections) == 2
+            Inputs.MagDirections = repmat (Inputs.MagDirections, 1, Inputs.NPolePairs);
+        else
+            error ('The number of magnet directions supplied is not appropriate');
+        end
+    end
     
     if isnumeric (Inputs.MagDirections) && isvector (Inputs.MagDirections)
         Inputs.MagDirections = {Inputs.MagDirections(1), Inputs.MagDirections(2)};
@@ -152,8 +161,11 @@ function [FemmProblem, nodes, links, info] = ...
     % first in a linear fashoin which we will manipulate into the real
     % arced shape by modifying the node locations
     [nodes, ~, links, rectcentres, spacecentres] ...
-        = rectregionsyperiodic (rmag, thetamag, (thetapole-thetamag), roffset, pos, Inputs.Tol, elcount.NNodes);
-
+        = rectregionsyperiodic (rmag, thetamag, (thetapole-thetamag), roffset, pos, ...
+                                'Tol', Inputs.Tol, ...
+                                'NodeCount', elcount.NNodes, ...
+                                'NY1Pairs', Inputs.NPolePairs);
+    
     % get the vertical links by finding those links where the difference in
     % y coordinates of the link nodes is not zero, these links must be made
     % into arc segments
@@ -197,7 +209,7 @@ function [FemmProblem, nodes, links, info] = ...
         'InGroup', Inputs.MagnetGroup);
 
     % Periodic boundary at top
-    [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, links(end,1), links(end,2), ...
+    [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, horizlinks(end,1), horizlinks(end,2), ...
         'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds).Name, ...
         'InGroup', Inputs.MagnetGroup);
     
