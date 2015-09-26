@@ -20,9 +20,11 @@ FemmProblem = radialfluxrotor2dfemmprob(thetapole, thetamag, rmag, rbackiron, dr
                                         'FemmProblem', FemmProblem, ...
                                         'MagArrangement', 'NS', ...
                                         'MagnetMaterial', 3, ...;
-                                        'BackIronMaterial', 2);
+                                        'BackIronMaterial', 2, ...
+                                        'NPolePairs', 3);
 
 
-openprobleminfemm_mfemm(FemmProblem);
+plotfemmproblem (FemmProblem)
+% openprobleminfemm_mfemm(FemmProblem);
 
 

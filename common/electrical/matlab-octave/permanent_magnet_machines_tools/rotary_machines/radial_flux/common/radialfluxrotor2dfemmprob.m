@@ -2,6 +2,8 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
 % adds the outermost rotor parts of a radial flux machine to a FemmProblem
 % Structure
 
+    Inputs.DrawingType = 'MagnetRotation';
+    Inputs.NPolePairs = 1;
     Inputs.MagArrangement = 'NS';
     Inputs.PolarisationType = 'constant';
     Inputs.FemmProblem = newproblem_mfemm('planar');
@@ -148,7 +150,7 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
     % Add a proscribed A boundary we will use for the outer regions
     % boundary types
     [FemmProblem, boundind] = addboundaryprop_mfemm(FemmProblem, 'Outer Boundary Pros A', 0, 'A0', 0);
-
+            
     linktb1 = false;
     linktb2 = false;
     info.NodeIDs1 = [];
@@ -176,6 +178,7 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
                               nan, Inputs.OuterRegionGroup(1); 
                               nan, Inputs.OuterRegionGroup(1) ];
         end
+        
 
         % draw the outer rotor parts
         [FemmProblem, ~, rotorinfo1] ...
@@ -189,7 +192,9 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
                                                   'MagnetGroup', Inputs.MagnetGroup(1), ...
                                                   'WrapperGroup', wrappergroups, ...
                                                   'Tol', Inputs.Tol, ...
-                                                  'MeshSize', Inputs.MagnetRegionMeshSize );
+                                                  'MeshSize', Inputs.MagnetRegionMeshSize, ...
+                                                  'NPolePairs', Inputs.NPolePairs);
+
 
         info.NodeIDs1 = rotorinfo1.NodeIDs;
         info.MagnetBlockInds1 = rotorinfo1.MagnetBlockInds;
@@ -230,7 +235,8 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
                                                   'MagnetGroup', Inputs.MagnetGroup(2), ...
                                                   'WrapperGroup', wrappergroups, ...
                                                   'Tol', Inputs.Tol, ...
-                                                  'MeshSize', Inputs.MagnetRegionMeshSize);
+                                                  'MeshSize', Inputs.MagnetRegionMeshSize, ...
+                                                  'NPolePairs', Inputs.NPolePairs);
 
         info.NodeIDs2 = rotorinfo2.NodeIDs;
         info.MagnetBlockInds2 = rotorinfo2.MagnetBlockInds;
@@ -252,7 +258,7 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
     if ~isempty(Inputs.BackIronMaterial)
         
         if drawnrotors(1)
-            [x,y] = pol2cart(thetapole, roffset(1) + rmag/2 + rbackiron/2);
+            [x,y] = pol2cart(Inputs.NPolePairs*thetapole, roffset(1) + rmag/2 + rbackiron/2);
             [FemmProblem, info.outerblockinds(end+1)] = addblocklabel_mfemm(FemmProblem, x, y, ...
                                                         'BlockType', FemmProblem.Materials(Inputs.BackIronMaterial).Name, ...
                                                         'MaxArea', Inputs.BackIronRegionMeshSize, ...
@@ -260,7 +266,7 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
         end
                                                 
         if drawnrotors(2)
-            [x,y] = pol2cart(thetapole, roffset(2) - rmag/2 - rbackiron/2);
+            [x,y] = pol2cart(Inputs.NPolePairs*thetapole, roffset(2) - rmag/2 - rbackiron/2);
             [FemmProblem, info.outerblockinds(end+1)] = addblocklabel_mfemm(FemmProblem, x, y, ...
                                                         'BlockType', FemmProblem.Materials(Inputs.BackIronMaterial).Name, ...
                                                         'MaxArea', Inputs.BackIronRegionMeshSize, ...
@@ -274,13 +280,13 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
         % Add the outer region block lables
         if drawnrotors(1)
             
-            [x,y] = pol2cart( thetapole,  roffset(1) + rmag/2 + rbackiron + outerwrapperthickness(2,2)/2);
+            [x,y] = pol2cart( Inputs.NPolePairs*thetapole,  roffset(1) + rmag/2 + rbackiron + outerwrapperthickness(2,2)/2);
             [FemmProblem, info.outerblockinds(end+1)] = addblocklabel_mfemm(FemmProblem, x, y, ...
                                               'BlockType', FemmProblem.Materials(Inputs.OuterRegionsMaterial).Name, ...
                                               'MaxArea', Inputs.OuterRegionsMeshSize(1), ...
                                               'InGroup', Inputs.OuterRegionGroup(1));
                                                     
-            [x,y] = pol2cart(thetapole, roffset(1) + rmag/2 + rbackiron + outerwrapperthickness(2,2) + outerwrapperthickness(3,2)/2);
+            [x,y] = pol2cart(Inputs.NPolePairs*thetapole, roffset(1) + rmag/2 + rbackiron + outerwrapperthickness(2,2) + outerwrapperthickness(3,2)/2);
             [FemmProblem, info.outerblockinds(end+1)] = addblocklabel_mfemm(FemmProblem, x, y, ...
                                               'BlockType', FemmProblem.Materials(Inputs.OuterRegionsMaterial).Name, ...
                                               'MaxArea', Inputs.OuterRegionsMeshSize(2), ...
@@ -290,13 +296,13 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
         
         if drawnrotors(2) 
             
-            [x,y] = pol2cart(thetapole, roffset(2) - rmag/2 - rbackiron - innerwrapperthickness(2,1)/2);
+            [x,y] = pol2cart(Inputs.NPolePairs*thetapole, roffset(2) - rmag/2 - rbackiron - innerwrapperthickness(2,1)/2);
             [FemmProblem, info.outerblockinds(end+1)] = addblocklabel_mfemm(FemmProblem, x, y, ...
                                               'BlockType', FemmProblem.Materials(Inputs.OuterRegionsMaterial).Name, ...
                                               'MaxArea', Inputs.OuterRegionsMeshSize(1), ...
                                               'InGroup', Inputs.OuterRegionGroup(2));
 
-            [x,y] = pol2cart(thetapole, roffset(2) - rmag/2 - rbackiron - innerwrapperthickness(2,1) - innerwrapperthickness(3,1)/2);
+            [x,y] = pol2cart(Inputs.NPolePairs*thetapole, roffset(2) - rmag/2 - rbackiron - innerwrapperthickness(2,1) - innerwrapperthickness(3,1)/2);
             [FemmProblem, info.outerblockinds(end+1)] = addblocklabel_mfemm(FemmProblem, x, y, ...
                                               'BlockType', FemmProblem.Materials(Inputs.OuterRegionsMaterial).Name, ...
                                               'MaxArea', Inputs.OuterRegionsMeshSize(2), ...
@@ -306,7 +312,7 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
     end
 
     if drawnrotors(1) && drawnrotors(2)
-        info.MagnetCornerIDs = [info.NodeIDs1([1,end-1]), info.nodeids2([2,end])];
+        info.MagnetCornerIDs = [info.NodeIDs1([1,end-1]), info.NodeIDs2([2,end])];
         info.TopSegInds = [rotorinfo1.TopSegInd, rotorinfo2.TopSegInd];
         info.BottomSegInds = [rotorinfo1.BottomSegInd, rotorinfo2.BottomSegInd];
     elseif drawnrotors(1)

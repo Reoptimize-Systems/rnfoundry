@@ -89,7 +89,7 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
 %
 
     % First set up some default inputs
-    Inputs.DrawingType = '2PoleMagnetRotation';
+    Inputs.DrawingType = 'MagnetRotation';
     Inputs.BoundaryPositions = 1;
     Inputs.ArmatureType = 'external';
     Inputs.NWindingLayers = nan;
@@ -260,7 +260,7 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
     
     switch Inputs.DrawingType
         
-        case '2PoleMagnetRotation'
+        case 'MagnetRotation'
     
             for ind = 1:Inputs.NPolePairs
 
@@ -283,6 +283,7 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
                     'OuterRegionsMeshSize', Inputs.OuterRegionsMeshSize, ...
                     'Position', Inputs.Position, ...
                     'DrawOuterRegions', Inputs.DrawOuterRegions, ...
+                    'NPolePairs', Inputs.NPolePairs, ...
                     'Tol', Inputs.Tol, ...
                     'YShift', YShift );
 
@@ -301,6 +302,7 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
                     'CoilInsulationThickness', design.CoilInsulationThickness, ...
                     'CoilBaseFraction', coilbasefrac, ...
                     'ShoeCurveControlFrac', shoecurvefrac, ...
+                    'NSlots', Inputs.NSlots, ...
                     'YShift', YShift );
 
                 coillabellocs = [coillabellocs; statorinfo.CoilLabelLocations];
@@ -584,7 +586,10 @@ function [FemmProblem, coillabellocs] = slottedfemmprob_radial(design, varargin)
                                                         [], ...
                                                         0, ...
                                                         0 );
-            
+                                                    
+        case 'LinkedGapBoundary'
+                                                        
+
         otherwise
             
             error ('Unrecognised simulation type, valid options are ''2PoleMagnetRotation'' and ''Full''');

@@ -13,6 +13,7 @@ function [FemmProblem, coillabellocs, inslabellocs] = slottedLfemmprob_radial(de
     Inputs.ArmatureType = 'external';
     Inputs.MagArrangement = 'NN';
     Inputs.NWindingLayers = 1;
+    Inputs.NPolePairs = 1;
      % set a suitible current for the inductance simulation in the circuit
     % for phase 1
     Inputs.CoilCurrent = [inductancesimcurrent(annularsecarea(design.Rci, design.Rco, design.thetac), ...

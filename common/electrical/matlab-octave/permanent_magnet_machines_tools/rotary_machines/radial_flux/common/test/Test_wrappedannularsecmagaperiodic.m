@@ -68,9 +68,24 @@ end
 
 FemmProblem = newproblem_mfemm('planar');
 
-try
-    mi_close;
-end
+%   Materials
+Matlib = parsematlib_mfemm(fullfile(fileparts(which('mfemm_parsematlib.m')), 'matlib.dat'));
+
+FemmProblem.Materials = Matlib([1, 47, 2]);
+
+
+[FemmProblem, wrapperthickness, info] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, ...
+                                                          thetamag, rmag, roffset, ...
+                                                          pos, wrapperthickness, ...
+                                                          'MagnetMaterial', 3);
+
+% plotnodelinks(nodes, links)
+
+plotfemmproblem (FemmProblem);
+
+%%
+
+FemmProblem = newproblem_mfemm('planar');
 
 %   Materials
 Matlib = parsematlib_mfemm(fullfile(fileparts(which('mfemm_parsematlib.m')), 'matlib.dat'));
@@ -78,18 +93,12 @@ Matlib = parsematlib_mfemm(fullfile(fileparts(which('mfemm_parsematlib.m')), 'ma
 FemmProblem.Materials = Matlib([1, 47, 2]);
 
 
-[FemmProblem, wrapperthickness, leftcentres, rightcentres] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, ...
+[FemmProblem, wrapperthickness, info] = wrappedannularsecmagaperiodic(FemmProblem, thetapole, ...
                                                           thetamag, rmag, roffset, ...
                                                           pos, wrapperthickness, ...
-                                                          'MagnetMaterial', 3);
+                                                          'MagnetMaterial', 3, ...
+                                                          'NPolePairs', 2);
 
 % plotnodelinks(nodes, links)
 
-filename = 'test.fem';
-
-writefemmfile(filename, FemmProblem)
-
-openfemm;
-
-opendocument(fullfile(pwd, filename))
-
+plotfemmproblem (FemmProblem);
