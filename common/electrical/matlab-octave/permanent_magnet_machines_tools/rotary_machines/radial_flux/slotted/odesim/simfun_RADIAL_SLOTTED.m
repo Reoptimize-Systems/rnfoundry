@@ -287,7 +287,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         for i = 1:numel (design.feapos)
 
             % Draw the sim, i.e by creating the FemmProblem structure
-            [design.FemmProblem, design.coillabellocs] = ...
+            [design.FemmProblem, design.RotorDrawingInfo, design.StatorDrawingInfo] = ...
                                 slottedfemmprob_radial (design, ...
                                     'ArmatureType', design.ArmatureType, ...
                                     'NWindingLayers', design.CoilLayers, ...
@@ -374,7 +374,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                     design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
                     
                     % get the cross-sectional area of the coil winding bundle
-                    design.CoilArea = solution.blockintegral ( 5, design.coillabellocs(1,1), design.coillabellocs(1,2) );
+                    design.CoilArea = solution.blockintegral ( 5, design.StatorDrawingInfo.CoilLabelLocations(1,1), design.StatorDrawingInfo.CoilLabelLocations(1,2) );
                     
                 end
                 
@@ -490,7 +490,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     
         % perform an inductance sim
         Lcurrent = inductancesimcurrent (design.CoilArea, design.CoilTurns);
-        [design.InductanceFemmProblem, Lcoillabellocs] = slottedLfemmprob_radial (design, ...
+        [design.InductanceFemmProblem, ~] = slottedLfemmprob_radial (design, ...
             'ArmatureType', design.ArmatureType, ...
             'NWindingLayers', design.CoilLayers, ...
             'CoilCurrent', [Lcurrent, 0, 0], ...
@@ -549,8 +549,8 @@ function design = slotintBdata (design, simoptions, feapos, solution)
     % positions of the magnet relative to coil
     if design.CoilLayers == 1
         
-        slotypos = design.coillabellocs(1:(size(design.coillabellocs,1)),2);
-        slotxpos = design.coillabellocs(1:(size(design.coillabellocs,1)),1);
+        slotypos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2);
+        slotxpos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1);
                 
         for i = 1:numel (slotypos)
             if exist ('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
@@ -570,10 +570,10 @@ function design = slotintBdata (design, simoptions, feapos, solution)
         
     elseif design.CoilLayers == 2
         
-        slotypos = [design.coillabellocs(1:2:(size(design.coillabellocs,1)),2), ...
-                    design.coillabellocs((1:2:(size(design.coillabellocs,1)))+1,2)];
-        slotxpos = [design.coillabellocs(1:2:(size(design.coillabellocs,1)),1), ...
-                    design.coillabellocs((1:2:(size(design.coillabellocs,1)))+1,1)];
+        slotypos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2), ...
+                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,2)];
+        slotxpos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1), ...
+                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,1)];
               
         for i = 1:size(slotypos,1)
 
@@ -632,8 +632,8 @@ function design = slotintAdata (design, simoptions, feapos, solution)
     % positions of the magnet relative to coil
     if design.CoilLayers == 1
         
-        slotypos = design.coillabellocs(1:(size(design.coillabellocs,1)),2);
-        slotxpos = design.coillabellocs(1:(size(design.coillabellocs,1)),1);
+        slotypos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2);
+        slotxpos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1);
 
         for i = 1:numel (slotypos)
             if exist('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
@@ -651,10 +651,10 @@ function design = slotintAdata (design, simoptions, feapos, solution)
         
     elseif design.CoilLayers == 2
         
-        slotypos = [design.coillabellocs(1:2:(size(design.coillabellocs,1)),2), ...
-                    design.coillabellocs((1:2:(size(design.coillabellocs,1)))+1,2)];
-        slotxpos = [design.coillabellocs(1:2:(size(design.coillabellocs,1)),1), ...
-                    design.coillabellocs((1:2:(size(design.coillabellocs,1)))+1,1)];
+        slotypos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2), ...
+                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,2)];
+        slotxpos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1), ...
+                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,1)];
               
         for i = 1:size (slotypos,1)
             
