@@ -128,6 +128,7 @@ function [FemmProblem, nodes, nodeids, links, magblockinds] = ...
     Inputs.SpaceGroup = 0;
     Inputs.Tol = 1e-5;
     Inputs.MeshSize = -1;
+    Inputs.NPolePairs = 1;
 
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -146,7 +147,10 @@ function [FemmProblem, nodes, nodeids, links, magblockinds] = ...
     % first in a linear fashion which we will manipulate into the real
     % shape by modifying the node locations
     [nodes, nodeids, links, rectcentres, spacecentres] = ...
-        rectregionsyperiodic(rmag, thetamag, (thetapole-thetamag), roffset, pos, Inputs.Tol, elcount.NNodes);
+        rectregionsyperiodic(rmag, thetamag, (thetapole-thetamag), roffset, pos, ...
+                             'Tol', Inputs.Tol, ...
+                             'NodeCount', elcount.NNodes, ...
+                             'NY1Pairs', Inputs.NPolePairs);
 
     % get the vertical links by finding those links where the difference in
     % y coordinates of the link nodes is not zero, these links must be made
