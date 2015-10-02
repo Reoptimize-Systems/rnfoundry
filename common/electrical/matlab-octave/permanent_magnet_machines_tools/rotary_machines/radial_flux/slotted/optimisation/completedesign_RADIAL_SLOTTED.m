@@ -373,6 +373,7 @@ function design = completeexternalarmature (design)
         
         if isfield (design, 'Rcb')
             design.tc(2) = design.Rco - design.Rcb;
+            design.RcbVRyi = design.Rcb / design.Ryi;
         end
         
         % complete the ratios
@@ -407,6 +408,7 @@ function design = completeexternalarmature (design)
         
         if numel (design.tc) > 1
             design.Rcb = design.Rco - design.tc(2);
+            design.RcbVRyi = design.Rcb / design.Ryi;
         end
         
         design.Rbo = design.Rmi;
@@ -510,7 +512,7 @@ function [design, ratiofields] = completeinternalarmature (design)
         design.tc = design.Rco - design.Rci;
         
         if isfield (design, 'Rcb')
-            design.tc(2) = design.Rco - design.Rcb;
+            design.tc(2) = design.Rtsb - design.Rcb;
         end
         
         design.tsb = design.Rao - design.Rtsb;
@@ -535,6 +537,11 @@ function [design, ratiofields] = completeinternalarmature (design)
         design.Rci = design.Ryo;
         design.Rbi = design.Rmo;
         design.Rtsg = design.Rao - design.tsg;
+        
+        if isfield (design, 'Rcb')
+            design.tc(2) = design.Rcb - design.Rtsb;
+            design.RcbVRtsb = design.Rcb / design.Rtsb;
+        end
         
         design.RmoVRbo = design.Rmo / design.Rbo;
         design.RmiVRmo = design.Rmi / design.Rmo;
@@ -564,6 +571,11 @@ function [design, ratiofields] = completeinternalarmature (design)
         design.Rci = design.Ryo;
         design.Rbi = design.Rmo;
         design.Rtsg = design.Rao - design.tsg;
+        
+        if numel (design.tc) > 1
+            design.Rcb = design.Ryo + design.tc(2);
+            design.RcbVRtsb = design.Rcb / design.Ryo;
+        end
         
         design.RmoVRbo = design.Rmo / design.Rbo;
         design.RmiVRmo = design.Rmi / design.Rmo;
