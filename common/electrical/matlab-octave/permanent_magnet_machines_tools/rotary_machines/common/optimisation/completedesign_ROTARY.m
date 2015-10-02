@@ -128,8 +128,8 @@ function design = completedesign_ROTARY(design, simoptions)
             design.NBasicWindings = design.NBasicWindings + 1;
         end
     
-        design.Qc = design.Qcb *  design.NBasicWindings;
-        design.Poles = design.pb *  design.NBasicWindings;
+        design.Qc = design.Qcb * design.NBasicWindings;
+        design.Poles = design.pb * design.NBasicWindings;
         
     else        
          % determine the number of coils 
@@ -143,9 +143,11 @@ function design = completedesign_ROTARY(design, simoptions)
     % determine the total number of slots in the machine
     if design.CoilLayers == 2
         design.Qs = design.Qc;
+        design.Qsb = design.Qcb;
         [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles, 0);
     elseif design.CoilLayers == 1
         design.Qs = 2 * design.Qc;
+        design.Qsb = 2 * design.Qcb;
         [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles, 1);
     else
         error('Only coils with one or two layers are implemented.')
