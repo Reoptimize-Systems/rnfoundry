@@ -1,5 +1,5 @@
 function strandDc = stranddiameter (Dc, Nstrands)
-% calculates the required strans diameter to make the same area of wire as
+% calculates the required strand diameter to make the same area of wire as
 % an unstranded conductor
 %
 % Syntax
