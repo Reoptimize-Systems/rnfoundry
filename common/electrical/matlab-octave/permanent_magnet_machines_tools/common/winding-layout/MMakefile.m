@@ -9,7 +9,7 @@ function [rules,vars] = MMakefile ()
 %     end
 % 
 %     % flags that will be passed direct to mex
-%     vars.MEXFLAGS = ['${MEXFLAGS} -I"../cfemm/fmesher" -I"../cfemm/libfemm" -I"../cfemm/libfemm/liblua" ', trilibraryflag];
+     vars.CXXFLAGS = '$CXXFLAGS -std=c++11';
 %     
 %     cfemmpath = fullfile (thisfilepath, '..', 'cfemm');
 %     libfemmpath = fullfile (cfemmpath, 'libfemm');
