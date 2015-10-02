@@ -42,7 +42,7 @@ using namespace mexutils;
         
         WL.ComputeWinding(m, Q, p, SL);
         
-        mexPrintf ("Computed winding, m: %d Q: %d p: %d SL: %d t: %d\n", m, Q, p, SL, WL.gett ());
+        //mexPrintf ("Computed winding, m: %d Q: %d p: %d SL: %d t: %d\n", m, Q, p, SL, WL.gett ());
         int nwindings = WL.windings.size ();
         vector<coil> coils = WL.windings[0].get_coils();
         int ncoilsperwinding = coils.size ();
@@ -58,7 +58,7 @@ using namespace mexutils;
             
             for (int coilind=0; coilind<coils.size (); coilind++)
             {
-                mexPrintf ("%d, %d\n", coils[coilind].s (), coils[coilind].e ());
+                //mexPrintf ("%d, %d\n", coils[coilind].s (), coils[coilind].e ());
                 
                 std::vector<mwSize> index;
                 index.push_back (coilind);
