@@ -1,5 +1,5 @@
 function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmprob(slots, Poles, ypole, ycoil, yshoegap, xyoke, xcoil, xshoebase, xshoegap, xoffset, side, varargin)
-% draw internal parts of half a slotted stator
+% draw internal parts of half a slotted axial flux stator
 %
 % Syntax
 %
