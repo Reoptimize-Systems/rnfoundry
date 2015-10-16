@@ -1,4 +1,4 @@
-function [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields)
+function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields)
 % generates tables of performance data a multiple speed and load points for
 % a rotary machine design
 %
@@ -46,13 +46,14 @@ function [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, ou
 %     points and m is the number of load ratio points supplied.
 %
 
-% Created by Richard Crozier 2013
+% Created by Richard Crozier 2013-2015
 
     if nargin < 5
         outfields = {};
     end
-
-    radialfields = { 'PowerLoadMean', ...
+    
+    % get output fields common to all rotary machines
+    rotaryfields = { 'PowerLoadMean', ...
                      'Efficiency', ...
                      'IPhasePeak', ...
                      'IPhaseRms', ...
@@ -70,43 +71,80 @@ function [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, ou
                      'PowerLossMean', ...
                      'FrequencyPeak' };
                 
-    outfields = [ outfields, radialfields ];
+	% append to any machine specific output fields already passed in
+    outfields = [ outfields, rotaryfields ];
+
+    % do design data gathering function if necessary
+    if ~isempty(simoptions.simfun)
+        % Analyse the machine and gather desired data
+        [design, simoptions] = feval(simoptions.simfun, design, simoptions);
+    end
     
+	% remove simfun, so we don't repeat fea etc. on subsequent runs
+	simoptions.simfun = [];
+
     % preallocate the fields
+    ptables = struct ();
+    pdata = nan * ones (numel(rpm) * numel (RlVRp), numel (outfields));
+    rpmslice = nan * ones (numel(rpm) * numel (RlVRp), 1);
+    RlVRpslice = rpmslice;
     
-    isfirstrun = true;
-    
+    rpmRlVRpind = 1;
     for rpmind = 1:numel(rpm)
         
-        for RgVRcind  = 1:numel(RlVRp)
+        for RgVRcind = 1:numel(RlVRp)
             
-            simoptions.RPM = rpm(rpmind);
-            simoptions.RlVRp = RlVRp(RgVRcind);
-            design.RlVRp = RlVRp(RgVRcind);
-            simoptions.abstol = [];
+            rpmslice(rpmRlVRpind) = rpm(rpmind);
+            RlVRpslice(rpmRlVRpind) = RlVRp(RgVRcind);
             
-            % simulate the machine
-            [~, ~, ~, design, simoptions] = simulatemachine_AM( design, ...
-                                                                simoptions, ...
-                                                                simoptions.simfun, ...
-                                                                simoptions.finfun, ...
-                                                                simoptions.odeevfun, ...
-                                                                simoptions.resfun );
-                                                                 
-            if isfirstrun
-                isfirstrun = false;
-                % remove simfun, so we don't repeat fea etc. on subsequent
-                % runs
-                simoptions.simfun = [];
-            end
+            rpmRlVRpind = rpmRlVRpind + 1;
+            
+        end
+        
+    end
+    
+    % perform the simulations and gather the data
+    parfor rpmRlVRpind = 1:rpmRlVRpind-1
+        pdata(rpmRlVRpind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmRlVRpind), RlVRpslice(rpmRlVRpind));
+    end
+    
+    % construct the output tables from the matrix of data
+    for rpmind = 1:numel(rpm)
+        
+        for RgVRcind = 1:numel(RlVRp)
             
             % copy the output over to the performance tables
             for find = 1:numel(outfields)
-                ptables.(outfields{find})(rpmind,RgVRcind) = design.(outfields{find});
+                ptables.(outfields{find})(rpmind,RgVRcind) = pdata((rpmind-1)*numel(RlVRp) + RgVRcind, find);
             end
             
         end
         
     end
 
+end
+
+function pdata = simfcn (design, simoptions, outfields, rpm, RlVRp)
+
+        simoptions.RPM = rpm;
+        simoptions.RlVRp = RlVRp;
+        design.RlVRp = RlVRp;
+        design = rmiffield (design, 'LoadResistance');
+        design = rmiffield (design, 'slm_fluxlinkage');
+        simoptions.abstol = [];
+        
+        % simulate the machine
+        [~, ~, ~, design, ~] = simulatemachine_AM( design, ...
+                                                   simoptions, ...
+                                                   simoptions.simfun, ...
+                                                   simoptions.finfun, ...
+                                                   simoptions.odeevfun, ...
+                                                   simoptions.resfun );
+
+        % copy the output over to the performance tables
+        pdata = nan * ones (1,numel(outfields));
+        for find = 1:numel(outfields)
+            pdata(find) = design.(outfields{find})(1);
+        end
+            
 end
