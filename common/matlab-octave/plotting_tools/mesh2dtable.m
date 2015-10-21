@@ -27,22 +27,14 @@ function [xq,yq,zq] = mesh2dtable(x, y, data, varargin)
 % See also, mesh
 %
 
-% Copyright Richard Crozier 2012
+% Copyright Richard Crozier 2012-2015
 
-    % do some input checking
-    if ~isvector(x) || numel(x) ~= size(data, 1)
-        error('x must be a vector of the same number of elements as the number of rows in data')
-    elseif ~isvector(y) || numel(y) ~= size(data, 2)
-        error('y must be a vector of the same number of elements as the number of columns in data')
-    end
-    
-    newx = repmat(x(:), numel(y), 1);
-    newy = reshape(repmat(y(:)', numel(x), 1), [], 1);
+    [newx, newy, newz] = makevars2dtable23dplot(x, y, data);
     
     % now mesh the data
     [xq,yq] = meshgrid(x,y);
     
-    zq = griddata(newx, newy, data(:), xq, yq);
+    zq = griddata(newx, newy, newz, xq, yq);
     
     % and create the mesh plot
     mesh(xq,yq,zq, varargin{:});
