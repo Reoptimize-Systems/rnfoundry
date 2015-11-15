@@ -1,4 +1,4 @@
-function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmprob(slots, Poles, ypole, ycoil, yshoegap, xyoke, xcoil, xshoebase, xshoegap, xoffset, side, varargin)
+function [FemmProblem, outernodes, coillabellocs, slotinfo] = axialfluxstatorhalf2dfemmprob(slots, Poles, ypole, ycoil, yshoegap, xyoke, xcoil, xshoebase, xshoegap, xoffset, side, varargin)
 % draw internal parts of half a slotted axial flux stator
 %
 % Syntax
@@ -20,6 +20,11 @@ function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmpro
     Inputs.SlotPositions = [];
     Inputs.NSlots = [];
     Inputs.Tol = 1e-5;
+    Inputs.CoilBaseFraction = 0.05;
+    Inputs.ShoeCurveControlFrac = 0.5;
+    Inputs.SplitX = false;
+    Inputs.DrawCoilInsulation = false;
+    Inputs.CoilInsulationThickness = 0;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -61,113 +66,25 @@ function [FemmProblem, outernodes, coillabellocs] = axialfluxstatorhalf2dfemmpro
         slotpos = Inputs.SlotPositions;
     end
     
-    % make a single slot
-    [nodes, links, cornernodes, shoegaplabelloc, coillabellocs] = ...
-            internalslotnodelinks(ycoil, yshoegap, xyoke/2, xcoil, xshoebase, xshoegap, Inputs.NWindingLayers, Inputs.Tol);
-    
-    % we flip the node positions if we are drawing the left hand side
-    if side == 'l'
-        
-        nodes(:,1) = -nodes(:,1);
-
-        if ~isempty(shoegaplabelloc)
-            shoegaplabelloc(:,1) = -shoegaplabelloc(:,1);
-        end
-        
-        if ~isempty(coillabellocs)
-            coillabellocs(:,1) = -coillabellocs(:,1);
-        end
-        
-        % rearrange the corner nodes to preserve clockwise ordering
-        % starting from bottom left
-        cornernodes = [cornernodes(2), cornernodes(1), cornernodes(4), cornernodes(3)];
-        
-    end
-    
-    % add the specified offset in the x direction
-    nodes(:,1) = nodes(:,1) + xoffset;
-
-    if ~isempty(shoegaplabelloc)
-        shoegaplabelloc(:,1) = shoegaplabelloc(:,1) + xoffset;
-    end
-
-    if ~isempty(coillabellocs)
-        coillabellocs(:,1) = coillabellocs(:,1) + xoffset;
-    end
-        
-    elcount = elementcount_mfemm(FemmProblem);
-    
-    % store the nodes at the bottom of all the slots
-    bottomnodes = cornernodes(1:2) + elcount.NNodes;  
-    lastslottopnodes = cornernodes(3:4) + elcount.NNodes;    
-    
-    % draw the first slot linking it to the bottom of the domain
-    thisslotsnodes = nodes;
-        
-    % move in the y direction to the first slot position
-    thisslotsnodes(:,2) = thisslotsnodes(:,2) + slotpos(1);
-
-    if ~isempty(coillabellocs)
-        coillabellocs(:,2) = coillabellocs(:,2) + slotpos(1);
-    end
-        
-    thisslotlinks = links + elcount.NNodes;
-    
-    [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
-        
-    [FemmProblem, seginds] = addsegments_mfemm(FemmProblem, thisslotlinks(:,1), thisslotlinks(:,2));
-    
-    if ~isempty(shoegaplabelloc)
-        FemmProblem = addblocklabel_mfemm(FemmProblem, shoegaplabelloc(1,1), shoegaplabelloc(1,2) + slotpos(1), ...
-                                            'BlockType', FemmProblem.Materials(Inputs.ShoeGapMaterial).Name, ...
-                                            'MaxArea', Inputs.ShoeGapRegionMeshSize);
-    end
-    
-    % draw the rest of the slots, making copies of the original slot's
-    % nodes and links, adding in the labels, and linking them together
-    for i = 2:numel(slotpos)
-        
-        thisslotsnodes = nodes;
-        
-        thisslotsnodes(:,2) = thisslotsnodes(:,2) + slotpos(i);
-        
-        thisslotlinks = links + numel(FemmProblem.Nodes);
-        
-        thisslotcornernodes = cornernodes + numel(FemmProblem.Nodes);
-        
-        [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, thisslotsnodes(:,1), thisslotsnodes(:,2));
-        
-        [FemmProblem, seginds] = addsegments_mfemm(FemmProblem, thisslotlinks(:,1), thisslotlinks(:,2));
-        
-        if ~isempty(shoegaplabelloc)
-            
-            FemmProblem = addblocklabel_mfemm(FemmProblem, shoegaplabelloc(1,1), shoegaplabelloc(1,2) + slotpos(i), ...
-                                            'BlockType', FemmProblem.Materials(Inputs.ShoeGapMaterial).Name, ...
-                                            'MaxArea', Inputs.ShoeGapRegionMeshSize);
-                                        
-        end
-        
-        % now link the slot to the slot below
-        if side == 'l'
-            [FemmProblem, seginds] = ...
-                addsegments_mfemm(FemmProblem, thisslotcornernodes(1), lastslottopnodes(2));            
-        else
-            [FemmProblem, seginds] = ...
-                addsegments_mfemm(FemmProblem, thisslotcornernodes(2), lastslottopnodes(1));
-        end
-        
-        % store the top nodes of the slot for the next loop
-        lastslottopnodes = thisslotcornernodes(3:4);     
-        
-        % get the coil label location
-        coillabellocs = [coillabellocs; ...
-                         coillabellocs(1:Inputs.NWindingLayers,1), ...
-                         coillabellocs(1:Inputs.NWindingLayers,2) + slotpos(i) - slotpos(1)];
-        
-    end
-    
-    % we will return the outer corner node ids for later use
-    outernodes = [bottomnodes, lastslottopnodes];
+    [FemmProblem, outernodes, coillabellocs, slotinfo] = ...
+        uncurvedstatorhalf2dfemmprob ( numel(slotpos), ...
+                                       ypole / slotsperpole, ...
+                                       ycoil, ...
+                                       yshoegap, ...
+                                       xyoke, ...
+                                       xcoil, ...
+                                       xshoebase, ...
+                                       xshoegap, ...
+                                       xoffset, ...
+                                       side, ...
+                                      'NWindingLayers', Inputs.NWindingLayers, ...
+                                      'FemmProblem', FemmProblem, ...
+                                      'ShoeGapMaterial', Inputs.ShoeGapMaterial, ...
+                                      'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
+                                      'Tol', Inputs.Tol, ... 
+                                      'DrawCoilInsulation', Inputs.DrawCoilInsulation, ...
+                                      'CoilInsulationThickness', Inputs.CoilInsulationThickness, ...
+                                      'CoilBaseFraction', Inputs.CoilBaseFraction );
     
 end
 
