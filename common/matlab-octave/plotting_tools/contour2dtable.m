@@ -1,5 +1,5 @@
 function [xq,yq,zq] = contour2dtable(x, y, data, varargin)
-% creates a mesh plot of the data in a 2D table
+% creates a contour plot of the data in a 2D table
 %
 % Syntax
 %
