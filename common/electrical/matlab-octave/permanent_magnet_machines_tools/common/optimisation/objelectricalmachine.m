@@ -35,7 +35,7 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
             [ simoptions.evaloptions.spawnslaves, simoptions.evaloptions.spawnslaves ];
     end
         
-    % First get the FEA data for each design
+    % preprocess the designs before simulation
     for i = 1:size (Chrom,1)
 
         % Construct initial design structure
