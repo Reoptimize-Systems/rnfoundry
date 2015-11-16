@@ -534,8 +534,9 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     end % ~simoptions.SkipInductanceFEA
     
     % now recalculate coil resistance
+    extralen = design.thetas * design.Rcm / 2;
     design.MTL = rectcoilmtl ( design.ls, ...
-                               design.yd * design.thetas * design.Rcm, ...
+                               design.yd * design.thetas * design.Rcm + extralen, ...
                                mean (design.thetac) * design.Rcm );
 
     design.CoilResistance = wireresistancedc ('round', design.Dc, design.MTL*design.CoilTurns);
