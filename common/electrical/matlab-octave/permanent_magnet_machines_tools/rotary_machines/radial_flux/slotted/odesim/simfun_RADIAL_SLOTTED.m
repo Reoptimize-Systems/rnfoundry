@@ -258,19 +258,6 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     %     design.FirstSlotCenter = design.thetap + (design.thetap / slotsperpole / 2);
         design.FirstSlotCenter = 0;
         design.feapos = linspace (0, 1, simoptions.NMagFEAPositions);
-
-        design.intAdata.slotPos = [];
-        design.intAdata.slotIntA = [];
-        design.intBdata.slotPos = [];
-        design.intBdata.slotIntB = [];
-        
-        femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
-        
-        % determine a unit vector pointing in the direction normal to the air
-        % gap half way between the Poles for the purpose of extracting the
-        % air-gap closing forces
-        [gvector(1), gvector(2)] = pol2cart (design.thetap,1);
-        gvector = unit (gvector);
         
         % determine a unit vector pointing in the direction tangential to the
         % radius half way between the Poles for the purpose of extracting
@@ -283,186 +270,51 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         % For vector V1 = <a, b>, the reciprocal V2 = <b, -a>. Now make it a
         % unit vector by dividing by the magnitude.
 %         coggingvector = unit([gvector(2), -gvector(1)]);
+
+        [ RawCoggingTorque, ...
+          BxCoreLossData, ...
+          ByCoreLossData, ...
+          ArmatureToothFluxDensity, ...
+          FemmDirectFluxLinkage, ...
+          AslotPos, ...
+          slotIntA, ...
+          BslotPos, ...
+          slotIntB, ...
+          design ] = dofeasim (design, simoptions, 1, true);
+        
+        parameterCell{1} = { RawCoggingTorque, ...
+                             BxCoreLossData, ...
+                             ByCoreLossData, ...
+                             ArmatureToothFluxDensity, ...
+                             FemmDirectFluxLinkage, ...
+                             AslotPos, slotIntA, ...
+                             BslotPos, slotIntB };
+                              
+        for posind = 2:numel (design.feapos)
+
+            [ RawCoggingTorque, ...
+              BxCoreLossData, ...
+              ByCoreLossData, ...
+              ArmatureToothFluxDensity, ...
+              FemmDirectFluxLinkage, ...
+              AslotPos, ...
+              slotIntA, ...
+              BslotPos, ...
+              slotIntB, ...
+              design ] = dofeasim (design, simoptions, posind, false);
             
-        for i = 1:numel (design.feapos)
-
-            % Draw the sim, i.e by creating the FemmProblem structure
-            [design.FemmProblem, design.RotorDrawingInfo, design.StatorDrawingInfo] = ...
-                                slottedfemmprob_radial (design, ...
-                                    'ArmatureType', design.ArmatureType, ...
-                                    'NWindingLayers', design.CoilLayers, ...
-                                    'Position', (design.feapos(i)+1) * design.thetap + design.FirstSlotCenter, ...
-                                    'MagnetRegionMeshSize', simoptions.femmmeshoptions.MagnetRegionMeshSize, ...
-                                    'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
-                                    'OuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
-                                    'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
-                                    'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
-                                    'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
-                                    'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
-
-            % write the fem file to disk
-            writefemmfile (femfilename, design.FemmProblem);
-            % analyse the problem
-            ansfilename = analyse_mfemm (femfilename, ...
-                                         simoptions.usefemm, ...
-                                         simoptions.quietfemm);
-                                
-            
-            if (exist('fpproc_interface_mex', 'file')==3) && ~simoptions.usefemm
-                
-                solution = fpproc (ansfilename);
-                % activate field smoothing so values are interpolated across
-                % mesh elements
-                solution.smoothon ();
-                
-                if i == 1
-                    design = corelosssetup (design, design.feapos, solution);
-                end
-                
-                % get the peak flux density in the armature back iron along
-                % center line of a tooth
-                NBpnts = 100;
-                if strcmpi (design.ArmatureType, 'external')
-                    [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Rai, design.Ryo, NBpnts));
-                elseif strcmpi (design.ArmatureType, 'internal')
-                    [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Ryi, design.Rao, NBpnts));
-                end
-                Bmag = magn (solution.getb (x, y));
-                
-                design.ArmatureToothFluxDensity(i) = max (Bmag);
-                
-                % get the integral of the vector potential in a slot, if two
-                % layers get both layers
-                design = slotintAdata(design, simoptions, design.feapos(i), solution);
-                
-                design = slotintBdata(design, simoptions, design.feapos(i), solution);
-                
-                if numel (design.FemmProblem.Circuits) > 0
-                    design = setfieldifabsent (design, 'FemmDirectFluxLinkage', []);
-                    temp = solution.getcircuitprops ( design.FemmProblem.Circuits(1).Name );
-                    design.FemmDirectFluxLinkage(i) = temp(3);
-                end
-
-                for ii = 1:numel(design.CoreLoss)
-                    
-                    p = solution.getpointvalues ( design.CoreLoss(ii).meshx(:), ...
-                                                  design.CoreLoss(ii).meshy(:) );
-
-                    design.CoreLoss(ii).By(:,i,:) = reshape (p(2,:)', size (design.CoreLoss(ii).meshx));
-                    design.CoreLoss(ii).Bx(:,i,:) = reshape (p(3,:)', size (design.CoreLoss(ii).meshx));
-
-                end
-                
-                if i == 1
-                    % get the forces
-                    solution.clearblock();
-                    solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
-                                                 design.FemmProblem.Groups.BackIron ]);
-                    
-%                     design.gforce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-%                                           gvector);
-%                                     
-%                     design.gvar = design.g;
-                    
-                    design.PerPoleAirGapClosingForce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-                                                            gvector);
-                    
-                    % get the cross-sectional area of the armature iron for
-                    % calcuation of material masses later
-                    solution.clearblock();
-                    solution.groupselectblock (design.FemmProblem.Groups.ArmatureBackIron);
-                    design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
-                    
-                    % get the cross-sectional area of the coil winding bundle
-                    design.CoilArea = solution.blockintegral ( 5, design.StatorDrawingInfo.CoilLabelLocations(1,1), design.StatorDrawingInfo.CoilLabelLocations(1,2) );
-                    
-                end
-                
-                % get the cogging forces
-                solution.clearblock ();
-                solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
-                                             design.FemmProblem.Groups.BackIron ]);
-                
-%                 design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-%                                              coggingvector);
-% 
-%                 design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
-                
-%                if simoptions.getintermagflux
-%                    design.InterMagFlux = getintermagflux (design, solution);
-%                end
-
-                design.RawCoggingTorque(i) = design.Poles(1) * (solution.blockintegral (22) / 2);
-                
-                % explicitly call the delete method on the solution
-                delete (solution);
-                clear solution;
-                
-            else
-                if i == 1
-                    design = corelosssetup (design, design.feapos, ansfilename);
-                end
-                
-                % open the solution in FEMM
-                opendocument (ansfilename);
-
-                % get the integral of the vector potential in a slot, if two
-                % layers get both layers
-                design = slotintAdata(design, simoptions, design.feapos(i));
-
-                design = slotintBdata(design, simoptions, design.feapos(i));
-
-                for ii = 1:numel(design.CoreLoss)
-                    
-                    p = mo_getpointvalues ( design.CoreLoss(ii).meshx(:), ...
-                                            design.CoreLoss(ii).meshy(:) );
-
-                    design.CoreLoss(ii).By(:,i,:) = reshape (p(:,2), size(design.CoreLoss(ii).meshx));
-                    design.CoreLoss(ii).Bx(:,i,:) = reshape (p(:,3), size(design.CoreLoss(ii).meshx));
-
-                end
-                
-                if i == 1
-                    % get the forces
-                    mo_clearblock ();
-                    mo_groupselectblock (1);
-                    design.gforce = dot ([mo_blockintegral(18)/2, mo_blockintegral(19)/2], ...
-                                         gvector);
-                    design.gvar = design.g;
-                    
-                    % get the cross-sectional area of the armature iron for
-                    % calcuation of material masses later
-                    mo_clearblock ();
-                    mo_groupselectblock (design.FemmProblem.Groups.ArmatureBackIron);
-                    design.ArmatureIronAreaPerPole = mo_blockintegral(5)/2;
-                    
-                end
-                
-                % get the cogging forces
-                mo_clearblock();
-                mo_groupselectblock (design.FemmProblem.Groups.Magnet);
-                mo_groupselectblock (design.FemmProblem.Groups.BackIron);
-                
-%                 design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-%                                              coggingvector);
-% 
-%                 design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
-                
-%                if simoptions.getintermagflux
-%                    design.InterMagFlux = getintermagflux (design, solution);
-%                end
-
-                design.RawCoggingTorque(i) = design.Poles(1) * (mo_blockintegral (22) / 2);
-
-                mo_close;
-                
-            end
-            
-            % clean up the FEA files
-            delete (femfilename);
-            delete (ansfilename);
+            parameterCell{posind} = { RawCoggingTorque, ...
+                                      BxCoreLossData, ...
+                                      ByCoreLossData, ...
+                                      ArmatureToothFluxDensity, ...
+                                      FemmDirectFluxLinkage, ...
+                                      AslotPos, slotIntA, ...
+                                      BslotPos, slotIntB };
         
         end
+        
+        % consolidate the gathered data in the design structure
+        design = integrate_fea_data (design, simoptions, parameterCell);
 
     end % ~SkipMainFEA
     
@@ -507,24 +359,15 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                                                      simoptions.usefemm, ...
                                                      simoptions.quietfemm );
         
-        if exist('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
-            solution = fpproc (ansfilename);
-            [design.CoilResistance, design.CoilInductance] = solution.circuitRL ('1');
-            % get the mutual inductance by dividing the flux in a neighbouring
-            % phase by the applied current in the first phase
-            temp = solution.getcircuitprops ('2');
-            % explicitly call the delete method on the solution
-            delete (solution);
-            clear solution;
-        else
-            opendocument(ansfilename);
-            % Now get the resistance and inductance of the machine coils
-            [design.CoilResistance, design.CoilInductance] = RandLfromFEMMcircuit ('1');
-            % get the mutual inductance by dividing the flux in a neighbouring
-            % phase by the applied current in the first phase
-            temp = mo_getcircuitproperties ('2');
-            mo_close ();
-        end
+        solution = fpproc (ansfilename);
+        [design.CoilResistance, design.CoilInductance] = solution.circuitRL ('1');
+        % get the mutual inductance by dividing the flux in a neighbouring
+        % phase by the applied current in the first phase
+        temp = solution.getcircuitprops ('2');
+        % explicitly call the delete method on the solution
+        delete (solution);
+        clear solution;
+
         design.CoilInductance(2) = abs (temp(3)) / Lcurrent;
         
         % clean up the FEA files
@@ -544,90 +387,179 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 end
 
 
-function design = slotintBdata (design, simoptions, feapos, solution)
+function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDensity, FemmDirectFluxLinkage, AslotPos, slotIntA, BslotPos, slotIntB, design] = dofeasim (design, simoptions, posind, isinit)
 
-    % extract the flux integral data from all the slots at the given
-    % positions of the magnet relative to coil
-    if design.CoilLayers == 1
+    femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
+
+    % Draw the sim, i.e by creating the FemmProblem structure
+    [design.FemmProblem, design.RotorDrawingInfo, design.StatorDrawingInfo] = ...
+                        slottedfemmprob_radial (design, ...
+                            'ArmatureType', design.ArmatureType, ...
+                            'NWindingLayers', design.CoilLayers, ...
+                            'Position', (design.feapos(posind)+1) * design.thetap + design.FirstSlotCenter, ...
+                            'MagnetRegionMeshSize', simoptions.femmmeshoptions.MagnetRegionMeshSize, ...
+                            'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
+                            'OuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
+                            'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
+                            'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
+                            'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
+                            'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize);
+
+    % write the fem file to disk
+    writefemmfile (femfilename, design.FemmProblem);
+    % analyse the problem
+    ansfilename = analyse_mfemm (femfilename, ...
+                                 simoptions.usefemm, ...
+                                 simoptions.quietfemm);
+
+    solution = fpproc (ansfilename);
+    % activate field smoothing so values are interpolated across
+    % mesh elements
+    solution.smoothon ();
+
+    if isinit
+        % is an initialisation run, do things we only need to do once
         
-        slotypos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2);
-        slotxpos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1);
-                
-        for i = 1:numel (slotypos)
-            if exist ('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
-                % x and y directed flux in slot on left hand side
-                solution.clearblock ();
-                solution.selectblock (slotxpos(i,1), slotypos(i));
-                design.intBdata.slotIntB(end+1,1,1) = solution.blockintegral (8);
-                design.intBdata.slotIntB(end,2,1) = solution.blockintegral (9);
-            else
-                % x and y directed flux in slot on left hand side
-                mo_clearblock ();
-                mo_selectblock (slotxpos(i,1), slotypos(i));
-                design.intBdata.slotIntB(end+1,1,1) = mo_blockintegral (8);
-                design.intBdata.slotIntB(end,2,1) = mo_blockintegral (9);
-            end
+        design = corelosssetup (design, design.feapos, solution);
+        
+                % get the forces
+        solution.clearblock();
+        solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
+                                     design.FemmProblem.Groups.BackIron ]);
+
+%                     design.gforce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+%                                           gvector);
+%                                     
+%                     design.gvar = design.g;
+
+        % determine a unit vector pointing in the direction normal to the air
+        % gap half way between the Poles for the purpose of extracting the
+        % air-gap closing forces
+        [gvector(1), gvector(2)] = pol2cart (design.thetap,1);
+        gvector = unit (gvector);
+
+        design.PerPoleAirGapClosingForce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+                                                gvector);
+
+        % get the cross-sectional area of the armature iron for
+        % calcuation of material masses later
+        solution.clearblock();
+        solution.groupselectblock (design.FemmProblem.Groups.ArmatureBackIron);
+        design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
+
+        % get the cross-sectional area of the coil winding bundle
+        design.CoilArea = solution.blockintegral ( 5, design.StatorDrawingInfo.CoilLabelLocations(1,1), design.StatorDrawingInfo.CoilLabelLocations(1,2) );
+        
+    end
+
+    % get the peak flux density in the armature back iron along
+    % center line of a tooth
+    NBpnts = 100;
+    if strcmpi (design.ArmatureType, 'external')
+        [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Rai, design.Ryo, NBpnts));
+    elseif strcmpi (design.ArmatureType, 'internal')
+        [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Ryi, design.Rao, NBpnts));
+    end
+    Bmag = magn (solution.getb (x, y));
+
+    ArmatureToothFluxDensity = max (Bmag);
+
+    FemmDirectFluxLinkage = nan;
+    if numel (design.FemmProblem.Circuits) > 0
+        design = setfieldifabsent (design, 'FemmDirectFluxLinkage', []);
+        temp = solution.getcircuitprops ( design.FemmProblem.Circuits(1).Name );
+        design.FemmDirectFluxLinkage(posind) = temp(3);
+    end
+
+    for ii = 1:numel(design.CoreLoss)
+
+        p = solution.getpointvalues ( design.CoreLoss(ii).meshx(:), ...
+                                      design.CoreLoss(ii).meshy(:) );
+                                  
+        ByCoreLossData{ii} = reshape (p(2,:)', size (design.CoreLoss(ii).meshx));
+        BxCoreLossData{ii} = reshape (p(3,:)', size (design.CoreLoss(ii).meshx));
+        
+    end
+
+    % get the cogging forces
+    solution.clearblock ();
+    solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
+                                 design.FemmProblem.Groups.BackIron ]);
+
+%                 design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+%                                              coggingvector);
+% 
+%                 design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
+
+%                if simoptions.getintermagflux
+%                    design.InterMagFlux = getintermagflux (design, solution);
+%                end
+
+    RawCoggingTorque = design.Poles(1) * (solution.blockintegral (22) / 2);
+    
+    % get the integral of the vector potential in a slot, if two
+    % layers get both layers
+    [AslotPos, slotIntA] = slotintAdata(design, posind, solution);
+
+    [BslotPos, slotIntB] = slotintBdata(design, posind, solution);
+
+% 
+%     % explicitly call the delete method on the solution
+%     delete (solution);
+%     clear solution;
+%     
+    delete (femfilename);
+    delete (ansfilename);
+            
+end
+
+function design = integrate_fea_data (design, simoptions, parameterCell)
+    
+    ind_RawCoggingTorque = 1;
+    ind_BxCoreLossData = 2;
+    ind_ByCoreLossData = 3;
+    ind_ArmatureToothFluxDensity = 4;
+    ind_FemmDirectFluxLinkage = 5;
+    ind_intA_slotPos = 6;
+    ind_intA_IntAData = 7;
+    ind_intB_slotPos = 8;
+    ind_intB_IntBData= 9;
+    
+    design.intAdata.slotPos = [];
+    design.intAdata.slotIntA = [];
+    design.intBdata.slotPos = [];
+    design.intBdata.slotIntB = [];
+        
+    for ind = 1:numel (parameterCell)
+        
+        design.intAdata.slotPos = [design.intAdata.slotPos; parameterCell{ind}{ind_intA_slotPos}];
+        design.intAdata.slotIntA = [design.intAdata.slotIntA; parameterCell{ind}{ind_intA_IntAData}];
+        design.intBdata.slotPos = [design.intBdata.slotPos; parameterCell{ind}{ind_intB_slotPos}];
+        design.intBdata.slotIntB = [design.intBdata.slotIntB; parameterCell{ind}{ind_intB_IntBData}];
+        design.RawCoggingTorque(ind) = parameterCell{ind}{ind_RawCoggingTorque};
+        design.ArmatureToothFluxDensity(ind) = parameterCell{ind}{ind_ArmatureToothFluxDensity};
+        design.FemmDirectFluxLinkage(ind) = parameterCell{ind}{ind_FemmDirectFluxLinkage};
+        
+        for ii = 1:numel(design.CoreLoss)
+        
+            design.CoreLoss(ii).By(:,ind,:) = parameterCell{ind}{ind_ByCoreLossData}{ii};
+        
+            design.CoreLoss(ii).Bx(:,ind,:) = parameterCell{ind}{ind_BxCoreLossData}{ii};
+            
         end
         
-    elseif design.CoilLayers == 2
-        
-        slotypos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2), ...
-                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,2)];
-        slotxpos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1), ...
-                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,1)];
-              
-        for i = 1:size(slotypos,1)
-
-            if exist('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
-                % x and y directed flux in slot on left hand side outer
-                % (leftmost) layer
-                solution.clearblock ();
-                solution.selectblock(slotxpos(i,1), slotypos(i,1));
-                design.intBdata.slotIntB(end+1,1,1) = solution.blockintegral (8);
-                design.intBdata.slotIntB(end,2,1) = solution.blockintegral (9);
-                
-                % x and y directed flux in slot on left hand side inner
-                % (rightmost) layer
-                solution.clearblock ();
-                solution.selectblock (slotxpos(i,2), slotypos(i,2));
-                design.intBdata.slotIntB(end,3,1) = solution.blockintegral (8);
-                design.intBdata.slotIntB(end,4,1) = solution.blockintegral (9);
-                
-            else
-                % x and y directed flux in slot on left hand side outer
-                % (leftmost) layer
-                mo_clearblock ();
-                mo_selectblock (slotxpos(i,1), slotypos(i,1));
-                design.intBdata.slotIntB(end+1,1,1) = mo_blockintegral (8);
-                design.intBdata.slotIntB(end,2,1) = mo_blockintegral (9);
-                
-                % x and y directed flux in slot on left hand side inner
-                % (rightmost) layer
-                mo_clearblock ();
-                mo_selectblock (slotxpos(i,2), slotypos(i,2));
-                design.intBdata.slotIntB(end,3,1) = mo_blockintegral (8);
-                design.intBdata.slotIntB(end,4,1) = mo_blockintegral (9);
-            end
-        end
-
     end
     
-    % store the relative coil/slot positions, we use -ve slotypos as the
-    % direction of sampling is the opposite of the direction of the fea
-    % drawing, so choosing a slot in the +ve y direction is the same as
-    % the magnets being in the opposite direction
-    [thetaslotypos, ~] = cart2pol (slotxpos(:,1), slotypos(:,1));
-    design.intBdata.slotPos = [design.intBdata.slotPos; 
-                               (-thetaslotypos./design.thetap) + design.FirstSlotCenter + feapos];
-    
-    % sort the data in ascending position order
+    % sort the B integral data in ascending position order
     [design.intBdata.slotPos, idx] = sort (design.intBdata.slotPos);
     design.intBdata.slotIntB = design.intBdata.slotIntB(idx,:,:);
     
+    [design.intAdata.slotPos, idx] = sort (design.intAdata.slotPos);
+    design.intAdata.slotIntA = design.intAdata.slotIntA(idx,:,:);
+
 end
 
-
-function design = slotintAdata (design, simoptions, feapos, solution)
+function [slotPos, slotIntA] = slotintAdata (design, posind, solution)
 
     % extract the flux integral data from all the slots at the given
     % positions of the magnet relative to coil
@@ -637,17 +569,10 @@ function design = slotintAdata (design, simoptions, feapos, solution)
         slotxpos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1);
 
         for i = 1:numel (slotypos)
-            if exist('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
-                % vector potential in slot on left hand side
-                solution.clearblock ();
-                solution.selectblock (slotxpos(i,1), slotypos(i));
-                design.intAdata.slotIntA(end+1,1,1) = solution.blockintegral (1);
-            else
-                % vector potential in slot on left hand side
-                mo_clearblock ();
-                mo_selectblock (slotxpos(i,1), slotypos(i));
-                design.intAdata.slotIntA(end+1,1,1) = mo_blockintegral (1);
-            end
+            % vector potential in slot on left hand side
+            solution.clearblock ();
+            solution.selectblock (slotxpos(i,1), slotypos(i));
+            slotIntA(i,1,1) = solution.blockintegral (1);
         end
         
     elseif design.CoilLayers == 2
@@ -661,33 +586,17 @@ function design = slotintAdata (design, simoptions, feapos, solution)
             
             solution.smoothon ()
 
-            if exist ('fpproc_interface_mex', 'file') == 3 && ~simoptions.usefemm
-                % vector potential in slot on left hand side outer
-                % (leftmost) layer
-                solution.clearblock ();
-                solution.selectblock (slotxpos(i,1), slotypos(i,1));
-                design.intAdata.slotIntA(end+1,1,1) = solution.blockintegral (1);
-                
-                % vector potential flux in slot on left hand side inner
-                % (rightmost) layer
-                solution.clearblock ();
-                solution.selectblock (slotxpos(i,2), slotypos(i,2));
-                design.intAdata.slotIntA(end,2,1) = solution.blockintegral (1);
-                
-            else
-                % vector potential in slot on left hand side outer
-                % (leftmost) layer
-                mo_clearblock ();
-                mo_selectblock (slotxpos(i,1), slotypos(i,1));
-                design.intAdata.slotIntA(end+1,1,1) = mo_blockintegral (1);
-                
-                % vector potential in slot on left hand side inner
-                % (rightmost) layer
-                mo_clearblock ();
-                mo_selectblock (slotxpos(i,2), slotypos(i,2));
-                design.intAdata.slotIntA(end,2,1) = mo_blockintegral (1);
-                
-            end
+            % vector potential in slot on left hand side outer
+            % (leftmost) layer
+            solution.clearblock ();
+            solution.selectblock (slotxpos(i,1), slotypos(i,1));
+            slotIntA(i,1,1) = solution.blockintegral (1);
+
+            % vector potential flux in slot on left hand side inner
+            % (rightmost) layer
+            solution.clearblock ();
+            solution.selectblock (slotxpos(i,2), slotypos(i,2));
+            slotIntA(i,2,1) = solution.blockintegral (1);
         end
 
     end
@@ -697,8 +606,7 @@ function design = slotintAdata (design, simoptions, feapos, solution)
     % drawing, so choosing a slot in the +ve y direction is the same as
     % the magnets being in the opposite direction
     [thetaslotypos, ~] = cart2pol (slotxpos(:,1), slotypos(:,1));
-    design.intAdata.slotPos = [design.intAdata.slotPos; 
-                              (-thetaslotypos./design.thetap) + design.FirstSlotCenter + feapos];
+    slotPos = (-thetaslotypos./design.thetap) + design.FirstSlotCenter + design.feapos(posind);
     
 %     % sort the data in ascending position order
 %     [design.intAdata.slotPos, idx] = sort (design.intAdata.slotPos);
@@ -706,6 +614,62 @@ function design = slotintAdata (design, simoptions, feapos, solution)
     
 end
 
+function [slotPos, slotIntB] = slotintBdata (design, posind, solution)
+
+    % extract the flux integral data from all the slots at the given
+    % positions of the magnet relative to coil
+    if design.CoilLayers == 1
+        
+        slotypos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2);
+        slotxpos = design.StatorDrawingInfo.CoilLabelLocations(1:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1);
+                
+        for i = 1:numel (slotypos)
+            % x and y directed flux in slot on left hand side
+            solution.clearblock ();
+            solution.selectblock (slotxpos(i,1), slotypos(i));
+            slotIntB(i,1,1) = solution.blockintegral (8);
+            slotIntB(i,2,1) = solution.blockintegral (9);
+        end
+        
+    elseif design.CoilLayers == 2
+        
+        slotypos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),2), ...
+                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,2)];
+        slotxpos = [design.StatorDrawingInfo.CoilLabelLocations(1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)),1), ...
+                    design.StatorDrawingInfo.CoilLabelLocations((1:2:(size(design.StatorDrawingInfo.CoilLabelLocations,1)))+1,1)];
+              
+        for i = 1:size(slotypos,1)
+
+            % x and y directed flux in slot on left hand side outer
+            % (leftmost) layer
+            solution.clearblock ();
+            solution.selectblock(slotxpos(i,1), slotypos(i,1));
+            slotIntB(i,1,1) = solution.blockintegral (8);
+            slotIntB(i,2,1) = solution.blockintegral (9);
+
+            % x and y directed flux in slot on left hand side inner
+            % (rightmost) layer
+            solution.clearblock ();
+            solution.selectblock (slotxpos(i,2), slotypos(i,2));
+            slotIntB(i,3,1) = solution.blockintegral (8);
+            slotIntB(i,4,1) = solution.blockintegral (9);
+
+        end
+
+    end
+    
+    % store the relative coil/slot positions, we use -ve slotypos as the
+    % direction of sampling is the opposite of the direction of the fea
+    % drawing, so choosing a slot in the +ve y direction is the same as
+    % the magnets being in the opposite direction
+    [thetaslotypos, ~] = cart2pol (slotxpos(:,1), slotypos(:,1));
+    slotPos = (-thetaslotypos./design.thetap) + design.FirstSlotCenter + design.feapos(posind);
+    
+%     % sort the data in ascending position order
+%     [design.intBdata.slotPos, idx] = sort (design.intBdata.slotPos);
+%     design.intBdata.slotIntB = design.intBdata.slotIntB(idx,:,:);
+    
+end
 
 
 function design = corelosssetup (design, feapos, solution)
