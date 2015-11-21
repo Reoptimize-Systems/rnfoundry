@@ -17,6 +17,9 @@ side = 'l';
     axialfluxstatorhalf2dfemmprob(slots, Poles, ypole, ycoil, yshoegap, ...
                                   xyoke, xcoil, xshoebase, xshoegap, xoffset, side, 'NWindingLayers', 3);
 
+plotfemmproblem (FemmProblem);
+
+%%
 filename = 'test.fem';
 
 writefemmfile(filename, FemmProblem)
