@@ -15,6 +15,12 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
     % pre-screen the design to see if a full simulation is worth it
     [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions);
     
+    % estimate the masses of the components
+    sdesign = materialmasses_RADIAL_SLOTTED(sdesign, ssimoptions);
+
+    % generate a score for the machine
+    [prescore, sdesign, ssimoptions] = machinescore_RADIAL_SLOTTED(sdesign, ssimoptions);
+        
     simoptions = setfieldifabsent(simoptions, 'ForceFullSim', false);
     simoptions = setfieldifabsent(simoptions, 'DoStructEval', false);
     
@@ -29,12 +35,6 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
         T = [];
         Y = [];
         results = [];
-        
-        % estimate the masses of the components
-        sdesign = materialmasses_RADIAL_SLOTTED(sdesign, ssimoptions);
-        
-        % generate a score for the machine
-        [prescore, sdesign, ssimoptions] = machinescore_RADIAL_SLOTTED(sdesign, ssimoptions);
         
         % make the score bigger to encourage getting into the full test zone
         score = prescore * 3; 
