@@ -85,7 +85,7 @@ private:
     vector<double> currents;                //!< The phases currents to compute the \f$ MMF \f$ (istantaneous values) (A)
     vector<double> slot_cur_matrix;         //!< The slot matrix with the total current of all the phases
     void fill_slot_cur_matrix();            //!< Fill the slot_cur_matrix starting from the windings slot matrix and the given phase currents
-    static constexpr double zero = 1.0e-10;     //!< The tolerance for zero coefficients in an and bn
+    double zero = 1.0e-10;                  //!< The tolerance for zero coefficients in an and bn
     StarOfSlot  star;                       //!< The star of slot object
 };
 
