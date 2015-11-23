@@ -37,10 +37,10 @@ function design = checkcoilprops_AM(design)
         % Determine the cross-sectional area of the coil, assuming it's a
         % box shape
         if isfield(design, 'CoilLayers')
-            layerheight = design.Hc / design.CoilLayers;
-            design.CoilArea = layerheight * design.Wc;
+            layerheight = design.Hc(1) / design.CoilLayers;
+            design.CoilArea = layerheight * mean(design.Wc);
         else
-            design.CoilArea = design.Hc * design.Wc;
+            design.CoilArea = design.Hc(1) * mean(design.Wc);
         end
     end
     
