@@ -73,7 +73,11 @@ private:
     bool single_layer_feasible;                    //!< Single layer feasibility (computed by this class)
     bool single_layer_wanted;                      //!< If true the single layer winding is computed (if feasible)
     bool mutual_inductance_zero;                   //!< if true the mutual inductance between two phases is zero with yq=1 (computed by this class)
-    static constexpr double zero = 1e-4;               //!< The zero for the angles in the star
+// #if __cplusplus <= 201103L
+    double zero = 1e-4;               //!< The zero for the angles in the star
+// #else
+//    static constexpr double zero = 1e-4;               //!< The zero for the angles in the star
+// #endif
 
     vector<spoke>    star;      //!< The vector containing the spoke number label sequence
     vector<sector>   p_sec;     //!< The vector containing the positive sectors of the star. The sectors are m
@@ -81,5 +85,7 @@ private:
 
     int gcd(int a, int b); //!< Returns the great common divisor of two numbers
 };
+
+// const double StarOfSlot::zero = 1e-4;
 
 #endif // STAROFSLOT_H
