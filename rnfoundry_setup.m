@@ -22,6 +22,8 @@ function rnfoundry_setup (varargin)
     Inputs.ForceMexSLMSetup = false;
     % mex ppval related
     Inputs.ForceMexPPValSetup = false;
+    % force setting up mexmPhaseWL
+    Inputs.ForceMexmPhaseWLSetup = false;
     % xfemm related
     Inputs.PreventXFemmCheck = false;
     if ispc
@@ -51,20 +53,20 @@ function rnfoundry_setup (varargin)
         end
     end
     
-    if Inputs.ForceMexLseiSetup || (exist ('mexlsei', 'file') ~= 3)
+    if Inputs.ForceMexLseiSetup || (exist (['mexlsei.', mexext], 'file') ~= 3)
         mexlsei_setup ( Inputs.ForceMexLseiF2cLibRecompile, ...
                         Inputs.ForceMexLseiCFileCreation );
     end
     
-    if Inputs.ForceMexSLMSetup || (exist ('mexslmeval', 'file') ~= 3)
+    if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mexext], 'file') ~= 3)
         mexslmeval_setup ();
     end
     
-    if Inputs.ForceMexPPValSetup || (exist ('mexppval', 'file') ~= 3)
+    if Inputs.ForceMexPPValSetup || (exist (['mexppval.', mexext], 'file') ~= 3)
         mexppval_setup();
     end
     
-    if Inputs.ForceMexPPValSetup || (exist ('mexmPhaseWL', 'file') ~= 3)
+    if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mexext], 'file') ~= 3)
         mmake ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
         mmake ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
     end
