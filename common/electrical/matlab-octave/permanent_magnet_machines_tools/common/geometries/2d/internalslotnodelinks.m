@@ -213,8 +213,8 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
     info.shoegaplabelloc = [];
     info.inslabelloc = [];
     
-    if yshoegap > ycoil
-        yshoegap = ycoil;
+    if yshoegap >= (ycoil(1) - 2*tol)
+        yshoegap = max (0, ycoil(1) - 2*tol);
     end
     
     if numel (ycoil) == 1
@@ -840,8 +840,21 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
         end
         
         if (layersmade >= ylayers)
-            % return if we've made enough layers, partly to sidestep
-            % numerical issues
+            % we've made enough layers, link up the sides and return,
+            % partly to sidestep numerical issues
+            
+            % link up the sides
+            links = [ links;
+                      topbasenids(end), topinnershoenode;
+                      botbasenids(end), botinnershoenode; ];
+
+            % update the link lists
+            if options.InsulationThickness > 0
+                info.inslinkinds = [info.inslinkinds, size(links, 1) - 1, size(links, 1)];
+            else
+                info.toothlinkinds = [info.toothlinkinds, size(links, 1) - 1, size(links, 1)];
+            end
+            
             info.cornernodes = [ lastinnernodes(2), botouternode, topouternode, lastinnernodes(1) ];
             return;
         end
@@ -966,6 +979,19 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
             end
 
         else
+            % link up the sides
+            links = [ links;
+                      topbasenids(end), topinnershoenode;
+                      botbasenids(end), botinnershoenode; ];
+
+            % update the link lists
+            if options.InsulationThickness > 0
+                info.inslinkinds = [info.inslinkinds, size(links, 1) - 1, size(links, 1)];
+            else
+                info.toothlinkinds = [info.toothlinkinds, size(links, 1) - 1, size(links, 1)];
+            end
+            
+            % update the amount of layer area available
             layer_area_available = layer_area_available + bodyarea;
         end
         
