@@ -105,7 +105,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % can't fit through the slot opening. By default this is prevented.
 	simoptions = setfieldifabsent(simoptions, ...
                     'PreventWireDiameterGreaterThanSlotOpening',  true);
-    
+
 	if simoptions.PreventWireDiameterGreaterThanSlotOpening
         % check the wire can fit through the slot opening, taing action to
         % allow it to if required, and setting the max possible wire size
@@ -124,13 +124,15 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
             design.thetasgVthetacg = design.thetasg / design.thetacg;
             % check the slot opening is not greater than the coil width at
             % the opening end
-            if design.thetasgVthetacg > 1
+            if design.thetasgVthetacg >= 1
                 % if it is, set it to the max possible, there is not much
                 % more that can be done short of changing the whole design
                 % of the coil. Should this prove to be an issue, an
                 % optimisation penalty can be introduced for this case.
-                design.thetasgVthetacg = 1.0;
-                design.thetasg = design.thetasgVthetacg * design.thetacg;
+                design.thetasg = ((design.thetacg*design.Rai) - (2*1e-5)) / design.Rai;
+                design.thetasg = max (0,design.thetasg);
+                design.thetasgVthetacg = design.thetasg / design.thetacg;
+%                 design.thetasg = design.thetasgVthetacg * design.thetacg;
             end
 
             simoptions = setfieldifabsent (simoptions, ...
