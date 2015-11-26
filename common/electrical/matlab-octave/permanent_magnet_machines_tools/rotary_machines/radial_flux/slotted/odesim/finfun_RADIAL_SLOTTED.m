@@ -1,10 +1,10 @@
 function [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions)
 % performs post-pro processing of simulation data generated for the slotted
-% torus axial flux rotary machine in preparation for an ODE simulation
+% radial flux rotary machine in preparation for an ODE simulation
 %
 % Syntax
 %
-% [design, simoptions] = finfun_TORUS_SLOTTED(design, simoptions)
+% [design, simoptions] = finfun_RADIAL_SLOTTED (design, simoptions)
 %
 % 
 
