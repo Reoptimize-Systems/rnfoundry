@@ -111,11 +111,11 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
     % First define the rectangle 1 coordinates, the other rectangles will
     % be defined relative to these
     % Bottom left of bottom rect
-	xycoords(1,:) = [-x/2, y2/2];
+    xycoords(1,:) = [-x/2, y2/2];
     % Bottom right of bottom rect
-	xycoords(2,:) = [x/2, y2/2];
+    xycoords(2,:) = [x/2, y2/2];
     % Top left of bottom rect
-	xycoords(3,:) = [-x/2, xycoords(1,2) + y1];
+    xycoords(3,:) = [-x/2, xycoords(1,2) + y1];
     % Top right of bottom rect
     xycoords(4,:) = [x/2, xycoords(2,2) + y1];
     % Next rectangles are bottom rectangle shifted by n half periods
@@ -198,7 +198,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
         Apos = find ( abs(xycoords(1:8:Ny1*4,2)) <= minsizes ...
                        | abs(((Ny1*(yperiod/2)) - abs(xycoords(1:8:Ny1*4,2)))) <= minsizes ) * 2 - 1;
                    
-        tempnodes = circshift (xycoords(1:4*Ny1,:), -Apos*4+2, 1);
+        tempnodes = circshift (xycoords(1:4*Ny1,:), [-Apos*4+2, 0]);
         
         nodes = [bottomnodes; 
                  tempnodes(1:end-2,:);
@@ -270,7 +270,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
         Apos = find ( abs(xycoords(3:8:4*Ny1+2,2)) <= minsizes ...
                        | abs(((Ny1*(yperiod/2)) - abs(xycoords(3:8:4*Ny1+2,2)))) <= minsizes ) * 2 - 1;
                    
-        tempnodes = circshift (xycoords(1:4*Ny1,:), -Apos*4, 1);
+        tempnodes = circshift (xycoords(1:4*Ny1,:), [-Apos*4, 0]);
         
         nodes = [bottomnodes; 
                  tempnodes(1:end-2,:);
@@ -345,7 +345,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                       | abs(((Ny1*(yperiod/2)) - abs(xycoords(5:8:4*Ny1-3,2)))) <= minsizes ...
                     ) * 2;
         
-        tempnodes = circshift (xycoords(1:4*Ny1,:), -Bpos*4+2, 1);
+        tempnodes = circshift (xycoords(1:4*Ny1,:), [-Bpos*4+2, 0]);
         
 %         nodes = [bottomnodes; 
 %                  xycoords(7:8,:); 
@@ -427,7 +427,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
                       | abs(((Ny1*(yperiod/2)) - abs(xycoords(7:8:4*Ny1-1,2)))) <= minsizes ...
                     ) * 2;
         
-        tempnodes = circshift (xycoords(1:4*Ny1,:), -Bpos*4, 1);
+        tempnodes = circshift (xycoords(1:4*Ny1,:), [-Bpos*4, 0]);
         
         nodes = [bottomnodes;
                  tempnodes(1:end-2,:);
@@ -504,7 +504,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
 
         Apos = find (xycoords(3:8:4*Ny1+2,2) < xycoords(1:8:4*Ny1,2)) * 2 - 1;
         
-        tempnodes = circshift (xycoords(1:4*Ny1,:), -Apos*4+2, 1);
+        tempnodes = circshift (xycoords(1:4*Ny1,:), [-Apos*4+2, 0]);
         
         nodes = [bottomnodes;
                  tempnodes;
@@ -577,7 +577,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
 
         Bpos = find ( xycoords(7:8:4*Ny1-1,2) < xycoords(5:8:4*Ny1-3,2) ) * 2;
         
-        tempnodes = circshift (xycoords(1:4*Ny1,:), -Bpos*4+2, 1);
+        tempnodes = circshift (xycoords(1:4*Ny1,:), [-Bpos*4+2, 0]);
         
         nodes = [bottomnodes;
                  tempnodes;
@@ -662,7 +662,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
 
             [~,Apos] = min (xycoords(1:4*Ny1,2));
 
-            tempnodes = circshift (xycoords(1:4*Ny1,:), -(Apos-1), 1);
+            tempnodes = circshift (xycoords(1:4*Ny1,:), [-(Apos-1), 0]);
 
             nodes = [ bottomnodes;
                       tempnodes;
@@ -735,7 +735,7 @@ function [nodes, nodeids, links, rectcentres, spacecentres] = ...
 
             [~,Apos] = min (xycoords(1:4*Ny1,2));
 
-            tempnodes = circshift (xycoords(1:4*Ny1,:), -(Apos-1), 1);
+            tempnodes = circshift (xycoords(1:4*Ny1,:), [-(Apos-1), 0]);
 
             nodes = [ bottomnodes;
                       tempnodes;
