@@ -32,9 +32,9 @@ function tf = doproceed (msg, default)
     end
     
     if default
-        endstr = ' [Y/n]';
+        endstr = ' [Y/n]: ';
     else
-        endstr = ' [y/N]';
+        endstr = ' [y/N]: ';
     end
     
     if ~ischar (msg)
