@@ -35,7 +35,7 @@ function rnfoundry_setup (varargin)
     end
 
     % set up the matlab path first to get access to a load of utility
-    % function we can then use
+    % functions we can then use
     thisfilepath = fileparts (which ('rnfoundry_setup'));
     addpath(genpath (thisfilepath));
     
