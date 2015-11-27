@@ -47,6 +47,6 @@ function [T, Y, results, design, simoptions] = simulatemachine_linear(design, si
 
     % call the more generic function simulatemachine_AM
     [T, Y, results, design, simoptions] = ...
-        simulatemachine_AM(design, simoptions, simfun, finfun, odeevfun, resfun, varargin{:});
+        simulatemachine_AM(design, simoptions, varargin{:});
 
 end
