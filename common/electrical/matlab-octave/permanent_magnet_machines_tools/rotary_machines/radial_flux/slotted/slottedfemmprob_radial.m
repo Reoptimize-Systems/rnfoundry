@@ -112,9 +112,12 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     Inputs.ArmatureBackIronGroup = [];
     Inputs.MagnetRegionMeshSize = choosemesharea_mfemm (design.tm, (design.Rmm*design.thetam), 1/10);
     Inputs.BackIronRegionMeshSize = choosemesharea_mfemm (min(design.tbi), 2*(design.Rbm*design.thetap), 1/10);
-    Inputs.OuterRegionsMeshSize = [choosemesharea_mfemm(design.tm, (design.Rbo*design.thetap), 1/5), -1];
+    Inputs.RotorOuterRegionsMeshSize = [choosemesharea_mfemm(design.tm, (design.Rbo*design.thetap), 1/5), -1];
+    Inputs.StatorOuterRegionsMeshSize = [];
+    Inputs.StatorOuterRegionMaterials = {};
     Inputs.AirGapMeshSize = choosemesharea_mfemm (design.g, (design.Rmm*design.thetap), 1/10);
     Inputs.DrawOuterRegions = true;
+    Inputs.StatorOuterRegionSize = [];
     Inputs.DrawCoilInsulation = false;
     Inputs.CoilInsRegionMeshSize = -1;
     
@@ -142,7 +145,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     Inputs.MaterialsLibrary = '';
     Inputs.NPolePairs = 1;
     
-    Inputs = parse_pv_pairs (Inputs, varargin);
+    Inputs = parseoptions (Inputs, varargin);
     
     Inputs.NSlots = Inputs.NPolePairs*2*design.Qs/design.Poles;
     
@@ -286,7 +289,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
                 'OuterRegionGroup', Inputs.RotorOuterRegionGroup, ...
                 'MagnetRegionMeshSize', Inputs.MagnetRegionMeshSize, ...
                 'BackIronRegionMeshSize', Inputs.BackIronRegionMeshSize, ...
-                'OuterRegionsMeshSize', Inputs.OuterRegionsMeshSize, ...
+                'OuterRegionsMeshSize', Inputs.RotorOuterRegionsMeshSize, ...
                 'Position', Inputs.Position, ...
                 'DrawOuterRegions', Inputs.DrawOuterRegions, ...
                 'NPolePairs', Inputs.NPolePairs, ...
@@ -450,7 +453,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
                 'OuterRegionGroup', Inputs.RotorOuterRegionGroup, ...
                 'MagnetRegionMeshSize', Inputs.MagnetRegionMeshSize, ...
                 'BackIronRegionMeshSize', Inputs.BackIronRegionMeshSize, ...
-                'OuterRegionsMeshSize', Inputs.OuterRegionsMeshSize, ...
+                'OuterRegionsMeshSize', Inputs.RotorOuterRegionsMeshSize, ...
                 'Position', Inputs.Position, ...
                 'DrawOuterRegions', Inputs.DrawOuterRegions, ...
                 'NPolePairs', Inputs.NPolePairs, ...
@@ -1103,7 +1106,7 @@ function [FemmProblem, statorinfo] = stator_iron_boundary (FemmProblem, design, 
 
     end
     
-    FemmProblem = shift_new_nodes_and_labels (FemmProblem, elcount, XShift, YShift);
+    FemmProblem = translatenewelements_mfemm (FemmProblem, elcount, XShift, YShift);
 
 end
 
@@ -1120,89 +1123,124 @@ function [FemmProblem, statorinfo] = stator_outer_regions (FemmProblem, design, 
             % single inner facing stator (magnets inside, stator outside)
 
             % the sizes of the stator outer air regions
-            statorinfo.touterregion = [2*design.tm, 10*design.tm]; 
-
-            % create the nodes which will make up the outer region and
-            % upper and lower enges of the stator
-            [edgenodes(:,1), edgenodes(:,2)] = pol2cart ( ...
-                                                         [ 0; ...
-                                                           design.thetap * Inputs.NPolePairs; ...
-                                                           design.thetap * 2 * Inputs.NPolePairs; ...
-                                                           0; ...
-                                                           design.thetap * Inputs.NPolePairs; ...
-                                                           design.thetap * 2 * Inputs.NPolePairs; ...
-                                                           ], ...
-                                                         [ Rs + design.ty/2 + statorinfo.touterregion(1); ... % outer surface of first inner region, bottom node
-                                                           Rs + design.ty/2 + statorinfo.touterregion(1); ... % outer surface of first inner region, middle node
-                                                           Rs + design.ty/2 + statorinfo.touterregion(1); ... % outer surface of first inner region, top node
-                                                           Rs + design.ty/2 + statorinfo.touterregion(1) + statorinfo.touterregion(2); ... % outer surface of second outer region, bottom node
-                                                           Rs + design.ty/2 + statorinfo.touterregion(1) + statorinfo.touterregion(2); ... % outer surface of second outer region, middle node
-                                                           Rs + design.ty/2 + statorinfo.touterregion(1) + statorinfo.touterregion(2); ... % outer surface of second outer region, top node
-                                                           ] ...
-                                                         ); 
-
-            if abs(tau-(design.thetap * 2 * Inputs.NPolePairs)) > Inputs.Tol
-                
-                % add the appropriate nodes to the problem
-                [FemmProblem, ~, nodeids] = addnodes_mfemm (FemmProblem, edgenodes(:,1), edgenodes(:,2));
-
-                statorinfo.node_id_set_stator_outer_region_1 = [nodeids(1), nodeids(2), nodeids(3)];
-                statorinfo.node_id_set_stator_outer_region_2 = [nodeids(4), nodeids(5), nodeids(6)];
-
-                % add segments with periodic boundaries on the outer parts
-                [FemmProblem, ~, region1boundname] = addboundaryprop_mfemm (FemmProblem, 'Radial Stator Outer Periodic', 4);
-                [FemmProblem, ~, region2boundname] = addboundaryprop_mfemm (FemmProblem, 'Radial Stator Outer Periodic', 4);
-
-                segprops = struct ('BoundaryMarker', {region1boundname, region2boundname}, 'InGroup', {0, 0});
-                
-                % bottom segs
-                [FemmProblem, statorinfo.BottomSegInds(end+1:end+2)] = addsegments_mfemm (FemmProblem, ...
-                                                [statorinfo.node_id_set_stator_outer(1), statorinfo.node_id_set_stator_outer_region_1(1)], ...
-                                                [statorinfo.node_id_set_stator_outer_region_1(1) statorinfo.node_id_set_stator_outer_region_2(1)], ...
-                                                segprops);
-                % top segs
-                [FemmProblem, statorinfo.TopSegInds(end+1:end+2)] = addsegments_mfemm (FemmProblem, ...
-                                                [statorinfo.node_id_set_stator_outer(3), statorinfo.node_id_set_stator_outer_region_1(3)], ...
-                                                [statorinfo.node_id_set_stator_outer_region_1(3) statorinfo.node_id_set_stator_outer_region_2(3)], ...
-                                                segprops);
-
-            else
-                
-                % add the nodes to the problem
-                [FemmProblem, ~, nodeids] = addnodes_mfemm (FemmProblem, edgenodes([1,2,4,5],1), edgenodes([1,2,4,5],2));
-
-                statorinfo.node_id_set_stator_outer_region_1 = [nodeids(1), nodeids(2), nodeids(1)];
-                statorinfo.node_id_set_stator_outer_region_2 = [nodeids(3), nodeids(4), nodeids(3)];
-                
+            if isempty (Inputs.StatorOuterRegionSize)
+                Inputs.StatorOuterRegionSize = [2*design.tm, 10*design.tm];                
             end
-                                        
-            % add arcs linking the outer segments
-            FemmProblem = addarcsegments_mfemm (FemmProblem, ...
-                                               [ statorinfo.node_id_set_stator_outer_region_1(1), ...
-                                                 statorinfo.node_id_set_stator_outer_region_1(2), ...
-                                                 statorinfo.node_id_set_stator_outer_region_2(1), ...
-                                                 statorinfo.node_id_set_stator_outer_region_2(2), ...
-                                                 ], ...
-                                               [ statorinfo.node_id_set_stator_outer_region_1(2), ...
-                                                 statorinfo.node_id_set_stator_outer_region_1(3), ...
-                                                 statorinfo.node_id_set_stator_outer_region_2(2), ...
-                                                 statorinfo.node_id_set_stator_outer_region_2(3)], ...
-                                               rad2deg(repmat(design.thetap*Inputs.NPolePairs,1,4)));
+            if isempty (Inputs.StatorOuterRegionsMeshSize)
+                Inputs.StatorOuterRegionsMeshSize = [ choosemesharea_mfemm(design.tm, (Rs*design.thetap), 1/5), ...
+                                                      repmat(-1,1,numel(Inputs.StatorOuterRegionSize)-1) ];
+            end
+            assert (samesize (Inputs.StatorOuterRegionSize, Inputs.StatorOuterRegionsMeshSize), ...
+                'RENEWNET:slottedfemmproble_radial:nstatormeshsizes', ...
+                'Number of supplied stator outer region mesh sizes does not match number of outer region sizes.');
+            
+            if isempty (Inputs.StatorOuterRegionMaterials)
+                % FemmProblem.Materials(GapMatInd).Name
+                Inputs.StatorOuterRegionMaterials = repmat ({FemmProblem.Materials(GapMatInd).Name}, 1, numel(Inputs.StatorOuterRegionSize));
+            end
+            assert (samesize (Inputs.StatorOuterRegionSize, Inputs.StatorOuterRegionMaterials), ...
+                'RENEWNET:slottedfemmproble_radial:nstatormaterials', ...
+                'Number of supplied stator outer region material names does not match number of outer region sizes.');
+                    
+            statorinfo.touterregion = Inputs.StatorOuterRegionSize;
+            
+            % calculate the radial positions of the outer region boundaries
+            statorinfo.routerregion = cumsum ([Rs + design.ty/2, statorinfo.touterregion]);
+            
+            % get a suitable tolerance to determine if we are making a full
+            % circle or not
+            FullCircleAngleTol = Inputs.Tol / statorinfo.routerregion(1);
+            
+            sectionangle = design.thetap * 2 * Inputs.NPolePairs;
+            
+            statorinfo.node_id_sets_stator_outer_region = statorinfo.node_id_set_stator_outer;
+            
+            for ind = 1:numel (statorinfo.touterregion)
 
-            % Add block labels for the outer air regions
-            [labelloc(1),labelloc(2)]  = pol2cart (design.thetap * Inputs.NPolePairs, Rs + design.ty/2 + statorinfo.touterregion(1)/2);
+                if (sectionangle < tau()) && ((tau()-sectionangle) > FullCircleAngleTol)
+                    % there is not a full circle, so we will be making
+                    % boundaries at the top and bottom. Test above is
+                    % checking angle and tolerance based on actual
+                    % distance, not angle
+                    
+                    [edgenodes(:,1), edgenodes(:,2)] = ...
+                        pol2cart ( [ 0; design.thetap * Inputs.NPolePairs; design.thetap * 2 * Inputs.NPolePairs; ], ...
+                                     repmat (statorinfo.routerregion(ind+1), [3,1] ) );
 
-            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm (labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
-                                    'MaxArea', Inputs.OuterRegionsMeshSize(1));
+                    % add the appropriate nodes to the problem
+                    [FemmProblem, ~, nodeids] = addnodes_mfemm (FemmProblem, edgenodes(:,1), edgenodes(:,2));
 
-            [labelloc(1),labelloc(2)]  = pol2cart(design.thetap * Inputs.NPolePairs, Rs + design.ty/2 + statorinfo.touterregion(1) + statorinfo.touterregion(2)/2);
+                    statorinfo.node_id_sets_stator_outer_region = [statorinfo.node_id_sets_stator_outer_region;
+                                                                   nodeids];
+                                                               
+%                     statorinfo.node_id_set_stator_outer_region_2 = [nodeids(4), nodeids(5), nodeids(6)];
 
-            FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm (labelloc(1,1), labelloc(1,2), ...
-                                    'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
-                                    'MaxArea', Inputs.OuterRegionsMeshSize(2));
+                    % add segments with periodic boundaries on the outer parts
+                    [FemmProblem, ~, boundname] = addboundaryprop_mfemm (FemmProblem, 'Radial Stator Outer Periodic', 4);
+%                     [FemmProblem, ~, region2boundname] = addboundaryprop_mfemm (FemmProblem, 'Radial Stator Outer Periodic', 4);
 
+                    segprops = struct ('BoundaryMarker', boundname, 'InGroup', 0);
 
+                    % bottom seg
+                    [FemmProblem, statorinfo.BottomSegInds(ind)] ...
+                        = addsegments_mfemm ( FemmProblem, ...
+                                              statorinfo.node_id_sets_stator_outer_region(ind,1), ...
+                                              statorinfo.node_id_sets_stator_outer_region(ind+1,1), ...
+                                              segprops );
+                    % top seg
+                    [FemmProblem, statorinfo.TopSegInds(ind)] ...
+                        = addsegments_mfemm ( FemmProblem, ...
+                                              statorinfo.node_id_sets_stator_outer_region(ind,3), ...
+                                              statorinfo.node_id_sets_stator_outer_region(ind+1,3), ...
+                                              segprops );
+
+                elseif (sectionangle > tau()) && ((sectionangle - tau()) > FullCircleAngleTol)
+                    error ('RENEWNET:slottedfemmprob_radial:toomanypoles', ...
+                        'You are attempting to draw too many poles, angle is greater than a complete circle.')
+                else
+                    % there is a full circle, so we'll be linking up the top
+                    % and bottom to itelf
+                    [edgenodes(:,1), edgenodes(:,2)] = ...
+                        pol2cart ( [ 0; design.thetap * Inputs.NPolePairs; ], ...
+                                     repmat (statorinfo.routerregion(ind+1), [2,1] ) );
+                    
+                    % add the nodes to the problem
+                    [FemmProblem, ~, nodeids] = addnodes_mfemm (FemmProblem, edgenodes(:,1), edgenodes(:,2));
+
+                    statorinfo.node_id_sets_stator_outer_region ...
+                        = [statorinfo.node_id_sets_stator_outer_region;
+                           nodeids(1), nodeids(2), nodeids(1)];
+                       
+%                     statorinfo.node_id_set_stator_outer_region_2 = [nodeids(3), nodeids(4), nodeids(3)];
+
+                end
+
+                % add arcs linking the outer segments
+                FemmProblem = addarcsegments_mfemm (FemmProblem, ...
+                                                   [ statorinfo.node_id_sets_stator_outer_region(ind+1,1), ...
+                                                     statorinfo.node_id_sets_stator_outer_region(ind+1,2), ...
+                                                     ], ...
+                                                   [ statorinfo.node_id_sets_stator_outer_region(ind+1,2), ...
+                                                     statorinfo.node_id_sets_stator_outer_region(ind+1,3), ...
+                                                     ], ...
+                                                   rad2deg(repmat(design.thetap*Inputs.NPolePairs,1,2)));
+
+                % Add block labels for the outer air region
+                [labelloc(1),labelloc(2)] = pol2cart (design.thetap * Inputs.NPolePairs, mean(statorinfo.routerregion(ind:ind+1)));
+
+                
+                FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm (labelloc(1,1), labelloc(1,2), ...
+                                        'BlockType', Inputs.StatorOuterRegionMaterials{ind}, ...
+                                        'MaxArea', Inputs.StatorOuterRegionsMeshSize(ind));
+% 
+%                 [labelloc(1),labelloc(2)]  = pol2cart(design.thetap * Inputs.NPolePairs, Rs + design.ty/2 + statorinfo.touterregion(1) + statorinfo.touterregion(2)/2);
+% 
+%                 FemmProblem.BlockLabels(end+1) = newblocklabel_mfemm (labelloc(1,1), labelloc(1,2), ...
+%                                         'BlockType', FemmProblem.Materials(GapMatInd).Name, ...
+%                                         'MaxArea', Inputs.OuterRegionsMeshSize(2));
+
+            end
+            
         case 'internal'
             % single outer facing stator (stator inside, magnets outside)
 
@@ -1307,28 +1345,42 @@ function [FemmProblem, statorinfo] = stator_outer_regions (FemmProblem, design, 
 
     end
     
-    FemmProblem = shift_new_nodes_and_labels (FemmProblem, elcount, XShift, YShift);
+    % move the new nodes and labels
+    FemmProblem = translatenewelements_mfemm (FemmProblem, elcount, XShift, YShift);
             
 end
 
 
-function FemmProblem = shift_new_nodes_and_labels (FemmProblem, oldelcount, XShift, YShift)
-
-    if XShift ~= 0 || YShift ~= 0
-        
-        newelcount = elementcount_mfemm (FemmProblem);
-        
-        nodeids = (oldelcount.NNodes):(newelcount.NNodes-1);
-        
-        FemmProblem = translatenodes_mfemm(FemmProblem, XShift, YShift, nodeids);
-        
-        blockids = (oldelcount.NBlockLabels):(newelcount.NBlockLabels-1);
-                 
-        FemmProblem = translateblocklabels_mfemm(FemmProblem, XShift, YShift, blockids);
-        
-    end
-
-end
+% function FemmProblem = shift_new_nodes_and_labels (FemmProblem, oldelcount, XShift, YShift)
+% % shift newly added nodes blocks and labels
+% %
+% % Syntax
+% %
+% % FemmProblem = shiftnewelements_mfemm (FemmProblem, oldelcount, XShift, YShift)
+% %
+% % Description
+% %
+% % shiftnewelements_mfemm moves all nodes and block lables added since the
+% % element count provided in oldelcount was performed by the specified
+% % amount in the x and y direction
+% %
+% % 
+% 
+%     if XShift ~= 0 || YShift ~= 0
+%         
+%         newelcount = elementcount_mfemm (FemmProblem);
+%         
+%         nodeids = (oldelcount.NNodes):(newelcount.NNodes-1);
+%         
+%         FemmProblem = translatenodes_mfemm(FemmProblem, XShift, YShift, nodeids);
+%         
+%         blockids = (oldelcount.NBlockLabels):(newelcount.NBlockLabels-1);
+%                  
+%         FemmProblem = translateblocklabels_mfemm(FemmProblem, XShift, YShift, blockids);
+%         
+%     end
+% 
+% end
 
 
 function FemmProblem = addcoilinsulationlabels (FemmProblem, design, Inputs, inslabellocs)
