@@ -156,6 +156,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     Inputs.ExtraResFunArgs = {};
     Inputs.ExtraOdeArgs = {};
     Inputs.odeevfun = true;
+    Inputs.Verbose = true;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
