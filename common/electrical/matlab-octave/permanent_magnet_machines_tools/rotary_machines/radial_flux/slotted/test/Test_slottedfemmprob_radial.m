@@ -114,3 +114,59 @@ plotfemmproblem (FemmProblem);
 
 % plotfemmproblem (FemmProblem);
 openprobleminfemm_mfemm (FemmProblem);
+
+%% No base curve at all
+
+design.ShoeCurveControlFrac = 0.1;
+design.CoilInsulationThickness = 2/10000;
+design.MagFEASimMaterials.CoilInsulation = 'Air';
+
+design.tc(2) = 0;
+
+[FemmProblem, coillabellocs] = ...
+    slottedfemmprob_radial ( design, ...
+                             'ArmatureType', design.ArmatureType, ...
+                             'DrawCoilInsulation', true, ...
+                             'NPolePairs', 2);
+
+plotfemmproblem (FemmProblem);
+
+%% Any number of external regions
+
+design.ShoeCurveControlFrac = 0.1;
+design.CoilInsulationThickness = 2/10000;
+design.MagFEASimMaterials.CoilInsulation = 'Air';
+
+design.tc(2) = 0;
+
+[FemmProblem, coillabellocs] = ...
+    slottedfemmprob_radial ( design, ...
+                             'ArmatureType', design.ArmatureType, ...
+                             'DrawCoilInsulation', true, ...
+                             'NPolePairs', 2, ...
+                             'StatorOuterRegionSize', [design.tm, 3*design.tm, design.tm, 2*design.tm] );
+
+plotfemmproblem (FemmProblem);
+
+%% Any number of external regions with specified materials in the external 
+%% regions
+
+design.ShoeCurveControlFrac = 0.1;
+design.CoilInsulationThickness = 2/10000;
+design.MagFEASimMaterials.CoilInsulation = 'Air';
+
+design.tc(2) = 0;
+
+[FemmProblem, coillabellocs] = ...
+    slottedfemmprob_radial ( design, ...
+                             'ArmatureType', design.ArmatureType, ...
+                             'DrawCoilInsulation', true, ...
+                             'NPolePairs', 2, ...
+                             'StatorOuterRegionSize', [design.tm, 3*design.tm, design.tm, 2*design.tm], ...
+                             'StatorOuterRegionMaterials', { design.MagFEASimMaterials.ArmatureCoil, ...  
+                                                             design.MagFEASimMaterials.ArmatureYoke, ...
+                                                             design.MagFEASimMaterials.CoilInsulation, ...
+                                                             design.MagFEASimMaterials.FieldBackIron } );
+
+plotfemmproblem (FemmProblem);
+
