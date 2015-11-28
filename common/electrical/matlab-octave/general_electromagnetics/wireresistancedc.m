@@ -62,7 +62,7 @@ function [Rdc, wirearea] = wireresistancedc (wiretype, csvars, wirelength, varar
             wirearea = csvars (:,1) .* csvars (:,2);
             
         otherwise
-            error ('RNFOUNDRY:wireresistancedc:badwiretype', 'Unrecognised wire type: %s', wiretype);
+            error ('RENEWNET:wireresistancedc:badwiretype', 'Unrecognised wire type: %s', wiretype);
     end
     
     Rdc = options.Resistivity .* wirelength ./ wirearea;
