@@ -273,18 +273,18 @@ double mPhaseWinding::get_phase_axis(int m){
 
     for(int i=0; i<coils.size(); ++i){
         coil c =coils[i];
-        int n = int(c.n());
+        int n = c.n();
         if (n>0){
-            x += std::abs(n)*std::cos(c.s()*ase);
-            y += std::abs(n)*std::sin(c.s()*ase);
-            x += std::abs(n)*std::cos(c.e()*ase+pi);
-            y += std::abs(n)*std::sin(c.e()*ase+pi);
+            x += int(std::abs(float(n)))*std::cos(c.s()*ase);
+            y += int(std::abs(float(n)))*std::sin(c.s()*ase);
+            x += int(std::abs(float(n)))*std::cos(c.e()*ase+pi);
+            y += int(std::abs(float(n)))*std::sin(c.e()*ase+pi);
             }
         else if(n<0){
-            x += std::abs(n)*std::cos(c.s()*ase+pi);
-            y += std::abs(n)*std::sin(c.s()*ase+pi);
-            x += std::abs(n)*std::cos(c.e()*ase);
-            y += std::abs(n)*std::sin(c.e()*ase);
+            x += int(std::abs(float(n)))*std::cos(c.s()*ase+pi);
+            y += int(std::abs(float(n)))*std::sin(c.s()*ase+pi);
+            x += int(std::abs(float(n)))*std::cos(c.e()*ase);
+            y += int(std::abs(float(n)))*std::sin(c.e()*ase);
         }
     }
 return atan2(y,x)*180/pi;
