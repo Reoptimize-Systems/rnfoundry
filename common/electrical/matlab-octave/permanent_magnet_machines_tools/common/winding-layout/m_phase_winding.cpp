@@ -273,7 +273,7 @@ double mPhaseWinding::get_phase_axis(int m){
 
     for(int i=0; i<coils.size(); ++i){
         coil c =coils[i];
-        int n = c.n();
+        int n = int(c.n());
         if (n>0){
             x += std::abs(n)*std::cos(c.s()*ase);
             y += std::abs(n)*std::sin(c.s()*ase);
