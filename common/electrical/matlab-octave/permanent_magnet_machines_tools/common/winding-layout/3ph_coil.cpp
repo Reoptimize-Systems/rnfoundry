@@ -21,6 +21,7 @@
 
 #include "3ph_coil.h"
 
+using namespace Koil;
 
 /*!
  * \brief This constructor makes some initialization for the struct

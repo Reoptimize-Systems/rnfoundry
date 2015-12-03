@@ -23,6 +23,8 @@
 
 #include "wire.h"
 
+namespace Koil {
+    
 /*! \class coil
  *  \brief This class represents a coil of the winding.
  *  \author Luigi Alberti
@@ -79,5 +81,7 @@ private:
     bool LENGTH_SET;                           //!< if false the resistance &co are not computed
 
 };
+
+}; // namespace Koil {
 
 #endif // COIL_H

@@ -21,8 +21,11 @@
 #ifndef CONSTANT_H
 #define CONSTANT_H
 
-
+namespace Koil {
+    
 static const double pi  = 3.141592653589793238462643383279502884197169399375105820974944592;
 static const double mu0 = 4e-7*pi;
+
+}; //namespace Koil {
 
 #endif // CONSTANT_H

@@ -21,6 +21,7 @@
 #include "winding.h"
 #include <math.h>
 
+using namespace Koil;
 
 winding::winding(int _Q, int _p) {
     Q = _Q;
@@ -108,13 +109,13 @@ bool winding::compute_slot_matrix(){
     return true;
 }
 
-vector<int> winding::get_slot_matrix(){
+std::vector<int> winding::get_slot_matrix(){
 
     compute_slot_matrix();
     return slot_matrix;
 }
 
-vector <coil> winding::get_coils(){ return coils; }
+std::vector <coil> winding::get_coils(){ return coils; }
 
 void winding::set_wire(wire _w){
 

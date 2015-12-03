@@ -22,6 +22,7 @@
 #include <math.h>
 #include <fstream>
 
+using namespace Koil;
 
 Threephase_winding::Threephase_winding()
 {

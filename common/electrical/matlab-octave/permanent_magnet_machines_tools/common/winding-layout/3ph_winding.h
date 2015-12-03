@@ -25,7 +25,9 @@
 
 #include "3ph_coil.h"
 
-using namespace std;
+namespace Koil {
+    
+//using namespace std;
 
 
 class Threephase_winding{
@@ -50,18 +52,20 @@ public:
 
 //  private:
   int Q, p, t, yq;
-  vector<int> star;                              //!< The vector containing the spoke number label sequence
-  vector<double> angle;                          //!< The vector of the angles (1 2 3 4,...,Q)
-  vector <double> mat_A, mat_B, mat_C;
+  std::vector<int> star;                              //!< The vector containing the spoke number label sequence
+  std::vector<double> angle;                          //!< The vector of the angles (1 2 3 4,...,Q)
+  std::vector <double> mat_A, mat_B, mat_C;
   int gcd(int a,int b);
   static const double pi = 3.1415926535897924 ;
   
 
- vector < coil_3ph > coils_A; //!< The list of the coils of phase A
- vector < coil_3ph > coils_B; //!< The list of the coils of phase B
- vector < coil_3ph > coils_C; //!< The list of the coils of phase C
+  std::vector < coil_3ph > coils_A; //!< The list of the coils of phase A
+  std::vector < coil_3ph > coils_B; //!< The list of the coils of phase B
+  std::vector < coil_3ph > coils_C; //!< The list of the coils of phase C
 //  vector < wire > m_wires; //!< The list of the wire present in the winding. This shoul be only one element
 
 };
+
+}; // namespace Koil {
 
 #endif

@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-using namespace std;
+namespace Koil {
 
 /** \brief This struct represents the coil of a winding of an electrical machine.
   *
@@ -42,7 +42,9 @@ struct coil_3ph{
   int w;                              //!< The wire that forms the coil
   int sec;                            //!< The slot star sector  of the coil 1: positive, -1: negative
 
-  friend ostream& operator<<(ostream& os, coil_3ph c);
+  friend std::ostream& operator<<(std::ostream& os, coil_3ph c);
 };
+
+}; // namespace Koil {
 
 #endif // THREEPH_COIL_H

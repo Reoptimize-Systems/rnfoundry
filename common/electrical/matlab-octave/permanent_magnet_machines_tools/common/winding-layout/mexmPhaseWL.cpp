@@ -9,6 +9,9 @@
 // some matlab and std data types, and ease various tasks for 
 // the mex interface
 using namespace mexutils;
+
+using namespace Koil;
+
 // 
 // 
 // // wrapper class to convert matlab arguments to appropriate arguments
@@ -44,7 +47,7 @@ using namespace mexutils;
         
         //mexPrintf ("Computed winding, m: %d Q: %d p: %d SL: %d t: %d\n", m, Q, p, SL, WL.gett ());
         int nwindings = WL.windings.size ();
-        vector<coil> coils = WL.windings[0].get_coils();
+        std::vector<coil> coils = WL.windings[0].get_coils();
         int ncoilsperwinding = coils.size ();
         
         plhs[0] = mxCreateDoubleMatrix(ncoilsperwinding,2*nwindings,mxREAL);

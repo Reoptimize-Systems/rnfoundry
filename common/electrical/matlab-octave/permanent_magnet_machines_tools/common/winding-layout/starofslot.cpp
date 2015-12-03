@@ -22,6 +22,10 @@
 #include "m_phase_winding.h"
 #include <math.h>
 
+using namespace Koil;
+
+const double StarOfSlot::zero = 1e-4;
+
 bool sector::AngleInside(double angle){
 
 //    qDebug()<<StartAngle<<"  "<<angle<<"  "<<EndAngle;
@@ -51,10 +55,12 @@ StarOfSlot::StarOfSlot(){
     single_layer_feasible  = false;
     single_layer_wanted    = false;
     mutual_inductance_zero = false;
+//     zero = 1e-4;
 }
 
 StarOfSlot::StarOfSlot(int _m, int _Q, int _p){
 
+//     zero = 1e-4;
     m = _m;
     Q = _Q;
     p = _p;
@@ -235,4 +241,4 @@ bool StarOfSlot::get_M_zero(){return mutual_inductance_zero;}
 
 bool StarOfSlot::get_SL_feasible(){return single_layer_feasible;}
 
-vector<spoke> StarOfSlot::get_star(){return star;}
+std::vector<spoke> StarOfSlot::get_star(){return star;}
