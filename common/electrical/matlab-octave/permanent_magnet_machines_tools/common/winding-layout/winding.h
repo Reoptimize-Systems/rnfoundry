@@ -24,6 +24,8 @@
 #include <vector>
 #include "coil.h"
 
+namespace Koil {
+    
 /*! \class winding
  *  \brief This class represents a set of coils.
  *  \author Luigi Alberti
@@ -47,18 +49,20 @@ public:
     double get_kw(int nu);                     //!< Compute the winding factor of the winding
     double get_kw();                           //!< Compute the winding factor of the winding
     bool compute_slot_matrix();                //!< Compute the slot matrix starting from the coils;
-    vector<int> get_slot_matrix();             //!< Get the slot matrix starting
-    vector<coil> get_coils();                  //!< Get the vector of the coils
-    void set_wire(wire _w);                     //!< Set the wire of all the coils to the giceb wire _w
+    std::vector<int> get_slot_matrix();        //!< Get the slot matrix starting
+    std::vector<coil> get_coils();             //!< Get the vector of the coils
+    void set_wire(wire _w);                    //!< Set the wire of all the coils to the giceb wire _w
 
 private:
 
     int Q;                                     //!< The number of slots
     int p;                                     //!< The pole pairs number
-    vector <int> slot_matrix;                  //!< The slot matrix of the winding. The element are the slot conductors
-    vector<coil> coils;                        //!< The vector of coils composing the winding
+    std::vector <int> slot_matrix;             //!< The slot matrix of the winding. The element are the slot conductors
+    std::vector<coil> coils;                   //!< The vector of coils composing the winding
 
 
 };
+
+}; //namespace Koil {
 
 #endif // WINDING_H

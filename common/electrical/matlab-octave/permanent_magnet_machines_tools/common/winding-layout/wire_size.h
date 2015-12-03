@@ -23,6 +23,8 @@
 
 #include "constant.h"
 
+namespace Koil {
+    
 /*! \class coil
  *  \brief This class represents a wire size which compose a wire
  *  \author Luigi Alberti
@@ -51,5 +53,7 @@ private:
 
 
 };
+
+}; // namespace Koil
 
 #endif // WIRE_SIZE_H

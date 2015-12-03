@@ -21,7 +21,7 @@
 #include "wire.h"
 #include "wire_size.h"
 
-
+using namespace Koil;
 
 wire::wire(){ }
 

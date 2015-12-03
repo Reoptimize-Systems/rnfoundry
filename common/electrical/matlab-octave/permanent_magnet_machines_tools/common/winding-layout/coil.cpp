@@ -22,6 +22,8 @@
 #include "constant.h"
 #include <math.h>
 
+using namespace Koil;
+
 coil::coil() {LENGTH_SET = false;}
 
 coil::coil(int s, int e, wire w, int n)

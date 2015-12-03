@@ -24,8 +24,9 @@
 #include <vector>
 #include "wire_size.h"
 
-using namespace std;
-
+//using namespace std;
+namespace Koil {
+    
 /*! \class wire
  *  \brief This class represents the wire of a coil
  *  \author Luigi Alberti
@@ -47,8 +48,10 @@ public:
     void add_wire_size(wire_size size);
 
 private:
-    vector <wire_size> wires;
+    std::vector <wire_size> wires;
 
 };
+
+}; // namespace Koil
 
 #endif // WIRE_H

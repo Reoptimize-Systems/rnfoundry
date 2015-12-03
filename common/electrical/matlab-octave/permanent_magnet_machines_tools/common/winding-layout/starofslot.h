@@ -23,6 +23,9 @@
 
 #include <vector>
 #include "wire.h"
+
+namespace Koil {
+    
 class mPhaseWinding;
 
 //! A structure to represent the spokes of the star of slot
@@ -36,7 +39,7 @@ typedef struct sector{ double StartAngle;         //!< The start angle of the ph
                        double EndAngle;           //!< The end angle of the phasor
                        bool AngleInside(double);  //!< Return true if the given angle is inside the sector
                        void NormalizeAngles();    //!< Makes the angles in the range 0-2*pi
-                       vector <int> slot;         //!< The list of slots that belong to the sector
+                       std::vector <int> slot;    //!< The list of slots that belong to the sector
 };
 
 
@@ -62,7 +65,7 @@ public:
     bool get_SL_feasible();   //!< Return the single layer feasibility of the winding
     bool get_M_zero();        //!< Return true if the mutual inductance between phases is zero
     int  get_yq();            //!< Return the coil throw
-    vector<spoke> get_star(); //!< Return the star
+    std::vector<spoke> get_star(); //!< Return the star
 
 private:
     int m,           //!< The number of phase
@@ -74,18 +77,21 @@ private:
     bool single_layer_wanted;                      //!< If true the single layer winding is computed (if feasible)
     bool mutual_inductance_zero;                   //!< if true the mutual inductance between two phases is zero with yq=1 (computed by this class)
 // #if __cplusplus <= 201103L
-    double zero = 1e-4;               //!< The zero for the angles in the star
+//     double zero;               //!< The zero for the angles in the star
 // #else
 //    static constexpr double zero = 1e-4;               //!< The zero for the angles in the star
 // #endif
 
-    vector<spoke>    star;      //!< The vector containing the spoke number label sequence
-    vector<sector>   p_sec;     //!< The vector containing the positive sectors of the star. The sectors are m
-    vector<sector>   n_sec;     //!< The vector containing the negative sectors of the star. The sectors are m
+    static const double zero;        //!< The zero for the angles in the star
+    
+    std::vector<spoke>    star;      //!< The vector containing the spoke number label sequence
+    std::vector<sector>   p_sec;     //!< The vector containing the positive sectors of the star. The sectors are m
+    std::vector<sector>   n_sec;     //!< The vector containing the negative sectors of the star. The sectors are m
 
     int gcd(int a, int b); //!< Returns the great common divisor of two numbers
 };
 
 // const double StarOfSlot::zero = 1e-4;
+}; // namespace Koil {
 
 #endif // STAROFSLOT_H

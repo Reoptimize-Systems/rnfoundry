@@ -22,11 +22,16 @@
 #include <cmath>
 #include "m_phase_winding.h"
 
+using namespace Koil;
+
+const double mPhaseWinding::zero = 1.0e-10;
+
 mPhaseWinding::mPhaseWinding(){
 
     Q  = -1;
     ws = -1;
     D  = -1;
+//     zero = 1.0e-10;
 }
 
 void mPhaseWinding::ComputeWinding(int m, int _Q, int _p, bool SL){
@@ -63,9 +68,9 @@ int mPhaseWinding::gett(){ return star.get_t(); }
   The coefficients are computed as:
   \f[  a_{\nu} = \dfrac{2}{\pi D} \int_0^C K(x) \cos \dfrac{2 \nu x}{\pi D} dx \f]
 */
-vector<double> mPhaseWinding::Get_MMF_a(int Nmax){
+std::vector<double> mPhaseWinding::Get_MMF_a(int Nmax){
 
-    vector<double> a;
+    std::vector<double> a;
     double sum;
 
     if (ws <= 0) ws=1e-3; //Use a default value for the slop opening
@@ -95,9 +100,9 @@ return a;
   The coefficients are computed as:
   \f[  b_{\nu} = \dfrac{2}{\pi D} \int_0^C K(x) \sin \dfrac{2 \nu x}{\pi D} dx \f]
 */
-vector<double> mPhaseWinding::Get_MMF_b(int Nmax){
+std::vector<double> mPhaseWinding::Get_MMF_b(int Nmax){
 
-    vector<double> b;
+    std::vector<double> b;
     double sum;
 
     if (ws <= 0) ws=1e-3;
@@ -131,7 +136,7 @@ void mPhaseWinding::clear(){
 
 
 
-void mPhaseWinding::SetCurrents(vector<double> cur){
+void mPhaseWinding::SetCurrents(std::vector<double> cur){
 
     currents.clear(); //!< removes previous values
     for(int i=0; i<cur.size(); ++i) currents.push_back(cur[i]);
@@ -150,7 +155,7 @@ void mPhaseWinding::fill_slot_cur_matrix(){
     for (int i=0; i<Q; ++i) slot_cur_matrix.push_back(0); //!< build an empty arrat
     int m = windings.size();
     for (int j=0; j<m; ++j){// for each winding/phase
-        vector<int> slot_matrix = windings[j].get_slot_matrix();
+        std::vector<int> slot_matrix = windings[j].get_slot_matrix();
         for (int i=0; i<Q; ++i){// for each slot
             slot_cur_matrix[i] += slot_matrix[i] * currents[j];
         }
@@ -171,12 +176,12 @@ void mPhaseWinding::setData(double _ws, double _D){
     D = _D;
 }
 
-vector<double> mPhaseWinding::Get_slot_cur_matrix(){ return slot_cur_matrix;  }
+std::vector<double> mPhaseWinding::Get_slot_cur_matrix(){ return slot_cur_matrix;  }
 
 double mPhaseWinding::get_RL_index(double k, double a, double b, double g, double mu, double sigma, int Nmax, double f){
 
     double index = 0;
-    vector<double> frnu = get_frnu(f,Nmax);
+    std::vector<double> frnu = get_frnu(f,Nmax);
     double kw = windings[0].get_kw();
 
     for(int i=1; i<Nmax+1; ++i){
@@ -195,9 +200,9 @@ double mPhaseWinding::get_RL_index(double k, double a, double b, double g, doubl
 
 
 
-vector<int> mPhaseWinding::get_nu_symmetrical(int Nmax){
+std::vector<int> mPhaseWinding::get_nu_symmetrical(int Nmax){
     
-    vector<int> temp,nu;
+    std::vector<int> temp,nu;
     int m       = windings.size();
     int sign = 0;
     int t       = star.get_t();
@@ -225,22 +230,22 @@ vector<int> mPhaseWinding::get_nu_symmetrical(int Nmax){
 
 }
 
-vector<double> mPhaseWinding::get_frnu(double f, int Nmax){
+std::vector<double> mPhaseWinding::get_frnu(double f, int Nmax){
 
-    vector<int>    nu   = get_nu_symmetrical(Nmax);
-    vector<double> wrnu = get_omega_rnu(f,Nmax);
-    vector<double> frnu;
+    std::vector<int>    nu   = get_nu_symmetrical(Nmax);
+    std::vector<double> wrnu = get_omega_rnu(f,Nmax);
+    std::vector<double> frnu;
     for (int k=0; k<Nmax; ++k)  frnu.push_back( fabs(nu[k]*wrnu[k]/2./pi));
 
     return frnu;
 }
 
-vector<double> mPhaseWinding::get_omega_rnu(double f, int Nmax){
+std::vector<double> mPhaseWinding::get_omega_rnu(double f, int Nmax){
 
-    vector<int>    nu = get_nu_symmetrical(Nmax);
-    vector<double>  a = Get_MMF_a(Nmax);
-    vector<double>  b = Get_MMF_b(Nmax);
-    vector<double>  wrnu;
+    std::vector<int>    nu = get_nu_symmetrical(Nmax);
+    std::vector<double>  a = Get_MMF_a(Nmax);
+    std::vector<double>  b = Get_MMF_b(Nmax);
+    std::vector<double>  wrnu;
     for (int k=0; k<Nmax; ++k){
         double c    = sqrt(a[k]*a[k]+b[k]*b[k]);
         double temp = 0;
@@ -262,7 +267,7 @@ double mPhaseWinding::get_phase_axis(int m){
     winding Win=windings[m];
 
     double ase=2*pi/Q*p;                  //!< Electrical slot angle
-    vector<coil> coils = Win.get_coils(); // Recover all the coils of the winding of index m
+    std::vector<coil> coils = Win.get_coils(); // Recover all the coils of the winding of index m
     double x=0;
     double y=0;
 

@@ -20,6 +20,8 @@
 
 #include "wire_size.h"
 
+using namespace Koil;
+
 wire_size::wire_size()
 {
 }
