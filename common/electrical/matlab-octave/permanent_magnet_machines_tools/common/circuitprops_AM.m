@@ -113,7 +113,8 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
     elseif ~isfield(design, 'LoadResistance')
         
         error('You must supply either a LoadResistance value or a ratio of grid resistance to phase resistance.')
-        
+    else
+        design.RlVRp = design.LoadResistance ./ design.PhaseResistance;
     end
     
     % make a resistance matrix for the Phases with diagonals all the
