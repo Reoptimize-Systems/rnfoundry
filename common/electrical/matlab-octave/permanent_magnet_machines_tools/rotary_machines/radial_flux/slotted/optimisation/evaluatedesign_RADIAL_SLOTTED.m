@@ -201,7 +201,14 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         % get the peak flux density in the armature back iron along
         % center line of a tooth
         NBpnts = 100;
-        [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), linspace (sdesign.Rai, sdesign.Ryo, NBpnts));
+        switch design.ArmatureType
+            case 'external'
+                [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), ...
+                                   linspace (sdesign.Rai, sdesign.Ryo, NBpnts));
+            case 'internal'
+                [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), ...
+                                   linspace (sdesign.Ryi, sdesign.Rao, NBpnts));
+        end
         Bmag = magn (solution.getb (x, y));
 
         sdesign.ArmatureToothFluxDensityPeak = max (Bmag);
@@ -278,7 +285,9 @@ function [sdesign, ssimoptions] = badscore (sdesign, ssimoptions)
 	sdesign.JCoilRms = 2 * ssimoptions.max_JCoilRms;
     sdesign.EMFPhaseRms = 5 * ssimoptions.max_EMFPhaseRms;
     sdesign.PowerLoadMean = 2 * ssimoptions.max_PowerLoadMean;
-    sdesign.TemperaturePeak = 2 * ssimoptions.max_TemperaturePeak;
+    if isfield (ssimoptions, 'max_TemperaturePeak')
+        sdesign.TemperaturePeak = 2 * ssimoptions.max_TemperaturePeak;
+    end
     sdesign.TorqueRippleFactor = 2 * ssimoptions.max_TorqueRippleFactor;
     sdesign.VoltagePercentTHD = 2 * ssimoptions.max_VoltagePercentTHD;
     sdesign.CoggingTorquePeak = 2 * ssimoptions.max_CoggingTorquePeak;

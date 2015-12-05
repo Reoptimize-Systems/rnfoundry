@@ -4,7 +4,7 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
 %
 % Syntax
 %
-% design = completedesign_RADIAL_SLOTTED(design, simoptions)
+% design = completedesign_RADIAL_SLOTTED(design, simoptions, setchoice)
 %
 % Description
 %
@@ -242,6 +242,10 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
     if nargin < 2
         simoptions = struct ();
     end
+    
+    if nargin < 3
+        setchoice = 'firstcomplete';
+    end
 
     % perform processing common to all radial machines, primarily the
     % winding specification
@@ -251,11 +255,11 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
     % on the specified stator type
     if strncmpi(design.ArmatureType, 'external', 1)
         
-        design = completeexternalarmature (design);
+        design = completeexternalarmature (design, setchoice);
         
     elseif strncmpi(design.ArmatureType, 'internal', 1)
         
-        design = completeinternalarmature (design);
+        design = completeinternalarmature (design, setchoice);
         
     else
         error('Unrecognised armature type.')
@@ -275,7 +279,45 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions)
     
 end
 
-function design = completeexternalarmature (design)
+function design = completeexternalarmature (design, setchoice)
+
+    if nargin < 2
+        setchoice = 'firstcomplete';
+    end
+            
+    switch lower (setchoice)
+        
+        case 'ratios'
+            
+            forceratios = true; 
+            forcerdims = false;
+            forcetdims = false;
+            
+        case 'radims'
+            
+            forceratios = false; 
+            forcerdims = true;
+            forcetdims = false;
+            
+        case 'tdims'
+            
+            forceratios = false; 
+            forcerdims = false;
+            forcetdims = true;
+            
+        case 'firstcomplete'
+            
+            forceratios = false; 
+            forcerdims = false;
+            forcetdims = false;
+            
+        otherwise
+            
+            forceratios = false; 
+            forcerdims = false;
+            forcetdims = false;
+            
+    end
 
                 
     ratiofields = { 'RyiVRyo', 0, 1.0;
@@ -291,35 +333,35 @@ function design = completeexternalarmature (design)
                     'thetasgVthetacg', 0, 1.0;
                     'lsVtm', 0, inf; };
                     
-    dimfields1 = { 'Ryo';
-                   'Ryi';
-                   'Rtsb';
-                   'Rai';
-                   'Rmi';
-                   'Rmo'; 
-                   'Rbi';
-                   'tsg';
-                   'thetam';
-                   'thetacg';
-                   'thetacy';
-                   'thetasg'; 
-                   'ls'; };
+    rdimsfields = { 'Ryo';
+                    'Ryi';
+                    'Rtsb';
+                    'Rai';
+                    'Rmi';
+                    'Rmo'; 
+                    'Rbi';
+                    'tsg';
+                    'thetam';
+                    'thetacg';
+                    'thetacy';
+                    'thetasg'; 
+                    'ls'; };
 
-    dimfields2 = { 'Ryo';
-                   'g';
-                   'ty';
-                   'tm';
-                   'tc';
-                   'tsb';
-                   'tbi';
-                   'tsg';
-                   'thetam';
-                   'thetacg';
-                   'thetacy';
-                   'thetasg'; 
-                   'ls'; };
+    tdimsfields = { 'Ryo';
+                    'g';
+                    'ty';
+                    'tm';
+                    'tc';
+                    'tsb';
+                    'tbi';
+                    'tsg';
+                    'thetam';
+                    'thetacg';
+                    'thetacy';
+                    'thetasg'; 
+                    'ls'; };
 
-    if all(isfield(design, ratiofields(:,1)))
+    if forceratios || (all(isfield(design, ratiofields(:,1))) && ~(forcerdims || forcetdims))
         % convert the ratio set to actual dimensions
         design = structratios2structvals(design, ratiofields(1:6), 'Ryo', 'V');
 
@@ -355,7 +397,7 @@ function design = completeexternalarmature (design)
         % finally calculate the stack length
         design.ls = design.lsVtm * design.tm;
 
-    elseif all(isfield(design, dimfields1))
+    elseif forcerdims || (all(isfield(design, rdimsfields)) && ~(forceratios || forcetdims))
         % The dimensions are present already, specified using the
         % radial dimensions, calculate the lengths
         design.ty = design.Ryo - design.Ryi;
@@ -392,7 +434,7 @@ function design = completeexternalarmature (design)
         design.thetasgVthetacg = design.thetasg / design.thetacg;
         design.lsVtm = design.ls / design.tm;
 
-    elseif all(isfield(design, dimfields2))
+    elseif forcetdims || (all(isfield(design, tdimsfields)) && ~(forceratios || forcerdims))
         
         % The dimensions are present already, specified using lengths,
         % calculate the radial dimensions
@@ -435,8 +477,8 @@ function design = completeexternalarmature (design)
         error( 'RENEWNET:pmmachines:slottedradspec', ...
                'For a slotted radial flux design with external armature you must have the\nfields %s OR %s OR %s in the design structure.', ...
                sprintf('%s, ', ratiofields{:,1}), ...
-               sprintf('%s, ', dimfields1{:,1}), ...
-               sprintf('%s, ', dimfields2{:,1}))
+               sprintf('%s, ', rdimsfields{:,1}), ...
+               sprintf('%s, ', tdimsfields{:,1}))
     end
     
  %   checkdesignratios_AM (design, ratiofields, true);
@@ -444,7 +486,45 @@ function design = completeexternalarmature (design)
 end
 
 
-function [design, ratiofields] = completeinternalarmature (design)
+function [design, ratiofields] = completeinternalarmature (design, setchoice)
+
+    if nargin < 2
+        setchoice = 'firstcomplete';
+    end
+            
+    switch lower (setchoice)
+        
+        case 'ratios'
+            
+            forceratios = true; 
+            forcerdims = false;
+            forcetdims = false;
+            
+        case 'radims'
+            
+            forceratios = false; 
+            forcerdims = true;
+            forcetdims = false;
+            
+        case 'tdims'
+            
+            forceratios = false; 
+            forcerdims = false;
+            forcetdims = true;
+            
+        case 'firstcomplete'
+            
+            forceratios = false; 
+            forcerdims = false;
+            forcetdims = false;
+            
+        otherwise
+            
+            forceratios = false; 
+            forcerdims = false;
+            forcetdims = false;
+            
+    end
 
     ratiofields = { 'RmoVRbo', 0, 1.0;
                     'RmiVRmo', 0, 1.0;
@@ -459,35 +539,35 @@ function [design, ratiofields] = completeinternalarmature (design)
                     'thetasgVthetacg', 0, 1.0;
                     'lsVtm', 0, inf };
                     
-    dimfields1 = { 'Rbo';
-                   'Rmo';
-                   'Rmi';
-                   'Rao';
-                   'Rtsb';
-                   'Ryo'; 
-                   'Ryi';
-                   'tsg';
-                   'thetam';
-                   'thetacg';
-                   'thetacy';
-                   'thetasg'; 
-                   'ls'; };
+    rdimsfields = { 'Rbo';
+                    'Rmo';
+                    'Rmi';
+                    'Rao';
+                    'Rtsb';
+                    'Ryo'; 
+                    'Ryi';
+                    'tsg';
+                    'thetam';
+                    'thetacg';
+                    'thetacy';
+                    'thetasg'; 
+                    'ls'; };
 
-    dimfields2 = { 'Rbo';
-                   'g';
-                   'ty';
-                   'tm';
-                   'tc';
-                   'tsb';
-                   'tbi';
-                   'tsg';
-                   'thetam';
-                   'thetacg';
-                   'thetacy';
-                   'thetasg'; 
-                   'ls'; };
+    tdimsfields = { 'Rbo';
+                    'g';
+                    'ty';
+                    'tm';
+                    'tc';
+                    'tsb';
+                    'tbi';
+                    'tsg';
+                    'thetam';
+                    'thetacg';
+                    'thetacy';
+                    'thetasg'; 
+                    'ls'; };
 
-    if all(isfield(design, ratiofields(:,1)))
+    if forceratios || (all(isfield(design, ratiofields(:,1))) && ~(forcerdims || forcetdims))
         % convert the ratio set to actual dimensions
         design = structratios2structvals(design, ratiofields(1:6), 'Rbo', 'V');
 
@@ -512,7 +592,7 @@ function [design, ratiofields] = completeinternalarmature (design)
         design.tc = design.Rco - design.Rci;
         
         if isfield (design, 'Rcb')
-            design.tc(2) = design.Rtsb - design.Rcb;
+            design.tc(2) = design.Rcb - design.Ryo;
         end
         
         design.tsb = design.Rao - design.Rtsb;
@@ -523,15 +603,15 @@ function [design, ratiofields] = completeinternalarmature (design)
         % finally calculate the stack length
         design.ls = design.lsVtm * design.tm;
 
-    elseif all(isfield(design, dimfields1))
+    elseif forcerdims || (all(isfield(design, rdimsfields)) && ~(forceratios || forcetdims))
         % The dimensions are present already, specified using the
         % radial dimensions, calculate the lengths
         design.ty = design.Ryo - design.Ryi;
-        design.tc = design.Rco - design.Rci;
+        design.tc = design.Rtsb - design.Ryo;
         design.tsb = design.Rao - design.Rtsb;
         design.g = design.Rmi - design.Rao;
         design.tm = design.Rmo - design.Rmi;
-        design.tbi = design.Rbo - design.Rbi;
+        design.tbi = design.Rbo - design.Rmo;
 
         design.Rco = design.Rtsb;
         design.Rci = design.Ryo;
@@ -539,7 +619,7 @@ function [design, ratiofields] = completeinternalarmature (design)
         design.Rtsg = design.Rao - design.tsg;
         
         if isfield (design, 'Rcb')
-            design.tc(2) = design.Rcb - design.Rtsb;
+            design.tc(2) = design.Rcb - design.Ryo;
             design.RcbVRtsb = design.Rcb / design.Rtsb;
         end
         
@@ -557,7 +637,7 @@ function [design, ratiofields] = completeinternalarmature (design)
         design.thetasgVthetacg = design.thetasg / design.thetacg;
         design.lsVtm = design.ls / design.tm;
 
-    elseif all(isfield(design, dimfields2))
+    elseif forcetdims || (all(isfield(design, tdimsfields)) && ~(forceratios || forcetdims))
         % The dimensions are present already, specified using lengths,
         % calculate the radial dimensions
         design.Rmo = design.Rbo - design.tbi;
@@ -596,8 +676,8 @@ function [design, ratiofields] = completeinternalarmature (design)
         error( 'RENEWNET:pmmachines:slottedradspec', ...
                'For a slotted radial flux design with internal armature you must have the\nfields %s\n OR %s\n OR %s in the design structure.', ...
                sprintf('%s, ', ratiofields{:,1}), ...
-               sprintf('%s, ', dimfields1{:,1}), ...
-               sprintf('%s, ', dimfields2{:,1}));
+               sprintf('%s, ', rdimsfields{:,1}), ...
+               sprintf('%s, ', tdimsfields{:,1}));
     end
     
 %    checkdesignratios_AM (design, ratiofields, true);
