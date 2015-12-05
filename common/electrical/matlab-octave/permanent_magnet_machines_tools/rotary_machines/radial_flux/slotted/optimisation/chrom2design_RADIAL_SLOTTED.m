@@ -499,6 +499,10 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
     end
     
     design.tsb = tsbVMax_tsb * options.Max_tsb;
+    
+%     if design.tsb >= design.tc(1)
+%         design.tsb = 0.99 * design.tc(1);
+%     end
 %     design.tsg = design.tsgVtsb * design.tsb;
 
     design.tbi = tbiVtm * design.tm;
@@ -591,10 +595,11 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
 
     % check for too big tooth shoe
     if (design.tsb > 0) && (design.tsb / design.tc(1)) > options.Max_tsbVtc1
-        % shift the shoe base radial position inward
-        rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc1));
-        design.Rtsb = design.Rtsb - rshift;
+        % shift the shoe base radial position outward
+%         rshift = (design.tsb - (design.tc(1)*options.Max_tsbVtc1));
+%         design.Rtsb = design.Rtsb + rshift;
         design.tsb = design.tc(1)*options.Max_tsbVtc1;
+        design.Rtsb = design.Rao - design.tsb;
         % recalculate the shoe gap size
         design.tsg = design.tsb * design.tsgVtsb;
         design.Rtsg = design.Rao - design.tsg;
@@ -803,7 +808,7 @@ function design = updatedims_interal_arm (design)
     end
 
     % the shoe tip length
-    design.Rtsg = design.Rao - design.tsg;
+%     design.Rtsg = design.Rao - design.tsg;
 
     % mean radial position of magnets
     design.Rmm = mean([design.Rmo, design.Rmi]);
