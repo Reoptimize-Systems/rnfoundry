@@ -17,7 +17,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     options.Phases = 3;
     % number of coils per pole and phase
     options.qc = fr(3,3);
-    options.yd = 1;
+    options.yd = 4;
     % grid resistance to phase resistance ratio
     options.RlVRp = 10;
     % ratio of mid slot height to slot base size
@@ -80,19 +80,38 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % first get line equation of slot side
     m = ((design.thetacg - design.thetacy)/2) / (design.tc(1) - design.tc(2));
     % get intercept with the yoke
-    c = design.thetacg/2 - m * design.tc(1);
+    cy = design.thetacg/2 - m * design.tc(1);
     
-    if c > ((design.thetas-2e-5) / 2)
+    if cy > ((design.thetas-2e-5) / 2)
         % the slots will overlap  each other in this case
         
         % find the slope which means slots do not overlap
         m = ((design.thetacg - (design.thetas-2e-5))/2) / design.tc(1);
         % make the intercept thetas at the coil base end (inner yoke
         % surface)
-        c = (design.thetas-2e-5) / 2;
-        design.thetacy = 2 * (m .* design.tc(2) + c);
-        % udate ratios etc
+        cy = (design.thetas-2e-5) / 2;
+        design.thetacy = 2 * (m .* design.tc(2) + cy);
+        % update ratios etc
         design.thetacyVthetas = design.thetacy / design.thetas;
+        design.thetac = [design.thetacg, design.thetacy];
+        
+    end
+    
+    % now prevent overlap at the shoe curve region
+    
+    % get width at the shoe base radial position
+    cs = m * (design.tc(1) + (design.tsb-design.tsg)/2) + cy;
+    
+    if cs > ((design.thetas-2e-5) / 2)
+        % the slots will overlap  each other in this case
+        
+        % find the slope which means slots do not overlap
+        m = ((design.thetas-2e-5)/2 - design.thetacy/2) / (design.tc(1) - design.tc(2) + (design.tsb-design.tsg)/2);
+        % make the intercept thetas at the slot opening end
+        cs = (design.thetacy/2) - m * (design.tc(2));
+        design.thetacg = 2 * (m .* design.tc(1) + cs);
+        % update ratios etc
+        design.thetacgVthetas = design.thetacg / design.thetas;
         design.thetac = [design.thetacg, design.thetacy];
         
     end
@@ -471,7 +490,7 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
     tyVtm = Chrom(2);
     tcVMax_tc = Chrom(3);
     tsbVMax_tsb = Chrom(4);
-    design.tsgVtsb = Chrom(5);
+    design.tsgVtsb = min(Chrom(5), 0.98);
     g = Chrom(6);
     tmVMax_tm = Chrom(7);
     tbiVtm = Chrom(8);
@@ -564,6 +583,7 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
         if design.Ryi < 0
             rshift = rshift + abs(design.Ryi);
         end
+        design.Rbo = design.Rbo + rshift;
         design.Rmo = design.Rmo + rshift;
         design.Rmi = design.Rmi + rshift;
         design.Rao = design.Rao + rshift;
@@ -741,7 +761,7 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
         design.tc(2) = design.tc(1) * options.tc2Vtc1;
         
         if rshift >= design.Ryi
-            % the amount we nee to shift inwards is greater than the space
+            % the amount we need to shift inwards is greater than the space
             % available, so we'll have to shift everything outwards a bit
             % to make the space
             rshift2 = design.Ryi - rshift;
@@ -750,8 +770,8 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
         end
         
         % first shift yoke inwards by rshift
-        design.Ryi = design.Ryi + rshift;
-        design.Ryo = design.Ryo + rshift;
+        design.Ryi = design.Ryi - rshift;
+        design.Ryo = design.Ryo - rshift;
         
         % then shift everything outwards by rshift2
         design.Rbo = design.Rbo + rshift2;
