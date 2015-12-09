@@ -183,11 +183,9 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     
 end
 
-function design = chrom2design_external_arm (design, simoptions, Chrom, options)
+function design = common_setup_1 (design, simoptions, Chrom, options)
+% common setup stuff, getting common variables out of Chrom etc
 
-
-    % convert machine ratios to actual dimensions
-    design.Ryo = Chrom(1);
     tyVtm = Chrom(2);
     tcVMax_tc = Chrom(3);
     tsbVMax_tsb = Chrom(4);
@@ -230,6 +228,18 @@ function design = chrom2design_external_arm (design, simoptions, Chrom, options)
     if design.ty < 1e-3
         design.ty = 1e-3;
     end
+    
+end
+
+
+function design = chrom2design_external_arm (design, simoptions, Chrom, options)
+
+
+    % get external arm specific variabes from chrom, i.e. Ryo
+    design.Ryo = Chrom(1);
+
+    % get the rest of the common variable out of Chrom
+    design = common_setup_1 (design, simoptions, Chrom, options);
     
     design.Ryi = design.Ryo - design.ty;
     design.RyiVRyo = design.Ryi / design.Ryo;
@@ -468,95 +478,12 @@ end
 
 function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
 
-%     % convert machine ratios to actual dimensions
-%     design.Rbo = Chrom(1);
-%     design.RmoVRbo = Chrom(2);
-%     design.RmiVRmo = Chrom(3);
-%     design.RaoVRmi = Chrom(4);
-%     design.RtsbVRao = Chrom(5);
-%     design.tsgVtsb = Chrom(6);
-%     design.RyoVRtsb = Chrom(7);
-%     design.RyiVRyo = Chrom(8);
-%     design.thetamVthetap = Chrom(9);
-%     design.thetacgVthetas = Chrom(10);
-%     design.thetacyVthetas = Chrom(11);
-%     design.thetasgVthetacg = Chrom(12);
-%     design.lsVtm = Chrom(13);
-%     design.NBasicWindings = round(Chrom(14));
-%     design.DcAreaFac = Chrom(15);
-%     design.BranchFac = Chrom(16);
-    
+    % convert inerna specific machine ratios to actual dimensions
     design.Rbo = Chrom(1);
-    tyVtm = Chrom(2);
-    tcVMax_tc = Chrom(3);
-    tsbVMax_tsb = Chrom(4);
-    design.tsgVtsb = min(Chrom(5), 0.98);
-    g = Chrom(6);
-    tmVMax_tm = Chrom(7);
-    tbiVtm = Chrom(8);
-    design.thetamVthetap = Chrom(9);
-    design.thetacgVthetas = Chrom(10);
-    design.thetacyVthetas = Chrom(11);
-    design.thetasgVthetacg = Chrom(12);
-    lsVMax_ls = Chrom(13);
-    design.NBasicWindings = round(Chrom(14));
-    design.DcAreaFac = Chrom(15);
-    design.BranchFac = Chrom(16);
-    
-    if numel(Chrom) > 16
-        design.MagnetSkew = Chrom(17);
-    end
-    
-    design.ls = lsVMax_ls * options.Max_ls;
-    
-    design.g = g;
-    design.tc(1) = tcVMax_tc * options.Max_tc;
-    
-    design.tm = tmVMax_tm * options.Max_tm;
-    if design.tm < 1e-3
-        design.tm = 1e-3;
-    end
-    
-    design.tsb = tsbVMax_tsb * options.Max_tsb;
-    
-%     if design.tsb >= design.tc(1)
-%         design.tsb = 0.99 * design.tc(1);
-%     end
-%     design.tsg = design.tsgVtsb * design.tsb;
 
-    design.tbi = tbiVtm * design.tm;
-    if design.tbi < 1e-3
-        design.tbi = 1e-3;
-    end
+    % get the rest of the common ratios etc.
+    design = common_setup_1 (design, simoptions, Chrom, options);
     
-    design.ty = tyVtm * design.tm;
-    if design.ty < 1e-3
-        design.ty = 1e-3;
-    end
-    
-%    Rbo - radial distance to outer back iron surface
-%    RmoVRbo - Rmo to Rbo ratio
-%    RmiVRmo - Rmi to Rmo ratio
-%    RsoVRmi -  Rso to Rmi ratio
-%    RtsbVRao - Rtsb to Rao ratio
-%    RyoVRtsb - Ryo to Rtsb ratio
-%    RyiVRyo -  Ryi to Ryo ratio
-%    tsgVtsb -  tsg to tsb ratio
-%    thetamVthetap - thetam to thetap ratio
-%    thetasgVthetacg -  thetasg to thetacg ratio
-%    thetasgVthetacy -  thetasg to thetacy ratio
-%    lsVtm - ls to tm ratio
-
-% design.RmoVRbo = design.Rmo / design.Rbo;
-%         design.RmiVRmo = design.Rmi / design.Rmo;
-%         design.RaoVRmi = design.Rao / design.Rmi;
-%         design.RtsbVRao = design.Rtsb / design.Rao;
-%         design.RyoVRtsb = design.Ryo / design.Rtsb;
-%         design.RyiVRyo = design.Ryi / design.Ryo;
-%         design.tsgVtsb = design.tsg / design.tsb;
-
-%     design.Rbi = design.Rbo - design.tbi;
-
     design.Rmo = design.Rbo - design.tbi;
     design.Rmi = design.Rmo - design.tm;
     design.Rao = design.Rmi - design.g;
@@ -572,7 +499,7 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
     design.RyiVRyo = design.Ryi / design.Ryo;
     design.lsVtm = design.ls / design.tm;
     
-    % check if the dimensions result in a desing with too small an inner
+    % check if the dimensions result in a design with too small an inner
     % radius
     if design.Ryi < 1e-4;
         if design.Ryi < 0
@@ -645,21 +572,21 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
     
     % check if the coil slot height is smaller than the minimum allowed
     if design.tc(1) < options.Min_tc
-        % move the stator yoke outwards to increase the size of the slot
+        % move the stator yoke inwards to increase the size of the slot
         rshift = (options.Min_tc - design.tc(1));
         
         if rshift >= design.Ryi
-            % the amount we nee to shift inwards is greater than the space
+            % the amount we need to shift inwards is greater than the space
             % available, so we'll have to shift everything outwards a bit
             % to make the space
-            rshift2 = design.Ryi - rshift;
+            rshift2 = design.Ryi - rshift + 1e-5;
         else
             rshift2 = 0;
         end
         
         % first shift yoke inwards by rshift
-        design.Ryi = design.Ryi + rshift;
-        design.Ryo = design.Ryo + rshift;
+        design.Ryi = design.Ryi - rshift;
+        design.Ryo = design.Ryo - rshift;
         
         % then shift everything outwards by rshift2
         design.Rbo = design.Rbo + rshift2;
@@ -827,9 +754,6 @@ function design = updatedims_interal_arm (design)
         design.RcbVRtsb = design.Rcb / design.Rtsb;
     end
 
-    % the shoe tip length
-%     design.Rtsg = design.Rao - design.tsg;
-
     % mean radial position of magnets
     design.Rmm = mean([design.Rmo, design.Rmi]);
     design.Rcm = mean([design.Rci, design.Rco]);
@@ -852,25 +776,3 @@ function design = updatedims_interal_arm (design)
     design.lsVtm = design.ls / design.tm;
 
 end
-
-
-% function design = recalculateratios_internal_arm(design)
-% % recalculates the design ratios of the slotted torus machine from the
-% % dimensions
-% 
-%     design.RmoVRbo = design.Rmo / design.Rbo;
-%     design.RmiVRmo = design.Rmi / design.Rmo;
-%     design.RaoVRmi = design.Rao / design.Rmi;
-%     design.RtsbVRao = design.Rtsb / design.Rao;
-%     design.RtsgVRao = design.Rtsg / design.Rao;
-%     design.RyoVRtsb = design.Ryo / design.Rtsb;
-%     design.RyiVRyo = design.Ryi / design.Ryo;
-%     design.thetamVthetap = design.thetam / design.thetap;
-%     design.thetacgVthetas = design.thetacg / design.thetas;
-%     design.thetasgVthetacg = design.thetasg / design.thetacg;
-%     design.lsVtm = design.ls / design.tm;
-% 
-% end
-
-
-
