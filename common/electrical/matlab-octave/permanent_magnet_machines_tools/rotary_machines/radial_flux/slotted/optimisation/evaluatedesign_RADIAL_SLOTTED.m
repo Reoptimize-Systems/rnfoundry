@@ -67,46 +67,6 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     sdesign = design;
     ssimoptions = simoptions;
     
-%     sdesign.Hc = sdesign.tc(1);
-%         
-%     % number of slots per pole and phase
-%     if ~isfield(sdesign, 'qc')
-%         sdesign.qc = fr(sdesign.Qs, sdesign.Phases * sdesign.Poles);
-%     else
-%         [sdesign.Qs,~] = rat(sdesign.qc * sdesign.Phases * sdesign.Poles);
-%     end
-%     
-%     % slot pitch at the mean slot height
-%     sdesign.tausm = sdesign.thetas * sdesign.Rcm;
-%     
-%     % get the numerator and denominator of qc
-%     [sdesign.qcn,sdesign.qcd] = rat(sdesign.qc);
-%     
-%     % Average coil pitch as defined by (Qs/Poles)
-%     sdesign.yp = fr(sdesign.Qs, sdesign.Poles);
-%     
-%     % get the numerator and denominator of the coil pitch in slots
-%     [sdesign.ypn,sdesign.ypd] = rat(sdesign.yp);
-%     
-%     % calculate the actual coil pitch in slots if not supplied
-%     if ~isfield(sdesign, 'yd')
-%         if sdesign.ypd == 1
-%             % the coil pitch in slots will be the same as the numerator of
-%             % yp, being an integral slot winding
-%             sdesign.yd = sdesign.ypn;
-%         else
-%             error('You must specify the coil pitch in fractional slot windings.')
-%         end
-%     end
-%     
-%     if sdesign.ypd ~= 1 && sdesign.ypd ~= 2
-%     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
-%     end
-% 
-%     % \Tau_{cs} is the thickness of the winding, i.e. the pitch of a
-%     % winding slot
-%     sdesign.Wc = sdesign.thetac * sdesign.Rcm;
-    
     if ~isfield(sdesign, 'CoreLoss')
         % CoreLoss will be the armature back iron data
         [sdesign.CoreLoss.fq, ...
@@ -127,10 +87,6 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     ssimoptions.femmmeshoptions = setfieldifabsent(ssimoptions.femmmeshoptions, 'ShoeGapRegionMeshSize', -1);
     ssimoptions.femmmeshoptions = setfieldifabsent(ssimoptions.femmmeshoptions, 'YokeRegionMeshSize', -1);
     ssimoptions.femmmeshoptions = setfieldifabsent(ssimoptions.femmmeshoptions, 'CoilRegionMeshSize', -1);
-
-    femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
-    
-    armirongroup = 2;
     
     rmcoilturns = false;
     if ~isfield(sdesign, 'CoilTurns')
@@ -139,11 +95,40 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     end
     
     % Draw the sim at position 0
+    firstslotcentre = design.thetas / 2;
+    if sdesign.yd == 1
+        coilspan = design.thetas;
+    else
+        coilspan = (design.yd-1) * design.thetas;
+    end
+    pos = (-design.thetap/2) + firstslotcentre + (coilspan / 2);
+    
+    
+    if sdesign.pb == 1
+        simpolepairs = 1;
+    else
+        simpolepairs = sdesign.pb/2;
+    end
+    
+    if ~iseven (sdesign.pb) && (sdesign.pb*2 <= sdesign.Poles)
+        % double the number of poes in the simulation
+        simpolepairs = sdesign.pb;
+    end
+    
+    % make sure there's at least 6 slots in the simulation. If not, as long
+    % as there are enough slots in the whole machine to simulate another
+    % pole pair, simulate another basic winding unit
+    if (((simpolepairs*2/sdesign.pb) * sdesign.Qsb) < 6) ...
+            || (simpolepairs*2 <= sdesign.Poles)
+        simpolepairs = simpolepairs ^2;
+    end
+        
     [sdesign.FemmProblem, sdesign.RotorDrawingInfo, sdesign.StatorDrawingInfo] = ...
-                        slottedfemmprob_radial(sdesign, ...
+                        slottedfemmprob_radial (sdesign, ...
+                            'NPolePairs', simpolepairs, ...
                             'ArmatureType', sdesign.ArmatureType, ...
                             'NWindingLayers', sdesign.CoilLayers, ...
-                            'Position', 0, ...
+                            'Position', pos, ...
                             'MagnetRegionMeshSize', ssimoptions.femmmeshoptions.MagnetRegionMeshSize, ...
                             'BackIronRegionMeshSize', ssimoptions.femmmeshoptions.BackIronRegionMeshSize, ...
                             'RotorOuterRegionsMeshSize', ssimoptions.femmmeshoptions.OuterRegionsMeshSize, ...
@@ -154,16 +139,19 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
                             'CoilRegionMeshSize', ssimoptions.femmmeshoptions.CoilRegionMeshSize);
 
     if rmcoilturns
-        sdesign = rmfield(sdesign, 'CoilTurns');
+        sdesign = rmfield (sdesign, 'CoilTurns');
     end
     
+    femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
+    
     % write the fem file to disk
-    writefemmfile(femfilename, sdesign.FemmProblem);
+    writefemmfile (femfilename, sdesign.FemmProblem);
+    
     % analyse the problem
     try
-        ansfilename = analyse_mfemm(femfilename, ...
-                                    simoptions.usefemm, ...
-                                    simoptions.quietfemm);
+        ansfilename = analyse_mfemm ( femfilename, ...
+                                      simoptions.usefemm, ...
+                                      simoptions.quietfemm );
     catch err
         if strncmp (err.message, 'Material properties have not been defined', 41)
             warning (err.message);
@@ -174,50 +162,72 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         end
     end
 	
-    if (exist('fpproc_interface_mex', 'file')==3) && ~ssimoptions.usefemm
+    solution = fpproc (ansfilename);
+    solution.smoothon ();
 
-        solution = fpproc(ansfilename);
-        solution.smoothon();
+    % get the cross-sectional area of the armature iron for
+    % calcuation of material masses later
+    solution.clearblock ();
+    solution.groupselectblock (sdesign.FemmProblem.Groups.ArmatureBackIron);
+    sdesign.ArmatureIronAreaPerPole = solution.blockintegral (5)/2;
 
-        % get the cross-sectional area of the armature iron for
-        % calcuation of material masses later
-        solution.clearblock();
-        solution.groupselectblock(sdesign.FemmProblem.Groups.ArmatureBackIron);
-        sdesign.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
-        
-        % get the peak flux linkage
-        temp = solution.getcircuitprops('1');
-        peakfl = temp(3);
-        
-        % get the cross-sectional area of the coil winding bundle
-        sdesign.CoilArea = ...
-            solution.blockintegral ( 5, ...
-                                     sdesign.StatorDrawingInfo.CoilLabelLocations(1,1), ...
-                                     sdesign.StatorDrawingInfo.CoilLabelLocations(1,2) );
-                                 
-        % estimate the coil resistance
-%         [design.CoilResistance, design.CoilInductance] = solution.circuitRL('1');
-        
-        % get the peak flux density in the armature back iron along
-        % center line of a tooth
-        NBpnts = 100;
-        switch design.ArmatureType
-            case 'external'
-                [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), ...
-                                   linspace (sdesign.Rai, sdesign.Ryo, NBpnts));
-            case 'internal'
-                [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), ...
-                                   linspace (sdesign.Ryi, sdesign.Rao, NBpnts));
-        end
-        Bmag = magn (solution.getb (x, y));
+    % get the cross-sectional area of the coil winding bundle
+    sdesign.CoilArea = ...
+        solution.blockintegral ( 5, ...
+                                 sdesign.StatorDrawingInfo.CoilLabelLocations(1,1), ...
+                                 sdesign.StatorDrawingInfo.CoilLabelLocations(1,2) );
 
-        sdesign.ArmatureToothFluxDensityPeak = max (Bmag);
-        
-    else
-        % open the solution in FEMM
-        error('Not yet implemented')
+    % get the internal subfunctions from simfun_RADIAL_SLOTTED which
+    % also include the slot A integral data gathering fucntion which we
+    % will reuse here
+    simfun_interna_fcns = simfun_RADIAL_SLOTTED ();
 
+    sdesign.FirstSlotCenter = 0;
+    sdesign.feapos = 0;
+    [slotPos, slotIntA] = feval (simfun_interna_fcns{1}, sdesign, 1, solution);
+
+    for ind = 1:design.CoilLayers
+        % use the integral data to produce flux linkage values according to the
+        % coil shape. We append the last slot again
+        intAslm(ind) = slmengine ([slotPos; slotPos(end)+slotPos(2)-slotPos(1)], ...
+                                  [slotIntA(:,ind); slotIntA(1,ind)], ...
+            'EndCon', 'periodic', ...
+            'knots', 2*numel (slotPos)+1, ...
+            'Plot', 'off');
     end
+
+    lambda = fluxlinkagefrmintAslm ( intAslm, ...
+                            sdesign.yd*design.thetas/design.thetap, ...
+                            linspace (0,4,100), ...
+                            1, ... % use one coil turn we will scale later
+                            sdesign.CoilArea, ...
+                           'Skew', sdesign.MagnetSkew, ...
+                           'NSkewPositions', sdesign.NSkewMagnetsPerPole );
+                       
+    peakfl = max ( abs (lambda));
+
+    % get the peak flux linkage
+%         temp = solution.getcircuitprops('1');
+%         peakfl = temp(3);
+
+    % estimate the coil resistance
+%         [design.CoilResistance, design.CoilInductance] = solution.circuitRL('1');
+
+    % get the peak flux density in the armature back iron along
+    % center line of a tooth
+    NBpnts = 100;
+    switch design.ArmatureType
+        case 'external'
+            [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), ...
+                               linspace (sdesign.Rai, sdesign.Ryo, NBpnts));
+        case 'internal'
+            [x, y] = pol2cart (repmat (sdesign.thetas, 1, NBpnts), ...
+                               linspace (sdesign.Ryi, sdesign.Rao, NBpnts));
+    end
+    Bmag = magn (solution.getb (x, y));
+
+    sdesign.ArmatureToothFluxDensityPeak = max (Bmag);
+        
     % tidy up the fea files
     delete (femfilename); delete (ansfilename); 
     
@@ -227,21 +237,10 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
        peakfl = peakfl * sdesign.CoilTurns;
     end
     
-    % now calculate coil resistance
-    sdesign.MTL = rectcoilmtl( sdesign.ls, ...
-                               sdesign.yd * sdesign.thetas * sdesign.Rcm, ...
-                               mean([sdesign.thetacg, sdesign.thetacy] * sdesign.Rcm) );
-
-    sdesign.CoilResistance = 1.7e-8 * sdesign.CoilTurns * sdesign.MTL ./ (pi * (sdesign.Dc/2)^2);
-
-%     sdesign.PhaseResistance = sdesign.CoilResistance * sdesign.CoilsPerBranch / sdesign.Branches;
-
-%     ssimoptions = simsetup_ROTARY(design, ssimoptions.simfun, ssimoptions.finfun, ...
-%                                 'RPM', ssimoptions.RPM, ...
-%                                 'PoleCount', ssimoptions.PoleCount, ...
-%                                 'odeevfun', 'prescribedmotode_linear', ...
-%                                 'simoptions', ssimoptions);
-%                             
+    % now calculate coil resistance using the same function as would be
+    % used in simfun_RADIAL_SLOTTED
+    sdesign = feval (simfun_interna_fcns{3}, sdesign);
+                           
     omega = rpm2omega(ssimoptions.RPM);
     
     sdesign.CoilInductance = 0;
