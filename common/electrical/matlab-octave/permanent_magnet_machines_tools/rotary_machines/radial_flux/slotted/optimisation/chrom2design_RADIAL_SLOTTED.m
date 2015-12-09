@@ -630,6 +630,7 @@ function design = chrom2design_internal_arm (design, simoptions, Chrom, options)
     if design.tc(1) > options.Max_tc
         % move the stator yoke outwards to reduce the size of the slot
         rshift = (design.tc(1) - options.Max_tc);
+        design.tc(1) = options.Max_tc;
         design.Ryi = design.Ryi + rshift;
         design.Ryo = design.Ryo + rshift;
         design = updatedims_interal_arm(design);
