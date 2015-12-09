@@ -188,7 +188,7 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
 end
 
 function L = inductancefromreluctnet (design)
-% calculate the inductance using a reluctance networ approach, only works
+% calculate the inductance using a reluctance network approach, only works
 % for single tooth wound coils at present
 %
 % Syntax
