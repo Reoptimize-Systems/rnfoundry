@@ -181,3 +181,178 @@ FemmProblem = slottedfemmprob_radial (design, ...
 plotfemmproblem (FemmProblem)
                         
 dispstruct(design, 25)
+
+%%
+
+Chrom = [0.1541;
+    1.7273;
+    0.0690 ;
+    0.9160 ;
+    0.8507  ;
+    0.0027 ;
+    0.9881;
+    4.9468;
+    0.7267 ;
+    0.2819 ;
+    0.2982 ;
+    0.6774 ;
+    0.1990 ;
+    46.6448 ;
+    0.9852 ;
+    0.0001;
+    0.0008 ;
+    0.7163 ]
+
+% set a sensible limit on the stack length
+simoptions.Max_ls = 40e-3;
+
+% choose the maximum possibe coil height and shoe base height
+simoptions.Max_tc = 50e-3;
+simoptions.Max_tsb = 10e-3;
+simoptions.Max_tm = 10e-3;
+
+simoptions.RlVRp = 1;
+
+% choose the maximum machine outer radius
+simoptions.Max_Rbo = 320e-3 / 2;
+% choose the minimum air gap
+simoptions.Min_g = 1.5e-3;
+
+[design, tsimoptions] = ML0125_221115.chrom2design (simoptions, Chrom);
+
+design.MagFEASimMaterials.Magnet = matstr2matstruct_mfemm ('NdFeB 48M@20C');                                         
+ElectricalSteel = matstr2matstruct_mfemm ('M-19 Steel');
+BackIronSteel = matstr2matstruct_mfemm ('Cold drawn carbon steel, annealed');
+design.MagFEASimMaterials.FieldBackIron = BackIronSteel;
+design.MagFEASimMaterials.ArmatureYoke = ElectricalSteel;
+design.MagFEASimMaterials.ArmatureCoil = matstr2matstruct_mfemm('36 AWG');
+design.MagFEASimMaterials.ArmatureCoil.WireD = design.Dc*1000;
+design.MagFEASimMaterials.AirGap = 'Air';
+design.MagFEASimMaterials.CoilInsulation = 'Air';
+design.CoilTurns = 1;
+
+FemmProblem = slottedfemmprob_radial (design, ...
+                            'ArmatureType', design.ArmatureType, ...
+                            'NWindingLayers', design.CoilLayers );
+                        
+plotfemmproblem (FemmProblem)
+                        
+dispstruct(design, 25)
+
+
+%%
+
+Chrom = [128.000000000000e-003;
+    4.00000000000000e+000;
+    1.00000000000000e+000;
+    0.00000000000000e+000;
+    788.019787424054e-003;
+    5.66342443257644e-003;
+    1.00000000000000e+000 ;
+    5.00000000000000e+000;
+    950.000000000000e-003;
+    900.000000000000e-003 ;
+    200.000000000000e-003 ;
+    103.370323711086e-003;
+    11.2757874323161e-003  ;
+    40.0188322962846e+000  ;
+    0.00000000000000e+000 ;
+    1.00000000000000e-003 ;
+    121.077012075819e-006 ;
+    103.144538484018e-003 ];
+
+
+% set a sensible limit on the stack length
+simoptions.Max_ls = 40e-3;
+
+% choose the maximum possibe coil height and shoe base height
+simoptions.Max_tc = 50e-3;
+simoptions.Max_tsb = 10e-3;
+simoptions.Max_tm = 10e-3;
+
+simoptions.RlVRp = 1;
+
+% choose the maximum machine outer radius
+simoptions.Max_Rbo = 320e-3 / 2;
+% choose the minimum air gap
+simoptions.Min_g = 1.5e-3;
+
+[design, tsimoptions] = ML0125_221115.chrom2design (simoptions, Chrom);
+
+design.MagFEASimMaterials.Magnet = matstr2matstruct_mfemm ('NdFeB 48M@20C');                                         
+ElectricalSteel = matstr2matstruct_mfemm ('M-19 Steel');
+BackIronSteel = matstr2matstruct_mfemm ('Cold drawn carbon steel, annealed');
+design.MagFEASimMaterials.FieldBackIron = BackIronSteel;
+design.MagFEASimMaterials.ArmatureYoke = ElectricalSteel;
+design.MagFEASimMaterials.ArmatureCoil = matstr2matstruct_mfemm('36 AWG');
+design.MagFEASimMaterials.ArmatureCoil.WireD = design.Dc*1000;
+design.MagFEASimMaterials.AirGap = 'Air';
+design.MagFEASimMaterials.CoilInsulation = 'Air';
+design.CoilTurns = 1;
+
+FemmProblem = slottedfemmprob_radial (design, ...
+                            'ArmatureType', design.ArmatureType, ...
+                            'NWindingLayers', design.CoilLayers );
+                        
+plotfemmproblem (FemmProblem)
+                        
+dispstruct(design, 25)   
+
+
+%%
+
+Chrom = [144.894567412053e-003 ;
+    3.43935474440623e+000 ;
+    894.473335060377e-003 ;
+    629.715273760603e-003 ;
+    1.00000000000000e+000  ;
+    2.76375713124924e-003;
+    881.657977413938e-003  ;
+    3.06650072019637e+000 ;
+    532.616862733833e-003 ;
+    505.752285814302e-003 ;
+    568.624333417970e-003 ;
+    532.192351338307e-003;
+    699.534337827985e-003 ;
+    56.1154105686251e+000 ;
+    320.860533716092e-003 ;
+    252.622787288614e-006 ;
+    309.830319257120e-006 ;
+    480.246171651591e-003];
+
+
+% set a sensible limit on the stack length
+simoptions.Max_ls = 40e-3;
+
+% choose the maximum possibe coil height and shoe base height
+simoptions.Max_tc = 50e-3;
+simoptions.Max_tsb = 10e-3;
+simoptions.Max_tm = 10e-3;
+
+simoptions.RlVRp = 1;
+
+% choose the maximum machine outer radius
+simoptions.Max_Rbo = 320e-3 / 2;
+% choose the minimum air gap
+simoptions.Min_g = 1.5e-3;
+
+[design, tsimoptions] = ML0125_221115.chrom2design (simoptions, Chrom);
+
+design.MagFEASimMaterials.Magnet = matstr2matstruct_mfemm ('NdFeB 48M@20C');                                         
+ElectricalSteel = matstr2matstruct_mfemm ('M-19 Steel');
+BackIronSteel = matstr2matstruct_mfemm ('Cold drawn carbon steel, annealed');
+design.MagFEASimMaterials.FieldBackIron = BackIronSteel;
+design.MagFEASimMaterials.ArmatureYoke = ElectricalSteel;
+design.MagFEASimMaterials.ArmatureCoil = matstr2matstruct_mfemm('36 AWG');
+design.MagFEASimMaterials.ArmatureCoil.WireD = design.Dc*1000;
+design.MagFEASimMaterials.AirGap = 'Air';
+design.MagFEASimMaterials.CoilInsulation = 'Air';
+design.CoilTurns = 1;
+
+FemmProblem = slottedfemmprob_radial (design, ...
+                            'ArmatureType', design.ArmatureType, ...
+                            'NWindingLayers', design.CoilLayers );
+                        
+plotfemmproblem (FemmProblem)
+                        
+dispstruct(design, 25)   
