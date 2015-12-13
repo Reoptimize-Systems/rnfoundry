@@ -109,13 +109,13 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     end
     
     if isfield (design, 'ShearStressMean')
-        ShearStressMean = design.ShearStressMean;
+        ShearStressMean = design.ShearStressMean/1000;
     else
         ShearStressMean = 'N/A';
     end
 
     if isfield (design, 'AirGapClosingStress')
-        AirGapClosingStress = design.AirGapClosingStress;
+        AirGapClosingStress = design.AirGapClosingStress/1e3;
     else
         AirGapClosingStress = 'N/A';
     end
@@ -138,7 +138,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         'Mean Winding Losses (kW)', design.PowerPhaseRMean/1000, 'Mean Iron Losses (kW)', PowerLossIronMean;
         'Mean Winding Eddy Losses (kW)', PowerLossEddyMean, 'Mean Input Power (kW)', design.PowerInputMean/1e3;
         'Voltage THD (\%)', VoltagePercentTHD, 'Peak Electrical Frequency', FrequencyPeak;
-        'Mean Air Gap Shear Stress (kN/m\textsuperscript{2})', ShearStressMean/1000, 'Air-Gap Closing Stress (kN/m\textsuperscript{2})', AirGapClosingStress/1e3;
+        'Mean Air Gap Shear Stress (kN/m\textsuperscript{2})', ShearStressMean, 'Air-Gap Closing Stress (kN/m\textsuperscript{2})', AirGapClosingStress;
         'Per-Pole Gap Closing Force (N)', PerPoleAirGapClosingForce, '', '';
     };
 
@@ -230,10 +230,22 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         design.PowerConverterCost = design.PowerConverterCost/1e3;
     end
     
+    if isfield(design, 'StructMaterialMass')
+        StructMaterialMass = design.StructMaterialMass;
+    else
+        StructMaterialMass = 'Not Calculated';
+    end
+    
+    if isfield(design, 'StructuralCost')
+        StructuralCost = design.StructuralCost/1e3;
+    else
+        StructuralCost = 'Not Calculated';
+    end
+    
     tabledata = { ...
         'Magnet Mass (kg)', design.MagnetMass, 'Magnet Cost (kEuro)', design.MagnetCost/1e3;
         'Copper Mass (kg)', design.CopperMass, 'Copper Cost (kEuro)', design.CopperCost/1e3;
-        'Structural Mass (kg)', design.StructMaterialMass, 'Structural Cost (kEuro)', design.StructuralCost/1e3;
+        'Structural Mass (kg)', StructMaterialMass, 'Structural Cost (kEuro)', StructuralCost;
         'Field Iron Mass (kg)', design.FieldIronMass, 'Field Iron Cost (kEuro)', design.FieldIronCost./1e3;
         'Armature Iron Mass (kg)', design.ArmatureIronMass, 'Armature Iron Cost (kEuro)', design.ArmatureIronCost ./1e3;
         'Power Converter Rating (kW)', design.PowerConverterRatingkW, 'Power Converter Cost (kEuro)', design.PowerConverterCost;
