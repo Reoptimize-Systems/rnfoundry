@@ -195,6 +195,12 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %
 %
     
+    if nargin == 0
+        % return the internal subfunctions
+        design = {@slotintAdata, @slotintBdata, @coilresistance};
+        return;
+    end
+    
     if design.ypd ~= 1 && design.ypd ~= 2
     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
     end
@@ -378,7 +384,15 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     end % ~simoptions.SkipInductanceFEA
     
     % now recalculate coil resistance
+    design = coilresistance (design);
+    
+end
+
+function design = coilresistance (design)
+
+    
     extralen = design.thetas * design.Rcm / 2;
+    
     design.MTL = rectcoilmtl ( design.ls, ...
                                design.yd * design.thetas * design.Rcm + extralen, ...
                                mean (design.thetac) * design.Rcm );
