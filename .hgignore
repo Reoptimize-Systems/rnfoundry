@@ -52,7 +52,7 @@ __pycache__/
 *.mexw32
 *.mexw64
 *.mex
-
+*.m~
 
 # Build Systems #
 ################
