@@ -1,4 +1,4 @@
-function str = sipre(val,sgf,pfx,trz)
+function [str, pfs] = sipre(val,sgf,pfx,trz)
 % Convert a scalar numeric into an SI prefixed string. (metric/engineering)
 %
 % (c) 2014 Stephen Cobeldick
