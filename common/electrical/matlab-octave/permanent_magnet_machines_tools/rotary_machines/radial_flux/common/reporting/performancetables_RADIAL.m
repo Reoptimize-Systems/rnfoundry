@@ -1,4 +1,4 @@
-function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields)
+function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields, varargin)
 % generates tables of performance data a multiple speed and load points for
 % a radial flux rotary machine design
 %
@@ -48,10 +48,15 @@ function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outf
 
 % Created by Richard Crozier 2013
 
+    options.UseParFor = false;
+    
+    options = parse_pv_pairs (options, varargin);
+    
     if nargin < 5
         outfields = {};
     end
 
-    [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields);
+    [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields, ...
+                    'UseParFor', options.UseParFor);
 
 end
