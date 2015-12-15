@@ -1,4 +1,4 @@
-function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields)
+function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields, varargin)
 % generates tables of performance data a multiple speed and load points for
 % a rotary machine design
 %
@@ -48,6 +48,10 @@ function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, Rl
 
 % Created by Richard Crozier 2013-2015
 
+    options.UseParFor = false;
+    
+    options = parse_pv_pairs (options, varargin);
+    
     if nargin < 5
         outfields = {};
     end
@@ -77,7 +81,7 @@ function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, Rl
     % do design data gathering function if necessary
     if ~isempty(simoptions.simfun)
         % Analyse the machine and gather desired data
-        [design, simoptions] = feval(simoptions.simfun, design, simoptions);
+        [design, simoptions] = feval (simoptions.simfun, design, simoptions);
     end
     
 	% remove simfun, so we don't repeat fea etc. on subsequent runs
@@ -104,8 +108,14 @@ function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, Rl
     end
     
     % perform the simulations and gather the data
-    parfor rpmRlVRpind = 1:rpmRlVRpind-1
-        pdata(rpmRlVRpind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmRlVRpind), RlVRpslice(rpmRlVRpind));
+    if options.UseParFor
+        parfor rpmRlVRpind = 1:rpmRlVRpind-1
+            pdata(rpmRlVRpind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmRlVRpind), RlVRpslice(rpmRlVRpind));
+        end
+    else
+        for rpmRlVRpind = 1:rpmRlVRpind-1
+            pdata(rpmRlVRpind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmRlVRpind), RlVRpslice(rpmRlVRpind));
+        end
     end
     
     % construct the output tables from the matrix of data
@@ -134,8 +144,8 @@ function pdata = simfcn (design, simoptions, outfields, rpm, RlVRp)
         simoptions.abstol = [];
         
         % simulate the machine
-        [~, ~, ~, design, ~] = simulatemachine_AM( design, ...
-                                                   simoptions );
+        [~, ~, ~, design, ~] = simulatemachine_AM ( design, ...
+                                                    simoptions );
 
         % copy the output over to the performance tables
         pdata = nan * ones (1,numel(outfields));

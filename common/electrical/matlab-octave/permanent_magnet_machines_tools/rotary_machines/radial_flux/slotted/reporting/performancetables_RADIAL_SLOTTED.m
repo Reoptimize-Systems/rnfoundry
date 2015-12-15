@@ -1,4 +1,4 @@
-function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlVRp)
+function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlVRp, varargin)
 % generates tables of performance data a multiple speed and load points for
 % a slotted radial flux machine design
 %
@@ -43,6 +43,10 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlV
 %
 %
 
+    options.UseParFor = false;
+    
+    options = parse_pv_pairs (options, varargin);
+    
     % run the simulations and return the results using the generic axial
     % flux evaluation function
     
@@ -57,6 +61,7 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlV
     simoptions = setfieldifabsent (simoptions, 'PoleCount', 300);
      
     % call the common radial performance tables function
-    ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields);
+    ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields, ...
+                    'UseParFor', options.UseParFor);
     
 end
