@@ -100,6 +100,8 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     % store the rms value of the flux linkage
     design.FluxLinkageRms = rms(slmeval(linspace(0,2,1000), design.slm_fluxlinkage, 0, false));
     
+    design.FluxLinkagePeak = slmpar(design.slm_fluxlinkage, 'maxfun');
+    
     % we will make the minimum phase current of interest that which
     % generates a power of 10W per coil at 1m/s, or a current density of
     % 0.1 A/mm^2 in the winding, whichever is less
