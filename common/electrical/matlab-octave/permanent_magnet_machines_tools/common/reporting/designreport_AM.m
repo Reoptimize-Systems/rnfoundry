@@ -84,63 +84,28 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     
 %% Simulation Outputs
 
-    if isfield(design, 'PowerLossIronMean')
-        PowerLossIronMean = design.PowerLossIronMean / 1000;
-    else
-        PowerLossIronMean = 'N\A';
-    end
-    
-    if isfield(design, 'PowerLossEddyMean')
-        PowerLossEddyMean = design.PowerLossEddyMean / 1000;
-    else
-        PowerLossEddyMean = 'N\A';
-    end
-    
     if isfield(design, 'VoltagePercentTHD')
         VoltagePercentTHD = design.VoltagePercentTHD;
     else
         VoltagePercentTHD = 'N/A';
     end
     
-    if isfield (design, 'FrequencyPeak')
-        FrequencyPeak = design.FrequencyPeak;
-    else
-        FrequencyPeak = 'N/A';
-    end
+    tbfcn = @quantity_to_table_cell_pair;
     
-    if isfield (design, 'ShearStressMean')
-        ShearStressMean = design.ShearStressMean/1000;
-    else
-        ShearStressMean = 'N/A';
-    end
-
-    if isfield (design, 'AirGapClosingStress')
-        AirGapClosingStress = design.AirGapClosingStress/1e3;
-    else
-        AirGapClosingStress = 'N/A';
-    end
-    
-    if isfield (design, 'PerPoleAirGapClosingForce')
-        PerPoleAirGapClosingForce = design.PerPoleAirGapClosingForce;
-    else
-        PerPoleAirGapClosingForce = 'N/A';
-    end
-    
-    tabledata = { ...
-        'Peak Phase Current (A)', design.IPhasePeak(1), 'RMS Coil Current (A)', design.IPhaseRms(1);
-        'Peak Coil Current (A)', design.ICoilPeak(1), 'RMS Coil Current (A)', design.ICoilRms(1);                            
-        'Peak Current Density (A/mm\textsuperscript{2})', design.JCoilPeak(1) / 1e6, 'RMS Current Density (A/mm\textsuperscript{2})', design.JCoilRms(1) / 1e6;
-        'Peak Phase EMF (V)', design.EMFPhasePeak(1), 'RMS Phase EMF (V)', design.EMFPhaseRms(1);         
-        'Mean Exported Power (kW)', design.PowerLoadMean/1000, 'Peak Exported Power (kW)', design.PowerLoadPeak/1000;
-        'Phase Inductance (mH)', design.PhaseInductance(1)*1000, 'Phase Resistance (\ohm)', design.PhaseResistance(1);
-        'Load Resistance (\ohm)',  design.LoadResistance, 'Load Inductance (H)', design.LoadInductance;
-        'Peak Flux Linkage (Wb)', slmpar(design.slm_fluxlinkage, 'maxfun'), 'Efficiency', design.Efficiency;
-        'Mean Winding Losses (kW)', design.PowerPhaseRMean/1000, 'Mean Iron Losses (kW)', PowerLossIronMean;
-        'Mean Winding Eddy Losses (kW)', PowerLossEddyMean, 'Mean Input Power (kW)', design.PowerInputMean/1e3;
-        'Voltage THD (\%)', VoltagePercentTHD, 'Peak Electrical Frequency', FrequencyPeak;
-        'Mean Air Gap Shear Stress (kN/m\textsuperscript{2})', ShearStressMean, 'Air-Gap Closing Stress (kN/m\textsuperscript{2})', AirGapClosingStress;
-        'Per-Pole Gap Closing Force (N)', PerPoleAirGapClosingForce, '', '';
-    };
+    tabledata = [ ...
+        tbfcn('Peak Phase Current', 'A', design, 'IPhasePeak'),       tbfcn('RMS Coil Current', 'A', design, 'IPhaseRms');
+        tbfcn('Peak Coil Current', 'A', design, 'ICoilPeak'),         tbfcn('RMS Coil Current', 'A', design, 'ICoilRms');                            
+        tbfcn('Peak Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilPeak', 1e-6), tbfcn('RMS Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilRms', 1e-6);
+        tbfcn('Peak Phase EMF', 'V', design, 'EMFPhasePeak'),         tbfcn('RMS Phase EMF', 'V', design, 'EMFPhaseRms');         
+        tbfcn('Mean Exported Power', 'W', design, 'PowerLoadMean'),   tbfcn('Peak Exported Power', 'W', design, 'PowerLoadPeak');
+        tbfcn('Phase Inductance', 'H', design, 'PhaseInductance'),    tbfcn('Phase Resistance', '\ohm', design, 'PhaseResistance');
+        tbfcn('Load Resistance', '\ohm',  design, 'LoadResistance'),  tbfcn('Load Inductance', 'H', design, 'LoadInductance');
+        tbfcn('Peak Flux Linkage', 'Wb', design, 'FluxLinkagePeak'), {'Efficiency', design.Efficiency};
+        tbfcn('Mean Winding Losses', 'W', design, 'PowerPhaseRMean'), tbfcn('Mean Iron Losses', 'W', design, 'PowerLossIronMean');
+        tbfcn('Mean Winding Eddy Losses', 'W', design, 'PowerLossEddyMean'),    tbfcn('Mean Input Power', 'W', design, 'PowerInputMean');
+        {'Voltage THD (\%)', VoltagePercentTHD},                      tbfcn('Peak Electrical Frequency', 'Hz', design, 'FrequencyPeak');
+        tbfcn('Mean Air Gap Shear Stress', 'N/m\textsuperscript{2}', design, 'ShearStressMean'), tbfcn('Air-Gap Closing Stress', 'N/m\textsuperscript{2}', design, 'AirGapClosingStress');
+        tbfcn('Per-Pole Gap Closing Force', 'N', design, 'PerPoleAirGapClosingForce'), {'', ''} ];
 
     % generate the LaTex table of the outputs
     colheadings = {};
@@ -230,28 +195,16 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         design.PowerConverterCost = design.PowerConverterCost/1e3;
     end
     
-    if isfield(design, 'StructMaterialMass')
-        StructMaterialMass = design.StructMaterialMass;
-    else
-        StructMaterialMass = 'Not Calculated';
-    end
-    
-    if isfield(design, 'StructuralCost')
-        StructuralCost = design.StructuralCost/1e3;
-    else
-        StructuralCost = 'Not Calculated';
-    end
-    
-    tabledata = { ...
-        'Magnet Mass (kg)', design.MagnetMass, 'Magnet Cost (kEuro)', design.MagnetCost/1e3;
-        'Copper Mass (kg)', design.CopperMass, 'Copper Cost (kEuro)', design.CopperCost/1e3;
-        'Structural Mass (kg)', StructMaterialMass, 'Structural Cost (kEuro)', StructuralCost;
-        'Field Iron Mass (kg)', design.FieldIronMass, 'Field Iron Cost (kEuro)', design.FieldIronCost./1e3;
-        'Armature Iron Mass (kg)', design.ArmatureIronMass, 'Armature Iron Cost (kEuro)', design.ArmatureIronCost ./1e3;
-        'Power Converter Rating (kW)', design.PowerConverterRatingkW, 'Power Converter Cost (kEuro)', design.PowerConverterCost;
-        'Total Cost (kEuro)', design.CostEstimate./1e3, 'Cost Per kWhr (Euro Cent/kWhr)', design.CostPerkWhr * 100;
-        'Amortised Cost Per kWhr (Euro Cent/kWhr)', design.OptimInfo.BaseScore, [], []; ...
-    };
+    tabledata = [ ...
+        tbfcn('Magnet Mass', 'g', design, 'MagnetMass', 1000), tbfcn('Magnet Cost', 'Euro', design, 'MagnetCost');
+        tbfcn('Copper Mass', 'g', design, 'CopperMass', 1000), tbfcn('Copper Cost', 'Euro', design, 'CopperCost');
+        tbfcn('Structural Mass', 'g', design, 'StructMaterialMass', 1000), tbfcn('Structural Cost', 'Euro', design, 'StructuralCost');
+        tbfcn('Field Iron Mass', 'g', design, 'FieldIronMass', 1000), tbfcn('Field Iron Cost', 'Euro', design, 'FieldIronCost');
+        tbfcn('Armature Iron Mass', 'g', design, 'ArmatureIronMass', 1000), tbfcn('Armature Iron Cost', 'Euro', design, 'ArmatureIronCost');
+        {'Power Converter Rating (kW)', design.PowerConverterRatingkW}, {'Power Converter Cost (kEuro)', design.PowerConverterCost};
+        tbfcn('Total Cost', 'Euro', design, 'CostEstimate'), {'Cost Per kWhr (Euro Cent/kWhr)', design.CostPerkWhr * 100};
+        {'Amortised Cost Per kWhr (Euro Cent/kWhr)', design.OptimInfo.BaseScore}, {[], []}; ...
+    ];
 
     % generate the LaTex table of the outputs
     colheadings = {};
