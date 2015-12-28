@@ -875,7 +875,13 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
 
                 bodyarealeft = bodyarealeft + layer_area_available;
                 
-                if (info.windingarea > bodyarealeft) || (layersmade >= ylayers) ...
+                if ((info.windingarea > bodyarealeft) ...
+                            && (abs (bodyarealeft - info.windingarea) > eps(info.windingarea))) ...
+                        || (layersmade >= ylayers)
+                    % the remaining coil body area is less than the coil
+                    % winding area, and not equal to the winding area (to
+                    % machine precision, eps). Or we have already made all
+                    % the required number of coil layers
 
                     % link up the sides
                     links = [ links;
