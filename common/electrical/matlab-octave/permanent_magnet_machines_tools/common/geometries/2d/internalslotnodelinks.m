@@ -203,8 +203,8 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
     
     xcoilbase = options.CoilBaseFraction * xcoil;
     
-    if xcoilbase < 2*tol
-        xcoilbase = 2*tol;
+    if xcoilbase < 10*eps (xcoil) %2*tol
+        xcoilbase = 10*eps (xcoil); %2*tol;
     end
     
     xcoilbody = xcoil - xcoilbase;
