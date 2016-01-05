@@ -883,6 +883,10 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     
     FemmProblem = addcircuitsandcoillabels (FemmProblem, design, Inputs, CoilMatInd, statorinfo.CoilLabelLocations);
     
+    % copy over some drawing info
+    rotorinfo.NDrawnPoles = 2 * Inputs.NPolePairs;
+    statorinfo.NDrawnSlots = Inputs.NSlots;
+    
 end
 
 function tbboundnames = getsegbounds (FemmProblem, tbboundseginds)
