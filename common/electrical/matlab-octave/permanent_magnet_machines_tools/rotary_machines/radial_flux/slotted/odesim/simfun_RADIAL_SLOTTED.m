@@ -383,20 +383,32 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     
     end % ~simoptions.SkipInductanceFEA
     
+    % calculate coil mean turn lenth and resistance unless this is
+    % overridden by settings in the simoptions structure
+    if isfield (simoptions, 'set_MTL')
+        design.MTL = simoptions.set_MTL;
+    end
+    
     % now recalculate coil resistance
-    design = coilresistance (design);
+    if isfield (simoptions, 'set_CoilResistance')
+        design.CoilResistance = simoptions.set_CoilResistance;
+    else
+        design = coilresistance (design);
+    end
     
 end
 
 function design = coilresistance (design)
 
-    
-    extralen = design.thetas * design.Rcm / 2;
-    
-    design.MTL = rectcoilmtl ( design.ls, ...
-                               design.yd * design.thetas * design.Rcm + extralen, ...
-                               mean (design.thetac) * design.Rcm );
+    if  ~isfield (design, 'MTL')
+        extralen = design.thetas * design.Rcm / 2;
 
+        design.MTL = rectcoilmtl ( design.ls, ...
+                                   design.yd * design.thetas * design.Rcm + extralen, ...
+                                   mean (design.thetac) * design.Rcm );
+    end
+    
+    
     design.CoilResistance = wireresistancedc ('round', design.Dc, design.MTL*design.CoilTurns);
     
 end
