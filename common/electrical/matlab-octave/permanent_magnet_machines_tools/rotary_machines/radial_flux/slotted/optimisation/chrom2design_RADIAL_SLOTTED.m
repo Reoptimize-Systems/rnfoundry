@@ -18,8 +18,10 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % number of coils per pole and phase
     options.qc = fr(3,3);
     options.yd = 4;
+    options.UseResistanceRatio = true;
     % grid resistance to phase resistance ratio
     options.RlVRp = 10;
+    options.LoadResistance = 1.0;
     % ratio of mid slot height to slot base size
     options.tc2Vtc1 = 0.1;
     % coil fill factor
@@ -63,7 +65,11 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
     design.yd = options.yd;
-    design.RlVRp = options.RlVRp;
+    if options.UseResistanceRatio
+        design.RlVRp = options.RlVRp;
+    else
+        design.LoadResistance = options.LoadResistance;
+    end
     design.CoilLayers = options.CoilLayers;
     
     % set a minimum wire diameter of 0.5mm, if not already set
