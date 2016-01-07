@@ -265,7 +265,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slotlessfemmprob_radial(design, 
             
             FemmProblem = addblocklabel_mfemm (FemmProblem, x, y, ...
                                                'BlockType', design.MagFEASimMaterials.AirGap );
-                                           
+
             [x, y] = pol2cart (design.thetap*Inputs.NPolePairs*2 - (design.thetas-max(design.thetacy, design.thetacg))/4, design.Rcm);
             
             FemmProblem = addblocklabel_mfemm (FemmProblem, x, y, ...
