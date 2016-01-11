@@ -33,7 +33,26 @@ function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs
         '$R_{ci}$', 'Inner coil radius. [mm]', design.Rci * 1000;
         '$R_{co}$', 'Outer coil radius. [mm]', design.Rco * 1000;
         '$R_{cm}$', 'Mean coil radius. [mm]', design.Rcm * 1000;
-        '$R_{tsb}$', 'Tooth shoe surface radius [mm]', design.Rtsb * 1000;
+        '$R_{tsb}$', 'Tooth shoe base radius [mm]', design.Rtsb * 1000;
+    };
+
+    % tooth surface location
+    if strncmpi (design.ArmatureType, 'e', 1)
+
+        tabledata = [ tabledata; { '$R_{ai}$', 'Tooth surface radius. [mm]', design.Rai * 1000 } ];
+
+    elseif strncmpi (design.ArmatureType, 'i', 1)
+
+        tabledata = [ tabledata; {'$R_{ao}$', 'Tooth surface radius. [mm]', design.Rao * 1000 } ];
+
+    end
+    
+    % add the coil base curve radius if it's present
+    if isfield (design, 'Rcb')
+        tabledata = [ tabledata; {'$R_{cb}$', 'Coil base curve beginning radius. [mm]', design.Rcb * 1000 } ];
+    end
+    
+    tabledata = [ tabledata; { ...
         '$y_d$', 'Coil pitch in slots. (No. Of Slots)', design.yd;
         '$\theta_{c}$', 'Coil pitch. [rad]', design.yd*design.thetas;
         '$\tau_{c}$', 'Coil pitch at mean coil radius. [mm]', design.yd*design.thetas*design.Rcm * 1000;
@@ -49,8 +68,8 @@ function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs
         '$\tau_{cg}$', 'Internal slot pitch at gap end. [mm]', design.thetacg.*design.Rtsb * 1000;
         '$\theta_{cy}$', 'Internal slot pitch angle at yoke end (coil base). [rad]', design.thetacy;
         '$\tau_{cg}$', 'Internal slot pitch at gap end. [mm]', design.thetacg.*design.Rtsb * 1000;
-    };
-    
+    } ];
+
     % radial flux armature dimensions
     if strncmpi (design.ArmatureType, 'e', 1)
 
@@ -61,7 +80,7 @@ function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs
         tabledata = [ tabledata; {'$\tau_{cy}$', 'Internal slot pitch at yoke end (coil base). [mm]', design.thetacy.*design.Ryo * 1000 } ];
 
     end
-
+    
     % generate the LaTex table of the outputs
     colheadings = {};
     rowheadings = {};
