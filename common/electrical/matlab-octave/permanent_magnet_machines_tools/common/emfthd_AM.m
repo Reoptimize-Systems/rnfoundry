@@ -35,7 +35,7 @@ function THD = emfthd_AM(slm_fluxlinkage)
     
     Nharmonics = 10;
     
-    if isoctave ()
+    if isoctave () || ~exist ('thd', 'file')
         [~, ~, ~, ~, THDdb] = prettyFFT(normdphidx,Fs,Nharmonics,true,true);
     else
         THDdb = thd (normdphidx, Fs, Nharmonics);
