@@ -13,6 +13,25 @@ function rnfoundry_setup (varargin)
 % with a number of Parameter-Value pairs.
 %
 %
+%  'ForceMexLseiSetup = false;
+%
+%  'ForceMexLseiF2cLibRecompile = false;
+%
+%  'ForceMexLseiCFileCreation = false;
+%
+%  'ForceMexSLMSetup = false;
+%
+%  'ForceMexPPValSetup = false;
+%
+%  'ForceMexmPhaseWLSetup = false;
+%
+%  'PreventXFemmCheck = false;
+%
+%  'XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.5/xfemm_v1_5_mingw_win64.zip/download';
+%
+%
+
+
 
     % mexlsei related
     Inputs.ForceMexLseiSetup = false;

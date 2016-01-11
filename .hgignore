@@ -1,5 +1,14 @@
 syntax: glob
 
+# rnfoundry specific patterns #
+-------------------------------
+
+# generated files
+dlsei.c
+
+# common patterns #
+-------------------
+
 # Mercurial Generate Files #
 ###########################
 *.orig
