@@ -36,6 +36,11 @@ function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs
         '$R_{tsb}$', 'Tooth shoe base radius [mm]', design.Rtsb * 1000;
     };
 
+    % add the tooth shoe radius at the gap if present
+    if isfield (design, 'Rtsg')
+        tabledata = [ tabledata; {'$R_{tsg}$', 'Tooth shoe at gap radius. [mm]', design.Rtsg * 1000 } ];
+    end
+
     % tooth surface location
     if strncmpi (design.ArmatureType, 'e', 1)
 
