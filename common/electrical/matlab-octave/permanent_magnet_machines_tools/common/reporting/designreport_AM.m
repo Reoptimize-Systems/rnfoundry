@@ -93,7 +93,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     tbfcn = @quantity_to_table_cell_pair;
     
     tabledata = [ ...
-        tbfcn('Peak Phase Current', 'A', design, 'IPhasePeak'),       tbfcn('RMS Coil Current', 'A', design, 'IPhaseRms');
+        tbfcn('Peak Phase Current', 'A', design, 'IPhasePeak'),       tbfcn('RMS Phase Current', 'A', design, 'IPhaseRms');
         tbfcn('Peak Coil Current', 'A', design, 'ICoilPeak'),         tbfcn('RMS Coil Current', 'A', design, 'ICoilRms');                            
         tbfcn('Peak Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilPeak', 1e-6), tbfcn('RMS Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilRms', 1e-6);
         tbfcn('Peak Phase EMF', 'V', design, 'EMFPhasePeak'),         tbfcn('RMS Phase EMF', 'V', design, 'EMFPhaseRms');         
