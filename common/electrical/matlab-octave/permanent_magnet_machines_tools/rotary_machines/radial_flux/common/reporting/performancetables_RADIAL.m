@@ -1,4 +1,4 @@
-function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields, varargin)
+function [ptables, pdata] = performancetables_RADIAL(design, simoptions, rpm, LoadVals, outfields, varargin)
 % generates tables of performance data a multiple speed and load points for
 % a radial flux rotary machine design
 %
@@ -24,6 +24,9 @@ function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outf
 %     corresponding combination of speed and loading. The fields of ptables
 %     will contain at least the following:
 %
+%       OmegaPeak
+%       TorquePtoMean
+%       TorquePtoPeak
 %       PowerLoadMean
 %       Efficiency
 %       IPhasePeak
@@ -49,6 +52,8 @@ function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outf
 % Created by Richard Crozier 2013
 
     options.UseParFor = false;
+    options.LoadSpecType = 'ratio';
+    options.DoSimFun = true;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -56,7 +61,9 @@ function ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outf
         outfields = {};
     end
 
-    [ptables] = performancetables_ROTARY(design, simoptions, rpm, RlVRp, outfields, ...
-                    'UseParFor', options.UseParFor);
+    [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, LoadVals, outfields, ...
+                    'UseParFor', options.UseParFor, ...
+                    'LoadSpecType', options.LoadSpecType, ...
+                    'DoSimFun', options.DoSimFun);
 
 end

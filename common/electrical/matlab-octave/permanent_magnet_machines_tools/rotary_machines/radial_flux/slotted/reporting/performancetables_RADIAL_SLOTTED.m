@@ -1,4 +1,4 @@
-function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlVRp, varargin)
+function [ptables, pdata] = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, LoadVals, varargin)
 % generates tables of performance data a multiple speed and load points for
 % a slotted radial flux machine design
 %
@@ -20,6 +20,10 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlV
 %     corresponding combination of speed and loading. The fields of ptables
 %     will contain at least the following:
 %
+%       PowerLossIronMean
+%       OmegaPeak
+%       TorquePtoMean
+%       TorquePtoPeak
 %       PowerLoadMean
 %       Efficiency
 %       IPhasePeak
@@ -44,6 +48,8 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlV
 %
 
     options.UseParFor = false;
+    options.LoadSpecType = 'ratio';
+    options.DoSimFun = true;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -58,10 +64,12 @@ function ptables = performancetables_RADIAL_SLOTTED(design, simoptions, rpm, RlV
     simoptions = setfieldifabsent (simoptions, 'odeevfun', 'prescribedmotodetorquefcn_ROTARY');
     simoptions = setfieldifabsent (simoptions, 'torquefcn', 'torquefcn_ROTARY');
     simoptions = setfieldifabsent (simoptions, 'resfun', 'prescribedmotresfun_ROTARY');
-    simoptions = setfieldifabsent (simoptions, 'PoleCount', 300);
+    simoptions = setfieldifabsent (simoptions, 'PoleCount', 1000);
      
     % call the common radial performance tables function
-    ptables = performancetables_RADIAL(design, simoptions, rpm, RlVRp, outfields, ...
-                    'UseParFor', options.UseParFor);
+    [ptables, pdata] = performancetables_RADIAL(design, simoptions, rpm, LoadVals, outfields, ...
+                    'UseParFor', options.UseParFor, ...
+                    'LoadSpecType', options.LoadSpecType, ...
+                    'DoSimFun', options.DoSimFun);
     
 end
