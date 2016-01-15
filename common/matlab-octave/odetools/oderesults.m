@@ -1,4 +1,4 @@
-function results = oderesults(T, Y, odeevfcn, odeargs, skip)
+function results = oderesults(T, Y, odeevfcn, odeargs, skip, skipfields)
 % oderesults: extracts results from an appropriately coded ode which were
 % not variables of the integration.
 %
@@ -50,6 +50,10 @@ function results = oderesults(T, Y, odeevfcn, odeargs, skip)
     if nargin < 5
         skip = 1;
     end
+    
+    if nargin < 6
+        skipfields = {};
+    end
 
     % preallocate the results structure with fields containing arrays of
     % zeros
@@ -73,7 +77,9 @@ function results = oderesults(T, Y, odeevfcn, odeargs, skip)
         [outArgs{1:nOut}] = feval(odeevfcn, T(i), Y(i,:)', odeargs{:});
         
         for j = 1:nOut
-           results.(fn{j})(k,:) = outArgs{j}; 
+            if ~ismember (fn{j}, skipfields)
+                results.(fn{j})(k,:) = outArgs{j};
+            end
         end
     
     end
