@@ -1,4 +1,4 @@
-function design = odeelectricalresults(T, Iphase, EMF, design, simoptions)
+function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoptions)
 % odeelectricalresults: calculates the electrical outputs, and exported
 % power from an ode simulation of a generator
 
@@ -36,7 +36,8 @@ function design = odeelectricalresults(T, Iphase, EMF, design, simoptions)
         
         design.PowerLoadMean = contmean(T, loadPower);
         
-        phasePower = sum(realpow(Iphase,2) .* design.PhaseResistance, 2)  .* design.NStages .* simoptions.NoOfMachines;
+        phasePower = sum(bsxfun (@times, realpow(Iphase,2), RPhase), 2) ...
+                        .* design.NStages .* simoptions.NoOfMachines;
         
         design.EnergyPhaseRTotal = trapz(T, phasePower);
 
