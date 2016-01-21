@@ -88,8 +88,13 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
     simoptions.evaloptions = evaloptions;
 
     % % multicoredir = 'N:\myhome\Postgrad_Research\MATLAB_Scripts\subversion\matlab\ngentec\comparisons\temp';
-    if ~exist('multicoredir', 'var')
-        multicoredir = fullfile(ngtrootdir, 'temp');
+    if ~exist('multicoredir', 'var') || isempty (multicoredir)
+        % use a directory in the computers temporary files folder for the
+        % multicore files if it's to be used
+        multicoredir = fullfile (tempdir (), 'machine_opt_temp_files');
+        if ~exist (multicoredir, 'dir')
+            mkdir (multicoredir);
+        end
     end
     
     if istestrun
