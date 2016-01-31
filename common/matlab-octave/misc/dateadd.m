@@ -18,15 +18,19 @@ function R = dateadd(D, V)
 % R - A serial date number representing the supplied date pluss the
 %     additional time
 %
+    
+    if ~isscalar (D)
+        R = datenum (D);
+    else
+        R = D;
+    end
+    
+    R = addtodate (R, V(1), 'year');
+    
+    R = addtodate (R, V(2), 'month');
+    
+    R = addtodate (R, V(3), 'day');
 
-    R = datenum(D);
-    
-    R = addtodate(R, V(1), 'year');
-    
-    R = addtodate(R, V(2), 'month');
-    
-    R = addtodate(R, V(3), 'day');
-
-    R = R + datenum(0,0,0,V(4),V(5),V(6)) - datenum(0,0,0,0,0,0);
+    R = R + datenum (0,0,0,V(4),V(5),V(6)) - datenum (0,0,0,0,0,0);
 
 end
