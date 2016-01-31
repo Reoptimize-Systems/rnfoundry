@@ -160,11 +160,10 @@ function startmulticoreslave2(multicoreDir, quitmode, quitdatenum, IDfilestart, 
     curWaitTime      = startWaitTime;
     
 %     C = onCleanup(@() onfinish(slaveID));
-
-    disp(fullfile(multicoreDir, [IDfilestart, num2str(slaveID), '.mat']))
-    disp(slaveID)
+    fprintf (1, 'This is a multicore slave process with ID: %d\n', slaveID)
     
     slaveIDfile = fullfile(multicoreDir, [IDfilestart, num2str(slaveID), '.mat']);
+    fprintf (1, 'Slave control file is:\n%s\nDelete this file to quit slave process.\n', slaveIDfile);
     
     % try to delete the slave ID file when we quit the slave for any reason
     % using an onCleanup object
