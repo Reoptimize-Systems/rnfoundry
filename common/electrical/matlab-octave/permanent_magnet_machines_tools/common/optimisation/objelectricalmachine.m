@@ -34,20 +34,35 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         simoptions.evaloptions.spawnslaves = ...
             [ simoptions.evaloptions.spawnslaves, simoptions.evaloptions.spawnslaves ];
     end
-        
+    
+    % common multicore settings
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'maxattempts', 3);
+    
     % preprocess the designs before simulation
-    for i = 1:size (Chrom,1)
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCorePreProcDir', '');
+    PPsettings.multicoreDir = fullfile (multicoredir, simoptions.evaloptions.MCorePreProcDir);
+    PPsettings.nResults = 2;
+    PPsettings.nrOfEvalsAtOnce = 5;
+    PPsettings.masterIsWorker = true;
+    parameterCell = mcoreobjfcneval ( preprocfcn, construct_pp_parametercell (simoptions, Chrom), ...
+                                      PPsettings, simoptions.evaloptions.maxattempts, ...
+                                      'ErrorUserFcn', @mcoreerrormail, ...
+                                      'TryLocalEval', true );
+
+    for i = 1:size (parameterCell,1)
 
         % Construct initial design structure
-        [design, psimoptions] = feval (preprocfcn, simoptions, Chrom(i,:));
+%         [design, psimoptions] = feval (preprocfcn, simoptions, Chrom(i,:));
 
-        % store the design chromsome and index for later use
-        design.OptimInfo.ChromInd = i;
-        design.OptimInfo.Chrom = Chrom (i,:);
+        % store various pieces of info for index for later use
+        parameterCell{i}{1}.OptimInfo.ChromInd = i;
+        parameterCell{i}{1}.OptimInfo.Chrom = Chrom (i,:);
+%         [~,hgid] = system ( ['cd ', getmfilepath('objelectricalmachine.m'), ' ; hg id']);
+%         parameterCell{i}{1}.OptimInfo.RNFoundryMercurialID = hgid;
 
-        psimoptions = rmiffield (psimoptions, 'filenamebase');
+        parameterCell{i}{2} = rmiffield (parameterCell{i}{2}, 'filenamebase');
         
-        parameterCell{i,1} = {design, psimoptions};
+%         parameterCell{i,1} = {design, psimoptions};
 
     end
 
@@ -69,7 +84,6 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
     settings.postProcessUserData = {};
     settings.debugMode = 0;
     settings.showWarnings = 1;
-    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'maxattempts', 3);
     simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'allowheld', 10);
         
     if separatesimfun
@@ -120,6 +134,9 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
                 simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabhost', '');
                 simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabport', '');
                 simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabpassword', '');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condornotifyemail', '');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'slavestartdir', '~/Documents/MATLAB');
+                simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matoroctslaves', 'm');
                 
                 % set up the mcorecondormatlabslavespawn monitor function, called
                 % by the multicore master process each time it looks for new files
@@ -141,7 +158,10 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
                     'maxslaves', simoptions.evaloptions.maxslaves, ...
                     'initialwait', 10*60, ... % wait 10 mins after the first slave launch before respawning
                     'allowheld', simoptions.evaloptions.allowheld, ...
-                    'condorlogdirectory', simoptions.evaloptions.condorlogdirectory );
+                    'condorlogdirectory', simoptions.evaloptions.condorlogdirectory, ...
+                    'notifyemail', simoptions.evaloptions.condornotifyemail, ...
+                    'slavestartdir', simoptions.evaloptions.slavestartdir, ...
+                    'matoroct', simoptions.evaloptions.matoroctslaves );
 
             end
 
@@ -191,6 +211,9 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
         simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabhost', '');
         simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabport', '');
         simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matlabpassword', '');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'condornotifyemail', '');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'slavestartdir', '~/Documents/MATLAB');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matoroctslaves', 'm');
         
         % set up the mcorecondormatlabslavespawn monitor function, called
         % by the multicore master process each time it looks for new files
@@ -212,8 +235,10 @@ function ObjVal = objelectricalmachine(simoptions, Chrom, preprocfcn, evalfcn, m
             'maxslaves', simoptions.evaloptions.maxslaves, ...
             'initialwait', 10*60, ... % wait 10 mins after the first slave launch before respawning
             'allowheld', simoptions.evaloptions.allowheld, ...
-            'condorlogdirectory', simoptions.evaloptions.condorlogdirectory ...
-            );
+            'condorlogdirectory', simoptions.evaloptions.condorlogdirectory, ...
+            'notifyemail', simoptions.evaloptions.condornotifyemail, ...
+            'slavestartdir', simoptions.evaloptions.slavestartdir, ...
+            'matoroct', simoptions.evaloptions.matoroctslaves );
 
     end
     
@@ -278,6 +303,17 @@ function displayresults (Chrom, ObjVal)
     if i < size (Chrom,1)
         i = i + 1;
         fprintf (1, 'Ind %d, Score: %f\n', i, ObjVal(i));
+    end
+
+end
+
+function parameterCell = construct_pp_parametercell (simoptions, Chrom)
+
+    parameterCell = cell (size (Chrom, 1), 1);
+    for ind = 1:size (Chrom,1)
+       
+        parameterCell{ind,1} = {simoptions, Chrom(ind,:)};
+        
     end
 
 end
