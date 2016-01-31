@@ -1,8 +1,15 @@
-function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptions, fieldbounds, multicoredir, istestrun, isfirstrun)
+function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaoptions, fieldbounds, istestrun, isfirstrun, varargin)
 % run an electrical machine optimisation, allow easy test runs of small
 % populations to be performed
 %
 
+    Inputs.MulticoreSharedDir = fullfile (tempdir (), 'machine_opt_temp_files');
+    Inputs.TestForceSlaveSpawn = false;
+    Inputs.TestNIND = 4;
+    Inputs.TestNSUBPOP = 1;
+    
+    Inputs = parse_pv_pairs (Inputs, varargin);
+    
     if nargin < 3
         mpgaoptions = struct();
     end
@@ -13,7 +20,13 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
         mpgaoptions.RESUME = false;
         mpgaoptions.SAVEMODE = false;
 
-        evaloptions.spawnslaves = false;
+        if Inputs.TestForceSlaveSpawn
+            evaloptions.spawnslaves = true;
+            evaloptions.maxslaves = 1;
+        else
+            evaloptions.spawnslaves = false;
+        end
+        
         evaloptions.masterIsWorkerEvFun = true;
         evaloptions.masterIsWorkerSimFun = true;
     else
@@ -117,9 +130,9 @@ function [mpgastate, mpgaoptions] = runopt_AM(simoptions, evaloptions, mpgaoptio
 
     if istestrun
         % Number of subpopulations
-        mpgaoptions.SUBPOP = 1;                       
+        mpgaoptions.SUBPOP = Inputs.TestNSUBPOP;                       
         % Number of individuals per subpopulations
-        mpgaoptions.NIND = 4;
+        mpgaoptions.NIND = Inputs.TestNIND;
         % Max number of generations
         mpgaoptions.MAXGEN = 3; 
     else
