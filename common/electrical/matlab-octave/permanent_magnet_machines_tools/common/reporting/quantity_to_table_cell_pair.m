@@ -1,15 +1,18 @@
 function tcells = quantity_to_table_cell_pair (name, unit, S, fieldname, scalefac)
+% created a two element cell array with a name and value with an
+% appropriate prefix
+
 
     if nargin < 5
         scalefac = 1;
     end
-    
+
     [num, prefix] = scalar_field_num_and_si_prefix (S, fieldname, scalefac, 1);
-    
+
     switch prefix
-        
+
         case 'y'
-            
+
             prefix = 'y';
         case 'z'
             prefix = 'z';
@@ -42,13 +45,11 @@ function tcells = quantity_to_table_cell_pair (name, unit, S, fieldname, scalefa
         case 'Y'
             prefix = 'Y';
     end
-    
+
     if strcmp ('N/A', num)
         tcells = {name, num};
     else
         tcells = {[name, ' (', prefix, unit, ')'], num };
     end
-    
-    
-    
+
 end
