@@ -156,7 +156,7 @@ function pdata = simfcn (design, simoptions, outfields, rpm, LoadVal, options)
     switch options.LoadSpecType
         case 'ratio'
             simoptions.RlVRp = LoadVal;
-            design.RlVRp = RlVRp;
+            design.RlVRp = LoadVal;
         case 'resistance'
             simoptions.LoadResistance = LoadVal;
             design.LoadResistance = LoadVal;
