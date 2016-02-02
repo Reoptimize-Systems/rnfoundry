@@ -481,7 +481,7 @@ function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDen
         % calcuation of material masses later
         solution.clearblock();
         solution.groupselectblock (design.FemmProblem.Groups.ArmatureBackIron);
-        design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
+        design.ArmatureIronArea = (solution.blockintegral(5) / design.StatorDrawingInfo.NDrawnSlots) * design.Qs;
 
         % get the cross-sectional area of the coil winding bundle
         design.CoilArea = solution.blockintegral ( 5, design.StatorDrawingInfo.CoilLabelLocations(1,1), design.StatorDrawingInfo.CoilLabelLocations(1,2) );
