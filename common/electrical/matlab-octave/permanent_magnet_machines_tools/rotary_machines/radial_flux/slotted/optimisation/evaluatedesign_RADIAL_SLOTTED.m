@@ -168,7 +168,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     % calcuation of material masses later
     solution.clearblock ();
     solution.groupselectblock (sdesign.FemmProblem.Groups.ArmatureBackIron);
-    sdesign.ArmatureIronAreaPerPole = solution.blockintegral (5)/2;
+    sdesign.ArmatureIronArea = (solution.blockintegral(5) / sdesign.StatorDrawingInfo.NDrawnSlots) * design.Qs;
 
     % get the cross-sectional area of the coil winding bundle
     sdesign.CoilArea = ...
