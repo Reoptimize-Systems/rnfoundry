@@ -220,7 +220,8 @@ function design = coggingforceslm(design)
     skew = design.MagnetSkew;
     skew(2) = design.NSkewMagnetsPerPole;
     
-    % account for magnet skew in the cogging forces
+    % account for magnet skew in the cogging forces, normalise it to the
+    % stator length
     normcoggingTorqueslm = slmengine (design.feapos, design.RawCoggingTorque ./ design.ls, ...
             'EndCon', 'periodic', ...
             'knots', numel (design.feapos), ...
