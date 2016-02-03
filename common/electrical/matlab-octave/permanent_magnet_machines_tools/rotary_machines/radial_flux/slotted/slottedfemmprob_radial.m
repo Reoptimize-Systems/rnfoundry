@@ -92,7 +92,6 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     Inputs.DrawingType = 'MagnetRotation';
     Inputs.NBoundaryPositions = 10;
     Inputs.BoundaryShift = 0;
-    Inputs.ArmatureType = 'external';
     Inputs.NWindingLayers = nan;
     Inputs.CoilCurrent = zeros (1,design.Phases);
     Inputs.MagArrangement = 'NN';
@@ -213,7 +212,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     YokeMatInd = matinds(4);
     CoilMatInd = matinds(5);
     
-    switch Inputs.ArmatureType
+    switch design.ArmatureType
         
         case 'external'
             % single inner facing stator
@@ -393,7 +392,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %             end
             
             % add the air gap labels
-            switch Inputs.ArmatureType
+            switch design.ArmatureType
         
                 case 'external'
 
@@ -460,7 +459,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
                 'Tol', Inputs.Tol, ...
                 'YShift', 0 );
             
-            switch Inputs.ArmatureType
+            switch design.ArmatureType
                 case 'external'
                     YShift = design.Rmo + design.g + (design.Ryo + 2*design.tm + 10*design.tm) + 10*Inputs.Tol;
                 case 'internal'
@@ -589,7 +588,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
             
             
             % add the air gap labels
-            switch Inputs.ArmatureType
+            switch design.ArmatureType
         
                 case 'external'
 
@@ -674,7 +673,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %                                                       rad2deg (design.thetas-design.thetacg), ...
 %                                                       'MaxSegDegrees', min (angle/5, 1) );
 
-            switch Inputs.ArmatureType
+            switch design.ArmatureType
                 
                 case 'external'
                     
@@ -911,7 +910,7 @@ function [FemmProblem, statorinfo] = stator_iron_boundary (FemmProblem, design, 
 
     edgenodes = [];
             
-    switch Inputs.ArmatureType
+    switch design.ArmatureType
 
         case 'external'
             % single inner facing stator (magnets inside, stator outside)
@@ -1127,7 +1126,7 @@ function [FemmProblem, statorinfo] = stator_outer_regions (FemmProblem, design, 
     
     edgenodes = [];
             
-    switch Inputs.ArmatureType
+    switch design.ArmatureType
 
         case 'external'
             % single inner facing stator (magnets inside, stator outside)
