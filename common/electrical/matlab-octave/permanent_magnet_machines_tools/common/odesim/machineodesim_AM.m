@@ -237,7 +237,7 @@ function rho = tempdepresistivity(rhobase, alpha, Tbase, T)
             
 end
 
-function Rac = roundwirefreqdepresistance(a, Rdc, rho, mu_r, freq)
+function Rac = roundwirefreqdepresistance(Dc, Rdc, rho, mu_r, freq)
 % calcuates the AC resitance of a wire of round cross-section due to the
 % skin effect
 %
@@ -246,6 +246,8 @@ function Rac = roundwirefreqdepresistance(a, Rdc, rho, mu_r, freq)
 % Rac = roundwirefreqdepresistance(Dc, Rdc, rho, mu_r, freq)
 %
 % Input
+%
+%   Dc - wire diameter
 %
 %   Rdc - the DC resistance of the wire
 % 
@@ -270,18 +272,18 @@ function Rac = roundwirefreqdepresistance(a, Rdc, rho, mu_r, freq)
 % Copyright Richard Crozier 2012 - 2012
 
     % determine the skin depth
-    delta = skindepth(rho, mu_r, freq);
+    delta = skindepth (rho, mu_r, freq);
     
     % calculate the AC resistance, this is dependent on the ratio of the
     % wire radius to the skin depth, as described in 'The Analysis of Eddy
     % Currents', Richard L Stoll, Chapter 2, Section 2.8, page 25
-    if a > 7 * delta
+    if Dc > 7 * delta
         
-        Rac = Rdc .* ( (a / (2*delta)) + 0.25 + (3*delta / (32*a)) );
+        Rac = Rdc .* ( (Dc / (2*delta)) + 0.25 + (3*delta / (32*Dc)) );
         
     else
         
-        Rac = Rdc .* ( 1 + a^2 / (4*delta^2) );
+        Rac = Rdc .* ( 1 + Dc^2 / (4*delta^2) );
         
     end
 
