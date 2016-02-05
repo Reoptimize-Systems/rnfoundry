@@ -199,31 +199,8 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     
     % finally simulate the machine using ode solver, first setting some
     % options
-    if isoctave
-
-        if isfield(simoptions, 'reltol')
-            if isfield(simoptions, 'abstol')
-               simoptions.abstol = simoptions.abstol(:);
-               if isscalar(simoptions.reltol) && ~isscalar(simoptions.abstol)
-                   simoptions.reltol = repmat(simoptions.reltol, size(simoptions.abstol));
-               end
-            end
-            odeoptions = odeset('RelTol', simoptions.reltol);
-        else
-            simoptions.reltol = 2e-2;
-            if isfield(simoptions, 'abstol')
-               if isscalar(simoptions.reltol) && ~isscalar(simoptions.abstol)
-                   simoptions.reltol = repmat(simoptions.reltol, size(simoptions.abstol));
-               end
-            end
-        end
-        
-    else
-        
-        if ~isfield(simoptions, 'reltol')
-            simoptions.reltol = 2e-2;
-        end
-
+    if ~isfield(simoptions, 'reltol')
+        simoptions.reltol = 2e-2;
     end
 
     odeoptions = odeset('RelTol', simoptions.reltol);
@@ -253,7 +230,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
         end
     else
         if isoctave
-            odefcn = @ode5r; %s @oders; %@ode23s; %@ode2r;
+            odefcn = @ode5r;
         else
             odefcn = @ode15s;
         end
