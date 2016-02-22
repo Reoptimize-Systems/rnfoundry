@@ -230,7 +230,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
         end
     else
         if isoctave
-            odefcn = @ode5r;
+            odefcn = @ode5r; %s @oders; %@ode23s; %@ode2r;
         else
             odefcn = @ode15s;
         end
