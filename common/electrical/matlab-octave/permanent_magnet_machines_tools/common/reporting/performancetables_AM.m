@@ -144,7 +144,7 @@ function [ptables, pdata] = performancetables_AM (design, simoptions, speeds, Lo
     ptables.SimulationInfo.Speeds = speeds;
     ptables.SimulationInfo.LoadVals = LoadVals;
     ptables.SimulationInfo.LoadSpecType = options.LoadSpecType;
-    if isa ('function_handle', options.SpeedSetupFcn)
+    if isa (options.SpeedSetupFcn, 'function_handle')
         ptables.SimulationInfo.SpeedSetupFcn = func2str (options.SpeedSetupFcn);
     else
         ptables.SimulationInfo.SpeedSetupFcn = options.SpeedSetupFcn;
