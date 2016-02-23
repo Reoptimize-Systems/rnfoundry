@@ -113,7 +113,7 @@ function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs
     set (gcf, 'color', 'w');
     xlabel ('Position (Fraction of Pole)');
     ylabel ('Flux Density Magnitude (T)');
-    matlab2tikz ([fname, '.tikz'], 'width', '8cm', 'mathmode', false, 'showInfo', false);
+    matlab2tikz ([fname, '.tikz'], 'width', '8cm', 'showInfo', false);
     close (h)
     
     fluxdensitystrs = txtfile2cell([fname, '.tikz']);
