@@ -7,6 +7,7 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
     Inputs.TestForceSlaveSpawn = false;
     Inputs.TestNIND = 4;
     Inputs.TestNSUBPOP = 1;
+    Inputs.TestMaxSlaves = 1;
     
     Inputs = parse_pv_pairs (Inputs, varargin);
     
@@ -22,7 +23,7 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
 
         if Inputs.TestForceSlaveSpawn
             evaloptions.spawnslaves = true;
-            evaloptions.maxslaves = 1;
+            evaloptions.maxslaves = Inputs.TestMaxSlaves;
         else
             evaloptions.spawnslaves = false;
         end
