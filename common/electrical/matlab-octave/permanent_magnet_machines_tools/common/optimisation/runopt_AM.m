@@ -142,6 +142,10 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
     mpgaoptions.STEP = 1;
     mpgaoptions.DISPLAYMODE = 2;
 
+    if isfield (simoptions, 'OptimisationName')
+        fprintf (1, 'Running Optimisation "%s"\n', simoptions.OptimisationName);
+    end
+
     % run the GA
     [mpgastate, mpgaoptions] = mpga(mpgaoptions, 'ObjectiveArgs', ObjectiveArgs);
     
