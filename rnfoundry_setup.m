@@ -10,29 +10,57 @@ function rnfoundry_setup (varargin)
 % Input
 %
 % rnfoundry_setup can be called with no arguments, of for finer control,
-% with a number of Parameter-Value pairs.
+% over the install process, it can be called with additional optional
+% arguemtns supplied as Parameter-Value pairs. The avaialble options are:
 %
+%  'ForceMexLseiSetup' : Forces the recompilation of the mexlsei mex 
+%    function even if it already on the path. Default is false.
 %
-%  'ForceMexLseiSetup = false;
+%  'ForceMexLseiF2cLibRecompile' : Forces the recompilation of the f2c
+%    library which must be linked to by the mexlsei mex function. Default
+%    is false.
 %
-%  'ForceMexLseiF2cLibRecompile = false;
+%  'ForceMexLseiCFileCreation' : Forces the creation of the C language file
+%    dlsei from the original fortran sources of dlsei using f2c. Default is
+%    false in which case a presupplied version is used.
 %
-%  'ForceMexLseiCFileCreation = false;
+%  'ForceMexSLMSetup' : Forces the recompilation of the mexslmeval mex 
+%    function even if it already on the path. Default is false.
 %
-%  'ForceMexSLMSetup = false;
+%  'ForceMexPPValSetup' : Forces the recompilation of the mexppval mex 
+%    function even if it already on the path. Default is false.
 %
-%  'ForceMexPPValSetup = false;
+%  'ForceMexmPhaseWLSetup' : Forces the recompilation of the mexmPhaseWL
+%    mex function even if it already on the path. Default is false.
 %
-%  'ForceMexmPhaseWLSetup = false;
+%  'PreventXFemmCheck' :  Many functions in the renewnet foundry require 
+%    the 'xfemm' finite element analysis package. rnfoundry_setup can
+%    download and install this package if desired. This option determines
+%    whether rnfoundry_setup checks to see if xfemm is already installed
+%    (by looking for xfemm functions in the path). Defautl is false, so
+%    rnfoundry_setup will check to see if xfemm is installed.
 %
-%  'PreventXFemmCheck = false;
+%  'XFemmInstallPrefix' : Many functions in the renewnet foundry require 
+%    the 'xfemm' finite element analysis package. rnfoundry_setup can 
+%    download and install this package if desired. By defualt the package
+%    will be installed in the same directory as the one containing
+%    rnfoundry_setup.m, you can use this option to set this to a different
+%    directory.
 %
-%  'XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.5/xfemm_v1_5_mingw_win64.zip/download';
-%
+%  'XFemmDownloadSource' : Many functions in the renewnet foundry require 
+%    the 'xfemm' finite element analysis package. rnfoundry_setup can
+%    download and install this package if desired. To change the default
+%    download location (i.e. the remote url pointing to the package on the
+%    internet) you can set this option. The default is a location on
+%    Sourceforge.net, and depends on your machine architecture. It's fairly
+%    unlikely you'll ever want to change this option.
 %
 
-
-
+    % set up the matlab path first to get access to a load of utility
+    % functions we can then use
+    thisfilepath = fileparts (which ('rnfoundry_setup'));
+    addpath(genpath (thisfilepath));
+    
     % mexlsei related
     Inputs.ForceMexLseiSetup = false;
     Inputs.ForceMexLseiF2cLibRecompile = false;
@@ -46,18 +74,14 @@ function rnfoundry_setup (varargin)
     % xfemm related
     Inputs.PreventXFemmCheck = false;
     if ispc
-        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.6/xfemm_v1_6_mingw_win64.zip/download';
+        Inputs.XFemmDownloadSource = 'http://downloads.sourceforge.net/project/xfemm/Release/Release%201.6/xfemm_v1_6_mingw_win64.zip';
     elseif isunix
-        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.6/xfemm_v1_6_linux64.tar.gz/download';
+        Inputs.XFemmDownloadSource = 'http://downloads.sourceforge.net/project/xfemm/Release/Release%201.6/xfemm_v1_6_linux64.tar.gz';
     else
         Inputs.XFemmDownloadSource = '';
     end
-
-    % set up the matlab path first to get access to a load of utility
-    % functions we can then use
-    thisfilepath = fileparts (which ('rnfoundry_setup'));
-    addpath(genpath (thisfilepath));
-    
+    Inputs.XFemmInstallPrefix = fullfile (thisfilepath, 'common');
+ 
     % now parse the pv pairs
     Inputs = parse_pv_pairs (Inputs, varargin);
     
@@ -97,18 +121,24 @@ function rnfoundry_setup (varargin)
             
             response = '';
             while ~(strcmpi (response, 'Y') || strcmpi (response, 'N') )
-                response = input('You do not have the xfemm package whick speeds up electromagnetic simulation,\n do you want to try to download it? (Y/N)','s');
+                response = input( [
+                    'You do not appear to have the xfemm package for performing electromagnetic\n', ...
+                    'simulations which is required for many functions in the foundry\n', ...
+                    'to work. Do you want to try to download and install it? (y/n): '], 's');
             end
             
-            if response == 'Y'
+            if upper(response) == 'Y'
                 
-                doxfemm = false;
+                doxfemm = true;
                 if ispc
-                    xfemmfile = 'xfemm_mingw_win64.zip';
+                    xfemm_prefix = 'xfemm_mingw_win64';
+                    xfemmfile = fullfile (tempdir, [xfemm_prefix, '.zip']);
                     urlwrite ( Inputs.XFemmDownloadSource, xfemmfile );
                     unpackfcn = @unzip;
                 elseif isunix
-                    xfemmfile = 'xfemm_linux64.tar.gz';
+                    xfemm_prefix = 'xfemm_linux64';
+                    xfemmfile = fullfile (tempdir, [xfemm_prefix, '.tar.gz']);
+                    urlwrite ( Inputs.XFemmDownloadSource, xfemmfile );
                     unpackfcn = @untar;
                 else
                     fprintf ('No xfemm compiled package is currently available for mac, skipping.\n');
@@ -117,13 +147,13 @@ function rnfoundry_setup (varargin)
 
                 if doxfemm
                     % unpack the download to the appropriate location
-                    unpackfcn (xfemmfile, fullfile (thisfilepath, 'common'));
+                    unpackfcn (xfemmfile, Inputs.XFemmInstallPrefix);
 
                     % remove the downloaded package
                     delete (xfemmfile);
 
                     % add mfemm setup function location to path and run it
-                    addpath (fullfile (thisfilepath, 'common', 'xfemm', 'mfemm'));
+                    addpath (fullfile (Inputs.XFemmInstallPrefix, xfemm_prefix, 'mfemm'));
                     mfemm_setup ();
 
                 end
