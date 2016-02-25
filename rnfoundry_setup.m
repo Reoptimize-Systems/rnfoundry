@@ -46,9 +46,9 @@ function rnfoundry_setup (varargin)
     % xfemm related
     Inputs.PreventXFemmCheck = false;
     if ispc
-        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.5/xfemm_v1_5_mingw_win64.zip/download';
+        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.6/xfemm_v1_6_mingw_win64.zip/download';
     elseif isunix
-        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.5/xfemm_v1_5_linux64.tar.gz/download';
+        Inputs.XFemmDownloadSource = 'http://sourceforge.net/projects/xfemm/files/Release/Release%201.6/xfemm_v1_6_linux64.tar.gz/download';
     else
         Inputs.XFemmDownloadSource = '';
     end
