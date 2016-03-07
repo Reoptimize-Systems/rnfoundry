@@ -44,7 +44,10 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
 % omega = [ 0, 1, 3, 7, 20, 20, 20, 21, 20, 20 ]
 % simoptions = simsetup_ROTARY(design, simfun, finfun, 'TSpan', t, 'TAngularVelocity', omega)
 %
-% 
+% Example 5 - setting up a fixed speed sim which runs long enough to cover
+%   a certain number of poles
+%
+% simoptions = simsetup_ROTARY(design, simfun, finfun, 'rpm', 15, 'PoleCount', 1000)
 %
 % See Also: simulatemachine_AM.m
 %
