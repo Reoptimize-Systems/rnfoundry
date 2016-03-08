@@ -125,40 +125,40 @@ function [histloss, eddyloss, excessloss] = ...
 end
 
 
-function Hirr = hirr_calc(B, dBVdx, beta, kh, Cbeta, Bdc)
-% calcualtes the irreversible component of magnetisation in a material
-%
-% Syntax
-%
-% Hirr = hirr_calc(B, beta, kh, Cbeta)
-%
-% Input
+% function Hirr = hirr_calc(B, dBVdx, beta, kh, Cbeta, Bdc)
+% % calcualtes the irreversible component of magnetisation in a material
+% %
+% % Syntax
+% %
+% % Hirr = hirr_calc(B, beta, kh, Cbeta)
+% %
+% % Input
+% % 
+% % 
 % 
+%     if every(dBVdx == 0)
+%         Hirr = zeros (size (B));
+%     else
+%     
+% %     % check for any dc component to the time varying field
+% %     Bdc = mean(B,2);
+%     
+%         Bac = bsxfun(@minus, B, Bdc);
 % 
-
-    if every(dBVdx == 0)
-        Hirr = zeros (size (B));
-    else
-    
-%     % check for any dc component to the time varying field
-%     Bdc = mean(B,2);
-    
-        Bac = bsxfun(@minus, B, Bdc);
-
-%    Bac = B;
-    
-        Bm = max(abs(Bac),[],2);
-    
-        % determine the angle of the EEL elipse
-        xtheta = bsxfun(@rdivide, Bac, Bm);
-    
-        % estimate Hirr
-        Hirr = abs( (kh ./ Cbeta) .* abs( bsxfun(@times, cos(asin(xtheta)), Bm) ).^(beta - 1) );
-    
-        Hirr (isnan (Hirr)) = 0;
-    end
-    
-end
+% %    Bac = B;
+%     
+%         Bm = max(abs(Bac),[],2);
+%     
+%         % determine the angle of the EEL elipse
+%         xtheta = bsxfun(@rdivide, Bac, Bm);
+%     
+%         % estimate Hirr
+%         Hirr = abs( (kh ./ Cbeta) .* abs( bsxfun(@times, cos(asin(xtheta)), Bm) ).^(beta - 1) );
+%     
+%         Hirr (isnan (Hirr)) = 0;
+%     end
+%     
+% end
 
 
 function Bgrad = bgrad(Bmat, xstep)
