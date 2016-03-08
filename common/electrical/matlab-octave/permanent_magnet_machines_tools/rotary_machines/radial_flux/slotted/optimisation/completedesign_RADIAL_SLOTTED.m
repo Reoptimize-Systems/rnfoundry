@@ -1,4 +1,4 @@
-function design = completedesign_RADIAL_SLOTTED(design, simoptions)
+function design = completedesign_RADIAL_SLOTTED(design, simoptions, setchoice)
 % converts a minimal design specification to a complete design suitable for
 % use by simfun_RADIAL_SLOTTED
 %
