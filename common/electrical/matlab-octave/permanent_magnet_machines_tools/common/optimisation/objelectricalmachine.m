@@ -31,6 +31,22 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
 %       spawnslaves - 
 %
 %       maxattempts - 
+%
+%       MCoreFEADir - 
+%
+%       MCoreODEDir - 
+%
+%       MCoreMonitorFunction - 
+%
+%       MCoreMonitorData - 
+%
+%       starttime - 
+%
+%       endtime - 
+%
+%       slavestartdir - 
+%
+%       matoroctslaves - 
 
 % Copyright Richard Crozer 2012, The University of Edinburgh
 
@@ -49,8 +65,8 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
     % set some default common spawning settings if not supplied
     simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreMonitorFunction', 'mcoreslavespawn');
     simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreMonitorData', []);
-    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'starttime', [18,0,0]);
-    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'endtime', [8,0,0]);
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'starttime', [5,0,1]);
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'endtime', [5,0,0]);
     simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'maxslaves', 100);
     simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'slavestartdir', '~/Documents/MATLAB');
     simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'matoroctslaves', 'm');
@@ -84,8 +100,10 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
 %             parameterCell{i,1} = {design, psimoptions};
         end
 
-        % store various pieces of info for index for later use
+        % store various pieces of info for later use
+        % index of this design in population
         parameterCell{i}{1}.OptimInfo.ChromInd = i;
+        % chromosome which led to this design
         parameterCell{i}{1}.OptimInfo.Chrom = Chrom (i,:);
 %         [~,hgid] = system ( ['cd ', getmfilepath('objelectricalmachine.m'), ' ; hg id']);
 %         parameterCell{i}{1}.OptimInfo.RNFoundryMercurialID = hgid;
@@ -131,7 +149,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
         % multicore evaluations at once in the same directory
         settings.clearExistingFiles = false;
         
-        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreFEADir', 'FEA');
+        simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreFEADir', '');
 
         settings.multicoreDir = fullfile (multicoredir, simoptions.evaloptions.MCoreFEADir);
 
@@ -198,7 +216,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
     % multicore evaluations at once in the same directory
     settings.clearExistingFiles = false;
 
-    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreODEDir', 'ODE');
+    simoptions.evaloptions = setfieldifabsent (simoptions.evaloptions, 'MCoreODEDir', '');
     
     settings.multicoreDir = fullfile (multicoredir, simoptions.evaloptions.MCoreODEDir);
 
