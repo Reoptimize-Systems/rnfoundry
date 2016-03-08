@@ -85,7 +85,7 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
         
         warning('AM:circuitprops_linear', ['Either ''CoilsPerBranch'' or ''Branches'' was ',...
                  'included in the design structure, but not both. ',...
-                 'Setting all coils to be in parallel']);
+                 'Setting all coils to be in series']);
         
         % we assume all coils in series
         design.Branches = 1;
