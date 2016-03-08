@@ -106,7 +106,12 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
         simoptions.ForceFullSim = true;
     end
     
-%% CANNOT MODIFY SIMOPTIONS OR OTHER OBJECTIVE ARGS BELOW THIS POINT    
+%% CANNOT MODIFY SIMOPTIONS OR OTHER OBJECTIVE ARGS BELOW THIS POINT
+
+    if ~exist (Inputs.MulticoreSharedDir, 'dir')
+        mkdir (Inputs.MulticoreSharedDir);
+    end
+    
     if ~isempty (fieldbounds)
         ObjectiveArgs = {fieldbounds, simoptions, Inputs.MulticoreSharedDir};
     else
