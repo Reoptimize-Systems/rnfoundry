@@ -1,11 +1,10 @@
-%% example_radial_flux_permanent_magnet_machine_sim.m
+%% nova_innovation_example_radial_flux_permanent_magnet_machine_sim.m
 %
 % This script sets up an example simulation of a radial flux permanent
-% magnet machine using the RenewNet Foundry permanent magnet machine
-% toolbox and also demonstrates some other capabilities of the toolbox,
-% such as the underlying common functions used by the machine simulations.
-%
-%
+% magnet machine using the nova Innovation simulation module built on top
+% of the RenewNet Foundry permanent magnet machine toolbox. It also
+% demonstrates some other capabilities of the toolbox, such as the
+% underlying common functions used by the machine simulations.
 %
 % A machine design is always defined using fields of a structure which we
 % usually named 'design'. Throughout the toolbox this is the name used. In
@@ -81,7 +80,7 @@ design.CoilLayers = 2;
 % many other ratios are possible, see the help for "fr" (run "help fr" at
 % the command prompt) for more information on using fractions objects
 design.qc = fr(36,design.Poles*design.Phases);
-% Specify the coil slot pitch in radians
+% Specify the actual coil slot pitch in slots
 design.yd = 4;
 % We must also specify a fill factor for the coils, this is the wire fill
 % factor acheived
@@ -101,15 +100,21 @@ design.Branches = 1;
 % Now set up actual dimensions of the machine components. There are
 % actually three different ways to do this. One is to specify the outer
 % radius of the machine, and then the radial lengths of various components
-% and other dimensions. This is the method we use here. Another way is to
-% specify the radial distance from the centre of the machine of the
-% components, or alternatively specify the outer radius, then all the other
-% dimensions through a set of dimensionless ratios based on this first
-% dimension. There are various reasons this can be more convenient.
+% and other dimensions, e.g the slot height, back iron thickness etc. This
+% is the method we use here. 
 %
-% However, as stated, here we use the lengths and the outer rotor radius.
-% What these dimensions are will be more obvious when we open the design
-% for plotting/viewing later.
+% Another way is to specify a set of radial distances from the centre of
+% the machine to the components, 
+%
+% The third way is to specify the outer radius, then all the other
+% dimensions through a set of dimensionless ratios based on this first
+% dimension. There are various reasons this can sometimes be more
+% convenient.
+%
+% However, as stated, here we use the lengths in the radial direction and
+% the outer rotor radius. What these dimensions are will be more obvious
+% when we open the design for plotting/viewing later.
+%
 
 % The outer radius of the rotor back iron
 design.Ryo = 95e-3;
