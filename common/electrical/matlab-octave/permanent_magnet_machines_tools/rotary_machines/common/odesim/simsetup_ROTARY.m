@@ -99,6 +99,7 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     
     if ~isempty(Inputs.Rpm)
         Inputs.AngularVelocity = rpm2omega(Inputs.Rpm);
+        simoptions.RPM = Inputs.Rpm;
     end
 
     if ~isempty(Inputs.Rps)
