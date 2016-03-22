@@ -188,11 +188,17 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     end
     
     if ~isfield(design, 'PowerConverterRating')
-        design.PowerConverterRatingkW = 'Not calculated';
-        design.PowerConverterCost = 'Not calculated';
+        design.PowerConverterRatingkW = 'N/A';
+        design.PowerConverterCost = 'N/A';
     else
         design.PowerConverterRatingkW = design.PowerConverterRating*design.PowerLoadMean/1e3;
         design.PowerConverterCost = design.PowerConverterCost/1e3;
+    end
+    
+    if isfield(design, 'CostPerkWhr')
+        CostPerkWhr = design.CostPerkWhr * 100;
+    else
+        CostPerkWhr = 'N/A';
     end
     
     tabledata = [ ...
@@ -202,9 +208,15 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         tbfcn('Field Iron Mass', 'g', design, 'FieldIronMass', 1000), tbfcn('Field Iron Cost', 'Euro', design, 'FieldIronCost');
         tbfcn('Armature Iron Mass', 'g', design, 'ArmatureIronMass', 1000), tbfcn('Armature Iron Cost', 'Euro', design, 'ArmatureIronCost');
         {'Power Converter Rating (kW)', design.PowerConverterRatingkW}, {'Power Converter Cost (kEuro)', design.PowerConverterCost};
-        tbfcn('Total Cost', 'Euro', design, 'CostEstimate'), {'Cost Per kWhr (Euro Cent/kWhr)', design.CostPerkWhr * 100};
-        {'Amortised Cost Per kWhr (Euro Cent/kWhr)', design.OptimInfo.BaseScore}, {[], []}; ...
+        tbfcn('Total Cost', 'Euro', design, 'CostEstimate'), {'Cost Per kWhr (Euro Cent/kWhr)', CostPerkWhr};
     ];
+
+    if isfield (design, 'OptimInfo')
+        tabledata = [ tabledata; ...
+            {'Amortised Cost Per kWhr (Euro Cent/kWhr)', design.OptimInfo.BaseScore}, {[], []}; ...
+            ];
+            
+    end
 
     % generate the LaTex table of the outputs
     colheadings = {};
