@@ -254,8 +254,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     end
     
     % now get the flux linkage in the coils, we will do this by getting the
-    % integral of the vector potential in a slot over a half pole of
-    % displacement, giving a quarter of the wave period
+    % integral of the vector potential in a slot at a range of rotor
+    % positions
     
     if ~simoptions.SkipMainFEA
     
