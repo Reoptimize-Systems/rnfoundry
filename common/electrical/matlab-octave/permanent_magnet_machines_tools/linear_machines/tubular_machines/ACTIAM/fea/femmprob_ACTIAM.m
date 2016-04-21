@@ -71,12 +71,14 @@ function FemmProblem = femmprob_ACTIAM(design, varargin)
 
     Inputs.CurrentDensities = [0,0,0];
     Inputs.CoilCurrents = [];
+    Inputs.MaterialsLibrary = '';
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
     FemmProblem = femmprob_TM(design, ...
                               'CurrentDensities', Inputs.CurrentDensities, ...
                               'CoilCurrents', Inputs.CoilCurrents, ...
-                              'TMType', 'STPMSM');
+                              'TMType', 'STPMSM', ...
+                              'MaterialsLibrary', Inputs.MaterialsLibrary);
 	
 end
