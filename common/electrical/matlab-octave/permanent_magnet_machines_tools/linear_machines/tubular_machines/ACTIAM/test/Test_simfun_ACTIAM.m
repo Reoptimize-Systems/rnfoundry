@@ -29,7 +29,13 @@ design.Poles = [5 10];
 
 design = ratios2dimensions_ACTIAM(design);
 
-[design, simoptions] = simfun_ACTIAM(design, struct());
+simoptions.GetVariableGapForce = true;
+simoptions.NForcePoints = 12;
+
+design.NStrands = 1;
+design.NCoilsPerPhase = 1;
+
+[design, simoptions] = simfun_ACTIAM(design, simoptions);
 
 plotfemmproblem(design.FemmProblem);
 
