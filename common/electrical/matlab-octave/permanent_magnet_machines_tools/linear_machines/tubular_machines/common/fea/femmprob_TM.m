@@ -1,10 +1,13 @@
 function FemmProblem = femmprob_TM(design, varargin)
-% RunFEMMSimNew_ACTIAM: A function for generating simulations of a single
-% pole of the Slotless Tubular Permanent Magnet machine in the FEMM finite
-% element analysis program. 
+% draws a single pole of several types of Tubular Permanent Magnet machine
 %
+% Syntax
 %
-% Arguments: (input)
+% FemmProblem = femmprob_TM(design, varargin)
+%
+% Input
+%
+%  design structure containing the following fields:
 %
 %   WmVWp - scalar value of Wm/design.Wp Ratio for machine to be evaluated
 %
@@ -66,14 +69,14 @@ function FemmProblem = femmprob_TM(design, varargin)
 %    |<-----> Rs2     | ^
 % Ws1|_______   Ws2   | :
 % ^  |       \  ^     | : half Ws
-% :  |        \_:_____| ;
+% :  |        \_:_____| :
 %    <--------> Rs1
-    
-%     newdocument(0);
+% 
     
     Inputs.CurrentDensities = [0,0,0];
     Inputs.CoilCurrents = [];
     Inputs.TMType = 'ACTM';
+    Inputs.MaterialsLibrary = ''; % default lib will be used if empty
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -97,10 +100,6 @@ function FemmProblem = femmprob_TM(design, varargin)
     else
         % use smaller angle constraint
         FemmProblem = newproblem_mfemm('axi', 'MinAngle', 5, 'LengthUnits','meters');
-    end
-    
-    if ~isfield(design, 'HcMag')
-        design.HcMag = mgoe2hc(40);
     end
     
     if design.mode == 0 || design.mode(1) == 1
@@ -133,43 +132,64 @@ function FemmProblem = femmprob_TM(design, varargin)
     %% Problem Setup
 
     % Add some boundary types
-%     mi_addboundprop('Pros A', 0, 0, 0, 90, 0, 0, 0, 0, 0)
     [ FemmProblem, prosAboundind, prosAboundname ] = addboundaryprop_mfemm(FemmProblem, 'Pros A', 0, 'Phi', 90);
     
     for i = 1:7
-%         mi_addAntiPeriodicBoundary(['antiPeriodic ' num2str(i)]);
         [ FemmProblem, APboundinds(i), APboundnames{i} ] = addboundaryprop_mfemm(FemmProblem, 'antiPeriodic', 5);
     end
     
-    % Add some materials
-    % Steel
-%     steelname = mi_addsteel;
-    steelname = '1117 Steel';
-    [FemmProblem, steelind] = addmaterials_mfemm(FemmProblem, steelname);
-
-    % Copper wire
-    wirename = 'wire';
-    [FemmProblem, wireind] = addmagnetwire_mfemm(FemmProblem, wirename, design.Dc);
+    % Add the problem materials
+    % Convert the material names to materials structures from the materials
+    % library, if this has not already been done.
+%     if strncmpi (Inputs.SimType, 'Magnetics', 1)
     
-    % Next magnets, 40 MGOe
-    [FemmProblem, magname, magmatind] = addmagnet_mfemm(FemmProblem, design.HcMag);
+        [FemmProblem, matinds] = addmaterials_mfemm (FemmProblem, ...
+            { design.MagFEASimMaterials.ArmatureIron, ...
+              design.MagFEASimMaterials.ArmatureCoil, ...
+              design.MagFEASimMaterials.Magnet, ...
+              design.MagFEASimMaterials.FieldIron, ...
+              design.MagFEASimMaterials.Shaft }, ...
+             'MaterialsLibrary', Inputs.MaterialsLibrary );
+         
+%     elseif strncmpi (Inputs.SimType, 'HeatFlow', 1)
+%     
+%         [FemmProblem, matinds] = addmaterials_mfemm (FemmProblem, ...
+%             { design.HeatFEASimMaterials.AirGap, ...
+%               design.HeatFEASimMaterials.Magnet, ...
+%               design.HeatFEASimMaterials.FieldBackIron, ...
+%               design.HeatFEASimMaterials.ArmatureYoke, ...
+%               design.HeatFEASimMaterials.ArmatureCoil }, ...
+%              'MaterialsLibrary', Inputs.MaterialsLibrary );
+%     
+%     end
+    
+    armironind = matinds(1);
+    wireind = matinds(2);
+    magmatind = matinds(3);
+    fieldironind = matinds(4);
+    shaftind = matinds(5);
+%     armironname = FemmProblem.Materials(armironind).Name;
+    wirename = FemmProblem.Materials(wireind).Name; 
+    magname = FemmProblem.Materials(magmatind).Name;
+    fieldironname = FemmProblem.Materials(fieldironind).Name;
+    shaftname = FemmProblem.Materials(shaftind).Name;
     
     switch Inputs.TMType
         
         case 'ACTM'
             
-            sheathmatname = 'Air';
+            armironname = 'Air';
             coilspacematname = 'Air';
             
         case 'STPMSM'
             
-            sheathmatname = steelname;
+            armironname = FemmProblem.Materials(armironind).Name; % steelname;
             coilspacematname = 'Air';
             
         case 'TPMSM'
             
-            sheathmatname = steelname;
-            coilspacematname = steelname;
+            armironname = FemmProblem.Materials(armironind).Name; %steelname;
+            coilspacematname = FemmProblem.Materials(armironind).Name; % steelname;
             
         otherwise
             
@@ -220,10 +240,10 @@ function FemmProblem = femmprob_TM(design, varargin)
     n1 = [10, 3,  9, 12,  4, 2, 13, 14] - 1;
 	[FemmProblem, internalseginds ] = addsegments_mfemm(FemmProblem, n0, n1, 'InGroup', 1);
 
-    FemmProblem = mirrorsegments_mfemm(FemmProblem, ...
-                                       1:numel(FemmProblem.Segments), ...
-                                       design.FEMMTol, ...
-                                       'TwoPoints', [-1, design.Wp/2, 1, design.Wp/2]);
+    FemmProblem = mirrorsegments_mfemm (FemmProblem, ...
+                                        1:numel(FemmProblem.Segments), ...
+                                        design.FEMMTol, ...
+                                        'TwoPoints', [-1, design.Wp/2, 1, design.Wp/2]);
 
     % Now add missing segments and nodes
     rzCoords(15,:) = [design.Rs1, design.Wp/2];
@@ -252,7 +272,7 @@ function FemmProblem = femmprob_TM(design, varargin)
         
         if design.mode == 0
             %  Magnet in center with no steel removed
-            innerdiscmatname = steelname;
+            innerdiscmatname = fieldironname; % steelname;
         elseif design.mode == 1
             % Magnet in centre with steel removed
             innerdiscmatname = 'Air';
@@ -277,13 +297,13 @@ function FemmProblem = femmprob_TM(design, varargin)
         FemmProblem = addblocklabel_mfemm(FemmProblem, ...
                                           design.Rs2 + ((design.Rm-design.Rs2)/2), ...
                                           design.Ws2 + (((design.Ws/2)-design.Ws2)/2), ...
-                                          'BlockType', steelname, ...
+                                          'BlockType', fieldironname, ...
                                           'MaxArea', meshSz);
         % top disc
         FemmProblem = addblocklabel_mfemm(FemmProblem, ...
                                           design.Rs2 + ((design.Rm-design.Rs2)/2), ...
                                           design.Wp - (design.Ws2 + (((design.Ws/2)-design.Ws2)/2)), ...
-                                          'BlockType', steelname, ...
+                                          'BlockType', fieldironname, ...
                                           'MaxArea', meshSz);
 
         % Magnet labels
@@ -308,7 +328,7 @@ function FemmProblem = femmprob_TM(design, varargin)
         
         if design.mode == 2
             %  Steel in center with no steel removed
-            innerdiscmatname = steelname;
+            innerdiscmatname = fieldironname;
         elseif design.mode == 3
             % Steel in centre with steel removed
             innerdiscmatname = 'Air';
@@ -353,7 +373,7 @@ function FemmProblem = femmprob_TM(design, varargin)
         FemmProblem = addblocklabel_mfemm(FemmProblem, ...
                                           design.Rs1+((design.Rm-design.Rs1)/2), ...
                                           design.Wp/2, ...
-                                          'BlockType', steelname, ...
+                                          'BlockType', fieldironname, ...
                                           'MaxArea', meshSz); 
         % inner
         FemmProblem = addblocklabel_mfemm(FemmProblem, ...
@@ -583,7 +603,7 @@ function FemmProblem = femmprob_TM(design, varargin)
     FemmProblem = addblocklabel_mfemm(FemmProblem, ...
                                       design.Ro+((design.Ra-design.Ro)/2), ...
                                       design.Wp/2, ...
-                                      'BlockType', sheathmatname, ...
+                                      'BlockType', armironname, ...
                                       'MaxArea', meshSz, ...
                                       'InGroup', 1);
 	
