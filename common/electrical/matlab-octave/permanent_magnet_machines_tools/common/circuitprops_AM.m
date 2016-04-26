@@ -25,13 +25,16 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
 %   LgVLc - ratio of grid inductance to col inductance, ignored if
 %     CoilInductance not present
 %
-%   Branches - Number of parallel branches of coils per phase
+%   Branches - Scalar number of parallel branches of series coils per phase
 %
-%   CoilsPerBranch - Number of series coils in each parallel branch
-%     NB: (Both CoilsPerBranch and Branches must be present for either to
-%     be used) If neither are specified, all coils are assumed to be in
-%     parallel. In this case the field 'PowerPoles' must be present which
-%     will be the number of parallel coils per phase)
+%   CoilsPerBranch - Scalar number of series coils in each parallel branch
+%
+%   NCoilsPerPhase - Scalar total number of coils per phase. 
+%
+% Any two of 'Branches', 'CoilsPerBranch' and 'NCoilsPerPhase' can be
+% supplied and the other will be calculated if not present. You can also
+% supply all three, a check will be made that the combination works. If
+% only 'NCoilsPerPhase' is present all coils will be put in series.
 %
 % Output
 %
@@ -76,28 +79,43 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
 %
 % See also: circuitode_linear
 
-    if all(isfield(design, {'CoilsPerBranch', 'Branches'}))
+    if all (isfield (design, {'CoilsPerBranch', 'Branches'}))
         
         % all info required to calculate phase resistance and inductance is
         % present, so do nothing
         
-    elseif any(isfield(design, {'CoilsPerBranch', 'Branches'}))
+    elseif isfield (design, 'CoilsPerBranch')
         
-        warning('AM:circuitprops_linear', ['Either ''CoilsPerBranch'' or ''Branches'' was ',...
-                 'included in the design structure, but not both. ',...
+        warning ('RENEWNET:circuitprops_AM', ['''CoilsPerBranch'' was ',...
+                 'included in the design structure, but not ''Branches''. ',...
+                 'the number of branches will be calculated if possible.']);
+        
+        % calculate the number of branches
+        design.Branches = design.NCoilsPerPhase / design.CoilsPerBranch;
+        
+    elseif isfield (design, 'Branches')
+        
+        warning ('RENEWNET:circuitprops_AM', ['''Branches'' was ',...
+                 'included in the design structure, but not ''CoilsPerBranch''. ',...
+                 'The number of coils per parallel branch will be calculated if possible.']);
+
+        % calculate the number of branches
+        design.CoilsPerBranch = design.NCoilsPerPhase / design.Branches;
+        
+    else
+        
+        warning ('RENEWNET:circuitprops_AM', ['Neither ''CoilsPerBranch'' nor ''Branches'' was ',...
+                 'included in the design structure, ',...
                  'Setting all coils to be in series']);
         
         % we assume all coils in series
         design.Branches = 1;
         design.CoilsPerBranch = design.NCoilsPerPhase;
         
-    else
-        
-        % we assume all coils in series
-        design.Branches = 1;
-        design.CoilsPerBranch = design.NCoilsPerPhase;
-        
     end
+    
+    % chekc the coil numbers work
+    check_coil_numbers (design);
     
     % calculate the output resistance and inductances of a machine from the
     % per-coil values
@@ -112,7 +130,8 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
         
     elseif ~isfield(design, 'LoadResistance')
         
-        error('You must supply either a LoadResistance value or a ratio of grid resistance to phase resistance.')
+        error('RENEWNET:circuitprops_AM', ...
+            'You must supply either a LoadResistance value or a ratio of grid resistance to phase resistance.')
     else
         design.RlVRp = design.LoadResistance ./ design.PhaseResistance;
     end
@@ -170,4 +189,29 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
 
     end
 
+end
+
+function check_coil_numbers (design)
+
+    % chekck all coils, branches are integers
+    if ~isint2eps (design.Branches)
+        error ('RENEWNET:circuitprops_AM', ...
+             'Number of parallel branches is not an integer, check winding specification.');
+    end
+
+    if ~isint2eps (design.CoilsPerBranch)
+        error ('RENEWNET:circuitprops_AM', ...
+             'Number of coils per parallel branch is not an integer, check winding specification.');
+    end
+    
+    if ~isint2eps (design.NCoilsPerPhase)
+        error ('RENEWNET:circuitprops_AM', ...
+             'Number of coils per phase is not an integer, check winding specification.');
+    end
+    
+    if (design.CoilsPerBranch * design.Branches) ~= design.NCoilsPerPhase
+        error ('RENEWNET:circuitprops_AM', ...
+             'Number of coils per phase does not match number of parallel branches and series coils, check winding specification.');
+    end
+    
 end
