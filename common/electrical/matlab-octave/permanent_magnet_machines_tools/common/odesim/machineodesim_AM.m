@@ -148,7 +148,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     % the displacement of the magnetic field relative to the armature coils
     % normalised to the pole width
 %     dpsidxCRTF = slmpsidot_linear(design, pos, design.PoleWidth);
-    dpsidxCRTF = periodicslmeval(pos, design.slm_fluxlinkage, 1, false) / design.PoleWidth;
+    dpsidxCRTF = periodicslmeval (pos, design.slm_fluxlinkage, 1, false) / design.PoleWidth;
     
     % The EMF (voltage) produced in the coils is given by -ve the rate of
     % change of flux linkage with respect to the displacement of the coil
@@ -179,8 +179,11 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     % 
     
     % original
-    FEF = -design.FieldDirection * sum(Icoils(:) .* dpsidxCRTF(:)) ...
-                .* design.NCoilsPerPhase .* design.NStages .* simoptions.NoOfMachines;
+    FEF = -design.FieldDirection ...
+                * sum (Icoils(:) .* dpsidxCRTF(:)) ...
+                .* design.NCoilsPerPhase ...
+                .* design.NStages ...
+                .* simoptions.NoOfMachines;
 
     % the force on the reactor is the reverse of the effector
     FRE = -FEF;
@@ -188,16 +191,22 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     % Now modify the resistance matrix to account for temperature
     
     % get the temperature dependent resistivity
-    rho = tempdepresistivity(design.WireResistivityBase, design.AlphaResistivity, design.TemperatureBase, simoptions.Temperature);
+    rho = tempdepresistivity ( design.WireResistivityBase, ...
+                               design.AlphaResistivity, ...
+                               design.TemperatureBase, ...
+                               simoptions.Temperature );
     
     % modify the resistance matrix to account for temperature
     design.RPhase = design.RDCPhase * rho / design.WireResistivityBase;
     
     % calculate the electrical frequency
-    fe = velocity2electricalfreq(vCoilRelToField, design.PoleWidth);
+    fe = velocity2electricalfreq (vCoilRelToField, design.PoleWidth);
     
     % Then modify to account for skin depth
-    design.RPhase = roundwirefreqdepresistance(design.Dc/2, design.RPhase, rho, 1, fe);
+    design.RPhase = design.NStrands * ...
+        roundwirefreqdepresistance (design.WireStrandDiameter/2, ...
+                                    design.RPhase./design.NStrands, ...
+                                    rho, 1, fe);
 
 end
 
