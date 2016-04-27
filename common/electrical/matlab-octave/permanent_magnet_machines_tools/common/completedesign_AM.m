@@ -1,11 +1,11 @@
-function design = completedesign_AM(design, simoptions)
+function design = completedesign_AM (design, simoptions)
 % completes common design aspects to create a minimal design ready for
 % simulation
 %
 % Syntax
 %
-% design = completedesign_AM(design)
-% design = completedesign_AM(design, simoptions)
+% design = completedesign_AM (design)
+% design = completedesign_AM (design, simoptions)
 %
 % Description
 %
