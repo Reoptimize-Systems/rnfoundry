@@ -1,10 +1,26 @@
 function [design, simoptions] = finfun_ACTIAM(design, simoptions)
     
     design = ratios2dimensions_ACTIAM(design);
-
-    design = makelossfcns_ACTIAM(design);
     
-    [design, simoptions] = finfun_TM(design, simoptions);
+    if simoptions.GetVariableGapForce
+        design = fieldenergy2forces (design);
+    end
+
+%     if ~simoptions.SkipLossFunctions
+        design = makelossfcns_ACTIAM(design);
+    
+        [design, simoptions] = finfun_TM(design, simoptions);
+%     end
+end
+
+function design = fieldenergy2forces (design)
+
+    slm_fe = slmengine (design.FieldEnergyDisp, design.FieldEnergyTotal(:,1).', ...
+                        'knots', design.FieldEnergyDisp, ...
+                        'concavedown', 'on');
+    
+    design.gforce = slmeval (design.FieldEnergyDisp, slm_fe, 1);
+    design.gvar = design.g - design.FieldEnergyDisp;
     
 end
 
