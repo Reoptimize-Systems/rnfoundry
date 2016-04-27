@@ -54,7 +54,7 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         '$f_c$', 'Copper Fill Factor', design.CoilFillFactor;
         '$N_s$', 'Strands Per Turn', design.NStrands;
         '$D_c$', 'Copper Wire Diameter [mm]', design.Dc*1000;
-        '', 'Copper Cross-Sectional Area [mm\textsuperscript{2}]', circlearea(design.Dc*1000/2);
+        '', 'Copper Cross-Sectional Area [mm\textsuperscript{2}]', design.ConductorArea * 1e6;
         '', 'Parallel Branches', design.Branches;
         '', 'Series Coils Per Branch', design.CoilsPerBranch;
     };
