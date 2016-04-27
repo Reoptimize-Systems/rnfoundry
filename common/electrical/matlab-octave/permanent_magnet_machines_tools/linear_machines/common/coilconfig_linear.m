@@ -24,6 +24,6 @@ function [branches, coilsperbranch] = coilconfig_linear(activecoilsperphase, bra
 %
 
     % call common function to do the conversion
-    [branches, coilsperbranch] = branchfac2coilconfig_AM(activecoilsperphase, branchfac);
+    [branches, coilsperbranch] = branchfac2coilconfig_AM (activecoilsperphase, branchfac);
     
 end
