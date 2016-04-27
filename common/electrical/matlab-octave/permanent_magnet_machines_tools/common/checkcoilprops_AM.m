@@ -1,10 +1,10 @@
-function design = checkcoilprops_AM(design)
+function design = checkcoilprops_AM (design)
 % checks and completes the common properties of an electrical machine coil
 % for an ode simulation
 %
 % Syntax
 %
-% design = checkcoilprops_AM(design)
+% design = checkcoilprops_AM (design)
 %
 % Description
 %
@@ -30,60 +30,84 @@ function design = checkcoilprops_AM(design)
 %   conductor area caculted based on the value of Dc assuming a round
 %   conductor.
 %
+%   The field 'NStrands' may also be supplied in which case fill factors
+%   and numbers of turns achievable are based on a stranded conductor. If
+%   not present this is set to 1, indicating an unstranded conductor.
+%
 
-% Copyright Richard Crozier 2011-2014
+% Copyright Richard Crozier 2011-2016
 
-    if ~isfield(design, 'CoilArea') && all(isfield(design, {'Hc', 'Wc'}))
+    if ~isfield (design, 'CoilArea') && all (isfield (design, {'Hc', 'Wc'}))
         % Determine the cross-sectional area of the coil, assuming it's a
         % box shape
-        if isfield(design, 'CoilLayers')
+        if isfield (design, 'CoilLayers')
             layerheight = design.Hc(1) / design.CoilLayers;
-            design.CoilArea = layerheight * mean(design.Wc);
+            design.CoilArea = layerheight * mean (design.Wc);
         else
-            design.CoilArea = design.Hc(1) * mean(design.Wc);
+            design.CoilArea = design.Hc(1) * mean (design.Wc);
         end
     end
     
-    if ~isfield(design, 'CoilFillFactor') && ~all(isfield(design, {'Dc', 'CoilTurns'}))
-        error('AM:checkcoilprops_AM:nofillfactor', ...
+    if ~isfield (design, 'CoilFillFactor') && ~all (isfield (design, {'Dc', 'CoilTurns'}))
+        error ('RENEWNET:checkcoilprops_AM:nofillfactor', ...
             'You must supply a CoilFillFactor field in the design structure')
     end
     
-    if isfield(design, 'Dc') && ~isfield(design, 'CoilTurns')
+    % set the number of strands in the conductor to 1 if not present
+    design = setfieldifabsent (design, 'NStrands', 1);
+    
+    if all (isfield (design, {'Dc', 'CoilFillFactor'})) && ~isfield (design, 'CoilTurns')
+        
+        % calculate wire strand diameter
+        design.WireStrandDiameter = stranddiameter (design.Dc, design.NStrands);
         
         % Find how many turns can be achieved with that fill factor and wire
         % diameter, and get the actual wire diameter which can achieve this
-        [design.CoilTurns, design.Dc] = CoilTurns(design.CoilArea, design.CoilFillFactor, design.Dc);
+        [turns, design.WireStrandDiameter] = CoilTurns (design.CoilArea, ...
+                                                        design.CoilFillFactor, ...
+                                                        design.WireStrandDiameter);
 
-    elseif ~isfield(design, 'Dc') && isfield(design, 'CoilTurns')
+        % the actual number of turns
+        design.CoilTurns = floor (turns / design.Nstrands);
+        
+    elseif ~isfield (design, 'Dc') && all (isfield (design, {'CoilTurns', 'CoilFillFactor'})
         
         % Find what wire diameter is necessary to achieve the desired
         % number of turns with the given fill factor
-        design.Dc = ConductorDiameter(design.CoilArea, design.CoilFillFactor, design.CoilTurns);
+        design.WireStrandDiameter = ConductorDiameter ( design.CoilArea, ...
+                                                        design.CoilFillFactor, ...
+                                                        design.CoilTurns * design.NStrands);
+                                                   
+        design.Dc = equivDcfromstranded (design.WireStrandDiameter, design.NStrands);
         
-    elseif all(isfield(design, {'Dc', 'CoilTurns'})) && ~isfield(design, 'CoilFillFactor')
+    elseif all (isfield (design, {'Dc', 'CoilTurns'})) && ~isfield (design, 'CoilFillFactor')
         
-        % calculate the fill factor from the supplied 
-        design.CoilFillFactor = calcwirefillfactor(design.Dc, design.CoilTurns, design.CoilArea);
+        design.WireStrandDiameter = stranddiameter (design.Dc, design.NStrands);
+        
+        % calculate the fill factor from the supplied strand diameter and
+        % coil area
+        design.CoilFillFactor = calcwirefillfactor ( design.WireStrandDiameter, ...
+                                                     design.CoilTurns * design.NStrands, ...
+                                                     design.CoilArea );
         
         if design.CoilFillFactor > 1
-            warning ('AM:checkcoilprops_AM:bigfillfac', 'Coil fill factor is greater than 1.0');
+            warning ('RENEWNET:checkcoilprops_AM:bigfillfac', 'Coil fill factor is greater than 1.0');
         end
         
-    elseif ~all(isfield(design, {'Dc', 'CoilTurns', 'CoilFillFactor'}))
+    elseif ~all (isfield (design, {'Dc', 'CoilTurns', 'CoilFillFactor'}))
         
-        error('AM:checkcoilprops_AM:insufficientinfo', ...
+        error ('RENEWNET:checkcoilprops_AM:insufficientinfo', ...
             'You have not supplied enough fields to determine the coil winding properties.')
         
     end
 
     % calculate the conductor cross-sectional area
-    design = setfieldifabsent(design, 'ConductorArea', pi*(design.Dc/2)^2);
+    design = setfieldifabsent (design, 'ConductorArea', pi*(design.Dc/2)^2);
     
 end
 
 
-function ff = calcwirefillfactor(dc, turns, area)
+function ff = calcwirefillfactor (dc, turns, area)
 % calculates the fill factor from the wire diameter and turns
 
     fulldc = dc2fulldc (dc);
