@@ -26,6 +26,8 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     options.tc2Vtc1 = 0.1;
     % coil fill factor
     options.CoilFillFactor = 0.65;
+    % default number of parallel strands in wire making up one turn
+    options.NStrands = 1;
     % branch factor, determines number of parallel and series coils
     options.BranchFac = 0;
     % stator type, determines if we have an outer facing or inner facing
@@ -62,6 +64,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     % design structure
     design.ArmatureType = options.ArmatureType;
     design.CoilFillFactor = options.CoilFillFactor;
+    design.NStrands = options.NStrands;
     design.Phases = max(1, round(options.Phases));
     design.qc = options.qc;
     design.yd = options.yd;
@@ -74,12 +77,12 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     
     % set a minimum wire diameter of 0.5mm, if not already set
     simoptions = setfieldifabsent(simoptions, ...
-                    'MinWireDiameter',  0.5/1000);
+                    'MinStrandDiameter',  0.5/1000);
     
     % set default behaviour regarding whether to allow wire diamters which
     % can't fit through the slot opening. By default this is prevented.
 	simoptions = setfieldifabsent(simoptions, ...
-                    'PreventWireDiameterGreaterThanSlotOpening',  true);
+                    'PreventStrandDiameterGreaterThanSlotOpening',  true);
     
     if strcmp(design.ArmatureType, 'external')
 
@@ -136,21 +139,21 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
     end
     
     
-	if simoptions.PreventWireDiameterGreaterThanSlotOpening
+	if simoptions.PreventStrandDiameterGreaterThanSlotOpening
         % check the wire can fit through the slot opening, taing action to
         % allow it to if required, and setting the max possible wire size
         % to an appropriate size
-        if (0.5*design.thetasg*Rstatorsurface) > simoptions.MinWireDiameter
-            % set a max wire diameter which allow the wire to fit through the
-            % slot opening
+        if (0.5*design.thetasg*Rstatorsurface) > simoptions.MinStrandDiameter
+            % set a max wire strand diameter which allow the wire to fit
+            % through the slot opening
             simoptions = setfieldifabsent (simoptions, ...
-                            'MaxWireDiameter', 0.5*design.thetasg*Rstatorsurface);
+                            'MaxStrandDiameter', 0.5*design.thetasg*Rstatorsurface);
         else
             % the slot opening is already smaller than the smallest possible
             % wire size, therefore we must make the slot opening just big
             % enough to allow at least the minimum wire size through, and set
             % an appropriate max wire size
-            design.thetasg = 2*simoptions.MinWireDiameter / Rstatorsurface;
+            design.thetasg = 2*simoptions.MinStrandDiameter / Rstatorsurface;
             design.thetasgVthetacg = design.thetasg / design.thetacg;
             % check the slot opening is not greater than the coil width at
             % the opening end
@@ -166,7 +169,7 @@ function [design, simoptions] = chrom2design_RADIAL_SLOTTED(simoptions, Chrom, v
             end
 
             simoptions = setfieldifabsent (simoptions, ...
-                            'MaxWireDiameter', simoptions.MinWireDiameter*1.001);
+                            'MaxStrandDiameter', simoptions.MinStrandDiameter*1.001);
         end
 	end
     
