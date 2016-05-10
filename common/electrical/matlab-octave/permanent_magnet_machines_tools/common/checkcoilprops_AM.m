@@ -68,9 +68,9 @@ function design = checkcoilprops_AM (design)
                                                         design.WireStrandDiameter);
 
         % the actual number of turns
-        design.CoilTurns = floor (turns / design.Nstrands);
+        design.CoilTurns = floor (turns / design.NStrands);
         
-    elseif ~isfield (design, 'Dc') && all (isfield (design, {'CoilTurns', 'CoilFillFactor'})
+    elseif ~isfield (design, 'Dc') && all (isfield (design, {'CoilTurns', 'CoilFillFactor'}))
         
         % Find what wire diameter is necessary to achieve the desired
         % number of turns with the given fill factor
