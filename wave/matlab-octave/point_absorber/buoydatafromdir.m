@@ -50,7 +50,7 @@ function buoydat = buoydatafromdir(libdir, buoydir, buoydat)
 %
 
     if isempty(libdir)
-        libdir = getbuoylibdir();
+        libdir = buoylibdir ();
     end
     
     fullbuoydir = fullfile(libdir, buoydir);

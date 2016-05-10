@@ -39,7 +39,7 @@ options.coilYieldStrength = 70e6;
 % Chose the method used to evaluate inductance
 simoptions.Lmode = 1;
 
-simoptions.buoylibdir = getbuoylibdir;
+simoptions.buoylibdir = buoylibdir ();
 
 simoptions.SeaParameters.peak_freq = 1/9;
 simoptions.SeaParameters.sigma_range = [2*pi*0.055, 0.1*(0.6)^0.5 + 2.24];

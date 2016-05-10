@@ -1,4 +1,4 @@
-function buoydat = buoysetup(buoy, buoylibdir, buoydat)
+function buoydat = buoysetup(buoy, buoylibdirectory, buoydat)
 % buoysetup: load the appropriate buoy details from a buoy library
 % directory based on either the buoy directory name, or on the number of
 % the buoy in the directory
@@ -51,8 +51,8 @@ function buoydat = buoysetup(buoy, buoylibdir, buoydat)
         buoydat = struct();
     end
 
-    if nargin < 2 || isempty(buoylibdir)
-        buoylibdir = getbuoylibdir;
+    if nargin < 2 || isempty(buoylibdirectory)
+        buoylibdirectory = buoylibdir ();
     end
 
     if isnumeric(buoy) && isscalar(buoy) 
@@ -61,12 +61,12 @@ function buoydat = buoysetup(buoy, buoylibdir, buoydat)
         buoy = ceil(buoy);
         
         % get the total number of buoys in the buoy library directory
-        numbuoys = buoynum2buoydata(buoylibdir);
+        numbuoys = buoynum2buoydata(buoylibdirectory);
         
         % if the desired buoy number is sensible, look up the buoy info
         if buoy <= numbuoys
 
-            buoydat = buoynum2buoydata(buoylibdir, buoy, buoydat);
+            buoydat = buoynum2buoydata(buoylibdirectory, buoy, buoydat);
 
         else
             error('There are less buoys in the library than the requested buoy number.');
@@ -76,7 +76,7 @@ function buoydat = buoysetup(buoy, buoylibdir, buoydat)
 
         % the buoy directory name has been supplied directly, so look up
         % the information from the buoy library directory
-        buoydat = buoydatafromdir(buoylibdir, buoy, buoydat);
+        buoydat = buoydatafromdir(buoylibdirectory, buoy, buoydat);
 
     else
 
