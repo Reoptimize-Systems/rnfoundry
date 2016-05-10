@@ -40,11 +40,11 @@ simoptions.maxAllowedxT = 0.5;
 
 % % Set up the buoy and sea data files, these are for the 2m buoy
 % snappertrunkdir = fileparts(which('wholesystemsim_Snapper'));
-% simoptions.HeaveFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'heave_coefficients_cyl_2di_1dr_d020610.mat');
-% simoptions.SurgeFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'surge_coefficients_cyl_2di_1dr.mat');
-% simoptions.HydroCoeffsFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.1');
-% simoptions.ExcitationFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.2');
-% simoptions.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
+% simoptions.HeaveFile = fullfile(buoylibdir(), 'Cylinder_2m_dia_d010410', 'heave_coefficients_cyl_2di_1dr_d020610.mat');
+% simoptions.SurgeFile = fullfile(buoylibdir(), 'Cylinder_2m_dia_d010410', 'surge_coefficients_cyl_2di_1dr.mat');
+% simoptions.HydroCoeffsFile = fullfile(buoylibdir(), 'Cylinder_2m_dia_d010410','cyl_d3103v4.1');
+% simoptions.ExcitationFile = fullfile(buoylibdir(), 'Cylinder_2m_dia_d010410','cyl_d3103v4.2');
+% simoptions.BuoyParameters = load(fullfile(buoylibdir(), 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
 % simoptions.buoynum = -1;
 % design.buoynum = simoptions.buoynum;
 % 
