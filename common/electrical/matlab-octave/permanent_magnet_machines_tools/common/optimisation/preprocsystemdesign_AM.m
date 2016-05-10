@@ -11,7 +11,7 @@ function design = preprocsystemdesign_AM(design, simoptions, activecoilsperphase
     % set infinite max wire diameter if not yet set
     simoptions = setfieldifabsent(simoptions, 'MaxStrandDiameter',  inf);
     
-    if simoptions.MaxStrandDiameter < simoptions.MinWireDiameter
+    if simoptions.MaxStrandDiameter < simoptions.MinStrandDiameter
         error ('In simoptions, maximum allowed wire size is less than minimum allowed wire size.')
     end
     
