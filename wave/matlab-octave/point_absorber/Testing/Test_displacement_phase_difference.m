@@ -1,8 +1,8 @@
 %% ACTM
 
-clear design
+clear design simoptions
 
-design.phases = 3;         % Number of phases in machine
+design.Phases = 3;         % Number of phases in machine
 design.Rm = 0.1;
 design.g = 5/1000;
 design.Ri = design.Rm + design.g;
@@ -14,27 +14,30 @@ design.RaVRo = 1.025;
 design.RsoVRm = 0.1;
 design.RsiVRso = 0;
 design.WcVWp = 1/3;
-design.fillfactor = 0.65;
+design.CoilFillFactor = 0.5;
 %design.Dc = 1/1000;  % 1 mm diameter wire 
-design.Ntot = 500;
+design.CoilTurns = 50;
 design.mode = 2; 
 design.LgVLc = 0;
-design.poles = [10 30];
+design.Poles = [10 30];
 % design.FieldDirection = 1;
 % design.PowerPoles = poles(1);
+design.Branches = 1;
+design.CoilsPerBranch = 10;
+design.NCoilsPerPhase = 10;
 
-design = Ratios2Dimensions_ACTM(design);
+design = ratios2dimensions_ACTM (design);
 
 simoptions.simfun = 'systemsimfun_ACTM';
 mname = 'ACTM';
 
 %% Set up Common Parameters
 
-design.RgVRc = 10;
+design.RlVRp = 10;
 
 simoptions.Lmode = 0;
 simoptions.NoOfMachines = 1;
-simoptions.maxAllowedxT = 0.5;
+simoptions.maxAllowedxT = inf;
 
 %% Test with buoy in sinusoidal sea
 
@@ -97,9 +100,12 @@ params.peak_freq = 1/9; % centred at resonant frequency
 params.sigma_range = [0.345575191894877,2.31745966692415;];
 params.water_depth = 50;
 
-simoptions.SeaParameters = defaultseaparamaters(params);
+simoptions.SeaParameters = seasetup('PMPeakFreq', params.peak_freq ... , ...
+                                     ... 'MinFreq', params.sigma_range(1) .* 2 * pi, ...
+                                     ... 'MinFreq', params.sigma_range(2) .* 2 * pi ...
+                                     );
 
-Nbuoys = 7;
+Nbuoys = 8;
 circlerad = 30;
 origphase = simoptions.SeaParameters.phase;
 
@@ -136,7 +142,7 @@ Forces = zeros(numel(interpT), Nbuoys);
 
 for i = 1:Nbuoys
     
-    Forces(:,i) = interp1(T{i}, results{i}.Ffea, interpT);
+    Forces(:,i) = interp1(T{i}, results{i}.Ffea_heave, interpT);
     
 end
 
