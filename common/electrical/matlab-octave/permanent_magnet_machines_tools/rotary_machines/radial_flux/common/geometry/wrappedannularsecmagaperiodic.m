@@ -159,12 +159,6 @@ function [FemmProblem, wrapperthickness, info] = ...
         Inputs.MagDirections = {Inputs.MagDirections(1), Inputs.MagDirections(2)};
     end
     
-    if (abs(Inputs.NPolePairs*thetapole - pi)*roffset) <= Inputs.Tol
-        linktb = true;
-    else
-        linktb = false;
-    end
-    
     % remove input fields specific to this function and pass the
     % remaining fields to planarrectmagaperiodic as a series of p-v pairs
     planarrectmagaperiodicInputs = rmfield(Inputs, {'WrapperGroup'});
@@ -173,67 +167,31 @@ function [FemmProblem, wrapperthickness, info] = ...
     planarrectmagaperiodicInputs = struct2pvpairs(planarrectmagaperiodicInputs);
     
     % first draw periodic magnet regions
-    [FemmProblem, nodes, ~, annulsecinfo] = annularsecmagaperiodic ( FemmProblem, ...
+    [FemmProblem, nodes, ~, info] = annularsecmagaperiodic ( FemmProblem, ...
                                                              thetapole, ...
                                                              thetamag, ...
                                                              rmag, ...
                                                              roffset, ...
                                                              pos, ...
                                                              planarrectmagaperiodicInputs{:}, ...
-                                                             'NPolePairs', Inputs.NPolePairs);
-                                                         
-	info = annulsecinfo;
-    info.LinkTopBottom = linktb;
+                                                             'NPolePairs', Inputs.NPolePairs);                    
     
-    if info.LinkTopBottom
-        % remove the segment linking the nodes at the 'top' of the drawing
-        FemmProblem.Segments(numel(FemmProblem.Segments)) = [];
-        % change the segments linking to the last two nodes to be added to
-        % be linked instead to the first two nodes
-        seglinks = getseglinks_mfemm(FemmProblem);
-        for ind = 1:size(seglinks,1)
-            if seglinks(ind,1) == info.NodeIDs(end-1)
-                FemmProblem.Segments(ind).n0 = info.NodeIDs(1);
-            elseif seglinks(ind,2) == info.NodeIDs(end-1)
-                FemmProblem.Segments(ind).n1 = info.NodeIDs(1);
-            elseif seglinks(ind,1) == info.NodeIDs(end)
-                FemmProblem.Segments(ind).n0 = info.NodeIDs(2);
-            elseif seglinks(ind,2) == info.NodeIDs(end)
-                FemmProblem.Segments(ind).n1 = info.NodeIDs(2);
-            end
-        end
-        seglinks = getarclinks_mfemm(FemmProblem);
-        for ind = 1:size(seglinks,1)
-            if seglinks(ind,1) == info.NodeIDs(end-1)
-                FemmProblem.ArcSegments(ind).n0 = info.NodeIDs(1);
-            elseif seglinks(ind,2) == info.NodeIDs(end-1)
-                FemmProblem.ArcSegments(ind).n1 = info.NodeIDs(1);
-            elseif seglinks(ind,1) == info.NodeIDs(end)
-                FemmProblem.ArcSegments(ind).n0 = info.NodeIDs(2);
-            elseif seglinks(ind,2) == info.NodeIDs(end)
-                FemmProblem.ArcSegments(ind).n1 = info.NodeIDs(2);
-            end
-        end
-        % remove the unnecessary final 2 nodes
-        FemmProblem.Nodes(end-1:end) = [];
-    end
-    
-    % Now correct the magnet angles which are specified as numeric values,
-    % and therefore represent angles relative to a normal pointing in the
-    % direction of the magnet block label
-    for ind = 1:size(info.MagnetBlockInds, 1)
-        if ~isempty(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir) ...
-                && isscalar(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir) ...
-                && isempty(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDirFctn)
-            
-            [maglabeltheta, ~] = cart2pol(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).Coords(1), ...
-                                    FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).Coords(2));
-                
-            FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir = ...
-                FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir + rad2deg(maglabeltheta);
-        
-        end
-    end
+%     % Now correct the magnet angles which are specified as numeric values,
+%     % and therefore represent angles relative to a normal pointing in the
+%     % direction of the magnet block label
+%     for ind = 1:size(info.MagnetBlockInds, 1)
+%         if ~isempty(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir) ...
+%                 && isscalar(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir) ...
+%                 && isempty(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDirFctn)
+%             
+%             [maglabeltheta, ~] = cart2pol(FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).Coords(1), ...
+%                                     FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).Coords(2));
+%                 
+%             FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir = ...
+%                 FemmProblem.BlockLabels(info.MagnetBlockInds(ind)).MagDir + rad2deg(maglabeltheta);
+%         
+%         end
+%     end
     
     % now add the back iron nodes and links, depending on their thicknesses
     if size(wrapperthickness,2) < 2
@@ -402,7 +360,7 @@ function [FemmProblem, wrapperthickness, info] = ...
             [FemmProblem, segind] = addsegments_mfemm(FemmProblem, ...
                                             lastbotnodeid, ...
                                             botnodeid, ...
-                                            'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
+                                            'BoundaryMarker', botboundarymarker, ...
                                             'InGroup', Inputs.WrapperGroup(i,1));
 
             info.BottomSegInd = [info.BottomSegInd, segind];
