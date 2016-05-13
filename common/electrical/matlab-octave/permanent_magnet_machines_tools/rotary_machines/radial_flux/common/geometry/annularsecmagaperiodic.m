@@ -144,6 +144,12 @@ function [FemmProblem, nodes, links, info] = ...
         Inputs.MagDirections = {Inputs.MagDirections(1), Inputs.MagDirections(2)};
     end
     
+    if (abs(Inputs.NPolePairs*thetapole - pi)*roffset) <= Inputs.Tol
+        info.LinkTopBottom = true;
+    else
+        info.LinkTopBottom = false;
+    end
+    
     % get the number of existing nodes, segments, boundaries etc. if any
     elcount = elementcount_mfemm (FemmProblem);
     
@@ -175,7 +181,7 @@ function [FemmProblem, nodes, links, info] = ...
     % get the horizontal links, these will be segments
     horizlinks = links(abs (diff ( [nodes(links(:,1)+1-elcount.NNodes,1), nodes(links(:,2)+1-elcount.NNodes,1)], 1, 2 )) >= Inputs.Tol,:);
     
-    % transform the node locations to convert the rectangulr region to the
+    % transform the node locations to convert the rectangular region to the
     % desired arced region 
     [nodes(:,1), nodes(:,2)] = pol2cart (nodes(:,2), nodes(:,1));
     [rectcentres(:,1), rectcentres(:,2)] = pol2cart (rectcentres(:,2),rectcentres(:,1));
@@ -192,10 +198,16 @@ function [FemmProblem, nodes, links, info] = ...
     [FemmProblem, ~, info.NodeIDs] = addnodes_mfemm (FemmProblem, ...
                             nodes(:,1), nodes(:,2), 'InGroup', Inputs.MagnetGroup);
     
-    % Periodic boundary at bottom
-    [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, links(1,1), links(1,2), ...
-        'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds).Name, ...
-        'InGroup', Inputs.MagnetGroup);
+    if ~info.LinkTopBottom
+        % Periodic boundary at bottom
+        [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, links(1,1), links(1,2), ...
+            'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds).Name, ...
+            'InGroup', Inputs.MagnetGroup);
+    else
+        % normal segment at bottom without periodic boundary
+        [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, links(1,1), links(1,2), ...
+            'InGroup', Inputs.MagnetGroup);
+    end
     
     info.BottomSegInd = seginds;
         
@@ -208,12 +220,45 @@ function [FemmProblem, nodes, links, info] = ...
     FemmProblem = addarcsegments_mfemm (FemmProblem, vertlinks(:,1), vertlinks(:,2), rad2deg(angles), ...
         'InGroup', Inputs.MagnetGroup);
 
-    % Periodic boundary at top
-    [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, horizlinks(end,1), horizlinks(end,2), ...
-        'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds).Name, ...
-        'InGroup', Inputs.MagnetGroup);
-    
-    info.TopSegInd = seginds;
+    if info.LinkTopBottom
+        % change the segments and arc segmetns linking to the last two
+        % nodes to be added to be linked instead to the first two nodes
+        seglinks = getseglinks_mfemm(FemmProblem);
+        for ind = 1:size(seglinks,1)
+            if seglinks(ind,1) == info.NodeIDs(end-1)
+                FemmProblem.Segments(ind).n0 = info.NodeIDs(1);
+            elseif seglinks(ind,2) == info.NodeIDs(end-1)
+                FemmProblem.Segments(ind).n1 = info.NodeIDs(1);
+            elseif seglinks(ind,1) == info.NodeIDs(end)
+                FemmProblem.Segments(ind).n0 = info.NodeIDs(2);
+            elseif seglinks(ind,2) == info.NodeIDs(end)
+                FemmProblem.Segments(ind).n1 = info.NodeIDs(2);
+            end
+        end
+        seglinks = getarclinks_mfemm(FemmProblem);
+        for ind = 1:size(seglinks,1)
+            if seglinks(ind,1) == info.NodeIDs(end-1)
+                FemmProblem.ArcSegments(ind).n0 = info.NodeIDs(1);
+            elseif seglinks(ind,2) == info.NodeIDs(end-1)
+                FemmProblem.ArcSegments(ind).n1 = info.NodeIDs(1);
+            elseif seglinks(ind,1) == info.NodeIDs(end)
+                FemmProblem.ArcSegments(ind).n0 = info.NodeIDs(2);
+            elseif seglinks(ind,2) == info.NodeIDs(end)
+                FemmProblem.ArcSegments(ind).n1 = info.NodeIDs(2);
+            end
+        end
+        % remove the unnecessary final 2 nodes
+        FemmProblem.Nodes(end-1:end) = [];
+        
+        info.TopSegInd = info.BottomSegInd;
+    else
+        % Periodic boundary at top
+        [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, horizlinks(end,1), horizlinks(end,2), ...
+            'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds).Name, ...
+            'InGroup', Inputs.MagnetGroup);
+        
+        info.TopSegInd = seginds;
+    end
     
     % Now add the labels
     info.MagnetBlockInds = [];

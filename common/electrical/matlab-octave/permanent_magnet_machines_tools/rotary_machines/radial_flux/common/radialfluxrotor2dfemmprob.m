@@ -238,6 +238,11 @@ function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rm
                                                   'MeshSize', Inputs.MagnetRegionMeshSize, ...
                                                   'NPolePairs', Inputs.NPolePairs);
 
+        if rotorinfo2.LinkTopBottom
+            % add a label to the centre with no mesh
+            FemmProblem = addblocklabel_mfemm (FemmProblem, 0, 0, 'BlockType', '<No Mesh>');
+        end
+            
         info.NodeIDs2 = rotorinfo2.NodeIDs;
         info.MagnetBlockInds2 = rotorinfo2.MagnetBlockInds;
         info.SpaceBlockInds2 = rotorinfo2.SpaceBlockInds;
