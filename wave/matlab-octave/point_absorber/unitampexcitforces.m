@@ -78,8 +78,8 @@ function [hfexcit, sfexcit] = unitampexcitforces(sigma, ExcitationFile)
     % Make dimensional, but still for unit amplitude waves and combine real
     % and imaginary parts. These forces can then be rescaled to the actual
     % wave amplitude later.
-    excit_stage2 = [excit(:,1), ( excit(:,2) + i .* excit(:,3) ) .* (rho * g * 1)];% removed *A - so amplitude considered later
-    surge_stage2 = [surge(:,1), ( surge(:,2) + i .* surge(:,3) ) .* (rho * g * 1)];
+    excit_stage2 = [excit(:,1), ( excit(:,2) + 1i .* excit(:,3) ) .* (rho * g * 1)];% removed *A - so amplitude considered later
+    surge_stage2 = [surge(:,1), ( surge(:,2) + 1i .* surge(:,3) ) .* (rho * g * 1)];
     
     % Make the wave number into sigma
     excit_stage3 = [2*pi ./ excit(:,1) , excit_stage2(:,2)];
