@@ -93,7 +93,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         sdesign.CoilTurns = 1;
         rmcoilturns = true;
     end
-keyboard
+
     % Draw the sim at position 0
     firstslotcentre = design.thetas / 2;
     if sdesign.yd == 1
