@@ -93,7 +93,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         sdesign.CoilTurns = 1;
         rmcoilturns = true;
     end
-    
+keyboard
     % Draw the sim at position 0
     firstslotcentre = design.thetas / 2;
     if sdesign.yd == 1
@@ -118,11 +118,13 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     % make sure there's at least 6 slots in the simulation. If not, as long
     % as there are enough slots in the whole machine to simulate another
     % pole pair, simulate another basic winding unit
-    if (((simpolepairs*2/sdesign.pb) * sdesign.Qsb) < 6) ...
-            || (simpolepairs*2 <= sdesign.Poles)
-        simpolepairs = simpolepairs ^2;
-    end
+    if ( ( (simpolepairs*2/sdesign.pb) * sdesign.Qsb ) < 6 ) ...
+            && (simpolepairs*2 <= sdesign.Poles)
         
+        simpolepairs = simpolepairs * 2;
+        
+    end
+
     [sdesign.FemmProblem, sdesign.RotorDrawingInfo, sdesign.StatorDrawingInfo] = ...
                         slottedfemmprob_radial (sdesign, ...
                             'NPolePairs', simpolepairs, ...
