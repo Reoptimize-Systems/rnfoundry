@@ -10,7 +10,8 @@ function [freqs, amps, phase, power] = pmspectrum(fpeak, varargin)
 %
 % Inputs
 %
-% fpeak - a scalar value of the peak frequency of the desired spectrum
+% fpeak - a scalar value of the peak frequency of the desired spectrum in
+%   Hz
 %
 % The following optional parameter-value pairs may then also be supplied:
 %
