@@ -222,9 +222,9 @@ function design = coggingforceslm(design)
     
     % account for magnet skew in the cogging forces, normalise it to the
     % stator length
-    normcoggingTorqueslm = slmengine (design.feapos, design.RawCoggingTorque ./ design.ls, ...
+    normcoggingTorqueslm = slmengine (design.MagFEASimPositions, design.RawCoggingTorque ./ design.ls, ...
             'EndCon', 'periodic', ...
-            'knots', numel (design.feapos), ...
+            'knots', numel (design.MagFEASimPositions), ...
             'Plot', 'off');
     
     % calculate the positions of the skewwed magnet sections
@@ -240,7 +240,7 @@ function design = coggingforceslm(design)
     
     design.slm_coggingtorque = slmengine (pos, coggingTorque, ...
             'EndCon', 'periodic', ...
-            'knots', 2 * numel (design.feapos), ...
+            'knots', 2 * numel (design.MagFEASimPositions), ...
             'Plot', 'off');
           
 end
@@ -316,8 +316,8 @@ function design = makelossfcns_RADIAL_SLOTTED(design)
 %     histloss = [ histloss, fliplr(histloss) ];
 %     eddyloss = [ eddyloss, fliplr(eddyloss) ];
 %     excessloss = [ excessloss, fliplr(excessloss) ];
-%     indepvar = [design.feapos, 1 - fliplr(design.feapos)];
-    indepvar = design.feapos;
+%     indepvar = [design.MagFEASimPositions, 1 - fliplr(design.MagFEASimPositions)];
+    indepvar = design.MagFEASimPositions;
     
     % divide the losses by 2 as we calculated them on samples from two
     % machine poles, and they must be on a per-pole basis
