@@ -184,7 +184,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     simfun_interna_fcns = simfun_RADIAL_SLOTTED ();
 
     sdesign.FirstSlotCenter = 0;
-    sdesign.feapos = 0;
+    sdesign.MagFEASimPositions = 0;
     [slotPos, slotIntA] = feval (simfun_interna_fcns{1}, sdesign, 1, solution);
 
     for ind = 1:design.CoilLayers

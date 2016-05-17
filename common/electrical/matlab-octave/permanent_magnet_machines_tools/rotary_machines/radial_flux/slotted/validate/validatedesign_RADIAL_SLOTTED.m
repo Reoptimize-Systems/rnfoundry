@@ -25,7 +25,7 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
         pos = design.MagSimFEAPeakFluxLinkagePosition*design.thetap;
     elseif isfield (design, 'FemmDirectFluxLinkage')
         [~,maxflind] = max (abs (design.FemmDirectFluxLinkage));
-        pos = (design.feapos(maxflind)+1) * design.thetap + design.FirstSlotCenter;
+        pos = (design.MagFEASimPositions(maxflind)+1) * design.thetap + design.FirstSlotCenter;
     else
         pos = 0;
     end

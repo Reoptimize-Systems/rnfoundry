@@ -109,7 +109,7 @@ function reportstrs = designreport_RADIAL_SLOTTED(design, simoptions, reportstrs
     radarmdimstablestrs = txtfile2cell(fname);
     
     h = figure;
-    plot (design.feapos, design.ArmatureToothFluxDensity);
+    plot (design.MagFEASimPositions, design.ArmatureToothFluxDensity);
     set (gcf, 'color', 'w');
     xlabel ('Position (Fraction of Pole)');
     ylabel ('Flux Density Magnitude (T)');
