@@ -83,10 +83,10 @@ evaloptions.ProjectYears = 25;
 evaloptions.DiscountRate = 0.08;
 
 % Machine magnetics mesh sizes
-simoptions.femmmeshoptions.MagnetRegionMeshSize = -1;
-simoptions.femmmeshoptions.BackIronRegionMeshSize = -1;
-simoptions.femmmeshoptions.OuterRegionsMeshSize = [-1, -1];
-simoptions.femmmeshoptions.AirGapMeshSize = -1;
+simoptions.MagFEASim.MagnetRegionMeshSize = -1;
+simoptions.MagFEASim.BackIronRegionMeshSize = -1;
+simoptions.MagFEASim.OuterRegionsMeshSize = [-1, -1];
+simoptions.MagFEASim.AirGapMeshSize = -1;
 
 % Machine structural FEA mesh sizes
 % simoptions.evaloptions.structmeshoptions.ShaftAxialLayersPerM = 10;
