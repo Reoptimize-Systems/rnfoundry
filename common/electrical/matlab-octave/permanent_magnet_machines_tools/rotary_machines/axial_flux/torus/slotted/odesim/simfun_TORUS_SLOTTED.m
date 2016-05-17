@@ -83,7 +83,7 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
     
     nfeapos = 10;
     design.FirstSlotCenter = design.taupm / slotsperpole / 2;
-    design.feapos = linspace(0, 1, nfeapos);
+    design.MagFEASimPositions = linspace(0, 1, nfeapos);
     
 %     design = corelosssetup(design, feapos);
     
@@ -94,14 +94,14 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
     
     femfilename = 'temp_simfun_TORUS_SLOTTED.fem';
         
-    for i = 1:numel(design.feapos)
+    for i = 1:numel(design.MagFEASimPositions)
         
         % Draw the sim 
         [design.FemmProblem, design.outermagsep, design.coillabellocs, design.yokenodeids] = ...
                             slottedfemmprob_torus(design, ...
                                 'NStages', simoptions.ndrawnstages, ...
                                 'NWindingLayers', design.CoilLayers, ...
-                                'Position', design.feapos(i) * design.taupm + design.FirstSlotCenter, ...
+                                'Position', design.MagFEASimPositions(i) * design.taupm + design.FirstSlotCenter, ...
                                 'MagnetRegionMeshSize', simoptions.MagFEASim.MagnetRegionMeshSize, ...
                                 'BackIronRegionMeshSize', simoptions.MagFEASim.BackIronRegionMeshSize, ...
                                 'OuterRegionsMeshSize', simoptions.MagFEASim.OuterRegionsMeshSize, ...
@@ -111,7 +111,7 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
                                 'CoilRegionMeshSize', simoptions.MagFEASim.CoilRegionMeshSize);
                                
         if i == 1
-            design = corelosssetup(design, design.feapos);
+            design = corelosssetup(design, design.MagFEASimPositions);
         end
         
         % write the fem file to disk
@@ -125,9 +125,9 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
             
             % get the integral of the vector potential in a slot, if two
             % layers get both layers
-            design = slotintAdata(design, design.feapos(i), solution);
+            design = slotintAdata(design, design.MagFEASimPositions(i), solution);
             
-            design = slotintBdata(design, design.feapos(i), solution);
+            design = slotintBdata(design, design.MagFEASimPositions(i), solution);
 
             for ii = 1:numel(design.CoreLoss)
                 
@@ -155,9 +155,9 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
 
             % get the integral of the vector potential in a slot, if two
             % layers get both layers
-            design = slotintAdata(design, design.feapos(i));
+            design = slotintAdata(design, design.MagFEASimPositions(i));
 
-            design = slotintBdata(design, design.feapos(i));
+            design = slotintBdata(design, design.MagFEASimPositions(i));
 
             for ii = 1:numel(design.CoreLoss)
                 
