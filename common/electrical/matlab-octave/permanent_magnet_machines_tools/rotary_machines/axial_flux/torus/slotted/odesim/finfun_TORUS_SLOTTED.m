@@ -198,8 +198,8 @@ function design = makelossfcns_TORUS_SLOTTED(design)
 %     histloss = [ histloss, fliplr(histloss) ];
 %     eddyloss = [ eddyloss, fliplr(eddyloss) ];
 %     excessloss = [ excessloss, fliplr(excessloss) ];
-%     indepvar = [design.feapos, 1 - fliplr(design.feapos)];
-    indepvar = design.feapos;
+%     indepvar = [design.MagFEASimPositions, 1 - fliplr(design.MagFEASimPositions)];
+    indepvar = design.MagFEASimPositions;
     
     % make core loss slms which are periodic over one pole. 
     design.CoreLossSLMs.hxslm = slmengine(indepvar, histloss, ...
