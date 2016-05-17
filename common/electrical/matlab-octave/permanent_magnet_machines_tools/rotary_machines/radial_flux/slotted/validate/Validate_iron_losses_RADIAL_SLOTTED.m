@@ -64,7 +64,7 @@ design.RlVRp = 100;
 simoptions = struct();
 simoptions.GetVariableGapForce = false;
 simoptions.NMagFEAPositions = 30;
-simoptions.femmmeshoptions.BackIronRegionMeshSize = ...
+simoptions.MagFEASim.BackIronRegionMeshSize = ...
     choosemesharea_mfemm(design.ty, design.Rai*design.thetap, 1/30);
 
 simoptions.reltol = 1e-4;
