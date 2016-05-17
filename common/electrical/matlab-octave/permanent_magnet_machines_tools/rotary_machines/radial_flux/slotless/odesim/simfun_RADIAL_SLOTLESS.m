@@ -253,7 +253,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTLESS(design, simoptions)
         
     %     design.FirstSlotCenter = design.thetap + (design.thetap / slotsperpole / 2);
         design.FirstSlotCenter = 0;
-        design.feapos = linspace (0, 1, simoptions.NMagFEAPositions);
+        design.MagFEASimPositions = linspace (0, 1, simoptions.NMagFEAPositions);
         
         % determine a unit vector pointing in the direction tangential to the
         % radius half way between the Poles for the purpose of extracting
@@ -286,7 +286,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTLESS(design, simoptions)
                              AslotPos, slotIntA, ...
                              BslotPos, slotIntB };
                               
-        for posind = 2:numel (design.feapos)
+        for posind = 2:numel (design.MagFEASimPositions)
 
             [ RawCoggingTorque, ...
               BxCoreLossData, ...
@@ -393,7 +393,7 @@ function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDen
                         slottedfemmprob_radial (design, ...
                             'ArmatureType', design.ArmatureType, ...
                             'NWindingLayers', design.CoilLayers, ...
-                            'Position', (design.feapos(posind)+1) * design.thetap + design.FirstSlotCenter, ...
+                            'Position', (design.MagFEASimPositions(posind)+1) * design.thetap + design.FirstSlotCenter, ...
                             'MagnetRegionMeshSize', simoptions.MagFEASim.MagnetRegionMeshSize, ...
                             'BackIronRegionMeshSize', simoptions.MagFEASim.BackIronRegionMeshSize, ...
                             'StatorOuterRegionsMeshSize', simoptions.MagFEASim.OuterRegionsMeshSize, ...
@@ -418,7 +418,7 @@ function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDen
     if isinit
         % is an initialisation run, do things we only need to do once
         
-        design = corelosssetup (design, design.feapos, solution);
+        design = corelosssetup (design, design.MagFEASimPositions, solution);
         
                 % get the forces
         solution.clearblock();
@@ -604,7 +604,7 @@ function [slotPos, slotIntA] = slotintAdata (design, posind, solution)
     % drawing, so choosing a slot in the +ve y direction is the same as
     % the magnets being in the opposite direction
     [thetaslotypos, ~] = cart2pol (slotxpos(:,1), slotypos(:,1));
-    slotPos = (-thetaslotypos./design.thetap) + design.FirstSlotCenter + design.feapos(posind);
+    slotPos = (-thetaslotypos./design.thetap) + design.FirstSlotCenter + design.MagFEASimPositions(posind);
     
 %     % sort the data in ascending position order
 %     [design.intAdata.slotPos, idx] = sort (design.intAdata.slotPos);
@@ -661,7 +661,7 @@ function [slotPos, slotIntB] = slotintBdata (design, posind, solution)
     % drawing, so choosing a slot in the +ve y direction is the same as
     % the magnets being in the opposite direction
     [thetaslotypos, ~] = cart2pol (slotxpos(:,1), slotypos(:,1));
-    slotPos = (-thetaslotypos./design.thetap) + design.FirstSlotCenter + design.feapos(posind);
+    slotPos = (-thetaslotypos./design.thetap) + design.FirstSlotCenter + design.MagFEASimPositions(posind);
     
 %     % sort the data in ascending position order
 %     [design.intBdata.slotPos, idx] = sort (design.intBdata.slotPos);
