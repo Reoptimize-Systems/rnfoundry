@@ -41,7 +41,7 @@ simoptions.NoOfMachines = 1;
 %% Test with linear motion
 
 speed = 1;
-simoptions.IC = zeros(1, design.Phases);
+simoptions.ODESim.InitialConditions = zeros(1, design.Phases);
 simoptions.skip = 1;
 simoptions.tspan = [0, 5];
 simoptions.drivetimes = 0:simoptions.tspan(2)/2:simoptions.tspan(2);
@@ -61,7 +61,7 @@ simoptions.finfun = ['finfun_', mname];
 
 %% Test with sinusoidal motion
 
-simoptions.IC = zeros(1, design.Phases);
+simoptions.ODESim.InitialConditions = zeros(1, design.Phases);
 simoptions.skip = 1;
 simoptions.xTperiod = 3;
 simoptions.xTamplitude = 1;

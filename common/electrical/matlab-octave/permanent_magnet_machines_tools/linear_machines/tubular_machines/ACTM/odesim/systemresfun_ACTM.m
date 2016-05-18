@@ -11,7 +11,7 @@ function [results, design] = systemresfun_ACTM(T, Y, design, simoptions)
     simoptions.skip = 1;
     
     % Now preallocate arrays of the correct sizes
-    results.ydot = zeros(ceil(size(Y,1)/simoptions.skip), size(simoptions.IC,2));
+    results.ydot = zeros(ceil(size(Y,1)/simoptions.skip), size(simoptions.ODESim.InitialConditions,2));
     results.dpsidxR = zeros(ceil(length(T)/simoptions.skip), 3);
     results.EMF = zeros(ceil(length(T)/simoptions.skip), 3);
     results.Ffea = zeros(ceil(length(T)/simoptions.skip), 1);

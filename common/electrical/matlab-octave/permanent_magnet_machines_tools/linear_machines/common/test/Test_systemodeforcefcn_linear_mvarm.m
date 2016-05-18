@@ -66,7 +66,7 @@ simoptions.maxAllowedTLength = 5;
 % determines method used to calculate inductance
 simoptions.Lmode = 1;
 % the initial values of xA, vA and the initial currents in the coils at t=0
-simoptions.IC = [0, 0, 0];
+simoptions.ODESim.InitialConditions = [0, 0, 0];
 % the number of calculations to skip when producing output after the ode
 % solver finishes
 simoptions.skip = 1;
@@ -161,7 +161,7 @@ load design_006_wholesys_design_and_simoptions.mat
 %%
 
 % plotresultsbuoysys_snapper(T, Y, results, 1)
-simoptions.IC = zeros(1, size(Y,2));
+simoptions.ODESim.InitialConditions = zeros(1, size(Y,2));
 simoptions.NoOfMachines = 1;
 design.PoleWidth = design.Taup;
 [results2, design2] = systemresfun_SNAPPER(T, Y, design2, simoptions);

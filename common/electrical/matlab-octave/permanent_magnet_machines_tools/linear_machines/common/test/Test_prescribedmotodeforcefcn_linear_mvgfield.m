@@ -97,7 +97,7 @@ design.MagCouple.N = 12;
 simoptions.skip = 1;
 simoptions.tspan = [0, 60];
 simoptions.Lmode = 1;
-simoptions.IC = [0, 0, 0, 0, 0];
+simoptions.ODESim.InitialConditions = [0, 0, 0, 0, 0];
 
 topspeed = 0.1;
 simoptions.drivetimes = linspace(0, simoptions.tspan(2), 100);

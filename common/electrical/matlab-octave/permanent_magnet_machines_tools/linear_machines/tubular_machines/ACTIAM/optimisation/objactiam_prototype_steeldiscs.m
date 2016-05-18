@@ -115,7 +115,7 @@ function ObjVal = objactiam_prototype_steeldiscs(Chrom, rtn_type)
            
            design = dimensions2ratios_ACTIAM(design);
 
-           simoptions.IC = 0;
+           simoptions.ODESim.InitialConditions = 0;
            simoptions.skip = 1;
            simoptions.tspan = [0, 5*2*design.Wp / speed];
            simoptions.drivetimes = 0:simoptions.tspan(2)/10:simoptions.tspan(2);

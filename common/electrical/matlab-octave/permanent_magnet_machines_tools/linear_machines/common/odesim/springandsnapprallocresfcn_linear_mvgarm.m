@@ -1,7 +1,7 @@
 function results = springandsnapprallocresfcn_linear_mvgarm(design, simoptions, T, Y)
 
     % Now preallocate arrays of the correct sizes
-    results.ydot = zeros(ceil(size(Y,1)/simoptions.skip), size(simoptions.IC, 2));
+    results.ydot = zeros(ceil(size(Y,1)/simoptions.skip), size(simoptions.ODESim.InitialConditions, 2));
     results.dpsidxR = zeros(ceil(length(T)/simoptions.skip), design.Phases);
     results.EMF = zeros(ceil(length(T)/simoptions.skip), design.Phases);
     results.Fpto = zeros(ceil(length(T)/simoptions.skip), 1);

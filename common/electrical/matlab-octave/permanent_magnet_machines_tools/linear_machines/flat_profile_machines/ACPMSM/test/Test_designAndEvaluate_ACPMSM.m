@@ -43,7 +43,7 @@ options.alphab = (design.ls + 2*bearingWidth) / design.ls;
 %%
 
 % speed = 1;
-% simoptions.IC = 0;
+% simoptions.ODESim.InitialConditions = 0;
 % simoptions.skip = 1;
 % simoptions.tspan = [0, 10];
 % simoptions.drivetimes = 0:simoptions.tspan(2);
@@ -64,7 +64,7 @@ simoptions.water_depth = 40;
 
 simoptions.tspan = [0, 60];
 simoptions.Lmode = 1;
-simoptions.IC = [0, 0, 0];
+simoptions.ODESim.InitialConditions = [0, 0, 0];
 
 simoptions.simfun = 'simfun_ACPMSM';
 simoptions.finfun = 'systemfinfun_ACPMSM';

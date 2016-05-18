@@ -44,7 +44,7 @@ options.coilYieldStrength = 70e6;
 % 
 % % Test with linear motion
 % speed = 1;
-% simoptions.IC = 0;
+% simoptions.ODESim.InitialConditions = 0;
 % simoptions.skip = 1;
 % simoptions.tspan = [0, 10];
 % simoptions.drivetimes = 0:simoptions.tspan(2);
@@ -67,7 +67,7 @@ simoptions.SeaParameters = defaultseaparamaters(simoptions.SeaParameters);
 simoptions.tether_length = 5;
 simoptions.water_depth = 40;
 
-simoptions.IC = [0,0,0];
+simoptions.ODESim.InitialConditions = [0,0,0];
 simoptions.skip = 1;
 simoptions.tspan = [0, 45];
 simoptions.Lmode = 0;

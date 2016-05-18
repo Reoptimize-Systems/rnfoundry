@@ -49,7 +49,7 @@ simoptions.maxAllowedxT = inf;
 % determines method used to calculate inductance
 simoptions.Lmode = 1;
 % the initial values of xA, vA and the initial currents in the coils at t=0
-simoptions.IC = [0, 0, zeros(1, design.Phases)];
+simoptions.ODESim.InitialConditions = [0, 0, zeros(1, design.Phases)];
 % the number of calculations to skip when producing output after the ode
 % solver finishes
 simoptions.skip = 1;
