@@ -35,7 +35,7 @@ simoptions.Lmode = true;
 
 simoptions.tether_length = 3;
 
-simoptions.IC = [0, 0, 0];
+simoptions.ODESim.InitialConditions = [0, 0, 0];
 
 simoptions.tspan = [0, 30];
 

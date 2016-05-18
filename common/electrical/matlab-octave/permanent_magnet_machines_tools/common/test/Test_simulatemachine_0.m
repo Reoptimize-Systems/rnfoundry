@@ -23,7 +23,7 @@ design.mode = 2;
 
 % Test with linear motion
 speed = 1;
-simoptions.IC = 0;
+simoptions.ODESim.InitialConditions = 0;
 simoptions.skip = 1;
 simoptions.tspan = [0, 10];
 simoptions.drivetimes = 0:simoptions.tspan(2);

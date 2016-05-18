@@ -51,7 +51,7 @@ NSsimoptions.SeaParameters = seasetup('PMPeakFreq', 1/9);
 NSsimoptions.tether_length = 5;
 NSsimoptions.water_depth = 40;
 
-% simoptions.IC = [0,0,0];
+% simoptions.ODESim.InitialConditions = [0,0,0];
 NSsimoptions.skip = 1;
 NSsimoptions.tspan = [0, 90];
 % simoptions.Lmode = 0;

@@ -20,7 +20,7 @@ function simoptions = buoysimoptions(varargin)
     % determines method used to calculate inductance
     simoptions.Lmode = 1;
     % the initial values of xA, vA and the initial currents in the coils at t=0
-    simoptions.IC = [];
+    simoptions.ODESim.InitialConditions = [];
     % the number of calculations to skip when producing output after the ode
     % solver finishes
     simoptions.skip = 1;

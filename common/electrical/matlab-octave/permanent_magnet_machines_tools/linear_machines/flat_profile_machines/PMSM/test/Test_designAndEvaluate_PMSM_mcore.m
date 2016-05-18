@@ -108,7 +108,7 @@ design.Poles = [18, 6];
 %% Run locally
 
 simoptions.Lmode = 1;
-simoptions.IC = zeros(1,design.Phases);
+simoptions.ODESim.InitialConditions = zeros(1,design.Phases);
 simoptions.skip = 1;
 simoptions.Translator = 2;
 

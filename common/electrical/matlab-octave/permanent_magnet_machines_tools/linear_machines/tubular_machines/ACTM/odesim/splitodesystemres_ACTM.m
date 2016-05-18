@@ -49,7 +49,7 @@ function results = splitodesystemres_ACTM(results, sol, design, simoptions)
         simoptions.skip = 1;
 
         % Recalculate the final solution values
-        temp.ydot = zeros(ceil(size(sol.y,2)/simoptions.skip), size(simoptions.IC,2));
+        temp.ydot = zeros(ceil(size(sol.y,2)/simoptions.skip), size(simoptions.ODESim.InitialConditions,2));
         temp.dpsidxR = zeros(ceil(length(sol.x)/simoptions.skip), 3);
         temp.EMF = zeros(ceil(length(sol.x)/simoptions.skip), 3);
         temp.Ffea = zeros(ceil(length(sol.x)/simoptions.skip), 1);

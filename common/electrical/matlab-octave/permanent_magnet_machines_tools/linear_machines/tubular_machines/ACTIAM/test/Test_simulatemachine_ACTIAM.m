@@ -43,7 +43,7 @@ simoptions.SeaParameters = seasetup('sigma', 2 * pi * 0.35, ...
 simoptions.tether_length = 5;
 simoptions.water_depth = 40;
 
-% simoptions.IC = [0,0,0];
+% simoptions.ODESim.InitialConditions = [0,0,0];
 simoptions.skip = 1;
 simoptions.tspan = [0, 10];
 % simoptions.Lmode = 0;

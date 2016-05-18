@@ -248,7 +248,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
             % in this case we use the odesplit function to allow longer
             % simulations to be run, only extracting pertinent values
             [results, simoptions.tspan] = odesplit ( odefcn, odeevfun, simoptions.tspan, ...
-                simoptions.IC, ...
+                simoptions.ODESim.InitialConditions, ...
                 odeoptions, ...
                 spfcn, ...
                 'spfcnArgs', {design, simoptions}, ...
@@ -272,8 +272,8 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     else
         if Inputs.Verbose, fprintf(1, '\nBeginning ode solution\n'); end
         %tic
-        %[T, Y] = odefcn(@(t, y) feval(odeevfun, t, y, design, simoptions, Inputs.odeargs{:}), simoptions.tspan, simoptions.IC, odeoptions);
-        [T,Y] = odefcn(odeevfun, simoptions.tspan, simoptions.IC, odeoptions);
+        %[T, Y] = odefcn(@(t, y) feval(odeevfun, t, y, design, simoptions, Inputs.odeargs{:}), simoptions.tspan, simoptions.ODESim.InitialConditions, odeoptions);
+        [T,Y] = odefcn(odeevfun, simoptions.tspan, simoptions.ODESim.InitialConditions, odeoptions);
         %toc
         if Inputs.Verbose, fprintf(1, 'ode solution complete\n'); end
     end

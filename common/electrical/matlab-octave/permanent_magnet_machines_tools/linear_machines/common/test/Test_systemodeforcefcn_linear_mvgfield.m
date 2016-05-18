@@ -96,7 +96,7 @@ design.MagCouple.N = 8;
 simoptions = buoysimoptions;
 
 % speed = 1;
-% simoptions.IC = 0;
+% simoptions.ODESim.InitialConditions = 0;
 % simoptions.skip = 1;
 % simoptions.tspan = [0, 10];
 % simoptions.drivetimes = 0:simoptions.tspan(2);
@@ -128,7 +128,7 @@ simoptions.NoOfMachines = 1;
 
 simoptions.tspan = [0, 120];
 simoptions.Lmode = 1;
-simoptions.IC = [0, 0, 0];
+simoptions.ODESim.InitialConditions = [0, 0, 0];
 
 simoptions.simfun = 'simfun_MAGCOUPLE';
 simoptions.finfun = 'finfun_MAGCOUPLE';

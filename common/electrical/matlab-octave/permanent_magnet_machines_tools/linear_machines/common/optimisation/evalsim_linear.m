@@ -66,7 +66,7 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         presimoptions.finfun = simoptions.evaloptions.presimfinfun;
         
         simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'presimIC', zeros(1, design.Phases));
-        presimoptions.IC = simoptions.evaloptions.presimIC;
+        presimoptions.ODESim.InitialConditions = simoptions.evaloptions.presimIC;
         
         presimoptions = rmiffield(presimoptions, {'events', 'abstol', 'maxstep', 'splitode'});
         
