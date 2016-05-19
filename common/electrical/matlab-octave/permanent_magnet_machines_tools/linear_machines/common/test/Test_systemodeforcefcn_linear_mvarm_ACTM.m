@@ -162,9 +162,9 @@ simoptions.odeevfun = 'systemodeforcefcn_linear_mvgarm';
 simoptions.resfun = 'systemresfun_linear_mvgarm';
 simoptions.preallocresfcn = 'springandsnapprallocresfcn_linear_mvgarm';
 % simoptions.forcefcn = 'springforcefcn_linear_mvgarm';
-% simoptions.forcefcnargs = {};
+% simoptions.ODESim.ForceFcnArgs = {};
 simoptions.forcefcn = 'springandsnapforcefcn_linear_mvgarm';
-simoptions.forcefcnargs = {};
+simoptions.ODESim.ForceFcnArgs = {};
 
 [T, Y, results, designACTM] = simulatemachine_linear(designACTM, simoptions, ...
                                                  simoptions.simfun, ...

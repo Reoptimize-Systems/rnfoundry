@@ -112,9 +112,9 @@ simoptions.spfcn = 'splitodesystemres_linear';
 simoptions.splitode = 10;
 simoptions.preallocresfcn = 'springandsnapprallocresfcn_linear_mvgarm';
 % simoptions.forcefcn = 'springforcefcn_linear_mvgarm';
-% simoptions.forcefcnargs = {};
+% simoptions.ODESim.ForceFcnArgs = {};
 % simoptions.forcefcn = 'springandsnapforcefcn_linear_mvgarm';
-% simoptions.forcefcnargs = {};
+% simoptions.ODESim.ForceFcnArgs = {};
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
                                                  simoptions.simfun, ...
@@ -146,9 +146,9 @@ end
 simoptions.preallocresfcn = 'prallocresfcn_linear_system';
 
 % simoptions.forcefcn = 'springforcefcn_linear_mvgarm';
-% simoptions.forcefcnargs = {};
+% simoptions.ODESim.ForceFcnArgs = {};
 % simoptions.forcefcn = 'springandsnapforcefcn_linear_mvgarm';
-% simoptions.forcefcnargs = {};
+% simoptions.ODESim.ForceFcnArgs = {};
 
 [T, Y, results2, design2] = simulatemachine_linear(design, simoptions, ...
                                                  simoptions.simfun, ...

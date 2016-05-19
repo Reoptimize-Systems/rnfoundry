@@ -137,7 +137,7 @@ simoptions.odeevfun = 'systemodeforcefcn_linear_mvgfield';
 simoptions.resfun = 'systemresfun_linear_mvgfield';
 % simoptions.dpsidxfun = @polydpsidx_ACPMSM
 simoptions.forcefcn = 'forcefcn_linear_mvgfield_system';
-simoptions.forcefcnargs = {};
+simoptions.ODESim.ForceFcnArgs = {};
 
 simfunargs = {@simfun_ACPMSM};
 

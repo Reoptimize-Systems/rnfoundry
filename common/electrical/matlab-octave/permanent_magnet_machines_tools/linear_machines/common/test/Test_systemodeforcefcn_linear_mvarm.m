@@ -143,7 +143,7 @@ simoptions.odeevfun = 'systemodeforcefcn_linear_mvgarm';
 simoptions.resfun = 'systemresfun_SNAPPER';
 simoptions.preallocresfcn = 'prallocresfcn_SNAPPER';
 simoptions.forcefcn = 'forcefcn_snapper';
-simoptions.forcefcnargs = {};
+simoptions.ODESim.ForceFcnArgs = {};
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
                                                  simoptions.simfun, ...
@@ -212,7 +212,7 @@ simoptions2.odeevfun = 'systemodeforcefcn_linear_mvgarm';
 simoptions2.resfun = 'systemresfun_SNAPPER';
 simoptions2.preallocresfcn = 'prallocresfcn_SNAPPER';
 simoptions2.forcefcn = 'forcefcn_snapper';
-simoptions2.forcefcnargs = {};
+simoptions2.ODESim.ForceFcnArgs = {};
 
 if isfield(design2, 'Ntot')
     design2 = rmfield(design2, 'Ntot');
