@@ -1,6 +1,68 @@
 function [FemmProblem, info] = radialfluxrotor2dfemmprob(thetapole, thetamag, rmag, rbackiron, drawnrotors, rrotor, varargin)
 % adds the outermost rotor parts of a radial flux machine to a FemmProblem
 % Structure
+%
+%
+% radialfluxrotor2dfemmprob creates a geometry 
+% with spaces in between, with a base position shown in the figure below.
+% In addition, any number of annular sectors can be added either to inside
+% or outside of the main region (like wrappers for the main region).
+%                       
+%             ********
+%      *******        *                                    
+%    **   *             *                                              
+%     *     *        ****** 
+%       *    *********     *                                            
+%        *    *             *                                              
+%          *    *             *                                                                                          
+%           *    *             *                                              
+%             *    *    Mag 2    *                                                                                     
+%              *    *             *                                              
+%               *    *             *                                              
+%                *    *             *            
+%                 *    ***************                                                                                          
+%                  *    *             *                                              
+%                   *    *             *  .........................
+%                    *    *             *                ^
+%                    *    *             *                 :
+%                     *    *************** ..^.......      :                            
+%                     *    *             *   :             :
+%                      *    *             *   :             :                                                                          
+%                      *    *             *   : thetamag    :                                    
+%                       *   *    Mag 1    *    :             : thetapole             
+%                       *    *             *   :             :                                      
+%                       *    *             *   :             :            
+%                       *    *             * . v.........     :                                       
+%                        *    ***************                 :                                       
+%                        *    *             *                 :               
+%                        *    *             *                 v                
+%  x                     ******************** ..............................                                       
+% r=0                    <---><------------->
+%  :                 rbackiron     rmag
+%  :                                :
+%  :                                :
+%  :            rrotor              :
+%  :------------------------------->:
+%  :           
+%
+%
+% This geometry is drawn in a periodic way in the tangential direction,
+% 'wrapping' around at the top and bottom. 
+%
+% Inputs
+%
+%  FemmProblem - FemmProblem structure to which the geometry will be added
+%
+%  thetapole - pole width in radians
+%
+%  thetamag - magnet width in radians
+%
+%  rmag - radial thickness of the magnets
+%
+%  rrotor - radial displacement of the magnet centers from the center
+%
+%  pos - the angular position of the magnets
+%
 
     Inputs.DrawingType = 'MagnetRotation';
     Inputs.NPolePairs = 1;
