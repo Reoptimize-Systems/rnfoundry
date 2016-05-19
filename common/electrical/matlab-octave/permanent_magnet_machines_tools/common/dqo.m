@@ -8,8 +8,8 @@ function idqo = dqo(iabc, theta)
 %
 % Description
 %
-% The direct quadrature zero (or dq0 or dqo) transformation or
-% zero direct quadrature (or 0dq or odq) transformation is a mathematical
+% The direct quadrature zero (or dq0 or dqo) transformation or zero direct
+% quadrature (or 0dq or odq) transformation is a mathematical
 % transformation used to simplify the analysis of three-phase circuits. In
 % the case of balanced three-phase circuits, application of the dqo
 % transform reduces the three AC quantities to two DC quantities.
@@ -27,12 +27,14 @@ function idqo = dqo(iabc, theta)
 % iabc - vector of three values, the currents in a balanced three phase
 %   system which are to be projected onto the direct quadrature zero axes
 %
-% theta - angle between the d axis and first current in iabc
+% theta - angle between the d axis and first current in iabc, this is given
+%   by omega*t in a time varying system 
 %
 % Output
 %
 % idqo - vector of three values containing the transformed currents on the
-%   direct quadrature zero axes. 
+%   direct quadrature zero axes.
+%
 
     if ~(isvector(iabc) && numel(iabc) == 3 && all(isreal(iabc)))
         error('DQO:badcurrentinput', 'i must be a vector of three real values.')
@@ -42,6 +44,7 @@ function idqo = dqo(iabc, theta)
     
     idqo = sqrt(2/3) * [cos(theta), cos(theta - 2*pi/3), cos(theta + 2*pi/3);
                         sin(theta), sin(theta - 2*pi/3), sin(theta + 2*pi/3);
-                        rt2over2,   rt2over2,            rt2over2] * iabc(:);
+                        rt2over2,   rt2over2,            rt2over2] ...
+                     * iabc(:);
 
 end
