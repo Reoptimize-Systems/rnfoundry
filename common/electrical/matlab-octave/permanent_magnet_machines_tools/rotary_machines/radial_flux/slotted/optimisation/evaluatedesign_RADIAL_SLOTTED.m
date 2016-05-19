@@ -178,14 +178,9 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
                                  sdesign.StatorDrawingInfo.CoilLabelLocations(1,1), ...
                                  sdesign.StatorDrawingInfo.CoilLabelLocations(1,2) );
 
-    % get the internal subfunctions from simfun_RADIAL_SLOTTED which
-    % also include the slot A integral data gathering fucntion which we
-    % will reuse here
-    simfun_interna_fcns = simfun_RADIAL_SLOTTED ();
-
     sdesign.FirstSlotCenter = 0;
     sdesign.MagFEASimPositions = 0;
-    [slotPos, slotIntA] = feval (simfun_interna_fcns{1}, sdesign, 1, solution);
+    [slotPos, slotIntA] = slotintAdata_RADIAL_SLOTTED (sdesign, 1, solution);
 
     for ind = 1:design.CoilLayers
         % use the integral data to produce flux linkage values according to the
@@ -206,13 +201,6 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
                            'NSkewPositions', sdesign.NSkewMagnetsPerPole );
                        
     peakfl = max ( abs (lambda));
-
-    % get the peak flux linkage
-%         temp = solution.getcircuitprops('1');
-%         peakfl = temp(3);
-
-    % estimate the coil resistance
-%         [design.CoilResistance, design.CoilInductance] = solution.circuitRL('1');
 
     % get the peak flux density in the armature back iron along
     % center line of a tooth
@@ -240,7 +228,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     
     % now calculate coil resistance using the same function as would be
     % used in simfun_RADIAL_SLOTTED
-    sdesign = feval (simfun_interna_fcns{3}, sdesign);
+    sdesign = coilresistance_RADIAL_SLOTTED (sdesign);
                            
     omega = rpm2omega(ssimoptions.RPM);
     

@@ -50,5 +50,15 @@ simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED ();
 
 [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions);
 
+%% Test parfor for fea
 
+simoptions = struct();
+simoptions.MagFEASim.UseParFor = true;
+simoptions.GetVariableGapForce = false;
+
+design.RlVRp = 10;
+design = completedesign_RADIAL_SLOTTED (design, simoptions);
+
+[design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions);
+fprintf(1, 'done simfun\n');
 
