@@ -46,7 +46,7 @@ function varargout = prescribedmotodetorquefcn_ROTARY(t, x, design, simoptions)
      
     % call the supplied additional force function
     [TqaddE, TorqueBD] = ...
-        feval(simoptions.torquefcn, design, simoptions, thetaE, omegaE, EMF, Iphases, simoptions.forcefcnargs{:});
+        feval(simoptions.torquefcn, design, simoptions, thetaE, omegaE, EMF, Iphases, simoptions.torquefcnargs{:});
     
     % ************************************************************************
 
