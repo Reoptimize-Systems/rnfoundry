@@ -137,11 +137,11 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
     
     % Change the x members into more useful variables names, MATLAB will
     % optimise away any memory penalty associated with this I think
-    xBh = x(1);
-    vBh = x(2);
-    xBs = x(3);
-    vBs = x(4);
-    Iphases = x(5:4+design.Phases);
+    xBh = x(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices);
+    vBh = x(simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices);
+    xBs = x(simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices);
+    vBs = x(simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices);
+    Iphases = x(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices);
     
     Icoils = Iphases ./ design.Branches;
 
@@ -149,8 +149,8 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
     dx = zeros(size(x));
 
     % The differentials of the positions are the velocities
-    dx(1,1) = vBh;
-    dx(3,1) = vBs;
+    dx(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices,1) = vBh;
+    dx(simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices,1) = vBs;
     
 %     if abs(vBh) >= 1
 %         keyboard;
@@ -162,7 +162,8 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
 
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(5:4+design.Phases,1) = circuitode_linear(Iphases, EMF, design);
+    dx(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices,1) = ...
+        circuitode_linear (Iphases, EMF, design);
     
     % determine the forces due to the magnets and electrical forces at
     % the relative position xR with the current values of J. Forces are
@@ -172,7 +173,9 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
 
     % Calculate the drag forces on the translator
     % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
-    [FaddB, ForceEBD] = feval(simoptions.forcefcn, design, simoptions, xE, vE, EMF, Iphases, xBh, vBh, xBs, vBs, simoptions.forcefcnargs{:});
+    [FaddB, ForceEBD] = feval ( simoptions.forcefcn, design, simoptions, ...
+                                 xE, vE, EMF, Iphases, xBh, vBh, xBs, vBs, ...
+                                 simoptions.ODESim.ForceFcnArgs{:} );
     
     % ********************************************************************
     % Buoy Acceleration, these calcs assume all of the mass is in the buoy,
@@ -182,12 +185,15 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
     Fexternal = FfeaVec + FaddB;
     
     % Determine the buoy/sea interaction forces and derivatives
-    [dx, buoyancy_force, ...
-        excitation_force_heave, ...
-        excitation_force_surge, ...
-        radiation_force_heave, ...
-        radiation_force_surge, ...
-        FBDh, FBDs, wave_height] = buoyodesim(t, x, dx, xBh, vBh, vBs, simoptions, Fexternal);
+    [ dx, ...
+      buoyancy_force, ...
+      excitation_force_heave, ...
+      excitation_force_surge, ...
+      radiation_force_heave, ...
+      radiation_force_surge, ...
+      FBDh, ...
+      FBDs, ...
+      wave_height ] = buoyodesim(t, x, dx, xBh, vBh, vBs, simoptions, Fexternal);
 
     % ************************************************************************
 

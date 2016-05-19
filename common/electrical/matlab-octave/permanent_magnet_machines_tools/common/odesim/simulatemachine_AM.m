@@ -190,12 +190,20 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
         [design, simoptions] = feval(finfun, design, simoptions, Inputs.ExtraFinFunArgs{:});
     end
 
+    % if solution components info is provided construct the initial
+    % conditions and tolerances etc from them
+    if isfield (simoptions.ODESim, 'SolutionComponents')
+        simoptions = assemble_ode_components (simoptions);
+    end
+    
     odeargs = [{design, simoptions}, Inputs.ExtraOdeArgs];
     
+% ---- No modifications to simoptions below this point will be propogated to the ODE function
+
     % construct the various functions for the ode solvers. This involves
     % constructing anonymous functions to pass in the extra ode solver
     % arguments as appropriate
-    [odeevfun, resfun, spfcn, eventfcns] = checkinputs_simulatemachine_AM(simoptions, odeargs);
+    [odeevfun, resfun, spfcn, eventfcns, outputfcn] = checkinputs_simulatemachine_AM(simoptions, odeargs);
     
     % finally simulate the machine using ode solver, first setting some
     % options
@@ -208,16 +216,24 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     % choose initial step size, this is done 
     odeoptions = odeset(odeoptions, 'InitialStep', simoptions.tspan(end) / 1000);
     
-    if isfield(simoptions, 'abstol')
-        odeoptions = odeset(odeoptions, 'AbsTol', simoptions.abstol);
+    if isfield (simoptions.ODESim, 'AbsTol')
+        odeoptions = odeset(odeoptions, 'AbsTol', simoptions.ODESim.AbsTol);
     end
 
     if isfield(simoptions, 'maxstep')
         odeoptions = odeset(odeoptions, 'MaxStep', simoptions.maxstep);
+    elseif isfield (simoptions.ODESim, 'MaxStep')
+        odeoptions = odeset(odeoptions, 'MaxStep', simoptions.ODESim.MaxStep);
     end
 
     if isfield(simoptions, 'events')
         odeoptions = odeset(odeoptions, 'Events', eventfcns);
+    elseif isfield (simoptions.ODESim, 'Events')
+        odeoptions = odeset(odeoptions, 'Events', eventfcns);
+    end
+    
+    if isfield(simoptions.ODESim, 'OutputFcn')
+        odeoptions = odeset(odeoptions, 'OutputFcn', outputfcn);
     end
 
     % select the solver to use, by default we choose stiff solvers a
@@ -288,7 +304,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 end
 
 
-function [odeevfun, resfun, spfcn, eventfcns] = checkinputs_simulatemachine_AM(simoptions, odeargs)
+function [odeevfun, resfun, spfcn, eventfcns, outputfcn] = checkinputs_simulatemachine_AM(simoptions, odeargs)
 
     odeevfun = [];
     if isfield(simoptions, 'odeevfun') 
@@ -305,6 +321,14 @@ function [odeevfun, resfun, spfcn, eventfcns] = checkinputs_simulatemachine_AM(s
             resfun = str2func (simoptions.resfun);
         else
             resfun = simoptions.resfun;
+        end
+    end
+    
+    outputfcn = [];
+    if isfield(simoptions.ODESim, 'OutputFcn') 
+        if ischar(simoptions.ODESim.OutputFcn)
+            outputfcn = str2func(simoptions.ODESim.OutputFcn);
+            outputfcn = @(t,y,flag) outputfcn (t,y,flag, odeargs{:});
         end
     end
     
@@ -375,5 +399,37 @@ function simoptions = func2str_simulatemachine_linear(simoptions)
         end
     end
     
+end
+
+function simoptions = assemble_ode_components (simoptions)
+
+    compnames = fieldnames (simoptions.ODESim.SolutionComponents);
+
+    simoptions.ODESim.InitialConditions = [];
+    
+    simoptions.ODESim.AbsTol = [];
+
+    for ind = 1:numel (compnames)
+
+        simoptions.ODESim.SolutionComponents.(compnames{ind}).SolutionIndices = ...
+            (numel(simoptions.ODESim.InitialConditions) + 1) : ...
+                numel(simoptions.ODESim.InitialConditions)+numel(simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions);
+
+        simoptions.ODESim.InitialConditions = [ simoptions.ODESim.InitialConditions, ...
+                simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions(:)' ];
+            
+        if isfield (simoptions.ODESim.SolutionComponents.(compnames{ind}), 'AbsTol')
+            abstol = simoptions.ODESim.SolutionComponents.(compnames{ind}).AbsTol;
+        else
+            abstol = inf * ones (size(simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions));
+        end
+        
+        simoptions.ODESim.AbsTol = [ simoptions.ODESim.AbsTol, ...
+                                     abstol(:)' ];
+
+    end
+    
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'OutputFcn', 'odesimoutputfcns_AM');
+
 end
 

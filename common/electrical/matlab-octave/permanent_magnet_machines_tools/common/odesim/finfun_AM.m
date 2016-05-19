@@ -6,11 +6,14 @@ function [design, simoptions] = finfun_AM(design, simoptions)
 
     % set any missing design properties
     
+    % check the wire and coil properties are all present
+    design = checkcoilprops_AM (design);
+    
     % calculate the circuit properties
     [design, simoptions] = circuitprops_AM(design, simoptions);
     
     % calculate the coil wire conductor area
-    design.ConductorArea = pi * (design.Dc/2)^2;
+    design = setfieldifabsent(design, 'ConductorArea', circlearea (design.Dc/2));
 
     % coefficient of friction for translator (for legacy code)
     design = setfieldifabsent(design, 'mu_fT', 0);
@@ -45,16 +48,18 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     % Set the number of machines connected mechanically, 1 by default
     simoptions = setfieldifabsent(simoptions, 'NoOfMachines', 1);
     
-    % set the number of outputs to use in the 
-    simoptions = setfieldifabsent(simoptions, 'skip', 1);
-    
     % set a flag which determines whether the results are saved to disk in
     % a split ode simulation
-    simoptions = setfieldifabsent(simoptions, 'SaveSplitResults', false);
+    simoptions = setfieldifabsent(simoptions, 'ODESim', struct());
+    
+    simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SolutionComponents', struct());
+    
+    % set the number of outputs to use in the calcualtion of ode results
+    simoptions = setfieldifabsent(simoptions, 'skip', 1);
+    
+    simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SaveSplitResults', false);
     
     simoptions = setfieldifabsent(simoptions, 'GetVariableGapForce', true);
-    
-    simoptions = setfieldifabsent(simoptions, 'forcefcnargs', {});
     
     simoptions = setfieldifabsent(simoptions, 'basescorefcn', 'costscore_AM');
 
@@ -108,22 +113,15 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     minIofinterest = min(design.ConductorArea * 0.1e6, ...
                          (10 / (design.Maxdlambdadx)) ) * design.Branches;
 
-    simoptions = setfieldifabsent(simoptions, 'PhaseCurrentTols', repmat(minIofinterest, 1, design.Phases));
-    
-    % we will create the absolute tolerances field if it is not present
-    if ~isfield(simoptions, 'abstol') 
-        simoptions.abstol = [];
-    end
+    % create the phase current solution component specification
+    simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
+                                          'PhaseCurrents', ...
+                                          struct ('InitialConditions', zeros (1, design.Phases), ...
+                                                  'AbsTol', repmat (minIofinterest, 1, design.Phases) ) ...
+                                                            );
 
     % set infinite allowed deflection factor if none is supplied
     simoptions = setfieldifabsent(simoptions, 'maxAllowedDeflectionFactor', inf);
-
-    % append the phase current tolerances to the absolute tolerances
-    % vector, these are not simply replaced to allow for the possibility
-    % that a larger sim already has some tolerances specified in this field
-    % which is used in simulatemachine_AM to set the absolute tolerances of
-    % the ODE solver
-    simoptions.abstol = [simoptions.abstol(:).', repmat(minIofinterest, 1, design.Phases)];
     
     % run a function to display the machine design if it is supplied
     if isfield(simoptions, 'DisplayDesignFcn')

@@ -205,7 +205,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     
     if nargin == 0
         % return the internal subfunctions
-        design = {@slotintAdata, @slotintBdata, @coilresistance};
+        design = [feasim_RADIAL_SLOTTED(), {@coilresistance}];
         return;
     end
     
@@ -265,6 +265,10 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     % integral of the vector potential in a slot at a range of rotor
     % positions
     
+    % choose an appropriate number of pole pairs for the simulation based
+    % on the basic winding
+    NPolePairs = max(1, ceil (design.pb/2));
+    
     if ~simoptions.SkipMainFEA
     
         simoptions = setfieldifabsent (simoptions, 'NMagFEAPositions', 10);
@@ -294,7 +298,9 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
           slotIntA, ...
           BslotPos, ...
           slotIntB, ...
-          design ] = feasim_RADIAL_SLOTTED (design, simoptions, design.thetap * feapos(1), 'IsInitialisation', true);
+          design ] = feasim_RADIAL_SLOTTED (design, simoptions, design.thetap * feapos(1), ...
+                                            'IsInitialisation', true, ...
+                                            'NPolePairs', NPolePairs);
         
         parameterCell{1} = { RawCoggingTorque, ...
                              BxCoreLossData, ...
@@ -319,7 +325,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                   slotIntA, ...
                   BslotPos, ...
                   slotIntB ] = feasim_RADIAL_SLOTTED (design, simoptions, design.thetap * feapos(posind), ...
-                                                        'IsInitialisation', false);
+                                                        'IsInitialisation', false, ...
+                                                        'NPolePairs', NPolePairs);
 
                 parameterCell{posind} = { RawCoggingTorque, ...
                                           BxCoreLossData, ...
@@ -344,7 +351,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                   slotIntA, ...
                   BslotPos, ...
                   slotIntB ] = feasim_RADIAL_SLOTTED (design, simoptions, design.thetap * feapos(posind), ...
-                                                        'IsInitialisation', false);
+                                                        'IsInitialisation', false, ...
+                                                        'NPolePairs', NPolePairs);
 
                 parameterCell{posind} = { RawCoggingTorque, ...
                                           BxCoreLossData, ...
@@ -361,6 +369,13 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         % consolidate the gathered data in the design structure
         design = assimilate_fea_data (design, simoptions, parameterCell);
 
+        % we divide the flux linkage extracted from femm by the number of
+        % turns in the simulation, to get the per-turn flux linkage, as
+        % later we update the coil properties which could result in a
+        % different number of turns, and then multiply by the updated
+        % number number of turns
+        design.FemmDirectFluxLinkage = design.FemmDirectFluxLinkage / design.CoilTurns;
+        
     end % ~SkipMainFEA
     
 
@@ -431,210 +446,10 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     if isfield (simoptions, 'set_CoilResistance')
         design.CoilResistance = simoptions.set_CoilResistance;
     else
-        design = coilresistance (design);
+        design = coilresistance_RADIAL_SLOTTED (design);
     end
     
 end
-
-function design = coilresistance (design)
-
-    if  ~isfield (design, 'MTL')
-        extralen = design.thetas * design.Rcm / 2;
-
-        design.MTL = rectcoilmtl ( design.ls, ...
-                                   design.yd * design.thetas * design.Rcm + extralen, ...
-                                   mean (design.thetac) * design.Rcm );
-    end
-    
-    
-    design.CoilResistance = wireresistancedc ('round', design.Dc, design.MTL*design.CoilTurns);
-    
-end
-
-
-% function [ RawTorque, ...
-%            BxCoreLossData, ...
-%            ByCoreLossData, ...
-%            ArmatureToothFluxDensity, ...
-%            FemmDirectFluxLinkage, ...
-%            AslotPos, ...
-%            slotIntA, ...
-%            BslotPos, ...
-%            slotIntB, ...
-%            design ] = feasim_RADIAL_SLOTTED (design, simoptions, theta, varargin)
-% % performs a single finite element simulation of a slotted radial flux
-% % machine and returns raw data
-% %
-% % Syntax
-% %
-% % [ RawTorque, ...
-% %   BxCoreLossData, ...
-% %   ByCoreLossData, ...
-% %   ArmatureToothFluxDensity, ...
-% %   FemmDirectFluxLinkage, ...
-% %   AslotPos, ...
-% %   slotIntA, ...
-% %   BslotPos, ...
-% %   slotIntB, ...
-% %   design ] = feasim_RADIAL_SLOTTED (design, simoptions, theta, 'Parameter', value)
-% %
-% % Inputs 
-% %
-% %  design - slotted radial flux design matrix
-% %
-% %  simoptions - simulation parameters structure
-% %
-% %  theta - 
-% 
-% 
-%     Inputs.IsInitialisation = false;
-%     Inputs.GatherIronLossData = true;
-%     Inputs.GatherVectorPotentialData = true;
-%     
-%     Inputs = parse_pv_pairs (Inputs, varargin);
-%     
-%     % initialise all outputs to empty matrices as we don't fill some
-%     % depending on input options
-%     BxCoreLossData = [];
-%     ByCoreLossData = [];
-%     ArmatureToothFluxDensity = [];
-%     FemmDirectFluxLinkage = [];
-%     AslotPos = [];
-%     slotIntA = [];
-%     BslotPos = [];
-%     slotIntB = [];
-%     
-%     femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
-% 
-%     % choose an appropriate number of pole pairs for the drawing based on
-%     % the basic winding
-%     Npolepairs = 1;
-%     if design.pb > 2
-%        Npolepairs = ceil (design.pb/2) ;
-%     end
-%     
-%     % Draw the sim, i.e by creating the FemmProblem structure
-%     [design.FemmProblem, design.RotorDrawingInfo, design.StatorDrawingInfo] = ...
-%                         slottedfemmprob_radial (design, ...
-%                             'NPolePairs', Npolepairs, ...
-%                             'NWindingLayers', design.CoilLayers, ...
-%                             'Position', theta + design.FirstSlotCenter, ...
-%                             'MagnetRegionMeshSize', simoptions.MagFEASim.MagnetRegionMeshSize, ...
-%                             'BackIronRegionMeshSize', simoptions.MagFEASim.BackIronRegionMeshSize, ...
-%                             'StatorOuterRegionsMeshSize', simoptions.MagFEASim.OuterRegionsMeshSize, ...
-%                             'RotorOuterRegionsMeshSize', simoptions.MagFEASim.OuterRegionsMeshSize, ...
-%                             'AirGapMeshSize', simoptions.MagFEASim.AirGapMeshSize, ...
-%                             'ShoeGapRegionMeshSize', simoptions.MagFEASim.ShoeGapRegionMeshSize, ...
-%                             'YokeRegionMeshSize', simoptions.MagFEASim.YokeRegionMeshSize, ...
-%                             'CoilRegionMeshSize', simoptions.MagFEASim.CoilRegionMeshSize);
-% 
-%     % write the fem file to disk
-%     writefemmfile (femfilename, design.FemmProblem);
-%     % analyse the problem
-%     ansfilename = analyse_mfemm (femfilename, ...
-%                                  simoptions.usefemm, ...
-%                                  simoptions.quietfemm);
-% 
-%     solution = fpproc (ansfilename);
-%     % activate field smoothing so values are interpolated across
-%     % mesh elements
-%     solution.smoothon ();
-% 
-%     if Inputs.IsInitialisation
-%         % is an initialisation run, do things we only need to do once
-%         
-%         design = corelosssetup (design, design.MagFEASimPositions, solution);
-%         
-%         % get the forces
-%         solution.clearblock();
-%         solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
-%                                      design.FemmProblem.Groups.BackIron ]);
-% 
-%         % determine a unit vector pointing in the direction normal to the air
-%         % gap half way between the Poles for the purpose of extracting the
-%         % air-gap closing forces
-%         [gvector(1), gvector(2)] = pol2cart (design.thetap,1);
-%         gvector = unit (gvector);
-% 
-%         design.PerPoleAirGapClosingForce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-%                                                 gvector);
-% 
-%         % get the cross-sectional area of the armature iron for
-%         % calcuation of material masses later
-%         solution.clearblock();
-%         solution.groupselectblock (design.FemmProblem.Groups.ArmatureBackIron);
-%         design.ArmatureIronArea = (solution.blockintegral(5) / design.StatorDrawingInfo.NDrawnSlots) * design.Qs;
-% 
-%         % get the cross-sectional area of the coil winding bundle
-%         design.CoilArea = solution.blockintegral ( 5, design.StatorDrawingInfo.CoilLabelLocations(1,1), design.StatorDrawingInfo.CoilLabelLocations(1,2) );
-%         
-%         
-%     end
-% 
-%     % get the peak flux density in the armature back iron along
-%     % center line of a tooth
-%     NBpnts = 100;
-%     if strcmpi (design.ArmatureType, 'external')
-%         [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Rai, design.Ryo, NBpnts));
-%     elseif strcmpi (design.ArmatureType, 'internal')
-%         [x, y] = pol2cart (repmat (design.thetas, 1, NBpnts), linspace (design.Ryi, design.Rao, NBpnts));
-%     end
-%     Bmag = magn (solution.getb (x, y));
-% 
-%     ArmatureToothFluxDensity = max (Bmag);
-% 
-%     FemmDirectFluxLinkage = nan;
-%     if numel (design.FemmProblem.Circuits) > 0
-%         temp = solution.getcircuitprops ( design.FemmProblem.Circuits(1).Name );
-%         FemmDirectFluxLinkage = temp(3);
-%     end
-% 
-%     if Inputs.GatherIronLossData
-%         
-%         for ii = 1:numel(design.CoreLoss)
-% 
-%             p = solution.getpointvalues ( design.CoreLoss(ii).meshx(:), ...
-%                                           design.CoreLoss(ii).meshy(:) );
-% 
-%             ByCoreLossData{ii} = reshape (p(2,:)', size (design.CoreLoss(ii).meshx));
-%             BxCoreLossData{ii} = reshape (p(3,:)', size (design.CoreLoss(ii).meshx));
-% 
-%         end
-%     
-%     end
-% 
-%     % get the cogging forces
-%     solution.clearblock ();
-%     solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
-%                                  design.FemmProblem.Groups.BackIron ]);
-% 
-% %                 design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-% %                                              coggingvector);
-% % 
-% %                 design.coggingforce(i) = design.coggingforce(i) * design.Poles(1);
-% 
-% %                if simoptions.getintermagflux
-% %                    design.InterMagFlux = getintermagflux (design, solution);
-% %                end
-% 
-%     % get the torque, this will include the cogging torque, and will in fact
-%     % be only the cogging torque if the coils currents are zero
-%     RawTorque = design.Poles(1) * (solution.blockintegral (22) / 2);
-%     
-%     if Inputs.GatherVectorPotentialData
-%         
-%         % get the integral of the vector potential in a slot, if two
-%         % layers get both layers
-%         [AslotPos, slotIntA] = slotintAdata(design, theta, solution);
-% 
-%         [BslotPos, slotIntB] = slotintBdata(design, theta, solution);
-% 
-%     end
-%    
-%     delete (femfilename);
-%     delete (ansfilename);
-%             
-% end
 
 function design = assimilate_fea_data (design, simoptions, parameterCell)
     
@@ -662,7 +477,7 @@ function design = assimilate_fea_data (design, simoptions, parameterCell)
         design.intBdata.slotIntB = [design.intBdata.slotIntB; parameterCell{ind}{ind_intB_IntBData}];
         design.RawCoggingTorque(ind) = parameterCell{ind}{ind_RawCoggingTorque};
         design.ArmatureToothFluxDensity(ind) = parameterCell{ind}{ind_ArmatureToothFluxDensity};
-        design.FemmDirectFluxLinkage(ind) = parameterCell{ind}{ind_FemmDirectFluxLinkage};
+        design.FemmDirectFluxLinkage(ind,:) = parameterCell{ind}{ind_FemmDirectFluxLinkage};
         
         for ii = 1:numel(design.CoreLoss)
         

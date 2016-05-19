@@ -25,7 +25,7 @@ function varargout = feaprescribedmotodetorquefcn_ROTARY(t, x, design, simoption
 
     % Change the x members into more useful variables names, MATLAB will
     % optimise away any memory penalty associated with this I think    
-    Iphases = x(simparams.ODESim.CurrentInds);
+    Iphases = x(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices);
     
     Icoils = Iphases ./ design.Branches;
 
@@ -37,24 +37,28 @@ function varargout = feaprescribedmotodetorquefcn_ROTARY(t, x, design, simoption
 
     % determine the machine outputs Get the flux linkage and forces using
     % the core machine simulation function
-    [flux_linkage, Tqeff, Tqreac, lossinfo, design] = machinefeaodesim_AM(design, simoptions, thetaE, 0, Icoils);
+    [flux_linkage, Tqeff, Tqreac, lossinfo, design] = ...
+        machinefeaodesim_AM(design, simoptions, thetaE, 0, omegaE, 0, Icoils);
     
     % clculate the numerical derivative of the flux linkage
-    dlambdaVdt = simparams.ODESim.NumericalDerivatives (t, flux_linkage);
+    flodederiv = simoptions.ODESim.SolutionComponents.PhaseFluxLinkages.NumericalDerivatives;
+    dlambdaVdt = flodederiv.derivative (t, flux_linkage(:));
     
     % the emf is the negative of the flux linkage derivative
-    EMF = -dlambdaVdt;
+    EMF = -dlambdaVdt .* design.CoilsPerBranch;
     
     % do the integration
-    dx(simparams.ODESim.FluxLinkageInds,1) = dlambdaVdt;
+    dx(simoptions.ODESim.SolutionComponents.PhaseFluxLinkages.SolutionIndices,1) = ...
+        dlambdaVdt;
     
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(simparams.ODESim.CurrentInds,1) = circuitode_linear(Iphases, EMF, design);
+    dx(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices,1) = ...
+        circuitode_linear(Iphases, EMF, design);
      
     % call the supplied additional force function
     [TqaddE, TorqueBD] = ...
-        feval(simoptions.torquefcn, design, simoptions, thetaE, omegaE, EMF, Iphases, simoptions.forcefcnargs{:});
+        feval(simoptions.torquefcn, design, simoptions, thetaE, omegaE, EMF, Iphases, simoptions.torquefcnargs{:});
     
     % ************************************************************************
 
