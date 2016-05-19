@@ -62,7 +62,7 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         presimoptions.odeevfun = simoptions.evaloptions.presimodeevfun;
         presimoptions.resfun = simoptions.evaloptions.presimresfun;
         presimoptions.forcefcn = simoptions.evaloptions.presimforcefun; 
-        presimoptions.forcefcnargs = {};
+        presimoptions.ODESim.ForceFcnArgs = {};
         presimoptions.finfun = simoptions.evaloptions.presimfinfun;
         
         simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'presimIC', zeros(1, design.Phases));
