@@ -50,7 +50,7 @@ function varargout = prescribedmotodeforcefcn_linear(t, x, design, simoptions)
      
     % call the supplied additional force function
     [FaddE, ForceBD] = ...
-        feval(simoptions.forcefcn, design, simoptions, xT, vT, EMF, Iphases, simoptions.forcefcnargs{:});
+        feval(simoptions.forcefcn, design, simoptions, xT, vT, EMF, Iphases, simoptions.ODESim.ForceFcnArgs{:});
     
     % ************************************************************************
 
