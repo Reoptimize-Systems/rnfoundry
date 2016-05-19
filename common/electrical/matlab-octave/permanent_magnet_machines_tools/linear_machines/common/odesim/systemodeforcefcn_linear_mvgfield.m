@@ -166,7 +166,7 @@ function varargout = systemodeforcefcn_linear_mvgfield(t, x, design, simoptions)
     % Calculate the drag forces on the translator
     % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
     
-    [FaddT, FaddF] = feval(simoptions.forcefcn, design, simoptions, xT, vT, xF, vF, xBh, xBs, vBh, vBs, simoptions.forcefcnargs{:});
+    [FaddT, FaddF] = feval(simoptions.forcefcn, design, simoptions, xT, vT, xF, vF, xBh, xBs, vBh, vBs, simoptions.ODESim.ForceFcnArgs{:});
     
     % Find the frictional force that would cause the armature to move at  
     % the same speed as the translator 
