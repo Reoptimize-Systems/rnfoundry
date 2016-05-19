@@ -16,7 +16,7 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
     design.JCoilRms = design.ICoilRms  / design.ConductorArea;
     
     % rms phase EMF (coil EMF times the number of coils per branch)
-    design.EMFPhaseRms = contrms(T, EMF(:,maxIind) .* design.CoilsPerBranch);
+    design.EMFPhaseRms = contrms(T, EMF(:,maxIind));
     
     % peak branch (coil current) (phase current divided by number of
     % parallel branches))
