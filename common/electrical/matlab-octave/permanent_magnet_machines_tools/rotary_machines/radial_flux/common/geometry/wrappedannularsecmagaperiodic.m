@@ -1,7 +1,7 @@
 function [FemmProblem, wrapperthickness, info] = ...
     wrappedannularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, roffset, pos, wrapperthickness, varargin)
-% creates a FemmProblem geometry of a radial section containing two magnets
-% optionally wrapped with additional layers and with periodic edges
+% creates a FemmProblem geometry of a radial section containing one or more
+% pairs of magnets optionally wrapped with additional layers
 %
 %
 % Syntax
@@ -14,10 +14,14 @@ function [FemmProblem, wrapperthickness, info] = ...
 %
 % Description
 %
-% wrappedannularsecmagaperiodic creates a periodic geometry of two magnets
-% with spaces in between, with a base position shown in the figure below.
-% In addition, any number of annular sectors can be added either to inside
-% or outside of the main region (like wrappers for the main region).
+% wrappedannularsecmagaperiodic creates a geometry of two magnets with
+% spaces in between, with a base position shown in the figure below. In
+% addition, any number of annular sectors can be added either to inside or
+% outside of the main region (like wrappers for the main region). If the
+% angle swept out by the section is less than a full circle periodic
+% boundary will be added to the segments at either end of the geometry. If
+% it is a full circle, the geometry will be linked at the start and end to
+% complete this circular region.
 %                       
 %             ********
 %      *******        *                                    
@@ -70,7 +74,7 @@ function [FemmProblem, wrapperthickness, info] = ...
 %
 %  rmag - radial thickness of the magnets
 %
-%  roffset - radial displacement of the magnet centers from the center
+%  roffset - radial displacement of the magnet centers from the origin
 %
 %  pos - the angular position of the magnets
 %
@@ -125,13 +129,9 @@ function [FemmProblem, wrapperthickness, info] = ...
 %
 %  FemmProblem - 
 %
-%  nodes - 
+%  wrapperthickness - 
 %
-%  nodeids - 
-%
-%  links - 
-%
-%  magblockinds - 
+%  info - information about the geometry packaged into a structure
 %
 %
 
