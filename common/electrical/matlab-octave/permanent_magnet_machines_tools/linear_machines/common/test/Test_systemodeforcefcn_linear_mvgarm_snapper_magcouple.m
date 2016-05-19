@@ -176,7 +176,7 @@ simoptions.odeevfun = 'systemodeforcefcn_linear_mvgarm';
 simoptions.resfun = 'systemresfun_linear_mvgarm';
 simoptions.preallocresfcn = 'prallocresfcn';
 simoptions.forcefcn = 'forcefcn_linear_mvgarm_system';
-simoptions.forcefcnargs = {};
+simoptions.ODESim.ForceFcnArgs = {};
 
 simoptions.rho = 0;
 

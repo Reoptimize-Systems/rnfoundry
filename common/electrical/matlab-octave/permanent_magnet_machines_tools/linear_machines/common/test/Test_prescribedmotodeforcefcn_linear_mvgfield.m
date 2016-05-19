@@ -120,7 +120,7 @@ simoptions.odeevfun = 'prescribedmotodeforcefcn_linear_mvgfield';
 simoptions.resfun = 'prescribedmotresfun_linear_mvgfield';
 % simoptions.dpsidxfun = @polydpsidx_ACPMSM
 simoptions.forcefcn = 'forcefcn_linear_mvgfield_pscbmot';
-simoptions.forcefcnargs = {};
+simoptions.ODESim.ForceFcnArgs = {};
 
 simfunargs = {@simfun_ACPMSM};
 

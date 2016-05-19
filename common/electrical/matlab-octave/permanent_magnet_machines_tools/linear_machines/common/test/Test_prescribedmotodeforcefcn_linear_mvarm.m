@@ -97,7 +97,7 @@ simoptions.odeevfun = 'prescribedmotodeforcefcn_linear_mvgarm';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
 simoptions.resfun = 'prescribedmotresfun_linear_mvgarm';
 simoptions.forcefcn = 'forcefcn_linear_mvgarm_pscbmot';
-simoptions.forcefcnargs = {};
+simoptions.ODESim.ForceFcnArgs = {};
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
                                                  simoptions.simfun, ...
@@ -169,7 +169,7 @@ simoptions2.odeevfun = 'systemodeforcefcn_linear_mvgarm';
 simoptions2.resfun = 'systemresfun_SNAPPER';
 simoptions2.preallocresfcn = 'prallocresfcn_SNAPPER';
 simoptions2.forcefcn = 'forcefcn_snapper';
-simoptions2.forcefcnargs = {};
+simoptions2.ODESim.ForceFcnArgs = {};
 
 if isfield(design2, 'Ntot')
     design2 = rmfield(design2, 'Ntot');
