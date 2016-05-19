@@ -94,6 +94,12 @@ function design = checkcoilprops_AM (design)
             warning ('RENEWNET:checkcoilprops_AM:bigfillfac', 'Coil fill factor is greater than 1.0');
         end
         
+    elseif all (isfield (design, {'Dc', 'CoilTurns', 'CoilFillFactor'})) ...
+            && ~isfield (design, 'WireStrandDiameter')
+        
+        % everything except wire strand diameter
+        design.WireStrandDiameter = stranddiameter (design.Dc, design.NStrands);
+        
     elseif ~all (isfield (design, {'Dc', 'CoilTurns', 'CoilFillFactor'}))
         
         error ('RENEWNET:checkcoilprops_AM:insufficientinfo', ...
