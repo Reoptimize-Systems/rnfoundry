@@ -1,10 +1,6 @@
 function [design, simoptions] = prescribedmotfinfun_linear(design, simoptions, finfun)
 
-    if ~all(isfield(design, {'slm_fluxlinkage'}))
-        % In this case we assume we have not already run the finalisation
-        % code on this design and must do so
-        [design, simoptions] = feval(finfun, design, simoptions);
-    end
+    [design, simoptions] = prescribedmotfinfun_AM (design, simoptions, finfun);
     
     simoptions.ODEPhaseCurrentCol = 1;
     
