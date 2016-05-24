@@ -1,4 +1,4 @@
-function design = machineodesim_common_AM (design, simparams)
+function design = machineodesim_common_AM (design, simoptions, vCoilRelToField)
 
     % Now modify the resistance matrix to account for temperature
     
