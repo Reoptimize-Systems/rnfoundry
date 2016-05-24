@@ -148,9 +148,9 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %   supplied functions
 %
 
-% Copyright Richard Crozer 2012
+% Copyright Richard Crozer 2012-2016
 
-    % Do some parsing of opional input arguments
+    % Do some parsing of optional input arguments
     Inputs.ExtraSimFunArgs = {};
     Inputs.ExtraFinFunArgs = {};
     Inputs.ExtraResFunArgs = {};
