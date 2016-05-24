@@ -81,8 +81,7 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
 
     if all (isfield (design, {'CoilsPerBranch', 'Branches'}))
         
-        % all info required to calculate phase resistance and inductance is
-        % present, so do nothing
+        design.NCoilsPerPhase = design.CoilsPerBranch .* design.Branches;
         
     elseif isfield (design, 'CoilsPerBranch')
         
