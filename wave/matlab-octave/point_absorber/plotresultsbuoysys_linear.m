@@ -1,4 +1,4 @@
-function hfigs = plotresultsbuoysys_linear(T, Y, results, design, skip)
+function hfigs = plotresultsbuoysys_linear(T, Y, results, design, simoptions, skip)
 % Syntax:
 %
 %   plotresultsbuoysys_linear(T, Y, results, design, skip)
@@ -51,15 +51,15 @@ function hfigs = plotresultsbuoysys_linear(T, Y, results, design, skip)
     % Y(:,5) is the armature displacement
     % Y(:,6) is the armature velocity
     % Y(:,7) is the coil current
-    xBh = Y(:,1);
-    vBh = Y(:,2);
-    xBs = Y(:,3);
-    vBs = Y(:,4);
-    Icoils = Y(:,5:4+design.phases);
+    xBh = Y(:,simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices);
+    vBh = Y(:,simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices);
+    xBs = Y(:,simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices);
+    vBs = Y(:,simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices);
+    IPhase = Y(:,simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices);
 
     % Get the Y-axis limits for the various plots
-    maxY = [1.05 * max([abs([Icoils, results.xE, results.vE]); ...
-            repmat(1e-10,1,size(Icoils,2)+2)], [], 1)];
+    maxY = [1.05 * max([abs([IPhase, results.xE, results.vE]); ...
+            repmat(1e-10,1,size(IPhase,2)+2)], [], 1)];
 
     % create the figure, ensuring it is visible
 %     h = figure('visible','on', 'Units','normalized','outerposition',[0 0.02 1 0.98]);
@@ -75,7 +75,7 @@ function hfigs = plotresultsbuoysys_linear(T, Y, results, design, skip)
     % we will create a 2 x 1 subplot
     hax = subplot(2,1,1);
 
-    [hax, legendstrings] = plotmachineresults_linear(T, 'Icoils', Icoils, ...
+    [hax, legendstrings] = plotmachineresults_linear(T, 'Icoils', IPhase, ...
                                                         'EMF', results.EMF, ...
                                                         'vT', results.vE, ...
                                                         'xT', results.xE, ...
