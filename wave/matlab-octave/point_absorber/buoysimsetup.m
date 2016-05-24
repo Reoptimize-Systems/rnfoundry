@@ -75,7 +75,7 @@ function [buoydat, I_H, I_S] = buoysimsetup(buoy, buoydat)
     end
     
     if ~isfield(buoydat, 'buoylibdir')
-        buoydat.buoylibdir = buoylibdir ();
+        buoydat.buoylibdir = getbuoylibdir;
     end
 
     if ~isempty(buoy)
@@ -193,18 +193,6 @@ function [buoydat, I_H, I_S] = buoysimsetup(buoy, buoydat)
     buoydat.BuoyParameters.velocity(:,1) = [initial_vel_ext, 0];
     
     % -----------------------------------------------------
-
-    % Set the initial conditions for the buoy position in heave, buoy
-    % velocity in heave buoy position in surge and buoy velocity in surge
-    buoy_initial_conditions = [0, 0, 0, 0];
-    
-    if ~isfield(buoydat, 'mx_initial_conditions') 
-        if isfield(buoydat, 'abstol')
-            buoydat.mx_initial_conditions = zeros(1, numel(buoydat.abstol));
-        else
-            error('You must supply initial conditions for the non-WEC system components, or a vector of tolerances')
-        end
-    end
     
     % set the number of radiation coefficients to use in the sim if it has
     % not already been specified
@@ -218,47 +206,30 @@ function [buoydat, I_H, I_S] = buoysimsetup(buoy, buoydat)
         end
     end
 
-    % Make the initial conditions of the heave and surge radiation
-    % coefficients
-    I_H = zeros(1, buoydat.NRadiationCoefs);
-    I_S = zeros(1, buoydat.NRadiationCoefs);
-
     % construct the initial conditions of the system
-    buoydat.IC = [buoy_initial_conditions, buoydat.mx_initial_conditions, I_H, I_S];
+    buoydat.ODESim.SolutionComponents.BuoyPositionHeave.InitialConditions = 0;
+    buoydat.ODESim.SolutionComponents.BuoyPositionHeave.AbsTol = buoydat.BuoyParameters.draft / 20;
     
-    if ~isfield(buoydat, 'tspan')
-        buoydat.tspan = [0,1];
-    end
-
-    if isfield(buoydat, 'abstol')
-        
-        % if a vector of absolute tolerances for the non-buoy motion
-        % components of the ODE simulation have been supplied, make sure
-        % there is the same number as there are non-buoy motion initial
-        % conditions
-        if ~samesize(buoydat.abstol, buoydat.mx_initial_conditions)
-            error('BUOYSIM:ictolnummismatch', ...
-                  ['If supplying absolute tolerances for the non-buoy components ', ...
-                   'of the simulation, you must supply the same number of these ', ...
-                   'as non-buoy initial conditions (in the mx_initial_conditions field. '...
-                   'You supplied %d tolerances and %d initial conditions.'], ...
-                   numel(buoydat.abstol), numel(buoydat.mx_initial_conditions))
-        end
-        
-        % Set the absolute tolerances on the hydrodynamic forces as the
-        % force necessary to accelerate the mass of the buoy at a rate of
-        % 0.01 m/s^2
-        hydro_force_tols = repmat(0.01 * buoydat.BuoyParameters.mass_external, 1, 2*buoydat.NRadiationCoefs);
-        
-        % Set tolerancs on the velocities and positions of the buoy, first
-        % four variables will always be xBh, vBh, xBs, vBs
-        buoy_motion_tols = [buoydat.BuoyParameters.draft / 20, 0.05, buoydat.BuoyParameters.a / 20, 0.05];
-
-        % construct the absolute tolerances vector
-        buoydat.abstol = [buoy_motion_tols, buoydat.abstol, hydro_force_tols];
-        
-    end
+    buoydat.ODESim.SolutionComponents.BuoyVelocityHeave.InitialConditions = 0;
+    buoydat.ODESim.SolutionComponents.BuoyVelocityHeave.AbsTol = 0.05;
     
+    buoydat.ODESim.SolutionComponents.BuoyPositionSurge.InitialConditions = 0;
+    buoydat.ODESim.SolutionComponents.BuoyPositionSurge.AbsTol = buoydat.BuoyParameters.a / 20;
+    
+    buoydat.ODESim.SolutionComponents.BuoyVelocitySurge.InitialConditions = 0;
+    buoydat.ODESim.SolutionComponents.BuoyVelocitySurge.AbsTol = 0.05;
+    
+    % Handle the  the heave and surge radiation force component setup
+    buoydat.ODESim.SolutionComponents.BuoyRadiationHeave.InitialConditions = zeros(1, buoydat.NRadiationCoefs);
+    buoydat.ODESim.SolutionComponents.BuoyRadiationSurge.InitialConditions = zeros(1, buoydat.NRadiationCoefs);
+    % Set the absolute tolerances on the hydrodynamic forces as the
+    % force necessary to accelerate the mass of the buoy at a rate of
+    % 0.01 m/s^2
+    buoydat.ODESim.SolutionComponents.BuoyRadiationHeave.AbsTol = ...
+        repmat(0.01 * buoydat.BuoyParameters.mass_external, 1, buoydat.NRadiationCoefs);
+    buoydat.ODESim.SolutionComponents.BuoyRadiationSurge.AbsTol = ...
+        repmat(0.01 * buoydat.BuoyParameters.mass_external, 1, buoydat.NRadiationCoefs);
+        
     % Calculate a suitible end stop spring constant related to the size of
     % the buoy. 
     %
