@@ -75,7 +75,7 @@ function [buoydat, I_H, I_S] = buoysimsetup(buoy, buoydat)
     end
     
     if ~isfield(buoydat, 'buoylibdir')
-        buoydat.buoylibdir = getbuoylibdir;
+        buoydat.buoylibdir = buoylibdir ();
     end
 
     if ~isempty(buoy)
