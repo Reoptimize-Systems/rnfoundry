@@ -1,6 +1,37 @@
-function legendstrings = plotforces_linear(T, results, skip)
-% plotforces_linear: plots the various forces that might arise in a linear
-% machine simulation of various types
+function legendstrings = plotforces_linear (T, results, skip)
+% plots the various forces that might arise in a linear machine ODE
+% simulation of various types
+%
+% Syntax
+%
+% legendstrings = plotforces_linear (T, results, skip)
+%
+% Input
+%
+%  T - time series as output by the ode solver
+%
+%  results - structure containing one or more of the following fields:
+%     
+%    Fpto
+%    Feff
+%    Freac
+%    Ffea
+%    Fs
+%    FfA
+%    FfT
+%    FBuoyFric
+%    FdragF
+%    FdragA
+%    FLinearDrag
+%    FLoss
+%    Fes
+%    Faddtrans
+%    Fsnap
+%
+%  skip - optional scalar determining how much output to produce, indices
+%    1:skip:end of the solution vectors will be plotted
+%
+%
 
     if nargin < 3 
         skip = 1;
@@ -14,8 +45,8 @@ function legendstrings = plotforces_linear(T, results, skip)
     FTtotal = zeros(size(T));
     
     if isfield(results, 'Fpto')
-        plot(T(1:skip:length(T)), results.Fpto, ':b');
-        currentylim = [-1.1*max(abs(results.Fpto)), 1.1*max(abs(results.Fpto))];
+        plot(T(1:skip:length(T)), results.Fpto(1:skip:length(T),:), ':b');
+        currentylim = [-1.1*max(abs(results.Fpto(1:skip:length(T),:))), 1.1*max(abs(results.Fpto(1:skip:length(T),:)))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'PTO Force'}];
         
@@ -23,8 +54,8 @@ function legendstrings = plotforces_linear(T, results, skip)
     end
     
     if isfield(results, 'Feff')
-        plot(T(1:skip:length(T)), results.Feff, '--b');
-        currentylim = [-1.1*max(abs(results.Feff)), 1.1*max(abs(results.Feff))];
+        plot(T(1:skip:length(T)), results.Feff(1:skip:length(T),:), '--b');
+        currentylim = [-1.1*max(abs(results.Feff(1:skip:length(T),:))), 1.1*max(abs(results.Feff(1:skip:length(T),:)))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Effector Forces'}];
         
@@ -32,38 +63,38 @@ function legendstrings = plotforces_linear(T, results, skip)
     end
     
     if isfield(results, 'Freac')
-        plot(T(1:skip:length(T)), results.Fpto, '--b');
-        currentylim = [-1.1*max(abs(results.Fpto)), 1.1*max(abs(results.Fpto))];
+        plot(T(1:skip:length(T)), results.Freac(1:skip:length(T),:), '--b');
+        currentylim = [-1.1*max(abs(results.Freac(1:skip:length(T),:))), 1.1*max(abs(results.Freac(1:skip:length(T),:)))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Reactor Forces'}];
         
-        FTtotal = FTtotal + results.Fpto;
+        FTtotal = FTtotal + results.Freac;
     end
     
     if isfield(results, 'Ffea')
-        plot(T(1:skip:length(T)), results.Ffea, '--b');
-        currentylim = [-1.1*max(abs(results.Ffea)), 1.1*max(abs(results.Ffea))];
+        plot(T(1:skip:length(T)), results.Ffea(1:skip:length(T),:), '--b');
+        currentylim = [-1.1*max(abs(results.Ffea(1:skip:length(T),:))), 1.1*max(abs(results.Ffea(1:skip:length(T),:)))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'EM Forces on Translator'}];
 
-        FTtotal = FTtotal + results.Ffea;
+        FTtotal = FTtotal + results.Ffea(1:skip:length(T),:);
     end
     
     % if present plot the spring forces
     if isfield(results, 'Fs')
         hold on
-        plot(T(1:skip:length(T)), results.Fs, ':g');
+        plot(T(1:skip:length(T)), results.Fs(1:skip:length(T),:), ':g');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.Fs))), max(currentylim(2), 1.1*max(abs(results.Fs)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.Fs(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.Fs(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Spring Force'}];
     end
     
     if isfield(results, 'FfA')
         hold on
-        plot(T(1:skip:length(T)), results.FfA, 'r');
+        plot(T(1:skip:length(T)), results.FfA(1:skip:length(T),:), 'r');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.FfA))), max(currentylim(2), 1.1*max(abs(results.FfA)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.FfA(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.FfA(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Armature Friction'}];
     end
@@ -72,18 +103,18 @@ function legendstrings = plotforces_linear(T, results, skip)
         hold on
         plot(T(1:skip:length(T)), results.FfT, 'r');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.FfT))), max(currentylim(2), 1.1*max(abs(results.FfT)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.FfT(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.FfT(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Field Friction'}];
         
-        FTtotal = FTtotal + results.FfT;
+        FTtotal = FTtotal + results.FfT(1:skip:length(T),:);
     end
     
     if isfield(results, 'FBuoyFric')
         hold on
-        plot(T(1:skip:length(T)), results.FBuoyFric, 'r');
+        plot(T(1:skip:length(T)), results.FBuoyFric(1:skip:length(T),:), 'r');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.FBuoyFric))), max(currentylim(2), 1.1*max(abs(results.FBuoyFric)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.FBuoyFric(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.FBuoyFric(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Buoy System Friction'}];
         
@@ -92,21 +123,21 @@ function legendstrings = plotforces_linear(T, results, skip)
     
     if isfield(results, 'Fsnap')
         hold on
-        plot(T(1:skip:length(T)), results.Fsnap, 'k');
+        plot(T(1:skip:length(T)), results.Fsnap(1:skip:length(T),:), 'k');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.Fsnap))), max(currentylim(2), 1.1*max(abs(results.Fsnap)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.Fsnap(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.Fsnap(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Snapping Force (Reactor)'}];
         
-        FTtotal = FTtotal - results.Fsnap;
+        FTtotal = FTtotal - results.Fsnap(1:skip:length(T),:);
         
     end
     
     if isfield(results, 'FdragF')
         hold on
-        plot(T(1:skip:length(T)), results.FdragF, ':r');
+        plot(T(1:skip:length(T)), results.FdragF(1:skip:length(T),:), ':r');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.FdragF))), max(currentylim(2), 1.1*max(abs(results.FdragF)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.FdragF(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.FdragF(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Fluid Drag (Reactor)'}];
         
@@ -116,9 +147,9 @@ function legendstrings = plotforces_linear(T, results, skip)
     
     if isfield(results, 'FdragA')
         hold on
-        plot(T(1:skip:length(T)), results.FdragA, ':r');
+        plot(T(1:skip:length(T)), results.FdragA(1:skip:length(T),:), ':r');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.FdragA))), max(currentylim(2), 1.1*max(abs(results.FdragA)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.FdragA(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.FdragA(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Fluid Drag (Reactor)'}];
         
@@ -128,35 +159,35 @@ function legendstrings = plotforces_linear(T, results, skip)
     
     if isfield(results, 'FLinearDrag')
         hold on
-        plot(T(1:skip:length(T)), results.FLinearDrag, 'm');
+        plot(T(1:skip:length(T)), results.FLinearDrag(1:skip:length(T),:), 'm');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.FLinearDrag))), max(currentylim(2), 1.1*max(abs(results.FLinearDrag)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.FLinearDrag(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.FLinearDrag(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Linear Drag Force (Reactor)'}];
         
-        FTtotal = FTtotal - results.FLinearDrag;
+        FTtotal = FTtotal - results.FLinearDrag(1:skip:length(T),:);
     end
     
     if isfield(results, 'FLoss')
         hold on
-        plot(T(1:skip:length(T)), results.FLoss, '--m');
+        plot(T(1:skip:length(T)), results.FLoss(1:skip:length(T),:), '--m');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.FLoss))), max(currentylim(2), 1.1*max(abs(results.FLoss)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.FLoss(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.FLoss(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Loss Force (Effector)'}];
         
-        FTtotal = FTtotal - results.FLoss;
+        FTtotal = FTtotal - results.FLoss(1:skip:length(T),:);
     end
     
     if isfield(results, 'Fes')
         hold on
-        plot(T(1:skip:length(T)), results.Fes, 'g');
+        plot(T(1:skip:length(T)), results.Fes(1:skip:length(T),:), 'g');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.Fes))), max(currentylim(2), 1.1*max(abs(results.Fes)))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.Fes(1:skip:length(T),:)))), max(currentylim(2), 1.1*max(abs(results.Fes(1:skip:length(T),:))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'End Stop Force (Effector)'}];
         
-        FTtotal = FTtotal - results.Fes;
+        FTtotal = FTtotal - results.Fes(1:skip:length(T),:);
     end
     
     if isfield(results, 'Faddtrans')
@@ -164,7 +195,7 @@ function legendstrings = plotforces_linear(T, results, skip)
         hold on
         plot(T(1:skip:length(T)), results.Faddtrans(:,1), ':k');
         hold off
-        currentylim = [min(currentylim(1), -1.1*max(abs(results.Faddtrans(:,1)))), max(currentylim(2), 1.1*max(abs(results.Faddtrans(:,1))))];
+        currentylim = [min(currentylim(1), -1.1*max(abs(results.Faddtrans(1:skip:length(T),1)))), max(currentylim(2), 1.1*max(abs(results.Faddtrans(1:skip:length(T),1))))];
         ylim(currentylim);
         legendstrings = [legendstrings; {'Total Translator Force'}];
     end
