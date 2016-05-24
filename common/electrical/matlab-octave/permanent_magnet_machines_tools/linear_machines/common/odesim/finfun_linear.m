@@ -28,6 +28,7 @@ function [design, simoptions] = finfun_linear(design, simoptions)
     
     design = setfieldifabsent(design, 'sides', design.NStages);
     
+    simoptions = setfieldifabsent(simoptions, 'ODESim', struct());
     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'ForceFcnArgs', {});
 
     % allow setting an initial offset in the effector position
