@@ -56,6 +56,8 @@ function [design, simoptions] = simfun_ACTM(design, simoptions)
     
     end
     
+    design = checkcoilprops_AM (design);
+    
     if ~simoptions.SkipInductanceFEA
     
         % Now get the inductances etc.
@@ -81,5 +83,5 @@ function [design, simoptions] = simfun_ACTM(design, simoptions)
         delete(femmfilename);
         
     end
-
+    
 end
