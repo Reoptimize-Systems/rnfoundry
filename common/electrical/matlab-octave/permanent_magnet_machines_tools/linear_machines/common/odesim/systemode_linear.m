@@ -137,12 +137,12 @@ function varargout = systemode_linear(t, x, design, simoptions)
     
     % Change the x members into more useful variables names, MATLAB will
     % optimise away any memory penalty associated with this I think
-    xBh = x(1);
-    vBh = x(2);
-    xBs = x(3);
-    vBs = x(4);
+    xBh = x(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices);
+    vBh = x(simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices);
+    xBs = x(simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices);
+    vBs = x(simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices);
     
-    Iphases = x(5:4+design.Phases);
+    Iphases = x(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices);
     
     Icoils = Iphases ./ design.Branches;
 
@@ -150,8 +150,8 @@ function varargout = systemode_linear(t, x, design, simoptions)
     dx = zeros(size(x));
 
     % The differentials of the positions are the velocities
-    dx(1,1) = vBh;
-    dx(3,1) = vBs;
+    dx(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices,1) = vBh;
+    dx(simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices,1) = vBs;
 
     % determine the machine outputs
     [dpsidxR, EMF, Feff, FfeaVec, xT, vT, unitv, design] = ...
@@ -185,7 +185,8 @@ function varargout = systemode_linear(t, x, design, simoptions)
 
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
-    dx(5:4+design.Phases,1) = circuitode_linear(Iphases, EMF, design);
+    dx(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices,1) ...
+        = circuitode_linear(Iphases, EMF, design);
     
     % Calculate the drag forces on the translator
     % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
