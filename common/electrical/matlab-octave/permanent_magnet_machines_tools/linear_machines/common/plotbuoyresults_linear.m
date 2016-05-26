@@ -78,55 +78,55 @@ function hfigs = plotbuoyresults_linear(T, xBh, vBh, xBs, vBs, results, skip)
 
     legstr = {};
     
-    plot(T(1:skip:length(T)), results.buoyancy_force)
+    plot(T(1:skip:length(T)), results.buoyancy_force(1:skip:length(T)))
     
     legstr = [legstr, {'Buoyancy'}];
     
     hold on
     
-    plot(T(1:skip:length(T)), results.FBDh,'m')
+    plot(T(1:skip:length(T)), results.FBDh(1:skip:length(T)),'m')
     
     legstr = [legstr, {'Buoy drag force -h'}];
     
-    plot(T(1:skip:length(T)), results.FBDs,':m')
+    plot(T(1:skip:length(T)), results.FBDs(1:skip:length(T)),':m')
     
     legstr = [legstr, {'Buoy drag force -s'}];
     
-    plot(T(1:skip:length(T)), results.excitation_force_heave, 'r')
+    plot(T(1:skip:length(T)), results.excitation_force_heave(1:skip:length(T)), 'r')
     
     legstr = [legstr, {'Excitation -h'}];
     
-    plot(T(1:skip:length(T)), results.excitation_force_surge, ':r')
+    plot(T(1:skip:length(T)), results.excitation_force_surge(1:skip:length(T)), ':r')
     
     legstr = [legstr, {'Excitation -s'}];
     
-    plot(T(1:skip:length(T)), results.radiation_force_heave, 'b')
+    plot(T(1:skip:length(T)), results.radiation_force_heave(1:skip:length(T)), 'b')
     
     legstr = [legstr, {'Radiation -h'}];
     
-    plot(T(1:skip:length(T)), results.radiation_force_surge, ':b')
+    plot(T(1:skip:length(T)), results.radiation_force_surge(1:skip:length(T)), ':b')
     
     legstr = [legstr, {'Radiation -s'}];
     
-    netforce_heave = results.excitation_force_heave + results.buoyancy_force ...
-                        + results.radiation_force_heave + results.FBDh;
+    netforce_heave = results.excitation_force_heave(1:skip:length(T)) + results.buoyancy_force(1:skip:length(T)) ...
+                        + results.radiation_force_heave(1:skip:length(T)) + results.FBDh(1:skip:length(T));
                     
-    netforce_surge = results.excitation_force_surge + results.radiation_force_surge + results.FBDs;              
+    netforce_surge = results.excitation_force_surge(1:skip:length(T)) + results.radiation_force_surge(1:skip:length(T)) + results.FBDs(1:skip:length(T));              
     
     if isfield(results, 'Ffea_surge') && isfield(results, 'Ffea_heave')
-        plot(T(1:skip:length(T)), results.Ffea_heave, 'g')
-        plot(T(1:skip:length(T)), results.Ffea_surge, ':g')
+        plot(T(1:skip:length(T)), results.Ffea_heave(1:skip:length(T)), 'g')
+        plot(T(1:skip:length(T)), results.Ffea_surge(1:skip:length(T)), ':g')
         legstr = [legstr, {'Ffea -h', 'Ffea -s'}];
-        netforce_heave = netforce_heave + results.Ffea_heave;
-        netforce_surge = netforce_surge + results.Ffea_surge;
+        netforce_heave = netforce_heave + results.Ffea_heave(1:skip:length(T));
+        netforce_surge = netforce_surge + results.Ffea_surge(1:skip:length(T));
     end
     
     if isfield(results, 'FaddB')
-        plot(T(1:skip:length(T)), results.FaddB(:,1), 'y')
-        plot(T(1:skip:length(T)), results.FaddB(:,2), ':y')
+        plot(T(1:skip:length(T)), results.FaddB(1:skip:length(T),1), 'y')
+        plot(T(1:skip:length(T)), results.FaddB(1:skip:length(T),2), ':y')
         legstr = [legstr, {'FaddB -h', 'FaddB -s'}];
-        netforce_heave = netforce_heave + results.FaddB(:,1);
-        netforce_surge = netforce_surge + results.FaddB(:,2);
+        netforce_heave = netforce_heave + results.FaddB(1:skip:length(T),1);
+        netforce_surge = netforce_surge + results.FaddB(1:skip:length(T),2);
     end
 
     % Net force on buoy in heave
