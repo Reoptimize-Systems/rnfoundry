@@ -42,7 +42,7 @@ function legendstrings = plotforces_linear (T, results, skip)
     legendstrings = {};
     currentylim = [0,0];
     
-    FTtotal = zeros(size(T));
+    FTtotal = zeros( size ( T(1:skip:length(T)) ) );
     
     if isfield(results, 'Fpto')
         plot(T(1:skip:length(T)), results.Fpto(1:skip:length(T),:), ':b');
@@ -59,7 +59,7 @@ function legendstrings = plotforces_linear (T, results, skip)
         ylim(currentylim);
         legendstrings = [legendstrings; {'Effector Forces'}];
         
-        FTtotal = FTtotal + results.Feff;
+        FTtotal = FTtotal + results.Feff(1:skip:length(T),:);
     end
     
     if isfield(results, 'Freac')
@@ -68,7 +68,7 @@ function legendstrings = plotforces_linear (T, results, skip)
         ylim(currentylim);
         legendstrings = [legendstrings; {'Reactor Forces'}];
         
-        FTtotal = FTtotal + results.Freac;
+        FTtotal = FTtotal + results.Freac(1:skip:length(T),:);
     end
     
     if isfield(results, 'Ffea')
@@ -118,7 +118,7 @@ function legendstrings = plotforces_linear (T, results, skip)
         ylim(currentylim);
         legendstrings = [legendstrings; {'Buoy System Friction'}];
         
-        FTtotal = FTtotal + results.FBuoyFric;
+        FTtotal = FTtotal + results.FBuoyFric(1:skip:length(T),:);
     end
     
     if isfield(results, 'Fsnap')
