@@ -1,5 +1,4 @@
-% Test_simulatemachine_TORUS_CORELESS
-
+% Test_feaprescribedmotodetorquefcn_ROTARY.m
 
 clear design simoptions 
 
@@ -98,7 +97,7 @@ design = completedesign_RADIAL_SLOTTED (design, simoptions);
 simoptions = simsetup_ROTARY(design, 'simfun_RADIAL_SLOTTED', 'feaprescribedmotfinfun_RADIAL_SLOTTED', ...
                                 'torquefcn', 'torquefcn_RADIAL_SLOTTED', ...
                                 'odeevfun', 'feaprescribedmotodetorquefcn_ROTARY', ...
-                                'PoleCount', 4, ...
+                                'PoleCount', 30, ...
                                 'RampPoles', 1, ...
                                 'Rpm', 60 );
                             
@@ -106,8 +105,8 @@ simoptions = simsetup_ROTARY(design, 'simfun_RADIAL_SLOTTED', 'feaprescribedmotf
 
 design.FEAFluxLinkageFCN = @feaode_RADIAL_SLOTTED;
 
-% simoptions.reltol = 1e-6;
-% simoptions.PhaseCurrentTols = repmat(0.001, 1, design.Phases);
+simoptions.reltol = 1e-6;
+simoptions.PhaseCurrentTols = repmat(0.001, 1, design.Phases);
 % simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 10000;
 
 simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED ();
