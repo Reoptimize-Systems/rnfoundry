@@ -17,10 +17,6 @@ function [results, design] = systemresfun_linear(T, Y, design, simoptions)
     if ~isfield(simoptions, 'skip')
         simoptions.skip = 1;
     end
-    
-    if ~isfield(simoptions, 'ODEPhaseCurrentCol')
-        simoptions.ODEPhaseCurrentCol = 5;
-    end
 
     [results, design] = resfun_linear(T, Y, design, simoptions);
     
