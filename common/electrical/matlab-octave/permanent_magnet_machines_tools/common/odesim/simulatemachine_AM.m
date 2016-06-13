@@ -213,8 +213,9 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 
     odeoptions = odeset('RelTol', simoptions.reltol);
     
+    % TODO: why? 
     % choose initial step size, this is done 
-    odeoptions = odeset(odeoptions, 'InitialStep', simoptions.tspan(end) / 1000);
+%     odeoptions = odeset(odeoptions, 'InitialStep', simoptions.tspan(end) / 1000);
     
     if isfield (simoptions.ODESim, 'AbsTol')
         odeoptions = odeset(odeoptions, 'AbsTol', simoptions.ODESim.AbsTol);
@@ -421,12 +422,20 @@ function simoptions = assemble_ode_components (simoptions)
         if isfield (simoptions.ODESim.SolutionComponents.(compnames{ind}), 'AbsTol')
             abstol = simoptions.ODESim.SolutionComponents.(compnames{ind}).AbsTol;
         else
-            abstol = inf * ones (size(simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions));
+            abstol = nan (size(simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions));
         end
         
         simoptions.ODESim.AbsTol = [ simoptions.ODESim.AbsTol, ...
                                      abstol(:)' ];
 
+    end
+    
+    if any (isnan(simoptions.ODESim.AbsTol))
+        simoptions.ODESim = rmfield (simoptions.ODESim, 'AbsTol');
+        warning ('RENEWNET:simulatemachine_AM:badabstol', ...
+                 ['AbsTol not supplied for all solution components. ALL AbTol ', ...
+                  'specifications have therefore been removed and will not be applied to ', ...
+                  'the ode solution.'])
     end
     
     simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'OutputFcn', 'odesimoutputfcns_AM');
