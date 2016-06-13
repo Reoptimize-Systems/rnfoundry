@@ -248,42 +248,71 @@ function [slotPos, slotIntB] = slotintBdata (design, theta, solution)
     
 end
 
-
 function design = corelosssetup (design, feapos, solution)
     
+    groups = design.FemmProblem.Groups.ArmatureBackIron;
+
+    if simoptions.DoBackIronCoreLoss
+        groups = [groups, design.FemmProblem.Groups.BackIron];
+    end
+    
+    if numel (design.CoreLoss) ~= numel (groups)
+        error ('RENEWNET:corelosssetup:badgroups', ...
+            'The number of specified groups does not match the number of CoreLoss structures.');
+    end
+
+    design = corelosssetup_SLOTTED (design, feapos, groups, design.ls, solution);
+
+end
+
+function design = corelosssetup_SLOTTED (design, feapos, groups, volscalefac, solution)
+
     % get the number of positions
     npos = numel (feapos);
     
     if isa(solution, 'fpproc')
         % it's an xfemm fpproc object
-
-        % get the volume of each element under consideration
-        design.CoreLoss(1).dV = solution.getgroupareas (design.FemmProblem.Groups.ArmatureBackIron) .* design.ls;
         
-        % get the location we will use to estimate the flux in the element
-        temp = solution.getgroupcentroids (design.FemmProblem.Groups.ArmatureBackIron);
-        design.CoreLoss(1).meshx = temp(:,1);
-        design.CoreLoss(1).meshy = temp(:,2);
-        
-        % The values along the first dimension (down the columns) of the
-        % arrays will contain values sampled in the x-direction in the fea
-        % simulation. In this case values along the dimension hbi, or ht in
-        % the case of the teeth. The values along the second dimension are
-        % the values sampled at each value xRVWp. The values along the
-        % third dimension of the arrays will contain values which are
-        % sampled from the y direction of the fea simulation, in this case
-        % along the dimension taupm, or tsb and tc in the case of the
-        % teeth.
-        design.CoreLoss(1).Bx = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-        design.CoreLoss(1).By = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
-        design.CoreLoss(1).Bz = zeros([size(design.CoreLoss(1).meshx,1), npos, size(design.CoreLoss(1).meshx,2)]);
+        for gpind = 1:numel (groups)
 
-        % add xstep which is the size of the steps in xRVWp denormalised. This
-        % is later used to find the value of dB/dx at each position
-        design.CoreLoss(1).xstep = (feapos(2) - feapos(1)) * design.thetap;
+            % get the volume of each element under consideration
+            design.CoreLoss(gpind).dV = solution.getgroupareas (groups(gpind)) .* volscalefac;
+
+            % get the location we will use to estimate the flux in the element
+            temp = solution.getgroupcentroids (design.FemmProblem.Groups.ArmatureBackIron);
+            design.CoreLoss(gpind).meshx = temp(:,1);
+            design.CoreLoss(gpind).meshy = temp(:,2);
+
+            % The values along the first dimension (down the columns) of the
+            % arrays will contain values sampled in the x-direction in the fea
+            % simulation. In this case values along the dimension hbi, or ht in
+            % the case of the teeth. The values along the second dimension are
+            % the values sampled at each value xRVWp. The values along the
+            % third dimension of the arrays will contain values which are
+            % sampled from the y direction of the fea simulation, in this case
+            % along the dimension taupm, or tsb and tc in the case of the
+            % teeth.
+            design.CoreLoss(gpind).Bx = zeros( [size(design.CoreLoss(gpind).meshx,1), ...
+                                                npos, ...
+                                                size(design.CoreLoss(gpind).meshx,2) ]);
+                                            
+            design.CoreLoss(gpind).By = zeros( [size(design.CoreLoss(gpind).meshx,1), ...
+                                                npos, ...
+                                                size(design.CoreLoss(gpind).meshx,2)]);
+                                            
+            design.CoreLoss(gpind).Bz = zeros( [size(design.CoreLoss(gpind).meshx,1), ...
+                                                npos, ...
+                                                size(design.CoreLoss(gpind).meshx,2)]);
+
+            % add xstep which is the size of the steps in xRVWp
+            % denormalised. This is later used to find the value of dB/dx
+            % (or dB/dtheta) at each position
+            design.CoreLoss(gpind).xstep = (feapos(2) - feapos(1)) * design.PoleWidth;
+        
+        end
         
     else
-        error ('FEMM not currently supported for this, use xfemm.')
+        error ('RENEWNET:corelosssetup_SLOTTED:nousefemm', 'FEMM not currently supported for core loss calculation, use xfemm.')
     end
 
 end
