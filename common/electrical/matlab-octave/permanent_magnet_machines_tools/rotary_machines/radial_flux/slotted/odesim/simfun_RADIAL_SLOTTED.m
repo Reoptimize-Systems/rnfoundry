@@ -219,6 +219,14 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
           design.CoreLoss.kc, ...
           design.CoreLoss.ke, ...
           design.CoreLoss.beta ] = corelosscoeffs ('M-36', '26', 'InterpolateMissing', false);
+      
+        if simoptions.DoBackIronCoreLoss
+            % CoreLoss will be the armature back iron data
+            design.CoreLoss(end+1).kh = mean ([7.54, 22.61] * 1e2);
+            design.CoreLoss(end+1).kc = design.CoreLoss.kc;
+            design.CoreLoss(end+1).ke = 0;
+            design.CoreLoss(end+1).beta = 2; 
+        end
     end
     
     % We don't check the coil turns etc at this stage (done by default in 
