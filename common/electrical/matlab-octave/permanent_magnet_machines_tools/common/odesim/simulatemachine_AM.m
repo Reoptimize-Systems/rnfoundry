@@ -236,6 +236,10 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     if isfield(simoptions.ODESim, 'OutputFcn')
         odeoptions = odeset(odeoptions, 'OutputFcn', outputfcn);
     end
+    
+    if isfield(simoptions.ODESim, 'Vectorized')
+        odeoptions = odeset(odeoptions, 'Vectorized', simoptions.ODESim.Vectorized);
+    end
 
     % select the solver to use, by default we choose stiff solvers a
     % generally the machine inductance circuit requires this.
