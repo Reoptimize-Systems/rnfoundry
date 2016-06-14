@@ -2,11 +2,12 @@ function [design, simoptions] = feaprescribedmotfinfun_RADIAL_SLOTTED(design, si
 
     [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, @finfun_RADIAL_SLOTTED);
 
-    [flux_linkage, ~, ~] = feaode_RADIAL_SLOTTED (design, simoptions, 0, simoptions.ODESim.SolutionComponents.PhaseCurrents.InitialConditions);
+    [flux_linkage, ~, ~] = feaode_RADIAL_SLOTTED (design, simoptions, 0, simoptions.ODESim.SolutionComponents.PhaseCurrents.InitialConditions(:));
 
     simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
                                           'PhaseFluxLinkages', ...
-                                          struct ('InitialConditions', flux_linkage(:)' ));
+                                          struct ('InitialConditions', flux_linkage(:)', ...
+                                                  'AbsTol', repmat (0.05*max(flux_linkage), 1, design.Phases)));
                                
 	% set up the numerical derivative calculation of the flux linkage using
 	% an odederiv object
@@ -21,5 +22,7 @@ function [design, simoptions] = feaprescribedmotfinfun_RADIAL_SLOTTED(design, si
         @flodederiv.outputfcn;
     
     simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'OutputFcn', 'odesimoutputfcns_AM');
+    
+    simoptions.ODESim.Vectorized = 'on';
     
 end
