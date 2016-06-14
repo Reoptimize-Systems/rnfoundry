@@ -212,6 +212,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     if design.ypd ~= 1 && design.ypd ~= 2
     	error('denominator of slots per pole must be 1 or 2, other values not yet supported')
     end
+    
+    simoptions = setfieldifabsent (simoptions, 'DoBackIronCoreLoss', false);
 
     if ~isfield(design, 'CoreLoss')
         % CoreLoss will be the armature back iron data
