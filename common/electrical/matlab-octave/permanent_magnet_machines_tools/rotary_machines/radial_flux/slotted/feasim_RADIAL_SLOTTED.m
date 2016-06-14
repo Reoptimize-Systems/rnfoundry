@@ -89,7 +89,7 @@ function [ RawTorque, ...
     if Inputs.IsInitialisation
         % is an initialisation run, do things we only need to do once
         
-        design = corelosssetup (design, design.MagFEASimPositions, solution);
+        design = corelosssetup (design, simoptions, design.MagFEASimPositions, solution);
         
         % get the forces
         solution.clearblock();
@@ -248,7 +248,7 @@ function [slotPos, slotIntB] = slotintBdata (design, theta, solution)
     
 end
 
-function design = corelosssetup (design, feapos, solution)
+function design = corelosssetup (design, simoptions, feapos, solution)
     
     groups = design.FemmProblem.Groups.ArmatureBackIron;
 
