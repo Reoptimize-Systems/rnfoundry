@@ -1,6 +1,6 @@
 % Test_feaprescribedmotodetorquefcn_ROTARY.m
 
-clear design simoptions 
+clear design simoptions
 
 % design = test_design_RADIAL_SLOTTED ('external');
 
@@ -82,8 +82,8 @@ design.RlVRp = 10;
  design.CoreLoss.kc, ...
  design.CoreLoss.ke, ...
  design.CoreLoss.beta ] = corelosscoeffs ('M-19', '29', 'InterpolateMissing', false);
- 
- 
+
+
 simoptions = struct();
 simoptions.GetVariableGapForce = false;
 
@@ -100,7 +100,7 @@ simoptions = simsetup_ROTARY(design, 'simfun_RADIAL_SLOTTED', 'feaprescribedmotf
                                 'PoleCount', 30, ...
                                 'RampPoles', 1, ...
                                 'Rpm', 60 );
-                            
+
 % simoptions.ODESim.OutputFcn = 'feaprescribedmotodeoutputfcn_ROTARY';
 
 design.FEAFluxLinkageFCN = @feaode_RADIAL_SLOTTED;
@@ -121,7 +121,7 @@ simoptions.finfun = [];
 
 [T, Y, results, design, simoptions] = simulatemachine_AM(design, ...
                                                          simoptions);
-                                                         
+
 %%
 %
 %fsimoptions = simoptions;
@@ -131,10 +131,9 @@ simoptions.finfun = [];
 %
 %fsimoptions.tspan = [ 0:0.01/100:bp, ...
 %                      (bp+0.01/100):(bp+tmax)/1000:(bp+tmax)  ];
-%                      
+%
 %fsimoptions.odesolver = 'odef1';
 %
 %[fT, fY, fresults, fdesign, fsimoptions] = simulatemachine_AM(design, ...
 %                                                         fsimoptions);
 
-                                                     
