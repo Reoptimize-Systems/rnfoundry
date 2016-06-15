@@ -1,15 +1,20 @@
 function [dx, bouyancy_force, excitation_force_heave, ...
     excitation_force_surge, radiation_force_heave, ...
-    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodesim(t, x, dx, xBh, vBh, vBs, simoptions, Fexternal)
+    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodesim(t, x, simoptions, Fexternal)
 % buoyodesim: solves the rhs of the system of differential equations
 % decribing the forces acting on a heaving buoy, and also determines the
 % excitation, radiation, and buoyancy forces acting on the buoy.
 %
 %     
     
+    dx = zeros (size (x));
+    
+    xBh = x(1,:);
+    vBh = x(2,:);
+    vBs = x(4,:);
+    
     % Get the solution indices for the hydrodynamic variables
-    buoyinds = [ simoptions.ODESim.SolutionComponents.BuoyRadiationHeave.SolutionIndices, ...
-                 simoptions.ODESim.SolutionComponents.BuoyRadiationSurge.SolutionIndices ];
+    buoyradinds = (5:4+(2*simoptions.NRadiationCoefs));
     
     % calculate the forces acting on the buoy
     [ buoyforcedx, ...
@@ -20,14 +25,14 @@ function [dx, bouyancy_force, excitation_force_heave, ...
       radiation_force_surge, ...
       FBDh, ...
       FBDs, ...
-      wave_height]  = buoyodeforces (t, x(buoyinds), xBh, vBh, vBs, simoptions);
+      wave_height]  = buoyodeforces (t, x(buoyradinds), xBh, vBh, vBs, simoptions);
 
     % copy the force derivatives to the derivatives vector at the
     % appropriae point
-    dx(buoyinds,:) = buoyforcedx;
+    dx(buoyradinds,:) = buoyforcedx;
     
     % Buoy acceleration in heave
-    heavevelind = simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices;
+    heavevelind = 2;
 
     dx(heavevelind,1) = real ( (excitation_force_heave + ...
                       radiation_force_heave + ...
@@ -40,7 +45,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
 	dx(heavevelind,1) = dx(heavevelind,1) * simoptions.SeaParameters.ConstrainHeave;
     
     % Buoy acceleration in surge
-    surgevelind = simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices;
+    surgevelind = 4;
 
     dx(surgevelind,1) = real ( (excitation_force_surge + ...
                     radiation_force_surge + ...
@@ -50,5 +55,9 @@ function [dx, bouyancy_force, excitation_force_heave, ...
                              );
                                  
 	dx(surgevelind,1) = dx(surgevelind,1) * simoptions.SeaParameters.ConstrainSurge;
+    
+    % The differentials of the positions are the velocities
+    dx(1,:) = vBh;
+    dx(3,:) = vBs;
        
 end
