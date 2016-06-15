@@ -9,40 +9,74 @@ function SeaParameters = seasetup(varargin)
 % Input
 %
 %   The inputs to seasetup are sets of Parameter-Value pairs specifying the
-%   properties of the desired sea. The possible parameters are as follows:
+%   properties of the desired sea. The possible parameters are detailed
+%   below, grouped into methods of specification:
 %
-%   MinFreq - 
+%   Specifying a min and max frequency:
+%
+%   In this case a set of equally spaced frequencies will be used in the
+%   specified range
+%
+%     'MinFreq' - Minimum frequency in Hz for the frequencies. Defaults to
+%        0.1*0.6^0.5 / (2*pi) [which is 12.3281e-003) Hz as recommended
+%       by Falco
 %   
-%   MaxFreq = (0.1*(0.6)^0.5 + 2.24) / (2*pi); % 0.3688 Hz
+%     'MaxFreq' - Maximum frequency in Hz for the frequencies, defaults to
+%       (0.1*(0.6)^0.5 + 2.24) / (2*pi) [which is 0.3688] Hz as recommended
+%       by Falco
 %
-%   NoOfFrequencies: If specifying a minimum and maximum frequency this
-%     field determines the number of frequencies generated between the
-%     limits.
+%    'NoOfFrequencies' - If specifying a minimum and maximum frequency this
+%      field determines the number of frequencies generated between the
+%      limits. Defualts to 1 if not supplied, and 'FrequencySpacing' is not
+%      used instead.
 %
-%   FrequencySpacing = 0;
+%    'FrequencySpacing' - If specifying a minimum and maximum frequency
+%      this field determines the spacing between frequencies.
+%      NoOfFrequencies is used if not supplied.
 %
-%   Sigmas: A vector of one or more angular frequencies of incident waves,
-%     if specified, 
+%   Specifying the angular wave frequencies directly:
 %
-%   Phases = pi / 2;
+%   In this case a set of angular wave frequencies can be supplied directly
 %
-%   Amplitudes: 
+%    'Sigmas' - Vector of one or more angular frequencies of incident waves,
+%      if specified, you must also supply Phases and Amplitudes for each
+%      frequency.
 %
-%   WaterDepth: Depth of the water, default is 50 m
+%    'Phases' - Vector of one or more phases, one for each value of Sigmas.
+%      If not supplied will be pi/2 for every value of Sigmas supplied. 
 %
-%   WaterDensity: Density of the water, default is 1025 kg/m^3
+%    'Amplitudes' - Vector of one or more wave amplitudes, one for each
+%      value of Sigmas. If not supplied, will be 0.5m for every value of
+%      Sigmas supplied. Note the amplitudes are the maximum wave excursion,
+%      i.e. the default of 0.5 results in a wave of height +/- 0.5m.
 %
-%   g: Accceleration due to gravity, default is 9.81 ms^-2
+%   To generate a pierson-moskowitz sea state
 %
-%   PMPeakFreq
+%    'PMPeakFreq' - Scalar value of the peak frequency of the sea state
 % 
-%   PMScaleFactor
+%    'PMScaleFactor' - Scalar factor by which to scale the wave amplitudes
+%      created by the spectrum. Defaults to 1 (no scaling).
+%
+%  Common Options
+%
+%    'WaterDepth' - Depth of the water, default is 50 m
+%
+%    'WaterDensity' - Density of the water, default is 1025 kg/m^3
+%
+%    'g' - Accceleration due to gravity, default is 9.81 ms^-2
 %   
 % Output
 %
 %   SeaParameters, a structure containing the some of the members
-%   described in the input and also
+%   described in the input and also the wavelengths and wave numbers of the
+%   generated frequencies.
 %
+% Examples
+%
+% % create a single frequency sea with a frequency of 0.35 Hz. The
+% amplitude of the wave will be the default, 0.5m
+% SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
+%  
 
 
     % Default freq range taken from Falcao (Phase control through load
@@ -52,12 +86,13 @@ function SeaParameters = seasetup(varargin)
     Inputs.MaxFreq = (0.1*(0.6)^0.5 + 2.24) / (2*pi); % 0.3688 Hz
     Inputs.NoOfFrequencies = 1;
     Inputs.FrequencySpacing = 0;
-    % wave phases
-    Inputs.Phases = pi / 2;
+    
     % wave angular frequencies
     Inputs.Sigmas = 2 * pi * 1/9;
+    % wave phases
+    Inputs.Phases = repmat(pi / 2, size(Inputs.Sigmas));
     % wave amplitudes (ignored/replaced for PM Spectrum)
-    Inputs.Amplitudes = 0.5; % 0.5 m
+    Inputs.Amplitudes = repmat(0.5, size(Inputs.Sigmas)); % 0.5 m
     Inputs.WaterDepth = 50; % 50 m
     Inputs.WaterDensity = 1025; % 1025 kg/m^3
     Inputs.g = 9.81; % 9.81 ms^-2
