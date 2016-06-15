@@ -21,6 +21,10 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     water_depth = simoptions.BuoyParameters.water_depth;
     draft = simoptions.BuoyParameters.draft;
     drag_coefficient = simoptions.BuoyParameters.drag_coefficient;
+
+    onetoncoeffs = 1:simoptions.NRadiationCoefs;
+    heaveradcoeffinds = onetoncoeffs;
+    surgeradcoeffinds = simoptions.NRadiationCoefs+1:2*simoptions.NRadiationCoefs;
     
     % Determine the simple bouyancy force: F = x*rho*g*V
     bouyancy_force = -( xBh .* rho .* g .* pi * a^2 );
@@ -57,25 +61,31 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     excitation_force_surge = sum(surge_force_all);
 
     % Determine the radiation forces in heave and surge
-    ncoefs = simoptions.NRadiationCoefs;
+    
     % preallocate the array for the radiation force derivatives
-    dx = zeros(2*ncoefs,1);
+    dx = zeros(2*simoptions.NRadiationCoefs,size(x,2));
     
     % Calculate the derivative of the radiation forces in heave
-    dx(1:ncoefs,1) = ...
-        real( Hbeta(1:ncoefs) .* x(1:ncoefs) + Halpha(1:ncoefs) .* vBh );
+    dx(heaveradcoeffinds,:) = ...
+        real( ...
+              bsxfun (@times, Hbeta(heaveradcoeffinds,1), x(heaveradcoeffinds,:)) ...
+                + bsxfun (@times, Halpha(heaveradcoeffinds,:), vBh) ...
+            );
     
     % sum up the actual heave radiation forces (integrated in the x
     % components)
-    radiation_force_heave = real(sum(x(1:ncoefs)));
+    radiation_force_heave = real (sum (x(heaveradcoeffinds,:), 1));
 
     % Calculate the derivative of the radiation forces in surge
-    dx((ncoefs+1):(2*ncoefs),1) = ...
-        real( Sbeta(1:ncoefs) .* x((ncoefs+1):(2*ncoefs)) + Salpha(1:ncoefs) .* vBs );        
+    dx(surgeradcoeffinds,1) = ...
+        real ( ...
+              bsxfun (@times, Sbeta(onetoncoeffs,1), x(surgeradcoeffinds,:)) ...
+                + bsxfun (@times, Salpha(onetoncoeffs,1), vBs) ...
+             );
                                     
     % sum up the actual surge radiation forces (integrated in the x
     % components)
-    radiation_force_surge = real(sum(x(ncoefs+1:2*ncoefs)));
+    radiation_force_surge = real (sum (x(surgeradcoeffinds,:), 1));
     
     % ********************************************************************
     % Friction forces from the movement of the buoy in the water
@@ -91,7 +101,9 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     %
     % The particle velocity in heave will be denoted vPh, and in surge vPs
     
-    %  Calculate som e terms used more than once
+    % TODO: vectorise this part of the buoy forces code
+    
+    % Calculate some terms used more than once
     sinhwvnumdepth = sinh(wave_number .* water_depth);
     ampsigma = amp .* sigma;
    
