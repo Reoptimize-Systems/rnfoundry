@@ -1,4 +1,4 @@
-function [buoydat, I_H, I_S] = buoysimsetup(buoy, buoydat)
+function buoydat = buoysimsetup(buoy, buoydat)
 % buoysimsetup: gets the data for the chosen buoy for use in a simulation
 %
 % Syntax
