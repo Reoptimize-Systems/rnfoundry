@@ -182,11 +182,11 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     if ~isfield(simoptions, 'finfun') || isempty(simoptions.ODESim.PostPreProcFcn)
         simoptions.ODESim.PostPreProcFcn = finfun;
     end
-    if ~isfield(simoptions, 'torquefcn') || isempty(simoptions.torquefcn)
-        simoptions.torquefcn = Inputs.torquefcn;
+    if ~isfield(simoptions, 'torquefcn') || isempty(simoptions.ODESim.TorqueFcn)
+        simoptions.ODESim.TorqueFcn = Inputs.torquefcn;
     end
-    if ~isfield(simoptions, 'torquefcnargs') || isempty(simoptions.torquefcnargs)
-        simoptions.torquefcnargs = Inputs.torquefcnargs;
+    if ~isfield(simoptions, 'torquefcnargs') || isempty(simoptions.ODESim.TorqueFcnArgs)
+        simoptions.ODESim.TorqueFcnArgs = Inputs.torquefcnargs;
     end
     
     simoptions.ODESim.TimeSpan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
