@@ -5,18 +5,18 @@
 %
 %
 
-simoptions = struct ();
+buoysimoptions = struct ();
 
 % create a sea, in this case a single frequency sea of frequency 0.35 Hz
 % and default amplitude 0.5m
-simoptions.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
+buoysimoptions.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
 
 % choose the number of radiation coefficients to use in the simulation,
 % default is 25 if not supplied
-simoptions.BuoySim.NRadiationCoefs = 10;
+buoysimoptions.NRadiationCoefs = 10;
 
 % set up the buoy in readiness for simulation
-simoptions = buoysimsetup ('cyl_2dia_1dr', simoptions);
+buoysimoptions = buoysimsetup ('cyl_2dia_1dr', buoysimoptions);
 
 % The buoy simulation must be solved by integrating a system of Ordinary
 % Differential Equations. This is done using the standard Matlab ODE
@@ -42,13 +42,13 @@ simoptions = buoysimsetup ('cyl_2dia_1dr', simoptions);
 % would normally change on every time step. Here it is just set to a
 % constant of zero in both directions on every time step, so the buoy just
 % moves under the actions of the waves.
-simfunction = @(t,x) buoyodesim (t, x, simoptions, [0,0]);
+simfunction = @(t,x) buoyodesim (t, x, buoysimoptions, [0,0]);
 
 % choose a time span for the simulation
 tspan = [0, 90];
 
 % solve the system using ode45
-[T, Y] = ode45 (simfunction, tspan, zeros(1, 4+2*simoptions.BuoySim.NRadiationCoefs) );
+[T, Y] = ode45 (simfunction, tspan, zeros(1, 4+2*buoysimoptions.NRadiationCoefs) );
 
 % The results returned by ode45 are T and y. T is a vetor of time values at
 % which the simulation outputs were calculated. Y is a matrix of output
@@ -75,13 +75,13 @@ plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]))
 
 %% PM Spectrum
 
-simoptions = struct ();
+buoysimoptions = struct ();
 
-simoptions.BuoySim.SeaParameters = seasetup ('PMPeakFreq', 1/9);
+buoysimoptions.SeaParameters = seasetup ('PMPeakFreq', 1/9);
 
-simoptions.BuoySim.NRadiationCoefs = 10;
+buoysimoptions.NRadiationCoefs = 10;
 
-simoptions = buoysimsetup (37, simoptions);
+buoysimoptions = buoysimsetup (37, buoysimoptions);
 
 % [dx, bouyancy_force, excitation_force_heave, ...
 %     excitation_force_surge, radiation_force_heave, ...
@@ -89,6 +89,6 @@ simoptions = buoysimsetup (37, simoptions);
 
 tspan = [0, 60];
 
-[T, Y] = ode45 (@(t,x) buoyodesim (t, x, simoptions, [0,0]), tspan, zeros(1, 4+2*simoptions.BuoySim.NRadiationCoefs) );
+[T, Y] = ode45 (@(t,x) buoyodesim (t, x, buoysimoptions, [0,0]), tspan, zeros(1, 4+2*buoysimoptions.NRadiationCoefs) );
 
 plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]))
