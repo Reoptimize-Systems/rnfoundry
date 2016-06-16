@@ -40,7 +40,7 @@ function hfigs = plotresultsbuoysys_linear(T, Y, results, design, simoptions, sk
 %          plotted. If skip is 2, every other step is plotted, if 3, every
 %          third point etc. 
 
-    if nargin < 5
+    if nargin < 6
         skip = 1;
     end
 
