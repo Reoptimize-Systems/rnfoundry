@@ -114,21 +114,22 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv, design] = machineodesim_l
     % first determine the translator displacement from the tether
     % length, the change in translator vertical position will be the change
     % in distance from hawser to buoy, i.e the change in tether length
-    xE = sqrt((xBh + simoptions.tether_length).^2 + xBs.^2) - simoptions.tether_length;
+    xE = sqrt ((xBh + simoptions.BuoySim.tether_length).^2 + xBs.^2) - simoptions.BuoySim.tether_length;
 
     % Find unit vector in the direction pointing from hawse hole to the
     % buoy, we add a tiny length to the tether length in case it is of
     % length zero which would make calculation of the unit vector
     % impossible
-    unitv = [simoptions.tether_length+1e-6+xBh, xBs] / norm([simoptions.tether_length+1e-6+xBh, xBs]);
+    unitv = [simoptions.BuoySim.tether_length+1e-6+xBh, xBs] ...
+              / norm([simoptions.BuoySim.tether_length+1e-6+xBh, xBs]);
 
     % Then find dot product of heave and surge velocities with unit vector
     % to get correct direction and magnitude of the velocity of the
     % magnetic field relative to the coils
-    vE = dot(unitv, [vBh, vBs]);
+    vE = dot (unitv, [vBh, vBs]);
 
     % Get the EMF and forces using the core machine simulation function
-    [Feff, Freac, EMF, dpsidxF, design] = machineodesim_AM(design, simoptions, xE, 0, vE, 0, Icoils);
+    [Feff, ~, EMF, dpsidxF, design] = machineodesim_AM (design, simoptions, xE, 0, vE, 0, Icoils);
     
     %  Calculating the proportion that the machine forces are producing on
     %  surge and in heave. Do this by multiplying unit vector in direction
