@@ -15,7 +15,7 @@ function [results, design] = splitsystemresfun_linear_mvgarm(T, Y, design, simop
 
     design.minLongMemberLength = design.minLongMemberPoles * design.PoleWidth;
 
-    design.extraFptoMass = 1.1 * results.MaxFpto / simoptions.BuoyParameters.g;
+    design.extraFptoMass = 1.1 * results.MaxFpto / simoptions.BuoySim.BuoyParameters.g;
 
     design.vRmax = results.vRmax;
 %     design.xArms = rms(interp1(T, Y(:,5), 0:max(T)/(length(T)*2):max(T)));

@@ -12,7 +12,7 @@ function [design, simoptions] = prescribedmotfinfun_linear_mvgarm(design, simopt
     % velocity
     if isfield(simoptions, 'PoleCrossings') && isfield(simoptions, 'Velocity')
         
-        simoptions.tspan = [0, simoptions.PoleCrossings * design.PoleWidth / simoptions.Velocity];
+        simoptions.ODESim.TimeSpan = [0, simoptions.PoleCrossings * design.PoleWidth / simoptions.Velocity];
         simoptions.xT = [0, simoptions.PoleCrossings*design.PoleWidth];
         simoptions.vT = [simoptions.Velocity, simoptions.Velocity];
         simoptions.drivetimes = [0, simoptions.xT(end) / simoptions.Velocity];
@@ -32,7 +32,7 @@ function [design, simoptions] = prescribedmotfinfun_linear_mvgarm(design, simopt
     elseif ~all(isfield(simoptions, {'drivetimes','xT','vT'}))
         error('Insufficient options provided to set up prescribed motion sim.')
     elseif ~isfield(simoptions, 'tspan')
-        simoptions.tspan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
+        simoptions.ODESim.TimeSpan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
     end
     
     % construct a piecewise polynomial interpolation of the position

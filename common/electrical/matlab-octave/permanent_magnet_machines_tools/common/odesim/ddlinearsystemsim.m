@@ -199,7 +199,7 @@ function [T, Y, results, design, params] = ddlinearsystemsim(design, simoptions,
     initial_conditions = [I_H; I_S]';
     
     if ~isfield(simoptions, 'tspan')
-        simoptions.tspan = [0,1];
+        simoptions.ODESim.TimeSpan = [0,1];
     end
 
     % Now perform the simulation by calling the appropriate function for

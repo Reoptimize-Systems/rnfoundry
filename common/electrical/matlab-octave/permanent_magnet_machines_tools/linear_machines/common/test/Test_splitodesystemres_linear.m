@@ -54,7 +54,7 @@ simoptions.ODESim.InitialConditions = [0, 0, zeros(1, design.Phases)];
 % solver finishes
 simoptions.skip = 1;
 % the time span of the simulation
-simoptions.tspan = [0, 60];   
+simoptions.ODESim.TimeSpan = [0, 60];   
 % Additional absolute tolerances on the components of the solution
 simoptions.abstol = [];
 % The number of machines attached to the buoy
@@ -75,7 +75,7 @@ simoptions.HydroCoeffsFile = fullfile('Cylinder_2m_dia_d010410', 'cyl_d3103v4.1'
 
 simoptions.ExcitationFile = fullfile('Cylinder_2m_dia_d010410','cyl_d3103v4.2');
 
-simoptions.BuoyParameters = load(fullfile(getbuoylibdir, ...
+simoptions.BuoySim.BuoyParameters = load(fullfile(getbuoylibdir, ...
                       'Cylinder_2m_dia_d010410',...
                       'buoyparams_d3103v4.mat'));
 
@@ -86,54 +86,50 @@ simoptions.buoynum = -1;
 params.peak_freq = 0.35;
 params.phase = pi./ 2;
 % Call defaultseaparamaters to set up the necessary sea data
-simoptions.SeaParameters = defaultseaparamaters(params);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
 % % Use a random sea with a peak frequency of 0.35 Hz
 % params.peak_freq = 0.35;
 % params.phase = pi./2;
 % % Call defaultseaparamaters to set up the necessary sea data
-% simoptions.SeaParameters = defaultseaparamaters(params);
+% simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
 % set the initial tether length between the buoy and the hawser
-simoptions.tether_length = 3;
+simoptions.BuoySim.tether_length = 3;
 
 %% set up the functions and run sim
 
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
-% simoptions.simfun = 'dummysimfun';
-simoptions.simfun = 'systemsimfun_ACTM';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemode_linear';
+% simoptions.ODESim.PreProcFcn = 'dummysimfun';
+simoptions.ODESim.PreProcFcn = 'systemsimfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-% simoptions.resfun = 'systemresfun_linear_mvgarm';
-simoptions.resfun = 'splitsystemresfun_linear';
-simoptions.spfcn = 'splitodesystemres_linear';
-simoptions.splitode = 10;
+% simoptions.ODESim.PostSimFcn = 'systemresfun_linear_mvgarm';
+simoptions.ODESim.PostSimFcn = 'splitsystemresfun_linear';
+simoptions.ODESim.SplitPointFcn = 'splitodesystemres_linear';
+simoptions.ODESim.Split = 10;
 simoptions.preallocresfcn = 'springandsnapprallocresfcn_linear_mvgarm';
-% simoptions.forcefcn = 'springforcefcn_linear_mvgarm';
+% simoptions.ODESim.ForceFcn = 'springforcefcn_linear_mvgarm';
 % simoptions.ODESim.ForceFcnArgs = {};
-% simoptions.forcefcn = 'springandsnapforcefcn_linear_mvgarm';
+% simoptions.ODESim.ForceFcn = 'springandsnapforcefcn_linear_mvgarm';
 % simoptions.ODESim.ForceFcnArgs = {};
 
-[T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun);
+[T, Y, results, design] = simulatemachine_linear(design, simoptions);
 
                                              
 %% Compare to straight sim
 
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
-% simoptions.simfun = 'dummysimfun';
-simoptions.simfun = 'systemsimfun_ACTM';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemode_linear';
+% simoptions.ODESim.PreProcFcn = 'dummysimfun';
+simoptions.ODESim.PreProcFcn = 'systemsimfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-% simoptions.resfun = 'systemresfun_linear_mvgarm';
-simoptions.resfun = 'systemresfun_linear';
+% simoptions.ODESim.PostSimFcn = 'systemresfun_linear_mvgarm';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 
 if isfield(simoptions, 'spfcn')
     simoptions = rmfield(simoptions, 'spfcn');
@@ -145,13 +141,9 @@ end
 
 simoptions.preallocresfcn = 'prallocresfcn_linear_system';
 
-% simoptions.forcefcn = 'springforcefcn_linear_mvgarm';
+% simoptions.ODESim.ForceFcn = 'springforcefcn_linear_mvgarm';
 % simoptions.ODESim.ForceFcnArgs = {};
-% simoptions.forcefcn = 'springandsnapforcefcn_linear_mvgarm';
+% simoptions.ODESim.ForceFcn = 'springandsnapforcefcn_linear_mvgarm';
 % simoptions.ODESim.ForceFcnArgs = {};
 
-[T, Y, results2, design2] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun);                                             
+[T, Y, results2, design2] = simulatemachine_linear(design, simoptions);                                             

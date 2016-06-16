@@ -23,7 +23,7 @@ function varargout = simplelinearmachineode_proscribedmotion(t, y, design, simop
     % Interpolate the data set (times,vT) at current time
     vTtemp = interp1(simoptions.drivetimes, simoptions.vT, t); 
 
-    simoptions.tether_length = 1000;
+    simoptions.BuoySim.tether_length = 1000;
     
     [dpsidxF, EMF, Force] = ...
         machinesim_linear(design, simoptions, y, xTtemp, 0, vTtemp, 0);

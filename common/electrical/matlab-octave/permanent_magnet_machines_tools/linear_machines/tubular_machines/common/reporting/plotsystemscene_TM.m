@@ -66,10 +66,10 @@ function plotsystemscene_TM(design, simoptions, xB, yB, yT, maxyT, yOffset, xOff
      
     % draw the buoy 
     
-    hBuoy = simoptions.BuoyParameters.draft * 2;
-    wBuoy = simoptions.BuoyParameters.a * 2;
+    hBuoy = simoptions.BuoySim.BuoyParameters.draft * 2;
+    wBuoy = simoptions.BuoySim.BuoyParameters.a * 2;
     
-    hBStart = simoptions.tether_length + maxyT + yOffset;
+    hBStart = simoptions.BuoySim.tether_length + maxyT + yOffset;
         
     x = -wBuoy/2 + xB + xOffset;
     

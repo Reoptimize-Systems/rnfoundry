@@ -83,7 +83,7 @@ simoptions.ODESim.InitialConditions = [0, 0, zeros(1, designACTM.Phases)];
 % solver finishes
 simoptions.skip = 1;
 % the time span of the simulation
-simoptions.tspan = [0, 60];   
+simoptions.ODESim.TimeSpan = [0, 60];   
 % Additional absolute tolerances on the components of the solution
 simoptions.abstol = [];
 % The number of machines attached to the buoy
@@ -104,7 +104,7 @@ simoptions.HydroCoeffsFile = fullfile('Cylinder_2m_dia_d010410', 'cyl_d3103v4.1'
 
 simoptions.ExcitationFile = fullfile('Cylinder_2m_dia_d010410','cyl_d3103v4.2');
 
-simoptions.BuoyParameters = load(fullfile(getbuoylibdir, ...
+simoptions.BuoySim.BuoyParameters = load(fullfile(getbuoylibdir, ...
                       'Cylinder_2m_dia_d010410',...
                       'buoyparams_d3103v4.mat'));
 
@@ -115,16 +115,16 @@ simoptions.buoy = [];
 params.peak_freq = 0.35;
 params.phase = pi./ 2;
 % Call defaultseaparamaters to set up the necessary sea data
-simoptions.SeaParameters = defaultseaparamaters(params);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
 % % Use a random sea with a peak frequency of 0.35 Hz
 % params.peak_freq = 0.35;
 % params.phase = pi./2;
 % % Call defaultseaparamaters to set up the necessary sea data
-% simoptions.SeaParameters = defaultseaparamaters(params);
+% simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
 % set the initial tether length between the buoy and the hawser
-simoptions.tether_length = 3;
+simoptions.BuoySim.tether_length = 3;
 
 %% Set up the sea and buoy - larger buoy
 
@@ -139,10 +139,10 @@ SeaParameters.sigma_range = [2*pi*0.055, 0.1*(0.6)^0.5 + 2.24];
 % % The depth of the water
 SeaParameters.water_depth = 50;
 
-simoptions.SeaParameters = defaultseaparamaters(SeaParameters);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(SeaParameters);
 
 % 
-simoptions.tether_length = 6;
+simoptions.BuoySim.tether_length = 6;
 % 
 % simoptions.FarmSize = 10e6;
 % 
@@ -154,23 +154,19 @@ designACTM.buoynum = simoptions.buoynum;
 
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
-simoptions.simfun = 'dummysimfun';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemodeforcefcn_linear_mvgarm';
+simoptions.ODESim.PreProcFcn = 'dummysimfun';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemodeforcefcn_linear_mvgarm';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-% simoptions.resfun = 'systemresfun_linear_mvgarm';
-simoptions.resfun = 'systemresfun_linear_mvgarm';
+% simoptions.ODESim.PostSimFcn = 'systemresfun_linear_mvgarm';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear_mvgarm';
 simoptions.preallocresfcn = 'springandsnapprallocresfcn_linear_mvgarm';
-% simoptions.forcefcn = 'springforcefcn_linear_mvgarm';
+% simoptions.ODESim.ForceFcn = 'springforcefcn_linear_mvgarm';
 % simoptions.ODESim.ForceFcnArgs = {};
-simoptions.forcefcn = 'springandsnapforcefcn_linear_mvgarm';
+simoptions.ODESim.ForceFcn = 'springandsnapforcefcn_linear_mvgarm';
 simoptions.ODESim.ForceFcnArgs = {};
 
-[T, Y, results, designACTM] = simulatemachine_linear(designACTM, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun);
+[T, Y, results, designACTM] = simulatemachine_linear(designACTM, simoptions);
 
 results.Ffea = results.Fpto + results.Fa(:,2);
 results.Fs = results.Fa(:,1);

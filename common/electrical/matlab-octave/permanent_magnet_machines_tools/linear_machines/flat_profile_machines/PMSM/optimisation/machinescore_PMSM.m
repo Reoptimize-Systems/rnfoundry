@@ -2,7 +2,7 @@ function [score, design, simoptions] = machinescore_PMSM(design, simoptions)
     
     % caculate machine cost, and mass of translator
     if isfield(simoptions, 'BuoyParameters')
-        [cost, design] = costestimate_PMSM(design, simoptions, simoptions.BuoyParameters.mass_external);
+        [cost, design] = costestimate_PMSM(design, simoptions, simoptions.BuoySim.BuoyParameters.mass_external);
     else
         [cost, design] = costestimate_PMSM(design, simoptions);
     end

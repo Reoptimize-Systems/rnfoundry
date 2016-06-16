@@ -172,8 +172,8 @@ function varargout = systemodeforcefcn_linear_mvgarm(t, x, design, simoptions)
 %     end
     
     % Calculate the drag forces on the translator
-    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
-    [FaddT, FaddA, FaddEBD] = feval(simoptions.forcefcn, design, simoptions, xT, vT, xA, vA, xBh, vBh, xBs, vBs, simoptions.ODESim.ForceFcnArgs{:});
+    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
+    [FaddT, FaddA, FaddEBD] = feval(simoptions.ODESim.ForceFcn, design, simoptions, xT, vT, xA, vA, xBh, vBh, xBs, vBs, simoptions.ODESim.ForceFcnArgs{:});
     
 %     if abs(vA) > 0.00001 %2 * max(simoptions.abstols(5))
 %         

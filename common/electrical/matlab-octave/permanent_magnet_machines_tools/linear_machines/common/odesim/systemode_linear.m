@@ -189,7 +189,7 @@ function varargout = systemode_linear(t, x, design, simoptions)
         = circuitode_linear (Iphases, EMF, design);
     
     % Calculate the drag forces on the translator
-    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
+    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
 
     % ********************************************************************
     % Buoy Acceleration, these calcs assume all of the mass is in the buoy,

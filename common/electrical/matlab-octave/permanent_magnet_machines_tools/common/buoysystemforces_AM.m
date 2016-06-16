@@ -9,7 +9,7 @@ function [FesVec, Fes, FfricVec, Ffric, unitv] = buoysystemforces_AM(design, sim
 % 
 
     % find a unit vector pointing from the hause hole to the buoy
-    unitv = [simoptions.tether_length+1e-6+xBh, xBs] / norm([simoptions.tether_length+1e-6+xBh, xBs]);
+    unitv = [simoptions.BuoySim.tether_length+1e-6+xBh, xBs] / norm([simoptions.BuoySim.tether_length+1e-6+xBh, xBs]);
     
     % calculate the end-stop forces
     [FesVec, Fes] = endstopforces(simoptions, xT, vT, unitv);

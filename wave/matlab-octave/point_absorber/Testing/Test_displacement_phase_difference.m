@@ -45,25 +45,25 @@ simoptions.maxAllowedxT = 0.5;
 % simoptions.SurgeFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'surge_coefficients_cyl_2di_1dr.mat');
 % simoptions.HydroCoeffsFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.1');
 % simoptions.ExcitationFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.2');
-% simoptions.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
+% simoptions.BuoySim.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
 % simoptions.buoynum = -1;
 % design.buoynum = simoptions.buoynum;
 % 
-% simoptions.tspan = [0, 60];
+% simoptions.ODESim.TimeSpan = [0, 60];
 % % params.amp = 1;
 % params.sigma = 2 * pi * 0.35;
 % params.phase = pi/2;
 % 
-% simoptions.SeaParameters = defaultseaparamaters(params);
+% simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 % 
-% simoptions.tether_length = 4;
+% simoptions.BuoySim.tether_length = 4;
 % 
-% simoptions.odeevfun = 'systemode_linear'; 
-% simoptions.finfun = ['systemfinfun_', mname];
-% simoptions.resfun = 'systemresfun_linear';    
+% simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+% simoptions.ODESim.PostPreProcFcn = ['systemfinfun_', mname];
+% simoptions.ODESim.PostSimFcn = 'systemresfun_linear';    
 % 
-% [T, Y, results, design] = simulatemachine_linear(design, simoptions, simoptions.simfun, ...
-%                                                   simoptions.finfun, simoptions.odeevfun, simoptions.resfun); 
+% [T, Y, results, design] = simulatemachine_linear(design, simoptions, simoptions.ODESim.PreProcFcn, ...
+%                                                   simoptions.ODESim.PostPreProcFcn, simoptions.ODESim.EvalFcn, simoptions.ODESim.PostSimFcn); 
 % 
 % plotresultsbuoysys_linear(T, Y, results, design, 1)
 
@@ -76,37 +76,37 @@ simoptions.maxAllowedxT = 0.5;
 % simoptions.SurgeFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'surge_coefficients_cyl_2di_1dr.mat');
 % simoptions.HydroCoeffsFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.1');
 % simoptions.ExcitationFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.2');
-% simoptions.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
+% simoptions.BuoySim.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
 % simoptions.buoynum = -1;
 
 simoptions.buoy = 37;
 % design.buoynum = simoptions.buoynum;
 
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 % params.amp = 1;
 
-simoptions.tether_length = 4;
+simoptions.BuoySim.tether_length = 4;
 
 simoptions.maxAllowedxT = inf;
 
-simoptions.simfun = 'systemsimfun_ACTM';
+simoptions.ODESim.PreProcFcn = 'systemsimfun_ACTM';
 mname = 'ACTM';
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.finfun = ['systemfinfun_', mname];
-simoptions.resfun = 'systemresfun_linear'; 
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostPreProcFcn = ['systemfinfun_', mname];
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear'; 
 simoptions.events = 'systemevents_linear';
 
 % params.peak_freq = 1/9; % centred at resonant frequency
 % params.sigma_range = [0.345575191894877,2.31745966692415;];
 % params.water_depth = 50;
 
-simoptions.SeaParameters = seasetup ('PMPeakFreq', 1/9);
+simoptions.BuoySim.SeaParameters = seasetup ('PMPeakFreq', 1/9);
 
 Nbuoys = 7;
 circlerad = 30;
-origphase = simoptions.SeaParameters.phase;
+origphase = simoptions.BuoySim.SeaParameters.phase;
 
-phi = cricwavephasediffs(simoptions.SeaParameters.L, circlerad, Nbuoys);
+phi = cricwavephasediffs(simoptions.BuoySim.SeaParameters.L, circlerad, Nbuoys);
 
 buoyangle = linspace(0, 2*pi, Nbuoys+1);
 
@@ -120,13 +120,13 @@ outdesign = cell(1,5);
 
 interpdur = inf;
 
-[design, simoptions] = feval (simoptions.simfun, design, simoptions);
-simoptions.simfun = [];
+[design, simoptions] = feval (simoptions.ODESim.PreProcFcn, design, simoptions);
+simoptions.ODESim.PreProcFcn = [];
 for i = 1:Nbuoys
 
     disp(i)
     
-    simoptions.SeaParameters.phase = origphase + phi(i, :);
+    simoptions.BuoySim.SeaParameters.phase = origphase + phi(i, :);
     
     [T{i}, Y, results{i}, outdesign{i}, outsimoptions{i}] = simulatemachine_linear (design, simoptions); 
     
@@ -135,7 +135,7 @@ for i = 1:Nbuoys
 end
 
 %%
-interpT = 0:interpdur:simoptions.tspan(2);
+interpT = 0:interpdur:simoptions.ODESim.TimeSpan(2);
 
 Forces = zeros(numel(interpT), Nbuoys);
 

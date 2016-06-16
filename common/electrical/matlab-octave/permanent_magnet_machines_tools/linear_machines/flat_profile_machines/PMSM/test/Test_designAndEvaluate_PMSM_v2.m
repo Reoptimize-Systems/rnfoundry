@@ -53,15 +53,15 @@ design.tols = options.InitDef;
 %% Test with linear motion
 
 speed = 1;
-simoptions.tspan = [0, 10];
-simoptions.drivetimes = 0:simoptions.tspan(2);
+simoptions.ODESim.TimeSpan = [0, 10];
+simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 simoptions.xT = simoptions.vT .* simoptions.drivetimes;
 
-simoptions.simfun = @simfunnocurrent_PMSM;
-simoptions.finfun = @prescribedmotfinfun_PMSM;
-simoptions.odeevfun = @prescribedmotode_linear;
-simoptions.resfun = @prescribedmotresfun_linear;
+simoptions.ODESim.PreProcFcn = @simfunnocurrent_PMSM;
+simoptions.ODESim.PostPreProcFcn = @prescribedmotfinfun_PMSM;
+simoptions.ODESim.EvalFcn = @prescribedmotode_linear;
+simoptions.ODESim.PostSimFcn = @prescribedmotresfun_linear;
 
 design.Poles = [1, 1];
 options.targetPower = 10e3; % 10kW machine
@@ -76,24 +76,24 @@ simoptions = buoysimoptions;
 % simoptions.SurgeFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'surge_coefficients_cyl_2di_1dr.mat');
 % simoptions.HydroCoeffsFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.1');
 % simoptions.ExcitationFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.2');
-% simoptions.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
+% simoptions.BuoySim.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
 % simoptions.buoy = [];
 simoptions.buoy = 'cyl_4dia_2dr';
 
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 % params.amp = 1;
 params.peak_freq = 0.35; % centred at resonant frequency
 params.phase = pi/2;
 
-simoptions.SeaParameters = defaultseaparamaters(params);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
-simoptions.tether_length = 4;
+simoptions.BuoySim.tether_length = 4;
 
 
-simoptions.simfun = 'simfunnocurrent_PMSM';
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.finfun = 'systemfinfun_PMSM';
-simoptions.resfun = 'systemresfun_linear'; 
+simoptions.ODESim.PreProcFcn = 'simfunnocurrent_PMSM';
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_PMSM';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear'; 
 
 design.Poles = [18, 6];
 

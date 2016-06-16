@@ -38,7 +38,7 @@ function varargout = prescribedmotodeforcefcn_linear(t, x, design, simoptions)
     % get the velocity and position at the current time
     [xTtemp, vTtemp] = prescribedmotvelpos(t, simoptions);
 
-    simoptions.tether_length = 1000;
+    simoptions.BuoySim.tether_length = 1000;
 
     % determine the machine outputs
     [dpsidxR, EMF, Feff, FfeaVec, xT, vT, unitv, design] = ...
@@ -50,7 +50,7 @@ function varargout = prescribedmotodeforcefcn_linear(t, x, design, simoptions)
      
     % call the supplied additional force function
     [FaddE, ForceBD] = ...
-        feval(simoptions.forcefcn, design, simoptions, xT, vT, EMF, Iphases, simoptions.ODESim.ForceFcnArgs{:});
+        feval(simoptions.ODESim.ForceFcn, design, simoptions, xT, vT, EMF, Iphases, simoptions.ODESim.ForceFcnArgs{:});
     
     % ************************************************************************
 

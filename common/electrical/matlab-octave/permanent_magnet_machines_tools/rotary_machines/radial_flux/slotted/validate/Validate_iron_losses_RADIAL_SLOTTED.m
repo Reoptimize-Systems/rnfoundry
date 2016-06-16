@@ -69,13 +69,13 @@ simoptions.MagFEASim.BackIronRegionMeshSize = ...
 
 simoptions.reltol = 1e-4;
 %simoptions.PhaseCurrentTols = repmat(0.001, 1, design.Phases);
-%simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 1000;
+%simoptions.maxstep = (simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan(1)) / 1000;
 simoptions.PoleCount = 1000;
 
 design.CoreLoss = struct ();
 
 [design, simoptions] = simfun_RADIAL_SLOTTED (design, simoptions);
-simoptions.simfun = [];
+simoptions.ODESim.PreProcFcn = [];
 
 save (fullfile(outputdir, 'validate_iron_losses_design_and_simoptions.mat'), 'design', 'simoptions');
 

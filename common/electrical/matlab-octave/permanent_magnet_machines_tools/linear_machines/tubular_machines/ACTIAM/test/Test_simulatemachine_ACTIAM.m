@@ -30,32 +30,32 @@ design.Poles = [5 10];
 design = ratios2dimensions_ACTIAM(design);
 
 % set up the functions
-simoptions.simfun = 'simfun_ACTIAM';
-simoptions.finfun = 'systemfinfun_ACTIAM'; 
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.resfun = 'systemresfun_linear';
+simoptions.ODESim.PreProcFcn = 'simfun_ACTIAM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTIAM'; 
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 
 % use buoy number 37, 4m diameter, 2m draft
 simoptions.buoy = 'cyl_4dia_2dr';
 
-simoptions.SeaParameters = seasetup('sigma', 2 * pi * 0.35, ...
+simoptions.BuoySim.SeaParameters = seasetup('sigma', 2 * pi * 0.35, ...
                                     'phase', pi / 2);
-simoptions.tether_length = 5;
+simoptions.BuoySim.tether_length = 5;
 simoptions.water_depth = 40;
 
 % simoptions.ODESim.InitialConditions = [0,0,0];
 simoptions.skip = 1;
-simoptions.tspan = [0, 10];
+simoptions.ODESim.TimeSpan = [0, 10];
 % simoptions.Lmode = 0;
 
 %%
 
 % run the simulation
 [T, Y, results, design, simoptions] = simulatemachine_linear(design, simoptions, ...
-                                                            simoptions.simfun, ...
-                                                            simoptions.finfun, ... 
-                                                            simoptions.odeevfun, ...
-                                                            simoptions.resfun);
+                                                            simoptions.ODESim.PreProcFcn, ...
+                                                            simoptions.ODESim.PostPreProcFcn, ... 
+                                                            simoptions.ODESim.EvalFcn, ...
+                                                            simoptions.ODESim.PostSimFcn);
 
 %%
 % plot the results

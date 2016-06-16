@@ -35,12 +35,12 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         % Poles, to determine whether to bother with the main simulation or
         % just to process the score based on the preliminary results to
         % avoid wasting computer time.
-        if ~isempty(simoptions.simfun)
-            [design, simoptions] = feval(simoptions.simfun, design, simoptions);
+        if ~isempty(simoptions.ODESim.PreProcFcn)
+            [design, simoptions] = feval (simoptions.ODESim.PreProcFcn, design, simoptions);
         end
         
-        if ~isempty(simoptions.finfun)
-            [design, simoptions] = feval(simoptions.finfun, design, simoptions);
+        if ~isempty(simoptions.ODESim.PostPreProcFcn)
+            [design, simoptions] = feval (simoptions.ODESim.PostPreProcFcn, design, simoptions);
         end
         
         % copy over the simoptions to a structure for perfoming the linear
@@ -49,7 +49,7 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         velocity = 1.0;
         displacement = 1.0;
         
-        presimoptions.tspan = [];
+        presimoptions.ODESim.TimeSpan = [];
         
         % operate for 1m  displacement at the chosen velocity
         polescrossed = max(2, round2even(ceil(displacement/design.PoleWidth)));
@@ -58,12 +58,12 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         presimoptions.xT = [0, polescrossed*design.PoleWidth];
         presimoptions.vT = [velocity, velocity];
         presimoptions.drivetimes = [0, presimoptions.xT(end) / velocity];
-        presimoptions.tspan = presimoptions.drivetimes;
-        presimoptions.odeevfun = simoptions.evaloptions.presimodeevfun;
-        presimoptions.resfun = simoptions.evaloptions.presimresfun;
-        presimoptions.forcefcn = simoptions.evaloptions.presimforcefun; 
+        presimoptions.ODESim.TimeSpan = presimoptions.drivetimes;
+        presimoptions.ODESim.EvalFcn = simoptions.evaloptions.presimodeevfun;
+        presimoptions.ODESim.PostSimFcn = simoptions.evaloptions.presimresfun;
+        presimoptions.ODESim.ForceFcn = simoptions.evaloptions.presimforcefun; 
         presimoptions.ODESim.ForceFcnArgs = {};
-        presimoptions.finfun = simoptions.evaloptions.presimfinfun;
+        presimoptions.ODESim.PostPreProcFcn = simoptions.evaloptions.presimfinfun;
         
         simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'presimIC', zeros(1, design.Phases));
         presimoptions.ODESim.InitialConditions = simoptions.evaloptions.presimIC;
@@ -73,14 +73,15 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         % make sure there's at least 4 points per pole in the sim
         presimoptions.maxstep = presimoptions.drivetimes(end) / (4 * polescrossed);
         
+        temp = presimoptions.ODESim.PreProcFcn;
+        presimoptions.ODESim.PreProcFcn = [];
+        
         % perform the preliminary sim
-        [T, Y, results, presimdesign] = simulatemachine_linear(design, ...
-                                                presimoptions, ...
-                                                'dummysimfun', ...
-                                                presimoptions.finfun, ...
-                                                presimoptions.odeevfun, ...
-                                                presimoptions.resfun);
-                                            
+        [T, Y, results, presimdesign] = ...
+            simulatemachine_linear(design, presimoptions);
+
+        presimoptions.ODESim.PreProcFcn = temp;
+        
         % if max possible voltage per m per m/s is less than 1kV and total
         % mean power per kg of translator per m/s less than 1kW
         if outputtest(presimdesign, presimoptions, velocity);
@@ -88,7 +89,7 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
             if isfield(presimoptions, 'SeaParameters')
 
                 % get max wave heights, make overlap 2x wave heights?
-                t = presimoptions.tspan(1):presimoptions.tspan(2);
+                t = presimoptions.ODESim.TimeSpan(1):presimoptions.ODESim.TimeSpan(2);
 
                 wave_height = zeros(size(t));
                 
@@ -104,11 +105,14 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
 
             end
             
-            presimdesign.minLongMemberLength = 2 * peakxT + (presimdesign.PowerPoles * presimdesign.PoleWidth);
+            presimdesign.minLongMemberLength = ...
+                2 * peakxT + (presimdesign.PowerPoles * presimdesign.PoleWidth);
 
-            presimdesign.minLongMemberPoles = ceil(presimdesign.minLongMemberLength ./ presimdesign.PoleWidth);
+            presimdesign.minLongMemberPoles = ...
+                ceil (presimdesign.minLongMemberLength ./ presimdesign.PoleWidth);
 
-            presimdesign.minLongMemberLength = presimdesign.minLongMemberPoles * presimdesign.PoleWidth;
+            presimdesign.minLongMemberLength = ...
+                presimdesign.minLongMemberPoles * presimdesign.PoleWidth;
                        
             % make the mean power small so it gets a poor score
             presimdesign.PowerLoadMean = presimdesign.PowerLoadMean ./ 1e6;
@@ -121,14 +125,14 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
             simoptions = presimoptions;
 
         else
+            
+            presimoptions.ODESim.PreProcFcn = [];
+            presimoptions.ODESim.PostPreProcFcn = [];
+        
             % the preliminary test has been passed and the main simulation
             % can proceed
-            [T, Y, results, design, simoptions] = simulatemachine_linear(design, ...
-                                                    simoptions, ...
-                                                    'dummysimfun', ...
-                                                    'dummysimfun', ...
-                                                    simoptions.odeevfun, ...
-                                                    simoptions.resfun);
+            [T, Y, results, design, simoptions] ...
+                = simulatemachine_linear (design, simoptions);
         end
                                             
         
@@ -136,20 +140,16 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
 
         % run the basic simulation without the preliminary constant
         % velocity simulation
-        [T, Y, results, design, simoptions] = simulatemachine_linear(design, ...
-                                                    simoptions, ...
-                                                    simoptions.simfun, ...
-                                                    simoptions.finfun, ...
-                                                    simoptions.odeevfun, ...
-                                                    simoptions.resfun);
+        [T, Y, results, design, simoptions] ...
+            = simulatemachine_linear(design, simoptions);
     
     end
         
-    if design.SimTimeSpan < (simoptions.tspan(end) - simoptions.tspan(1))
+    if design.SimTimeSpan < (simoptions.ODESim.TimeSpan(end) - simoptions.ODESim.TimeSpan(1))
         % the full simulation was not run, probably because of a terminal
         % event, so reduce the recorded power output to reflect this
         design.PowerLoadMean = design.PowerLoadMean ...
-            * (design.SimTimeSpan / (simoptions.tspan(end) - simoptions.tspan(1)));
+            * (design.SimTimeSpan / (simoptions.ODESim.TimeSpan(end) - simoptions.ODESim.TimeSpan(1)));
     end
     
 end
@@ -158,7 +158,7 @@ end
 function wave_height = waveheight(t, simoptions)
 % waveheight: calculates the wave heights at a series of times
 
-	wave_height = sum(real(simoptions.SeaParameters.amp .* exp(-1i .* (simoptions.SeaParameters.sigma .* t - simoptions.SeaParameters.phase))));
+	wave_height = sum(real(simoptions.BuoySim.SeaParameters.amp .* exp(-1i .* (simoptions.BuoySim.SeaParameters.sigma .* t - simoptions.BuoySim.SeaParameters.phase))));
             
 end
 

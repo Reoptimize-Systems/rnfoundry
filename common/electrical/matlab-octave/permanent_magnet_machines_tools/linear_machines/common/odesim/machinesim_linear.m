@@ -90,7 +90,7 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv] = machinesim_linear(desig
     % first determine the translator displacement from the tether
     % length, the change in translator vertical position will be the change
     % in distance from hawser to buoy, i.e the change in tether length
-    xE = sqrt((xBh + simoptions.tether_length).^2 + xBs.^2) - simoptions.tether_length;
+    xE = sqrt((xBh + simoptions.BuoySim.tether_length).^2 + xBs.^2) - simoptions.BuoySim.tether_length;
 
     xE = xE + simoptions.xEoffset;
     
@@ -98,7 +98,7 @@ function [dpsidxF, EMF, Feff, ForceVec, xE, vE, unitv] = machinesim_linear(desig
     % buoy, we add a tiny length to the tether length in case it is of
     % length zero which would make calculation of the unit vector
     % impossible
-    unitv = [simoptions.tether_length+1e-6+xBh, xBs] / norm([simoptions.tether_length+1e-6+xBh, xBs]);
+    unitv = [simoptions.BuoySim.tether_length+1e-6+xBh, xBs] / norm([simoptions.BuoySim.tether_length+1e-6+xBh, xBs]);
 
     % Then find dot product of heave and surge velocities with unit vector
     % to get correct direction and magnitude of the velocity of the

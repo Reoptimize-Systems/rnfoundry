@@ -13,7 +13,7 @@ function [dpsidxR, EMF, FA, ForceVec, xE, vE, design] = machineodesim_linear_mvg
     % first determine xT from the new tether length, change in translator
     % vertical position will be change in distance from hawser to buoy, i.e
     % the change in tether length
-    xE = (sqrt((xBh + simoptions.tether_length).^2 + xBs.^2) - simoptions.tether_length);
+    xE = (sqrt((xBh + simoptions.BuoySim.tether_length).^2 + xBs.^2) - simoptions.BuoySim.tether_length);
     
 %     % Then calculate xR, the relative position
 %     xR = (xT./ design.PoleWidth) - (xA./ design.PoleWidth);
@@ -28,7 +28,7 @@ function [dpsidxR, EMF, FA, ForceVec, xE, vE, design] = machineodesim_linear_mvg
 %     dpsidxR = slmpsidot_linear(design, pos, design.PoleWidth);
     
     % Find unit vector in the direction pointing from hawse hole to the buoy
-    unitv = [simoptions.tether_length+xBh, xBs] / norm([simoptions.tether_length+xBh, xBs]);
+    unitv = [simoptions.BuoySim.tether_length+xBh, xBs] / norm([simoptions.BuoySim.tether_length+xBh, xBs]);
 
     % Then find dot product of heave and surge velocities with unit vector
     % to get correct direction and magnitude of translator velocity

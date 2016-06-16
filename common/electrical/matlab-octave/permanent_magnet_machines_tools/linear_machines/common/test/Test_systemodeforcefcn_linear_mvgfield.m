@@ -98,8 +98,8 @@ simoptions = buoysimoptions;
 % speed = 1;
 % simoptions.ODESim.InitialConditions = 0;
 % simoptions.skip = 1;
-% simoptions.tspan = [0, 10];
-% simoptions.drivetimes = 0:simoptions.tspan(2);
+% simoptions.ODESim.TimeSpan = [0, 10];
+% simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 % simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 % simoptions.xT = simoptions.vT .* simoptions.drivetimes;
 % simoptions.Lmode = 1;
@@ -109,34 +109,34 @@ simoptions.buoynum = 37;
 
 simoptions = buoysetup(simoptions.buoynum, [], simoptions);
 
-simoptions.SeaParameters = seasetup('MinFreq', simoptions.BuoyParameters.minfreq, ...
-                                    'MaxFreq', simoptions.BuoyParameters.maxfreq, ...
+simoptions.BuoySim.SeaParameters = seasetup('MinFreq', simoptions.BuoySim.BuoyParameters.minfreq, ...
+                                    'MaxFreq', simoptions.BuoySim.BuoyParameters.maxfreq, ...
                                     'PMPeakFreq', 0.111, ...
                                     'NoOfFrequencies', 50, ...
-                                    'WaterDepth', simoptions.BuoyParameters.water_depth);
+                                    'WaterDepth', simoptions.BuoySim.BuoyParameters.water_depth);
 
 
-%simoptions.SeaParameters.sigma = 2 * pi * 0.111;
-%simoptions.SeaParameters.phase = pi / 2;
-% simoptions.SeaParameters.peak_freq = 0.111;
-% simoptions.SeaParameters.water_depth = 40;
-% simoptions.SeaParameters = defaultseaparamaters(simoptions.SeaParameters);
+%simoptions.BuoySim.SeaParameters.sigma = 2 * pi * 0.111;
+%simoptions.BuoySim.SeaParameters.phase = pi / 2;
+% simoptions.BuoySim.SeaParameters.peak_freq = 0.111;
+% simoptions.BuoySim.SeaParameters.water_depth = 40;
+% simoptions.BuoySim.SeaParameters = defaultseaparamaters(simoptions.BuoySim.SeaParameters);
 
-simoptions.tether_length = 5;
+simoptions.BuoySim.tether_length = 5;
 
 simoptions.NoOfMachines = 1;
 
-simoptions.tspan = [0, 120];
+simoptions.ODESim.TimeSpan = [0, 120];
 simoptions.Lmode = 1;
 simoptions.ODESim.InitialConditions = [0, 0, 0];
 
-simoptions.simfun = 'simfun_MAGCOUPLE';
-simoptions.finfun = 'finfun_MAGCOUPLE';
-% simoptions.odeevfun = @simplelinearmachineode_proscribedmotion;
-simoptions.odeevfun = 'systemodeforcefcn_linear_mvgfield';
-simoptions.resfun = 'systemresfun_linear_mvgfield';
+simoptions.ODESim.PreProcFcn = 'simfun_MAGCOUPLE';
+simoptions.ODESim.PostPreProcFcn = 'finfun_MAGCOUPLE';
+% simoptions.ODESim.EvalFcn = @simplelinearmachineode_proscribedmotion;
+simoptions.ODESim.EvalFcn = 'systemodeforcefcn_linear_mvgfield';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear_mvgfield';
 % simoptions.dpsidxfun = @polydpsidx_ACPMSM
-simoptions.forcefcn = 'forcefcn_linear_mvgfield_system';
+simoptions.ODESim.ForceFcn = 'forcefcn_linear_mvgfield_system';
 simoptions.ODESim.ForceFcnArgs = {};
 
 simfunargs = {@simfun_ACPMSM};
@@ -150,10 +150,10 @@ simoptions.rho = 0;
 %%
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun, ...
+                                                 simoptions.ODESim.PreProcFcn, ...
+                                                 simoptions.ODESim.PostPreProcFcn, ...
+                                                 simoptions.ODESim.EvalFcn, ...
+                                                 simoptions.ODESim.PostSimFcn, ...
                                                  'simfunargs', simfunargs, ...
                                                  'finfunargs', finfunargs);
                                              
@@ -167,7 +167,7 @@ machinescore_ACPMSM()
 
 % %% no FEA
 % 
-% simoptions.simfun = 'dummysimfun';
+% simoptions.ODESim.PreProcFcn = 'dummysimfun';
 % simfunargs = {@dummysimfun};
 % 
 % 
@@ -176,10 +176,10 @@ machinescore_ACPMSM()
 % 
 % 
 % [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-%                                                  simoptions.simfun, ...
-%                                                  simoptions.finfun, ...
-%                                                  simoptions.odeevfun, ...
-%                                                  simoptions.resfun, ...
+%                                                  simoptions.ODESim.PreProcFcn, ...
+%                                                  simoptions.ODESim.PostPreProcFcn, ...
+%                                                  simoptions.ODESim.EvalFcn, ...
+%                                                  simoptions.ODESim.PostSimFcn, ...
 %                                                  'simfunargs', simfunargs, ...
 %                                                  'finfunargs', finfunargs);
 %                                              
@@ -192,19 +192,19 @@ machinescore_ACPMSM()
 %% Compare to no magcouple
 
 
-simoptions.simfun = 'dummysimfun';
-% simoptions.simfun = 'simfun_ACPMSM';
-simoptions.finfun = 'systemfinfun_ACPMSM';
-simoptions.odeevfun = 'systemode_linear';
-simoptions.resfun = 'systemresfun_linear';
+simoptions.ODESim.PreProcFcn = 'dummysimfun';
+% simoptions.ODESim.PreProcFcn = 'simfun_ACPMSM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACPMSM';
+simoptions.ODESim.EvalFcn = 'systemode_linear';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 
 simoptions.rho = 0;
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun);
+                                                 simoptions.ODESim.PreProcFcn, ...
+                                                 simoptions.ODESim.PostPreProcFcn, ...
+                                                 simoptions.ODESim.EvalFcn, ...
+                                                 simoptions.ODESim.PostSimFcn);
                                              
                                              
 plotresultsbuoysys_linear(T, Y, results, design, 1)

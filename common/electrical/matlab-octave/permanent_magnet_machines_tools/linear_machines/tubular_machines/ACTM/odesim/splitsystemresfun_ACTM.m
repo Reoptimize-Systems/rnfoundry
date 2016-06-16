@@ -18,7 +18,7 @@ function [results, design] = splitsystemresfun_ACTM(T, Y, design, simoptions, re
         design.EMFpeak = results.EMFpeak;
 
         design.TotalGridEnergy = results.TotalGridEnergy;
-        design.AverageEnergy = design.TotalGridEnergy ./ (simoptions.tspan(2) - simoptions.tspan(1));
+        design.AverageEnergy = design.TotalGridEnergy ./ (simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan(1));
 
         design.GridMeanPower = results.GridPowersum / results.GridPowern;
 

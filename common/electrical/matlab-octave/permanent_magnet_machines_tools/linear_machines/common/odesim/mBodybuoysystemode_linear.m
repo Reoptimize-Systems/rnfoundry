@@ -148,9 +148,9 @@ function varargout = mBodybuoysystemode_linear (t, x, design, simoptions)
     % Change the x members into more useful variables names, MATLAB will
     % optimise away any memory penalty associated with this I think
     xBh = x(mbsolutioninds(simoptions.ODESim.SolutionComponents.MultiBodySystem.BuoyPositionSolutionInd),:) ...
-            - buoy.sz/2 + simoptions.BuoyParameters.draft; % x(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices);
+            - buoy.sz/2 + simoptions.BuoySim.BuoyParameters.draft; % x(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices);
     vBh = x(mbsolutioninds(simoptions.ODESim.SolutionComponents.MultiBodySystem.BuoyVelocitySolutionInd),:); % x(simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices);
-%     xBh = buoy.pos(3) - buoy.sz/2 + simoptions.BuoyParameters.draft;
+%     xBh = buoy.pos(3) - buoy.sz/2 + simoptions.BuoySim.BuoyParameters.draft;
 %     vBh = buoy.vel(3);
     xBs = 0; % x(simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices);
     vBs = 0; % x(simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices);
@@ -171,8 +171,8 @@ function varargout = mBodybuoysystemode_linear (t, x, design, simoptions)
         circuitode_linear (Iphases, EMF, design);
 
     % Calculate the drag forces on the translator
-    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
-%     [FaddB, ForceEBD] = feval ( simoptions.forcefcn, design, simoptions, ...
+    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
+%     [FaddB, ForceEBD] = feval ( simoptions.ODESim.ForceFcn, design, simoptions, ...
 %                                  xE, vE, EMF, Iphases, xBh, vBh, xBs, vBs, ...
 %                                  simoptions.ODESim.ForceFcnArgs{:} );
     

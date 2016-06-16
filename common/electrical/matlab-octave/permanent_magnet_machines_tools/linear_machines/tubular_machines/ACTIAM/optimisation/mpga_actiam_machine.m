@@ -28,13 +28,13 @@ mpgaoptions.OBJ_F = 'objactiam_machine';   % Name of function for objective valu
 
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
-simoptions.simfun = 'dummysimfun';
-simoptions.finfun = 'systemfinfun_ACTIAM';
-simoptions.odeevfun = 'systemode_linear';
+simoptions.ODESim.PreProcFcn = 'dummysimfun';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTIAM';
+simoptions.ODESim.EvalFcn = 'systemode_linear';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions.resfun = 'splitsystemresfun_linear';
-simoptions.splitode = 10;
-simoptions.spfcn = 'splitodesystemres_linear';
+simoptions.ODESim.PostSimFcn = 'splitsystemresfun_linear';
+simoptions.ODESim.Split = 10;
+simoptions.ODESim.SplitPointFcn = 'splitodesystemres_linear';
 simoptions.events = 'systemevents_linear';
 
 simoptions.DisplayDesignFcn = 'displaydesign_ACTIAM';
@@ -82,10 +82,10 @@ mpgaoptions.RESUME = false;
 %% Evaluate the winner
 
 % set up the functions
-simoptions.simfun = 'simfun_ACTIAM';
-simoptions.finfun = 'systemfinfun_ACTIAM';
-simoptions.odeevfun = 'systemode_linear';
-simoptions.resfun = 'systemresfun_linear';
+simoptions.ODESim.PreProcFcn = 'simfun_ACTIAM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTIAM';
+simoptions.ODESim.EvalFcn = 'systemode_linear';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 
 if isfield(simoptions, 'splitode')
     simoptions = rmfield(simoptions, 'splitode');

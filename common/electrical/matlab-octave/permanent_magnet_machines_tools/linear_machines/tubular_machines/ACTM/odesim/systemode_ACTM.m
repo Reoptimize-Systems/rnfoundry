@@ -47,7 +47,7 @@ function varargout = systemode_ACTM(t, x, design, simoptions)
 % design is a standard machine design structure popluated with all the
 % necessary information to perform the simulation. 
 %
-% simoptions.BuoyParameters is a parameters structure containing information about the buoy.
+% simoptions.BuoySim.BuoyParameters is a parameters structure containing information about the buoy.
 % It should contain the following members:
 %
 %   Halpha - 
@@ -59,7 +59,7 @@ function varargout = systemode_ACTM(t, x, design, simoptions)
 %   g - local gravitational constant (in case we deploy on Mars or Moon in future)
 %   rho - density of seawater (see above)
 %
-% simoptions.SeaParameters is a structure containing information about the see conditions
+% simoptions.BuoySim.SeaParameters is a structure containing information about the see conditions
 % being used in the simulation. It should contain the following members:
 %
 %   amp - vector of wave amplitudes for each wave sinusoid being applied
@@ -109,7 +109,7 @@ function varargout = systemode_ACTM(t, x, design, simoptions)
     % first determine xT from the new tether length, change in translator
     % vertical position will be change in distance from hawser to buoy, i.e
     % the change in tether length
-    xT = sqrt((xBh+simoptions.tether_length).^2 + xBs.^2) - simoptions.tether_length;
+    xT = sqrt((xBh+simoptions.BuoySim.tether_length).^2 + xBs.^2) - simoptions.BuoySim.tether_length;
 
     % convert to relative position
     xR = xT ./ design.Wp;
@@ -122,7 +122,7 @@ function varargout = systemode_ACTM(t, x, design, simoptions)
     dpsidxR = slmpsidot_linear(design, pos, design.Wp);
     
     % First find unit vector in the direction pointing from hawser to the buoy
-    unitv = [simoptions.tether_length+xBh, xBs] / norm([simoptions.tether_length+xBh, xBs]);
+    unitv = [simoptions.BuoySim.tether_length+xBh, xBs] / norm([simoptions.BuoySim.tether_length+xBh, xBs]);
 
     % Then find dot product of heave and surge velocities with unit vector
     % to get correct direction and magnitude of translator velocity
@@ -165,7 +165,7 @@ function varargout = systemode_ACTM(t, x, design, simoptions)
     FfeaVec = -Ffea * unitv;
 
     % Calculate the drag forces on the translator
-    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
+    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
 
     % ********************************************************************
     % Buoy Acceleration, these calcs assume all of the mass is in the buoy,

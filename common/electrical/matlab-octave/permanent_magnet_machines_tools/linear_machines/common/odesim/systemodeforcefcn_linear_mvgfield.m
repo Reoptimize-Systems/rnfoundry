@@ -164,9 +164,9 @@ function varargout = systemodeforcefcn_linear_mvgfield(t, x, design, simoptions)
     dx(7:6+design.Phases,1) = circuitode_linear(Iphases, EMF, design);
     
     % Calculate the drag forces on the translator
-    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
+    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
     
-    [FaddT, FaddF] = feval(simoptions.forcefcn, design, simoptions, xT, vT, xF, vF, xBh, xBs, vBh, vBs, simoptions.ODESim.ForceFcnArgs{:});
+    [FaddT, FaddF] = feval(simoptions.ODESim.ForceFcn, design, simoptions, xT, vT, xF, vF, xBh, xBs, vBh, vBs, simoptions.ODESim.ForceFcnArgs{:});
     
     % Find the frictional force that would cause the armature to move at  
     % the same speed as the translator 

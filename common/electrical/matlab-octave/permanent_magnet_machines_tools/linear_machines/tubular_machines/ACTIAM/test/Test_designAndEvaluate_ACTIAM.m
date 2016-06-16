@@ -35,41 +35,41 @@ options.pointsPerPole = 40;
 options.coilYieldStrength = 70e6;
 
 % % set up the functions
-% simoptions.simfun = @RunStructFEMMSimNew_ACTIAM;
+% simoptions.ODESim.PreProcFcn = @RunStructFEMMSimNew_ACTIAM;
 % simoptions.xycoords = randMat([1.00000001*design.Rm; 0], [0.99999*design.Ro; 1.0], 0, 2000); 
-% simoptions.finfun = @finfun_ACTIAM;
+% simoptions.ODESim.PostPreProcFcn = @finfun_ACTIAM;
 % simoptions.odefun = @simplelinearmachineode_proscribedmotion; 
 % simoptions.dpsidxfun = @polypsidot_ACTIAM; %@dpsidx_tubular; 
-% simoptions.resfun = @resfun_ACTM;
+% simoptions.ODESim.PostSimFcn = @resfun_ACTM;
 % 
 % % Test with linear motion
 % speed = 1;
 % simoptions.ODESim.InitialConditions = 0;
 % simoptions.skip = 1;
-% simoptions.tspan = [0, 10];
-% simoptions.drivetimes = 0:simoptions.tspan(2);
+% simoptions.ODESim.TimeSpan = [0, 10];
+% simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 % simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 % simoptions.xT = simoptions.vT .* simoptions.drivetimes;
 % simoptions.Lmode = 0;
 
 % set up the functions
-simoptions.simfun = 'simfun_ACTIAM';
-simoptions.finfun = 'systemfinfun_ACTIAM';
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.resfun = 'systemresfun_linear';
+simoptions.ODESim.PreProcFcn = 'simfun_ACTIAM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTIAM';
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 
 % use buoy number 37, 4m diameter, 2m draft
 design.buoynum = 37;
 
-simoptions.SeaParameters.sigma = 2 * pi * 0.35;
-simoptions.SeaParameters.phase = pi / 2;
-simoptions.SeaParameters = defaultseaparamaters(simoptions.SeaParameters);
-simoptions.tether_length = 5;
+simoptions.BuoySim.SeaParameters.sigma = 2 * pi * 0.35;
+simoptions.BuoySim.SeaParameters.phase = pi / 2;
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(simoptions.BuoySim.SeaParameters);
+simoptions.BuoySim.tether_length = 5;
 simoptions.water_depth = 40;
 
 simoptions.ODESim.InitialConditions = [0,0,0];
 simoptions.skip = 1;
-simoptions.tspan = [0, 45];
+simoptions.ODESim.TimeSpan = [0, 45];
 simoptions.Lmode = 0;
 
 %%

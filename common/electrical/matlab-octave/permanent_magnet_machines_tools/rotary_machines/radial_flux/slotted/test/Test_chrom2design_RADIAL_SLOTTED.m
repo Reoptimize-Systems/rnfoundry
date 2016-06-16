@@ -98,11 +98,11 @@ simoptions.MagFEASim.AirGapMeshSize = -1;
 
 % The simulation functions, these are suitible for a prescribed motion
 % simulation of a coreless torus machine
-simoptions.simfun = 'simfun_RADIAL_SLOTTED';
-simoptions.finfun = 'prescribedmotfinfun_RADIAL_SLOTTED';
-simoptions.odeevfun = 'prescribedmotodetorquefcn_ROTARY'; 
+simoptions.ODESim.PreProcFcn = 'simfun_RADIAL_SLOTTED';
+simoptions.ODESim.PostPreProcFcn = 'prescribedmotfinfun_RADIAL_SLOTTED';
+simoptions.ODESim.EvalFcn = 'prescribedmotodetorquefcn_ROTARY'; 
 simoptions.torquefcn = 'torquefcn_ROTARY'; 
-simoptions.resfun = 'prescribedmotresfun_ROTARY';
+simoptions.ODESim.PostSimFcn = 'prescribedmotresfun_ROTARY';
 simoptions.usefemm = false;
 simoptions.quietfemm = true;
 

@@ -55,8 +55,8 @@ function [results, design] = systemresfun_ACTM(T, Y, design, simoptions)
     results.wave_height = zeros(1, length(T));
 
     for k = 1:length(T)
-        time_vector = T(k) * ones(1, length(simoptions.SeaParameters.phase));
-        results.wave_height(k) = sum(real(simoptions.SeaParameters.amp .* exp(-i .* (simoptions.SeaParameters.sigma .* time_vector - simoptions.SeaParameters.phase))));
+        time_vector = T(k) * ones(1, length(simoptions.BuoySim.SeaParameters.phase));
+        results.wave_height(k) = sum(real(simoptions.BuoySim.SeaParameters.amp .* exp(-i .* (simoptions.BuoySim.SeaParameters.sigma .* time_vector - simoptions.BuoySim.SeaParameters.phase))));
     end
     
     design.xAmax = 0;

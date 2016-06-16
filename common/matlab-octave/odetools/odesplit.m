@@ -202,7 +202,7 @@ function [results, tspan] = odesplit(odefcn, odeevfcn, tspan, y0, odeoptions, sp
     Inputs.MaxDuration = 0;
     Inputs.Blocks = 2;
     Inputs.OdeArgs = {};
-    Inputs.spfcnArgs = {};
+    Inputs.SplitPointFcnArgs = {};
     Inputs.ManageMemory = false;
     Inputs.BlockMultiplier = 20;
     Inputs.MaxAttempts = 2;
@@ -344,13 +344,13 @@ function [results, tspan] = odesplit(odefcn, odeevfcn, tspan, y0, odeoptions, sp
                     % evaluation function that a terminal event has been
                     % detected
                     flag = 2;
-                    results = feval(spfcn, flag, results, sol, Inputs.spfcnArgs{:});
+                    results = feval(spfcn, flag, results, sol, Inputs.SplitPointFcnArgs{:});
                 end
             end
         else
            flag = 1;
            % Call the split point function with the solution results
-           results = feval(spfcn, flag, results, sol, Inputs.spfcnArgs{:});
+           results = feval(spfcn, flag, results, sol, Inputs.SplitPointFcnArgs{:});
         end
         
         if sol.x(end) >= tspan(2) 

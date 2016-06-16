@@ -45,6 +45,7 @@ design.Branches = 1;
 design = ratios2dimensions_ACTM(design);
 
 
+
 %% Set up Common Parameters
 
 % ratio of load resistance to phase resistance
@@ -76,14 +77,14 @@ simoptions.BuoySim.tether_length = 4;
 simoptions.BuoySim.maxAllowedxT = inf;
 
 % choose a time span for the simulation
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 
 % set up some functions to be used to generate the data and run the
 % simulation
-simoptions.simfun = 'systemsimfun_ACTM';
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.resfun = 'systemresfun_linear'; 
+simoptions.ODESim.PreProcFcn = 'systemsimfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear'; 
 simoptions.events = 'systemevents_linear'; 
 
 % run the simulation with the specified parameters
@@ -100,22 +101,22 @@ plotresultsbuoysys_linear(T, Y, results, design, outsimoptions, 1)
 % directory
 simoptions.buoy = 37;
 
-simoptions.tether_length = 4;
+simoptions.BuoySim.tether_length = 4;
 
 simoptions.maxAllowedxT = inf;
 
-simoptions.simfun = 'systemsimfun_ACTM';
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.resfun = 'systemresfun_linear'; 
+simoptions.ODESim.PreProcFcn = 'systemsimfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear'; 
 simoptions.events = 'systemevents_linear';
 
 % this time we specify a pierson-moskowitz sea state with a peak frequency
 % of 1/9
-simoptions.SeaParameters = seasetup ('PMPeakFreq', 1/9);
+simoptions.BuoySim.SeaParameters = seasetup ('PMPeakFreq', 1/9);
 
 % we'll do a 60 second simulation, but for a 
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 
 [T, Y, results, outdesign, outsimoptions] = simulatemachine_linear (design, simoptions); 
     

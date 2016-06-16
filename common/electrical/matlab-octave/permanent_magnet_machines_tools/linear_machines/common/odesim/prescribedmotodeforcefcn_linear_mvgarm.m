@@ -48,7 +48,7 @@ function varargout = prescribedmotodeforcefcn_linear_mvgarm(t, x, design, simopt
 %     % Interpolate the data set (times,vT) at current time
 %     vTtemp = interp1(simoptions.drivetimes, simoptions.vT, t); 
 
-    simoptions.tether_length = 1000;
+    simoptions.BuoySim.tether_length = 1000;
 
     % determine the machine outputs
     [dpsidxR, EMF, FA, FfeaVec, xT, vT, design] = machineodesim_linear_mvgarm(design, simoptions, Icoils, xA, vA, xTtemp, vTtemp, 0, 0);
@@ -64,9 +64,9 @@ function varargout = prescribedmotodeforcefcn_linear_mvgarm(t, x, design, simopt
     %Ffea = sum(intbpolyshearforce_AC(design, J, pos)) .* design.Poles(1);
 
     % Calculate the drag forces on the translator
-    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
+    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
      
-    [FaddT, FaddA, ForceBD] = feval(simoptions.forcefcn, design, simoptions, xT, vT, xA, vA, xTtemp, 0, vTtemp, 0, simoptions.ODESim.ForceFcnArgs{:});
+    [FaddT, FaddA, ForceBD] = feval(simoptions.ODESim.ForceFcn, design, simoptions, xT, vT, xA, vA, xTtemp, 0, vTtemp, 0, simoptions.ODESim.ForceFcnArgs{:});
     
     % Find the frictional force that would cause the armature to move at  
     % the same speed as the translator 

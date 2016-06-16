@@ -85,13 +85,13 @@ function [ptables, pdata] = performancetables_AM (design, simoptions, speeds, Lo
     outfields = [ outfields, commonfields ];
 
     % do design data gathering function if necessary
-    if options.DoSimFun && ~isempty(simoptions.simfun)
+    if options.DoSimFun && ~isempty(simoptions.ODESim.PreProcFcn)
         % Analyse the machine and gather desired data
-        [design, simoptions] = feval (simoptions.simfun, design, simoptions);
+        [design, simoptions] = feval (simoptions.ODESim.PreProcFcn, design, simoptions);
     end
     
 	% remove simfun, so we don't repeat fea etc. on subsequent runs
-	simoptions.simfun = [];
+	simoptions.ODESim.PreProcFcn = [];
 
     % preallocate the fields
     ptables = struct ();

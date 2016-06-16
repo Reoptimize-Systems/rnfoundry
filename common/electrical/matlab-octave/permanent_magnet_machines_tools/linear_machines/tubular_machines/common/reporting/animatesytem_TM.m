@@ -60,8 +60,8 @@ function animatesytem_TM(design, simoptions, T, Y, results, frames, fps, avifile
     plotsystemscene_TM(design, simoptions, xBs(1), xBh(1), xT(1), maxyT, yOffset, xOffset, mwscale);
     
     % now determine suitible axis limits to keep everything to scale
-    Axmax = max(simoptions.BuoyParameters.a + max(simoptions.BuoyParameters.a/2, 1.1*max(abs(Y(:,1)))), ...
-        simoptions.BuoyParameters.draft*2 + simoptions.tether_length + abs(maxyT) + max(abs(Y(:,3))));
+    Axmax = max(simoptions.BuoySim.BuoyParameters.a + max(simoptions.BuoySim.BuoyParameters.a/2, 1.1*max(abs(Y(:,1)))), ...
+        simoptions.BuoySim.BuoyParameters.draft*2 + simoptions.BuoySim.tether_length + abs(maxyT) + max(abs(Y(:,3))));
     
     Aymax = Axmax;
     

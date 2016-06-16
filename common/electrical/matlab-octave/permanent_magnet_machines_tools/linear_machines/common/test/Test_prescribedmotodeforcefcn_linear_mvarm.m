@@ -73,7 +73,7 @@ simoptions.ODESim.InitialConditions = [0, 0, 0];
 % solver finishes
 simoptions.skip = 1;
 % the time span of the simulation
-simoptions.tspan = [0, 9];   
+simoptions.ODESim.TimeSpan = [0, 9];   
 % Additional absolute tolerances on the components of the solution
 simoptions.abstol = [];
 
@@ -81,7 +81,7 @@ simoptions.NoOfMachines = 1;
 
 speed = 0.042;
 
-simoptions.drivetimes = simoptions.tspan(1):((simoptions.tspan(2) - simoptions.tspan(1))/20):simoptions.tspan(2);
+simoptions.drivetimes = simoptions.ODESim.TimeSpan(1):((simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan(1))/20):simoptions.ODESim.TimeSpan(2);
 simoptions.xT = simoptions.drivetimes .* speed;
 simoptions.vT = repmat(speed, size(simoptions.xT));
 
@@ -90,20 +90,16 @@ simoptions.vT = repmat(speed, size(simoptions.xT));
 
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
-% simoptions.simfun = 'simfunnocurrent_SNAPPER';
-simoptions.simfun = 'dummysimfun';
-simoptions.finfun = 'finfun_SNAPPER';
-simoptions.odeevfun = 'prescribedmotodeforcefcn_linear_mvgarm';
+% simoptions.ODESim.PreProcFcn = 'simfunnocurrent_SNAPPER';
+simoptions.ODESim.PreProcFcn = 'dummysimfun';
+simoptions.ODESim.PostPreProcFcn = 'finfun_SNAPPER';
+simoptions.ODESim.EvalFcn = 'prescribedmotodeforcefcn_linear_mvgarm';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions.resfun = 'prescribedmotresfun_linear_mvgarm';
-simoptions.forcefcn = 'forcefcn_linear_mvgarm_pscbmot';
+simoptions.ODESim.PostSimFcn = 'prescribedmotresfun_linear_mvgarm';
+simoptions.ODESim.ForceFcn = 'forcefcn_linear_mvgarm_pscbmot';
 simoptions.ODESim.ForceFcnArgs = {};
 
-[T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun);
+[T, Y, results, design] = simulatemachine_linear(design, simoptions);
 
 
 plotresultsproscribedmot_linear(T, Y, results, design, 1)
@@ -157,30 +153,26 @@ simoptions2.buoylibdir = getbuoylibdir;
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
 % if all(isfield(design2, {'p_FEAFy', 'slm_psidot'}))
-%     simoptions2.simfun = 'dummysimfun';
-%     simoptions2.finfun = 'dummysimfun';
+%     simoptions2.ODESim.PreProcFcn = 'dummysimfun';
+%     simoptions2.ODESim.PostPreProcFcn = 'dummysimfun';
 % else
-    simoptions2.simfun = 'simfunnocurrent_SNAPPER';
-    simoptions2.finfun = 'systemfinfun_SNAPPER';
+    simoptions2.ODESim.PreProcFcn = 'simfunnocurrent_SNAPPER';
+    simoptions2.ODESim.PostPreProcFcn = 'systemfinfun_SNAPPER';
 % end
 
-simoptions2.odeevfun = 'systemodeforcefcn_linear_mvgarm';
+simoptions2.ODESim.EvalFcn = 'systemodeforcefcn_linear_mvgarm';
 % simoptions2.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions2.resfun = 'systemresfun_SNAPPER';
+simoptions2.ODESim.PostSimFcn = 'systemresfun_SNAPPER';
 simoptions2.preallocresfcn = 'prallocresfcn_SNAPPER';
-simoptions2.forcefcn = 'forcefcn_snapper';
+simoptions2.ODESim.ForceFcn = 'forcefcn_snapper';
 simoptions2.ODESim.ForceFcnArgs = {};
 
 if isfield(design2, 'Ntot')
     design2 = rmfield(design2, 'Ntot');
 end
 
-[T2, Y2, results2, design2, simoptions2] = simulatemachine_linear(design2, ...
-                                                 simoptions2, ...
-                                                 simoptions2.simfun, ...
-                                                 simoptions2.finfun, ...
-                                                 simoptions2.odeevfun, ...
-                                                 simoptions2.resfun);
+[T2, Y2, results2, design2, simoptions2] = ...
+    simulatemachine_linear (design2, simoptions2);
 
 results2.Fs = results2.Fa(:,1);
 results2.Ffea = results2.Fpto + results2.Fa(:,3);

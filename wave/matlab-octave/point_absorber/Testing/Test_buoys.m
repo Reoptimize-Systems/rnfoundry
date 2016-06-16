@@ -41,25 +41,25 @@ simoptions.Lmode = 1;
 
 simoptions.buoylibdir = buoylibdir ();
 
-simoptions.SeaParameters.peak_freq = 1/9;
-simoptions.SeaParameters.sigma_range = [2*pi*0.055, 0.1*(0.6)^0.5 + 2.24];
-simoptions.SeaParameters.freqcount = 50;
-simoptions.SeaParameters.water_depth = 50;
+simoptions.BuoySim.SeaParameters.peak_freq = 1/9;
+simoptions.BuoySim.SeaParameters.sigma_range = [2*pi*0.055, 0.1*(0.6)^0.5 + 2.24];
+simoptions.BuoySim.SeaParameters.freqcount = 50;
+simoptions.BuoySim.SeaParameters.water_depth = 50;
 
-simoptions.SeaParameters = defaultseaparamaters(simoptions.SeaParameters);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(simoptions.BuoySim.SeaParameters);
 
-simoptions.tether_length = 10;
+simoptions.BuoySim.tether_length = 10;
 
-simoptions.tspan = [0, 500];
+simoptions.ODESim.TimeSpan = [0, 500];
 
 % set up the functions
-simoptions.simfun = 'dummysimfun_ACTM';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemode_ACTM';
+simoptions.ODESim.PreProcFcn = 'dummysimfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_ACTM';
 simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions.resfun = 'splitsystemresfun_ACTM';
-simoptions.splitode = 5;
-simoptions.spfcn = 'splitodesystemres_ACTM';
+simoptions.ODESim.PostSimFcn = 'splitsystemresfun_ACTM';
+simoptions.ODESim.Split = 5;
+simoptions.ODESim.SplitPointFcn = 'splitodesystemres_ACTM';
 simoptions.events = 'vevents_ACTM';
 
 design = Ratios2Dimensions_ACTM(design);
@@ -83,7 +83,7 @@ diary('buoy_test_output.log')
 
 for j = 1:seatests
     
-    simoptionsArr(j).SeaParameters = defaultseaparamaters(simoptions.SeaParameters);
+    simoptionsArr(j).SeaParameters = defaultseaparamaters(simoptions.BuoySim.SeaParameters);
     
     for i = 1:numbuoys
 
@@ -170,11 +170,11 @@ end
 %%
 
 simoptions = rmfield(simoptions, 'splitode');
-simoptions.simfun = @systemsimfun_ACTM;
-simoptions.finfun = @systemfinfun_ACTM;
+simoptions.ODESim.PreProcFcn = @systemsimfun_ACTM;
+simoptions.ODESim.PostPreProcFcn = @systemfinfun_ACTM;
 simoptions.odefun = @systemode_ACTM; 
 simoptions.dpsidxfun = @polypsidot_ACTIAM; %@dpsidx_tubular; 
-simoptions.resfun = @systemresfun_ACTM;
+simoptions.ODESim.PostSimFcn = @systemresfun_ACTM;
 simoptions.events = @vevents_ACTM;
 buoynum = 1;
 simoptions = buoysimsetup(buoynum, simoptions);
@@ -208,16 +208,16 @@ plotresultsbuoysys_linear(T, Y, results, 1)
 
 load splitodesystemres_ACTM.mat
 
-simoptions.tspan = [0, 500];
+simoptions.ODESim.TimeSpan = [0, 500];
 
 % set up the functions
-simoptions.simfun = 'dummysimfun_ACTM';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemode_ACTM';
+simoptions.ODESim.PreProcFcn = 'dummysimfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_ACTM';
 simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions.resfun = 'splitsystemresfun_ACTM';
-simoptions.splitode = 5;
-simoptions.spfcn = 'splitodesystemres_ACTM';
+simoptions.ODESim.PostSimFcn = 'splitsystemresfun_ACTM';
+simoptions.ODESim.Split = 5;
+simoptions.ODESim.SplitPointFcn = 'splitodesystemres_ACTM';
 simoptions.events = 'vevents_ACTM';
 
 actmrootpath = fileparts(which('GetEMF_ACTM'));
@@ -273,12 +273,12 @@ end
 %% Now repeat with different sea
 
 simoption = rmfield(simoptions, 'SeaParameters');
-simoptions.SeaParameters.peak_freq = 1/9;
-simoptions.SeaParameters.sigma_range = [2*pi*0.055, 0.1*(0.6)^0.5 + 2.24];
-simoptions.SeaParameters.freqcount = 55;
-simoptions.SeaParameters.water_depth = 50;
+simoptions.BuoySim.SeaParameters.peak_freq = 1/9;
+simoptions.BuoySim.SeaParameters.sigma_range = [2*pi*0.055, 0.1*(0.6)^0.5 + 2.24];
+simoptions.BuoySim.SeaParameters.freqcount = 55;
+simoptions.BuoySim.SeaParameters.water_depth = 50;
 
-simoptions.SeaParameters = defaultseaparamaters(simoptions.SeaParameters);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(simoptions.BuoySim.SeaParameters);
 
 for i = 1:numbuoys
     

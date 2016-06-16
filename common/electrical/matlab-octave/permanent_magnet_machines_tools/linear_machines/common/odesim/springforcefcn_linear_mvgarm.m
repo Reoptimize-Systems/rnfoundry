@@ -4,7 +4,7 @@ function [Force, Fa] = springforcefcn_linear_mvgarm(design, simoptions, xT, vT, 
     Fs = Fs_Snapper(xA - design.xSC, design);
     
 %     % Calculate the drag forces on the armature
-%     FdragA = sign(vA) .* 0.5 .* realpow(vA,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
+%     FdragA = sign(vA) .* 0.5 .* realpow(vA,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
 %     
     % total the force on the reactor
     Fa = Fs;

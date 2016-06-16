@@ -128,7 +128,7 @@ function [design, simoptions] = mBodybuoysystemfinfun_AM (design, simoptions, fi
                                             
 	design.MultiBodySystem = mb;
     
-%     simoptions.odesolver = 'ode45';
+%     simoptions.ODESim.Solver = 'ode45';
 %     simoptions.reltol = 10e-9;
     
 end
