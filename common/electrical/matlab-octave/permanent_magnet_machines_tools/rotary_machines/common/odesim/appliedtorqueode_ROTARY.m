@@ -28,7 +28,7 @@ function [dx, varargout] = appliedtorqueode_ROTARY(t, x, design, simoptions, tor
      
     % call the supplied additional force function
     [FaddE, ForceBD] = ...
-        feval(simoptions.ODESim.ForceFcn, design, simoptions, xT, vT, EMF, Iphases, simoptions.torquefcnargs{:});
+        feval(simoptions.ODESim.TorqueFcn, design, simoptions, xT, vT, EMF, Iphases, simoptions.ODESim.TorqueFcnArgs{:});
     
     % velocity
     dx(1) = vR;
