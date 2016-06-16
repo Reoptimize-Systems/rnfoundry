@@ -1,6 +1,7 @@
 %% example_basic_heaving_buoy_simulation
 %
-% shows the use of the basic buoy simulation functions in isolation
+% Shows the use of the basic buoy simulation functions in isolation from
+% other simulation components.
 %
 %
 
@@ -17,12 +18,6 @@ simoptions.NRadiationCoefs = 10;
 % set up the buoy in readiness for simulation
 simoptions = buoysimsetup ('cyl_2dia_1dr', simoptions);
 
-% [dx, bouyancy_force, excitation_force_heave, ...
-%     excitation_force_surge, radiation_force_heave, ...
-%     radiation_force_surge, FBDh, FBDs, wave_height] = buoyodesim (t, x, simoptions, Fexternal);
-
-
-
 % The buoy simulation must be solved by integrating a system of Ordinary
 % Differential Equations. This is done using the standard Matlab ODE
 % solving routines. These routines take in as input a function which
@@ -31,16 +26,22 @@ simoptions = buoysimsetup ('cyl_2dia_1dr', simoptions);
 % 
 % dx = anodesystem (t, x)
 % 
-% Our system of ODEs requires more inputs than just t and x to calculate
-% the derivatives, i.e. it is called as
+% The function which solves our system of ODEs requires more inputs than
+% just t and x to calculate the derivatives, i.e. it is called as
 %
 % dx = buoyodesim (t, x, simoptions, Fexternal)
 %
-% thereforce we must create an anonymous function to get this into a form
-% suitible for ode45. In this case we set the Fexternal argument to [0,0].
-% This is the external force in the buoy in heave and surge, e.g. the power
-% take-off force which would normally change on every time step. Here it is
-% just set to a constant of zero on every time step
+% Therefore we must create an anonymous function to get this into a form
+% suitible for ode45 (and ode15s etc.). Anonymous functions allow you to
+% store a function as a variable. To learn more about them see:
+%
+% http://uk.mathworks.com/help/matlab/matlab_prog/anonymous-functions.html
+%
+% In this case we set the Fexternal argument to [0,0]. This is the external
+% force in the buoy in heave and surge, e.g. the power take-off force which
+% would normally change on every time step. Here it is just set to a
+% constant of zero in both directions on every time step, so the buoy just
+% moves under the actions of the waves.
 simfunction = @(t,x) buoyodesim (t, x, simoptions, [0,0]);
 
 % choose a time span for the simulation
@@ -69,7 +70,7 @@ tspan = [0, 90];
 %
 %
 
-% plot the buoy positions and velocities in heave and surge
+% Plot the buoy positions and velocities in heave and surge
 plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]))
 
 %% PM Spectrum

@@ -1,6 +1,6 @@
 function [dx, bouyancy_force, excitation_force_heave, ...
     excitation_force_surge, radiation_force_heave, ...
-    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodesim(t, x, simoptions, Fexternal)
+    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodesim(t, x, buoysimoptions, Fexternal)
 % solves the rhs of the system of ODEs describing a heaving buoy
 %
 % Syntax
@@ -107,7 +107,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     vBs = x(4,:);
     
     % Get the solution indices for the hydrodynamic variables
-    buoyradinds = (5:4+(2*simoptions.NRadiationCoefs));
+    buoyradinds = (5:4+(2*buoysimoptions.NRadiationCoefs));
     
     % calculate the forces acting on the buoy
     [ buoyforcedx, ...
@@ -118,10 +118,10 @@ function [dx, bouyancy_force, excitation_force_heave, ...
       radiation_force_surge, ...
       FBDh, ...
       FBDs, ...
-      wave_height]  = buoyodeforces (t, x(buoyradinds,:), xBh, vBh, vBs, simoptions);
+      wave_height]  = buoyodeforces (t, x(buoyradinds,:), xBh, vBh, vBs, buoysimoptions);
 
     % copy the force derivatives to the derivatives vector at the
-    % appropriae point
+    % appropriate point
     dx(buoyradinds,:) = buoyforcedx;
     
     % Buoy acceleration in heave
@@ -131,12 +131,12 @@ function [dx, bouyancy_force, excitation_force_heave, ...
                    bouyancy_force + FBDh + Fexternal(1);
 
 	% calculate the acceleration
-    dx(2,:) = real ( heaveforce / (simoptions.BuoyParameters.mass_external + ...
-                                   simoptions.BuoyParameters.HM_infinity) ...
+    dx(2,:) = real ( heaveforce / (buoysimoptions.BuoyParameters.mass_external + ...
+                                   buoysimoptions.BuoyParameters.HM_infinity) ...
                     );
 
 	% limit the acceleration in heave if requested
-	dx(2,:) = dx(2,:) .* simoptions.SeaParameters.ConstrainHeave;
+	dx(2,:) = dx(2,:) .* buoysimoptions.SeaParameters.ConstrainHeave;
     
     % Buoy acceleration in surge
 
@@ -145,12 +145,12 @@ function [dx, bouyancy_force, excitation_force_heave, ...
                     FBDs + Fexternal(2);
 
 	% calculate the acceleration
-    dx(4,:) = real ( surgeforce / (simoptions.BuoyParameters.mass_external + ...
-                                   simoptions.BuoyParameters.SM_infinity) ...
+    dx(4,:) = real ( surgeforce / (buoysimoptions.BuoyParameters.mass_external + ...
+                                   buoysimoptions.BuoyParameters.SM_infinity) ...
                    );
                          
 	% limit the acceleration in surge if requested
-	dx(4,:) = dx(4,:) .* simoptions.SeaParameters.ConstrainSurge;
+	dx(4,:) = dx(4,:) .* buoysimoptions.SeaParameters.ConstrainSurge;
     
     % The differentials of the positions are the velocities
     dx(1,:) = vBh;
