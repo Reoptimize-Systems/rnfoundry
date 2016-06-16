@@ -84,10 +84,8 @@ function refactor_code_string (expression, replace, topdir, stripvc)
         mfiles = dir(fullfile (thepath{indi}, '*.m'));
 
         for indii = 1:numel(mfiles)
-            % replace string in file using regexprepfile, with a regex
-            % looking for word boundaries to avoid functions with similar
-            % substrings
-            regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), expression, replace);
+            % replace string in file using regexprepfile
+            regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), expression, replace, true);
         end
 
     end
