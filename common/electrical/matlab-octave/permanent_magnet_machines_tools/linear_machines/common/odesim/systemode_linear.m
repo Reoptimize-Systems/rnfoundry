@@ -155,29 +155,29 @@ function varargout = systemode_linear(t, x, design, simoptions)
 
     % determine the machine outputs
     [dpsidxR, EMF, Feff, FfeaVec, xT, vT, unitv, design] = ...
-        machineodesim_linear(design, simoptions, Icoils, xBh, vBh, xBs, vBs);
+        machineodesim_linear (design, simoptions, Icoils, xBh, vBh, xBs, vBs);
     
     Fes = 0;
     
     % add end stop forces
-    if (xT > simoptions.maxAllowedxT && vT > 0) || (xT < -simoptions.maxAllowedxT && vT < 0)
+    if (xT > simoptions.BuoySim.maxAllowedxT && vT > 0) || (xT < -simoptions.BuoySim.maxAllowedxT && vT < 0)
 
-        Fes = - sign(xT) * simoptions.EndStopks * (abs(xT) - simoptions.maxAllowedxT);
+        Fes = - sign (xT) * simoptions.EndStopks * (abs (xT) - simoptions.BuoySim.maxAllowedxT);
         
-    elseif (xT > simoptions.maxAllowedxT && vT <= 0) || (xT < -simoptions.maxAllowedxT && vT >= 0)
+    elseif (xT > simoptions.BuoySim.maxAllowedxT && vT <= 0) || (xT < -simoptions.BuoySim.maxAllowedxT && vT >= 0)
         
         % get the end stop force
-        Fesmag = simoptions.EndStopks * (abs(xT) - simoptions.maxAllowedxT);
+        Fesmag = simoptions.EndStopks * (abs (xT) - simoptions.BuoySim.maxAllowedxT);
         
         % modify the force so it falls faster if we are moving in the
         % opposite direction, ensuring we are not adding energy by
         % exceeding the end stop force
-        Fvelmod = min(Fesmag, abs(vT) * (Fesmag / 1));
+        Fvelmod = min(Fesmag, abs (vT) * (Fesmag / 1));
         
         Fesmag = Fesmag - Fvelmod;
         
         % add it to the total force
-        Fes = - sign(xT) * Fesmag;
+        Fes = - sign (xT) * Fesmag;
         
     end
     
@@ -186,7 +186,7 @@ function varargout = systemode_linear(t, x, design, simoptions)
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
     dx(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices,1) ...
-        = circuitode_linear(Iphases, EMF, design);
+        = circuitode_linear (Iphases, EMF, design);
     
     % Calculate the drag forces on the translator
     % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
@@ -202,7 +202,6 @@ function varargout = systemode_linear(t, x, design, simoptions)
     % elements of dx are assumed to be the hydrodynamic radiation forces
     % derivatives where N is the number of alpha coefficients plus the
     % nuber of beta coefficients
-    % Determine the buoy/sea interaction forces and derivatives
     [ dx([simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices, ...
           simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices, ...
           simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices, ...
@@ -216,15 +215,15 @@ function varargout = systemode_linear(t, x, design, simoptions)
       radiation_force_surge, ...
       FBDh, ...
       FBDs, ...
-      wave_height ] = buoyodesim(t, ...
-                                 x([simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices, ...
-                                    simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices, ...
-                                    simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices, ...
-                                    simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices, ...
-                                    simoptions.ODESim.SolutionComponents.BuoyRadiationHeave.SolutionIndices, ...
-                                    simoptions.ODESim.SolutionComponents.BuoyRadiationSurge.SolutionIndices]), ...
-                                 simoptions, Fexternal);
-
+      wave_height ] = buoyodesim (t, ...
+                                  x([simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices, ...
+                                     simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices, ...
+                                     simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices, ...
+                                     simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices, ...
+                                     simoptions.ODESim.SolutionComponents.BuoyRadiationHeave.SolutionIndices, ...
+                                     simoptions.ODESim.SolutionComponents.BuoyRadiationSurge.SolutionIndices]), ...
+                                  simoptions.BuoySim, Fexternal);
+ 
     % ************************************************************************
 
     % Now assign the outputs
