@@ -54,7 +54,7 @@ simoptions = simsetup_ROTARY(design, 'simfun_TORUS_SLOTLESS', 'finfun_TORUS_SLOT
                                     
 simoptions.reltol = 1e-4;
 simoptions.abstol = repmat(0.001, 1, design.Phases);
-simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 10000;
+simoptions.maxstep = (simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan(1)) / 10000;
 
 % add core loss interpolation data
 [fq, Bq, Pq] = m19corelossdata();

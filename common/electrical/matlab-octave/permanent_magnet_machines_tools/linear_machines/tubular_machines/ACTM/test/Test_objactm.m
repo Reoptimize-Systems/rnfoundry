@@ -17,19 +17,19 @@ options.coilYieldStrength = 70e6;
 % speed = 1;
 % simoptions.ODESim.InitialConditions = 0;
 % simoptions.skip = 1;
-% simoptions.tspan = [0, 5];
-% simoptions.drivetimes = 0:simoptions.tspan(2);
+% simoptions.ODESim.TimeSpan = [0, 5];
+% simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 % simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 % simoptions.xT = simoptions.vT .* simoptions.drivetimes;
 % simoptions.Lmode = 1;
 
 % set up the functions
-% simoptions.simfun = @RunStructFEMMSimNew_ACTM;
+% simoptions.ODESim.PreProcFcn = @RunStructFEMMSimNew_ACTM;
 % simoptions.xycoords = randMat([1.00000001*design.Rm; 0], [2.9999999*design.Rm; 1.0], 0, 2000); 
-% simoptions.finfun = @finfun_ACTM;
+% simoptions.ODESim.PostPreProcFcn = @finfun_ACTM;
 % simoptions.odefun = @simplelinearmachineode_proscribedmotion; 
 % simoptions.dpsidxfun = @dpsidx_tubular; 
-% simoptions.resfun = @resfun_ACTM;
+% simoptions.ODESim.PostSimFcn = @resfun_ACTM;
 
 simoptions.desiredMeanPower = 100*3;
 simoptions.maxAllowedJrms = 5e6;

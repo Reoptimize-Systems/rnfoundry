@@ -6,11 +6,13 @@ function [design, simoptions] = finfun_linear(design, simoptions)
 % [design, simoptions] = finfun_linear(design, simoptions)
 %
 % 
+
+    simoptions = setfieldifabsent(simoptions, 'ODESim', struct());
     
     if ~isfield(simoptions, 'tether_length')
         % assume we are doing a prescribed motion sim and therefore set the
         % tether length to a very large value. 
-        simoptions.tether_length = 1000;
+        simoptions.BuoySim.tether_length = 1000;
         warning('CROZIER:finfun_linear', 'Tether length not specified, using 1000m')
     end
     
@@ -28,7 +30,6 @@ function [design, simoptions] = finfun_linear(design, simoptions)
     
     design = setfieldifabsent(design, 'sides', design.NStages);
     
-    simoptions = setfieldifabsent(simoptions, 'ODESim', struct());
     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'ForceFcnArgs', {});
 
     % allow setting an initial offset in the effector position

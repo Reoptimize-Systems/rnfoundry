@@ -74,11 +74,11 @@ function [dx, bouyancy_force, excitation_force_heave, ...
 % 
 % % create a sea, in this case a single frequency sea of frequency 0.35 Hz
 % % and default amplitude 0.5m
-% simoptions.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
+% simoptions.BuoySim.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
 % 
 % % choose the number of radiation coefficients to use in the simulation,
 % % default is 25 if not supplied
-% simoptions.NRadiationCoefs = 10;
+% simoptions.BuoySim.NRadiationCoefs = 10;
 % 
 % % set up the buoy in readiness for simulation
 % simoptions = buoysimsetup ('cyl_2dia_1dr', simoptions);
@@ -89,7 +89,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
 % tspan = [0, 90];
 % 
 % % solve the system using ode45
-% [T, Y] = ode45 (simfunction, tspan, zeros(1, 4+2*simoptions.NRadiationCoefs) );
+% [T, Y] = ode45 (simfunction, tspan, zeros(1, 4+2*simoptions.BuoySim.NRadiationCoefs) );
 %
 % % plot the buoy position in heave and surge and the buoy velocity in
 % heave and surge

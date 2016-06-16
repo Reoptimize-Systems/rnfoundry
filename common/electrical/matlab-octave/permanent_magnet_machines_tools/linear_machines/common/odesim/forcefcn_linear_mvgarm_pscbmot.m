@@ -30,7 +30,7 @@ function [FTVec, FA, ForceBD, xRmachine, xRmagcouple, vR, unitv] = forcefcn_line
     FT = FfT + FdragT - FEAFy - FLinearDrag;
     
     % Find unit vector in the direction pointing from hawse hole to the buoy
-    unitv = [simoptions.tether_length+xBh, xBs] / norm([simoptions.tether_length+xBh, xBs]);
+    unitv = [simoptions.BuoySim.tether_length+xBh, xBs] / norm([simoptions.BuoySim.tether_length+xBh, xBs]);
     
     % Get the force exerted on the buoy
     FTVec = FT * unitv;

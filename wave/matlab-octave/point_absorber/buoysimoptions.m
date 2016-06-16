@@ -23,12 +23,8 @@ function simoptions = buoysimoptions(varargin)
     % solver finishes
     simoptions.skip = 1;
     % the time span of the simulation
-    simoptions.tspan = [0, 60];   
+    simoptions.ODESim.TimeSpan = [0, 60];   
     % Additional absolute tolerances on the components of the solution
-    simoptions.abstol = [];
-    
-    if nargin > 0
-        simoptions = parse_pv_pairs(simoptions, varargin);
-    end
+    simoptions.ODESim.AbsTol = [];
     
 end

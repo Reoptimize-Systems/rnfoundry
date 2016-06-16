@@ -1,7 +1,7 @@
 function [score, design] = machinescore_ACPMSM(design, simoptions)
 
     if isfield(simoptions, 'BuoyParameters')
-        [cost, design] = costestimate_ACPMSM(design, simoptions, simoptions.BuoyParameters.mass_external);
+        [cost, design] = costestimate_ACPMSM(design, simoptions, simoptions.BuoySim.BuoyParameters.mass_external);
     else
         [cost, design] = costestimate_ACPMSM(design, simoptions);
     end

@@ -20,8 +20,8 @@ function [results, design] = systemresfun_linear_mvgfield(T, Y, design, simoptio
 %     results.wave_height = zeros(1, length(T));
 %
 %     for k = 1:length(T)
-%         time_vector = T(k) * ones(1, length(simoptions.SeaParameters.phase));
-%         results.wave_height(k) = sum(real(simoptions.SeaParameters.amp .* exp(-i .* (simoptions.SeaParameters.sigma .* time_vector - simoptions.SeaParameters.phase))));
+%         time_vector = T(k) * ones(1, length(simoptions.BuoySim.SeaParameters.phase));
+%         results.wave_height(k) = sum(real(simoptions.BuoySim.SeaParameters.amp .* exp(-i .* (simoptions.BuoySim.SeaParameters.sigma .* time_vector - simoptions.BuoySim.SeaParameters.phase))));
 %     end
     
     % FF = [Fs, FLinearDrag, FdragF, FEAFy];
@@ -57,7 +57,7 @@ function [results, design] = systemresfun_linear_mvgfield(T, Y, design, simoptio
 
     design.minTransLength = design.minTransPoles * design.PoleWidth;
 
-    design.extraTMass = 1.1 * max(abs(results.Fpto)) / simoptions.BuoyParameters.g;
+    design.extraTMass = 1.1 * max(abs(results.Fpto)) / simoptions.BuoySim.BuoyParameters.g;
 
 %     design.minTransMass = transMass_Snapper(design);
 
@@ -66,7 +66,7 @@ function [results, design] = systemresfun_linear_mvgfield(T, Y, design, simoptio
     design.xFmax = max(abs(Y(:,5)));
     design.xFrms = rms(interp1(T, Y(:,5), 0:max(T)/(length(T)*2):max(T)));
 
-%         simoptions.BuoyParameters.mass = simoptions.BuoyParameters.draft * pi * simoptions.BuoyParameters.a^2 * simoptions.BuoyParameters.rho;
+%         simoptions.BuoySim.BuoyParameters.mass = simoptions.BuoySim.BuoyParameters.draft * pi * simoptions.BuoySim.BuoyParameters.a^2 * simoptions.BuoySim.BuoyParameters.rho;
 
 end
         

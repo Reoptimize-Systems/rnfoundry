@@ -40,10 +40,10 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
     % in a results structure. The order of the strings must be the order of
     % the return arguments of the ode function when called with more than
     % one input
-    results = oderesults(T, Y, simoptions.odeevfun, {design, simoptions}, simoptions.skip, simoptions.SkipOutputFields);
+    results = oderesults(T, Y, simoptions.ODESim.EvalFcn, {design, simoptions}, simoptions.skip, simoptions.SkipOutputFields);
     
     % store the actual simulation time taken
-    design.SimTimeSpan = max(T) - simoptions.tspan(1);
+    design.SimTimeSpan = max(T) - simoptions.ODESim.TimeSpan(1);
     
     % we should use the phase that produced the highest current
     currentInds = simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices;

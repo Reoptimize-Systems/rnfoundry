@@ -41,23 +41,23 @@ simoptions.maxAllowedxT = 0.5;
 % Set up the buoy and sea data files, these are for the 2m buoy
 simoptions.buoy = 'cyl_2dia_1dr';
 
-simoptions.tspan = [0, 0.5];
+simoptions.ODESim.TimeSpan = [0, 0.5];
 % params.amp = 1;
 % params.sigma = 2 * pi * 0.35;
 % params.phase = pi/2;
 
 % use a default sea
-simoptions.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
+simoptions.BuoySim.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
 
 % set the end stop position (the maximum allowed translator displacement)
 simoptions.maxAllowedxT = inf;
 
-% simoptions.tether_length = 4;
+% simoptions.BuoySim.tether_length = 4;
 
-simoptions.simfun = 'simfun_ACTM';
-simoptions.odeevfun = 'mBodybuoysystemode_linear'; 
-simoptions.finfun = 'mBodybuoysystemfinfun_ACTM';
-simoptions.resfun = 'systemresfun_linear'; 
+simoptions.ODESim.PreProcFcn = 'simfun_ACTM';
+simoptions.ODESim.EvalFcn = 'mBodybuoysystemode_linear'; 
+simoptions.ODESim.PostPreProcFcn = 'mBodybuoysystemfinfun_ACTM';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear'; 
 % simoptions.events = 'systemevents_linear'; 
 
 [T, Y, results, outdesign, outsimoptions] = simulatemachine_linear(design, simoptions); 
@@ -71,24 +71,24 @@ plotresultsbuoysys_linear(T, Y, results, design, outsimoptions, 1)
 simoptions.buoy = 37;
 % design.buoynum = simoptions.buoynum;
 
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 % params.amp = 1;
 
-simoptions.tether_length = 4;
+simoptions.BuoySim.tether_length = 4;
 
 simoptions.maxAllowedxT = inf;
 
-simoptions.simfun = 'systemsimfun_ACTM';
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.resfun = 'systemresfun_linear'; 
+simoptions.ODESim.PreProcFcn = 'systemsimfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear'; 
 simoptions.events = 'systemevents_linear';
 
 % params.peak_freq = 1/9; % centred at resonant frequency
 % params.sigma_range = [0.345575191894877,2.31745966692415;];
 % params.water_depth = 50;
 
-simoptions.SeaParameters = seasetup ('PMPeakFreq', 1/9);
+simoptions.BuoySim.SeaParameters = seasetup ('PMPeakFreq', 1/9);
 
 [T, Y, results, outdesign, outsimoptions] = simulatemachine_linear (design, simoptions); 
     

@@ -96,7 +96,7 @@ function [score, design] = ddsysscorecommon_linear(design, simoptions)
         
         design.buoyMassPenalty = 0;
 
-        maxmass = simoptions.BuoyParameters.mass_external / 2;  
+        maxmass = simoptions.BuoySim.BuoyParameters.mass_external / 2;  
         
         if ~isfield(simoptions, 'NoOfMachines')
             simoptions.NoOfMachines = 1;

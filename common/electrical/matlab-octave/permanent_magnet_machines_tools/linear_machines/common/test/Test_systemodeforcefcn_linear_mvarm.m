@@ -71,7 +71,7 @@ simoptions.ODESim.InitialConditions = [0, 0, 0];
 % solver finishes
 simoptions.skip = 1;
 % the time span of the simulation
-simoptions.tspan = [0, 5];   
+simoptions.ODESim.TimeSpan = [0, 5];   
 % Additional absolute tolerances on the components of the solution
 simoptions.abstol = [];
 
@@ -88,7 +88,7 @@ simoptions.HydroCoeffsFile = fullfile('Cylinder_2m_dia_d010410', 'cyl_d3103v4.1'
 
 simoptions.ExcitationFile = fullfile('Cylinder_2m_dia_d010410','cyl_d3103v4.2');
 
-simoptions.BuoyParameters = load(fullfile(getbuoylibdir, ...
+simoptions.BuoySim.BuoyParameters = load(fullfile(getbuoylibdir, ...
                       'Cylinder_2m_dia_d010410',...
                       'buoyparams_d3103v4.mat'));
 
@@ -98,16 +98,16 @@ simoptions.buoylibdir = getbuoylibdir;
 % Use a random sea with a peak frequency of 0.35 Hz
 params.peak_freq = 0.35;
 % Call defaultseaparamaters to set up the necessary sea data
-simoptions.SeaParameters = defaultseaparamaters(params);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
 % % Use a random sea with a peak frequency of 0.35 Hz
 % params.peak_freq = 0.35;
 % params.phase = pi./2;
 % % Call defaultseaparamaters to set up the necessary sea data
-% simoptions.SeaParameters = defaultseaparamaters(params);
+% simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
 % set the initial tether length between the buoy and the hawser
-simoptions.tether_length = 3;
+simoptions.BuoySim.tether_length = 3;
 
 % % The peak frequency of a PM Specturm
 % SeaParameters.peak_freq = 1/9;
@@ -118,9 +118,9 @@ simoptions.tether_length = 3;
 % % The depth of the water
 % SeaParameters.water_depth = 50;
 % 
-% simoptions.SeaParameters = defaultseaparamaters(SeaParameters);
+% simoptions.BuoySim.SeaParameters = defaultseaparamaters(SeaParameters);
 % 
-% simoptions.tether_length = 10;
+% simoptions.BuoySim.tether_length = 10;
 % 
 % simoptions.FarmSize = 10e6;
 % 
@@ -136,20 +136,20 @@ simoptions.mx_initial_conditions = [0, 0, 0, 0, 0];
 
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
-simoptions.simfun = 'simfunnocurrent_SNAPPER';
-simoptions.finfun = 'systemfinfun_SNAPPER';
-simoptions.odeevfun = 'systemodeforcefcn_linear_mvgarm';
+simoptions.ODESim.PreProcFcn = 'simfunnocurrent_SNAPPER';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_SNAPPER';
+simoptions.ODESim.EvalFcn = 'systemodeforcefcn_linear_mvgarm';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions.resfun = 'systemresfun_SNAPPER';
+simoptions.ODESim.PostSimFcn = 'systemresfun_SNAPPER';
 simoptions.preallocresfcn = 'prallocresfcn_SNAPPER';
-simoptions.forcefcn = 'forcefcn_snapper';
+simoptions.ODESim.ForceFcn = 'forcefcn_snapper';
 simoptions.ODESim.ForceFcnArgs = {};
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun);
+                                                 simoptions.ODESim.PreProcFcn, ...
+                                                 simoptions.ODESim.PostPreProcFcn, ...
+                                                 simoptions.ODESim.EvalFcn, ...
+                                                 simoptions.ODESim.PostSimFcn);
 
 %%
 
@@ -200,18 +200,18 @@ design2.buoynum = -1;
 % objactiam_machine will perform the simulation of each machine, so use a
 % dummy simulation function
 % if all(isfield(design2, {'p_FEAFy', 'slm_psidot'}))
-%     simoptions2.simfun = 'dummysimfun';
-%     simoptions2.finfun = 'dummysimfun';
+%     simoptions2.ODESim.PreProcFcn = 'dummysimfun';
+%     simoptions2.ODESim.PostPreProcFcn = 'dummysimfun';
 % else
-    simoptions2.simfun = 'simfunnocurrent_SNAPPER';
-    simoptions2.finfun = 'systemfinfun_SNAPPER';
+    simoptions2.ODESim.PreProcFcn = 'simfunnocurrent_SNAPPER';
+    simoptions2.ODESim.PostPreProcFcn = 'systemfinfun_SNAPPER';
 % end
 
-simoptions2.odeevfun = 'systemodeforcefcn_linear_mvgarm';
+simoptions2.ODESim.EvalFcn = 'systemodeforcefcn_linear_mvgarm';
 % simoptions2.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions2.resfun = 'systemresfun_SNAPPER';
+simoptions2.ODESim.PostSimFcn = 'systemresfun_SNAPPER';
 simoptions2.preallocresfcn = 'prallocresfcn_SNAPPER';
-simoptions2.forcefcn = 'forcefcn_snapper';
+simoptions2.ODESim.ForceFcn = 'forcefcn_snapper';
 simoptions2.ODESim.ForceFcnArgs = {};
 
 if isfield(design2, 'Ntot')
@@ -220,10 +220,10 @@ end
 
 [T2, Y2, results2, design2, simoptions2] = simulatemachine_linear(design2, ...
                                                  simoptions2, ...
-                                                 simoptions2.simfun, ...
-                                                 simoptions2.finfun, ...
-                                                 simoptions2.odeevfun, ...
-                                                 simoptions2.resfun);
+                                                 simoptions2.ODESim.PreProcFcn, ...
+                                                 simoptions2.ODESim.PostPreProcFcn, ...
+                                                 simoptions2.ODESim.EvalFcn, ...
+                                                 simoptions2.ODESim.PostSimFcn);
 
 results2.Fs = results2.Fa(:,1);
 results2.Ffea = results2.Fpto + results2.Fa(:,3);

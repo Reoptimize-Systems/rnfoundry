@@ -20,7 +20,7 @@ function [FT, FF] = forcefcn_linear_mvgfield_pscbmot(design, simoptions, xT, vT,
     FT = FEAFy + FLinearDrag - FfT;
     
     % Find unit vector in the direction pointing from hawse hole to the buoy
-    unitv = [simoptions.tether_length+xBh, xBs] / norm([simoptions.tether_length+xBh, xBs]);
+    unitv = [simoptions.BuoySim.tether_length+xBh, xBs] / norm([simoptions.BuoySim.tether_length+xBh, xBs]);
     
     % Get the force exerted on the buoy
     FT = -FT * unitv;
@@ -39,7 +39,7 @@ function [FT, FF] = forcefcn_linear_mvgfield_pscbmot(design, simoptions, xT, vT,
 %     Ffricfield = 0;
     
     % Calculate the drag forces on the field
-    FdragF = -sign(vF) .* 0.5 .* realpow(vF,2) .* simoptions.SeaParameters.rho .* design.Cd .* design.DragArea;
+    FdragF = -sign(vF) .* 0.5 .* realpow(vF,2) .* simoptions.BuoySim.SeaParameters.rho .* design.Cd .* design.DragArea;
 
     % total the force on the reactor
     FF = [Fs, FLinearDrag, FdragF, FEAFy];

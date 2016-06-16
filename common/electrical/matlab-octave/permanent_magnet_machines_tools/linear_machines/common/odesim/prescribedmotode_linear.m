@@ -35,7 +35,7 @@ function varargout = prescribedmotode_linear(t, x, design, simoptions)
     % get the velocity and position at the current time
     [xTtemp, vTtemp] = prescribedmotvelpos(t, simoptions);
     
-    simoptions.tether_length = 1000;
+    simoptions.BuoySim.tether_length = 1000;
 
     % determine the machine outputs
     [dpsidxR, EMF, Fpto, FfeaVec, xT, vT, unitv, design] = ...

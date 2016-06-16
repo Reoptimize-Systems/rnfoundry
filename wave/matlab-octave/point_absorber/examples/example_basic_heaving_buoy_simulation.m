@@ -13,7 +13,7 @@ simoptions.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
 
 % choose the number of radiation coefficients to use in the simulation,
 % default is 25 if not supplied
-simoptions.NRadiationCoefs = 10;
+simoptions.BuoySim.NRadiationCoefs = 10;
 
 % set up the buoy in readiness for simulation
 simoptions = buoysimsetup ('cyl_2dia_1dr', simoptions);
@@ -48,7 +48,7 @@ simfunction = @(t,x) buoyodesim (t, x, simoptions, [0,0]);
 tspan = [0, 90];
 
 % solve the system using ode45
-[T, Y] = ode45 (simfunction, tspan, zeros(1, 4+2*simoptions.NRadiationCoefs) );
+[T, Y] = ode45 (simfunction, tspan, zeros(1, 4+2*simoptions.BuoySim.NRadiationCoefs) );
 
 % The results returned by ode45 are T and y. T is a vetor of time values at
 % which the simulation outputs were calculated. Y is a matrix of output
@@ -77,9 +77,9 @@ plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]))
 
 simoptions = struct ();
 
-simoptions.SeaParameters = seasetup ('PMPeakFreq', 1/9);
+simoptions.BuoySim.SeaParameters = seasetup ('PMPeakFreq', 1/9);
 
-simoptions.NRadiationCoefs = 10;
+simoptions.BuoySim.NRadiationCoefs = 10;
 
 simoptions = buoysimsetup (37, simoptions);
 
@@ -89,6 +89,6 @@ simoptions = buoysimsetup (37, simoptions);
 
 tspan = [0, 60];
 
-[T, Y] = ode45 (@(t,x) buoyodesim (t, x, simoptions, [0,0]), tspan, zeros(1, 4+2*simoptions.NRadiationCoefs) );
+[T, Y] = ode45 (@(t,x) buoyodesim (t, x, simoptions, [0,0]), tspan, zeros(1, 4+2*simoptions.BuoySim.NRadiationCoefs) );
 
 plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]))

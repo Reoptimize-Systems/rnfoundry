@@ -1,6 +1,6 @@
 % Test_machineodesim_linear_mvgarm
 
-simoptions.tether_length = 1;
+simoptions.BuoySim.tether_length = 1;
 simoptions.NoOfMachines = 1;
 design.Phases = 1;
 Icoils=1;

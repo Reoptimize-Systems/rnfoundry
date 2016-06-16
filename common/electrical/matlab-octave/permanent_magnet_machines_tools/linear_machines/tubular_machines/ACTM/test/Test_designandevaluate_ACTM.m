@@ -41,18 +41,18 @@ options.coilYieldStrength = 70e6;
 speed = 1;
 simoptions.ODESim.InitialConditions = zeros(1, design.Phases);
 simoptions.skip = 1;
-simoptions.tspan = [0, 5];
-simoptions.drivetimes = 0:simoptions.tspan(2);
+simoptions.ODESim.TimeSpan = [0, 5];
+simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 simoptions.xT = simoptions.vT .* simoptions.drivetimes;
 simoptions.Lmode = 1;
 
 % set up the functions
-simoptions.simfun = 'simfun_ACTM';
-simoptions.finfun = 'prescribedmotfinfun_ACTM';
-simoptions.odeevfun = 'prescribedmotodeforcefcn_linear';
-simoptions.forcefcn = 'forcefcn_linear_pscbmot';
-simoptions.resfun = 'prescribedmotresfun_linear';
+simoptions.ODESim.PreProcFcn = 'simfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'prescribedmotfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'prescribedmotodeforcefcn_linear';
+simoptions.ODESim.ForceFcn = 'forcefcn_linear_pscbmot';
+simoptions.ODESim.PostSimFcn = 'prescribedmotresfun_linear';
 
 %%
 

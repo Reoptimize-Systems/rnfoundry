@@ -33,7 +33,7 @@ function [score, design] = machinescore_TM(design, simoptions)
     [design, simoptions] = materialmasses_TM(design, simoptions);
     
     if isfield(simoptions, 'BuoyParameters')
-        [cost, design] = costestimate_TM(design, simoptions, simoptions.BuoyParameters.mass_external);
+        [cost, design] = costestimate_TM(design, simoptions, simoptions.BuoySim.BuoyParameters.mass_external);
     else
         [cost, design] = costestimate_TM(design, simoptions);
     end

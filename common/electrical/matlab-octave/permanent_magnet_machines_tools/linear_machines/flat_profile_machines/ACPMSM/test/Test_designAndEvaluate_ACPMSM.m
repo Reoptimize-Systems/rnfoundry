@@ -45,8 +45,8 @@ options.alphab = (design.ls + 2*bearingWidth) / design.ls;
 % speed = 1;
 % simoptions.ODESim.InitialConditions = 0;
 % simoptions.skip = 1;
-% simoptions.tspan = [0, 10];
-% simoptions.drivetimes = 0:simoptions.tspan(2);
+% simoptions.ODESim.TimeSpan = [0, 10];
+% simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 % simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 % simoptions.xT = simoptions.vT .* simoptions.drivetimes;
 % simoptions.Lmode = 1;
@@ -54,23 +54,23 @@ options.alphab = (design.ls + 2*bearingWidth) / design.ls;
 % use buoy number 37, 4m diameter, 2m draft
 simoptions.buoy = 'cyl_4dia_2dr';
 
-% NSsimoptions.SeaParameters = seasetup('sigma', 2 * pi * 0.35, ...
+% NSsimoptions.BuoySim.SeaParameters = seasetup('sigma', 2 * pi * 0.35, ...
 %                                     'phase', pi / 2);
 
-simoptions.SeaParameters = seasetup('PMPeakFreq', 1/9);
+simoptions.BuoySim.SeaParameters = seasetup('PMPeakFreq', 1/9);
 
-simoptions.tether_length = 5;
+simoptions.BuoySim.tether_length = 5;
 simoptions.water_depth = 40;
 
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 simoptions.Lmode = 1;
 simoptions.ODESim.InitialConditions = [0, 0, 0];
 
-simoptions.simfun = 'simfun_ACPMSM';
-simoptions.finfun = 'systemfinfun_ACPMSM';
-% simoptions.odeevfun = @simplelinearmachineode_proscribedmotion;
-simoptions.odeevfun = 'systemode_linear';
-simoptions.resfun = 'systemresfun_linear';
+simoptions.ODESim.PreProcFcn = 'simfun_ACPMSM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACPMSM';
+% simoptions.ODESim.EvalFcn = @simplelinearmachineode_proscribedmotion;
+simoptions.ODESim.EvalFcn = 'systemode_linear';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 % simoptions.dpsidxfun = @polydpsidx_ACPMSM;
 
 

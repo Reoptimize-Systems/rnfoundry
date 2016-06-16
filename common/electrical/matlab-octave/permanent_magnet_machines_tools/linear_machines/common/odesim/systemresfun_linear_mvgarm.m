@@ -37,8 +37,8 @@ function [results, design] = systemresfun_linear_mvgarm(T, Y, design, simoptions
 %     results.wave_height = zeros(1, length(T));
 % 
 %     for k = 1:length(T)
-%         time_vector = T(k) * ones(1, length(simoptions.SeaParameters.phase));
-%         results.wave_height(k) = sum(real(simoptions.SeaParameters.amp .* exp(-i .* (simoptions.SeaParameters.sigma .* time_vector - simoptions.SeaParameters.phase))));
+%         time_vector = T(k) * ones(1, length(simoptions.BuoySim.SeaParameters.phase));
+%         results.wave_height(k) = sum(real(simoptions.BuoySim.SeaParameters.amp .* exp(-i .* (simoptions.BuoySim.SeaParameters.sigma .* time_vector - simoptions.BuoySim.SeaParameters.phase))));
 %     end
 
     design.xAmax = 0;
@@ -56,7 +56,7 @@ function [results, design] = systemresfun_linear_mvgarm(T, Y, design, simoptions
 
     design.minLongMemberLength = design.minLongMemberPoles * design.PoleWidth;
 
-    design.extraFptoMass = 1.1 * max(abs(results.Fpto)) / simoptions.BuoyParameters.g;
+    design.extraFptoMass = 1.1 * max(abs(results.Fpto)) / simoptions.BuoySim.BuoyParameters.g;
 
     design.xAmax = max(abs(Y(:,5)));
     design.xArms = contrms(T, Y(:,5));

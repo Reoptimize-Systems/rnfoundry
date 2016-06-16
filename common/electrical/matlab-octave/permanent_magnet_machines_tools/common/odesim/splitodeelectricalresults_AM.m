@@ -41,7 +41,7 @@ function [results] = splitodeelectricalresults_AM(flag, design, simoptions, resu
     % sol.y(simoptions.ODEPhaseCurrentCol,:) is the phase current of the
     % first phase, so we divide by the number of parallel branched to
     % obtain the current in the coils
-    phaseCurrent = sol.y(simoptions.ODEPhaseCurrentCol:simoptions.ODEPhaseCurrentCol-1+design.Phases,:)';
+    phaseCurrent = sol.y(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices,:)';
     
     % calculate the coil current
     coilCurrent = phaseCurrent ./ design.Branches;

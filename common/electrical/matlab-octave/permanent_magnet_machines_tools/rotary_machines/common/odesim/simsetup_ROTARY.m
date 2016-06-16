@@ -65,8 +65,8 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     Inputs.TAngularVelocity = [];
     Inputs.TSpan = [];
     Inputs.PoleCount = [];
-    Inputs.odeevfun = 'prescribedmotodetorquefcn_ROTARY';
-    Inputs.resfun = 'prescribedmotresfun_ROTARY';
+    Inputs.ODESim.EvalFcn = 'prescribedmotodetorquefcn_ROTARY';
+    Inputs.ODESim.PostSimFcn = 'prescribedmotresfun_ROTARY';
     Inputs.torquefcn = 'torquefcn_ROTARY';
     Inputs.torquefcnargs = {};
     Inputs.simoptions = struct();
@@ -170,17 +170,17 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
         simoptions.thetaT = cumtrapz(simoptions.drivetimes, simoptions.omegaT);
     end
 
-    if ~isfield(simoptions, 'odeevfun') || isempty(simoptions.odeevfun)
-        simoptions.odeevfun = Inputs.odeevfun;
+    if ~isfield(simoptions, 'odeevfun') || isempty(simoptions.ODESim.EvalFcn)
+        simoptions.ODESim.EvalFcn = Inputs.ODESim.EvalFcn;
     end
-    if ~isfield(simoptions, 'resfun') || isempty(simoptions.resfun)
-        simoptions.resfun = Inputs.resfun;
+    if ~isfield(simoptions, 'resfun') || isempty(simoptions.ODESim.PostSimFcn)
+        simoptions.ODESim.PostSimFcn = Inputs.ODESim.PostSimFcn;
     end
-    if ~isfield(simoptions, 'simfun') || isempty(simoptions.simfun)
-        simoptions.simfun = simfun;
+    if ~isfield(simoptions, 'simfun') || isempty(simoptions.ODESim.PreProcFcn)
+        simoptions.ODESim.PreProcFcn = simfun;
     end
-    if ~isfield(simoptions, 'finfun') || isempty(simoptions.finfun)
-        simoptions.finfun = finfun;
+    if ~isfield(simoptions, 'finfun') || isempty(simoptions.ODESim.PostPreProcFcn)
+        simoptions.ODESim.PostPreProcFcn = finfun;
     end
     if ~isfield(simoptions, 'torquefcn') || isempty(simoptions.torquefcn)
         simoptions.torquefcn = Inputs.torquefcn;
@@ -189,7 +189,7 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
         simoptions.torquefcnargs = Inputs.torquefcnargs;
     end
     
-    simoptions.tspan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
+    simoptions.ODESim.TimeSpan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
     
     % if an initial ramp up in speed has been specified, construct it
     if ~isempty(Inputs.RampPoles) && Inputs.RampPoles > 0
@@ -207,10 +207,10 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
         simoptions.thetaT = [rampthetaT(1:end-1), simoptions.thetaT + rampthetaT(end)];
         simoptions.drivetimes = [rampT(1:end-1), simoptions.drivetimes + rampT(end)];
 
-        simoptions.tspan = simoptions.drivetimes([1, end]);
+        simoptions.ODESim.TimeSpan = simoptions.drivetimes([1, end]);
 
         simoptions = setfieldifabsent (simoptions, 'maxstep', ...
-            (simoptions.tspan(end) - simoptions.tspan(end-1)) / (Inputs.MinPointsPerPole * Inputs.RampPoles) );
+            (simoptions.ODESim.TimeSpan(end) - simoptions.ODESim.TimeSpan(end-1)) / (Inputs.MinPointsPerPole * Inputs.RampPoles) );
         
     end
     

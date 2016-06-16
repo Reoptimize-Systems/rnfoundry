@@ -104,16 +104,16 @@ function ObjVal = objactm_prototype(Chrom, rtn_type, simoptions, options)
 
            simoptions.ODESim.InitialConditions = 0;
            simoptions.skip = 1;
-           simoptions.tspan = [0, 5*2*design.Wp / speed];
-           simoptions.drivetimes = 0:simoptions.tspan(2)/10:simoptions.tspan(2);
+           simoptions.ODESim.TimeSpan = [0, 5*2*design.Wp / speed];
+           simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2)/10:simoptions.ODESim.TimeSpan(2);
            simoptions.vT = repmat(speed, size(simoptions.drivetimes));
            simoptions.xT = simoptions.vT .* simoptions.drivetimes;
            simoptions.Lmode = 1;
-           simoptions.simfun = @simfun_ACTM;
-           simoptions.finfun = @finfun_ACTM;
+           simoptions.ODESim.PreProcFcn = @simfun_ACTM;
+           simoptions.ODESim.PostPreProcFcn = @finfun_ACTM;
            simoptions.odefun = @simplelinearmachineode_proscribedmotion;
            simoptions.dpsidxfun = @polypsidot_ACTM;
-           simoptions.resfun = @resfun_ACTM;
+           simoptions.ODESim.PostSimFcn = @resfun_ACTM;
 
            simoptions.abstol = [];
 

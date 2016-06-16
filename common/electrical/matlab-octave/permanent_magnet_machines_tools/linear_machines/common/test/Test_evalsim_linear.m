@@ -29,7 +29,7 @@ design = ratios2dimensions_ACTM(design);
 design.PoleWeight = (pi * (design.Rm - design.Rsi)^2 * design.Wp * 7500) + (pi * (design.Ra - design.Ri)^2 * design.Wp * 8600 * design.CoilFillFactor);
 
 
-simoptions.simfun = 'systemsimfun_ACTM';
+simoptions.ODESim.PreProcFcn = 'systemsimfun_ACTM';
 mname = 'ACTM';
 
 % Set Parameters
@@ -40,23 +40,23 @@ simoptions.maxAllowedxT = 0.5;
 
 simoptions.buoy = 37;
 
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 % params.amp = 1;
 
-simoptions.tether_length = 4;
+simoptions.BuoySim.tether_length = 4;
 
 simoptions.maxAllowedxT = inf;
 
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.finfun = ['systemfinfun_', mname];
-simoptions.resfun = 'systemresfun_linear'; 
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostPreProcFcn = ['systemfinfun_', mname];
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear'; 
 simoptions.events = 'systemevents_linear';
 
 params.peak_freq = 1/9; % centred at resonant frequency
 params.sigma_range = [0.345575191894877,2.31745966692415;];
 params.water_depth = 50;
 
-simoptions.SeaParameters = seasetup('PMPeakFreq', 1/9, ...
+simoptions.BuoySim.SeaParameters = seasetup('PMPeakFreq', 1/9, ...
                                     'WaterDepth', 50, ...
                                     'NoOfFrequencies', 50);
          

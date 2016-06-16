@@ -95,12 +95,12 @@ design.MagCouple.N = 12;
 %%
 
 simoptions.skip = 1;
-simoptions.tspan = [0, 60];
+simoptions.ODESim.TimeSpan = [0, 60];
 simoptions.Lmode = 1;
 simoptions.ODESim.InitialConditions = [0, 0, 0, 0, 0];
 
 topspeed = 0.1;
-simoptions.drivetimes = linspace(0, simoptions.tspan(2), 100);
+simoptions.drivetimes = linspace(0, simoptions.ODESim.TimeSpan(2), 100);
 
 % simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 simoptions.vT = (topspeed / simoptions.drivetimes(end)) * simoptions.drivetimes;
@@ -108,18 +108,18 @@ simoptions.vT = (topspeed / simoptions.drivetimes(end)) * simoptions.drivetimes;
 % simoptions.xT = simoptions.vT .* simoptions.drivetimes;
 simoptions.xT = (topspeed / simoptions.drivetimes(end)) * (simoptions.drivetimes.^2 / 2);
 
-simoptions.SeaParameters.rho = 0;
+simoptions.BuoySim.SeaParameters.rho = 0;
 
 simoptions.NoOfMachines = 1;
 
 
-simoptions.simfun = 'simfun_MAGCOUPLE';
-simoptions.finfun = 'finfun_MAGCOUPLE';
-% simoptions.odeevfun = @simplelinearmachineode_proscribedmotion;
-simoptions.odeevfun = 'prescribedmotodeforcefcn_linear_mvgfield';
-simoptions.resfun = 'prescribedmotresfun_linear_mvgfield';
+simoptions.ODESim.PreProcFcn = 'simfun_MAGCOUPLE';
+simoptions.ODESim.PostPreProcFcn = 'finfun_MAGCOUPLE';
+% simoptions.ODESim.EvalFcn = @simplelinearmachineode_proscribedmotion;
+simoptions.ODESim.EvalFcn = 'prescribedmotodeforcefcn_linear_mvgfield';
+simoptions.ODESim.PostSimFcn = 'prescribedmotresfun_linear_mvgfield';
 % simoptions.dpsidxfun = @polydpsidx_ACPMSM
-simoptions.forcefcn = 'forcefcn_linear_mvgfield_pscbmot';
+simoptions.ODESim.ForceFcn = 'forcefcn_linear_mvgfield_pscbmot';
 simoptions.ODESim.ForceFcnArgs = {};
 
 simfunargs = {@simfun_ACPMSM};
@@ -138,10 +138,6 @@ simoptions.magnetDensity = 7800;
 %%
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun, ...
                                                  'simfunargs', simfunargs, ...
                                                  'finfunargs', finfunargs);
                                              
@@ -161,14 +157,10 @@ design.GridMeanPower
 
 %% no FEA
 
-simoptions.simfun = 'dummysimfun';
+simoptions.ODESim.PreProcFcn = 'dummysimfun';
 simfunargs = {@dummysimfun};
 
 [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun, ...
                                                  'simfunargs', simfunargs, ...
                                                  'finfunargs', finfunargs);
                                              
@@ -189,18 +181,14 @@ fprintf(1, '\nsnap distance %f\n', snapdist)
 % %% Compare to no magcouple
 % 
 % 
-% simoptions.simfun = 'simfun_ACPMSM';
-% simoptions.finfun = 'systemfinfun_ACPMSM';
-% simoptions.odeevfun = 'systemode_linear';
-% simoptions.resfun = 'systemresfun_linear';
+% simoptions.ODESim.PreProcFcn = 'simfun_ACPMSM';
+% simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACPMSM';
+% simoptions.ODESim.EvalFcn = 'systemode_linear';
+% simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 % 
 % simoptions.rho = 0;
 % 
-% [T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-%                                                  simoptions.simfun, ...
-%                                                  simoptions.finfun, ...
-%                                                  simoptions.odeevfun, ...
-%                                                  simoptions.resfun);
+% [T, Y, results, design] = simulatemachine_linear(design, simoptions);
 %                                              
 %                                              
 % plotresultsbuoysys_linear(T, Y, results, design, 1)

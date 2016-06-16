@@ -31,15 +31,15 @@ simoptions = simsetup_ROTARY(design, 'simfun_RADIAL_SLOTTED', 'finfun_RADIAL_SLO
                             
 simoptions.reltol = 1e-6;
 %simoptions.PhaseCurrentTols = repmat(0.001, 1, design.Phases);
-%simoptions.maxstep = (simoptions.tspan(2) - simoptions.tspan(1)) / 10000;
+%simoptions.maxstep = (simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan(1)) / 10000;
 
 simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED ();
 
-[design, simoptions] = feval(simoptions.simfun, design, simoptions);
-simoptions.simfun = [];
+[design, simoptions] = feval(simoptions.ODESim.PreProcFcn, design, simoptions);
+simoptions.ODESim.PreProcFcn = [];
 
-[design, simoptions] = feval(simoptions.finfun, design, simoptions);
-simoptions.finfun = [];
+[design, simoptions] = feval(simoptions.ODESim.PostPreProcFcn, design, simoptions);
+simoptions.ODESim.PostPreProcFcn = [];
 
 [T, Y, results, design, simoptions] = simulatemachine_AM(design, ...
                                                          simoptions);
@@ -51,10 +51,10 @@ simoptions.finfun = [];
 %bp = 0.1;
 %tmax = 1;
 %
-%fsimoptions.tspan = [ 0:0.01/100:bp, ...
+%fsimoptions.ODESim.TimeSpan = [ 0:0.01/100:bp, ...
 %                      (bp+0.01/100):(bp+tmax)/1000:(bp+tmax)  ];
 %                      
-%fsimoptions.odesolver = 'odef1';
+%fsimoptions.ODESim.Solver = 'odef1';
 %
 %[fT, fY, fresults, fdesign, fsimoptions] = simulatemachine_AM(design, ...
 %                                                         fsimoptions);

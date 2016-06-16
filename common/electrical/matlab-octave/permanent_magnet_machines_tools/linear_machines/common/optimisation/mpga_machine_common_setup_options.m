@@ -42,7 +42,7 @@ simoptions.ODESim.InitialConditions = [0, 0, 0];
 % solver finishes
 simoptions.skip = 1;
 % the time span of the simulation
-simoptions.tspan = [0, 500];   
+simoptions.ODESim.TimeSpan = [0, 500];   
 % Additional absolute tolerances on the components of the solution
 simoptions.abstol = [];
 % The peak frequency of a PM Specturm
@@ -54,9 +54,9 @@ SeaParameters.freqcount = 50;
 % The depth of the water
 SeaParameters.water_depth = 50;
 % Create the sea
-simoptions.SeaParameters = defaultseaparamaters(SeaParameters);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(SeaParameters);
 % set the tether length
-simoptions.tether_length = 6;
+simoptions.BuoySim.tether_length = 6;
 % Choose a size for the wave farm
 simoptions.FarmSize = 10e6;
 % Choose a buoy to use in the simulation

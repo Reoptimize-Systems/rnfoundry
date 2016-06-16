@@ -168,8 +168,8 @@ function varargout = systemodeforcefcn_linear(t, x, design, simoptions)
     %Ffea = sum(intbpolyshearforce_AC(design, J, pos)) .* design.Poles(1);
 
     % Calculate the drag forces on the translator
-    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoyParameters.rho .* design.Cd .* design.DragArea;
-    [FaddB, ForceEBD] = feval ( simoptions.forcefcn, design, simoptions, ...
+    % Fdrag = sign(vT) .* 0.5 .* realpow(vT,2) .* simoptions.BuoySim.BuoyParameters.rho .* design.Cd .* design.DragArea;
+    [FaddB, ForceEBD] = feval ( simoptions.ODESim.ForceFcn, design, simoptions, ...
                                  xE, vE, EMF, Iphases, xBh, vBh, xBs, vBs, ...
                                  simoptions.ODESim.ForceFcnArgs{:} );
     

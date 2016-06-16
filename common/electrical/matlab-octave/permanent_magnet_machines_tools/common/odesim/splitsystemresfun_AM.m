@@ -12,7 +12,7 @@ function [results, design] = splitsystemresfun_AM(T, Y, design, simoptions, resu
 % Copyright Richard Crozer, The University of Edinburgh
 
     % determine the actual simulation time
-    design.SimTimeSpan = results.maxT - simoptions.tspan(1);
+    design.SimTimeSpan = results.maxT - simoptions.ODESim.TimeSpan(1);
 
     % Get the peak coil current and current densities
     [design.ICoilPeak, maxIind] = max(results.ICoilPeak);

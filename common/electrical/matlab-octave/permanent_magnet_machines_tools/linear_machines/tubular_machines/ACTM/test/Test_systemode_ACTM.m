@@ -45,23 +45,23 @@ simoptions.HeaveFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'heave
 simoptions.SurgeFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'surge_coefficients_cyl_2di_1dr.mat');
 simoptions.HydroCoeffsFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.1');
 simoptions.ExcitationFile = fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410','cyl_d3103v4.2');
-simoptions.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
+simoptions.BuoySim.BuoyParameters = load(fullfile(getbuoylibdir, 'Cylinder_2m_dia_d010410', 'buoyparams_d3103v4.mat'));
 
 params.amp = 1;
 params.peak_freq = 0.35; % centred at resonant frequency
 params.phase = pi/2;
 
-simoptions.SeaParameters = defaultseaparamaters(params);
+simoptions.BuoySim.SeaParameters = defaultseaparamaters(params);
 
-simoptions.tether_length = 4;
+simoptions.BuoySim.tether_length = 4;
 
-simoptions.tspan = [0, 30];
+simoptions.ODESim.TimeSpan = [0, 30];
 
 % set up the functions
-simoptions.simfun = 'simfun_ACTM';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemode_linear'; 
-simoptions.resfun = 'systemresfun_linear';
+simoptions.ODESim.PreProcFcn = 'simfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear'; 
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 
 %%
 

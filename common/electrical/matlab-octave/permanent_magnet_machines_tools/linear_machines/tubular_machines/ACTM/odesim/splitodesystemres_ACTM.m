@@ -92,8 +92,8 @@ function results = splitodesystemres_ACTM(results, sol, design, simoptions)
         %     temp.wave_height = zeros(1, length(sol.x));
         %
         %     for k = 1:length(sol.x)
-        %         time_vector = T(k) * ones(1, length(simoptions.SeaParameters.phase));
-        %         temp.wave_height(k) = sum(real(simoptions.SeaParameters.amp .* exp(-i .* (simoptions.SeaParameters.sigma .* time_vector - simoptions.SeaParameters.phase))));
+        %         time_vector = T(k) * ones(1, length(simoptions.BuoySim.SeaParameters.phase));
+        %         temp.wave_height(k) = sum(real(simoptions.BuoySim.SeaParameters.amp .* exp(-i .* (simoptions.BuoySim.SeaParameters.sigma .* time_vector - simoptions.BuoySim.SeaParameters.phase))));
         %     end
 
         %         results.xAmax = 0;

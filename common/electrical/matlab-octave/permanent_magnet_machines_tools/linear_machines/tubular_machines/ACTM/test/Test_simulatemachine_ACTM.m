@@ -38,24 +38,20 @@ simoptions.maxAllowedxT = 0.5;
 speed = 1;
 simoptions.ODESim.InitialConditions = zeros(1, design.Phases);
 simoptions.skip = 1;
-simoptions.tspan = [0, 5];
-simoptions.drivetimes = 0:simoptions.tspan(2)/2:simoptions.tspan(2);
+simoptions.ODESim.TimeSpan = [0, 5];
+simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2)/2:simoptions.ODESim.TimeSpan(2);
 simoptions.vT = repmat(speed, size(simoptions.drivetimes));
 simoptions.xT = simoptions.vT .* simoptions.drivetimes;
-simoptions.tether_length = 0;
+simoptions.BuoySim.tether_length = 0;
 simoptions.NoOfMachines = 1;
 
-simoptions.odeevfun = 'prescribedmotodeforcefcn_linear'; 
-simoptions.forcefcn = 'forcefcn_linear_pscbmot'; 
-simoptions.simfun = 'simfun_ACTM';
-simoptions.resfun = 'prescribedmotresfun_linear'; 
-simoptions.finfun = 'prescribedmotfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'prescribedmotodeforcefcn_linear'; 
+simoptions.ODESim.ForceFcn = 'forcefcn_linear_pscbmot'; 
+simoptions.ODESim.PreProcFcn = 'simfun_ACTM';
+simoptions.ODESim.PostSimFcn = 'prescribedmotresfun_linear'; 
+simoptions.ODESim.PostPreProcFcn = 'prescribedmotfinfun_ACTM';
 
-[T, Y, results, design] = simulatemachine_linear(design, simoptions, ...
-                                                 simoptions.simfun, ...
-                                                 simoptions.finfun, ...
-                                                 simoptions.odeevfun, ...
-                                                 simoptions.resfun); 
+[T, Y, results, design] = simulatemachine_linear(design, simoptions); 
 
 plotresultsproscribedmot_linear(T, Y, results, design, 1);     
 

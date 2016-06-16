@@ -33,16 +33,16 @@ design.Poles = [1 1];
 
 simoptions.Lmode = true;
 
-simoptions.tether_length = 3;
+simoptions.BuoySim.tether_length = 3;
 
 simoptions.ODESim.InitialConditions = [0, 0, 0];
 
-simoptions.tspan = [0, 30];
+simoptions.ODESim.TimeSpan = [0, 30];
 
 % set up the functions
-simoptions.simfun = @RunStructFEMMSimNew_ACTIAM;
-simoptions.finfun = @finfun_ACTIAM;
-simoptions.resfun = @buoysysresfun_ACTIAM;
+simoptions.ODESim.PreProcFcn = @RunStructFEMMSimNew_ACTIAM;
+simoptions.ODESim.PostPreProcFcn = @finfun_ACTIAM;
+simoptions.ODESim.PostSimFcn = @buoysysresfun_ACTIAM;
 
 Bparams = load('buoyparams_d3103v4.mat');
 

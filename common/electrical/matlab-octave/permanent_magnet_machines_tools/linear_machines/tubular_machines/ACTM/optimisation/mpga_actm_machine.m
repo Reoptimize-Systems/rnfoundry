@@ -26,13 +26,13 @@ mpga_machine_common_setup_options;
 mpgaoptions.OBJ_F = 'objactm_machine';   % Name of function for objective values
 
 % set up the functions
-simoptions.simfun = 'dummysimfun_ACTM';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemode_linear';
+simoptions.ODESim.PreProcFcn = 'dummysimfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear';
 % simoptions.dpsidxfun = 'polypsidot_ACTIAM'; %@dpsidx_tubular; 
-simoptions.resfun = 'splitsystemresfun_linear';
-simoptions.splitode = 10;
-simoptions.spfcn = 'splitodesystemres_linear';
+simoptions.ODESim.PostSimFcn = 'splitsystemresfun_linear';
+simoptions.ODESim.Split = 10;
+simoptions.ODESim.SplitPointFcn = 'splitodesystemres_linear';
 simoptions.events = 'systemevents_linear';
 
 simoptions.DisplayDesignFcn = 'displaydesign_ACTM';
@@ -80,10 +80,10 @@ mpgaoptions.resumefile = mpgaoptions.filename;
 %% Evaluate the winner
 
 % set up the functions
-simoptions.simfun = 'simfun_ACTM';
-simoptions.finfun = 'systemfinfun_ACTM';
-simoptions.odeevfun = 'systemode_linear';
-simoptions.resfun = 'systemresfun_linear';
+simoptions.ODESim.PreProcFcn = 'simfun_ACTM';
+simoptions.ODESim.PostPreProcFcn = 'systemfinfun_ACTM';
+simoptions.ODESim.EvalFcn = 'systemode_linear';
+simoptions.ODESim.PostSimFcn = 'systemresfun_linear';
 
 if isfield(simoptions, 'splitode')
     simoptions = rmfield(simoptions, 'splitode');

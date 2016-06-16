@@ -42,7 +42,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     % interpolations of each individual frequency, taking into account the
     % phase of each incident wave. The interpolation must have been
     % previously performed for the frequencies supplied in 
-    % simoptions.SeaParameters.sigma. These excitation forces are for unit
+    % buoysimoptions.SeaParameters.sigma. These excitation forces are for unit
     % amplitude waves and are scaled here to the actual wave amplitude.
 
     % calculate some terms used repeatedly in the expressions for
@@ -129,8 +129,8 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     % The drag force is determined by the drag coefficient which has a
     % typical value of around 0.8, and should be present in the buoy
     % parameters. Ideally this value should be determined experimentally.
-%     FBDh = 0.25 * simoptions.BuoyParameters.rho * pi * simoptions.BuoyParameters.a^2 * ...
-%         simoptions.BuoyParameters.drag_coefficient * abs(vBh - vPh) ...
+%     FBDh = 0.25 * buoysimoptions.BuoyParameters.rho * pi * buoysimoptions.BuoyParameters.a^2 * ...
+%         buoysimoptions.BuoyParameters.drag_coefficient * abs(vBh - vPh) ...
 %         * (vBh - vPh);
     
     VBR = vPh - vBh;
@@ -168,7 +168,7 @@ function FBDs = surgedrag(xBh, vBs, rho, a, draft, wave_number, water_depth, sig
     % calculate the relative velocity of the particles and buoy
     VBR = vBs - vPs;
     
-    FBDs = 0.5 .* rho .* delh .* a .* 2 .* 1.2 ... .* simoptions.BuoyParameters.drag_coefficient ...
+    FBDs = 0.5 .* rho .* delh .* a .* 2 .* 1.2 ... .* buoysimoptions.BuoyParameters.drag_coefficient ...
            .* -sign(VBR) .* realpow(VBR,2);
        
     FBDs = sum(FBDs(:));     
