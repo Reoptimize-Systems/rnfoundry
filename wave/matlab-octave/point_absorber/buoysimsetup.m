@@ -1,5 +1,5 @@
-function buoydat = buoysimsetup(buoy, buoydat)
-% buoysimsetup: gets the data for the chosen buoy for use in a simulation
+function buoysimoptions = buoysimsetup(buoy, buoysimoptions)
+% buoysimsetup: gets the data for a chosen buoy for use in a simulation
 %
 % Syntax
 %
@@ -8,20 +8,19 @@ function buoydat = buoysimsetup(buoy, buoydat)
 % Input
 %
 %   buoy - either a scalar, string or empty matrix. If empty, it is assumed
-%          that the buoydat structure contains the fields HeaveFile,
-%          SurgeFile, ExcitationFile and HydroCoeffsFile, containing the
-%          appropriate strings naming the file locations relative to the
-%          main buoy library directory.
+%    that the buoydat structure contains the fields HeaveFile, SurgeFile,
+%    ExcitationFile and HydroCoeffsFile, containing the appropriate strings
+%    naming the file locations relative to the main buoy library directory.
 %
-%          If a scalar, the appropriate buoy data is loaded from the
-%          directory corresponding to this number in the buoy library
-%          directory.
+%    If a scalar, the appropriate buoy data is loaded from the directory
+%    corresponding to this number in the buoy library directory.
 %
-%          If a string, this is assumed to be the directory of the chosen
-%          buoy, relative to the main buoy library directory.
+%    If a string, this is assumed to be the directory of the chosen buoy,
+%    relative to the main buoy library directory.
 %
 %   buoydat - (optional) a structure which will be returned with the
-%          appropriate simulation data appended.
+%    appropriate simulation data appended. If not supplied a new structure
+%    will be created with the appropriate data.
 %
 % Output
 %
@@ -35,21 +34,21 @@ function buoydat = buoysimsetup(buoy, buoydat)
 %
 %
 
-% Copyright Richard Crozier & Helen Bailey 2010
+% Copyright Richard Crozier & Helen Bailey 2010-2016
 
     if nargin == 1
         
         if isstruct(buoy)
             
-            buoydat = buoy;
+            buoysimoptions = buoy;
         
-            if isfield(buoydat, 'buoynum')
+            if isfield(buoysimoptions, 'buoynum')
                 
-                buoy = buoydat.buoynum;
+                buoy = buoysimoptions.buoynum;
                 
-            elseif isfield(buoydat, 'buoydir')
+            elseif isfield(buoysimoptions, 'buoydir')
                 
-                buoy = buoydat.buoydir;
+                buoy = buoysimoptions.buoydir;
                 
             else
                 error('BUOYSIM:incorrectstruct', 'One input argument was supplied which was a structure without the minimum required fields to specify a simulation.')
@@ -59,11 +58,11 @@ function buoydat = buoysimsetup(buoy, buoydat)
 
             if isscalar(buoy)
 
-                buoydat = struct('buoynum', buoy);
+                buoysimoptions = struct('buoynum', buoy);
 
             elseif ischar(buoy)
 
-                buoydat = struct('buoydir', buoy);
+                buoysimoptions = struct('buoydir', buoy);
 
             elseif isempty(buoy)
                 
@@ -74,27 +73,27 @@ function buoydat = buoysimsetup(buoy, buoydat)
         end
     end
     
-    if ~isfield(buoydat, 'buoylibdir')
-        buoydat.buoylibdir = buoylibdir ();
+    if ~isfield(buoysimoptions, 'buoylibdir')
+        buoysimoptions.buoylibdir = buoylibdir ();
     end
 
     if ~isempty(buoy)
         
         if ischar(buoy)
-            buoydat = buoydatafromdir(buoydat.buoylibdir, buoy, buoydat);
+            buoysimoptions = buoydatafromdir(buoysimoptions.buoylibdir, buoy, buoysimoptions);
         elseif isnumeric(buoy)
             if buoy ~= -1
-                buoydat = buoynum2buoydata(buoydat.buoylibdir, buoy, buoydat);
+                buoysimoptions = buoynum2buoydata(buoysimoptions.buoylibdir, buoy, buoysimoptions);
             end
         else
             error('Buoy choice is not valid');
         end
         
         if buoy ~= -1
-            buoydat.HeaveFile = fullfile(buoydat.buoylibdir, buoydat.HeaveFile);
-            buoydat.SurgeFile = fullfile(buoydat.buoylibdir, buoydat.SurgeFile);
-            buoydat.ExcitationFile = fullfile(buoydat.buoylibdir, buoydat.ExcitationFile);
-            buoydat.HydroCoeffsFile = fullfile(buoydat.buoylibdir, buoydat.HydroCoeffsFile);
+            buoysimoptions.HeaveFile = fullfile(buoysimoptions.buoylibdir, buoysimoptions.HeaveFile);
+            buoysimoptions.SurgeFile = fullfile(buoysimoptions.buoylibdir, buoysimoptions.SurgeFile);
+            buoysimoptions.ExcitationFile = fullfile(buoysimoptions.buoylibdir, buoysimoptions.ExcitationFile);
+            buoysimoptions.HydroCoeffsFile = fullfile(buoysimoptions.buoylibdir, buoysimoptions.HydroCoeffsFile);
         end
         
     end
@@ -103,55 +102,55 @@ function buoydat = buoysimsetup(buoy, buoydat)
 %     buoydat.SeaParameters = defaultseaparamaters(buoydat.SeaParameters, buoydat.BuoyParameters);
 
     % check the sea parameters are suitible for the buoy
-    if max(buoydat.SeaParameters.sigma / (2*pi)) > buoydat.BuoyParameters.maxfreq
+    if max(buoysimoptions.SeaParameters.sigma / (2*pi)) > buoysimoptions.BuoyParameters.maxfreq
        
         warning('Max sea frequency greater than max buoy frequency, sea will be modified (higher frequencies stripped).')
         
-        inds = find((buoydat.SeaParameters.sigma / (2*pi)) <= buoydat.BuoyParameters.maxfreq);
+        inds = find((buoysimoptions.SeaParameters.sigma / (2*pi)) <= buoysimoptions.BuoyParameters.maxfreq);
         
-        buoydat.SeaParameters.sigma = buoydat.SeaParameters.sigma(inds);
-        buoydat.SeaParameters.phase = buoydat.SeaParameters.phase(inds);
-        buoydat.SeaParameters.amp = buoydat.SeaParameters.amp(inds);
-        buoydat.SeaParameters.L = buoydat.SeaParameters.L(inds);
-        buoydat.SeaParameters.wave_number = buoydat.SeaParameters.wave_number(inds);
+        buoysimoptions.SeaParameters.sigma = buoysimoptions.SeaParameters.sigma(inds);
+        buoysimoptions.SeaParameters.phase = buoysimoptions.SeaParameters.phase(inds);
+        buoysimoptions.SeaParameters.amp = buoysimoptions.SeaParameters.amp(inds);
+        buoysimoptions.SeaParameters.L = buoysimoptions.SeaParameters.L(inds);
+        buoysimoptions.SeaParameters.wave_number = buoysimoptions.SeaParameters.wave_number(inds);
         
-        buoydat.SeaParameters.sigma_range(2) = max(buoydat.SeaParameters.sigma);
+        buoysimoptions.SeaParameters.sigma_range(2) = max(buoysimoptions.SeaParameters.sigma);
         
     end
     
-    if min(buoydat.SeaParameters.sigma / (2*pi)) < buoydat.BuoyParameters.maxfreq
+    if min(buoysimoptions.SeaParameters.sigma / (2*pi)) < buoysimoptions.BuoyParameters.maxfreq
        
         warning('Min sea frequency less than min buoy frequency, sea will be modified (lower frequencies stripped).')
         
-        inds = find((buoydat.SeaParameters.sigma / (2*pi)) >= buoydat.BuoyParameters.minfreq);
+        inds = find((buoysimoptions.SeaParameters.sigma / (2*pi)) >= buoysimoptions.BuoyParameters.minfreq);
         
-        buoydat.SeaParameters.sigma = buoydat.SeaParameters.sigma(inds);
-        buoydat.SeaParameters.phase = buoydat.SeaParameters.phase(inds);
-        buoydat.SeaParameters.amp = buoydat.SeaParameters.amp(inds);
-        buoydat.SeaParameters.L = buoydat.SeaParameters.L(inds);
-        buoydat.SeaParameters.wave_number = buoydat.SeaParameters.wave_number(inds);
+        buoysimoptions.SeaParameters.sigma = buoysimoptions.SeaParameters.sigma(inds);
+        buoysimoptions.SeaParameters.phase = buoysimoptions.SeaParameters.phase(inds);
+        buoysimoptions.SeaParameters.amp = buoysimoptions.SeaParameters.amp(inds);
+        buoysimoptions.SeaParameters.L = buoysimoptions.SeaParameters.L(inds);
+        buoysimoptions.SeaParameters.wave_number = buoysimoptions.SeaParameters.wave_number(inds);
         
-        buoydat.SeaParameters.sigma_range(1) = min(buoydat.SeaParameters.sigma);
+        buoysimoptions.SeaParameters.sigma_range(1) = min(buoysimoptions.SeaParameters.sigma);
         
     end
 
     % Find the excitation forces
-    [buoydat.BuoyParameters.heave_excit_force, buoydat.BuoyParameters.surge_excit_force] = ...
-                unitampexcitforces(buoydat.SeaParameters.sigma, buoydat.ExcitationFile);
+    [buoysimoptions.BuoyParameters.heave_excit_force, buoysimoptions.BuoyParameters.surge_excit_force] = ...
+                unitampexcitforces(buoysimoptions.SeaParameters.sigma, buoysimoptions.ExcitationFile);
     
     % load up alphas and betas for this cylinder
-    temp = load(buoydat.HeaveFile, 'alpha', 'beta');
-    buoydat.BuoyParameters.Halpha = temp.alpha;
-    buoydat.BuoyParameters.Hbeta = temp.beta;
+    temp = load(buoysimoptions.HeaveFile, 'alpha', 'beta');
+    buoysimoptions.BuoyParameters.Halpha = temp.alpha;
+    buoysimoptions.BuoyParameters.Hbeta = temp.beta;
     
-    temp = load(buoydat.SurgeFile, 'alpha', 'beta');
+    temp = load(buoysimoptions.SurgeFile, 'alpha', 'beta');
     
     if isstruct(temp)
-        buoydat.BuoyParameters.Salpha = temp.alpha;
-        buoydat.BuoyParameters.Sbeta = temp.beta;
+        buoysimoptions.BuoyParameters.Salpha = temp.alpha;
+        buoysimoptions.BuoyParameters.Sbeta = temp.beta;
     else
-        buoydat.BuoyParameters.Salpha = temp(:,1);
-        buoydat.BuoyParameters.Sbeta = temp(:,2);
+        buoysimoptions.BuoyParameters.Salpha = temp(:,1);
+        buoysimoptions.BuoyParameters.Sbeta = temp(:,2);
     end
 
 %     % Find the number of alpha and betas used
@@ -160,7 +159,7 @@ function buoydat = buoysimsetup(buoy, buoydat)
 
     % Load the variables necessary to calculate the added mass for the
     % buoy, it is expected that this will be an ascii text data file
-    hydrocoeffs = load(buoydat.HydroCoeffsFile, '-ascii');
+    hydrocoeffs = load(buoysimoptions.HydroCoeffsFile, '-ascii');
 
     Hadded_mass = [0 0]; % [sigma, added mass]
     Sadded_mass = [0 0]; % [sigma, added mass]
@@ -182,53 +181,53 @@ function buoydat = buoysimsetup(buoy, buoydat)
     Hadded_mass(1,:) = [];% Removes zero first entry
     Sadded_mass(1,:) = [];% Removes zero first entry
 
-    Hadded_mass = [(2 * pi ./ Hadded_mass(:,1)) , Hadded_mass(:,2) .* buoydat.BuoyParameters.rho];
-    buoydat.BuoyParameters.HM_infinity = Hadded_mass(end);
+    Hadded_mass = [(2 * pi ./ Hadded_mass(:,1)) , Hadded_mass(:,2) .* buoysimoptions.BuoyParameters.rho];
+    buoysimoptions.BuoyParameters.HM_infinity = Hadded_mass(end);
     
-    Sadded_mass = [(2 * pi ./ Sadded_mass(:,1)) , Sadded_mass(:,2) .* buoydat.BuoyParameters.rho];
-    buoydat.BuoyParameters.SM_infinity = Sadded_mass(end);
+    Sadded_mass = [(2 * pi ./ Sadded_mass(:,1)) , Sadded_mass(:,2) .* buoysimoptions.BuoyParameters.rho];
+    buoysimoptions.BuoyParameters.SM_infinity = Sadded_mass(end);
         
     initial_vel_ext = 0.0;
 
-    buoydat.BuoyParameters.velocity(:,1) = [initial_vel_ext, 0];
+    buoysimoptions.BuoyParameters.velocity(:,1) = [initial_vel_ext, 0];
     
     % -----------------------------------------------------
     
     % set the number of radiation coefficients to use in the sim if it has
     % not already been specified
-    if ~isfield(buoydat, 'NRadiationCoefs')
-        buoydat.NRadiationCoefs = numel(buoydat.BuoyParameters.Halpha);
+    if ~isfield(buoysimoptions, 'NRadiationCoefs')
+        buoysimoptions.NRadiationCoefs = numel(buoysimoptions.BuoyParameters.Halpha);
     else
-        if buoydat.NRadiationCoefs < 1
+        if buoysimoptions.NRadiationCoefs < 1
             error('You must specify at least one radiation force coeficient.');
-        elseif buoydat.NRadiationCoefs < 5
+        elseif buoysimoptions.NRadiationCoefs < 5
             warning('You have specified the use of less than 5 radiation coefficients, the accuracy may not be reliable');
         end
     end
 
     % construct the initial conditions of the system
-    buoydat.ODESim.SolutionComponents.BuoyPositionHeave.InitialConditions = 0;
-    buoydat.ODESim.SolutionComponents.BuoyPositionHeave.AbsTol = buoydat.BuoyParameters.draft / 20;
+    buoysimoptions.ODESim.SolutionComponents.BuoyPositionHeave.InitialConditions = 0;
+    buoysimoptions.ODESim.SolutionComponents.BuoyPositionHeave.AbsTol = buoysimoptions.BuoyParameters.draft / 20;
     
-    buoydat.ODESim.SolutionComponents.BuoyVelocityHeave.InitialConditions = 0;
-    buoydat.ODESim.SolutionComponents.BuoyVelocityHeave.AbsTol = 0.05;
+    buoysimoptions.ODESim.SolutionComponents.BuoyVelocityHeave.InitialConditions = 0;
+    buoysimoptions.ODESim.SolutionComponents.BuoyVelocityHeave.AbsTol = 0.05;
     
-    buoydat.ODESim.SolutionComponents.BuoyPositionSurge.InitialConditions = 0;
-    buoydat.ODESim.SolutionComponents.BuoyPositionSurge.AbsTol = buoydat.BuoyParameters.a / 20;
+    buoysimoptions.ODESim.SolutionComponents.BuoyPositionSurge.InitialConditions = 0;
+    buoysimoptions.ODESim.SolutionComponents.BuoyPositionSurge.AbsTol = buoysimoptions.BuoyParameters.a / 20;
     
-    buoydat.ODESim.SolutionComponents.BuoyVelocitySurge.InitialConditions = 0;
-    buoydat.ODESim.SolutionComponents.BuoyVelocitySurge.AbsTol = 0.05;
+    buoysimoptions.ODESim.SolutionComponents.BuoyVelocitySurge.InitialConditions = 0;
+    buoysimoptions.ODESim.SolutionComponents.BuoyVelocitySurge.AbsTol = 0.05;
     
     % Handle the  the heave and surge radiation force component setup
-    buoydat.ODESim.SolutionComponents.BuoyRadiationHeave.InitialConditions = zeros(1, buoydat.NRadiationCoefs);
-    buoydat.ODESim.SolutionComponents.BuoyRadiationSurge.InitialConditions = zeros(1, buoydat.NRadiationCoefs);
+    buoysimoptions.ODESim.SolutionComponents.BuoyRadiationHeave.InitialConditions = zeros(1, buoysimoptions.NRadiationCoefs);
+    buoysimoptions.ODESim.SolutionComponents.BuoyRadiationSurge.InitialConditions = zeros(1, buoysimoptions.NRadiationCoefs);
     % Set the absolute tolerances on the hydrodynamic forces as the
     % force necessary to accelerate the mass of the buoy at a rate of
     % 0.01 m/s^2
-    buoydat.ODESim.SolutionComponents.BuoyRadiationHeave.AbsTol = ...
-        repmat(0.01 * buoydat.BuoyParameters.mass_external, 1, buoydat.NRadiationCoefs);
-    buoydat.ODESim.SolutionComponents.BuoyRadiationSurge.AbsTol = ...
-        repmat(0.01 * buoydat.BuoyParameters.mass_external, 1, buoydat.NRadiationCoefs);
+    buoysimoptions.ODESim.SolutionComponents.BuoyRadiationHeave.AbsTol = ...
+        repmat(0.01 * buoysimoptions.BuoyParameters.mass_external, 1, buoysimoptions.NRadiationCoefs);
+    buoysimoptions.ODESim.SolutionComponents.BuoyRadiationSurge.AbsTol = ...
+        repmat(0.01 * buoysimoptions.BuoyParameters.mass_external, 1, buoysimoptions.NRadiationCoefs);
         
     % Calculate a suitible end stop spring constant related to the size of
     % the buoy. 
@@ -252,13 +251,13 @@ function buoydat = buoysimsetup(buoy, buoydat)
     %   ks = pi * r^2 * rho * g / f 
     %
     f = 0.05;
-    buoydat.EndStopks = (buoydat.BuoyParameters.rho * ...
-                         buoydat.BuoyParameters.g * ...
-                         pi * buoydat.BuoyParameters.a^2) / f;
+    buoysimoptions.EndStopks = (buoysimoptions.BuoyParameters.rho * ...
+                         buoysimoptions.BuoyParameters.g * ...
+                         pi * buoysimoptions.BuoyParameters.a^2) / f;
                      
     
     % Set heave and surge not to be constrained if not set already
-	buoydat.SeaParameters = setfieldifabsent(buoydat.SeaParameters, 'ConstrainSurge', 1);
-    buoydat.SeaParameters = setfieldifabsent(buoydat.SeaParameters, 'ConstrainHeave', 1);
+	buoysimoptions.SeaParameters = setfieldifabsent(buoysimoptions.SeaParameters, 'ConstrainSurge', 1);
+    buoysimoptions.SeaParameters = setfieldifabsent(buoysimoptions.SeaParameters, 'ConstrainHeave', 1);
     
 end

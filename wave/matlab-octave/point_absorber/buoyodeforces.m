@@ -1,30 +1,30 @@
 function [dx, bouyancy_force, excitation_force_heave, ...
     excitation_force_surge, radiation_force_heave, ...
-    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodeforces(t, x, xBh, vBh, vBs, simoptions)
+    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodeforces(t, x, xBh, vBh, vBs, buoysimoptions)
 
     % copy over some values (they are not modified, and so there will be no
     % memory/speed penalty from this (in theory). The purpose of this is
     % purely to provide cleaner, more readable code below.
-    rho = simoptions.BuoyParameters.rho;
-    g = simoptions.BuoyParameters.g;
-    a = simoptions.BuoyParameters.a;
-    sigma = simoptions.SeaParameters.sigma;
-    phase = simoptions.SeaParameters.phase;
-    amp = simoptions.SeaParameters.amp;
-    heave_excit_force = simoptions.BuoyParameters.heave_excit_force;
-    surge_excit_force = simoptions.BuoyParameters.surge_excit_force;
-    wave_number = simoptions.SeaParameters.wave_number;
-    Hbeta = simoptions.BuoyParameters.Hbeta;
-    Halpha = simoptions.BuoyParameters.Halpha;
-    Sbeta = simoptions.BuoyParameters.Sbeta;
-    Salpha = simoptions.BuoyParameters.Salpha;
-    water_depth = simoptions.BuoyParameters.water_depth;
-    draft = simoptions.BuoyParameters.draft;
-    drag_coefficient = simoptions.BuoyParameters.drag_coefficient;
+    rho = buoysimoptions.BuoyParameters.rho;
+    g = buoysimoptions.BuoyParameters.g;
+    a = buoysimoptions.BuoyParameters.a;
+    sigma = buoysimoptions.SeaParameters.sigma;
+    phase = buoysimoptions.SeaParameters.phase;
+    amp = buoysimoptions.SeaParameters.amp;
+    heave_excit_force = buoysimoptions.BuoyParameters.heave_excit_force;
+    surge_excit_force = buoysimoptions.BuoyParameters.surge_excit_force;
+    wave_number = buoysimoptions.SeaParameters.wave_number;
+    Hbeta = buoysimoptions.BuoyParameters.Hbeta;
+    Halpha = buoysimoptions.BuoyParameters.Halpha;
+    Sbeta = buoysimoptions.BuoyParameters.Sbeta;
+    Salpha = buoysimoptions.BuoyParameters.Salpha;
+    water_depth = buoysimoptions.BuoyParameters.water_depth;
+    draft = buoysimoptions.BuoyParameters.draft;
+    drag_coefficient = buoysimoptions.BuoyParameters.drag_coefficient;
 
-    onetoncoeffs = 1:simoptions.NRadiationCoefs;
+    onetoncoeffs = 1:buoysimoptions.NRadiationCoefs;
     heaveradcoeffinds = onetoncoeffs;
-    surgeradcoeffinds = simoptions.NRadiationCoefs+1:2*simoptions.NRadiationCoefs;
+    surgeradcoeffinds = buoysimoptions.NRadiationCoefs+1:2*buoysimoptions.NRadiationCoefs;
     
     % Determine the simple bouyancy force: F = x*rho*g*V
     bouyancy_force = -( xBh .* rho .* g .* pi * a^2 );
@@ -63,7 +63,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     % Determine the radiation forces in heave and surge
     
     % preallocate the array for the radiation force derivatives
-    dx = zeros(2*simoptions.NRadiationCoefs,size(x,2));
+    dx = zeros(2*buoysimoptions.NRadiationCoefs,size(x,2));
     
     % Calculate the derivative of the radiation forces in heave
     dx(heaveradcoeffinds,:) = ...

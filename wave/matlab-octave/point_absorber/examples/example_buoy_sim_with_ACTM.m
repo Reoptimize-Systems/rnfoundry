@@ -57,23 +57,23 @@ design.LgVLc = 0;
 % Set up the buoy and sea data files, these are for the 2m buoy with 1m
 % draft. There are two ways to specify a buoy, in this case we will use a
 % string, which refers to a buoy directory name in the library of buoys
-simoptions.buoy = 'cyl_2dia_1dr';
+simoptions.BuoySim.buoy = 'cyl_2dia_1dr';
 
 % create a sea, in this case a single frequency sea of frequency 0.35 Hz
 % and default amplitude 0.5m
-simoptions.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
+simoptions.BuoySim.SeaParameters = seasetup ('Sigmas', 2 * pi * 0.35);
 
 % the system is simulated as a heaving buoy attached to a tether which
 % passes through a hole in a vertically mounted structure and raises the
 % translator vertically. The tether_length is the initial distance from the
 % tether point on the buoy (the centre of the buoy) to the hole when the
 % buoy is at rest in the starting position.
-simoptions.tether_length = 4;
+simoptions.BuoySim.tether_length = 4;
 
 % set the end stop position (the maximum allowed translator displacement).
 % Here we set it to inf, so there are no end stops and the translator can
 % travel any distance
-simoptions.maxAllowedxT = inf;
+simoptions.BuoySim.maxAllowedxT = inf;
 
 % choose a time span for the simulation
 simoptions.tspan = [0, 60];
