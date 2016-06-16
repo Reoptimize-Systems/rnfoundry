@@ -1,4 +1,4 @@
-function regexprepfile(filename,exp,repstr)
+function changecount = regexprepfile(filename,exp,repstr,display)
 % Replace string in one or more files using regular expressions.
 %
 % Syntax
@@ -18,15 +18,39 @@ function regexprepfile(filename,exp,repstr)
 % filename may also be a cell array of strings, each a file name, in which
 % case the replacement is perfromed for each file.
 %
+% Input
+%
+%  filename - string or cell array of strings being file paths to be
+%    checked by regexprepfile for the expression exp
+%
+%  exp - regular expression replacement using the pattern exp, in the same
+%    format as required by regexprep.m
+%
+%  repstr - string with which to replace any occurances of the pattern in
+%    exp, in all files in 'filename'
+%
+%  display - optional T/F flag determining whether to display output about
+%    the replacement process. Default is false
+% 
+% Output
+% 
+%  changecount - number 
+%
 %
 % See also regexprep, strrepfile
 %
 
+    if nargin < 4
+        display = false;
+    end
+    
     if ~iscellstr(filename) && ischar(filename)
         filename = {filename};
     elseif ~iscellstr(filename)
         error('filename must be a string or cell array of strings containing file locations.')
     end
+    
+    changecount = zeros (size (filename));
     
     for i = 1:numel(filename)
         
@@ -82,8 +106,6 @@ function regexprepfile(filename,exp,repstr)
         elseif origfid == -1
             error('Error opening search file.');
         end
-
-        changecount = 0;
         
         while 1
             tline = fgets(origfid);
@@ -98,7 +120,17 @@ function regexprepfile(filename,exp,repstr)
                 fprintf(tempfid, '%s', newtline);
                 
                 if ~strcmp (tline, newtline)
-                    changecount = changecount + 1;
+                    changecount(i) = changecount(i) + 1;
+                    
+                    if display
+                        
+                        fprintf (1, '---- original string\n');
+                        fprintf (1, '%s\n', strtrim (tline));
+                        fprintf (1, '---- new string\n');
+                        fprintf (1, '%s\n', strtrim (newtline));
+                        fprintf (1, '----\n');
+                        
+                    end
                 end
                 
             else
@@ -118,13 +150,17 @@ function regexprepfile(filename,exp,repstr)
             end
         end
         
-        if changecount > 0
+        if changecount(i) > 0
             % copy over the new file to the original location
             [status,message,messageid] = copyfile(tempfilename, fullfile(pathstr, [name, ext]));
             
             % if there was a problem rethrow the error
             if status == 0
                 rethrow(struct('message', message, 'identifier', messageid));
+            end
+            
+            if display
+                fprintf (1, '^^^ changes above found in file %s\n', filename{i});
             end
         end
         
