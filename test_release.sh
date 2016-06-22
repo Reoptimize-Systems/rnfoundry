@@ -4,15 +4,23 @@
 
 # run tests on the release if possible
 
+RED='\033[0;31m'
+BRed='\033[1;31m'
+NC='\033[0m' # No Color
+
+printf "Testing RenewNet release in dir ${1}\n"
+
 if ! [ -x "$(command -v matlab)" ]; then
-  echo 'matlab is not installed, not running tests using Matlab.' >&2
+  printf 'matlab is not installed, not running tests using Matlab.\n' >&2
 else
-  matlab -nodesktop -r "restoredefaultpath; cd $1; rnfoundry_setup(); quit"
+  printf "${BRed}Testing release using Matlab.${NC}\n"
+  matlab -nodesktop -r "restoredefaultpath; fprintf(1, 'changing dir to %s\n', strtrim('${1}')); cd(strtrim('${1}')); rnfoundry_setup(); quit"
 fi
 
 if ! [ -x "$(command -v octave-cli)" ]; then
-  echo 'octave is not installed, not running tests using Octave.' >&2
+  printf 'octave is not installed, not running tests using Octave.\n' >&2
 else
-  octave-cli --no-init-file --eval "cd $1; rnfoundry_setup(); quit"
+  printf "${BRed}Testing release using Octave.${NC}\n"
+  octave-cli --no-init-file --eval "fprintf(1, 'changing dir to %s\n', strtrim('${1}')); cd(strtrim('${1}')); rehash(); rnfoundry_setup(); quit"
 fi
 
