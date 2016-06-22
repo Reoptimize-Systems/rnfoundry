@@ -40,6 +40,9 @@ function results = oderesults(T, Y, odeevfcn, odeargs, skip, skipfields)
 %   recalculate. If skip is greater than 1, only every 'skip'th value is
 %   recalculated.
 %
+% skipfields is an optional cell array of output field names to ignore when
+%   populating the results structure
+%
 % See also: prallocresfcn.m
 %
 
