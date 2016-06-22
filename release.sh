@@ -37,6 +37,6 @@ zip -r ${RELEASE_NAME}.zip $RELEASE_DIR/
 
 
 # test
-#cd $WORKING_COPY_DIR
-#./test_release.sh $RELEASE_DIR
+cd $WORKING_COPY_DIR
+./test_release.sh $RELEASE_DIR
 
