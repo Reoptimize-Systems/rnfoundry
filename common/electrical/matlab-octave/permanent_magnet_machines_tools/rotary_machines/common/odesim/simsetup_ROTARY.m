@@ -1,4 +1,4 @@
-function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
+function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, varargin)
 % sets up variables for a rotary machine dynamic simulation 
 %
 % Syntax
@@ -65,10 +65,10 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
     Inputs.TAngularVelocity = [];
     Inputs.TSpan = [];
     Inputs.PoleCount = [];
-    Inputs.ODESim.EvalFcn = 'prescribedmotodetorquefcn_ROTARY';
-    Inputs.ODESim.PostSimFcn = 'prescribedmotresfun_ROTARY';
-    Inputs.torquefcn = 'torquefcn_ROTARY';
-    Inputs.torquefcnargs = {};
+    Inputs.EvalFcn = 'prescribedmotodetorquefcn_ROTARY';
+    Inputs.PostSimFcn = 'prescribedmotresfun_ROTARY';
+    Inputs.TorqueFcn = 'torquefcn_ROTARY';
+    Inputs.TorqueFcnArgs = {};
     Inputs.simoptions = struct();
     Inputs.RampPoles = [];
     Inputs.MinPointsPerPole = 20;
@@ -170,23 +170,23 @@ function simoptions = simsetup_ROTARY(design, simfun, finfun, varargin)
         simoptions.thetaT = cumtrapz(simoptions.drivetimes, simoptions.omegaT);
     end
 
-    if ~isfield(simoptions, 'odeevfun') || isempty(simoptions.ODESim.EvalFcn)
+    if ~isfield(simoptions.ODESim, 'EvalFcn') || isempty(simoptions.ODESim.EvalFcn)
         simoptions.ODESim.EvalFcn = Inputs.ODESim.EvalFcn;
     end
-    if ~isfield(simoptions, 'resfun') || isempty(simoptions.ODESim.PostSimFcn)
+    if ~isfield(simoptions.ODESim, 'PostSimFcn') || isempty(simoptions.ODESim.PostSimFcn)
         simoptions.ODESim.PostSimFcn = Inputs.ODESim.PostSimFcn;
     end
-    if ~isfield(simoptions, 'simfun') || isempty(simoptions.ODESim.PreProcFcn)
-        simoptions.ODESim.PreProcFcn = simfun;
+    if ~isfield(simoptions.ODESim, 'PreProcFcn') || isempty(simoptions.ODESim.PreProcFcn)
+        simoptions.ODESim.PreProcFcn = PreProcFcn;
     end
-    if ~isfield(simoptions, 'finfun') || isempty(simoptions.ODESim.PostPreProcFcn)
-        simoptions.ODESim.PostPreProcFcn = finfun;
+    if ~isfield(simoptions.ODESim, 'PostPreProcFcn') || isempty(simoptions.ODESim.PostPreProcFcn)
+        simoptions.ODESim.PostPreProcFcn = PostPreProcFcn;
     end
-    if ~isfield(simoptions, 'torquefcn') || isempty(simoptions.ODESim.TorqueFcn)
-        simoptions.ODESim.TorqueFcn = Inputs.torquefcn;
+    if ~isfield(simoptions.ODESim, 'TorqueFcn') || isempty(simoptions.ODESim.TorqueFcn)
+        simoptions.ODESim.TorqueFcn = Inputs.TorqueFcn;
     end
-    if ~isfield(simoptions, 'torquefcnargs') || isempty(simoptions.ODESim.TorqueFcnArgs)
-        simoptions.ODESim.TorqueFcnArgs = Inputs.torquefcnargs;
+    if ~isfield(simoptions.ODESim, 'TorqueFcnArgs') || isempty(simoptions.ODESim.TorqueFcnArgs)
+        simoptions.ODESim.TorqueFcnArgs = Inputs.TorqueFcnArgs;
     end
     
     simoptions.ODESim.TimeSpan = [simoptions.drivetimes(1), simoptions.drivetimes(end)];
