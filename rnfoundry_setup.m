@@ -60,6 +60,7 @@ function rnfoundry_setup (varargin)
     % functions we can then use
     thisfilepath = fileparts (which ('rnfoundry_setup'));
     addpath(genpath (thisfilepath));
+    workdir = pwd ();
     
     % mexlsei related
     Inputs.ForceMexLseiSetup = false;
@@ -101,18 +102,26 @@ function rnfoundry_setup (varargin)
                         Inputs.ForceMexLseiCFileCreation );
     end
     
+    cd (workdir);
+    
     if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mexext], 'file') ~= 3)
         mexslmeval_setup ();
     end
+    
+    cd (workdir);
     
     if Inputs.ForceMexPPValSetup || (exist (['mexppval.', mexext], 'file') ~= 3)
         mexppval_setup();
     end
     
+    cd (workdir);
+    
     if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mexext], 'file') ~= 3)
         mmake ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
         mmake ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
     end
+    
+    cd (workdir);
     
     % check for the existence of xfemm package
     if ~Inputs.PreventXFemmCheck
@@ -146,6 +155,9 @@ function rnfoundry_setup (varargin)
                 end
 
                 if doxfemm
+                    
+                    fprintf (1, 'Downloading xfemm package from:\n%s\n', Inputs.XFemmDownloadSource);
+                    
                     % unpack the download to the appropriate location
                     unpackfcn (xfemmfile, Inputs.XFemmInstallPrefix);
 
@@ -155,6 +167,8 @@ function rnfoundry_setup (varargin)
                     % add mfemm setup function location to path and run it
                     addpath (fullfile (Inputs.XFemmInstallPrefix, xfemm_prefix, 'mfemm'));
                     mfemm_setup ();
+                    
+                    fprintf (1, 'xfemm package installation complete\n');
 
                 end
             else
@@ -163,6 +177,7 @@ function rnfoundry_setup (varargin)
             
         end
     end
-
+    
+    cd (workdir);
     
 end
