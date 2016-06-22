@@ -7,6 +7,26 @@ function rnfoundry_setup (varargin)
 % rnfoundry_setup ()
 % rnfoundry_setup ('Parameter', value)
 %
+% Description
+%
+% rnfoundry_setup sets up the RenewNet Foundry matlab code on a new
+% installation. At it's simplest, it will just add some directories to your
+% Matlab/Octave path. At it's most complicated it will download missing
+% packages required for optimum performance and feature sets, and compile
+% from scratch any matlab mex files which need compiled. What it does, or
+% attempts to do, will depend on what has already been done before, or what
+% has been supplied, or what you tell it to do using various options.
+%
+% If using Matlab (rather than Octave), to do any of the compilation you
+% must have set up a C++ compiler for your Matlab installation in order to
+% use the high performance functions. See Matlab's documentation for
+% further information on setting up C++ compiler. Good starting points for
+% this are
+%
+% http://uk.mathworks.com/help/matlab/matlab_external/choose-c-or-c-compilers.html
+%
+% and the 'doc mex' command
+%
 % Input
 %
 % rnfoundry_setup can be called with no arguments, or for finer control,
