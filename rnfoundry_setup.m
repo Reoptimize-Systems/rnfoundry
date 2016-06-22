@@ -9,7 +9,7 @@ function rnfoundry_setup (varargin)
 %
 % Input
 %
-% rnfoundry_setup can be called with no arguments, of for finer control,
+% rnfoundry_setup can be called with no arguments, or for finer control,
 % over the install process, it can be called with additional optional
 % arguemtns supplied as Parameter-Value pairs. The avaialble options are:
 %
@@ -74,9 +74,9 @@ function rnfoundry_setup (varargin)
     % xfemm related
     Inputs.PreventXFemmCheck = false;
     if ispc
-        Inputs.XFemmDownloadSource = 'http://downloads.sourceforge.net/project/xfemm/Release/Release%201.6/xfemm_v1_6_mingw_win64.zip';
+        Inputs.XFemmDownloadSource = 'http://downloads.sourceforge.net/project/xfemm/Release/Release%201.7/xfemm_v1_7_mingw_win64.zip';
     elseif isunix
-        Inputs.XFemmDownloadSource = 'http://downloads.sourceforge.net/project/xfemm/Release/Release%201.6/xfemm_v1_6_linux64.tar.gz';
+        Inputs.XFemmDownloadSource = 'http://downloads.sourceforge.net/project/xfemm/Release/Release%201.7/xfemm_v1_7_linux64.tar.gz';
     else
         Inputs.XFemmDownloadSource = '';
     end
