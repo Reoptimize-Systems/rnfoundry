@@ -242,7 +242,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 
     % select the solver to use, by default we choose stiff solvers a
     % generally the machine inductance circuit requires this.
-    if isfield(simoptions, 'odesolver')
+    if isfield(simoptions.ODESim, 'Solver')
         if ischar(simoptions.ODESim.Solver)
             odefcn = str2func(simoptions.ODESim.Solver);
         elseif isa(simoptions.ODESim.Solver, 'function_handle')
@@ -341,6 +341,8 @@ function [odeevfun, resfun, spfcn, eventfcns, outputfcn] = checkinputs_simulatem
         if ischar(simoptions.ODESim.OutputFcn)
             outputfcn = str2func(simoptions.ODESim.OutputFcn);
             outputfcn = @(t,y,flag) outputfcn (t,y,flag, odeargs{:});
+        else
+            outputfcn = simoptions.ODESim.OutputFcn;
         end
     end
     
