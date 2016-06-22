@@ -31,10 +31,9 @@ rm $RELEASE_DIR/.hgignore
 rm $RELEASE_DIR/release.sh
 rm $RELEASE_DIR/test_release.sh
 
-# tar up the result
+# zip up the result
 cd $WORKING_COPY_DIR
-zip -r ${RELEASE_NAME}.zip $RELEASE_DIR/
-
+zip -r ${RELEASE_NAME}.zip $RELEASE_NAME/
 
 # test
 cd $WORKING_COPY_DIR
