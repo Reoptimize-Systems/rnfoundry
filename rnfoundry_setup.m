@@ -214,8 +214,8 @@ end
 function runtests ()
     % put some tests in here
     
-    % get all variables currently in memory
-    vars = who ();
+    % get all variables names currently in memory
+    vars = who (); vars{end+1} = 'vars';
     
     fprintf (1, 'Running "example_basic_heaving_buoy_simulation"\n');
     example_basic_heaving_buoy_simulation;
