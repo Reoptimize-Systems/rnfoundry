@@ -33,6 +33,9 @@ function rnfoundry_setup (varargin)
 % over the install process, it can be called with additional optional
 % arguemtns supplied as Parameter-Value pairs. The avaialble options are:
 %
+%  'RunTests' : Flag determining whether tor runs some scripts to test the 
+%    setup after installation is complete. Default is false.
+%
 %  'ForceMexLseiSetup' : Forces the recompilation of the mexlsei mex 
 %    function even if it already on the path. Default is false.
 %
@@ -75,6 +78,7 @@ function rnfoundry_setup (varargin)
 %    Sourceforge.net, and depends on your machine architecture. It's fairly
 %    unlikely you'll ever want to change this option.
 %
+%
 
     % set up the matlab path first to get access to a load of utility
     % functions we can then use
@@ -82,6 +86,7 @@ function rnfoundry_setup (varargin)
     addpath(genpath (thisfilepath));
     workdir = pwd ();
     
+    Inputs.RunTests = false;
     % mexlsei related
     Inputs.ForceMexLseiSetup = false;
     Inputs.ForceMexLseiF2cLibRecompile = false;
@@ -200,4 +205,25 @@ function rnfoundry_setup (varargin)
     
     cd (workdir);
     
+    if Inputs.RunTests
+        runtests ();
+    end
+    
+end
+
+function runtests ()
+    % put some tests in here
+    
+    fprintf (1, 'Running "example_basic_heaving_buoy_simulation"\n');
+    example_basic_heaving_buoy_simulation;
+    
+    fprintf (1, 'Running "example_buoy_sim_with_ACTM"\n');
+    example_buoy_sim_with_ACTM;
+    
+    fprintf (1, 'Running "example_radial_flux_permanent_magnet_machine_sim"\n');
+    example_radial_flux_permanent_magnet_machine_sim;
+    
+    fprintf (1, 'Running "example_radial_flux_pm_with_ratio_specification"\n');
+    example_radial_flux_pm_with_ratio_specification
+
 end
