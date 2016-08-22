@@ -1,6 +1,24 @@
 function meshsize = choosemesh(w, h, fraction)
 % choosemesh selects an appropriate mesh size for a rectangular region
 %
+% Syntax
+%
+% meshsize = choosemesh(w, h, fraction)
+%
+% Input
+%
+%  w - region width
+%
+%  h - region height
+%
+%  fraction - (optionsl) max fraction of any dimention taken up by one
+%    element.  Defaults to 0.05 if not supplied
+%
+% Output
+%
+%  meshsize - 
+%
+%
     
     if nargin < 3
         fraction = 0.05;
