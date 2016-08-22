@@ -14,13 +14,13 @@ if ! [ -x "$(command -v matlab)" ]; then
   printf 'matlab is not installed, not running tests using Matlab.\n' >&2
 else
   printf "${BRed}Testing release using Matlab.${NC}\n"
-  matlab -nodesktop -r "restoredefaultpath; fprintf(1, 'changing dir to %s\n', strtrim('${1}')); cd(strtrim('${1}')); rnfoundry_setup(); quit"
+  matlab -nodesktop -r "restoredefaultpath; fprintf(1, 'changing dir to %s\n', strtrim('${1}')); cd(strtrim('${1}')); rnfoundry_setup('RunTests', true); quit"
 fi
 
 if ! [ -x "$(command -v octave-cli)" ]; then
   printf 'octave is not installed, not running tests using Octave.\n' >&2
 else
   printf "${BRed}Testing release using Octave.${NC}\n"
-  octave-cli --no-init-file --eval "fprintf(1, 'changing dir to %s\n', strtrim('${1}')); cd(strtrim('${1}')); rehash(); rnfoundry_setup(); quit"
+  octave-cli --no-init-file --eval "pkg load odepkg; fprintf(1, 'changing dir to %s\n', strtrim('${1}')); cd(strtrim('${1}')); rehash(); rnfoundry_setup('RunTests', true); quit"
 fi
 
