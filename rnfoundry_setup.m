@@ -214,16 +214,27 @@ end
 function runtests ()
     % put some tests in here
     
+    % get all variables currently in memory
+    vars = who ();
+    
     fprintf (1, 'Running "example_basic_heaving_buoy_simulation"\n');
     example_basic_heaving_buoy_simulation;
+    clearvars ('-except', vars{:});
+    close all;
     
     fprintf (1, 'Running "example_buoy_sim_with_ACTM"\n');
     example_buoy_sim_with_ACTM;
+    clearvars ('-except', vars{:});
+    close all;
     
     fprintf (1, 'Running "example_radial_flux_permanent_magnet_machine_sim"\n');
     example_radial_flux_permanent_magnet_machine_sim;
+    clearvars ('-except', vars{:});
+    close all;
     
     fprintf (1, 'Running "example_radial_flux_pm_with_ratio_specification"\n');
     example_radial_flux_pm_with_ratio_specification
-
+    clearvars ('-except', vars{:});
+    close all;
+    
 end
