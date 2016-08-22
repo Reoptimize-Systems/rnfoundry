@@ -87,7 +87,13 @@ function design = makelossfcns_ACTIAM(design)
                                             design.intBdata.pos .* design.Wp, ...
                                             design.intBdata.intB1 ./ design.CoilArea, ...
                                             [], ...
-                                            design.NStrands);  
+                                            design.NStrands);
+                                        
+	% also capture some information so we can estimate frequency based
+	% losses for verification purposes
+    design.CoreLoss.maxBx = max (design.CoreLoss.Bx, [], 2);
+    design.CoreLoss.maxBy = max (design.CoreLoss.By, [], 2);
+    design.CoreLoss.maxBz = max (design.CoreLoss.Bz, [], 2);
     
 end
 
