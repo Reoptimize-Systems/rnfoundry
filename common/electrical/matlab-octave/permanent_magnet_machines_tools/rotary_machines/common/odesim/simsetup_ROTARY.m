@@ -171,10 +171,10 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
     end
 
     if ~isfield(simoptions.ODESim, 'EvalFcn') || isempty(simoptions.ODESim.EvalFcn)
-        simoptions.ODESim.EvalFcn = Inputs.ODESim.EvalFcn;
+        simoptions.ODESim.EvalFcn = Inputs.EvalFcn;
     end
     if ~isfield(simoptions.ODESim, 'PostSimFcn') || isempty(simoptions.ODESim.PostSimFcn)
-        simoptions.ODESim.PostSimFcn = Inputs.ODESim.PostSimFcn;
+        simoptions.ODESim.PostSimFcn = Inputs.PostSimFcn;
     end
     if ~isfield(simoptions.ODESim, 'PreProcFcn') || isempty(simoptions.ODESim.PreProcFcn)
         simoptions.ODESim.PreProcFcn = PreProcFcn;
