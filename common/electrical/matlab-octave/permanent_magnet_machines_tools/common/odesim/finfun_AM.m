@@ -61,6 +61,10 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     
     simoptions = setfieldifabsent(simoptions, 'GetVariableGapForce', true);
     
+    simoptions = setfieldifabsent (simoptions, 'TempDependantResistivity', false);
+    
+    simoptions = setfieldifabsent (simoptions, 'FreqDependantResistance', false);
+    
     simoptions = setfieldifabsent(simoptions, 'basescorefcn', 'costscore_AM');
 
     if ~isfield (design, 'slm_fluxlinkage')
