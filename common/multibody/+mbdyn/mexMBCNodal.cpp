@@ -26,7 +26,7 @@ public:
         userefnode = false;
         refnoderot = MBCBase::NONE;
         nodes = 0;
-        labels = true;
+        getlabels = true;
         accelerations = false;
         rot = MBCBase::MAT;
         
@@ -46,7 +46,7 @@ public:
         std::vector<int> nallowed;
         
         // eight or nine arguments must be supplied : refnode, refnoderot, 
-        //   nodes, labels, rot, accelerations, commethod, comstring, hostport
+        //   nodes, getlabels, rot, accelerations, commethod, comstring, hostport
         nallowed.push_back (8);
         nallowed.push_back (9);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
@@ -107,10 +107,10 @@ public:
         mexPrintf ("nodes: %d\n", nodes);
         #endif
         
-        labels = mxnthargscalarbool (nrhs, prhs, 4, 2);
+        getlabels = mxnthargscalarbool (nrhs, prhs, 4, 2);
         
         #ifdef DEBUG
-        mexPrintf ("labels: %d\n", labels);
+        mexPrintf ("getlabels: %d\n", getlabels);
         #endif
         
         std::string rotargstr = mxnthargstring (nrhs, prhs, 5, 2);
@@ -148,7 +148,7 @@ public:
         accelerations = mxnthargscalarbool (nrhs, prhs, 6, 2);
         
         #ifdef DEBUG
-        mexPrintf ("labels: %d\n", accelerations);
+        mexPrintf ("getlabels: %d\n", accelerations);
         #endif
         
         std::string commethod = mxnthargstring (nrhs, prhs, 7, 2);
@@ -171,7 +171,7 @@ public:
 //             rot = MBCBase::NONE;
 //         }
         
-        if (mbc->Initialize (refnoderot, nodes, labels, rot, accelerations)) 
+        if (mbc->Initialize (refnoderot, nodes, getlabels, rot, accelerations)) 
         {
             mexErrMsgIdAndTxt ("MBCNodal:initfailed: ",
                "MBCNodal::Initialize() failed");
@@ -206,7 +206,7 @@ public:
         else
         {
             mexErrMsgIdAndTxt ( "MBCNodal:badCommType",
-               "Unrecgnised communication method type (should be 'local' or 'inet').");
+               "Unrecognised communication method type (should be 'local' or 'inet').");
         }
         
         /* "negotiate" configuration with MBDyn
@@ -214,7 +214,7 @@ public:
         if (mbc->Negotiate ()) 
         {
             mexErrMsgIdAndTxt ( "MBCNodal:inconsistantConfig",
-               "Negotiate call failed, indicating inconsistant mbc configuration.");
+               "Negotiate call failed, indicating inconsistant configuration, check mbc file options etc. match options used here.");
         }
         
         // free stuff allocated by mx
@@ -225,13 +225,17 @@ public:
     
     void GetMotion (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
     {
+        std::vector<int> nallowed;
+        
+        nallowed.push_back (0);
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
         
         int status = mbc->GetMotion ();
-        if (status) 
-        {
-            mexErrMsgIdAndTxt ( "MBCNodal:getMotionFailure",
-               "GetMotion call failed.");
-        }
+//         if (status) 
+//         {
+//             mexErrMsgIdAndTxt ( "MBCNodal:getMotionFailure",
+//                "GetMotion call failed.");
+//         }
         
         mxSetLHS (status, 1, nlhs, plhs);
     }
@@ -247,6 +251,12 @@ public:
     
     void KinematicsLabel (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
+        if (!getlabels)
+        {
+            mexErrMsgIdAndTxt ( "MBCNodal:nolabelsavailable",
+               "You did not request labels at initialisation so they cannot be retreived.");
+        }
+        
         std::vector<int> nallowed;
         
         // one arg allowed, the node number
@@ -255,21 +265,33 @@ public:
         
         int nnodes = mbc->GetNodes();
         
+        #ifdef DEBUG
+        mexPrintf ("in KinematicsLabel, nnodes: %d\n", nnodes);
+        #endif
+        
         int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
         
-        if (n > (nnodes-1))
+        #ifdef DEBUG
+        mexPrintf ("in KinematicsLabel, n: %d\n", n);
+        #endif
+        
+        if (n > nnodes)
         {
             mexErrMsgIdAndTxt ( "MBCNodal:badNodeRequest",
                "Requested node number is greater than number of nodes.");
         }
         
-        if (n < 0)
+        if (n < 1)
         {
             mexErrMsgIdAndTxt ( "MBCNodal:badNodeRequest",
-               "Requested node number was negative.");
+               "Requested node number was less than 1.");
         }
         
-        int label = mbc->KinematicsLabel(n);
+        #ifdef DEBUG
+        mexPrintf ("About to call mbc->KinematicsLabel\n");
+        #endif
+        
+        int label = mbc->KinematicsLabel (n);
         
         mxSetLHS (label, 1, nlhs, plhs);
         
@@ -315,6 +337,99 @@ public:
         mxSetLHS (XP, 1, nlhs, plhs);
     }
     
+    void XPP (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        if (accelerations == false)
+        {
+           mexErrMsgIdAndTxt ("MBCNodal:XPP:nouseaccelerations",
+                    "You have set UseAccelerations to false, angular acceleration data is not available.");   
+        }
+        
+        std::vector<int> nallowed;
+        
+        // one arg, the node number 
+        nallowed.push_back (1);
+        
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+        
+        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        
+        std::vector<double> XPP;
+        
+        XPP.push_back (mbc->XPP(n, 1));
+        XPP.push_back (mbc->XPP(n, 2));
+        XPP.push_back (mbc->XPP(n, 3));
+        
+        mxSetLHS (XPP, 1, nlhs, plhs);
+    }
+    
+    void Theta (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        std::vector<int> nallowed;
+        
+        // one arg, the node number 
+        nallowed.push_back (1);
+        
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+        
+        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        
+        std::vector<double> Theta;
+        
+        Theta.push_back (mbc->Theta(n, 1));
+        Theta.push_back (mbc->Theta(n, 2));
+        Theta.push_back (mbc->Theta(n, 3));
+        
+        mxSetLHS (Theta, 1, nlhs, plhs);
+    }
+    
+    void Omega (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        std::vector<int> nallowed;
+        
+        // one arg, the node number 
+        nallowed.push_back (1);
+        
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+        
+        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        
+        std::vector<double> Omega;
+        
+        Omega.push_back (mbc->Omega(n, 1));
+        Omega.push_back (mbc->Omega(n, 2));
+        Omega.push_back (mbc->Omega(n, 3));
+        
+        mxSetLHS (Omega, 1, nlhs, plhs);
+    }
+    
+    void OmegaP (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        
+        if (accelerations == false)
+        {
+           mexErrMsgIdAndTxt ("MBCNodal:OmegaP:nouseaccelerations",
+                    "You have set UseAccelerations to false, acceleration data is not available.");   
+        }
+        
+        std::vector<int> nallowed;
+        
+        // one arg, the node number 
+        nallowed.push_back (1);
+        
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+        
+        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        
+        std::vector<double> OmegaP;
+        
+        OmegaP.push_back (mbc->OmegaP(n, 1));
+        OmegaP.push_back (mbc->OmegaP(n, 2));
+        OmegaP.push_back (mbc->OmegaP(n, 3));
+        
+        mxSetLHS (OmegaP, 1, nlhs, plhs);
+    }
+    
     
     void F (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
@@ -333,7 +448,7 @@ public:
         
         if (mbc->GetNodes() > 0)
         {
-            if (labels)
+            if (getlabels)
             {
                 for (unsigned n = 1; n <= mbc->GetNodes(); n++)
                 {
@@ -385,7 +500,7 @@ public:
         
         if (mbc->GetNodes() > 0)
         {
-            if (labels)
+            if (getlabels)
             {
                 for (unsigned n = 1; n <= mbc->GetNodes(); n++)
                 {
@@ -409,6 +524,303 @@ public:
     }
     
     
+    void GetRot (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        
+        int nnodes = mbc->GetNodes ();
+        std::vector<mwSize> index;
+        std::vector<int> nallowed;
+        
+        nallowed.push_back (0);
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+        
+        // This call gets the rotation matrix data into the mbc data 
+        // structure
+        MBCBase::Rot rottype = mbc->GetRot ();
+        
+        switch (rottype) 
+        {
+                
+            case MBCBase::THETA:
+            {
+                // create the output matrix
+                const mwSize dims[] = {3, nnodes};
+                plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+                
+                // wrap it for easy indexing
+                mxNumericArrayWrapper thetamat ( plhs[0] );
+                // initialise the matrix index vector
+                index.push_back (0);
+                index.push_back (0);
+                
+                for (unsigned n = 1; n <= nnodes; n++)
+                {
+                    
+                    index[0] = (mwSize)0;
+                    index[1] = (mwSize)(n-1);
+                    thetamat.setDoubleValue (index, mbc->Theta (n, 1));
+
+                    index[0] = (mwSize)1;
+                    index[1] = (mwSize)(n-1);
+                    thetamat.setDoubleValue (index, mbc->Theta (n, 2));
+
+                    index[0] = (mwSize)2;
+                    index[1] = (mwSize)(n-1);
+                    thetamat.setDoubleValue (index, mbc->Theta (n, 3));
+                
+                }
+                
+                return;
+            }
+            case MBCBase::EULER_123:
+            {
+                std::vector<double> euler123;
+                // create the output matrix
+                const mwSize dims[] = {3, nnodes};
+                plhs[0] = mxCreateNumericArray(2, dims, mxDOUBLE_CLASS, mxREAL);
+                
+                // wrap it for easy indexing
+                mxNumericArrayWrapper euler123mat ( plhs[0] );
+                // initialise the matrix index vector
+                index.push_back(0);
+                index.push_back(0);
+                
+                for (unsigned n = 1; n <= nnodes; n++)
+                {
+                    index[0] = (mwSize)0;
+                    index[1] = (mwSize)(n-1);
+                    euler123mat.setDoubleValue (index, mbc->Euler123 (n, 1));
+
+                    index[0] = (mwSize)1;
+                    index[1] = (mwSize)(n-1);
+                    euler123mat.setDoubleValue (index, mbc->Euler123 (n, 2));
+
+                    index[0] = (mwSize)2;
+                    index[1] = (mwSize)(n-1);
+                    euler123mat.setDoubleValue (index, mbc->Euler123 (n, 3));
+                }
+                
+                return;
+            }  
+            default:
+            {
+                // create the output matrix
+                const mwSize dims[] = {3, 3, nnodes};
+                plhs[0] = mxCreateNumericArray (3, dims, mxDOUBLE_CLASS, mxREAL);
+                
+                // wrap it for easy indexing
+                mxNumericArrayWrapper rotmat ( plhs[0] );
+                
+                // initialise the matrix index vector
+                index.push_back(0);
+                index.push_back(0);
+                index.push_back(0);
+                
+                // orientation matrix supplied as three column vectors:
+                //
+                //  r11,r21,r31,r12,r22,r32,r13,r23,r33;
+                //
+                // mbc->R(n, 1, 1)  mbc->R(n, 1, 2)  mbc->R(n, 1, 3)
+                // mbc->R(n, 2, 1)  mbc->R(n, 2, 2)  mbc->R(n, 2, 3)
+                // mbc->R(n, 3, 1)  mbc->R(n, 3, 2)  mbc->R(n, 3, 3)
+                //
+                
+                for (unsigned n = 1; n <= nnodes; n++)
+                {
+                    
+                    index[2] = (mwSize)(n-1);
+                    
+                
+                    index[0] = (mwSize)0;
+                    index[1] = (mwSize)0;
+                    rotmat.setDoubleValue (index, mbc->R(n, 1, 1));
+
+                    index[0] = (mwSize)1;
+                    index[1] = (mwSize)0;
+                    rotmat.setDoubleValue (index, mbc->R(n, 2, 1));
+
+                    index[0] = (mwSize)2;
+                    index[1] = (mwSize)0;
+                    rotmat.setDoubleValue (index, mbc->R(n, 3, 1));
+
+
+                    index[0] = (mwSize)0;
+                    index[1] = (mwSize)1;
+                    rotmat.setDoubleValue (index, mbc->R(n, 1, 2));
+
+                    index[0] = (mwSize)1;
+                    index[1] = (mwSize)1;
+                    rotmat.setDoubleValue (index, mbc->R(n, 2, 2));
+
+                    index[0] = (mwSize)2;
+                    index[1] = (mwSize)1;
+                    rotmat.setDoubleValue (index, mbc->R(n, 3, 2));
+
+
+                    index[0] = (mwSize)0;
+                    index[1] = (mwSize)2;
+                    rotmat.setDoubleValue (index, mbc->R(n, 1, 3));
+
+                    index[0] = (mwSize)1;
+                    index[1] = (mwSize)2;
+                    rotmat.setDoubleValue (index, mbc->R(n, 2, 3));
+
+                    index[0] = (mwSize)2;
+                    index[1] = (mwSize)2;
+                    rotmat.setDoubleValue (index, mbc->R(n, 3, 3));
+                
+                }
+                
+                return;
+            }
+                
+        }
+        
+    }
+    
+    void GetRefNodeRot (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        std::vector<mwSize> index;
+        std::vector<int> nallowed;
+        
+        if (!userefnode)
+        {
+            mexErrMsgIdAndTxt ( "MBCNodal:getrefnoderot:norefnode",
+               "GetRefNodeRot called, but there is no reference node.");
+        }
+        
+        nallowed.push_back (0);
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+        
+        // This call gets the rotation matrix data into the mbc data 
+        // structure
+        MBCBase::Rot rottype = mbc->GetRefNodeRot ();
+        
+        switch (rottype) 
+        {
+                
+            case MBCBase::THETA:
+            {
+                // create the output matrix
+                const mwSize dims[] = {3, 1};
+                plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+                
+                // wrap it for easy indexing
+                mxNumericArrayWrapper thetamat ( plhs[0] );
+                // initialise the matrix index vector
+                index.push_back (0);
+                index.push_back (0);
+                
+                index[0] = (mwSize)0;
+                index[1] = (mwSize)0;
+                thetamat.setDoubleValue (index, mbc->Theta (1));
+
+                index[0] = (mwSize)1;
+                index[1] = (mwSize)0;
+                thetamat.setDoubleValue (index, mbc->Theta (2));
+
+                index[0] = (mwSize)2;
+                index[1] = (mwSize)0;
+                thetamat.setDoubleValue (index, mbc->Theta (3));
+                
+                return;
+            }
+            case MBCBase::EULER_123:
+            {
+                std::vector<double> euler123;
+                // create the output matrix
+                const mwSize dims[] = {3, 1};
+                plhs[0] = mxCreateNumericArray(2, dims, mxDOUBLE_CLASS, mxREAL);
+                
+                // wrap it for easy indexing
+                mxNumericArrayWrapper euler123mat ( plhs[0] );
+                // initialise the matrix index vector
+                index.push_back(0);
+                index.push_back(0);
+                
+                index[0] = (mwSize)0;
+                index[1] = (mwSize)0;
+                euler123mat.setDoubleValue (index, mbc->Euler123 (1));
+
+                index[0] = (mwSize)1;
+                index[1] = (mwSize)0;
+                euler123mat.setDoubleValue (index, mbc->Euler123 (2));
+
+                index[0] = (mwSize)2;
+                index[1] = (mwSize)0;
+                euler123mat.setDoubleValue (index, mbc->Euler123 (3));
+                
+                return;
+            }
+                
+            default:
+            {
+                
+                // create the output matrix
+                const mwSize dims[] = {3, 3};
+                plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+                
+                // wrap it for easy indexing
+                mxNumericArrayWrapper rotmat ( plhs[0] );
+                
+                // initialise the matrix index vector
+                index.push_back(0);
+                index.push_back(0);
+                
+                // orientation matrix supplied as three column vectors:
+                //
+                //  r11,r21,r31,r12,r22,r32,r13,r23,r33;
+                //
+                // mbc->R(1, 1)  mbc->R(1, 2)  mbc->R(1, 3)
+                // mbc->R(2, 1)  mbc->R(2, 2)  mbc->R(2, 3)
+                // mbc->R(3, 1)  mbc->R(3, 2)  mbc->R(3, 3)
+                //
+
+                index[0] = (mwSize)0;
+                index[1] = (mwSize)0;
+                rotmat.setDoubleValue (index, mbc->R (1, 1));
+
+                index[0] = (mwSize)1;
+                index[1] = (mwSize)0;
+                rotmat.setDoubleValue (index, mbc->R (2, 1));
+
+                index[0] = (mwSize)2;
+                index[1] = (mwSize)0;
+                rotmat.setDoubleValue (index, mbc->R (3, 1));
+
+
+                index[0] = (mwSize)0;
+                index[1] = (mwSize)1;
+                rotmat.setDoubleValue (index, mbc->R (1, 2));
+
+                index[0] = (mwSize)1;
+                index[1] = (mwSize)1;
+                rotmat.setDoubleValue (index, mbc->R (2, 2));
+
+                index[0] = (mwSize)2;
+                index[1] = (mwSize)1;
+                rotmat.setDoubleValue (index, mbc->R (3, 2));
+
+
+                index[0] = (mwSize)0;
+                index[1] = (mwSize)2;
+                rotmat.setDoubleValue (index, mbc->R (1, 3));
+
+                index[0] = (mwSize)1;
+                index[1] = (mwSize)2;
+                rotmat.setDoubleValue (index, mbc->R (2, 3));
+
+                index[0] = (mwSize)2;
+                index[1] = (mwSize)2;
+                rotmat.setDoubleValue (index, mbc->R (3, 3));
+                
+                return;
+            }
+                
+        }
+        
+    }            
+            
     void PutForces (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         std::vector<int> nallowed;
@@ -432,8 +844,8 @@ private:
     
 	bool userefnode;
 	MBCBase::Rot refnoderot;
+    bool getlabels;
 	int nodes;
-	bool labels;
 	bool accelerations;
 	MBCBase::Rot rot;
 
@@ -454,8 +866,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,KinematicsLabel)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,X)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,XP)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,XPP)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,Theta)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,Omega)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,OmegaP)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,PutForces)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,F)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,M)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetRot)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetRefNodeRot)
      END_MEX_CLASS_WRAPPER(MBCNodal_wrapper)
     
 }

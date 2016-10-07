@@ -71,7 +71,7 @@ classdef MBCNodal < cppinterface
             %   'mat'.
             %
             % 'UseLabels' - true/false flag determining whether node labels
-            %   will be used.
+            %   will be used and made available. Defautl is true.
             %
             % 'UseAccelerations' - true/false flag determining whether
             %   accelerations will be returned by MBDyn. Default is false.
@@ -175,14 +175,19 @@ classdef MBCNodal < cppinterface
             nnodes = self.cppcall ('GetNodes');
         end
 
-        function KinematicsLabel (self, n)
+        function label = KinematicsLabel (self, n)
             % gets the label associated with the 'n'th node
-            self.cppcall ('KinematicsLabel', n);
+            label = self.cppcall ('KinematicsLabel', n);
         end
 
-        function pos = X(self, n)
-            % gets the position of a single node
-            pos = self.cppcall ('X', n)';
+        function rot = GetRot (self)
+            % get the rotation matrices for all nodes in the chosen format
+            rot = self.cppcall ('GetRot');
+        end
+        
+        function rot = GetRefNodeRot (self)
+            % get the rotation matrix in the chosen format
+            rot = self.cppcall ('GetRefNodeRot');
         end
         
         function pos = NodePositions (self, n)
@@ -201,10 +206,45 @@ classdef MBCNodal < cppinterface
             end
             
         end
+        
+        function pos = X(self, n)
+            % gets the position of a single node
+            pos = self.cppcall ('X', n)';
+        end
 
         function vel = XP (self, n)
             % gets the velocity of a single node
-            vel = self.cppcall ('XP',n );
+            vel = self.cppcall ('XP', n)';
+        end
+        
+        function acc = XPP (self, n)
+             % gets the acceleration of a single node
+            if ~self.useAccelerations
+                error ('MBCNodal:xpp:nouseaccelerations', ...
+                    'You have set UseAccelerations to false, acceleration data is not available.')
+            else
+                acc = self.cppcall ('XPP', n)';
+            end
+        end
+        
+        function theta = Theta (self, n)
+            % gets the angular position of a single node
+            theta = self.cppcall ('Theta', n)';
+        end
+        
+        function w = Omega (self, n)
+            % gets the angular velocity of a single node
+            w = self.cppcall ('Omega', n)';
+        end
+        
+        function w = OmegaP (self, n)
+            % gets the angular acceleration of a single node
+            if ~self.useAccelerations
+                error ('MBCNodal:omegap:nouseaccelerations', ...
+                    'You have set UseAccelerations to false, angular acceleration data is not available.');
+            else
+                w = self.cppcall ('OmegaP', n)';
+            end
         end
         
         function F (self, forces)
@@ -220,6 +260,7 @@ classdef MBCNodal < cppinterface
         
         function M (self, moments)
             % sets the nodal moments
+            
             if self.useMoments
                 self.cppcall ('M', moments );
                 self.needMoments = false;
@@ -232,7 +273,13 @@ classdef MBCNodal < cppinterface
         function result = applyForcesAndMoments (self, convergence_flag)
             
             if self.needForces
-                error ('MBCNodal:notsetforces');
+                error ('MBCNodal:notsetforces', ...
+                    'You must set the nodal forces in the system before applying them');
+            end
+            
+            if self.needMoments
+                error ('MBCNodal:notsetforces', ...
+                    'You must set the nodal moments in the system before applying them');
             end
             
             % Sends the forces to the mbdyn system
