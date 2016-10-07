@@ -4,6 +4,8 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
 % have been performed already, such as steps 2 and 3. 
 % 
 
+    fprintf (1, 'Setting up mexlsei\n');
+    
     % optional settings
     if nargin < 1
         forcef2clibrecompile = false;
@@ -213,6 +215,8 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
 
     % restore the current directory
     cd(origdir);
+    
+    fprintf (1, 'Finished setting up mexlsei\n');
     
 end
 
