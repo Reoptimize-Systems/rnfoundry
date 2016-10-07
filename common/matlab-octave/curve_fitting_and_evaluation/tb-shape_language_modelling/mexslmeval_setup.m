@@ -1,4 +1,4 @@
-function mexslmeval_setup ()
+function mexslmeval_setup (varargin)
 % builds the mexslmeval mex function from source using mex
 %
 % Syntax
@@ -16,15 +16,47 @@ function mexslmeval_setup ()
 %
 % See also: slmeval, slmengine
 
+    options.MexOpts = '';
+    options.DoCrossBuildWin64 = false;
+    options.Verbose = false;
+    options.GSLLibDir = '';
+    
+    options = parse_pv_pairs (options, varargin);
+    
     CC = onCleanup (@() cd(pwd));
     
+    fprintf (1, 'Setting up mexslmeval.\n');
+    
     cd(getmfilepath (mfilename));
+    
+    mexargs = {'mexslmeval.cpp', '-lgsl', '-lgslcblas'};
+    
+    if options.Verbose
+        mexargs = [ mexargs, {'-v'}];
+    end
+    
+    if (ispc && ~isempty (options.GSLLibDir)) || (~isempty (options.GSLLibDir) )
+        % on windows we need to add the locations of the 
+        mexargs = [ mexargs, ...
+            {['-I"' options.GSLLibDir, '"'], ...
+             ['-L"' options.GSLLibDir, '"']} ];
+    end
+    
+    if ~isempty(options.MexOpts)
+        if exist (options.MexOpts, 'file')
+            mexargs = [mexargs, {['-f "', options.MexOpts, '"']}];
+        else
+            error ('Specified alternative mex options file does not exist.')
+        end
+    end
 
     try
         % note the order of the linking commands seams to matter here
-        mex mexslmeval.cpp -lgsl -lgslcblas
+        mex(mexargs{:})
     catch
         warning ('mexslmeval compilation failed, you may be missing required libraries, gsl and gslcblas');
     end
+    
+    fprintf (1, 'Finished building mexslmeval.\n');
 
 end
