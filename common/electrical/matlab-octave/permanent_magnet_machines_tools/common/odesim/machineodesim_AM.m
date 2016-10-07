@@ -148,7 +148,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     % the displacement of the magnetic field relative to the armature coils
     % normalised to the pole width
 %     dpsidxCRTF = slmpsidot_linear(design, pos, design.PoleWidth);
-    dpsidxCRTF = periodicslmeval (pos, design.slm_fluxlinkage, 1, false) / design.PoleWidth;
+    dpsidxCRTF = periodicslmeval (pos, design.slm_fluxlinkage, 1, false) ./ design.PoleWidth;
     
     % The EMF (voltage) produced in the coils is given by -ve the rate of
     % change of flux linkage with respect to the displacement of the coil
