@@ -68,6 +68,7 @@ begin: elements;
       no signal,
       coupling,
         tight,
+    labels, yes,
     2,                      # number of nodes to receive forces
       0, offset, null,      # first node
       1, offset, null;      # second node

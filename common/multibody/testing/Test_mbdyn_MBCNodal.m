@@ -3,7 +3,7 @@
 
 % start mbdyn 
 delete ('output.*');
-[status, cmdout] = system (sprintf ('mbdyn -f %s -o output > output.txt 2>&1 &', fullfile (getmfilepath ('Test_mbdyn_MBCNodal'), 'socket.mbd')))
+[status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', fullfile (getmfilepath ('Test_mbdyn_MBCNodal'), 'socket.mbd')))
 
 % wait a few seconds for mbdyn to initialise
 pause (3);
@@ -14,10 +14,9 @@ mb = mbdyn.MBCNodal ();
 
 mb.Initialize ( 'local', '/tmp/mbdyn.sock', ...
                 'NNodes', 2, ...
-                'UseLabels', false);
+                'UseLabels', true);
 
 nnodes = mb.GetNodes ()
-
 
 
 maxiter = 3; % to match example program 
@@ -31,10 +30,10 @@ while status == 0
     for iter = (maxiter-1):-1:1
 
         disp(iter)
-        status = mb.GetMotion ()
+        status = mb.GetMotion ();
 
-        pos1 = mb.X(1)
-
+%         pos1 = mb.X(1)
+        
         % set the forces
         mb.F (forces)
 
@@ -45,6 +44,14 @@ while status == 0
     status = mb.GetMotion ()
 
     pos1 = mb.X(1)
+    
+    rot = mb.GetRot()
+    
+    for ind = 1:nnodes
+    
+        fprintf (1, 'Node %d has label %d\n', ind, mb.KinematicsLabel (ind));
+    
+    end
 
     % set the forces
     mb.F (forces)
