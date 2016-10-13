@@ -1,4 +1,5 @@
 #include <vector>
+#include <memory>
 #include "mbcxx.h"
 #include "mex.h"
 
@@ -21,24 +22,23 @@ class MBCNodal_wrapper
 {
 public:
     
-    MBCNodal_wrapper (void)
+    MBCNodal_wrapper (void) : mbc (new MBCNodal)
     {
         userefnode = false;
         refnoderot = MBCBase::NONE;
         nodes = 0;
         getlabels = true;
         accelerations = false;
+        data_and_next = true;
+        verboseflag = false;
+        timeout = -1;
         rot = MBCBase::MAT;
-        
-        // initialize data structure:
-        mbc = new MBCNodal;
     }
     
     ~MBCNodal_wrapper (void)
     {
         // clean up
         mbc->Close ();
-        delete mbc;
     }
     
     void Initialize (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
@@ -46,9 +46,9 @@ public:
         std::vector<int> nallowed;
         
         // eight or nine arguments must be supplied : refnode, refnoderot, 
-        //   nodes, getlabels, rot, accelerations, commethod, comstring, hostport
-        nallowed.push_back (8);
-        nallowed.push_back (9);
+        //   nodes, getlabels, rot, accelerations, data_and_next, verboseflag, timeout, commethod, comstring, hostport
+        nallowed.push_back (11);
+        nallowed.push_back (12);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
         
         userefnode = mxnthargscalarbool (nrhs, prhs, 1, 2);
@@ -148,11 +148,29 @@ public:
         accelerations = mxnthargscalarbool (nrhs, prhs, 6, 2);
         
         #ifdef DEBUG
-        mexPrintf ("getlabels: %d\n", accelerations);
+        mexPrintf ("accelerations: %d\n", accelerations);
         #endif
         
-        std::string commethod = mxnthargstring (nrhs, prhs, 7, 2);
-        char* comstring = mxnthargchar (nrhs, prhs, 8, 2);
+        data_and_next = mxnthargscalarbool (nrhs, prhs, 7, 2);
+        
+        #ifdef DEBUG
+        mexPrintf ("data_and_next: %d\n", data_and_next);
+        #endif
+        
+        verboseflag = mxnthargscalarbool (nrhs, prhs, 8, 2);
+        
+        #ifdef DEBUG
+        mexPrintf ("verboseflag: %d\n", verboseflag);
+        #endif
+        
+        timeout = int (mxnthargscalar (nrhs, prhs, 9, 2));
+        
+        #ifdef DEBUG
+        mexPrintf ("timeout: %d\n", timeout);
+        #endif
+        
+        std::string commethod = mxnthargstring (nrhs, prhs, 10, 2);
+        char* comstring = mxnthargchar (nrhs, prhs, 11, 2);
         
         #ifdef DEBUG
         mexPrintf ("commethod: %s\n", commethod.c_str());
@@ -170,6 +188,12 @@ public:
 //         if (nomoments) {
 //             rot = MBCBase::NONE;
 //         }
+        
+        mbc->SetDataAndNext (data_and_next);
+        
+        mbc->SetVerbose (verboseflag);
+        
+        mbc->SetTimeout (timeout);
         
         if (mbc->Initialize (refnoderot, nodes, getlabels, rot, accelerations)) 
         {
@@ -194,7 +218,7 @@ public:
                    "No inet port number was supplied.");
             }
             
-            int port = int (mxnthargscalar (nrhs, prhs, 9, 2));
+            int port = int (mxnthargscalar (nrhs, prhs, 12, 2));
             
             /* initialize INET socket (host, port) */
             if (mbc->Init (comstring, port))
@@ -466,12 +490,14 @@ public:
                 mexPrintf ("fmatind[0]: %d, fmatind[1]: %d, F(%d,1): %f\n", fmatind[0], fmatind[1], n, forces.getDoubleValue (fmatind));
                 #endif
                 mbc->F(n, 1) = forces.getDoubleValue (fmatind);
+                
                 fmatind[0] = (mwSize)1;
                 fmatind[1] = (mwSize)(n-1);
                 #ifdef DEBUG
                 mexPrintf ("fmatind[0]: %d, fmatind[1]: %d, F(%d,2): %f\n", fmatind[0], fmatind[1], n, forces.getDoubleValue (fmatind));
                 #endif
                 mbc->F(n, 2) = forces.getDoubleValue (fmatind);
+                
                 fmatind[0] = (mwSize)2;
                 fmatind[1] = (mwSize)(n-1);
                 #ifdef DEBUG
@@ -543,6 +569,10 @@ public:
                 
             case MBCBase::THETA:
             {
+                #ifdef DEBUG
+                mexPrintf ("MBCBase::THETA\n");
+                #endif
+                
                 // create the output matrix
                 const mwSize dims[] = {3, nnodes};
                 plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
@@ -550,6 +580,7 @@ public:
                 // wrap it for easy indexing
                 mxNumericArrayWrapper thetamat ( plhs[0] );
                 // initialise the matrix index vector
+                index.clear ();
                 index.push_back (0);
                 index.push_back (0);
                 
@@ -574,6 +605,10 @@ public:
             }
             case MBCBase::EULER_123:
             {
+                #ifdef DEBUG
+                mexPrintf ("MBCBase::EULER_123\n");
+                #endif
+                
                 std::vector<double> euler123;
                 // create the output matrix
                 const mwSize dims[] = {3, nnodes};
@@ -582,6 +617,7 @@ public:
                 // wrap it for easy indexing
                 mxNumericArrayWrapper euler123mat ( plhs[0] );
                 // initialise the matrix index vector
+                index.clear ();
                 index.push_back(0);
                 index.push_back(0);
                 
@@ -604,6 +640,10 @@ public:
             }  
             default:
             {
+                #ifdef DEBUG
+                mexPrintf ("MBCBase default %d (of %d, %d, %d, %d)\n", rottype, MBCBase::NONE, MBCBase::THETA, MBCBase::EULER_123, MBCBase::MAT);
+                #endif
+                
                 // create the output matrix
                 const mwSize dims[] = {3, 3, nnodes};
                 plhs[0] = mxCreateNumericArray (3, dims, mxDOUBLE_CLASS, mxREAL);
@@ -612,9 +652,14 @@ public:
                 mxNumericArrayWrapper rotmat ( plhs[0] );
                 
                 // initialise the matrix index vector
-                index.push_back(0);
-                index.push_back(0);
-                index.push_back(0);
+                index.clear ();
+                index.push_back (0);
+                index.push_back (0);
+                if (nnodes > 1)
+                {
+                    // matlab collapses array dimensions of size 1
+                    index.push_back (0);
+                }
                 
                 // orientation matrix supplied as three column vectors:
                 //
@@ -628,7 +673,11 @@ public:
                 for (unsigned n = 1; n <= nnodes; n++)
                 {
                     
-                    index[2] = (mwSize)(n-1);
+                    if (nnodes > 1)
+                    {
+                        // matlab collapses array dimensions of size 1
+                        index[2] = (mwSize)(n-1);
+                    }
                     
                 
                     index[0] = (mwSize)0;
@@ -839,14 +888,18 @@ public:
 private:
 
     // wrapped  MBCNodal class from mbcxx.h, class is created on the heap
-    // using new in the constructor
-    MBCNodal *mbc;
+    // using new in the constructor. Using unique_ptr ensures its 
+    // destruction when wrapper is done
+    std::unique_ptr<MBCNodal> mbc;
     
 	bool userefnode;
 	MBCBase::Rot refnoderot;
     bool getlabels;
 	int nodes;
 	bool accelerations;
+    bool data_and_next;
+    bool verboseflag;
+    int timeout;
 	MBCBase::Rot rot;
 
 };
