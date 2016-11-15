@@ -15,7 +15,12 @@ function status = odesimoutputfcns_AM (t, y, flag, design, simoptions)
                                      t, y(simoptions.ODESim.SolutionComponents.(compnames{ind}).SolutionIndices,end), ...
                                      flag, design, simoptions);
                              
-            else
+            elseif strcmp (flag, 'init')
+                status(ind) = feval (simoptions.ODESim.SolutionComponents.(compnames{ind}).OutputFcn, ...
+                                     t, y(simoptions.ODESim.SolutionComponents.(compnames{ind}).SolutionIndices), flag, design, simoptions);
+                                 
+            elseif strcmp (flag, 'done')
+                % t and y will be empty matrices in this case
                 status(ind) = feval (simoptions.ODESim.SolutionComponents.(compnames{ind}).OutputFcn, ...
                                      t, y, flag, design, simoptions);
                 
