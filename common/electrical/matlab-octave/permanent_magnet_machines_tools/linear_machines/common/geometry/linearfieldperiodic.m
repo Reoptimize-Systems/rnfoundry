@@ -335,7 +335,7 @@ function [nodes, links, outernodeids] = simple_field_body (npoles, zmag, tmag, t
     % make horizontal links
     links = [ links;
               (lnodestartid:(lnodestartid+2*npoles-1))', (rnodestartid:(rnodestartid+2*npoles-1))';
-             ]
+             ];
          
     if flip
         nodes = mfemmdeps.reflect2d (nodes, 'Axis', 'y');
