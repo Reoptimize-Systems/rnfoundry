@@ -40,7 +40,7 @@ options.coilYieldStrength = 70e6;
 % Test with linear motion
 speed = 1;
 simoptions.ODESim.InitialConditions = zeros(1, design.Phases);
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.ODESim.TimeSpan = [0, 5];
 simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 simoptions.vT = repmat(speed, size(simoptions.drivetimes));
