@@ -52,7 +52,7 @@ simoptions.Lmode = 1;
 simoptions.ODESim.InitialConditions = [0, 0, 0];
 % the number of calculations to skip when producing output after the ode
 % solver finishes
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 %
 simoptions.reltol = 1e-4;
 
