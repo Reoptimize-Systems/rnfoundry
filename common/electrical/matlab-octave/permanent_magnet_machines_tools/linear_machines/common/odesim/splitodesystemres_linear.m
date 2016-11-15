@@ -1,12 +1,12 @@
-function results = splitodesystemres_linear(flag, results, sol, design, simoptions)
+function results = splitodesystemres_linear (design, simoptions, flag, results, sol)
 % splitodesystemres_linear: accumulates data from the evaluation of a
-% linear machine and heaving buoy simulaion when using odesplit to split the
+% linear machine and heaving buoy simulation when using odesplit to split the
 % evaluation time span into sections
 
     if flag == 0
         
         % set up initial values for the electrical results
-        results = splitodeelectricalresults_AM(flag, design, simoptions);
+        results = splitodeelectricalresults_AM (design, simoptions, flag);
         
         % Initialize the results structure
         results.minLongerPartLength = 0;
@@ -16,14 +16,18 @@ function results = splitodesystemres_linear(flag, results, sol, design, simoptio
         results.block = 1;
         
         results.vRmax = 0;
+        
+        return;
 
-    else
+    elseif flag == 1
 
         % Now obtain internally calculated values by recalling the function
         % with the results, first preallocating the arrays. This is necessary
         % as the ode solver used may take steps while choosing step sizes which
         % do not form part of the solution      
-        odeinternals = oderesults(sol.x, sol.y', simoptions.ODESim.EvalFcn, {design, simoptions}, simoptions.skip);
+        odeinternals = oderesults (sol.x, sol.y', simoptions.ODESim.EvalFcn, ...
+                                'ODEArgs', {design, simoptions}, ...
+                                'Skip', simoptions.ODESim.ResultsTSkip);
 
         % if requested, save the results of this part of the solution to a
         % file
