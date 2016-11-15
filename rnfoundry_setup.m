@@ -37,7 +37,12 @@ function rnfoundry_setup (varargin)
 %    setup after installation is complete. Default is false.
 %
 %  'ForceMexLseiSetup' : Forces the recompilation of the mexlsei mex 
-%    function even if it already on the path. Default is false.
+%    function even if it already on the path. mexlsei is not required if
+%    your system has the 'quadprog' function. Default is false.
+%
+%  'SkipMexLseiSetup' : Skips the compilation of the mexlsei mex function.
+%    Features requiring this will not be available. mexlsei is not required
+%    if your system has the 'quadprog' function.
 %
 %  'ForceMexLseiF2cLibRecompile' : Forces the recompilation of the f2c
 %    library which must be linked to by the mexlsei mex function. Default
@@ -48,7 +53,13 @@ function rnfoundry_setup (varargin)
 %    false in which case a presupplied version is used.
 %
 %  'ForceMexSLMSetup' : Forces the recompilation of the mexslmeval mex 
-%    function even if it already on the path. Default is false.
+%    function even if it already on the path. Compilation of this function
+%    requires the GNU scientific library (libgsl and libgslblas). Default
+%    is false.
+%
+%  'SkipMexSLMSetup' : Sips the recompilation of the mexslmeval mex 
+%    function even if it already on the path. A slower non-compiled version
+%    will be used if the compiled version is not present. Default is false.
 %
 %  'ForceMexPPValSetup' : Forces the recompilation of the mexppval mex 
 %    function even if it already on the path. Default is false.
@@ -87,12 +98,16 @@ function rnfoundry_setup (varargin)
     workdir = pwd ();
     
     Inputs.RunTests = false;
+    Inputs.Verbose = false;
     % mexlsei related
     Inputs.ForceMexLseiSetup = false;
+    Inputs.SkipMexLseiSetup = false;
     Inputs.ForceMexLseiF2cLibRecompile = false;
     Inputs.ForceMexLseiCFileCreation = false;
     % slm fitting tool related
     Inputs.ForceMexSLMSetup = false;
+    Inputs.SkipMexSLMSetup = false;
+    Inputs.GSLLibDir = '';
     % mex ppval related
     Inputs.ForceMexPPValSetup = false;
     % force setting up mexmPhaseWL
@@ -122,21 +137,38 @@ function rnfoundry_setup (varargin)
         end
     end
     
-    if Inputs.ForceMexLseiSetup || (exist (['mexlsei.', mexext], 'file') ~= 3)
-        mexlsei_setup ( Inputs.ForceMexLseiF2cLibRecompile, ...
-                        Inputs.ForceMexLseiCFileCreation );
+    if Inputs.ForceMexLseiSetup && Inputs.SkipMexLseiSetup
+        error ('The options ForceMexLseiSetup and SkipMexLseiSetup are both true')
+    end
+    
+    if ~Inputs.SkipMexLseiSetup
+        if Inputs.ForceMexLseiSetup || (exist (['mexlsei.', mexext], 'file') ~= 3)
+            mexlsei_setup ( Inputs.ForceMexLseiF2cLibRecompile, ...
+                            Inputs.ForceMexLseiCFileCreation );
+        end
     end
     
     cd (workdir);
     
-    if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mexext], 'file') ~= 3)
-        mexslmeval_setup ();
+    if Inputs.ForceMexSLMSetup && Inputs.SkipMexSLMSetup
+        error ('The options ForceMexSLMSetup and SkipMexSLMSetup are both true')
+    end
+    
+    if ~Inputs.SkipMexSLMSetup
+        if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mexext], 'file') ~= 3)
+            mexslmeval_setup ( 'Verbose', Inputs.Verbose, ...
+                               'GSLLibDir', Inputs.GSLLibDir );
+        end
     end
     
     cd (workdir);
     
-    if Inputs.ForceMexPPValSetup || (exist (['mexppval.', mexext], 'file') ~= 3)
-        mexppval_setup();
+    if Inputs.ForceMexPPValSetup ...
+            || (exist (['ppmval.', mexext], 'file') ~= 3)...
+            || (exist (['ppuval.', mexext], 'file') ~= 3)
+        
+        mexppval_setup ('Verbose', Inputs.Verbose);
+        
     end
     
     cd (workdir);
