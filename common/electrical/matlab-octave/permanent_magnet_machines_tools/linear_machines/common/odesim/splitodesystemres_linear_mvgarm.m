@@ -30,7 +30,7 @@ function results = splitodesystemres_linear_mvgarm(flag, results, sol, design, s
         % with the results, first preallocating the arrays. This is necessary
         % as the ode solver used may take steps while choosing step sizes which
         % do not form part of the solution      
-        odeinternals = oderesults(sol.x, sol.y', simoptions.ODESim.EvalFcn, {design, simoptions}, simoptions.skip);
+        odeinternals = oderesults(sol.x, sol.y', simoptions.ODESim.EvalFcn, {design, simoptions}, simoptions.ODESim.ResultsTSkip);
 
         if simoptions.ODESim.SaveSplitResults
             savesplitoderesult(simoptions, mfilename(), results, sol, odeinternals);
