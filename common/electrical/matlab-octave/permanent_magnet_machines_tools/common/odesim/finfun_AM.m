@@ -55,7 +55,7 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SolutionComponents', struct());
     
     % set the number of outputs to use in the calcualtion of ode results
-    simoptions = setfieldifabsent(simoptions, 'skip', 1);
+    simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'ResultsTSkip', 1);
     
     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SaveSplitResults', false);
     
@@ -117,13 +117,19 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     minIofinterest = min(design.ConductorArea * 0.1e6, ...
                          (10 / (design.Maxdlambdadx)) ) * design.Branches;
 
-    % create the phase current solution component specification
-    simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
-                                          'PhaseCurrents', ...
-                                          struct ('InitialConditions', zeros (1, design.Phases), ...
-                                                  'AbsTol', repmat (minIofinterest, 1, design.Phases) ) ...
-                                                            );
-
+    % by default we will add the phase currents to the list of solution
+    % components to be solved
+    simoptions = setfieldifabsent (simoptions, 'AddPhaseCurrentsComponents', true);
+    
+    if simoptions.AddPhaseCurrentsComponents
+        % create the phase current solution component specification
+        simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
+                                              'PhaseCurrents', ...
+                                              struct ('InitialConditions', zeros (1, design.Phases), ...
+                                                      'AbsTol', repmat (minIofinterest, 1, design.Phases) ) ...
+                                                                );
+    end
+    
     % set infinite allowed deflection factor if none is supplied
     simoptions = setfieldifabsent(simoptions, 'maxAllowedDeflectionFactor', inf);
     
