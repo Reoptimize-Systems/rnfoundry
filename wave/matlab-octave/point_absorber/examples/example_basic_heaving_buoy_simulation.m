@@ -71,7 +71,15 @@ tspan = [0, 90];
 %
 
 % Plot the buoy positions and velocities in heave and surge
-plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]))
+[hAx,hLine1,hLine2] = plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]));
+
+title('Point Absorber Response (Single Frequency Wave)')
+xlabel('Time (s)')
+
+ylabel(hAx(1),'Displacement (m)') % left y-axis
+ylabel(hAx(2),'Velocity (ms^{-1}') % right y-axis
+
+legend ('heave position', 'surge position', 'heave velocity', 'surge velocity');
 
 %% PM Spectrum
 
@@ -87,8 +95,16 @@ buoysimoptions = buoysimsetup (37, buoysimoptions);
 %     excitation_force_surge, radiation_force_heave, ...
 %     radiation_force_surge, FBDh, FBDs, wave_height] = buoyodesim (t, x, simoptions, Fexternal);
 
-tspan = [0, 60];
+tspan = [0, 120];
 
 [T, Y] = ode45 (@(t,x) buoyodesim (t, x, buoysimoptions, [0,0]), tspan, zeros(1, 4+2*buoysimoptions.NRadiationCoefs) );
 
-plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]))
+[hAx,hLine1,hLine2] = plotyy (T, Y(:,[1,3]), T, Y(:,[2,4]));
+
+title('Point Absorber Response (PM Spectrum)')
+xlabel('Time (s)')
+
+ylabel(hAx(1),'Displacement (m)') % left y-axis
+ylabel(hAx(2),'Velocity (ms^{-1}') % right y-axis
+
+legend ('heave position', 'surge position', 'heave velocity', 'surge velocity');
