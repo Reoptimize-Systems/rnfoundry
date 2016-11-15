@@ -126,7 +126,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     % the magnetic field is moving in the opposite direction. e.g. the
     % magnets are mounted on a stationary reactor and the coils on a moving
     % effector.
-    xCoilRelToField = -design.FieldDirection * (xEF - xRE) / design.PoleWidth;
+    xCoilRelToField = -design.FieldDirection .* (xEF - xRE) ./ design.PoleWidth;
     
     % Next we get the positions of the magnetic field relative to each coil
     % in a multi-phase block. We will use this to get the differential of
@@ -141,7 +141,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
 %     pos = (((1:design.Phases) .* (2/design.Phases)) - 1 -
 %     (1/design.Phases) + xRF)';
 %     pos = (((1:design.Phases) .* (1/design.Phases + 1) )  + xCoilRelToField)';
-    pos = design.CoilPositions + xCoilRelToField;
+    pos = bsxfun (@plus, design.CoilPositions(:), xCoilRelToField);
     
     % Find dpsidxR from an slm object fitted to the flux linkage versus
     % the positions 0 <= xR <= 1.0 where xR is xEF ./ design.PoleWidth, i.e.
@@ -157,7 +157,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     %
     % We will first calculate the velocity of the field relative to the
     % armature
-    vCoilRelToField = -design.FieldDirection * (vEF - vRE);
+    vCoilRelToField = -design.FieldDirection .* (vEF - vRE);
     
     %%
     % <latex>
@@ -165,7 +165,7 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     %   \text{EMF} = - frac{\text{d}\,\lambda}{\text{d} x_F} * v_F
     % \end{equation}
     % </latex>
-    EMF = -dpsidxCRTF .* vCoilRelToField .* design.CoilsPerBranch;
+    EMF = bsxfun (@times, -dpsidxCRTF, vCoilRelToField) .* design.CoilsPerBranch;
     
     % determine the forces due to the magnets and electrical forces at
     % the relative position xR absed on the coil current and rate of change
@@ -176,9 +176,9 @@ function [FEF, FRE, EMF, dpsidxCRTF, design, pos] = machineodesim_AM(design, sim
     %   F_{\text{trans}} = \sum I \frac{\text{d} \, \lambda}{\text{d} x_F} 
     % \end{equation}
     % </latex>
-    % 
+    %
     FEF = -design.FieldDirection ...
-                * sum (Icoils(:) .* dpsidxCRTF(:)) ...
+                * sum (bsxfun (@times, Icoils, dpsidxCRTF), 1) ...
                 .* design.NCoilsPerPhase ...
                 .* design.NStages ...
                 .* simoptions.NoOfMachines;
