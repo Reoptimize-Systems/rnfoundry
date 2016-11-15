@@ -1139,38 +1139,6 @@ function [FemmProblem, statorinfo] = stator_outer_regions (FemmProblem, design, 
 end
 
 
-% function FemmProblem = shift_new_nodes_and_labels (FemmProblem, oldelcount, XShift, YShift)
-% % shift newly added nodes blocks and labels
-% %
-% % Syntax
-% %
-% % FemmProblem = shiftnewelements_mfemm (FemmProblem, oldelcount, XShift, YShift)
-% %
-% % Description
-% %
-% % shiftnewelements_mfemm moves all nodes and block lables added since the
-% % element count provided in oldelcount was performed by the specified
-% % amount in the x and y direction
-% %
-% % 
-% 
-%     if XShift ~= 0 || YShift ~= 0
-%         
-%         newelcount = elementcount_mfemm (FemmProblem);
-%         
-%         nodeids = (oldelcount.NNodes):(newelcount.NNodes-1);
-%         
-%         FemmProblem = translatenodes_mfemm(FemmProblem, XShift, YShift, nodeids);
-%         
-%         blockids = (oldelcount.NBlockLabels):(newelcount.NBlockLabels-1);
-%                  
-%         FemmProblem = translateblocklabels_mfemm(FemmProblem, XShift, YShift, blockids);
-%         
-%     end
-% 
-% end
-
-
 function FemmProblem = addcoilinsulationlabels (FemmProblem, design, Inputs, inslabellocs)
     
    if strncmpi (Inputs.SimType, 'm', 1)
