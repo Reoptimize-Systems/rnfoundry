@@ -34,13 +34,20 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
     % skipped when getting the output values
     simoptions = setfieldifabsent (simoptions, 'SkipOutputFields', {});
     
+    % if a reset function exists for any solution components, call it
+    % before recalculating the results of the ODE
+    call_resets_recurse (simoptions.ODESim);
+    
     % extract the internally calculated results from the ode simulation
     % function. It must be coded so that when called with no arguments it
     % returns a cell array of strings which will become the names of fields
     % in a results structure. The order of the strings must be the order of
     % the return arguments of the ode function when called with more than
     % one input
-    results = oderesults(T, Y, simoptions.ODESim.EvalFcn, {design, simoptions}, simoptions.skip, simoptions.SkipOutputFields);
+    results = oderesults ( T, Y, simoptions.ODESim.EvalFcn, ...
+                           'ODEArgs', {design, simoptions}, ...
+                           'Skip', simoptions.ODESim.ResultsTSkip, ...
+                           'SkipFields', simoptions.SkipOutputFields );
     
     % store the actual simulation time taken
     design.SimTimeSpan = max(T) - simoptions.ODESim.TimeSpan(1);
@@ -63,5 +70,25 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
                                   results.RPhase, ...
                                   design, ...
                                   simoptions);
+
+end
+
+
+function call_resets_recurse (ODESim)
+% recursively call the reset fuction for the solution components and any
+% nested simulation components if present
+
+    if isfield (ODESim, 'NestedSim')
+        nested_sim_recurse (ODESim);
+    end
+    
+    if isfield (ODESim, 'SolutionComponents')
+        fnames = fieldnames (ODESim.SolutionComponents);
+        for ind = 1:numel(fnames)
+            if isfield (ODESim.SolutionComponents.(fnames{ind}), 'ResetFcn')
+                feval (ODESim.SolutionComponents.(fnames{ind}).ResetFcn);
+            end
+        end
+    end
 
 end
