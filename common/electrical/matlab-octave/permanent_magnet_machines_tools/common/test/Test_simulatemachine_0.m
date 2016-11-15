@@ -24,7 +24,7 @@ design.mode = 2;
 % Test with linear motion
 speed = 1;
 simoptions.ODESim.InitialConditions = 0;
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.ODESim.TimeSpan = [0, 10];
 simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 simoptions.vT = repmat(speed, size(simoptions.drivetimes));
