@@ -118,4 +118,8 @@ function [design, simoptions] = simfun_AM(design, simoptions)
         
     end
     
+    if ~isfield(simoptions, 'MagFEASim')
+        simoptions.MagFEASim = struct();
+    end
+    
 end
