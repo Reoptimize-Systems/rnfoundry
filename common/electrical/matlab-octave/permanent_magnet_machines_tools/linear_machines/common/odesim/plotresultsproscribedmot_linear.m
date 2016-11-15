@@ -1,4 +1,4 @@
-function plotresultsproscribedmot_linear(T, Y, results, design, skip)
+function plotresultsproscribedmot_linear (T, Y, results, design, simoptions, skip)
 % Syntax
 % 
 % plotresultsproscribedmot_linear(T, Y, results, design, skip)
@@ -53,7 +53,7 @@ function plotresultsproscribedmot_linear(T, Y, results, design, skip)
     % Y is the coil current for each phase, where each phase has it's own
     % column
     
-    Icoils = Y;
+    Iphases = Y(:,simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices);
 %     
 %     % Get the Y-axis limits for the various plots
 %     maxY = [1.05*max([abs([Icoils, results.xT, results.vT, xA, vA]); repmat(1e-10,1,size(Icoils,2)+4)], [], 1)];
@@ -121,7 +121,7 @@ function plotresultsproscribedmot_linear(T, Y, results, design, skip)
 % %     lh = legend('xT : Drive/Translator Position, m', 'vT : Drive/Translator Velocity, ms^{-1}', 'I : Coil Current, A', 'EMF, V', 'Location','NorthWest');
 %     lh = legend(legstr{:}, 'I : Coil Current, A', 'EMF, V', 'Location','NorthWest');
     
-    [hax, legendstrings] = plotmachineresults_linear(T, 'Icoils', Icoils, ...
+    [hax, legendstrings] = plotmachineresults_linear(T, 'Iphases', Iphases, ...
                                                      'EMF', results.EMF, ...
                                                      'vT', results.vT, ...
                                                      'xT', results.xT, ...
