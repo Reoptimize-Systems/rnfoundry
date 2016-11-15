@@ -98,7 +98,7 @@ function design = completedesign_AM (design, simoptions)
     % check the minimum set of winding specification
     if all (isfield (design, {'Qc', 'Phases', 'Poles'})) && ~isfield (design, 'qc')
         % create qc fraction
-        design.qc = fr (design.Qc, design.Poles * design.Phases);
+        design.qc = fr (design.Qc, design.Poles(1) * design.Phases);
     end
 
     % the number of Poles should be supplied and the ratio of coils to
@@ -134,14 +134,14 @@ function design = completedesign_AM (design, simoptions)
         end
     
         design.Qc = design.Qcb * design.NBasicWindings;
-        design.Poles = design.pb * design.NBasicWindings;
+        design.Poles(1) = design.pb * design.NBasicWindings;
         
     else        
          % determine the number of coils 
-        [design.Qc,~] = rat (design.qc * design.Phases * design.Poles);
+        [design.Qc,~] = rat (design.qc * design.Phases * design.Poles(1));
         
         % calculate the number of basic windings in the design
-        design.NBasicWindings = design.Poles / design.pb;
+        design.NBasicWindings = design.Poles(1) / design.pb;
         
     end
     
@@ -149,11 +149,11 @@ function design = completedesign_AM (design, simoptions)
     if design.CoilLayers == 2
         design.Qs = design.Qc;
         design.Qsb = design.Qcb;
-        [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles, 0);
+        [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles(1), 0);
     elseif design.CoilLayers == 1
         design.Qs = 2 * design.Qc;
         design.Qsb = 2 * design.Qcb;
-        [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles, 1);
+        [coillayout, phaselayout] = windinglayout (design.Phases, design.Qs, design.Poles(1), 1);
     else
         error ('Only coils with one or two layers are implemented.')
     end
@@ -164,7 +164,7 @@ function design = completedesign_AM (design, simoptions)
     [design.qcn,design.qcd] = rat (design.qc);
     
     % Average coil pitch as defined by (Qs/Poles)
-    design.yp = fr(design.Qs, design.Poles);
+    design.yp = fr(design.Qs, design.Poles(1));
     
     % get the numerator and denominator of the coil pitch in slots
     [design.ypn,design.ypd] = rat (design.yp);
@@ -182,7 +182,7 @@ function design = completedesign_AM (design, simoptions)
     
     design.NCoilsPerPhase = design.Qc / design.Phases;
     
-    if design.pb > design.Poles
+    if design.pb > design.Poles(1)
         error ('LINEAR:badwinding', 'Impossible winding design, basic winding poles greater than total number of poles.')
     end
     
