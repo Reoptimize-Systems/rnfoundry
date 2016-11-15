@@ -9,6 +9,8 @@ function [design, simoptions] = simfun_ACTM(design, simoptions)
 
     design = ratios2dimensions_ACTM(design);
     
+    design.Rcm = mean([design.Ro, design.Ri]);
+    
     [design, simoptions] = simfun_TM(design, simoptions);
 
     design = setfieldifabsent (design, 'MagFEASimMaterials', struct ());
