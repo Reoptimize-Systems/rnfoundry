@@ -15,7 +15,7 @@ function [results, design] = systemresfun_linear(T, Y, design, simoptions)
     % so we use the skip value to allow us to skip every x solution points,
     % e.g. skip = 2 would calculate only every other solution point.
     if ~isfield(simoptions, 'skip')
-        simoptions.skip = 1;
+        simoptions.ODESim.ResultsTSkip = 1;
     end
 
     [results, design] = resfun_linear(T, Y, design, simoptions);
