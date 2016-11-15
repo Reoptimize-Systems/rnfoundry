@@ -103,7 +103,7 @@ function ObjVal = objactm_prototype(Chrom, rtn_type, simoptions, options)
            design = dimensions2ratios_ACTM(design);
 
            simoptions.ODESim.InitialConditions = 0;
-           simoptions.skip = 1;
+           simoptions.ODESim.ResultsTSkip = 1;
            simoptions.ODESim.TimeSpan = [0, 5*2*design.Wp / speed];
            simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2)/10:simoptions.ODESim.TimeSpan(2);
            simoptions.vT = repmat(speed, size(simoptions.drivetimes));
