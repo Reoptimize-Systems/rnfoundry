@@ -28,7 +28,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %     which will be run to generate data prior to running the simulation.
 %     simfun will be passed the design and simoptions structure, and can
 %     also be supplied with additional arguments by using the
-%     'ExtraPreProcFunArgs' parameter-value pair. The extra arguments must be
+%     'ExtraPreProcFcnArgs' parameter-value pair. The extra arguments must be
 %     placed in a cell array. It must return two arguments which will
 %     overwrite the design and simoptions variables.
 %
@@ -38,14 +38,14 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %
 %     Where simfunarg1, simfunarg2, ... if supplied are the elements of the
 %     a cell array, passed in using the Parameter-value pair
-%     ExtraPreProcFunArgs, e.g.
+%     ExtraPreProcFcnArgs, e.g.
 %
-%     simulatemachine_AM(design, simoptions, 'ExtraPreProcFunArgs', {1, 'another', [1,2;3,4]})
+%     simulatemachine_AM(design, simoptions, 'ExtraPreProcFcnArgs', {1, 'another', [1,2;3,4]})
 %
 %   finfun - optional function handle or string containing a function which
 %     will be run after simfun. finfun will also be passed the design and
 %     simoptions structure, and can also be supplied with additional
-%     arguments by using the 'ExtraPostPreProcFunArgs' parameter-value pair. The
+%     arguments by using the 'ExtraPostPreProcFcnArgs' parameter-value pair. The
 %     extra arguments must be placed in a cell array. It must return two
 %     arguments which will overwrite the design and simoptions variables.
 %
@@ -55,9 +55,9 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %   
 %     Where finfunarg1, finfunarg2, ... if supplied are the elements of the
 %     a cell array, passed in using the Parameter-value pair
-%     ExtraPostPreProcFunArgs, e.g.
+%     ExtraPostPreProcFcnArgs, e.g.
 %
-%     simulatemachine_AM(design, simoptions, 'ExtraPostPreProcFunArgs', {1, 'another', [1,2;3,4]})
+%     simulatemachine_AM(design, simoptions, 'ExtraPostPreProcFcnArgs', {1, 'another', [1,2;3,4]})
 %
 %   odeevfun - function handle or string containing the function which will
 %     be evaluated by the ode solver routines to solve the system of
@@ -115,16 +115,16 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 % already described previously (such as the options to pass additional
 % arguments to the simulation functions). These Parameter-Value pairs are:
 %
-%   'ExtraPreProcFunArgs' - cell array of a additional arguemts to pass to
+%   'ExtraPreProcFcnArgs' - cell array of a additional arguments to pass to
 %     simfun
 %
-%   'ExtraPostPreProcFunArgs' - cell array of a additional arguemts to pass to
+%   'ExtraPostPreProcFcnArgs' - cell array of a additional arguments to pass to
 %     funfun
 %
-%   'ExtraPostSimFcnArgs' - cell array of a additional arguemts to pass to
+%   'ExtraPostSimFcnArgs' - cell array of a additional arguments to pass to
 %     resfun
 %
-%   'ExtraEvalFcnArgs' - cell array of a additional arguemts to pass to
+%   'ExtraEvalFcnArgs' - cell array of a additional arguments to pass to
 %     odeevfun
 %
 % In addition, the following parameter-value pairs may be supplied:
@@ -151,8 +151,9 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 % Copyright Richard Crozer 2012-2016
 
     % Do some parsing of optional input arguments
-    Inputs.ExtraPreProcFunArgs = {};
-    Inputs.ExtraPostPreProcFunArgs = {};
+    Inputs.ExtraPreProcFcnArgs = {};
+    Inputs.ExtraPostPreProcFcnArgs = {};
+    Inputs.ExtraPostAssemblyFcnArgs = {};
     Inputs.ExtraPostSimFcnArgs = {};
     Inputs.ExtraEvalFcnArgs = {};
     Inputs.Verbose = true;
@@ -171,7 +172,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     
     if ~isempty(simfun)
         % run the data gathering function for the design
-        [design, simoptions] = feval(simfun, design, simoptions, Inputs.ExtraPreProcFunArgs{:});
+        [design, simoptions] = feval(simfun, design, simoptions, Inputs.ExtraPreProcFcnArgs{:});
     end
     
     finfun = [];
@@ -186,13 +187,28 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     if ~isempty(finfun)
         % now complete any further required modification or post-processing
         % required before running the ode simulation
-        [design, simoptions] = feval(finfun, design, simoptions, Inputs.ExtraPostPreProcFunArgs{:});
+        [design, simoptions] = feval(finfun, design, simoptions, Inputs.ExtraPostPreProcFcnArgs{:});
     end
 
     % if solution components info is provided construct the initial
     % conditions and tolerances etc from them
     if isfield (simoptions.ODESim, 'SolutionComponents')
         simoptions = assemble_ode_components (simoptions);
+    end
+    
+    PostAssemblyFcn = [];
+    if isfield(simoptions.ODESim, 'PostAssemblyFcn')
+        if ischar(simoptions.ODESim.PostAssemblyFcn)
+            PostAssemblyFcn = str2func(simoptions.ODESim.PostAssemblyFcn);
+        else
+            PostAssemblyFcn = simoptions.ODESim.PostAssemblyFcn;
+        end
+    end
+    
+    if ~isempty(PostAssemblyFcn)
+        % now complete any further required modification or post-processing
+        % required before running the ode simulation
+        [design, simoptions] = feval(PostAssemblyFcn, design, simoptions, Inputs.ExtraPostAssemblyFcnArgs{:});
     end
     
     odeargs = [{design, simoptions}, Inputs.ExtraEvalFcnArgs];
@@ -202,7 +218,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     % construct the various functions for the ode solvers. This involves
     % constructing anonymous functions to pass in the extra ode solver
     % arguments as appropriate
-    [odeevfun, resfun, spfcn, eventfcns, outputfcn] = checkinputs_simulatemachine_AM(simoptions, odeargs);
+    [odeevfun, resfun, spfcn, eventfcns, outputfcn] = checkinputs_simulatemachine_AM (simoptions, odeargs);
     
     % finally simulate the machine using ode solver, first setting some
     % options
@@ -218,6 +234,10 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
     
     if isfield (simoptions.ODESim, 'AbsTol')
         odeoptions = odeset(odeoptions, 'AbsTol', simoptions.ODESim.AbsTol);
+    end
+    
+    if isfield (simoptions.ODESim, 'InitialStep')
+        odeoptions = odeset(odeoptions, 'InitialStep', simoptions.ODESim.InitialStep);
     end
 
     if isfield(simoptions, 'maxstep')
@@ -316,7 +336,7 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 end
 
 
-function [odeevfun, resfun, spfcn, eventfcns, outputfcn] = checkinputs_simulatemachine_AM(simoptions, odeargs)
+function [odeevfun, resfun, spfcn, eventfcns, outputfcn] = checkinputs_simulatemachine_AM (simoptions, odeargs)
 
     odeevfun = [];
     if isfield(simoptions.ODESim, 'EvalFcn') 
@@ -417,41 +437,54 @@ end
 
 function simoptions = assemble_ode_components (simoptions)
 
-    compnames = fieldnames (simoptions.ODESim.SolutionComponents);
-
-    simoptions.ODESim.InitialConditions = [];
+    simoptions.ODESim = assemble_ode_comp_recurse (simoptions.ODESim);
     
-    simoptions.ODESim.AbsTol = [];
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'OutputFcn', 'odesimoutputfcns_AM');
+
+end
+
+function odeoptstruct = assemble_ode_comp_recurse (odeoptstruct)
+% function to recursively set up a set of nested ode simulations
+
+    if isfield (odeoptstruct, 'NestedSim')
+        % set up the simulation for the nested simulation
+    	odeoptstruct.NestedSim = assemble_ode_comp_recurse (odeoptstruct.NestedSim);
+    end
+
+    compnames = fieldnames (odeoptstruct.SolutionComponents);
+
+    odeoptstruct.InitialConditions = [];
+    
+    odeoptstruct.AbsTol = [];
 
     for ind = 1:numel (compnames)
 
-        simoptions.ODESim.SolutionComponents.(compnames{ind}).SolutionIndices = ...
-            (numel(simoptions.ODESim.InitialConditions) + 1) : ...
-                numel(simoptions.ODESim.InitialConditions)+numel(simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions);
+        odeoptstruct.SolutionComponents.(compnames{ind}).SolutionIndices = ...
+            (numel(odeoptstruct.InitialConditions) + 1) : ...
+                numel(odeoptstruct.InitialConditions)+numel(odeoptstruct.SolutionComponents.(compnames{ind}).InitialConditions);
 
-        simoptions.ODESim.InitialConditions = [ simoptions.ODESim.InitialConditions, ...
-                simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions(:)' ];
+        odeoptstruct.InitialConditions = [ odeoptstruct.InitialConditions, ...
+                odeoptstruct.SolutionComponents.(compnames{ind}).InitialConditions(:)' ];
             
-        if isfield (simoptions.ODESim.SolutionComponents.(compnames{ind}), 'AbsTol')
-            abstol = simoptions.ODESim.SolutionComponents.(compnames{ind}).AbsTol;
+        if isfield (odeoptstruct.SolutionComponents.(compnames{ind}), 'AbsTol')
+            abstol = odeoptstruct.SolutionComponents.(compnames{ind}).AbsTol;
         else
-            abstol = nan (size(simoptions.ODESim.SolutionComponents.(compnames{ind}).InitialConditions));
+            abstol = nan (size(odeoptstruct.SolutionComponents.(compnames{ind}).InitialConditions));
         end
         
-        simoptions.ODESim.AbsTol = [ simoptions.ODESim.AbsTol, ...
+        odeoptstruct.AbsTol = [ odeoptstruct.AbsTol, ...
                                      abstol(:)' ];
 
     end
     
-    if any (isnan(simoptions.ODESim.AbsTol))
-        simoptions.ODESim = rmfield (simoptions.ODESim, 'AbsTol');
+    if any (isnan(odeoptstruct.AbsTol))
+        odeoptstruct = rmfield (odeoptstruct, 'AbsTol');
         warning ('RENEWNET:simulatemachine_AM:badabstol', ...
-                 ['AbsTol not supplied for all solution components. ALL AbTol ', ...
+                 ['AbsTol not supplied for all solution components. ALL AbsTol ', ...
                   'specifications have therefore been removed and will not be applied to ', ...
                   'the ode solution.'])
     end
-    
-    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'OutputFcn', 'odesimoutputfcns_AM');
+
 
 end
 
