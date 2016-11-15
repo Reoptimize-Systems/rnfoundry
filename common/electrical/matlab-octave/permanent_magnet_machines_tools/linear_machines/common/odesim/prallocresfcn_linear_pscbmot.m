@@ -12,12 +12,12 @@ function results = prallocresfcn_linear_pscbmot(design, simoptions, T, Y)
     ] = prescribedmotodeforcefcn_linear(T(1), Y(1,:)', design, simoptions);
      
     % Now preallocate arrays of the correct sizes
-    results.ydot = zeros(ceil(size(Y,1)/simoptions.skip), size(results.ydot, 2));
-    results.dpsidx = zeros(ceil(length(T)/simoptions.skip), size(results.dpsidx, 2));
-    results.EMF = zeros(ceil(length(T)/simoptions.skip), size(results.EMF, 2));
-    results.xT = zeros(ceil(length(T)/simoptions.skip), size(results.xT, 2));
-    results.vT = zeros(ceil(length(T)/simoptions.skip), size(results.vT, 2));
-    results.Fpto = zeros(ceil(length(T)/simoptions.skip), size(results.Fpto, 2));
-    results.Faddtrans = zeros(ceil(length(T)/simoptions.skip), size(results.Faddtrans, 2));
+    results.ydot = zeros(ceil(size(Y,1)/simoptions.ODESim.ResultsTSkip), size(results.ydot, 2));
+    results.dpsidx = zeros(ceil(length(T)/simoptions.ODESim.ResultsTSkip), size(results.dpsidx, 2));
+    results.EMF = zeros(ceil(length(T)/simoptions.ODESim.ResultsTSkip), size(results.EMF, 2));
+    results.xT = zeros(ceil(length(T)/simoptions.ODESim.ResultsTSkip), size(results.xT, 2));
+    results.vT = zeros(ceil(length(T)/simoptions.ODESim.ResultsTSkip), size(results.vT, 2));
+    results.Fpto = zeros(ceil(length(T)/simoptions.ODESim.ResultsTSkip), size(results.Fpto, 2));
+    results.Faddtrans = zeros(ceil(length(T)/simoptions.ODESim.ResultsTSkip), size(results.Faddtrans, 2));
 
 end
