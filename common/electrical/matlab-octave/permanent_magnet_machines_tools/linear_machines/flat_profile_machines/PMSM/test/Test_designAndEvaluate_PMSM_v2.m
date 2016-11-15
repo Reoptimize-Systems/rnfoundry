@@ -101,7 +101,7 @@ design.Poles = [18, 6];
 
 simoptions.Lmode = 1;
 simoptions.ODESim.InitialConditions = zeros(1,design.Phases);
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.Translator = 2;
 
 % Overlap between stator and translator, i.e. stator is mleng metres longer
