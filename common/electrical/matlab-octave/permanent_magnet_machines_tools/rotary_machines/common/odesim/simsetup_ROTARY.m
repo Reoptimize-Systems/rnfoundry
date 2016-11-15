@@ -83,7 +83,12 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
                    Inputs.TRpm, Inputs.TRps, Inputs.TTangentialVelocity, ...
                    Inputs.TangentialVelocity]);
                
+    simoptions = setfieldifabsent (simoptions, 'ODESim', struct ());
     
+    % strip existing sim spec if present
+    simoptions = rmiffield (simoptions, 'thetaT');
+    simoptions = rmiffield (simoptions, 'omegaT');
+    simoptions = rmiffield (simoptions, 'drivetimes');
           
     if nopts > 1
           
@@ -148,7 +153,7 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
         simoptions.omegaT = repmat(Inputs.AngularVelocity, 1, ninterppoints);
         
         % choose a suitible max time step, if not done so already
-        simoptions = setfieldifabsent (simoptions, 'maxstep', maxstep (design, simoptions, Inputs.MinPointsPerPole));
+        simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'MaxStep', maxstep (design, simoptions, Inputs.MinPointsPerPole));
         
     end
        
@@ -209,7 +214,7 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
 
         simoptions.ODESim.TimeSpan = simoptions.drivetimes([1, end]);
 
-        simoptions = setfieldifabsent (simoptions, 'maxstep', ...
+        simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'MaxStep', ...
             (simoptions.ODESim.TimeSpan(end) - simoptions.ODESim.TimeSpan(end-1)) / (Inputs.MinPointsPerPole * Inputs.RampPoles) );
         
     end
