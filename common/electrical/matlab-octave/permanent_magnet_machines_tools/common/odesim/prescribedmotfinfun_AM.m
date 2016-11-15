@@ -10,9 +10,15 @@ function [design, simoptions] = prescribedmotfinfun_AM (design, simoptions, finf
         [design, simoptions] = feval(finfun, design, simoptions);
     end
 
-    % create the phase current solution component specification
-    simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
-                                          'PhaseCurrents', ...
-                                          struct ('InitialConditions', zeros (1, design.Phases) ));
+%     % by default we will add the phase currents to the list of solution
+%     % components to be solved
+%     simoptions = setfieldifabsent (simoptions, 'AddPhaseCurrentsComponents', true);
+%     
+%     if simoptions.AddPhaseCurrentsComponents
+%         % create the phase current solution component specification
+%         simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
+%                                               'PhaseCurrents', ...
+%                                               struct ('InitialConditions', zeros (1, design.Phases) ));
+%     end
 
 end
