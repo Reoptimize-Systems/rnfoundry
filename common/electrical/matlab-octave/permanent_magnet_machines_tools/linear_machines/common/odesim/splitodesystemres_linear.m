@@ -5,6 +5,8 @@ function results = splitodesystemres_linear (design, simoptions, flag, results, 
 
     if flag == 0
         
+        results.block = 1;
+        
         % set up initial values for the electrical results
         results = splitodeelectricalresults_AM (design, simoptions, flag);
         
@@ -12,8 +14,6 @@ function results = splitodesystemres_linear (design, simoptions, flag, results, 
         results.minLongerPartLength = 0;
         
         results.interpdur = [];
-        
-        results.block = 1;
         
         results.vRmax = 0;
         
@@ -47,7 +47,9 @@ function results = splitodesystemres_linear (design, simoptions, flag, results, 
         results.minLongerPartLength = max(results.minLongerPartLength, 2 * peakxT + (design.PowerPoles * design.PoleWidth));
 
         % Determine some interesting design outputs
-        [results] = splitodeelectricalresults_AM(flag, design, simoptions, results, sol, odeinternals, design.NStages);
+        [results] = splitodeelectricalresults_AM (flag, design, simoptions, results, ...
+                            sol, odeinternals, design.NStages, ...
+                            simoptions.ODESim.StoreFullResults);
         
         %save(sprintf('splitode_test_%d.mat', results.block), 'sol', 'odeinternals');
         
