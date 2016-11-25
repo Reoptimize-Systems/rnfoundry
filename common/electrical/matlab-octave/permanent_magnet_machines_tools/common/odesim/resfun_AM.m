@@ -44,10 +44,12 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
     % in a results structure. The order of the strings must be the order of
     % the return arguments of the ode function when called with more than
     % one input
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'OutputFcn', []);
     results = oderesults ( T, Y, simoptions.ODESim.EvalFcn, ...
                            'ODEArgs', {design, simoptions}, ...
                            'Skip', simoptions.ODESim.ResultsTSkip, ...
-                           'SkipFields', simoptions.SkipOutputFields );
+                           'SkipFields', simoptions.SkipOutputFields, ...
+                           'OutputFcn', simoptions.ODESim.OutputFcn );
     
     % store the actual simulation time taken
     design.SimTimeSpan = max(T) - simoptions.ODESim.TimeSpan(1);
