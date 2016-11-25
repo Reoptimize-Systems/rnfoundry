@@ -284,6 +284,43 @@ classdef MBCNodal < cppinterface
             
         end
         
+        function vel = NodeVelocities (self, n)
+            % gets the velocities of one or more nodes
+            %
+            % Syntax
+            %
+            % NodeVelocities ()
+            % NodeVelocities (n)
+            %
+            % Input
+            %
+            %  n - vector of one or more node numbers for which to get the
+            %    position. If not supplied, the velocities of all nodes will
+            %    be returned.
+            %
+            % Output
+            %
+            %  vel - (3 x k) matrix of k node velocities, one for each
+            %    node number supplied in input 'n'. Each column represents
+            %    a node. Will contain the velocities of all nodes if n is
+            %    not supplied
+            %
+            %
+            
+            if nargin < 2
+                n = 1:self.NNodes;
+            end
+            
+            vel = nan * ones (3, numel(n));
+            
+            for ind = 1:numel (n)
+                
+               vel (1:3,ind) = XP(self, n(ind));
+               
+            end
+            
+        end
+        
         function pos = X(self, n)
             % gets the position of a single node with number n
             %
