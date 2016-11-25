@@ -11,7 +11,7 @@ function [design, simoptions] = feaprescribedmotfinfun_AM (design, simoptions)
     % set up the numerical derivative calculation of the flux linkage using
 	% an odederiv object
     flodederiv = odederiv (0, simoptions.ODESim.SolutionComponents.PhaseFluxLinkages.InitialConditions', ...
-        'DoPlot', true);
+        'DoPlot', true, 'UseFastMethod', false);
     
 	simoptions.ODESim.SolutionComponents.PhaseFluxLinkages.NumericalDerivatives = ...
         flodederiv;
