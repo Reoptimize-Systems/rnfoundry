@@ -13,7 +13,7 @@ function [results, fn, nOut] = prallocresfcn(T, Y, odeevfcn, odeargs, skip)
 % T - vector of time points as produced by the ode solver acting on the
 %   solution function.
 %
-% Y - matlrix of values of the solution variables at each time step in T.
+% Y - matrix of values of the solution variables at each time step in T.
 %   Each column of Y should be a solution variable.
 %
 % odeevfcn - function handle or string containing the name of the ode
