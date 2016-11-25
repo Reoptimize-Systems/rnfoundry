@@ -467,20 +467,35 @@ public:
         nallowed.push_back (1);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
         
-        /// \todo: add check for correct force matrix size (3 rows n cols)
         mxNumericArrayWrapper forces = mxnthargmatrix (nrhs, prhs, 1, 2);
+        
+        mwSize nrows = forces.getRows ();
+        mwSize ncols = forces.getColumns ();
+        
+        unsigned nnodes = mbc->GetNodes();
+        
+        if ( (nrows != 3) | (ncols != nnodes) )
+        {
+            mexErrMsgIdAndTxt("MBCNodal:F:badinputsize",
+         "Input force matrix should have 3 rows and Nnodes columns, but is actually (%d x %d).", 
+                    nrows, ncols );
+        }
         
         if (mbc->GetNodes() > 0)
         {
             if (getlabels)
             {
-                for (unsigned n = 1; n <= mbc->GetNodes(); n++)
+                for (unsigned n = 1; n <= nnodes; n++)
                 {
                     mbc->DynamicsLabel(n) = mbc->KinematicsLabel(n);
                 }
             }
+            
+            #ifdef DEBUG
+            mexPrintf ("In 'F', about to set forces\n");
+            #endif
 
-            for (unsigned n = 1; n <= mbc->GetNodes(); n++)
+            for (unsigned n = 1; n <= nnodes; n++)
             {
                 // note mxNumericArrayWrapper indices are zero based not 1-based
 
@@ -505,7 +520,11 @@ public:
                 #endif
                 mbc->F(n, 3) = forces.getDoubleValue (fmatind);
             
-            }   
+            }
+            
+            #ifdef DEBUG
+            mexPrintf ("In 'F', finished setting forces\n");
+            #endif
         }
     }
     
@@ -521,31 +540,59 @@ public:
         nallowed.push_back (1);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
         
-        /// \todo: add check for correct moment matrix size (3 rows n cols)
         mxNumericArrayWrapper moments = mxnthargmatrix (nrhs, prhs, 1, 2);
         
-        if (mbc->GetNodes() > 0)
+        mwSize nrows = moments.getRows ();
+        mwSize ncols = moments.getColumns ();
+        
+        unsigned nnodes = mbc->GetNodes();
+        
+        if ( (nrows != 3) | (ncols != nnodes))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:M:badinputsize",
+         "Input moment matrix should have 3 rows and Nnodes columns, but is actually (%d x %d).", 
+                    nrows, ncols );
+        }
+        
+        if (nnodes > 0)
         {
             if (getlabels)
             {
-                for (unsigned n = 1; n <= mbc->GetNodes(); n++)
+                for (unsigned n = 1; n <= nnodes; n++)
                 {
                     mbc->DynamicsLabel(n) = mbc->KinematicsLabel(n);
                 }
             }
             
-            for (unsigned n = 1; n <= mbc->GetNodes(); n++)
+            #ifdef DEBUG
+            mexPrintf ("In 'M', about to set moments\n");
+            #endif
+            
+            for (unsigned n = 1; n <= nnodes; n++)
             {
                 mmatind[0] = (mwSize)0;
                 mmatind[1] = (mwSize)(n-1);
+                #ifdef DEBUG
+                mexPrintf ("mmatind[0]: %d, mmatind[1]: %d, F(%d,1): %f\n", mmatind[0], mmatind[1], n, moments.getDoubleValue (mmatind));
+                #endif
                 mbc->M(n, 1) = moments.getDoubleValue (mmatind);
                 mmatind[0] = (mwSize)1;
                 mmatind[1] = (mwSize)(n-1);
+                #ifdef DEBUG
+                mexPrintf ("mmatind[0]: %d, mmatind[1]: %d, F(%d,1): %f\n", mmatind[0], mmatind[1], n, moments.getDoubleValue (mmatind));
+                #endif
                 mbc->M(n, 2) = moments.getDoubleValue (mmatind);
                 mmatind[0] = (mwSize)2;
                 mmatind[1] = (mwSize)(n-1);
+                #ifdef DEBUG
+                mexPrintf ("mmatind[0]: %d, mmatind[1]: %d, F(%d,1): %f\n", mmatind[0], mmatind[1], n, moments.getDoubleValue (mmatind));
+                #endif
                 mbc->M(n, 3) = moments.getDoubleValue (mmatind);
-            }    
+            }
+            
+            #ifdef DEBUG
+            mexPrintf ("In 'M', finished setting moments\n");
+            #endif
         }
     }
     
