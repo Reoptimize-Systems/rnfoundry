@@ -1,15 +1,19 @@
 Library {
   Name			  "pm_machines_library"
-  Version		  8.1
-  MdlSubVersion		  0
+  Version		  8.8
   SavedCharacterEncoding  "UTF-8"
+  LogicAnalyzerGraphicalSettings ""
+  LogicAnalyzerPlugin	  "on"
+  LogicAnalyzerSignalOrdering ""
+  DiagnosticSuppressor	  "on"
+  SuppressorTable	  "22 serialization::archive 11 0 3 0 0 0 11 0"
   LibraryType		  "BlockLibrary"
-  SaveDefaultBlockParams  on
   ScopeRefreshTime	  0.035000
   OverrideScopeRefreshTime on
   DisableAllScopes	  off
   FPTRunName		  "Run 1"
   MaxMDLFileLineLength	  120
+  LastSavedArchitecture	  "glnxa64"
   Object {
     $PropName		    "BdWindowsInfo"
     $ObjectID		    1
@@ -19,7 +23,7 @@ Library {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [-4.0, -4.0, 1288.0, 782.0]
+      Location		      [58.0, 108.0, 1451.0, 882.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -36,35 +40,74 @@ Library {
 	$ClassName		"Simulink.ExplorerBarInfo"
 	Visible			[1]
       }
-      Object {
-	$PropName		"EditorsInfo"
-	$ObjectID		5
-	$ClassName		"Simulink.EditorInfo"
-	IsActive		[1]
-	ViewObjType		"SimulinkSubsys"
-	LoadSaveID		"46"
-	Extents			[1244.0, 623.0]
-	ZoomFactor		[1.0]
-	Offset			[0.0, 75.0]
+      Array {
+	Type			"Simulink.EditorInfo"
+	Dimension		2
+	Object {
+	  $ObjectID		  5
+	  IsActive		  [1]
+	  ViewObjType		  "SimulinkTopLevel"
+	  LoadSaveID		  "0"
+	  Extents		  [1395.0, 708.0]
+	  ZoomFactor		  [1.0]
+	  Offset		  [-107.5, 9.261896323414593]
+	}
+	Object {
+	  $ObjectID		  6
+	  IsActive		  [0]
+	  ViewObjType		  "SimulinkSubsys"
+	  LoadSaveID		  "16"
+	  Extents		  [1395.0, 708.0]
+	  ZoomFactor		  [1.0]
+	  Offset		  [0.0, 0.0]
+	}
+	PropName		"EditorsInfo"
       }
+      Object {
+	$PropName		"DockComponentsInfo"
+	$ObjectID		7
+	$ClassName		"Simulink.DockComponentInfo"
+	Type			"GLUE2:PropertyInspector"
+	ID			"Property Inspector"
+	Visible			[0]
+	CreateCallback		""
+	UserData		""
+	Floating		[0]
+	DockPosition		"Right"
+	Width			[640]
+	Height			[480]
+      }
+      WindowState	      "AAAA/wAAAAD9AAAAAgAAAAAAAAC9AAAB+PwCAAAAA/sAAAAWAEQAbwBjAGsAVwBpAGQAZwBlAHQAMwEAAAAxAAAB+AAAA"
+      "AAAAAAA+wAAABYARABvAGMAawBXAGkAZABnAGUAdAA0AAAAAAD/////AAAAAAAAAAD7AAAAUgBHAEwAVQBFADIAIAB0AHIAZQBlACAAYwBvAG0Ac"
+      "ABvAG4AZQBuAHQALwBHAEwAVQBFADIAIAB0AHIAZQBlACAAYwBvAG0AcABvAG4AZQBuAHQAAAAAAP////8AAABXAP///wAAAAEAAAAAAAAAAPwCA"
+      "AAAAfsAAABUAEcATABVAEUAMgA6AFAAcgBvAHAAZQByAHQAeQBJAG4AcwBwAGUAYwB0AG8AcgAvAFAAcgBvAHAAZQByAHQAeQAgAEkAbgBzAHAAZ"
+      "QBjAHQAbwByAAAAAAD/////AAAAKAD///8AAAWXAAAC/gAAAAEAAAACAAAAAQAAAAL8AAAAAQAAAAIAAAAP/////wAAAAAA/////wAAAAAAAAAA/"
+      "////wEAAAAA/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA/"
+      "////wEAAAB5/////wAAAAAAAAAA/////wEAAADa/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA/"
+      "////wAAAAAA/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA/////wEAAAEo/////wAAAAAAAAAA/"
+      "////wAAAAAA/////wAAAAAAAAAA/////wAAAAAA/////wAAAAAAAAAA"
     }
   }
   Created		  "Mon Mar 25 10:35:58 2013"
   Creator		  "s0237326"
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
-  LastModifiedBy	  "s0237326"
+  LastModifiedBy	  "rcrozier"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Tue Dec 03 11:52:30 2013"
-  RTWModifiedTimeStamp	  307972321
-  ModelVersionFormat	  "1.%<AutoIncrement:66>"
-  ConfigurationManager	  "None"
+  LastModifiedDate	  "Tue Jan 24 17:00:57 2017"
+  RTWModifiedTimeStamp	  407177880
+  ModelVersionFormat	  "1.%<AutoIncrement:71>"
+  ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
   LibraryLinkDisplay	  "none"
   WideLines		  off
   ShowLineDimensions	  off
   ShowPortDataTypes	  off
+  ShowEditTimeErrors	  on
+  ShowEditTimeWarnings	  on
+  ShowEditTimeAdvisorChecks off
+  ShowPortUnits		  off
   ShowDesignRanges	  off
   ShowLoopsOnError	  on
   IgnoreBidirectionalLines off
@@ -73,31 +116,28 @@ Library {
   ShowSignalResolutionIcons on
   ShowViewerIcons	  on
   SortedOrder		  off
+  VariantCondition	  off
   ExecutionContextIcon	  off
   ShowLinearizationAnnotations on
+  ShowVisualizeInsertedRTB on
+  ShowMarkup		  on
   BlockNameDataTip	  off
   BlockParametersDataTip  off
   BlockDescriptionStringDataTip	off
   ToolBar		  on
   StatusBar		  on
   BrowserShowLibraryLinks off
+  FunctionConnectors	  off
   BrowserLookUnderMasks	  off
   SimulationMode	  "normal"
+  PauseTimes		  "5"
+  NumberOfSteps		  1
+  SnapshotBufferSize	  10
+  SnapshotInterval	  10
+  NumberOfLastSnapshots	  0
   LinearizationMsg	  "none"
   Profile		  off
   ParamWorkspaceSource	  "MATLABWorkspace"
-  RecordCoverage	  off
-  CovSaveName		  "covdata"
-  CovMetricSettings	  "dw"
-  CovNameIncrementing	  off
-  CovHtmlReporting	  on
-  CovForceBlockReductionOff on
-  covSaveCumulativeToWorkspaceVar on
-  CovSaveSingleToWorkspaceVar on
-  CovCumulativeReport	  off
-  CovReportOnPause	  on
-  CovModelRefEnable	  "Off"
-  CovExternalEMLEnable	  off
   ExtModeBatchMode	  off
   ExtModeEnableFloating	  on
   ExtModeTrigType	  "manual"
@@ -125,14 +165,18 @@ Library {
     Type		    "Handle"
     Dimension		    1
     Simulink.ConfigSet {
-      $ObjectID		      6
-      Version		      "1.13.0"
+      $ObjectID		      8
+      Version		      "1.16.5"
+      DisabledProps	      []
+      Description	      ""
       Array {
 	Type			"Handle"
-	Dimension		9
+	Dimension		10
 	Simulink.SolverCC {
-	  $ObjectID		  7
-	  Version		  "1.13.0"
+	  $ObjectID		  9
+	  Version		  "1.16.5"
+	  DisabledProps		  []
+	  Description		  ""
 	  StartTime		  "0.0"
 	  StopTime		  "10.0"
 	  AbsTol		  "auto"
@@ -149,7 +193,7 @@ Library {
 	  MinStep		  "auto"
 	  MaxConsecutiveMinStep	  "1"
 	  RelTol		  "1e-3"
-	  SolverMode		  "Auto"
+	  EnableMultiTasking	  on
 	  EnableConcurrentExecution off
 	  ConcurrentTasks	  off
 	  Solver		  "ode45"
@@ -159,15 +203,20 @@ Library {
 	  ZeroCrossControl	  "UseLocalSettings"
 	  ZeroCrossAlgorithm	  "Nonadaptive"
 	  AlgebraicLoopSolver	  "TrustRegion"
+	  SolverInfoToggleStatus  off
+	  IsAutoAppliedInSIP	  off
 	  SolverResetMethod	  "Fast"
 	  PositivePriorityOrder	  off
 	  AutoInsertRateTranBlk	  off
 	  SampleTimeConstraint	  "Unconstrained"
 	  InsertRTBMode		  "Whenever possible"
+	  SampleTimeProperty	  []
 	}
 	Simulink.DataIOCC {
-	  $ObjectID		  8
-	  Version		  "1.13.0"
+	  $ObjectID		  10
+	  Version		  "1.16.5"
+	  DisabledProps		  []
+	  Description		  ""
 	  Decimation		  "1"
 	  ExternalInput		  "[t, u]"
 	  FinalStateName	  "xFinal"
@@ -185,6 +234,9 @@ Library {
 	  SignalLogging		  on
 	  DSMLogging		  on
 	  InspectSignalLogs	  off
+	  VisualizeSimOutput	  on
+	  StreamToWorkspace	  off
+	  StreamVariableName	  "streamout"
 	  SaveTime		  on
 	  ReturnWorkspaceOutputs  off
 	  StateSaveName		  "xout"
@@ -196,10 +248,13 @@ Library {
 	  OutputTimes		  "[]"
 	  ReturnWorkspaceOutputsName "out"
 	  Refine		  "1"
+	  LoggingToFile		  off
+	  LoggingFileName	  "out.mat"
+	  LoggingIntervals	  "[-inf, inf]"
 	}
 	Simulink.OptimizationCC {
-	  $ObjectID		  9
-	  Version		  "1.13.0"
+	  $ObjectID		  11
+	  Version		  "1.16.5"
 	  Array {
 	    Type		    "Cell"
 	    Dimension		    8
@@ -213,49 +268,58 @@ Library {
 	    Cell		    "UseSpecifiedMinMax"
 	    PropName		    "DisabledProps"
 	  }
+	  Description		  ""
 	  BlockReduction	  on
 	  BooleanDataType	  on
 	  ConditionallyExecuteInputs on
-	  InlineParams		  off
-	  UseIntDivNetSlope	  off
+	  DefaultParameterBehavior "Tunable"
+	  UseDivisionForNetSlopeComputation "off"
 	  UseFloatMulNetSlope	  off
+	  DefaultUnderspecifiedDataType	"double"
 	  UseSpecifiedMinMax	  off
 	  InlineInvariantSignals  off
 	  OptimizeBlockIOStorage  on
 	  BufferReuse		  on
 	  EnhancedBackFolding	  off
+	  CachingGlobalReferences off
+	  GlobalBufferReuse	  on
 	  StrengthReduction	  off
+	  AdvancedOptControl	  ""
 	  ExpressionFolding	  on
 	  BooleansAsBitfields	  off
 	  BitfieldContainerType	  "uint_T"
 	  EnableMemcpy		  on
 	  MemcpyThreshold	  64
 	  PassReuseOutputArgsAs	  "Structure reference"
+	  PassReuseOutputArgsThreshold 12
 	  ExpressionDepthLimit	  2147483647
-	  FoldNonRolledExpr	  on
 	  LocalBlockOutputs	  on
 	  RollThreshold		  5
-	  SystemCodeInlineAuto	  off
 	  StateBitsets		  off
 	  DataBitsets		  off
-	  UseTempVars		  off
+	  ActiveStateOutputEnumStorageType "Native Integer"
 	  ZeroExternalMemoryAtStartup on
 	  ZeroInternalMemoryAtStartup on
 	  InitFltsAndDblsToZero	  off
 	  NoFixptDivByZeroProtection off
 	  EfficientFloat2IntCast  off
 	  EfficientMapNaN2IntZero on
-	  OptimizeModelRefInitCode off
 	  LifeSpan		  "inf"
 	  MaxStackSize		  "Inherit from target"
 	  BufferReusableBoundary  on
-	  SimCompilerOptimization "Off"
+	  SimCompilerOptimization "off"
 	  AccelVerboseBuild	  off
-	  ParallelExecutionInRapidAccelerator on
 	}
 	Simulink.DebuggingCC {
-	  $ObjectID		  10
-	  Version		  "1.13.0"
+	  $ObjectID		  12
+	  Version		  "1.16.5"
+	  Array {
+	    Type		    "Cell"
+	    Dimension		    1
+	    Cell		    "UseOnlyExistingSharedCode"
+	    PropName		    "DisabledProps"
+	  }
+	  Description		  ""
 	  RTPrefix		  "error"
 	  ConsistencyChecking	  "none"
 	  ArrayBoundsChecking	  "none"
@@ -282,7 +346,6 @@ Library {
 	  IgnoredZcDiagnostic	  "warning"
 	  SolverPrmCheckMsg	  "warning"
 	  InheritedTsInSrcMsg	  "warning"
-	  DiscreteInheritContinuousMsg "warning"
 	  MultiTaskDSMMsg	  "error"
 	  MultiTaskCondExecSysMsg "error"
 	  MultiTaskRateTransMsg	  "error"
@@ -304,23 +367,24 @@ Library {
 	  UnnecessaryDatatypeConvMsg "none"
 	  VectorMatrixConversionMsg "none"
 	  InvalidFcnCallConnMsg	  "error"
-	  FcnCallInpInsideContextMsg "UseLocalSettings"
+	  FcnCallInpInsideContextMsg "warning"
 	  SignalLabelMismatchMsg  "none"
 	  UnconnectedInputMsg	  "warning"
 	  UnconnectedOutputMsg	  "warning"
 	  UnconnectedLineMsg	  "warning"
+	  UseOnlyExistingSharedCode "error"
 	  SFcnCompatibilityMsg	  "none"
-	  FrameProcessingCompatibilityMsg "warning"
+	  FrameProcessingCompatibilityMsg "error"
 	  UniqueDataStoreMsg	  "none"
 	  BusObjectLabelMismatch  "warning"
 	  RootOutportRequireBusObject "warning"
 	  AssertControl		  "UseLocalSettings"
-	  EnableOverflowDetection off
+	  AllowSymbolicDim	  on
+	  RowMajorDimensionSupport off
 	  ModelReferenceIOMsg	  "none"
 	  ModelReferenceMultiInstanceNormalModeStructChecksumCheck "error"
 	  ModelReferenceVersionMismatchMessage "none"
 	  ModelReferenceIOMismatchMessage "none"
-	  ModelReferenceCSMismatchMessage "none"
 	  UnknownTsInhSupMsg	  "warning"
 	  ModelReferenceDataLoggingMessage "warning"
 	  ModelReferenceSymbolNameMessage "warning"
@@ -332,20 +396,33 @@ Library {
 	  StrictBusMsg		  "ErrorLevel1"
 	  BusNameAdapt		  "WarnAndRepair"
 	  NonBusSignalsTreatedAsBus "none"
-	  LoggingUnavailableSignals "error"
+	  SymbolicDimMinMaxWarning "warning"
+	  LossOfSymbolicDimsSimulationWarning "warning"
+	  LossOfSymbolicDimsCodeGenerationWarning "error"
 	  BlockIODiagnostic	  "none"
 	  SFUnusedDataAndEventsDiag "warning"
 	  SFUnexpectedBacktrackingDiag "warning"
 	  SFInvalidInputDataAccessInChartInitDiag "warning"
 	  SFNoUnconditionalDefaultTransitionDiag "warning"
 	  SFTransitionOutsideNaturalParentDiag "warning"
-	  SFUnconditionalTransitionShadowingDiag "warning"
+	  SFUnreachableExecutionPathDiag "warning"
 	  SFUndirectedBroadcastEventsDiag "warning"
 	  SFTransitionActionBeforeConditionDiag	"warning"
+	  SFOutputUsedAsStateInMooreChartDiag "error"
+	  SFTemporalDelaySmallerThanSampleTimeDiag "warning"
+	  SFSelfTransitionDiag	  "warning"
+	  SFExecutionAtInitializationDiag "none"
+	  SFMachineParentedDataDiag "warning"
+	  IntegerSaturationMsg	  "warning"
+	  AllowedUnitSystems	  "all"
+	  UnitsInconsistencyMsg	  "warning"
+	  AllowAutomaticUnitConversions	on
 	}
 	Simulink.HardwareCC {
-	  $ObjectID		  11
-	  Version		  "1.13.0"
+	  $ObjectID		  13
+	  Version		  "1.16.5"
+	  DisabledProps		  []
+	  Description		  ""
 	  ProdBitPerChar	  8
 	  ProdBitPerShort	  16
 	  ProdBitPerInt		  32
@@ -354,6 +431,8 @@ Library {
 	  ProdBitPerFloat	  32
 	  ProdBitPerDouble	  64
 	  ProdBitPerPointer	  32
+	  ProdBitPerSizeT	  32
+	  ProdBitPerPtrDiffT	  32
 	  ProdLargestAtomicInteger "Char"
 	  ProdLargestAtomicFloat  "None"
 	  ProdIntDivRoundTo	  "Undefined"
@@ -370,6 +449,8 @@ Library {
 	  TargetBitPerFloat	  32
 	  TargetBitPerDouble	  64
 	  TargetBitPerPointer	  32
+	  TargetBitPerSizeT	  32
+	  TargetBitPerPtrDiffT	  32
 	  TargetLargestAtomicInteger "Char"
 	  TargetLargestAtomicFloat "None"
 	  TargetShiftRightIntArith on
@@ -377,82 +458,119 @@ Library {
 	  TargetIntDivRoundTo	  "Undefined"
 	  TargetEndianess	  "Unspecified"
 	  TargetWordSize	  32
-	  TargetTypeEmulationWarnSuppressLevel 0
 	  TargetPreprocMaxBitsSint 32
 	  TargetPreprocMaxBitsUint 32
 	  TargetHWDeviceType	  "Specified"
 	  TargetUnknown		  off
 	  ProdEqTarget		  on
+	  UseEmbeddedCoderFeatures on
+	  UseSimulinkCoderFeatures on
 	}
 	Simulink.ModelReferenceCC {
-	  $ObjectID		  12
-	  Version		  "1.13.0"
+	  $ObjectID		  14
+	  Version		  "1.16.5"
+	  DisabledProps		  []
+	  Description		  ""
 	  UpdateModelReferenceTargets "IfOutOfDateOrStructuralChange"
+	  EnableRefExpFcnMdlSchedulingChecks on
 	  CheckModelReferenceTargetMessage "error"
 	  EnableParallelModelReferenceBuilds off
 	  ParallelModelReferenceErrorOnInvalidPool on
 	  ParallelModelReferenceMATLABWorkerInit "None"
 	  ModelReferenceNumInstancesAllowed "Multi"
 	  PropagateVarSize	  "Infer from blocks in model"
+	  ModelDependencies	  ""
 	  ModelReferencePassRootInputsByReference on
 	  ModelReferenceMinAlgLoopOccurrences off
 	  PropagateSignalLabelsOutOfModel off
 	  SupportModelReferenceSimTargetCustomCode off
 	}
 	Simulink.SFSimCC {
-	  $ObjectID		  13
-	  Version		  "1.13.0"
-	  SFSimEnableDebug	  on
-	  SFSimOverflowDetection  on
+	  $ObjectID		  15
+	  Version		  "1.16.5"
+	  DisabledProps		  []
+	  Description		  ""
+	  SimCustomSourceCode	  ""
+	  SimCustomHeaderCode	  ""
+	  SimCustomInitializer	  ""
+	  SimCustomTerminator	  ""
+	  SimReservedNameArray	  []
+	  SimUserSources	  ""
+	  SimUserIncludeDirs	  ""
+	  SimUserLibraries	  ""
+	  SimUserDefines	  ""
+	  SimCustomCompilerFlags  ""
+	  SimCustomLinkerFlags	  ""
 	  SFSimEcho		  on
-	  SimBlas		  on
 	  SimCtrlC		  on
-	  SimExtrinsic		  on
 	  SimIntegrity		  on
 	  SimUseLocalCustomCode	  off
 	  SimParseCustomCode	  on
 	  SimBuildMode		  "sf_incremental_build"
+	  SimGenImportedTypeDefs  off
+	  ModelFunctionsGlobalVisibility "on"
+	  CompileTimeRecursionLimit 50
+	  EnableRuntimeRecursion  on
 	}
 	Simulink.RTWCC {
 	  $BackupClass		  "Simulink.RTWCC"
-	  $ObjectID		  14
-	  Version		  "1.13.0"
+	  $ObjectID		  16
+	  Version		  "1.16.5"
 	  Array {
 	    Type		    "Cell"
-	    Dimension		    8
+	    Dimension		    13
 	    Cell		    "IncludeHyperlinkInReport"
 	    Cell		    "GenerateTraceInfo"
 	    Cell		    "GenerateTraceReport"
 	    Cell		    "GenerateTraceReportSl"
 	    Cell		    "GenerateTraceReportSf"
 	    Cell		    "GenerateTraceReportEml"
-	    Cell		    "GenerateSLWebview"
 	    Cell		    "GenerateCodeMetricsReport"
+	    Cell		    "PortableWordSizes"
+	    Cell		    "GenerateWebview"
+	    Cell		    "GenerateCodeReplacementReport"
+	    Cell		    "GenerateMissedCodeReplacementReport"
+	    Cell		    "GenerateErtSFunction"
+	    Cell		    "CreateSILPILBlock"
 	    PropName		    "DisabledProps"
 	  }
 	  SystemTargetFile	  "grt.tlc"
+	  HardwareBoard		  "None"
+	  TLCOptions		  ""
 	  GenCodeOnly		  off
 	  MakeCommand		  "make_rtw"
 	  GenerateMakefile	  on
 	  PackageGeneratedCodeAndArtifacts off
+	  PackageName		  ""
 	  TemplateMakefile	  "grt_default_tmf"
+	  PostCodeGenCommand	  ""
+	  Description		  ""
 	  GenerateReport	  off
 	  SaveLog		  off
 	  RTWVerbose		  on
 	  RetainRTWFile		  off
+	  RTWBuildHooks		  []
 	  ProfileTLC		  off
 	  TLCDebug		  off
 	  TLCCoverage		  off
 	  TLCAssert		  off
-	  ProcessScriptMode	  "Default"
-	  ConfigurationMode	  "Optimized"
-	  ConfigAtBuild		  off
 	  RTWUseLocalCustomCode	  off
 	  RTWUseSimCustomCode	  off
+	  CustomSourceCode	  ""
+	  CustomHeaderCode	  ""
+	  CustomInclude		  ""
+	  CustomSource		  ""
+	  CustomLibrary		  ""
+	  CustomDefine		  ""
+	  CustomLAPACKCallback	  ""
+	  CustomInitializer	  ""
+	  CustomTerminator	  ""
+	  Toolchain		  "Automatically locate an installed toolchain"
+	  BuildConfiguration	  "Faster Builds"
+	  CustomToolchainOptions  []
 	  IncludeHyperlinkInReport off
 	  LaunchReport		  off
 	  PortableWordSizes	  off
-	  GenerateErtSFunction	  off
 	  CreateSILPILBlock	  "None"
 	  CodeExecutionProfiling  off
 	  CodeExecutionProfileVariable "executionProfile"
@@ -461,28 +579,29 @@ Library {
 	  SILDebugging		  off
 	  TargetLang		  "C"
 	  IncludeBusHierarchyInRTWFileBlockHierarchyMap	off
-	  IncludeERTFirstTime	  off
 	  GenerateTraceInfo	  off
 	  GenerateTraceReport	  off
 	  GenerateTraceReportSl	  off
 	  GenerateTraceReportSf	  off
 	  GenerateTraceReportEml  off
-	  GenerateCodeInfo	  off
 	  GenerateWebview	  off
 	  GenerateCodeMetricsReport off
 	  GenerateCodeReplacementReport	off
-	  RTWCompilerOptimization "Off"
+	  GenerateMissedCodeReplacementReport off
+	  RTWCompilerOptimization "off"
+	  ObjectivePriorities	  []
+	  RTWCustomCompilerOptimizations ""
 	  CheckMdlBeforeBuild	  "Off"
-	  CustomRebuildMode	  "OnUpdate"
+	  SharedConstantsCachingThreshold 1024
 	  Array {
 	    Type		    "Handle"
 	    Dimension		    2
 	    Simulink.CodeAppCC {
-	      $ObjectID		      15
-	      Version		      "1.13.0"
+	      $ObjectID		      17
+	      Version		      "1.16.5"
 	      Array {
 		Type			"Cell"
-		Dimension		21
+		Dimension		25
 		Cell			"IgnoreCustomStorageClasses"
 		Cell			"IgnoreTestpoints"
 		Cell			"InsertBlockDesc"
@@ -504,10 +623,17 @@ Library {
 		Cell			"CustomSymbolStrTmpVar"
 		Cell			"CustomSymbolStrMacro"
 		Cell			"ReqsInCode"
+		Cell			"InternalIdentifier"
+		Cell			"CustomSymbolStrModelFcn"
+		Cell			"CustomSymbolStrUtil"
+		Cell			"CustomUserTokenString"
 		PropName		"DisabledProps"
 	      }
+	      Description	      ""
+	      Comment		      ""
 	      ForceParamTrailComments off
 	      GenerateComments	      on
+	      CommentStyle	      "Auto"
 	      IgnoreCustomStorageClasses on
 	      IgnoreTestpoints	      off
 	      IncHierarchyInIds	      off
@@ -526,33 +652,42 @@ Library {
 	      CustomSymbolStrType     "$N$R$M_T"
 	      CustomSymbolStrField    "$N$M"
 	      CustomSymbolStrFcn      "$R$N$M$F"
+	      CustomSymbolStrModelFcn "$R$N"
 	      CustomSymbolStrFcnArg   "rt$I$N$M"
 	      CustomSymbolStrBlkIO    "rtb_$N$M"
 	      CustomSymbolStrTmpVar   "$N$M"
 	      CustomSymbolStrMacro    "$R$N$M"
+	      CustomSymbolStrUtil     "$N$C"
+	      CustomUserTokenString   ""
+	      CustomCommentsFcn	      ""
 	      DefineNamingRule	      "None"
+	      DefineNamingFcn	      ""
 	      ParamNamingRule	      "None"
+	      ParamNamingFcn	      ""
 	      SignalNamingRule	      "None"
+	      SignalNamingFcn	      ""
 	      InsertBlockDesc	      off
 	      InsertPolySpaceComments off
 	      SimulinkBlockComments   on
 	      MATLABSourceComments    off
 	      EnableCustomComments    off
+	      InternalIdentifierFile  ""
 	      InternalIdentifier      "Shortened"
 	      InlinedPrmAccess	      "Literals"
 	      ReqsInCode	      off
 	      UseSimReservedNames     off
+	      ReservedNameArray	      []
 	    }
 	    Simulink.GRTTargetCC {
 	      $BackupClass	      "Simulink.TargetCC"
-	      $ObjectID		      16
-	      Version		      "1.13.0"
+	      $ObjectID		      18
+	      Version		      "1.16.5"
 	      Array {
 		Type			"Cell"
-		Dimension		16
+		Dimension		18
 		Cell			"GeneratePreprocessorConditionals"
 		Cell			"IncludeMdlTerminateFcn"
-		Cell			"CombineOutputUpdateFcns"
+		Cell			"RemoveResetFunc"
 		Cell			"SuppressErrorStatus"
 		Cell			"ERTCustomFileBanners"
 		Cell			"GenerateSampleERTMain"
@@ -566,20 +701,26 @@ Library {
 		Cell			"SupportContinuousTime"
 		Cell			"SupportNonInlinedSFcns"
 		Cell			"GenerateAllocFcn"
+		Cell			"ExistingSharedCode"
+		Cell			"RemoveDisableFunc"
 		PropName		"DisabledProps"
 	      }
+	      Description	      ""
 	      TargetFcnLib	      "ansi_tfl_table_tmw.mat"
 	      TargetLibSuffix	      ""
 	      TargetPreCompLibLocation ""
-	      CodeReplacementLibrary  "ANSI_C"
+	      GenFloatMathFcnCalls    "NOT IN USE"
+	      TargetLangStandard      "C89/C90 (ANSI)"
+	      CodeReplacementLibrary  "None"
 	      UtilityFuncGeneration   "Auto"
 	      ERTMultiwordTypeDef     "System defined"
 	      ERTMultiwordLength      256
 	      MultiwordLength	      2048
 	      GenerateFullHeader      on
+	      InferredTypesCompatibility off
+	      ExistingSharedCode      ""
 	      GenerateSampleERTMain   off
 	      GenerateTestInterfaces  off
-	      IsPILTarget	      off
 	      ModelReferenceCompliant on
 	      ParMdlRefBuildCompliant on
 	      CompOptLevelCompliant   on
@@ -596,20 +737,27 @@ Library {
 	      LogVarNameModifier      "rt_"
 	      MatFileLogging	      on
 	      MultiInstanceERTCode    off
+	      CodeInterfacePackaging  "Nonreusable function"
 	      SupportNonFinite	      on
 	      SupportComplex	      on
 	      PurelyIntegerCode	      off
 	      SupportContinuousTime   on
 	      SupportNonInlinedSFcns  on
+	      RemoveDisableFunc	      off
+	      RemoveResetFunc	      off
 	      SupportVariableSizeSignals off
-	      EnableShiftOperators    on
 	      ParenthesesLevel	      "Nominal"
+	      CastingMode	      "Nominal"
 	      MATLABClassNameForMDSCustomization "Simulink.SoftwareTarget.GRTCustomization"
 	      ModelStepFunctionPrototypeControlCompliant off
-	      CPPClassGenCompliant    off
+	      CPPClassGenCompliant    on
 	      AutosarCompliant	      off
+	      MDXCompliant	      off
 	      GRTInterface	      on
 	      GenerateAllocFcn	      off
+	      UseToolchainInfoCompliant	on
+	      GenerateSharedConstants on
+	      CoderGroups	      []
 	      UseMalloc		      off
 	      ExtMode		      off
 	      ExtModeStaticAlloc      off
@@ -617,19 +765,61 @@ Library {
 	      ExtModeStaticAllocSize  1000000
 	      ExtModeTransport	      0
 	      ExtModeMexFile	      "ext_comm"
+	      ExtModeMexArgs	      ""
 	      ExtModeIntrfLevel	      "Level1"
 	      RTWCAPISignals	      off
 	      RTWCAPIParams	      off
 	      RTWCAPIStates	      off
 	      RTWCAPIRootIO	      off
 	      GenerateASAP2	      off
+	      MultiInstanceErrorCode  "Error"
 	    }
 	    PropName		    "Components"
 	  }
 	}
+	SlCovCC.ConfigComp {
+	  $ObjectID		  19
+	  Version		  "1.16.5"
+	  DisabledProps		  []
+	  Description		  "Simulink Coverage Configuration Component"
+	  Name			  "Simulink Coverage"
+	  CovEnable		  off
+	  CovScope		  "EntireSystem"
+	  CovIncludeTopModel	  on
+	  RecordCoverage	  off
+	  CovPath		  "/"
+	  CovSaveName		  "covdata"
+	  CovCompData		  ""
+	  CovMetricSettings	  "dw"
+	  CovFilter		  ""
+	  CovHTMLOptions	  ""
+	  CovNameIncrementing	  off
+	  CovHtmlReporting	  on
+	  CovForceBlockReductionOff on
+	  CovEnableCumulative	  on
+	  CovSaveCumulativeToWorkspaceVar on
+	  CovSaveSingleToWorkspaceVar on
+	  CovCumulativeVarName	  "covCumulativeData"
+	  CovCumulativeReport	  off
+	  CovSaveOutputData	  on
+	  CovOutputDir		  "slcov_output/$ModelName$"
+	  CovDataFileName	  "$ModelName$_cvdata"
+	  CovShowResultsExplorer  on
+	  CovReportOnPause	  on
+	  CovModelRefEnable	  "off"
+	  CovModelRefExcluded	  ""
+	  CovExternalEMLEnable	  off
+	  CovSFcnEnable		  on
+	  CovBoundaryAbsTol	  1e-05
+	  CovBoundaryRelTol	  0.01
+	  CovUseTimeInterval	  off
+	  CovStartTime		  0
+	  CovStopTime		  0
+	}
 	hdlcoderui.hdlcc {
-	  $ObjectID		  17
-	  Version		  "1.13.0"
+	  $ObjectID		  20
+	  Version		  "1.16.5"
+	  DisabledProps		  []
 	  Description		  "HDL Coder custom configuration component"
 	  Name			  "HDL Coder"
 	  Array {
@@ -643,6 +833,7 @@ Library {
 	PropName		"Components"
       }
       Name		      "Configuration"
+      ExtraOptions	      ""
       CurrentDlgPage	      "Solver"
       ConfigPrmDlgPosition     [ 400, 210, 1280, 840 ] 
     }
@@ -683,7 +874,7 @@ Library {
   MaskDefaults {
     SelfModifiable	    "off"
     IconFrame		    "on"
-    IconOpaque		    "on"
+    IconOpaque		    "opaque"
     RunInitForIconRedraw    "off"
     IconRotate		    "none"
     PortRotate		    "default"
@@ -738,6 +929,7 @@ Library {
       OutDataTypeStr	      "Inherit: auto"
       LockScale		      off
       BusOutputAsStruct	      off
+      Unit		      "inherit"
       PortDimensions	      "-1"
       VarSizeSig	      "Inherit"
       SampleTime	      "-1"
@@ -755,6 +947,9 @@ Library {
       LimitOutput	      off
       UpperSaturationLimit    "inf"
       LowerSaturationLimit    "-inf"
+      WrapState		      off
+      WrappedStateUpperValue  "pi"
+      WrappedStateLowerValue  "-pi"
       ShowSaturationPort      off
       ShowStatePort	      off
       AbsoluteTolerance	      "auto"
@@ -783,11 +978,13 @@ Library {
       OutDataTypeStr	      "Inherit: auto"
       LockScale		      off
       BusOutputAsStruct	      off
+      Unit		      "inherit"
       PortDimensions	      "-1"
       VarSizeSig	      "Inherit"
       SampleTime	      "-1"
       SignalType	      "auto"
       SamplingMode	      "auto"
+      EnsureOutportIsVirtual  off
       SourceOfInitialOutputValue "Dialog"
       OutputWhenDisabled      "held"
       InitialOutput	      "[]"
@@ -816,11 +1013,14 @@ Library {
       Permissions	      "ReadWrite"
       PermitHierarchicalResolution "All"
       TreatAsAtomicUnit	      off
-      CheckFcnCallInpInsideContextMsg off
+      MinAlgLoopOccurrences   off
+      PropExecContextOutsideSubsystem off
       SystemSampleTime	      "-1"
+      RTWSystemCode	      "Auto"
       RTWFcnNameOpts	      "Auto"
       RTWFileNameOpts	      "Auto"
       FunctionInterfaceSpec   "void_void"
+      FunctionWithSeparateData off
       RTWMemSecFuncInitTerm   "Inherit from model"
       RTWMemSecFuncExecute    "Inherit from model"
       RTWMemSecDataConstants  "Inherit from model"
@@ -830,9 +1030,14 @@ Library {
       DataTypeOverride	      "UseLocalSettings"
       DataTypeOverrideAppliesTo	"AllNumericTypes"
       MinMaxOverflowLogging   "UseLocalSettings"
+      Opaque		      off
+      MaskHideContents	      off
       SFBlockType	      "NONE"
-      Variant		      off
       GeneratePreprocessorConditionals off
+      PropagateVariantConditions off
+      TreatAsGroupedWhenPropagatingVariantConditions on
+      ContentPreviewEnabled   off
+      IsWebBlock	      off
     }
     Block {
       BlockType		      Switch
@@ -863,8 +1068,8 @@ Library {
   }
   System {
     Name		    "pm_machines_library"
-    Location		    [-4, -4, 1284, 778]
-    Open		    off
+    Location		    [58, 108, 1509, 990]
+    Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
     ScreenColor		    "white"
@@ -877,7 +1082,7 @@ Library {
     ShowPageBoundaries	    off
     ZoomFactor		    "100"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "195"
+    SIDHighWatermark	    "229"
     Block {
       BlockType		      SubSystem
       Name		      "Angular Motion"
@@ -885,13 +1090,8 @@ Library {
       Ports		      [2, 3]
       Position		      [420, 62, 525, 168]
       ZOrder		      -1
-      MinAlgLoopOccurrences   off
-      PropExecContextOutsideSubsystem off
-      RTWSystemCode	      "Auto"
-      FunctionWithSeparateData off
-      Opaque		      off
       RequestExecContextInheritance off
-      MaskHideContents	      off
+      Variant		      off
       System {
 	Name			"Angular Motion"
 	Location		[404, 107, 907, 560]
@@ -991,40 +1191,48 @@ Library {
 	  IconDisplay		  "Port number"
 	}
 	Line {
+	  ZOrder		  1
 	  SrcBlock		  "Product"
 	  SrcPort		  1
 	  Points		  [20, 0]
 	  Branch {
+	    ZOrder		    2
 	    DstBlock		    "alpha"
 	    DstPort		    1
 	  }
 	  Branch {
+	    ZOrder		    3
 	    Points		    [0, -65]
 	    DstBlock		    "Acceleration \nIntegrator"
 	    DstPort		    1
 	  }
 	}
 	Line {
+	  ZOrder		  4
 	  SrcBlock		  "Velocity\nIntegrator"
 	  SrcPort		  1
 	  DstBlock		  "theta"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  5
 	  SrcBlock		  "Acceleration \nIntegrator"
 	  SrcPort		  1
 	  Points		  [10, 0]
 	  Branch {
+	    ZOrder		    6
 	    DstBlock		    "omega"
 	    DstPort		    1
 	  }
 	  Branch {
+	    ZOrder		    7
 	    Points		    [0, -65]
 	    DstBlock		    "Velocity\nIntegrator"
 	    DstPort		    1
 	  }
 	}
 	Line {
+	  ZOrder		  8
 	  SrcBlock		  "Torque"
 	  SrcPort		  1
 	  Points		  [90, 0; 0, 50]
@@ -1032,12 +1240,14 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  9
 	  SrcBlock		  "Moment of Inertia"
 	  SrcPort		  1
 	  DstBlock		  "Divide"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  10
 	  SrcBlock		  "Divide"
 	  SrcPort		  1
 	  DstBlock		  "Product"
@@ -1052,16 +1262,11 @@ Library {
       Ports		      [3, 0, 0, 0, 0, 3, 3]
       Position		      [60, 31, 220, 199]
       ZOrder		      -2
-      MinAlgLoopOccurrences   off
-      PropExecContextOutsideSubsystem off
-      RTWSystemCode	      "Auto"
-      FunctionWithSeparateData off
-      Opaque		      off
       RequestExecContextInheritance off
-      MaskHideContents	      off
+      Variant		      off
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		18
+	$ObjectID		21
 	$ClassName		"Simulink.Mask"
 	Type			"Controlled 3-Phase Voltage Source"
 	Description		"Controlled 3-Phase Voltage Source Mask"
@@ -1120,11 +1325,12 @@ Library {
 	  Ports			  [1, 0, 0, 0, 0, 1, 1]
 	  Position		  [230, 60, 275, 95]
 	  ZOrder		  -4
-	  LibraryVersion	  "1.2191"
+	  LibraryVersion	  "1.2729"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Electrical\nSources/Controlled Voltage Source"
 	  SourceType		  "Controlled Voltage Source"
+	  ContentPreviewEnabled	  off
 	  Initialize		  off
 	  Source_Type		  "AC"
 	  Amplitude		  "0"
@@ -1139,11 +1345,12 @@ Library {
 	  Ports			  [1, 0, 0, 0, 0, 1, 1]
 	  Position		  [230, 235, 275, 270]
 	  ZOrder		  -5
-	  LibraryVersion	  "1.2191"
+	  LibraryVersion	  "1.2729"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Electrical\nSources/Controlled Voltage Source"
 	  SourceType		  "Controlled Voltage Source"
+	  ContentPreviewEnabled	  off
 	  Initialize		  off
 	  Source_Type		  "AC"
 	  Amplitude		  "0"
@@ -1159,11 +1366,12 @@ Library {
 	  Position		  [230, 145, 275, 180]
 	  ZOrder		  -6
 	  ShowName		  off
-	  LibraryVersion	  "1.2191"
+	  LibraryVersion	  "1.2729"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Electrical\nSources/Controlled Voltage Source"
 	  SourceType		  "Controlled Voltage Source"
+	  ContentPreviewEnabled	  off
 	  Initialize		  off
 	  Source_Type		  "AC"
 	  Amplitude		  "0"
@@ -1248,6 +1456,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  1
 	  SrcBlock		  "A-"
 	  SrcPort		  RConn1
 	  DstBlock		  "Controlled Voltage Source A"
@@ -1255,6 +1464,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  2
 	  SrcBlock		  "Controlled Voltage Source A"
 	  SrcPort		  RConn1
 	  DstBlock		  "A+"
@@ -1262,6 +1472,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  3
 	  SrcBlock		  "C-"
 	  SrcPort		  RConn1
 	  DstBlock		  "Controlled Voltage Source C"
@@ -1269,6 +1480,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  4
 	  SrcBlock		  "Controlled Voltage Source C"
 	  SrcPort		  RConn1
 	  DstBlock		  "C+"
@@ -1276,6 +1488,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  5
 	  SrcBlock		  "B-"
 	  SrcPort		  RConn1
 	  DstBlock		  "Controlled Voltage Source1"
@@ -1283,12 +1496,14 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  6
 	  SrcBlock		  "Controlled Voltage Source1"
 	  SrcPort		  RConn1
 	  DstBlock		  "B+"
 	  DstPort		  RConn1
 	}
 	Line {
+	  ZOrder		  7
 	  SrcBlock		  "Set C"
 	  SrcPort		  1
 	  Points		  [35, 0; 0, 15]
@@ -1296,6 +1511,7 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  8
 	  SrcBlock		  "Set B"
 	  SrcPort		  1
 	  Points		  [35, 0; 0, 30]
@@ -1303,6 +1519,7 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  9
 	  SrcBlock		  "Set A"
 	  SrcPort		  1
 	  Points		  [0, 40]
@@ -1312,7 +1529,10 @@ Library {
 	Annotation {
 	  SID			  "172"
 	  Name			  "Controlled Voltage Source B"
-	  Position		  [247, 191]
+	  Position		  [184, 184, 310, 198]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -1
 	}
       }
@@ -1324,20 +1544,15 @@ Library {
       Ports		      [1, 1]
       Position		      [95, 550, 190, 650]
       ZOrder		      -3
-      MinAlgLoopOccurrences   off
-      PropExecContextOutsideSubsystem off
-      RTWSystemCode	      "Auto"
-      FunctionWithSeparateData off
-      Opaque		      off
       RequestExecContextInheritance off
-      MaskHideContents	      off
+      Variant		      off
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		19
+	$ObjectID		22
 	$ClassName		"Simulink.Mask"
 	Object {
 	  $PropName		  "Parameters"
-	  $ObjectID		  20
+	  $ObjectID		  23
 	  $ClassName		  "Simulink.MaskParameter"
 	  Type			  "popup"
 	  Array {
@@ -1356,7 +1571,7 @@ Library {
       System {
 	Name			"PM Measure To Simulink Measure"
 	Location		[-4, -4, 1284, 778]
-	Open			on
+	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
 	ScreenColor		"white"
@@ -1637,6 +1852,7 @@ Library {
 	  IconDisplay		  "Port number"
 	}
 	Line {
+	  ZOrder		  1
 	  Labels		  [0, 0]
 	  SrcBlock		  "Demux"
 	  SrcPort		  2
@@ -1645,12 +1861,14 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  2
 	  SrcBlock		  "In1"
 	  SrcPort		  1
 	  DstBlock		  "Demux"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  3
 	  SrcBlock		  "Demux"
 	  SrcPort		  4
 	  Points		  [530, 0; 0, 205]
@@ -1658,6 +1876,7 @@ Library {
 	  DstPort		  9
 	}
 	Line {
+	  ZOrder		  4
 	  SrcBlock		  "Demux"
 	  SrcPort		  6
 	  Points		  [74, 0; 0, 20; 97, 0; 0, 275; 474, 0; 0, -145]
@@ -1665,6 +1884,7 @@ Library {
 	  DstPort		  10
 	}
 	Line {
+	  ZOrder		  5
 	  SrcBlock		  "Mux"
 	  SrcPort		  1
 	  Points		  [0, 25]
@@ -1672,12 +1892,14 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  6
 	  SrcBlock		  "Demux"
 	  SrcPort		  1
 	  DstBlock		  "Terminator1"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  7
 	  SrcBlock		  "Demux"
 	  SrcPort		  9
 	  Points		  [124, 0; 0, 35]
@@ -1685,20 +1907,24 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  8
 	  SrcBlock		  "Demux"
 	  SrcPort		  10
 	  Points		  [335, 0; 0, -150]
 	  Branch {
+	    ZOrder		    9
 	    DstBlock		    "Stator Phase Currents (I) \nabc_to_dq0 Transformation"
 	    DstPort		    1
 	  }
 	  Branch {
+	    ZOrder		    10
 	    Points		    [0, -100; 300, 0; 0, -25]
 	    DstBlock		    "Mux"
 	    DstPort		    5
 	  }
 	}
 	Line {
+	  ZOrder		  11
 	  SrcBlock		  "Demux"
 	  SrcPort		  7
 	  Points		  [70, 0]
@@ -1706,25 +1932,30 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  12
 	  SrcBlock		  "Demux"
 	  SrcPort		  5
 	  Points		  [0, 25; 113, 0]
 	  Branch {
+	    ZOrder		    13
 	    Points		    [0, 67; 22, 0; 0, 278; 525, 0; 0, -125]
 	    DstBlock		    "Mux"
 	    DstPort		    11
 	  }
 	  Branch {
+	    ZOrder		    14
 	    Points		    [0, -55]
 	    DstBlock		    "Trigonometric\nFunction"
 	    DstPort		    1
 	  }
 	  Branch {
+	    ZOrder		    15
 	    DstBlock		    "Trigonometric\nFunction1"
 	    DstPort		    1
 	  }
 	}
 	Line {
+	  ZOrder		  16
 	  SrcBlock		  "Trigonometric\nFunction"
 	  SrcPort		  1
 	  Points		  [4, 0; 0, 15]
@@ -1732,6 +1963,7 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  17
 	  SrcBlock		  "Trigonometric\nFunction1"
 	  SrcPort		  1
 	  Points		  [4, 0; 0, -15]
@@ -1739,24 +1971,28 @@ Library {
 	  DstPort		  2
 	}
 	Line {
+	  ZOrder		  18
 	  SrcBlock		  "Flux (phi) abc_to_dq0\nTransformation"
 	  SrcPort		  1
 	  DstBlock		  "Demux1"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  19
 	  SrcBlock		  "Stator Phase Currents (I) \nabc_to_dq0 Transformation"
 	  SrcPort		  1
 	  DstBlock		  "Demux2"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  20
 	  SrcBlock		  "Stator Phase Voltages (I)\nabc_to_dq0 Transformation"
 	  SrcPort		  1
 	  DstBlock		  "Demux3"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  21
 	  SrcBlock		  "Constant"
 	  SrcPort		  1
 	  Points		  [10, 0]
@@ -1764,6 +2000,7 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  22
 	  SrcBlock		  "Constant3"
 	  SrcPort		  1
 	  Points		  [10, 0]
@@ -1771,6 +2008,7 @@ Library {
 	  DstPort		  4
 	}
 	Line {
+	  ZOrder		  23
 	  SrcBlock		  "Constant2"
 	  SrcPort		  1
 	  Points		  [10, 0]
@@ -1778,6 +2016,7 @@ Library {
 	  DstPort		  3
 	}
 	Line {
+	  ZOrder		  24
 	  SrcBlock		  "Constant1"
 	  SrcPort		  1
 	  Points		  [10, 0]
@@ -1785,6 +2024,7 @@ Library {
 	  DstPort		  2
 	}
 	Line {
+	  ZOrder		  25
 	  SrcBlock		  "Flip is dq"
 	  SrcPort		  1
 	  Points		  [15, 0; 0, -90]
@@ -1792,6 +2032,7 @@ Library {
 	  DstPort		  6
 	}
 	Line {
+	  ZOrder		  26
 	  SrcBlock		  "Demux2"
 	  SrcPort		  1
 	  Points		  [25, 0]
@@ -1799,12 +2040,14 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  27
 	  SrcBlock		  "Demux3"
 	  SrcPort		  1
 	  DstBlock		  "Flip vs dq"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  28
 	  SrcBlock		  "Flip vs dq"
 	  SrcPort		  1
 	  Points		  [30, 0; 0, -135]
@@ -1812,12 +2055,14 @@ Library {
 	  DstPort		  8
 	}
 	Line {
+	  ZOrder		  29
 	  SrcBlock		  "Demux1"
 	  SrcPort		  1
 	  DstBlock		  "Flip phi dq"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  30
 	  SrcBlock		  "Flip phi dq"
 	  SrcPort		  1
 	  Points		  [15, 0; 0, 290]
@@ -1825,6 +2070,7 @@ Library {
 	  DstPort		  7
 	}
 	Line {
+	  ZOrder		  31
 	  SrcBlock		  "Demux3"
 	  SrcPort		  2
 	  Points		  [10, 0; 0, 40]
@@ -1832,12 +2078,14 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  32
 	  SrcBlock		  "Demux1"
 	  SrcPort		  2
 	  DstBlock		  "Terminator4"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  33
 	  SrcBlock		  "Demux2"
 	  SrcPort		  2
 	  Points		  [0, 15]
@@ -1845,18 +2093,21 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  34
 	  SrcBlock		  "Demux"
 	  SrcPort		  3
 	  DstBlock		  "Terminator6"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  35
 	  SrcBlock		  "Zero sin_cos"
 	  SrcPort		  1
 	  DstBlock		  "Switch"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  36
 	  SrcBlock		  "Mux2"
 	  SrcPort		  1
 	  Points		  [7, 0; 0, -95]
@@ -1864,6 +2115,7 @@ Library {
 	  DstPort		  3
 	}
 	Line {
+	  ZOrder		  37
 	  SrcBlock		  "ref_type"
 	  SrcPort		  1
 	  Points		  [1, 0; 0, -20]
@@ -1871,28 +2123,34 @@ Library {
 	  DstPort		  2
 	}
 	Line {
+	  ZOrder		  38
 	  SrcBlock		  "Switch"
 	  SrcPort		  1
 	  Points		  [10, 0]
 	  Branch {
+	    ZOrder		    39
 	    Points		    [0, 255]
 	    Branch {
+	      ZOrder		      40
 	      DstBlock		      "Stator Phase Currents (I) \nabc_to_dq0 Transformation"
 	      DstPort		      2
 	    }
 	    Branch {
+	      ZOrder		      41
 	      Points		      [0, 135]
 	      DstBlock		      "Stator Phase Voltages (I)\nabc_to_dq0 Transformation"
 	      DstPort		      2
 	    }
 	  }
 	  Branch {
+	    ZOrder		    42
 	    Points		    [0, -80]
 	    DstBlock		    "Flux (phi) abc_to_dq0\nTransformation"
 	    DstPort		    2
 	  }
 	}
 	Line {
+	  ZOrder		  43
 	  SrcBlock		  "Demux"
 	  SrcPort		  8
 	  DstBlock		  "Terminator7"
@@ -1901,126 +2159,190 @@ Library {
 	Annotation {
 	  SID			  "195"
 	  Name			  "RMS Flux"
-	  Position		  [114, 451]
+	  Position		  [92, 444, 137, 458]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
+	  ZOrder		  -1
 	}
 	Annotation {
 	  SID			  "173"
 	  Name			  "Electrical Freq (rad/s)"
-	  Position		  [134, 204]
+	  Position		  [86, 197, 183, 211]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -1
 	}
 	Annotation {
 	  SID			  "174"
 	  Name			  "Stator Flux Linkage (Wb)"
-	  Position		  [143, 157]
+	  Position		  [87, 150, 199, 164]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -2
 	}
 	Annotation {
 	  SID			  "175"
 	  Name			  "Stator Currents (Amps)"
-	  Position		  [145, 551]
+	  Position		  [93, 544, 197, 558]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -3
 	}
 	Annotation {
 	  SID			  "176"
 	  Name			  "Stator Voltages (V)"
-	  Position		  [136, 503]
+	  Position		  [94, 496, 179, 510]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -4
 	}
 	Annotation {
 	  SID			  "177"
 	  Name			  "Omega"
-	  Position		  [104, 273]
+	  Position		  [87, 266, 121, 280]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -5
 	}
 	Annotation {
 	  SID			  "178"
 	  Name			  "Electrical Angle"
-	  Position		  [125, 325]
+	  Position		  [91, 318, 160, 332]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -6
 	}
 	Annotation {
 	  SID			  "179"
 	  Name			  "Torque"
-	  Position		  [108, 381]
+	  Position		  [92, 374, 124, 388]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -7
 	}
 	Annotation {
 	  SID			  "180"
 	  Name			  "Torque"
-	  Position		  [798, 516]
+	  Position		  [782, 509, 814, 523]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -8
 	}
 	Annotation {
 	  SID			  "181"
 	  Name			  "Omega"
-	  Position		  [794, 468]
+	  Position		  [777, 461, 811, 475]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -9
 	}
 	Annotation {
 	  SID			  "182"
 	  Name			  "vs_qd"
-	  Position		  [796, 425]
+	  Position		  [782, 418, 810, 432]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -10
 	}
 	Annotation {
 	  SID			  "183"
 	  Name			  "is qd"
-	  Position		  [798, 331]
+	  Position		  [787, 324, 810, 338]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -11
 	}
 	Annotation {
 	  SID			  "184"
 	  Name			  "phi qd"
-	  Position		  [795, 383]
+	  Position		  [781, 376, 810, 390]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -12
 	}
 	Annotation {
 	  SID			  "185"
 	  Name			  "is abc"
-	  Position		  [793, 288]
+	  Position		  [779, 281, 807, 295]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -13
 	}
 	Annotation {
 	  SID			  "186"
 	  Name			  "ir abc"
-	  Position		  [793, 113]
+	  Position		  [780, 106, 806, 120]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -14
 	}
 	Annotation {
 	  SID			  "187"
 	  Name			  "ir qd"
-	  Position		  [791, 152]
+	  Position		  [781, 145, 802, 159]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -15
 	}
 	Annotation {
 	  SID			  "188"
 	  Name			  "phir qd"
-	  Position		  [797, 198]
+	  Position		  [781, 191, 813, 205]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -16
 	}
 	Annotation {
 	  SID			  "189"
 	  Name			  "vr qd"
-	  Position		  [792, 249]
+	  Position		  [780, 242, 804, 256]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -17
 	}
 	Annotation {
 	  SID			  "190"
 	  Name			  "Stator Phase Resistances"
-	  Position		  [145, 98]
+	  Position		  [87, 91, 203, 105]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -18
 	}
 	Annotation {
 	  SID			  "191"
 	  Name			  "Inertia"
-	  Position		  [107, 404]
+	  Position		  [93, 397, 122, 411]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -19
 	}
 	Annotation {
 	  SID			  "192"
 	  Name			  "Electrical Angle"
-	  Position		  [815, 560]
+	  Position		  [781, 553, 850, 567]
+	  InternalMargins	  [0, 0, 0, 0]
+	  FixedHeight		  off
+	  FixedWidth		  off
 	  ZOrder		  -20
 	}
       }
@@ -2032,24 +2354,161 @@ Library {
       Ports		      [1, 2, 0, 0, 0, 0, 3]
       Position		      [370, 282, 575, 478]
       ZOrder		      -4
-      MinAlgLoopOccurrences   off
-      PropExecContextOutsideSubsystem off
-      RTWSystemCode	      "Auto"
-      FunctionWithSeparateData off
-      Opaque		      off
       RequestExecContextInheritance off
-      MaskHideContents	      off
+      Variant		      off
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		21
+	$ObjectID		24
 	$ClassName		"Simulink.Mask"
+	Initialization		"data_ready = false;\n\nif design_data_type_popup == 1\n    \n    if ~(strcmp(file_name_edit, 'Enter "
+	"file path here') ...\n            || isempty(file_name_edit))\n\n        % get the file name\n        design_data_fil"
+	"e = file_name_edit;\n        \n        % check it exists\n        if exist (design_data_file, 'file') == 2\n         "
+	"   % check if right data is in file\n            try\n                load (design_data_file, 'design', 'simoptions')"
+	";\n            catch ME\n                error ('RENEWNET:rotgen_three_phase_sfcn:badfile', ...\n                'Loa"
+	"ding design data from file\\n\\n %s\\n\\nfailed with the following error message:\\n\\n\"%s\"\\n\\n', ...\n          "
+	"          design_data_file, ME.message);\n            end\n            \n            data_ready = true;\n\n        el"
+	"se\n            error ('RENEWNET:rotgen_three_phase_sfcn:badfile', ...\n                'Design data file\\n: %s\\ndo"
+	"es not appear to exist', design_data_file);\n        end\n    \n    end\n\nelseif design_data_type_popup == 2\n    % "
+	"get the variable names\n    design = design_workspace_edit;\n    simoptions = simoptions_workspace_edit;\n    \n    i"
+	"f ~isempty (design) && ~isempty (simoptions)\n        data_ready = true;\n    end\nelse\n    error ('RENEWNET:rotgen_"
+	"three_phase_sfcn:baddatatype', ...\n        'Invalid Data Type popup value')\nend\n\nif data_ready\n    \n    % do so"
+	"me checks on the data\n    if design.Phases ~= 3\n        error('Design must have three Phases.')\n    end\n\n    if "
+	"~isfield(design, 'slm_fluxlinkage')\n        error('Design data does not appear to be complete (no flux linage info)'"
+	")\n    end\n\n    blk = gcb;                                         \n    % set_param([gcb, '/adder1/Gain'],'Gain','"
+	"A')\n\n    set_param([blk, '/Windings'], 'SelfImpedance1', sprintf('[%f %f]', design.PhaseResistance(1), design.Phase"
+	"Inductance(1)));\n    set_param([blk, '/Windings'], 'SelfImpedance2', sprintf('[%f %f]', design.PhaseResistance(2), d"
+	"esign.PhaseInductance(1)));\n    set_param([blk, '/Windings'], 'SelfImpedance3', sprintf('[%f %f]', design.PhaseResis"
+	"tance(3), design.PhaseInductance(1)));\n\n    if numel(design.PhaseInductance) == 2\n        set_param([blk, '/Windin"
+	"gs'], 'MutualImpedance', sprintf('[0 %f]', design.PhaseInductance(2)));\n    else\n        set_param([blk, '/Windings"
+	"'], 'MutualImpedance', '[0 0]');\n    end\n    \n    % put the data into UserData for the block\n    set_param(blk, '"
+	"UserData', struct ('design', design, ...\n                                       'simoptions', simoptions, ...\n     "
+	"                                  'data_ready', true));\n\nend"
+	SelfModifiable		"on"
 	Display			"port_label('input', 1, 'Omega')\nport_label('output', 1, 'Torque')\nport_label('output', 2, 'Meas')\nport_"
 	"label('rconn', 1, 'Phase A')\nport_label('rconn', 2, 'Phase B')\nport_label('rconn', 3, 'Phase C')"
+	Array {
+	  Type			  "Simulink.MaskParameter"
+	  Dimension		  4
+	  Object {
+	    $ObjectID		    25
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Rotary PM Machine S-Function/design_data_type_popup"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "design_data_type_popup"
+	    Prompt		    "Design Data Type"
+	    Value		    "From File"
+	    Tunable		    "off"
+	    Callback		    "blk = gcb;\n\n% Get the mask parameter values. This is a cell\n%   array of character vectors.\nma"
+	    "skStr = get_param(blk,'design_data_type_popup');\n\n% The pop-up menu is the first mask parameter.\n%   Check the"
+	    " value selected in the pop-up \nif strcmp(maskStr,'From File')\n\n    % Make file name box visible only\n    set_"
+	    "param(gcb,'MaskEnables',{'on';'on';'off';'off'});\n\nelse\n\n    % Make variable name boxes visible only\n    set"
+	    "_param(gcb,'MaskEnables',{'on';'off';'on';'on'});\n    \n    % Set the character vector in the Values field equal"
+	    " to the\n    % character vector selected in the Gain pop-up menu.\n\n%     %maskStr{2}=maskStr{1};\n%     set_par"
+	    "am(gcb,'editvalue',maskStr);\n    \nend"
+	  }
+	  Object {
+	    $ObjectID		    26
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Rotary PM Machine S-Function/file_name_edit"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "file_name_edit"
+	    Prompt		    "File containing design and Simoptions data structures"
+	    Value		    "Enter file path here"
+	    Evaluate		    "off"
+	    Tunable		    "off"
+	  }
+	  Object {
+	    $ObjectID		    27
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Rotary PM Machine S-Function/design_workspace_edit"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "design_workspace_edit"
+	    Prompt		    "Design structure variable in workspace"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  Object {
+	    $ObjectID		    28
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Rotary PM Machine S-Function/simoptions_workspace_edit"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "simoptions_workspace_edit"
+	    Prompt		    "Simoptions structure variable name"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  PropName		  "Parameters"
+	}
+	Array {
+	  Type			  "Simulink.dialog.Group"
+	  Dimension		  2
+	  Object {
+	    $ObjectID		    29
+	    Prompt		    "Three Phase Rotary PM Machine"
+	    Object {
+	      $PropName		      "DialogControls"
+	      $ObjectID		      30
+	      $ClassName	      "Simulink.dialog.Text"
+	      Prompt		      "Three phase rotary permanent magnet machine."
+	      Name		      "DescTextVar"
+	    }
+	    Name		    "DescGroupVar"
+	  }
+	  Object {
+	    $ObjectID		    31
+	    Prompt		    "Simulink:studio:ToolBarParametersMenu"
+	    Array {
+	      Type		      "Simulink.dialog.parameter.Control"
+	      Dimension		      4
+	      Object {
+		$ObjectID		32
+		$ClassName		"Simulink.dialog.parameter.Popup"
+		Name			"design_data_type_popup"
+	      }
+	      Object {
+		$ObjectID		33
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"file_name_edit"
+	      }
+	      Object {
+		$ObjectID		34
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"design_workspace_edit"
+	      }
+	      Object {
+		$ObjectID		35
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"simoptions_workspace_edit"
+	      }
+	      PropName		      "DialogControls"
+	    }
+	    Name		    "ParameterGroupVar"
+	  }
+	  PropName		  "DialogControls"
+	}
       }
       System {
 	Name			"Three Phase Rotary PM Machine"
-	Location		[120, 100, 1173, 708]
-	Open			off
+	Location		[58, 108, 1509, 990]
+	Open			on
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
 	ScreenColor		"white"
@@ -2061,10 +2520,11 @@ Library {
 	TiledPageScale		1
 	ShowPageBoundaries	off
 	ZoomFactor		"100"
+	SIDHighWatermark	"229"
 	Block {
 	  BlockType		  Inport
 	  Name			  "omega"
-	  SID			  "17"
+	  SID			  "16:213"
 	  Position		  [25, 73, 55, 87]
 	  ZOrder		  -1
 	  IconDisplay		  "Port number"
@@ -2072,18 +2532,19 @@ Library {
 	Block {
 	  BlockType		  Reference
 	  Name			  "Controlled 3-Phase Voltage Source"
-	  SID			  "18"
+	  SID			  "16:214"
 	  Ports			  [3, 0, 0, 0, 0, 3, 3]
 	  Position		  [485, 154, 630, 301]
 	  ZOrder		  -2
-	  LibraryVersion	  "1.58"
+	  LibraryVersion	  "1.70"
 	  SourceBlock		  "pm_machines_library/Controlled 3-Phase Voltage Source"
 	  SourceType		  "Controlled 3-Phase Voltage Source"
+	  ContentPreviewEnabled	  off
 	}
 	Block {
 	  BlockType		  Demux
 	  Name			  "Demux"
-	  SID			  "19"
+	  SID			  "16:215"
 	  Ports			  [1, 3]
 	  Position		  [105, 100, 120, 200]
 	  ZOrder		  -3
@@ -2094,7 +2555,7 @@ Library {
 	Block {
 	  BlockType		  From
 	  Name			  "From"
-	  SID			  "20"
+	  SID			  "16:216"
 	  Position		  [40, 136, 80, 164]
 	  ZOrder		  -4
 	  GotoTag		  "Iabc"
@@ -2102,7 +2563,7 @@ Library {
 	Block {
 	  BlockType		  From
 	  Name			  "From Measurement Iabc"
-	  SID			  "45"
+	  SID			  "16:217"
 	  Position		  [285, 330, 330, 350]
 	  ZOrder		  -5
 	  BlockMirror		  on
@@ -2111,7 +2572,7 @@ Library {
 	Block {
 	  BlockType		  From
 	  Name			  "From Measurement Vabc"
-	  SID			  "44"
+	  SID			  "16:218"
 	  Position		  [285, 286, 325, 304]
 	  ZOrder		  -6
 	  BlockMirror		  on
@@ -2120,14 +2581,14 @@ Library {
 	Block {
 	  BlockType		  Reference
 	  Name			  "Ground"
-	  SID			  "21"
+	  SID			  "16:219"
 	  Ports			  [0, 0, 0, 0, 0, 1]
 	  Position		  [404, 325, 426, 350]
 	  ZOrder		  -7
 	  BlockRotation		  270
 	  BlockMirror		  on
 	  ShowName		  off
-	  LibraryVersion	  "1.2191"
+	  LibraryVersion	  "1.2729"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Elements/Ground"
@@ -2137,7 +2598,7 @@ Library {
 	Block {
 	  BlockType		  Integrator
 	  Name			  "Integrator"
-	  SID			  "22"
+	  SID			  "16:220"
 	  Ports			  [1, 1]
 	  Position		  [100, 30, 130, 60]
 	  ZOrder		  -8
@@ -2145,7 +2606,7 @@ Library {
 	Block {
 	  BlockType		  Mux
 	  Name			  "Mux"
-	  SID			  "43"
+	  SID			  "16:221"
 	  Ports			  [3, 1]
 	  Position		  [200, 223, 210, 367]
 	  ZOrder		  -9
@@ -2157,26 +2618,31 @@ Library {
 	Block {
 	  BlockType		  Reference
 	  Name			  "Three Phase Rotary PM Machine S-Function"
-	  SID			  "23"
+	  SID			  "16:222"
 	  Ports			  [5, 5]
 	  Position		  [155, 27, 340, 203]
 	  ZOrder		  -10
-	  LibraryVersion	  "1.58"
+	  LibraryVersion	  "1.70"
 	  SourceBlock		  "pm_machines_library/Three Phase Rotary PM Machine S-Function"
 	  SourceType		  ""
+	  design_data_type_popup  "From File"
+	  file_name_edit	  "Enter file path here"
+	  design_workspace_edit	  "design_workspace_edit"
+	  simoptions_workspace_edit "simoptions_workspace_edit"
 	}
 	Block {
 	  BlockType		  Reference
 	  Name			  "Three-Phase\nV-I Measurement"
-	  SID			  "24"
-	  Ports			  [0, 2, 0, 0, 0, 3, 3]
+	  SID			  "16:223"
+	  Ports			  [0, 0, 0, 0, 0, 3, 3]
 	  Position		  [865, 157, 925, 303]
 	  ZOrder		  -11
-	  LibraryVersion	  "1.2191"
+	  LibraryVersion	  "1.2729"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Measurements/Three-Phase\nV-I Measurement"
 	  SourceType		  "Three-Phase VI Measurement"
+	  ContentPreviewEnabled	  off
 	  VoltageMeasurement	  "phase-to-ground"
 	  SetLabelV		  on
 	  LabelV		  "Vabc"
@@ -2195,12 +2661,12 @@ Library {
 	Block {
 	  BlockType		  Reference
 	  Name			  "Windings"
-	  SID			  "25"
+	  SID			  "16:224"
 	  Ports			  [0, 0, 0, 0, 0, 3, 3]
 	  Position		  [655, 156, 840, 304]
 	  ZOrder		  -12
 	  AttributesFormatString  "\\n"
-	  LibraryVersion	  "1.2191"
+	  LibraryVersion	  "1.2729"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib/Elements/Mutual Inductance"
@@ -2209,11 +2675,11 @@ Library {
 	  RConnTagsString	  "A|B|C"
 	  TypeOfMutual		  "Two or three windings with equal mutual terms"
 	  NumberOfWindings	  "3"
-	  SelfImpedance1	  "[1.1 1.1e-03]"
-	  SelfImpedance2	  "[ 1.1 1.1e-03]"
+	  SelfImpedance1	  "[218.993012 0.000104]"
+	  SelfImpedance2	  "[218.993012 0.000104]"
 	  ThreeWindings		  on
-	  SelfImpedance3	  "[ 1.1 1.1e-03]"
-	  MutualImpedance	  "[1.0 1.0e-03]"
+	  SelfImpedance3	  "[218.993012 0.000104]"
+	  MutualImpedance	  "[0 0.000000]"
 	  InductanceMatrix	  "[1.0 0.9  0.9 ;  0.9 1.0  0.9;  0.9 0.9 1.0 ] * 1e-3"
 	  ResistanceMatrix	  "[1.0 0.9  0.9 ;  0.9 1.0  0.9;  0.9 0.9 1.0 ] "
 	  Measurements		  "None"
@@ -2221,7 +2687,7 @@ Library {
 	Block {
 	  BlockType		  PMIOPort
 	  Name			  "Conn1"
-	  SID			  "26"
+	  SID			  "16:225"
 	  Position		  [950, 173, 980, 187]
 	  ZOrder		  -13
 	  BlockMirror		  on
@@ -2231,7 +2697,7 @@ Library {
 	Block {
 	  BlockType		  PMIOPort
 	  Name			  "Conn2"
-	  SID			  "27"
+	  SID			  "16:226"
 	  Position		  [950, 223, 980, 237]
 	  ZOrder		  -14
 	  BlockMirror		  on
@@ -2241,7 +2707,7 @@ Library {
 	Block {
 	  BlockType		  PMIOPort
 	  Name			  "Conn3"
-	  SID			  "28"
+	  SID			  "16:227"
 	  Position		  [950, 273, 980, 287]
 	  ZOrder		  -15
 	  BlockMirror		  on
@@ -2251,7 +2717,7 @@ Library {
 	Block {
 	  BlockType		  Outport
 	  Name			  "Out1"
-	  SID			  "29"
+	  SID			  "16:228"
 	  Position		  [365, 38, 395, 52]
 	  ZOrder		  -16
 	  IconDisplay		  "Port number"
@@ -2259,7 +2725,7 @@ Library {
 	Block {
 	  BlockType		  Outport
 	  Name			  "Out2"
-	  SID			  "30"
+	  SID			  "16:229"
 	  Position		  [95, 288, 125, 302]
 	  ZOrder		  -17
 	  BlockMirror		  on
@@ -2268,6 +2734,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  1
 	  Points		  [415, 290; 55, 0]
 	  DstBlock		  "Controlled 3-Phase Voltage Source"
 	  DstPort		  LConn3
@@ -2294,6 +2761,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  6
 	  SrcBlock		  "Windings"
 	  SrcPort		  LConn1
 	  DstBlock		  "Controlled 3-Phase Voltage Source"
@@ -2301,6 +2769,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  7
 	  SrcBlock		  "Windings"
 	  SrcPort		  LConn2
 	  DstBlock		  "Controlled 3-Phase Voltage Source"
@@ -2308,6 +2777,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  8
 	  SrcBlock		  "Windings"
 	  SrcPort		  LConn3
 	  DstBlock		  "Controlled 3-Phase Voltage Source"
@@ -2315,6 +2785,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  9
 	  SrcBlock		  "Windings"
 	  SrcPort		  RConn1
 	  DstBlock		  "Three-Phase\nV-I Measurement"
@@ -2322,6 +2793,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  10
 	  SrcBlock		  "Windings"
 	  SrcPort		  RConn2
 	  DstBlock		  "Three-Phase\nV-I Measurement"
@@ -2329,36 +2801,42 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  11
 	  SrcBlock		  "Windings"
 	  SrcPort		  RConn3
 	  DstBlock		  "Three-Phase\nV-I Measurement"
 	  DstPort		  LConn3
 	}
 	Line {
+	  ZOrder		  12
 	  SrcBlock		  "Demux"
 	  SrcPort		  3
 	  DstBlock		  "Three Phase Rotary PM Machine S-Function"
 	  DstPort		  5
 	}
 	Line {
+	  ZOrder		  13
 	  SrcBlock		  "Demux"
 	  SrcPort		  2
 	  DstBlock		  "Three Phase Rotary PM Machine S-Function"
 	  DstPort		  4
 	}
 	Line {
+	  ZOrder		  14
 	  SrcBlock		  "Demux"
 	  SrcPort		  1
 	  DstBlock		  "Three Phase Rotary PM Machine S-Function"
 	  DstPort		  3
 	}
 	Line {
+	  ZOrder		  15
 	  SrcBlock		  "From"
 	  SrcPort		  1
 	  DstBlock		  "Demux"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  16
 	  SrcBlock		  "Three Phase Rotary PM Machine S-Function"
 	  SrcPort		  4
 	  Points		  [85, 0; 0, 65]
@@ -2366,6 +2844,7 @@ Library {
 	  DstPort		  3
 	}
 	Line {
+	  ZOrder		  17
 	  SrcBlock		  "Three Phase Rotary PM Machine S-Function"
 	  SrcPort		  3
 	  Points		  [100, 0; 0, 75]
@@ -2373,6 +2852,7 @@ Library {
 	  DstPort		  2
 	}
 	Line {
+	  ZOrder		  18
 	  SrcBlock		  "Three Phase Rotary PM Machine S-Function"
 	  SrcPort		  2
 	  Points		  [115, 0; 0, 85]
@@ -2380,26 +2860,31 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  19
 	  SrcBlock		  "Integrator"
 	  SrcPort		  1
 	  DstBlock		  "Three Phase Rotary PM Machine S-Function"
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  20
 	  SrcBlock		  "omega"
 	  SrcPort		  1
 	  Points		  [10, 0]
 	  Branch {
+	    ZOrder		    21
 	    DstBlock		    "Three Phase Rotary PM Machine S-Function"
 	    DstPort		    2
 	  }
 	  Branch {
+	    ZOrder		    22
 	    Points		    [0, -35]
 	    DstBlock		    "Integrator"
 	    DstPort		    1
 	  }
 	}
 	Line {
+	  ZOrder		  23
 	  SrcBlock		  "Three Phase Rotary PM Machine S-Function"
 	  SrcPort		  1
 	  DstBlock		  "Out1"
@@ -2407,6 +2892,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  24
 	  SrcBlock		  "Conn1"
 	  SrcPort		  RConn1
 	  DstBlock		  "Three-Phase\nV-I Measurement"
@@ -2414,6 +2900,7 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  25
 	  SrcBlock		  "Conn2"
 	  SrcPort		  RConn1
 	  DstBlock		  "Three-Phase\nV-I Measurement"
@@ -2421,12 +2908,14 @@ Library {
 	}
 	Line {
 	  LineType		  "Connection"
+	  ZOrder		  26
 	  SrcBlock		  "Conn3"
 	  SrcPort		  RConn1
 	  DstBlock		  "Three-Phase\nV-I Measurement"
 	  DstPort		  RConn3
 	}
 	Line {
+	  ZOrder		  27
 	  SrcBlock		  "Three Phase Rotary PM Machine S-Function"
 	  SrcPort		  5
 	  Points		  [10, 0; 0, 65]
@@ -2434,18 +2923,21 @@ Library {
 	  DstPort		  1
 	}
 	Line {
+	  ZOrder		  28
 	  SrcBlock		  "From Measurement Vabc"
 	  SrcPort		  1
 	  DstBlock		  "Mux"
 	  DstPort		  2
 	}
 	Line {
+	  ZOrder		  29
 	  SrcBlock		  "From Measurement Iabc"
 	  SrcPort		  1
 	  DstBlock		  "Mux"
 	  DstPort		  3
 	}
 	Line {
+	  ZOrder		  30
 	  SrcBlock		  "Mux"
 	  SrcPort		  1
 	  DstBlock		  "Out2"
@@ -2463,12 +2955,115 @@ Library {
       FunctionName	      "rotgen_three_phase_sfcn"
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		22
+	$ObjectID		36
 	$ClassName		"Simulink.Mask"
 	Display			"port_label('input', 1, 'theta')\nport_label('input', 2, 'omega')\nport_label('input', 3, 'Phase A Current'"
 	")\nport_label('input', 4, 'Phase B Current')\nport_label('input', 5, 'Phase C Current')\nport_label('output', 1, 'Tor"
 	"que')\nport_label('output', 2, 'Phase A EMF')\nport_label('output', 3, 'Phase B EMF')\nport_label('output', 4, 'Phase"
 	" C EMF')\nport_label('output', 5, 'Meas')"
+	Array {
+	  Type			  "Simulink.MaskParameter"
+	  Dimension		  4
+	  Object {
+	    $ObjectID		    37
+	    Type		    "popup"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      2
+	      Cell		      "From File"
+	      Cell		      "From Workspace"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "design_data_type_popup"
+	    Prompt		    "Design Data Type"
+	    Value		    "From FIle"
+	    Tunable		    "off"
+	    Callback		    "blk = gcb;\n\n% Get the mask parameter values. This is a cell\n%   array of character vectors.\nma"
+	    "skStr = get_param(blk,'design_data_type_popup');\n\n% The pop-up menu is the first mask parameter.\n%   Check the"
+	    " value selected in the pop-up \nif strcmp(maskStr,'From File')\n\n    % Make file name box visible only\n    set_"
+	    "param(gcb,'MaskEnables',{'on';'on';'off';'off'});\n\nelse\n\n    % Make variable name boxes visible only\n    set"
+	    "_param(gcb,'MaskEnables',{'on';'off';'on';'on'});\n    \n    % Set the character vector in the Values field equal"
+	    " to the\n    % character vector selected in the Gain pop-up menu.\n\n%     %maskStr{2}=maskStr{1};\n%     set_par"
+	    "am(gcb,'editvalue',maskStr);\n    \nend"
+	  }
+	  Object {
+	    $ObjectID		    38
+	    Type		    "edit"
+	    Name		    "file_name_edit"
+	    Prompt		    "File containing design and Simoptions data structures"
+	    Value		    "Enter file path here"
+	    Evaluate		    "off"
+	    Tunable		    "off"
+	  }
+	  Object {
+	    $ObjectID		    39
+	    Type		    "edit"
+	    Name		    "design_workspace_edit"
+	    Prompt		    "Design structure variable in workspace"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  Object {
+	    $ObjectID		    40
+	    Type		    "edit"
+	    Name		    "simoptions_workspace_edit"
+	    Prompt		    "Simoptions structure variable name"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  PropName		  "Parameters"
+	}
+	Array {
+	  Type			  "Simulink.dialog.Group"
+	  Dimension		  2
+	  Object {
+	    $ObjectID		    41
+	    Prompt		    "Three Phase Rotary PM Machine S-Function"
+	    Object {
+	      $PropName		      "DialogControls"
+	      $ObjectID		      42
+	      $ClassName	      "Simulink.dialog.Text"
+	      Prompt		      "Block for simulation of a three phase rotary permanent magnet machine based on a Level-2 S-Funct"
+	      "ion. This is a low level block, used in the higher-level 'Three Phase Rotary PM Machine' block which is intende"
+	      "d for users."
+	      Name		      "DescTextVar"
+	    }
+	    Name		    "DescGroupVar"
+	  }
+	  Object {
+	    $ObjectID		    43
+	    Prompt		    "Simulink:studio:ToolBarParametersMenu"
+	    Array {
+	      Type		      "Simulink.dialog.parameter.Control"
+	      Dimension		      4
+	      Object {
+		$ObjectID		44
+		$ClassName		"Simulink.dialog.parameter.Popup"
+		Name			"design_data_type_popup"
+	      }
+	      Object {
+		$ObjectID		45
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"file_name_edit"
+	      }
+	      Object {
+		$ObjectID		46
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"design_workspace_edit"
+	      }
+	      Object {
+		$ObjectID		47
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"simoptions_workspace_edit"
+	      }
+	      PropName		      "DialogControls"
+	    }
+	    Name		    "ParameterGroupVar"
+	  }
+	  PropName		  "DialogControls"
+	}
       }
     }
   }

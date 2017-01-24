@@ -101,7 +101,7 @@ function setup(block)
 
     % Register all relevant block methods
 %     block.RegBlockMethod('CheckParameters',      @CheckPrms);
-%     block.RegBlockMethod('Start', @Start);
+    block.RegBlockMethod('Start', @Start);
     block.RegBlockMethod('Outputs', @Outputs);
 %     block.RegBlockMethod('Derivatives', @Derivatives);
     block.RegBlockMethod('Terminate', @Terminate);
@@ -110,24 +110,65 @@ function setup(block)
     
 end
 
-% function Start(block)
-% % check and initialises block just prior to simulation
-% 
-%     % get the UserData for the block
-%     data = get(block.BlockHandle, 'UserData');
-%     
-%     if isempty(data) || ~isfield(data, 'design') || ~isfield(data, 'simoptions')
-%         error('PM machine design and simoptions structure not both present in UserData.')
-%     end
-%     
-%     if data.design.Phases ~= 3
-%         error('Design must have three Phases.')
-%     end
-%     
-%     if ~isfield(data.design, 'slm_fluxlinkage')
-%         error('Design data does not appear to be complete (no flux linage info)')
-%     end
-%     
+function Start(block)
+% check and initialises block just prior to simulation
+
+    % get the UserData for the block
+    data = get (block.BlockHandle, 'UserData');
+    
+    if isempty(data)
+        % get the data from the parameters
+
+        % get the value of the drop down to see if we are getting design data
+        % from file or workspace
+        file_or_workspace = block.DialogPrm(1).Data;
+
+        if strcmp (file_or_workspace, 'From File')
+
+            % get the file name
+            design_data_file = block.DialogPrm(2).Data;
+
+            % check it exists
+            if exist (design_data_file, 'file')
+                % check if right data is in file
+                try
+                    load ('design_data_file', 'design', 'simoptions');
+                catch ME
+                    error ('RENEWNET:rotgen_three_phase_sfcn:badfile', ...
+                    'Loading design data from file\n: %s\nfailed with the following error message:\n"%s"\n', ...
+                        design_data_file, ME.message);
+                end
+
+            else
+                error ('RENEWNET:rotgen_three_phase_sfcn:badfile', ...
+                    'Design data file\n: %s\ndoes not appear to exist', design_data_file);
+            end
+
+        elseif strcmp (file_or_workspace, 'From Workspace')
+            % get the variable names 
+            design = block.DialogPrm(3).Data;
+            simoptions = block.DialogPrm(4).Data;
+        else
+            error ('RENEWNET:rotgen_three_phase_sfcn:baddatatype', ...
+                'Invalid Data Type popup value')
+        end
+
+        % do some checks on the data
+
+        if design.Phases ~= 3
+            error('Design must have three Phases.')
+        end
+
+        if ~isfield(design, 'slm_fluxlinkage')
+            error('Design data does not appear to be complete (no flux linage info)')
+        end
+
+        % put the data into UserData for the block
+        set(block.BlockHandle, 'UserData', struct ('design', design, ...
+                                                   'simoptions', simoptions))
+                                           
+    end
+    
 %     % now check if we are in a Three Phase PM Machine Block, and if so, set
 %     % the windings impedances
 %     parent_block = get(block.BlockHandle, 'Parent');
@@ -164,8 +205,8 @@ end
 %         set_param(gcs, 'SimulationCommand', 'continue');
 %     
 %     end
-% 
-% end
+
+end
 
 function SetInputPortSamplingMode(block, idx, fd)
 % Set the port sampling modes
@@ -193,11 +234,11 @@ function Outputs(block)
     data = get(block.BlockHandle, 'UserData');
 
     % get the simulation data from the input ports
-    theta             = block.InputPort(1).Data;
-    omega             = block.InputPort(2).Data;
-    phasecurrent(1)   = block.InputPort(3).Data;
-    phasecurrent(2)   = block.InputPort(4).Data;
-    phasecurrent(3)   = block.InputPort(5).Data;
+    theta               = block.InputPort(1).Data;
+    omega               = block.InputPort(2).Data;
+    phasecurrent(1,1)   = block.InputPort(3).Data;
+    phasecurrent(2,1)   = block.InputPort(4).Data;
+    phasecurrent(3,1)   = block.InputPort(5).Data;
 
     [EMF, torque, flux, data.design] = rotgensfcn_common(data.design, ...
                                       data.simoptions,...
