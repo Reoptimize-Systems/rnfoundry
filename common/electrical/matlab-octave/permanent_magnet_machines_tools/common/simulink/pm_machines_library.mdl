@@ -23,7 +23,7 @@ Library {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [58.0, 108.0, 1451.0, 882.0]
+      Location		      [238.0, 87.0, 1451.0, 882.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -32,7 +32,7 @@ Library {
 	DockPosition		"Left"
 	Width			[50]
 	Height			[50]
-	Filter			[8]
+	Filter			[9]
       }
       Object {
 	$PropName		"ExplorerBarInfo"
@@ -40,32 +40,20 @@ Library {
 	$ClassName		"Simulink.ExplorerBarInfo"
 	Visible			[1]
       }
-      Array {
-	Type			"Simulink.EditorInfo"
-	Dimension		2
-	Object {
-	  $ObjectID		  5
-	  IsActive		  [1]
-	  ViewObjType		  "SimulinkTopLevel"
-	  LoadSaveID		  "0"
-	  Extents		  [1395.0, 708.0]
-	  ZoomFactor		  [1.0]
-	  Offset		  [-107.5, 9.261896323414593]
-	}
-	Object {
-	  $ObjectID		  6
-	  IsActive		  [0]
-	  ViewObjType		  "SimulinkSubsys"
-	  LoadSaveID		  "16"
-	  Extents		  [1395.0, 708.0]
-	  ZoomFactor		  [1.0]
-	  Offset		  [0.0, 0.0]
-	}
-	PropName		"EditorsInfo"
+      Object {
+	$PropName		"EditorsInfo"
+	$ObjectID		5
+	$ClassName		"Simulink.EditorInfo"
+	IsActive		[1]
+	ViewObjType		"SimulinkTopLevel"
+	LoadSaveID		"0"
+	Extents			[1395.0, 710.0]
+	ZoomFactor		[0.79999999999999993]
+	Offset			[-73.067382565235135, -21.86489695340515]
       }
       Object {
 	$PropName		"DockComponentsInfo"
-	$ObjectID		7
+	$ObjectID		6
 	$ClassName		"Simulink.DockComponentInfo"
 	Type			"GLUE2:PropertyInspector"
 	ID			"Property Inspector"
@@ -94,9 +82,9 @@ Library {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "rcrozier"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Tue Jan 24 17:00:57 2017"
-  RTWModifiedTimeStamp	  407177880
-  ModelVersionFormat	  "1.%<AutoIncrement:71>"
+  LastModifiedDate	  "Wed Jan 25 11:40:55 2017"
+  RTWModifiedTimeStamp	  407245209
+  ModelVersionFormat	  "1.%<AutoIncrement:76>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -165,7 +153,7 @@ Library {
     Type		    "Handle"
     Dimension		    1
     Simulink.ConfigSet {
-      $ObjectID		      8
+      $ObjectID		      7
       Version		      "1.16.5"
       DisabledProps	      []
       Description	      ""
@@ -173,7 +161,7 @@ Library {
 	Type			"Handle"
 	Dimension		10
 	Simulink.SolverCC {
-	  $ObjectID		  9
+	  $ObjectID		  8
 	  Version		  "1.16.5"
 	  DisabledProps		  []
 	  Description		  ""
@@ -213,7 +201,7 @@ Library {
 	  SampleTimeProperty	  []
 	}
 	Simulink.DataIOCC {
-	  $ObjectID		  10
+	  $ObjectID		  9
 	  Version		  "1.16.5"
 	  DisabledProps		  []
 	  Description		  ""
@@ -253,7 +241,7 @@ Library {
 	  LoggingIntervals	  "[-inf, inf]"
 	}
 	Simulink.OptimizationCC {
-	  $ObjectID		  11
+	  $ObjectID		  10
 	  Version		  "1.16.5"
 	  Array {
 	    Type		    "Cell"
@@ -311,7 +299,7 @@ Library {
 	  AccelVerboseBuild	  off
 	}
 	Simulink.DebuggingCC {
-	  $ObjectID		  12
+	  $ObjectID		  11
 	  Version		  "1.16.5"
 	  Array {
 	    Type		    "Cell"
@@ -419,7 +407,7 @@ Library {
 	  AllowAutomaticUnitConversions	on
 	}
 	Simulink.HardwareCC {
-	  $ObjectID		  13
+	  $ObjectID		  12
 	  Version		  "1.16.5"
 	  DisabledProps		  []
 	  Description		  ""
@@ -467,7 +455,7 @@ Library {
 	  UseSimulinkCoderFeatures on
 	}
 	Simulink.ModelReferenceCC {
-	  $ObjectID		  14
+	  $ObjectID		  13
 	  Version		  "1.16.5"
 	  DisabledProps		  []
 	  Description		  ""
@@ -486,7 +474,7 @@ Library {
 	  SupportModelReferenceSimTargetCustomCode off
 	}
 	Simulink.SFSimCC {
-	  $ObjectID		  15
+	  $ObjectID		  14
 	  Version		  "1.16.5"
 	  DisabledProps		  []
 	  Description		  ""
@@ -514,7 +502,7 @@ Library {
 	}
 	Simulink.RTWCC {
 	  $BackupClass		  "Simulink.RTWCC"
-	  $ObjectID		  16
+	  $ObjectID		  15
 	  Version		  "1.16.5"
 	  Array {
 	    Type		    "Cell"
@@ -597,7 +585,7 @@ Library {
 	    Type		    "Handle"
 	    Dimension		    2
 	    Simulink.CodeAppCC {
-	      $ObjectID		      17
+	      $ObjectID		      16
 	      Version		      "1.16.5"
 	      Array {
 		Type			"Cell"
@@ -680,7 +668,7 @@ Library {
 	    }
 	    Simulink.GRTTargetCC {
 	      $BackupClass	      "Simulink.TargetCC"
-	      $ObjectID		      18
+	      $ObjectID		      17
 	      Version		      "1.16.5"
 	      Array {
 		Type			"Cell"
@@ -778,7 +766,7 @@ Library {
 	  }
 	}
 	SlCovCC.ConfigComp {
-	  $ObjectID		  19
+	  $ObjectID		  18
 	  Version		  "1.16.5"
 	  DisabledProps		  []
 	  Description		  "Simulink Coverage Configuration Component"
@@ -817,7 +805,7 @@ Library {
 	  CovStopTime		  0
 	}
 	hdlcoderui.hdlcc {
-	  $ObjectID		  20
+	  $ObjectID		  19
 	  Version		  "1.16.5"
 	  DisabledProps		  []
 	  Description		  "HDL Coder custom configuration component"
@@ -1068,7 +1056,7 @@ Library {
   }
   System {
     Name		    "pm_machines_library"
-    Location		    [58, 108, 1509, 990]
+    Location		    [238, 87, 1689, 969]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -1080,9 +1068,9 @@ Library {
     TiledPaperMargins	    [1.270000, 1.270000, 1.270000, 1.270000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "100"
+    ZoomFactor		    "80"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "229"
+    SIDHighWatermark	    "231"
     Block {
       BlockType		      SubSystem
       Name		      "Angular Motion"
@@ -1094,7 +1082,7 @@ Library {
       Variant		      off
       System {
 	Name			"Angular Motion"
-	Location		[404, 107, 907, 560]
+	Location		[238, 87, 1689, 969]
 	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
@@ -1266,10 +1254,25 @@ Library {
       Variant		      off
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		21
+	$ObjectID		20
 	$ClassName		"Simulink.Mask"
 	Type			"Controlled 3-Phase Voltage Source"
 	Description		"Controlled 3-Phase Voltage Source Mask"
+	Object {
+	  $PropName		  "DialogControls"
+	  $ObjectID		  21
+	  $ClassName		  "Simulink.dialog.Group"
+	  Prompt		  "Controlled Three Phase Voltage Source"
+	  Object {
+	    $PropName		    "DialogControls"
+	    $ObjectID		    22
+	    $ClassName		    "Simulink.dialog.Text"
+	    Prompt		    "A block of three SimPowerSystems controlled voltage sources for interfacing non-SimPowerSystems thre"
+	    "e phase signals into SimPowerSystems simulations. Provided for convenience, used by other library blocks."
+	    Name		    "DescTextVar"
+	  }
+	  Name			  "DescGroupVar"
+	}
       }
       System {
 	Name			"Controlled 3-Phase Voltage Source"
@@ -1542,17 +1545,17 @@ Library {
       Name		      "PM Measure To Simulink Measure"
       SID		      "46"
       Ports		      [1, 1]
-      Position		      [95, 550, 190, 650]
+      Position		      [685, 65, 780, 165]
       ZOrder		      -3
       RequestExecContextInheritance off
       Variant		      off
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		22
+	$ObjectID		23
 	$ClassName		"Simulink.Mask"
 	Object {
 	  $PropName		  "Parameters"
-	  $ObjectID		  23
+	  $ObjectID		  24
 	  $ClassName		  "Simulink.MaskParameter"
 	  Type			  "popup"
 	  Array {
@@ -1567,10 +1570,39 @@ Library {
 	  Value			  "Stationary"
 	  Tunable		  "off"
 	}
+	Array {
+	  Type			  "Simulink.dialog.Group"
+	  Dimension		  2
+	  Object {
+	    $ObjectID		    25
+	    Prompt		    "PM Measurements to Simulink Measurements"
+	    Object {
+	      $PropName		      "DialogControls"
+	      $ObjectID		      26
+	      $ClassName	      "Simulink.dialog.Text"
+	      Prompt		      "Converts the outputs of the PM Machines library blocks to the same format as the native simulink"
+	      " electrical machine models proide as 'measurements'."
+	      Name		      "DescTextVar"
+	    }
+	    Name		    "DescGroupVar"
+	  }
+	  Object {
+	    $ObjectID		    27
+	    Prompt		    "Simulink:studio:ToolBarParametersMenu"
+	    Object {
+	      $PropName		      "DialogControls"
+	      $ObjectID		      28
+	      $ClassName	      "Simulink.dialog.parameter.Popup"
+	      Name		      "ref_type"
+	    }
+	    Name		    "ParameterGroupVar"
+	  }
+	  PropName		  "DialogControls"
+	}
       }
       System {
 	Name			"PM Measure To Simulink Measure"
-	Location		[-4, -4, 1284, 778]
+	Location		[238, 87, 1689, 969]
 	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
@@ -1695,11 +1727,12 @@ Library {
 	  Ports			  [2, 1]
 	  Position		  [425, 59, 555, 146]
 	  ZOrder		  -13
-	  LibraryVersion	  "1.664"
+	  LibraryVersion	  "1.676"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib_extras/Measurements/abc_to_dq0\nTransformation"
 	  SourceType		  "abc to dq0 Transformation"
+	  ContentPreviewEnabled	  off
 	}
 	Block {
 	  BlockType		  Mux
@@ -1730,11 +1763,12 @@ Library {
 	  Ports			  [2, 1]
 	  Position		  [440, 394, 570, 481]
 	  ZOrder		  -16
-	  LibraryVersion	  "1.664"
+	  LibraryVersion	  "1.676"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib_extras/Measurements/abc_to_dq0\nTransformation"
 	  SourceType		  "abc to dq0 Transformation"
+	  ContentPreviewEnabled	  off
 	}
 	Block {
 	  BlockType		  Reference
@@ -1743,11 +1777,12 @@ Library {
 	  Ports			  [2, 1]
 	  Position		  [440, 529, 570, 616]
 	  ZOrder		  -17
-	  LibraryVersion	  "1.664"
+	  LibraryVersion	  "1.676"
 	  FontName		  "Verdana"
 	  FontSize		  11
 	  SourceBlock		  "powerlib_extras/Measurements/abc_to_dq0\nTransformation"
 	  SourceType		  "abc to dq0 Transformation"
+	  ContentPreviewEnabled	  off
 	}
 	Block {
 	  BlockType		  Switch
@@ -2349,16 +2384,16 @@ Library {
     }
     Block {
       BlockType		      SubSystem
-      Name		      "Three Phase Rotary PM Machine"
-      SID		      "16"
+      Name		      "Three Phase Linear PM Machine"
+      SID		      "231"
       Ports		      [1, 2, 0, 0, 0, 0, 3]
-      Position		      [370, 282, 575, 478]
-      ZOrder		      -4
+      Position		      [370, 547, 575, 743]
+      ZOrder		      2
       RequestExecContextInheritance off
       Variant		      off
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		24
+	$ObjectID		29
 	$ClassName		"Simulink.Mask"
 	Initialization		"data_ready = false;\n\nif design_data_type_popup == 1\n    \n    if ~(strcmp(file_name_edit, 'Enter "
 	"file path here') ...\n            || isempty(file_name_edit))\n\n        % get the file name\n        design_data_fil"
@@ -2380,9 +2415,733 @@ Library {
 	"esign.PhaseInductance(1)));\n    set_param([blk, '/Windings'], 'SelfImpedance3', sprintf('[%f %f]', design.PhaseResis"
 	"tance(3), design.PhaseInductance(1)));\n\n    if numel(design.PhaseInductance) == 2\n        set_param([blk, '/Windin"
 	"gs'], 'MutualImpedance', sprintf('[0 %f]', design.PhaseInductance(2)));\n    else\n        set_param([blk, '/Windings"
-	"'], 'MutualImpedance', '[0 0]');\n    end\n    \n    % put the data into UserData for the block\n    set_param(blk, '"
-	"UserData', struct ('design', design, ...\n                                       'simoptions', simoptions, ...\n     "
-	"                                  'data_ready', true));\n\nend"
+	"'], 'MutualImpedance', '[0 0]');\n    end\n    \n    % put the data into UserData for the block\n    set_param([blk, "
+	"'/Three Phase Rotary PM Machine S-Function'], ...\n        'UserData', struct ('design', design, ...\n               "
+	"             'simoptions', simoptions, ...\n                            'data_ready', true));\n\nend"
+	SelfModifiable		"on"
+	Display			"port_label('input', 1, 'Velocity')\nport_label('output', 1, 'Force')\nport_label('output', 2, 'Meas')\npor"
+	"t_label('rconn', 1, 'Phase A')\nport_label('rconn', 2, 'Phase B')\nport_label('rconn', 3, 'Phase C')"
+	Array {
+	  Type			  "Simulink.MaskParameter"
+	  Dimension		  4
+	  Object {
+	    $ObjectID		    30
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Linear PM Machine S-Function/design_data_type_popup"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "design_data_type_popup"
+	    Prompt		    "Design Data Type"
+	    Value		    "From File"
+	    Tunable		    "off"
+	    Callback		    "blk = gcb;\n\n% Get the mask parameter values. This is a cell\n%   array of character vectors.\nma"
+	    "skStr = get_param(blk,'design_data_type_popup');\n\n% The pop-up menu is the first mask parameter.\n%   Check the"
+	    " value selected in the pop-up \nif strcmp(maskStr,'From File')\n\n    % Make file name box visible only\n    set_"
+	    "param(gcb,'MaskEnables',{'on';'on';'off';'off'});\n\nelse\n\n    % Make variable name boxes visible only\n    set"
+	    "_param(gcb,'MaskEnables',{'on';'off';'on';'on'});\n    \n    % Set the character vector in the Values field equal"
+	    " to the\n    % character vector selected in the Gain pop-up menu.\n\n%     %maskStr{2}=maskStr{1};\n%     set_par"
+	    "am(gcb,'editvalue',maskStr);\n    \nend"
+	  }
+	  Object {
+	    $ObjectID		    31
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Linear PM Machine S-Function/file_name_edit"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "file_name_edit"
+	    Prompt		    "File containing design and Simoptions data structures"
+	    Value		    "Enter file path here"
+	    Evaluate		    "off"
+	    Tunable		    "off"
+	  }
+	  Object {
+	    $ObjectID		    32
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Linear PM Machine S-Function/design_workspace_edit"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "design_workspace_edit"
+	    Prompt		    "Design structure variable in workspace"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  Object {
+	    $ObjectID		    33
+	    Type		    "promote"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      1
+	      Cell		      "Three Phase Linear PM Machine S-Function/simoptions_workspace_edit"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "simoptions_workspace_edit"
+	    Prompt		    "Simoptions structure variable name"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  PropName		  "Parameters"
+	}
+	Array {
+	  Type			  "Simulink.dialog.Group"
+	  Dimension		  2
+	  Object {
+	    $ObjectID		    34
+	    Prompt		    "Three Phase Linear PM Machine"
+	    Object {
+	      $PropName		      "DialogControls"
+	      $ObjectID		      35
+	      $ClassName	      "Simulink.dialog.Text"
+	      Prompt		      "Three phase linear permanent magnet machine."
+	      Name		      "DescTextVar"
+	    }
+	    Name		    "DescGroupVar"
+	  }
+	  Object {
+	    $ObjectID		    36
+	    Prompt		    "Simulink:studio:ToolBarParametersMenu"
+	    Array {
+	      Type		      "Simulink.dialog.parameter.Control"
+	      Dimension		      4
+	      Object {
+		$ObjectID		37
+		$ClassName		"Simulink.dialog.parameter.Popup"
+		Name			"design_data_type_popup"
+	      }
+	      Object {
+		$ObjectID		38
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"file_name_edit"
+	      }
+	      Object {
+		$ObjectID		39
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"design_workspace_edit"
+	      }
+	      Object {
+		$ObjectID		40
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"simoptions_workspace_edit"
+	      }
+	      PropName		      "DialogControls"
+	    }
+	    Name		    "ParameterGroupVar"
+	  }
+	  PropName		  "DialogControls"
+	}
+      }
+      System {
+	Name			"Three Phase Linear PM Machine"
+	Location		[238, 87, 1689, 969]
+	Open			off
+	ModelBrowserVisibility	off
+	ModelBrowserWidth	200
+	ScreenColor		"white"
+	PaperOrientation	"landscape"
+	PaperPositionMode	"auto"
+	PaperType		"usletter"
+	PaperUnits		"inches"
+	TiledPaperMargins	[0.500000, 0.500000, 0.500000, 0.500000]
+	TiledPageScale		1
+	ShowPageBoundaries	off
+	ZoomFactor		"100"
+	SIDHighWatermark	"230"
+	SIDPrevWatermark	"229"
+	Block {
+	  BlockType		  Inport
+	  Name			  "omega"
+	  SID			  "231:213"
+	  Position		  [25, 73, 55, 87]
+	  ZOrder		  -1
+	  IconDisplay		  "Port number"
+	}
+	Block {
+	  BlockType		  Reference
+	  Name			  "Controlled 3-Phase Voltage Source"
+	  SID			  "231:214"
+	  Ports			  [3, 0, 0, 0, 0, 3, 3]
+	  Position		  [485, 154, 630, 301]
+	  ZOrder		  -2
+	  LibraryVersion	  "1.72"
+	  SourceBlock		  "pm_machines_library/Controlled 3-Phase Voltage Source"
+	  SourceType		  "Controlled 3-Phase Voltage Source"
+	  ContentPreviewEnabled	  off
+	}
+	Block {
+	  BlockType		  Demux
+	  Name			  "Demux"
+	  SID			  "231:215"
+	  Ports			  [1, 3]
+	  Position		  [105, 100, 120, 200]
+	  ZOrder		  -3
+	  ShowName		  off
+	  Outputs		  "3"
+	  DisplayOption		  "bar"
+	}
+	Block {
+	  BlockType		  From
+	  Name			  "From"
+	  SID			  "231:216"
+	  Position		  [40, 136, 80, 164]
+	  ZOrder		  -4
+	  GotoTag		  "Iabc"
+	}
+	Block {
+	  BlockType		  From
+	  Name			  "From Measurement Iabc"
+	  SID			  "231:217"
+	  Position		  [285, 335, 330, 355]
+	  ZOrder		  -5
+	  BlockMirror		  on
+	  GotoTag		  "Iabc"
+	}
+	Block {
+	  BlockType		  From
+	  Name			  "From Measurement Vabc"
+	  SID			  "231:218"
+	  Position		  [285, 286, 325, 304]
+	  ZOrder		  -6
+	  BlockMirror		  on
+	  GotoTag		  "Vabc"
+	}
+	Block {
+	  BlockType		  Reference
+	  Name			  "Ground"
+	  SID			  "231:219"
+	  Ports			  [0, 0, 0, 0, 0, 1]
+	  Position		  [404, 325, 426, 350]
+	  ZOrder		  -7
+	  BlockRotation		  270
+	  BlockMirror		  on
+	  ShowName		  off
+	  LibraryVersion	  "1.2729"
+	  FontName		  "Verdana"
+	  FontSize		  11
+	  SourceBlock		  "powerlib/Elements/Ground"
+	  SourceType		  "Ground"
+	  LConnTagsString	  "a"
+	}
+	Block {
+	  BlockType		  Integrator
+	  Name			  "Integrator"
+	  SID			  "231:220"
+	  Ports			  [1, 1]
+	  Position		  [100, 30, 130, 60]
+	  ZOrder		  -8
+	}
+	Block {
+	  BlockType		  Mux
+	  Name			  "Mux"
+	  SID			  "231:221"
+	  Ports			  [3, 1]
+	  Position		  [200, 223, 210, 367]
+	  ZOrder		  -9
+	  BlockMirror		  on
+	  ShowName		  off
+	  Inputs		  "3"
+	  DisplayOption		  "bar"
+	}
+	Block {
+	  BlockType		  Reference
+	  Name			  "Three Phase Linear PM Machine S-Function"
+	  SID			  "231:230"
+	  Ports			  [5, 5]
+	  Position		  [160, 25, 340, 185]
+	  ZOrder		  2
+	  LibraryVersion	  "1.72"
+	  SourceBlock		  "pm_machines_library/Three Phase Linear PM Machine S-Function"
+	  SourceType		  ""
+	  design_data_type_popup  "From File"
+	  file_name_edit	  "Enter file path here"
+	  design_workspace_edit	  "design_workspace_edit"
+	  simoptions_workspace_edit "simoptions_workspace_edit"
+	}
+	Block {
+	  BlockType		  Reference
+	  Name			  "Three-Phase\nV-I Measurement"
+	  SID			  "231:223"
+	  Ports			  [0, 0, 0, 0, 0, 3, 3]
+	  Position		  [865, 157, 925, 303]
+	  ZOrder		  -11
+	  LibraryVersion	  "1.2729"
+	  FontName		  "Verdana"
+	  FontSize		  11
+	  SourceBlock		  "powerlib/Measurements/Three-Phase\nV-I Measurement"
+	  SourceType		  "Three-Phase VI Measurement"
+	  ContentPreviewEnabled	  off
+	  VoltageMeasurement	  "phase-to-ground"
+	  SetLabelV		  on
+	  LabelV		  "Vabc"
+	  Vpu			  off
+	  VpuLL			  off
+	  CurrentMeasurement	  "yes"
+	  SetLabelI		  on
+	  LabelI		  "Iabc"
+	  Ipu			  off
+	  Pbase			  "100e6"
+	  Vbase			  "500e3"
+	  OutputType		  "Complex"
+	  PhasorSimulation	  off
+	  PSBequivalent		  "0"
+	}
+	Block {
+	  BlockType		  Reference
+	  Name			  "Windings"
+	  SID			  "231:224"
+	  Ports			  [0, 0, 0, 0, 0, 3, 3]
+	  Position		  [655, 156, 840, 304]
+	  ZOrder		  -12
+	  AttributesFormatString  "\\n"
+	  LibraryVersion	  "1.2729"
+	  FontName		  "Verdana"
+	  FontSize		  11
+	  SourceBlock		  "powerlib/Elements/Mutual Inductance"
+	  SourceType		  "Mutual Inductance"
+	  LConnTagsString	  "a|b|c"
+	  RConnTagsString	  "A|B|C"
+	  TypeOfMutual		  "Two or three windings with equal mutual terms"
+	  NumberOfWindings	  "3"
+	  SelfImpedance1	  "[218.993012 0.000104]"
+	  SelfImpedance2	  "[218.993012 0.000104]"
+	  ThreeWindings		  on
+	  SelfImpedance3	  "[218.993012 0.000104]"
+	  MutualImpedance	  "[0 0.000000]"
+	  InductanceMatrix	  "[1.0 0.9  0.9 ;  0.9 1.0  0.9;  0.9 0.9 1.0 ] * 1e-3"
+	  ResistanceMatrix	  "[1.0 0.9  0.9 ;  0.9 1.0  0.9;  0.9 0.9 1.0 ] "
+	  Measurements		  "None"
+	}
+	Block {
+	  BlockType		  PMIOPort
+	  Name			  "Conn1"
+	  SID			  "231:225"
+	  Position		  [950, 173, 980, 187]
+	  ZOrder		  -13
+	  BlockMirror		  on
+	  Port			  "1"
+	  Side			  "Right"
+	}
+	Block {
+	  BlockType		  PMIOPort
+	  Name			  "Conn2"
+	  SID			  "231:226"
+	  Position		  [950, 223, 980, 237]
+	  ZOrder		  -14
+	  BlockMirror		  on
+	  Port			  "2"
+	  Side			  "Right"
+	}
+	Block {
+	  BlockType		  PMIOPort
+	  Name			  "Conn3"
+	  SID			  "231:227"
+	  Position		  [950, 273, 980, 287]
+	  ZOrder		  -15
+	  BlockMirror		  on
+	  Port			  "3"
+	  Side			  "Right"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "Out1"
+	  SID			  "231:228"
+	  Position		  [365, 38, 395, 52]
+	  ZOrder		  -16
+	  IconDisplay		  "Port number"
+	}
+	Block {
+	  BlockType		  Outport
+	  Name			  "Out2"
+	  SID			  "231:229"
+	  Position		  [95, 288, 125, 302]
+	  ZOrder		  -17
+	  BlockMirror		  on
+	  Port			  "2"
+	  IconDisplay		  "Port number"
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  1
+	  Points		  [415, 290; 55, 0]
+	  DstBlock		  "Controlled 3-Phase Voltage Source"
+	  DstPort		  LConn3
+	  Branch {
+	    ConnectType		    "SRC_DEST"
+	    Points		    [415, 265; 0, 25]
+	    Branch {
+	      ConnectType	      "SRC_SRC"
+	      DstBlock		      "Controlled 3-Phase Voltage Source"
+	      DstPort		      LConn2
+	    }
+	    Branch {
+	      ConnectType	      "SRC_DEST"
+	      SrcBlock		      "Controlled 3-Phase Voltage Source"
+	      SrcPort		      LConn1
+	      Points		      [-55, 0; 0, 25]
+	    }
+	  }
+	  Branch {
+	    ConnectType		    "SRC_SRC"
+	    DstBlock		    "Ground"
+	    DstPort		    LConn1
+	  }
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  6
+	  SrcBlock		  "Windings"
+	  SrcPort		  LConn1
+	  DstBlock		  "Controlled 3-Phase Voltage Source"
+	  DstPort		  RConn1
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  7
+	  SrcBlock		  "Windings"
+	  SrcPort		  LConn2
+	  DstBlock		  "Controlled 3-Phase Voltage Source"
+	  DstPort		  RConn2
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  8
+	  SrcBlock		  "Windings"
+	  SrcPort		  LConn3
+	  DstBlock		  "Controlled 3-Phase Voltage Source"
+	  DstPort		  RConn3
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  9
+	  SrcBlock		  "Windings"
+	  SrcPort		  RConn1
+	  DstBlock		  "Three-Phase\nV-I Measurement"
+	  DstPort		  LConn1
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  10
+	  SrcBlock		  "Windings"
+	  SrcPort		  RConn2
+	  DstBlock		  "Three-Phase\nV-I Measurement"
+	  DstPort		  LConn2
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  11
+	  SrcBlock		  "Windings"
+	  SrcPort		  RConn3
+	  DstBlock		  "Three-Phase\nV-I Measurement"
+	  DstPort		  LConn3
+	}
+	Line {
+	  ZOrder		  40
+	  SrcBlock		  "Demux"
+	  SrcPort		  3
+	  Points		  [15, 0; 0, -20]
+	  DstBlock		  "Three Phase Linear PM Machine S-Function"
+	  DstPort		  5
+	}
+	Line {
+	  ZOrder		  39
+	  SrcBlock		  "Demux"
+	  SrcPort		  2
+	  Points		  [15, 0; 0, -15]
+	  DstBlock		  "Three Phase Linear PM Machine S-Function"
+	  DstPort		  4
+	}
+	Line {
+	  ZOrder		  38
+	  SrcBlock		  "Demux"
+	  SrcPort		  1
+	  Points		  [15, 0; 0, -10]
+	  DstBlock		  "Three Phase Linear PM Machine S-Function"
+	  DstPort		  3
+	}
+	Line {
+	  ZOrder		  15
+	  SrcBlock		  "From"
+	  SrcPort		  1
+	  DstBlock		  "Demux"
+	  DstPort		  1
+	}
+	Line {
+	  ZOrder		  35
+	  SrcBlock		  "Three Phase Linear PM Machine S-Function"
+	  SrcPort		  4
+	  Points		  [39, 0; 0, 80]
+	  DstBlock		  "Controlled 3-Phase Voltage Source"
+	  DstPort		  3
+	}
+	Line {
+	  ZOrder		  34
+	  SrcBlock		  "Three Phase Linear PM Machine S-Function"
+	  SrcPort		  3
+	  Points		  [76, 0; 0, 85]
+	  DstBlock		  "Controlled 3-Phase Voltage Source"
+	  DstPort		  2
+	}
+	Line {
+	  ZOrder		  33
+	  SrcBlock		  "Three Phase Linear PM Machine S-Function"
+	  SrcPort		  2
+	  Points		  [114, 0; 0, 90]
+	  DstBlock		  "Controlled 3-Phase Voltage Source"
+	  DstPort		  1
+	}
+	Line {
+	  ZOrder		  32
+	  SrcBlock		  "Integrator"
+	  SrcPort		  1
+	  DstBlock		  "Three Phase Linear PM Machine S-Function"
+	  DstPort		  1
+	}
+	Line {
+	  ZOrder		  20
+	  SrcBlock		  "omega"
+	  SrcPort		  1
+	  Points		  [10, 0]
+	  Branch {
+	    ZOrder		    37
+	    Points		    [0, 6; 74, 0; 0, -11]
+	    DstBlock		    "Three Phase Linear PM Machine S-Function"
+	    DstPort		    2
+	  }
+	  Branch {
+	    ZOrder		    22
+	    Points		    [0, -35]
+	    DstBlock		    "Integrator"
+	    DstPort		    1
+	  }
+	}
+	Line {
+	  ZOrder		  31
+	  SrcBlock		  "Three Phase Linear PM Machine S-Function"
+	  SrcPort		  1
+	  DstBlock		  "Out1"
+	  DstPort		  1
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  24
+	  SrcBlock		  "Conn1"
+	  SrcPort		  RConn1
+	  DstBlock		  "Three-Phase\nV-I Measurement"
+	  DstPort		  RConn1
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  25
+	  SrcBlock		  "Conn2"
+	  SrcPort		  RConn1
+	  DstBlock		  "Three-Phase\nV-I Measurement"
+	  DstPort		  RConn2
+	}
+	Line {
+	  LineType		  "Connection"
+	  ZOrder		  26
+	  SrcBlock		  "Conn3"
+	  SrcPort		  RConn1
+	  DstBlock		  "Three-Phase\nV-I Measurement"
+	  DstPort		  RConn3
+	}
+	Line {
+	  ZOrder		  36
+	  SrcBlock		  "Three Phase Linear PM Machine S-Function"
+	  SrcPort		  5
+	  Points		  [13, 0; 0, 80]
+	  DstBlock		  "Mux"
+	  DstPort		  1
+	}
+	Line {
+	  ZOrder		  28
+	  SrcBlock		  "From Measurement Vabc"
+	  SrcPort		  1
+	  DstBlock		  "Mux"
+	  DstPort		  2
+	}
+	Line {
+	  ZOrder		  29
+	  SrcBlock		  "From Measurement Iabc"
+	  SrcPort		  1
+	  DstBlock		  "Mux"
+	  DstPort		  3
+	}
+	Line {
+	  ZOrder		  30
+	  SrcBlock		  "Mux"
+	  SrcPort		  1
+	  DstBlock		  "Out2"
+	  DstPort		  1
+	}
+      }
+    }
+    Block {
+      BlockType		      M-S-Function
+      Name		      "Three Phase Linear PM Machine S-Function"
+      SID		      "230"
+      Ports		      [5, 5]
+      Position		      [50, 565, 230, 725]
+      ZOrder		      1
+      FunctionName	      "lineargen_three_phase_sfcn"
+      Object {
+	$PropName		"MaskObject"
+	$ObjectID		41
+	$ClassName		"Simulink.Mask"
+	Display			"port_label('input', 1, 'displacement')\nport_label('input', 2, 'velocity')\nport_label('input', 3, 'Phase "
+	"A Current')\nport_label('input', 4, 'Phase B Current')\nport_label('input', 5, 'Phase C Current')\nport_label('output"
+	"', 1, 'Force')\nport_label('output', 2, 'Phase A EMF')\nport_label('output', 3, 'Phase B EMF')\nport_label('output', "
+	"4, 'Phase C EMF')\nport_label('output', 5, 'Meas')"
+	Array {
+	  Type			  "Simulink.MaskParameter"
+	  Dimension		  4
+	  Object {
+	    $ObjectID		    42
+	    Type		    "popup"
+	    Array {
+	      Type		      "Cell"
+	      Dimension		      2
+	      Cell		      "From File"
+	      Cell		      "From Workspace"
+	      PropName		      "TypeOptions"
+	    }
+	    Name		    "design_data_type_popup"
+	    Prompt		    "Design Data Type"
+	    Value		    "From File"
+	    Tunable		    "off"
+	    Callback		    "blk = gcb;\n\n% Get the mask parameter values. This is a cell\n%   array of character vectors.\nma"
+	    "skStr = get_param(blk,'design_data_type_popup');\n\n% The pop-up menu is the first mask parameter.\n%   Check the"
+	    " value selected in the pop-up \nif strcmp(maskStr,'From File')\n\n    % Make file name box visible only\n    set_"
+	    "param(gcb,'MaskEnables',{'on';'on';'off';'off'});\n\nelse\n\n    % Make variable name boxes visible only\n    set"
+	    "_param(gcb,'MaskEnables',{'on';'off';'on';'on'});\n    \n    % Set the character vector in the Values field equal"
+	    " to the\n    % character vector selected in the Gain pop-up menu.\n\n%     %maskStr{2}=maskStr{1};\n%     set_par"
+	    "am(gcb,'editvalue',maskStr);\n    \nend"
+	  }
+	  Object {
+	    $ObjectID		    43
+	    Type		    "edit"
+	    Name		    "file_name_edit"
+	    Prompt		    "File containing design and Simoptions data structures"
+	    Value		    "Enter file path here"
+	    Evaluate		    "off"
+	    Tunable		    "off"
+	  }
+	  Object {
+	    $ObjectID		    44
+	    Type		    "edit"
+	    Name		    "design_workspace_edit"
+	    Prompt		    "Design structure variable in workspace"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  Object {
+	    $ObjectID		    45
+	    Type		    "edit"
+	    Name		    "simoptions_workspace_edit"
+	    Prompt		    "Simoptions structure variable name"
+	    Value		    "[]"
+	    Tunable		    "off"
+	    Enabled		    "off"
+	  }
+	  PropName		  "Parameters"
+	}
+	Array {
+	  Type			  "Simulink.dialog.Group"
+	  Dimension		  2
+	  Object {
+	    $ObjectID		    46
+	    Prompt		    "Three Phase Linear PM Machine S-Function"
+	    Object {
+	      $PropName		      "DialogControls"
+	      $ObjectID		      47
+	      $ClassName	      "Simulink.dialog.Text"
+	      Prompt		      "Block for simulation of a three phase linear permanent magnet machine based on a Level-2 S-Funct"
+	      "ion. This is a low level block, used in the higher-level 'Three Phase Linear PM Machine' block which is intende"
+	      "d for users. You may want to use this if you do not wish to use SimPowerSystems components."
+	      Name		      "DescTextVar"
+	    }
+	    Name		    "DescGroupVar"
+	  }
+	  Object {
+	    $ObjectID		    48
+	    Prompt		    "Simulink:studio:ToolBarParametersMenu"
+	    Array {
+	      Type		      "Simulink.dialog.parameter.Control"
+	      Dimension		      4
+	      Object {
+		$ObjectID		49
+		$ClassName		"Simulink.dialog.parameter.Popup"
+		Name			"design_data_type_popup"
+	      }
+	      Object {
+		$ObjectID		50
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"file_name_edit"
+	      }
+	      Object {
+		$ObjectID		51
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"design_workspace_edit"
+	      }
+	      Object {
+		$ObjectID		52
+		$ClassName		"Simulink.dialog.parameter.Edit"
+		Name			"simoptions_workspace_edit"
+	      }
+	      PropName		      "DialogControls"
+	    }
+	    Name		    "ParameterGroupVar"
+	  }
+	  PropName		  "DialogControls"
+	}
+      }
+    }
+    Block {
+      BlockType		      SubSystem
+      Name		      "Three Phase Rotary PM Machine"
+      SID		      "16"
+      Ports		      [1, 2, 0, 0, 0, 0, 3]
+      Position		      [370, 282, 575, 478]
+      ZOrder		      -4
+      RequestExecContextInheritance off
+      Variant		      off
+      Object {
+	$PropName		"MaskObject"
+	$ObjectID		53
+	$ClassName		"Simulink.Mask"
+	Initialization		"data_ready = false;\n\nif design_data_type_popup == 1\n    \n    if ~(strcmp(file_name_edit, 'Enter "
+	"file path here') ...\n            || isempty(file_name_edit))\n\n        % get the file name\n        design_data_fil"
+	"e = file_name_edit;\n        \n        % check it exists\n        if exist (design_data_file, 'file') == 2\n         "
+	"   % check if right data is in file\n            try\n                load (design_data_file, 'design', 'simoptions')"
+	";\n            catch ME\n                error ('RENEWNET:rotgen_three_phase_sfcn:badfile', ...\n                'Loa"
+	"ding design data from file\\n\\n %s\\n\\nfailed with the following error message:\\n\\n\"%s\"\\n\\n', ...\n          "
+	"          design_data_file, ME.message);\n            end\n            \n            data_ready = true;\n\n        el"
+	"se\n            error ('RENEWNET:rotgen_three_phase_sfcn:badfile', ...\n                'Design data file\\n: %s\\ndo"
+	"es not appear to exist', design_data_file);\n        end\n    \n    end\n\nelseif design_data_type_popup == 2\n    % "
+	"get the variable names\n    design = design_workspace_edit;\n    simoptions = simoptions_workspace_edit;\n    \n    i"
+	"f ~isempty (design) && ~isempty (simoptions)\n        data_ready = true;\n    end\nelse\n    error ('RENEWNET:rotgen_"
+	"three_phase_sfcn:baddatatype', ...\n        'Invalid Data Type popup value')\nend\n\nif data_ready\n    \n    % do so"
+	"me checks on the data\n    if design.Phases ~= 3\n        error('Design must have three Phases.')\n    end\n\n    if "
+	"~isfield(design, 'slm_fluxlinkage')\n        error('Design data does not appear to be complete (no flux linage info)'"
+	")\n    end\n\n    blk = gcb;                                         \n    % set_param([gcb, '/adder1/Gain'],'Gain','"
+	"A')\n\n    set_param([blk, '/Windings'], 'SelfImpedance1', sprintf('[%f %f]', design.PhaseResistance(1), design.Phase"
+	"Inductance(1)));\n    set_param([blk, '/Windings'], 'SelfImpedance2', sprintf('[%f %f]', design.PhaseResistance(2), d"
+	"esign.PhaseInductance(1)));\n    set_param([blk, '/Windings'], 'SelfImpedance3', sprintf('[%f %f]', design.PhaseResis"
+	"tance(3), design.PhaseInductance(1)));\n\n    if numel(design.PhaseInductance) == 2\n        set_param([blk, '/Windin"
+	"gs'], 'MutualImpedance', sprintf('[0 %f]', design.PhaseInductance(2)));\n    else\n        set_param([blk, '/Windings"
+	"'], 'MutualImpedance', '[0 0]');\n    end\n    \n    % put the data into UserData for the block\n    set_param([blk, "
+	"'/Three Phase Rotary PM Machine S-Function'], ...\n        'UserData', struct ('design', design, ...\n               "
+	"             'simoptions', simoptions, ...\n                            'data_ready', true));\n\nend"
 	SelfModifiable		"on"
 	Display			"port_label('input', 1, 'Omega')\nport_label('output', 1, 'Torque')\nport_label('output', 2, 'Meas')\nport_"
 	"label('rconn', 1, 'Phase A')\nport_label('rconn', 2, 'Phase B')\nport_label('rconn', 3, 'Phase C')"
@@ -2390,7 +3149,7 @@ Library {
 	  Type			  "Simulink.MaskParameter"
 	  Dimension		  4
 	  Object {
-	    $ObjectID		    25
+	    $ObjectID		    54
 	    Type		    "promote"
 	    Array {
 	      Type		      "Cell"
@@ -2411,7 +3170,7 @@ Library {
 	    "am(gcb,'editvalue',maskStr);\n    \nend"
 	  }
 	  Object {
-	    $ObjectID		    26
+	    $ObjectID		    55
 	    Type		    "promote"
 	    Array {
 	      Type		      "Cell"
@@ -2426,7 +3185,7 @@ Library {
 	    Tunable		    "off"
 	  }
 	  Object {
-	    $ObjectID		    27
+	    $ObjectID		    56
 	    Type		    "promote"
 	    Array {
 	      Type		      "Cell"
@@ -2441,7 +3200,7 @@ Library {
 	    Enabled		    "off"
 	  }
 	  Object {
-	    $ObjectID		    28
+	    $ObjectID		    57
 	    Type		    "promote"
 	    Array {
 	      Type		      "Cell"
@@ -2461,11 +3220,11 @@ Library {
 	  Type			  "Simulink.dialog.Group"
 	  Dimension		  2
 	  Object {
-	    $ObjectID		    29
+	    $ObjectID		    58
 	    Prompt		    "Three Phase Rotary PM Machine"
 	    Object {
 	      $PropName		      "DialogControls"
-	      $ObjectID		      30
+	      $ObjectID		      59
 	      $ClassName	      "Simulink.dialog.Text"
 	      Prompt		      "Three phase rotary permanent magnet machine."
 	      Name		      "DescTextVar"
@@ -2473,28 +3232,28 @@ Library {
 	    Name		    "DescGroupVar"
 	  }
 	  Object {
-	    $ObjectID		    31
+	    $ObjectID		    60
 	    Prompt		    "Simulink:studio:ToolBarParametersMenu"
 	    Array {
 	      Type		      "Simulink.dialog.parameter.Control"
 	      Dimension		      4
 	      Object {
-		$ObjectID		32
+		$ObjectID		61
 		$ClassName		"Simulink.dialog.parameter.Popup"
 		Name			"design_data_type_popup"
 	      }
 	      Object {
-		$ObjectID		33
+		$ObjectID		62
 		$ClassName		"Simulink.dialog.parameter.Edit"
 		Name			"file_name_edit"
 	      }
 	      Object {
-		$ObjectID		34
+		$ObjectID		63
 		$ClassName		"Simulink.dialog.parameter.Edit"
 		Name			"design_workspace_edit"
 	      }
 	      Object {
-		$ObjectID		35
+		$ObjectID		64
 		$ClassName		"Simulink.dialog.parameter.Edit"
 		Name			"simoptions_workspace_edit"
 	      }
@@ -2507,8 +3266,8 @@ Library {
       }
       System {
 	Name			"Three Phase Rotary PM Machine"
-	Location		[58, 108, 1509, 990]
-	Open			on
+	Location		[238, 87, 1689, 969]
+	Open			off
 	ModelBrowserVisibility	off
 	ModelBrowserWidth	200
 	ScreenColor		"white"
@@ -2536,7 +3295,7 @@ Library {
 	  Ports			  [3, 0, 0, 0, 0, 3, 3]
 	  Position		  [485, 154, 630, 301]
 	  ZOrder		  -2
-	  LibraryVersion	  "1.70"
+	  LibraryVersion	  "1.72"
 	  SourceBlock		  "pm_machines_library/Controlled 3-Phase Voltage Source"
 	  SourceType		  "Controlled 3-Phase Voltage Source"
 	  ContentPreviewEnabled	  off
@@ -2622,7 +3381,7 @@ Library {
 	  Ports			  [5, 5]
 	  Position		  [155, 27, 340, 203]
 	  ZOrder		  -10
-	  LibraryVersion	  "1.70"
+	  LibraryVersion	  "1.72"
 	  SourceBlock		  "pm_machines_library/Three Phase Rotary PM Machine S-Function"
 	  SourceType		  ""
 	  design_data_type_popup  "From File"
@@ -2955,7 +3714,7 @@ Library {
       FunctionName	      "rotgen_three_phase_sfcn"
       Object {
 	$PropName		"MaskObject"
-	$ObjectID		36
+	$ObjectID		65
 	$ClassName		"Simulink.Mask"
 	Display			"port_label('input', 1, 'theta')\nport_label('input', 2, 'omega')\nport_label('input', 3, 'Phase A Current'"
 	")\nport_label('input', 4, 'Phase B Current')\nport_label('input', 5, 'Phase C Current')\nport_label('output', 1, 'Tor"
@@ -2965,7 +3724,7 @@ Library {
 	  Type			  "Simulink.MaskParameter"
 	  Dimension		  4
 	  Object {
-	    $ObjectID		    37
+	    $ObjectID		    66
 	    Type		    "popup"
 	    Array {
 	      Type		      "Cell"
@@ -2987,7 +3746,7 @@ Library {
 	    "am(gcb,'editvalue',maskStr);\n    \nend"
 	  }
 	  Object {
-	    $ObjectID		    38
+	    $ObjectID		    67
 	    Type		    "edit"
 	    Name		    "file_name_edit"
 	    Prompt		    "File containing design and Simoptions data structures"
@@ -2996,7 +3755,7 @@ Library {
 	    Tunable		    "off"
 	  }
 	  Object {
-	    $ObjectID		    39
+	    $ObjectID		    68
 	    Type		    "edit"
 	    Name		    "design_workspace_edit"
 	    Prompt		    "Design structure variable in workspace"
@@ -3005,7 +3764,7 @@ Library {
 	    Enabled		    "off"
 	  }
 	  Object {
-	    $ObjectID		    40
+	    $ObjectID		    69
 	    Type		    "edit"
 	    Name		    "simoptions_workspace_edit"
 	    Prompt		    "Simoptions structure variable name"
@@ -3019,42 +3778,42 @@ Library {
 	  Type			  "Simulink.dialog.Group"
 	  Dimension		  2
 	  Object {
-	    $ObjectID		    41
+	    $ObjectID		    70
 	    Prompt		    "Three Phase Rotary PM Machine S-Function"
 	    Object {
 	      $PropName		      "DialogControls"
-	      $ObjectID		      42
+	      $ObjectID		      71
 	      $ClassName	      "Simulink.dialog.Text"
 	      Prompt		      "Block for simulation of a three phase rotary permanent magnet machine based on a Level-2 S-Funct"
 	      "ion. This is a low level block, used in the higher-level 'Three Phase Rotary PM Machine' block which is intende"
-	      "d for users."
+	      "d for users. You may want to use this if you do not wish to use SimPowerSystems components."
 	      Name		      "DescTextVar"
 	    }
 	    Name		    "DescGroupVar"
 	  }
 	  Object {
-	    $ObjectID		    43
+	    $ObjectID		    72
 	    Prompt		    "Simulink:studio:ToolBarParametersMenu"
 	    Array {
 	      Type		      "Simulink.dialog.parameter.Control"
 	      Dimension		      4
 	      Object {
-		$ObjectID		44
+		$ObjectID		73
 		$ClassName		"Simulink.dialog.parameter.Popup"
 		Name			"design_data_type_popup"
 	      }
 	      Object {
-		$ObjectID		45
+		$ObjectID		74
 		$ClassName		"Simulink.dialog.parameter.Edit"
 		Name			"file_name_edit"
 	      }
 	      Object {
-		$ObjectID		46
+		$ObjectID		75
 		$ClassName		"Simulink.dialog.parameter.Edit"
 		Name			"design_workspace_edit"
 	      }
 	      Object {
-		$ObjectID		47
+		$ObjectID		76
 		$ClassName		"Simulink.dialog.parameter.Edit"
 		Name			"simoptions_workspace_edit"
 	      }
