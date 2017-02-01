@@ -8,17 +8,18 @@
 %
 %
 
-
 t0 = 0;
 tspan = 2;
 
 % draw y = 0 line for reference
 figure;
 legstrs = {'y = 0'};
+
+plot ( [t0, t0+tspan], [0, 0], 'k:', 'LineWidth', 0.1);
+
 title ('State Space Method Comparison');
 xlabel('Time (sec)')
 ylabel('Ball Position (m)')
-plot ( [t0, t0+tspan], [0, 0], 'Color', 'k', 'LineWidth', 0.1);
 
 %% Set up the system
 
@@ -36,8 +37,9 @@ D = zeros ( size (C, 1), size (B, 2) );
 
 x0 = [0.01 0 0];
 
+%% 
 
-
+% create state space object
 SS = stateSpace (A, B, C, D, x0);
 
 odeopts = odeset ('OutputFcn', @SS.outputfcn ...
@@ -187,9 +189,5 @@ end
 legend (legstrs);
 
 
-
-
-
-              
 
 
