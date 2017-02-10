@@ -88,7 +88,7 @@ function setup(block)
     
     
     % Register Dialog parameters
-    block.NumDialogPrms     = 0;
+    block.NumDialogPrms     = 4;
 %     block.NumDialogPrms     = 1;
 %     block.DialogPrmsTunable = {'Nontunable'};
 
@@ -123,7 +123,7 @@ function Start(block)
         % from file or workspace
         file_or_workspace = block.DialogPrm(1).Data;
 
-        if strcmp (file_or_workspace, 'From File')
+        if file_or_workspace == 1 % strcmp (file_or_workspace, 'From File')
 
             % get the file name
             design_data_file = block.DialogPrm(2).Data;
@@ -132,7 +132,7 @@ function Start(block)
             if exist (design_data_file, 'file')
                 % check if right data is in file
                 try
-                    load ('design_data_file', 'design', 'simoptions');
+                    load (design_data_file, 'design', 'simoptions');
                 catch ME
                     error ('RENEWNET:lineargen_three_phase_sfcn:badfile', ...
                     'Loading design data from file\n: %s\nfailed with the following error message:\n"%s"\n', ...
@@ -144,7 +144,7 @@ function Start(block)
                     'Design data file\n: %s\ndoes not appear to exist', design_data_file);
             end
 
-        elseif strcmp (file_or_workspace, 'From Workspace')
+        elseif file_or_workspace == 2 % strcmp (file_or_workspace, 'From Workspace')
             % get the variable names 
             design = block.DialogPrm(3).Data;
             simoptions = block.DialogPrm(4).Data;
@@ -226,7 +226,7 @@ function Outputs(block)
                                  vR, ...
                                  2 * pi * xR / (2 * data.design.PoleWidth), ... % the electrical angle
                                  force, ...
-                                 data.design.RotorMomentOfInertia, ...
+                                 0, ...data.design.RotorMomentOfInertia, ...
                                  data.design.FluxLinkageRms ];
     
 end
