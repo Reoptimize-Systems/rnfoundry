@@ -15,7 +15,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 classdef hydrobody < handle
-    
+
     properties (SetAccess = 'private', GetAccess = 'public') %hdf5 file
         hydroData         = struct()                                            % Hydrodynamic data from BEM or user defined.
     end
@@ -55,8 +55,8 @@ classdef hydrobody < handle
                                    'vertex', [], ...                                % List of vertices
                                    'face', [], ...                                  % List of faces
                                    'norm', [], ...                                  % List of normal vectors
-                                   'area', [], ...                                  % List of cell areas 
-                                   'center', [])                                    % List of cell centers 
+                                   'area', [], ...                                  % List of cell areas
+                                   'center', [])                                    % List of cell centers
     end
 
     properties (SetAccess = 'public', GetAccess = 'public') %internal
@@ -68,10 +68,10 @@ classdef hydrobody < handle
         bodyTotal         = []                                                  % Total number of WEC-Sim bodies (body block iterations)
         lenJ              = []                                                  % Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
     end
-    
-    
+
+
     properties (SetAccess = 'private', GetAccess = 'public') %internal
-        
+
         excitationMethod;
         doNonLinearFKExcitation;
         radiationMethod;
@@ -80,91 +80,91 @@ classdef hydrobody < handle
         bodyToBodyInteraction;
         doMorrisonElementViscousDrag;
         caseDir;
-        
+
     end
-    
+
     properties (SetAccess = 'private', GetAccess = 'private') %internal
-        
+
         waves;
         simu;
-        
+
         excitationMethodNum;
         radiationMethodNum;
         hydroRestoringForceMethodNum;
         freeSurfaceMethodNum;
-        
+
         % properties used to calculate nonFKForce at reduced sample time
         oldForce    = [];
         oldWp       = [];
         oldWpMeanFs = [];
-        
+
         % nonlinear buoyancy
         oldNonLinBuoyancyF = [];
         oldNonLinBuoyancyP = [];
-        
+
         % wave radiation force convolution integral
         CIdt;
         radForceVelocity;
         radForceOldTime;
         radForceOldF_FM = zeros(6,1);
         radForce_IRKB_interp;
-            
+
         % wave radiation forces state-space system object
         radForceSS;
-        
+
     end
-    
+
     % public pre-processing related methods (and constructor)
     methods (Access = 'public') %modify object = T; output = F
-        
+
         function obj = hydrobody (filename, caseDir)
-            
+
             if nargin < 2
                 obj.caseDir = pwd();
             else
                 obj.caseDir = caseDir;
             end
-            
+
             % hydro data file
             obj.h5File = filename;
-            
+
         end
-        
+
         function odeSimReset (obj)
-            
+
             obj.oldForce    = [];
             obj.oldWp       = [];
             obj.oldWpMeanFs = [];
-            
+
             % reset non-linear buoyancy calc stuff
             obj.oldNonLinBuoyancyF = [];
             obj.oldNonLinBuoyancyP = [];
-            
+
             % reset radiation force related stuff
             if isa (obj.radForceSS, 'stateSpace')
                 obj.radForceSS.reset ();
             end
-            
+
         end
-        
+
         function odeSimSetup (obj, waves, simu, bodynum)
-            
+
             assert (isa (simu, 'simulationClass'), 'waves must be a simulationClass object')
             assert (isa (waves, 'waveClass'), 'waves must be a wavesClass object');
             assert (isscalar (bodynum) &&  isint2eps (bodynum) , 'bodynum must be a scalar integer')
-            
+
             % store waves and simu for later access
             obj.waves = waves;
             obj.simu = simu;
             obj.bodyNumber = bodynum;
-            
-            % Morrison Element        
+
+            % Morrison Element
             if obj.simu.morrisonElement == 0
                 obj.doMorrisonElementViscousDrag = false;
             elseif obj.simu.morrisonElement == 1
                 obj.doMorrisonElementViscousDrag = true;
             end
-            
+
             % Wave type
 
             % linear excitation type
@@ -181,14 +181,14 @@ classdef hydrobody < handle
                 obj.excitationMethod = 'user defined waves';
                 obj.excitationMethodNum = 3;
             end
-            
+
             % nonlinear excitation type
             if obj.simu.nlHydro == 0
                 obj.doNonLinearFKExcitation = false;
             elseif obj.simu.nlHydro > 0
                 obj.doNonLinearFKExcitation = true;
             end
-            
+
             if obj.simu.nlHydro < 2
                 obj.freeSurfaceMethod = 'mean';
                 obj.freeSurfaceMethodNum = 0;
@@ -218,10 +218,10 @@ classdef hydrobody < handle
             else
                 obj.bodyToBodyInteraction = true;
             end
-            
+
             % first reset everything
             odeSimReset (obj);
-            
+
             % then do the setup again
             obj.hydroForcePre( obj.waves.w, ...
                                obj.waves.waveDir, ...
@@ -241,7 +241,7 @@ classdef hydrobody < handle
 
             % Radiation Damping
             if obj.radiationMethodNum == 1 && ~isempty (fieldnames(obj.hydroForce))
-                
+
                 % reset the radiation force convolution integral related states
                 obj.CIdt = obj.simu.CTTime(2) - obj.simu.CTTime(1);
 
@@ -256,18 +256,16 @@ classdef hydrobody < handle
                 interp_factor = 1;
 
                 obj.radForce_IRKB_interp = IRKB_reordered(:,1:interp_factor:end, :);
-                
+
             elseif obj.radiationMethodNum == 2
-                
+
                 % initialise the radiation force state space solver object
                 obj.radForceSS = stateSpace ( obj.hydroForce.ssRadf.A, ...
                                               obj.hydroForce.ssRadf.B, ...
                                               obj.hydroForce.ssRadf.C, ...
                                               obj.hydroForce.ssRadf.D, ...
-                                              0 );
+                                              zeros (size (A,2), 1) );
             end
-            
-            
 
         end
 
@@ -306,7 +304,7 @@ classdef hydrobody < handle
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
         end
-        
+
         function loadHydroData(obj, hydroData)
             % Loads hydroData structure from matlab variable as alternative
             % to reading the h5 file. Used in wecSimMCR
@@ -353,10 +351,10 @@ classdef hydrobody < handle
                     obj.irfInfAddedMassAndDamping(CIkt,CTTime,ssCalc,iBod,rho,B2B);
                     obj.excitationMethodNum = 3;
             end
-            
+
             % store the description of the wave type for information later
             obj.excitationMethod = waveType;
-            
+
         end
 
         function adjustMassMatrix(obj,adjMassWeightFun,B2B)
@@ -389,8 +387,8 @@ classdef hydrobody < handle
                 obj.hydroForce.fAddedMass(3,3) = obj.hydroForce.fAddedMass(3,3) - tmp.adjmass;
                 obj.hydroForce.fAddedMass(4,4) = 0;
                 obj.hydroForce.fAddedMass(5,5) = 0;
-                obj.hydroForce.fAddedMass(6,6) = 0; 
-            end 
+                obj.hydroForce.fAddedMass(6,6) = 0;
+            end
         end
 
         function restoreMassMatrix(obj)
@@ -419,19 +417,19 @@ classdef hydrobody < handle
             % addLinDisp: initial linear displacement (in addition to the displacement caused by rotation)
 
             relCoord = obj.cg - x_rot;
-            
+
             rotatedRelCoord = hydrobody.rotateXYZ(relCoord, ax_rot, ang_rot);
-            
+
             newCoord = rotatedRelCoord + x_rot;
-            
+
             linDisp = newCoord - obj.cg;
-            
-            obj.initDisp.initLinDisp = linDisp + addLinDisp; 
-            
+
+            obj.initDisp.initLinDisp = linDisp + addLinDisp;
+
             obj.initDisp.initAngularDispAxis = ax_rot;
-            
+
             obj.initDisp.initAngularDispAngle = ang_rot;
-            
+
         end
 
         function listInfo(obj)
@@ -503,11 +501,11 @@ classdef hydrobody < handle
             p = obj.bodyGeometry.vertex;
             n = obj.bodyGeometry.norm;
             figure()
-            hold on 
+            hold on
             trimesh(tri,p(:,1),p(:,2),p(:,3))
             quiver3(c(:,1),c(:,2),c(:,3),n(:,1),n(:,2),n(:,3))
         end
-        
+
         function checkinputs(obj)
             % Checks the user inputs
             % hydro data file
@@ -522,11 +520,11 @@ classdef hydrobody < handle
             end
         end
     end
-    
+
     % non-public pre-processing methods
     methods (Access = 'protected') %modify object = T; output = F
-        
-        
+
+
         function noExcitation(obj)
             % Set excitation force for no excitation case
             obj.hydroForce.fExt.re=zeros(1,6);
@@ -614,7 +612,7 @@ classdef hydrobody < handle
                         end
                     end
                 otherwise
-                    lenJ = 6;                
+                    lenJ = 6;
                     obj.hydroForce.fAddedMass = zeros(6,lenJ);
                     obj.hydroForce.fDamping = zeros(6,lenJ);
                     obj.hydroForce.totDOF  =zeros(6,lenJ);
@@ -634,19 +632,19 @@ classdef hydrobody < handle
             % Added mass at infinite frequency
             % Convolution integral raditation damping
             % State space formulation
-            if B2B == 1;                 
-                lenJ = obj.bodyTotal*6;                    
-            else   
+            if B2B == 1;
+                lenJ = obj.bodyTotal*6;
+            else
                 lenJ = 6;
-            end   
+            end
             % Convolution integral formulation
-            if B2B == 1;  
-                obj.hydroForce.fAddedMass=obj.hydroData.hydro_coeffs.added_mass.inf_freq .*rho;                
-            else  
+            if B2B == 1;
+                obj.hydroForce.fAddedMass=obj.hydroData.hydro_coeffs.added_mass.inf_freq .*rho;
+            else
                 obj.hydroForce.fAddedMass=obj.hydroData.hydro_coeffs.added_mass.inf_freq(1:6,(iBod-1)*6+1:(iBod-1)*6+6) .*rho;
             end
             % Radition IRF
-            obj.hydroForce.fDamping=zeros(6,lenJ);             
+            obj.hydroForce.fDamping=zeros(6,lenJ);
             irfk = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K  .*rho;
             irft = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t;
             %obj.hydroForce.irkb=zeros(CIkt,6,lenJ);
@@ -730,12 +728,12 @@ classdef hydrobody < handle
                 obj.massCalcMethod = 'user';
             end
         end
-        
+
     end
 
     % public transient simulation methods
     methods (Access = 'public')
-        
+
         function [forces, out] = hydroForces (obj, t, x, vel, accel, elv)
             % hydroForces calculates the hydrodynamic forces acting on a
             % body
@@ -766,153 +764,153 @@ classdef hydrobody < handle
             %    forces
             %
             %
-            
+
             % always do linear excitation forces
             out.F_ExcitLin = linearExcitationForces (obj, t);
-            
+
             % always do viscous damping
             out.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
-            
+
             % always do radiation forces
             [out.F_addedmass, out.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
-            
+
             % hydrostatic restoring forces
             [out.F_Restoring, out.BodyHSPressure ] =  hydrostaticForces (obj, t, x, elv);
-            
+
             if obj.doNonLinearFKExcitation
-                
+
                 [out.F_ExcitLinNonLin, out.wavenonlinearpressure, out.wavelinearpressure] = nonlinearExcitationForces (obj, t, x, elv);
-                
+
             else
                 out.F_ExcitLinNonLin = zeros (6, 1);
             end
-            
+
             if obj.doMorrisonElementViscousDrag
-                
+
                 out.F_MorrisonElement = morrisonElementForce (obj, t, x, vel(:,obj.bodyNumber), accel(:,obj.bodyNumber));
-                
+
             else
-                
+
                 out.F_MorrisonElement = zeros (6, 1);
-                
+
             end
-            
-            
+
+
             out.F_Excit = out.F_ExcitLin + out.F_ExcitLinNonLin;
-            
+
             out.F_ExcitRamp = applyRamp (obj, t, out.F_Excit);
-            
+
             forces = out.F_ExcitRamp ...
                      - out.F_ViscousDamping ...
                      - out.F_addedmass ...
                      - out.F_Restoring ...
                      - out.F_RadiationDamping ...
                      - out.F_MorrisonElement;
-            
+
         end
-        
+
         function forces = viscousDamping (obj, vel)
-            
+
             forces = obj.hydroForce.visDrag * ( vel .* abs (vel));
-            
+
         end
-        
-        function forces = morrisonElementForce (obj, t, x, vel, accel) 
-            
+
+        function forces = morrisonElementForce (obj, t, x, vel, accel)
+
             % TODO: convert morrison element simulink models
             switch obj.excitationMethodNum
-                
+
                 case 0
                     % no wave
                     forces = [0 0 0 0 0 0];
-                    
+
                 case 1
                     % regular wave
                     forces = [0 0 0 0 0 0];
-                    
+
                 case 2
                     % irregular wave
                     forces = [0 0 0 0 0 0];
-                    
+
             end
-            
+
         end
-        
+
         function forces = linearExcitationForces (obj, t)
             % calculates wave excitation forces during transient simulation
-            
+
             switch obj.excitationMethodNum
-                
+
                 case 0
                     % no wave
                     forces = [0; 0; 0; 0; 0; 0];
-                    
+
                 case 1
                     % regular wave
-                    
+
                     % Calculates the wave force, F_wave, for the case of Regular Waves.
 
-                    % F_wave =   A * cos(w * t) * Re{Fext}  
-                    %            -  A * sin(w * t) * Im{Fext} 
-                    
+                    % F_wave =   A * cos(w * t) * Re{Fext}
+                    %            -  A * sin(w * t) * Im{Fext}
+
                     wt = obj.waves.w(1,:) .* t;
-                    
+
                     forces = obj.waves.A(1,:) .* ( ...
                                 cos (wt) .* obj.hydroForce.fExt.re(1,:) ...
                                 - sin (wt) .* obj.hydroForce.fExt.im(1,:) ...
                                              ).';
-                    
+
                 case 2
                     % irregular wave
-                    
+
                     % Calculates the wave force, F_wave, for the case of Irregular Waves.
-                    % 
+                    %
                     % F_wave = sum( F_wave(i))
-                    % 
+                    %
                     % where i = each frequency bin.
-                    
+
                     % TOD: check correct dimension/orientation of force output
                     A1 = bsxfun (@plus, obj.waves.w * t, pi/2);
-                    
+
                     B1 = sin (bsxfun (@plus, A1, obj.waves.phaseRand));
-                    
+
                     B11 = sin (bsxfun (@plus, w*time, obj.waves.phaseRand));
-                    
+
                     C1 = sqrt (bsxfun (@times, obj.waves.A, obj.waves.dw));
-                    
+
                     D1 = bsxfun (@times, obj.hydroForce.fExt.re, C1);
-                    
+
                     D11 = bsxfun (@times, obj.hydroForce.fExt.im, C1);
-                    
+
                     E1 = bsxfun (@times, B1, D1);
-                    
+
                     E11 = bsxfun (@times, B11, D11);
 
                     forces = sum (bsxfun (@minus, E1, E11));
-                    
-                    
+
+
                 case 3
                     % user defined
-                    
+
                     % Calculates the wave force, F_wave, for the case of User Defined Waves.
-                    % 
+                    %
                     % F_wave = convolution calculation [1x6]
-                    
+
                     error ('not yet implemented')
                     % TODO: make interpolation function for user defined waves, using ppval (C++ version)
-                    
+
             end
-                  
+
         end
-        
+
         function [forces, wavenonlinearpressure, wavelinearpressure] = nonlinearExcitationForces (obj, t, x, elv)
-                
+
                 x = x - [ obj.hydroData.properties.cg, 0, 0, 0];
-                
+
                 [forces, wavenonlinearpressure, wavelinearpressure]  = nonFKForce (obj, t, x, elv);
-                
+
         end
-        
+
         function [F_addedmass, F_RadiationDamping] = radiationForces (obj, t, vel, accel)
             % calculates the wave radiation forces
             %
@@ -942,91 +940,91 @@ classdef hydrobody < handle
             % F_RadiationDamping - force due to wave radiation damping
             %
             %
-            
+
             % matrix multiplication with acceleration
 %             if t > (obj.simu.startTime + 10e-8)
                 F_addedmass = obj.hydroForce.fAddedMass * accel(:);
 %             else
 %                 F_addedmass = 0;
 %             end
-            
+
             switch obj.radiationMethodNum
-                
+
                 case 0
                     % simple static coefficients
                     F_RadiationDamping = obj.hydroForce.fDamping * vel(:);
-                    
+
                 case 1
                     % convolution
                     F_RadiationDamping = convolutionIntegral (obj, vel(:), t);
-                    
+
                 case 2
                     % state space
                     F_RadiationDamping = obj.radForceSS.outputs ();
-                    
+
             end
-            
+
         end
-        
+
         function [forces, body_hspressure_out] =  hydrostaticForces (obj, t, x, waveElv)
-            
+
             x = x - [ obj.cg; 0; 0; 0 ];
-            
+
             switch obj.freeSurfaceMethodNum
-                
+
                 case 0
-                    
+
                     body_hspressure_out = [];
-                    
+
                     forces = obj.hydroForce.linearHydroRestCoef * x;
-                    
+
                     % Add Net Bouyancy Force to Z-Direction
                     forces(3) = forces(3) + ...
                         ((obj.simu.g .* obj.hydroForce.storage.mass) - (obj.simu.rho .* obj.simu.g .*  obj.dispVol));
 
                 case 1
-                    
+
                     [forces, body_hspressure_out]  = nonLinearBuoyancy( obj, x, waveElv, t );
-                                                 
+
                     % Add Net Bouyancy Force to Z-Direction
                     forces = -forces + [ 0, 0, (obj.simu.g .* obj.hydroForce.storage.mass), 0, 0, 0 ];
-                    
+
             end
-            
+
 %             forces = forces;
-            
+
         end
-        
+
     end
-    
+
     % non-public transient simulation methods
     methods (Access = 'protected')
-        
+
         function ramped = applyRamp (obj, t, nominal)
             % apply a time based ramp to the input
             %
             %
-            
+
             if t < obj.simu.rampT
                 % (3 * pi/2) == 4.712388980384690
                 ramped  = nominal .* 0.5 .* (1 + sin( pi .* (t ./ obj.simu.rampT) + 4.712388980384690));
             else
                 ramped = nominal;
             end
-            
+
         end
-        
+
         function [f, wp, wpMeanFS]  = nonFKForce (obj, t, x, elv)
             % Function to calculate wave exitation force and moment on a
-            % triangulated surface 
+            % triangulated surface
             %
             % NOTE: This function assumes that the STL file is imported
             % with its CG at 0,0,0
 
             % Logic to calculate nonFKForce at reduced sample time
             if isempty(obj.oldForce) || (mod (t, obj.simu.dtFeNonlin) < obj.simu.dt/2)
-                
-                % TODO: reduce calc_nonFKForce method inputs 
+
+                % TODO: reduce calc_nonFKForce method inputs
                 % no need to have all these inputs as they could be
                 % accessed directly from the class properties in the
                 % subfunction
@@ -1034,15 +1032,15 @@ classdef hydrobody < handle
                 obj.oldForce = f;
                 obj.oldWp = wp;
                 obj.oldWpMeanFs = wpMeanFS;
-                
+
             else
-                
+
                 f = obj.oldForce;
                 wp = obj.oldWp;
                 wpMeanFS = obj.oldWpMeanFs;
-                
+
             end
-            
+
         end
 
         function [f, wp, wpMeanFS]  = calc_nonFKForce (obj, x, elv, t)
@@ -1059,7 +1057,7 @@ classdef hydrobody < handle
             center = hydrobody.rotateXYZ (center, [0 0 1], x(6));
             center = hydrobody.offsetXYZ (center, x);
             center = hydrobody.offsetXYZ (center, obj.hydroData.properties.cg);
-            
+
             % Compute new normal vectors coords after cog rotation and translation
             tnorm = hydrobody.rotateXYZ (obj.bodyGeometry.tnorm, [1 0 0], x(4));
             tnorm = hydrobody.rotateXYZ (tnorm, [0 1 0], x(5));
@@ -1070,75 +1068,75 @@ classdef hydrobody < handle
 
             % Calculate the free surface
             wpMeanFS = pDis (obj, centerMeanFS, 0, t);
-            
+
             wp = pDis (obj, center, elv, t);
 
             % Calculate forces
             f_linear    = FK ( centerMeanFS,          obj.hydroData.properties.cg, avMeanFS, wpMeanFS );
-            f_nonLinear = FK ( center      , x(1:3) + obj.hydroData.properties.cg,       av,       wp ); 
+            f_nonLinear = FK ( center      , x(1:3) + obj.hydroData.properties.cg,       av,       wp );
             f = f_nonLinear - f_linear;
-            
+
         end
 
         function f = pDis (obj, center, elv, t)
             % Function to calculate pressure distribution
-            
+
             f = zeros (length (center(:,3)), 1);
             z = zeros (length (center(:,1)), 1);
-            
+
             if obj.waves.typeNum < 10
-                
+
             elseif obj.waves.typeNum < 20
-                
+
                 f = obj.simu.rho .* obj.simu.g .* obj.waves.AH(1) .* cos(obj.waves.k(1) .* center(:,1) - obj.waves.w(1) * t);
-                
+
                 if obj.waves.deepWaterWave == 0
-                    
+
                     z = (center(:,3) - elv) .* obj.waves.wDepth ./ (obj.waves.wDepth + elv);
-                    
+
                     f = f .* (cosh(obj.waves.k(1) .* (z + obj.waves.wDepth)) ./ cosh(obj.waves.k(1) * obj.waves.wDepth));
-                    
+
                 else
-                    
+
                     z = (center(:,3) - elv);
-                    
+
                     f = f .* exp(obj.waves.k(1) .* z);
-                    
+
                 end
-                
+
             elseif obj.waves.typeNum < 30
-                
+
                 for i=1:length(obj.waves.AH)
-                    
+
                     if obj.waves.deepWaterWave == 0 && obj.waves.wDepth <= 0.5*pi/obj.waves.k(i)
-                        
+
                         z = (center(:,3) - elv) .* obj.waves.wDepth ./ (obj.waves.wDepth + elv);
-                        
+
                         f_tmp = obj.simu.rho .* obj.simu.g .* sqrt(obj.waves.AH(i) * obj.waves.dw) .* cos(obj.waves.k(i) .* center(:,1) - obj.waves.w(i) * t - obj.waves.phaseRand(i));
-                        
+
                         f = f + f_tmp .* (cosh(obj.waves.k(i) .* (z + obj.waves.wDepth)) ./ cosh(obj.waves.k(i) .* obj.waves.wDepth));
-                        
+
                     else
-                        
+
                         z = (center(:,3) - elv);
-                        
+
                         f_tmp = obj.simu.rho .* obj.simu.g .* sqrt (obj.waves.AH(i) * obj.waves.dw) .* cos (obj.waves.k(i) .* center(:,1) - obj.waves.w(i) * t - obj.waves.phaseRand(i));
-                        
+
                         f = f + f_tmp .* exp(obj.waves.k(i) .* z);
-                        
+
                     end
                 end
-                
+
             end
-            
+
             f(z > 0) = 0;
-            
+
         end
 
         function f = FK(center, instcg, av, wp)
             % Function to calculate the force and moment about the cog due
             % to Froude-Krylov pressure
-            
+
             f = zeros(6,1);
 
             % Calculate the hydrostatic pressure at each triangle center
@@ -1154,10 +1152,10 @@ classdef hydrobody < handle
 
             f(4:6)= sum (cross (center2cgVec, pressureVect));
         end
-        
+
         function F_FM = convolutionIntegral(obj, vel, t)
             % Function to calculate convolution integral
-            
+
             if abs(t - obj.radForceOldTime - obj.CIdt) < 1e-8
 
                 obj.radForceVelocity      = circshift(obj.radForceVelocity, 1, 2);
@@ -1177,7 +1175,7 @@ classdef hydrobody < handle
                 % is always zeros
                 F_FM = obj.radForceOldF_FM;
             end
-            
+
         end
 
         function [f,p]  = nonLinearBuoyancy (obj, x, elv, t)
@@ -1186,29 +1184,29 @@ classdef hydrobody < handle
             % file is imported with its CG at 0,0,0
 
             if isempty(obj.oldNonLinBuoyancyF)
-                
+
                 [f,p] = calc_nonLinearBuoyancy (obj, x, elv);
-                
+
                 obj.oldNonLinBuoyancyF  = f;
-                
+
                 obj.oldNonLinBuoyancyP  = p;
-                
+
             else
-                
+
                 if mod(t, obj.simu.dtFeNonlin) < obj.simu.dt/2
-                    
+
                     [f,p] = calc_nonLinearBuoyancy (obj, x,elv);
-                    
+
                     obj.oldNonLinBuoyancyF  = f;
-                    
+
                     obj.oldNonLinBuoyancyP  = p;
-                    
+
                 else
-                    
+
                     f  = obj.oldNonLinBuoyancyF;
-                    
+
                     p  = obj.oldNonLinBuoyancyP;
-                    
+
                 end
             end
         end
@@ -1222,7 +1220,7 @@ classdef hydrobody < handle
             center = hydrobody.rotateXYZ(center, [0 0 1], x(6));
             center = hydrobody.offsetXYZ(center, x);
             center = hydrobody.offsetXYZ(center, obj.cg);
-            
+
             % Compute new normal vectors coords after cog rotation
             tnorm = hydrobody.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], x(4));
             tnorm = hydrobody.rotateXYZ(tnorm, [0 1 0], x(5));
@@ -1230,9 +1228,9 @@ classdef hydrobody < handle
 
             % Calculate the hydrostatic forces
             av = tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
-            
+
             [f,p] = fHydrostatic (obj, center, elv, x(1:3) + obj.cg, av);
-            
+
         end
 
         function [f,p] = fHydrostatic(obj, center, elv, instcg, av)
@@ -1246,7 +1244,7 @@ classdef hydrobody < handle
             % Calculate the hydrostatic pressure at each triangle center
             pressureVect = obj.simu.rho * obj.simu.g .* [-z -z -z] .* -av;
             p = obj.simu.rho * obj.simu.g .* -z;
-            
+
             % Compute force about cog
             f(1:3) = sum(pressureVect);
 
@@ -1256,12 +1254,12 @@ classdef hydrobody < handle
 
             f(4:6)= sum(cross(center2cgVec,pressureVect));
         end
-            
+
     end
-    
+
 	% public post-processing related methods
     methods (Access = 'public') %modify object = F; output = T
-        
+
         function fam = forceAddedMass(obj,acc,B2B)
             % Calculates and outputs the real added mass force time history
             iBod = obj.bodyNumber;
@@ -1271,7 +1269,7 @@ classdef hydrobody < handle
                 for j =1:6
                     if B2B == 1
                         jj = (iBod-1)*6+j;
-                    else 
+                    else
                         jj = j;
                     end
                     iam = obj.hydroForce.fAddedMass(i,jj);
@@ -1311,9 +1309,9 @@ classdef hydrobody < handle
                 % write points
                 fprintf(fid,'      <Points>\n');
                 fprintf(fid,'        <DataArray type="Float32" NumberOfComponents="3" format="ascii">\n');
-                for ii = 1:numVertex    
+                for ii = 1:numVertex
                     fprintf(fid, '          %5.5f %5.5f %5.5f\n', vertex_mod(ii,:));
-                end; 
+                end;
                 clear vertex_mod
                 fprintf(fid,'        </DataArray>\n');
                 fprintf(fid,'      </Points>\n');
@@ -1322,7 +1320,7 @@ classdef hydrobody < handle
                 fprintf(fid,'        <DataArray type="Int32" Name="connectivity" format="ascii">\n');
                 for ii = 1:numFace
                     fprintf(fid, '          %i %i %i\n', face(ii,:)-1);
-                end; 
+                end;
                 fprintf(fid,'        </DataArray>\n');
                 fprintf(fid,'        <DataArray type="Int32" Name="offsets" format="ascii">\n');
                 fprintf(fid, '         ');
@@ -1339,7 +1337,7 @@ classdef hydrobody < handle
                 fprintf(fid,'        <DataArray type="Float32" Name="Cell Area" NumberOfComponents="1" format="ascii">\n');
                 for ii = 1:numFace
                     fprintf(fid, '          %i', cellareas(ii));
-                end; 
+                end;
                 fprintf(fid, '\n');
                 fprintf(fid,'        </DataArray>\n');
                 % Hydrostatic Pressure
@@ -1347,7 +1345,7 @@ classdef hydrobody < handle
                     fprintf(fid,'        <DataArray type="Float32" Name="Hydrostatic Pressure" NumberOfComponents="1" format="ascii">\n');
                     for ii = 1:numFace
                         fprintf(fid, '          %i', hspressure.signals.values(it,ii));
-                    end; 
+                    end;
                     fprintf(fid, '\n');
                     fprintf(fid,'        </DataArray>\n');
                 end
@@ -1356,7 +1354,7 @@ classdef hydrobody < handle
                     fprintf(fid,'        <DataArray type="Float32" Name="Wave Pressure NonLinear" NumberOfComponents="1" format="ascii">\n');
                     for ii = 1:numFace
                         fprintf(fid, '          %i', wavenonlinearpressure.signals.values(it,ii));
-                    end; 
+                    end;
                     fprintf(fid, '\n');
                     fprintf(fid,'        </DataArray>\n');
                 end
@@ -1365,7 +1363,7 @@ classdef hydrobody < handle
                     fprintf(fid,'        <DataArray type="Float32" Name="Wave Pressure Linear" NumberOfComponents="1" format="ascii">\n');
                     for ii = 1:numFace
                         fprintf(fid, '          %i', wavelinearpressure.signals.values(it,ii));
-                    end; 
+                    end;
                     fprintf(fid, '\n');
                     fprintf(fid,'        </DataArray>\n');
                 end
@@ -1380,9 +1378,9 @@ classdef hydrobody < handle
         end
 
     end
-    
+
     methods (Static)
-        
+
         function xn = rotateXYZ (x, ax, theta)
             % Function to rotate a point about an arbitrary axis
             % x: 3-componenet coordinates
@@ -1408,7 +1406,7 @@ classdef hydrobody < handle
             verts_out(:,2) = verts(:,2) + x(2);
             verts_out(:,3) = verts(:,3) + x(3);
         end
-        
+
     end
-    
+
 end
