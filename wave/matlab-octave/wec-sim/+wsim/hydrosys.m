@@ -1,6 +1,6 @@
 classdef hydrosys < handle
     % class representing a collection of bodies interacting with water
-    % waves
+    % waves and each other hydrodynamically
     %
     %
     
@@ -225,6 +225,10 @@ classdef hydrosys < handle
                 
             end
             
+            for bodyind = 1:numel(self.hydroBodies)
+                self.hydroBodies(bodyind).adjustMassMatrix(self.simu.adjMassWeightFun,self.simu.b2b);
+            end
+            
             self.odeSimInitialised = true;
             
         end
@@ -241,6 +245,21 @@ classdef hydrosys < handle
                                                                  accel, ...
                                                                  elv );
             end
+            
+        end
+        
+        function [F_Total, F_AddedMass] = correctAddedMassForce (self, forceTotal, forceAddedMass, accel)
+            % recalcualte the added mass and total forces on bodies
+            
+            F_Total = forceTotal + forceAddedMass;
+            F_AddedMass = nan * ones (size (forceAddedMass));
+            
+            for bodyind = 1:numel(self.hydroBodies)
+                self.hydroBodies(bodyind).restoreMassMatrix ();
+                F_AddedMass(:,:,bodyind) = self.hydroBodies(bodyind).forceAddedMass(accel(:,:,bodyind), self.simu.b2b);
+            end
+            
+            F_Total = F_Total - F_AddedMass;
             
         end
         
