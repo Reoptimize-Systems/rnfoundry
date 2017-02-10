@@ -37,7 +37,7 @@ D = zeros ( size (C, 1), size (B, 2) );
 
 x0 = [0.01 0 0];
 
-%% 
+%%
 
 % create state space object
 SS = stateSpace (A, B, C, D, x0);
@@ -47,8 +47,8 @@ odeopts = odeset ('OutputFcn', @SS.outputfcn ...
                   , 'RelTol', 1e-6 ...
                   ... , 'AbsTol', [1e-5, 1e-5, 1e-5] ...
                   );
-              
-              
+
+
 if exist ('ss', 'class')
     % compare to matlab control systems state-space model if it is
     % avaialable
@@ -65,16 +65,16 @@ if exist ('ss', 'class')
     sys_cl = ss(A-B*K,B,C(1,:),0);
 
     [yss,tss,x] = lsim(sys_cl,u,tss,x0);
-    
+
     % append a legend string for adding later
     legstrs = [ legstrs, 'Control Systems Toolbox ss lsim method'];
-    
+
     hold on
     plot (tss, yss);
     hold off
-    
+
 else
-    % this is what K is with 
+    % this is what K is with
     %
     % p1 = -10 + 10i;
     % p2 = -10 - 10i;
@@ -93,11 +93,11 @@ dx = [];
 y = [];
 
 for ind = 1:numel (T)
-    
+
     [dx(:,ind),y(:,ind)]  = test_state_space_odefcn (T(ind), X(ind,:)', SS, K);
-    
+
     SS.update (X(ind,:)');
-    
+
 end
 
 %% plot the results
@@ -120,11 +120,11 @@ dx = [];
 y = [];
 
 for ind = 1:numel (T)
-    
+
     [dx(:,ind),y(:,ind)]  = test_state_space_odefcn (T(ind), X(ind,:)', SS, K);
-    
+
     SS.update (X(ind,:)');
-    
+
 end
 
 %% plot the results
@@ -147,11 +147,11 @@ dx = [];
 y = [];
 
 for ind = 1:numel (T)
-    
+
     [dx(:,ind),y(:,ind)]  = test_state_space_odefcn (T(ind), X(ind,:)', SS, K);
-    
+
     SS.update (X(ind,:)');
-    
+
 end
 
 %% plot the results
@@ -161,10 +161,11 @@ plot (T, y(1,:))
 hold off
 legstrs = [ legstrs, sprintf('stateSpace classdef method using ode23, RelTol %g', odeopts.RelTol)];
 
-%% compare to simulink 
+%% compare to simulink
 
 % load_system ('state_space_simulink_compare');
 if exist ('sim', 'builtin')
+
     sim ('state_space_simulink_compare')
 
     % close_system ('state_space_simulink_compare');
@@ -183,7 +184,7 @@ if exist ('sim', 'builtin')
 
 end
 
-%% 
+%%
 
 % complete the figure by adding the legend strings
 legend (legstrs);
