@@ -776,11 +776,13 @@ classdef hydrobody < handle
             % always do radiation forces
             [out.F_addedmass, out.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
             
+            % hydrostatic restoring forces
+            [out.F_Restoring, out.BodyHSPressure ] =  hydrostaticForces (obj, t, x, elv);
+            
             if obj.doNonLinearFKExcitation
                 
                 [out.F_ExcitLinNonLin, out.wavenonlinearpressure, out.wavelinearpressure] = nonlinearExcitationForces (obj, t, x, elv);
                 
-%                 forces = forces + out.F_ExcitLinNonLin;
             else
                 out.F_ExcitLinNonLin = zeros (6, 1);
             end
@@ -789,7 +791,6 @@ classdef hydrobody < handle
                 
                 out.F_MorrisonElement = morrisonElementForce (obj, t, x, vel(:,obj.bodyNumber), accel(:,obj.bodyNumber));
                 
-%                 forces = forces - out.F_MorrisonElement;
             else
                 
                 out.F_MorrisonElement = zeros (6, 1);
@@ -799,11 +800,12 @@ classdef hydrobody < handle
             
             out.F_Excit = out.F_ExcitLin + out.F_ExcitLinNonLin;
             
-            out.F_ExcitRamp = applyExcitRamp (t, out.F_Excit);
+            out.F_ExcitRamp = applyRamp (obj, t, out.F_Excit);
             
             forces = out.F_ExcitRamp ...
                      - out.F_ViscousDamping ...
                      - out.F_addedmass ...
+                     - out.F_Restoring ...
                      - out.F_RadiationDamping ...
                      - out.F_MorrisonElement;
             
@@ -905,7 +907,7 @@ classdef hydrobody < handle
         
         function [forces, wavenonlinearpressure, wavelinearpressure] = nonlinearExcitationForces (obj, t, x, elv)
                 
-                x = x - [ body.hydroData.properties.cg, 0, 0, 0];
+                x = x - [ obj.hydroData.properties.cg, 0, 0, 0];
                 
                 [forces, wavenonlinearpressure, wavelinearpressure]  = nonFKForce (obj, t, x, elv);
                 
@@ -942,11 +944,11 @@ classdef hydrobody < handle
             %
             
             % matrix multiplication with acceleration
-            if t > (obj.simu.startTime + 10e-8)
+%             if t > (obj.simu.startTime + 10e-8)
                 F_addedmass = obj.hydroForce.fAddedMass * accel(:);
-            else
-                F_addedmass = 0;
-            end
+%             else
+%                 F_addedmass = 0;
+%             end
             
             switch obj.radiationMethodNum
                 
@@ -956,7 +958,7 @@ classdef hydrobody < handle
                     
                 case 1
                     % convolution
-                    F_RadiationDamping = convolutionIntegral (obj, vel, t);
+                    F_RadiationDamping = convolutionIntegral (obj, vel(:), t);
                     
                 case 2
                     % state space
@@ -968,20 +970,20 @@ classdef hydrobody < handle
         
         function [forces, body_hspressure_out] =  hydrostaticForces (obj, t, x, waveElv)
             
-            x = x - [ obj.cg, 0, 0, 0 ];
+            x = x - [ obj.cg; 0; 0; 0 ];
             
-            switch obj.hydroRestoringForceMethodNum
+            switch obj.freeSurfaceMethodNum
                 
                 case 0
                     
                     body_hspressure_out = [];
                     
-                    forces = x * obj.hydroForce.linearHydroRestCoef;
+                    forces = obj.hydroForce.linearHydroRestCoef * x;
                     
                     % Add Net Bouyancy Force to Z-Direction
                     forces(3) = forces(3) + ...
                         ((obj.simu.g .* obj.hydroForce.storage.mass) - (obj.simu.rho .* obj.simu.g .*  obj.dispVol));
-                    
+
                 case 1
                     
                     [forces, body_hspressure_out]  = nonLinearBuoyancy( obj, x, waveElv, t );
@@ -990,6 +992,8 @@ classdef hydrobody < handle
                     forces = -forces + [ 0, 0, (obj.simu.g .* obj.hydroForce.storage.mass), 0, 0, 0 ];
                     
             end
+            
+%             forces = forces;
             
         end
         
@@ -1275,7 +1279,6 @@ classdef hydrobody < handle
                 end
                 fam(:,i) = tmp;
             end
-            clear tmp
         end
 
         function write_paraview_vtp (obj, t, pos_all, bodyname, model, simdate, hspressure, wavenonlinearpressure, wavelinearpressure)
