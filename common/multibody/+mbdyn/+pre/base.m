@@ -60,7 +60,7 @@ classdef base < handle
             
             ok = mbdyn.pre.base.check3X3Matrix (mat, false);
             
-            if throw
+            if ~ok && throw
                 error ('orientation matrix must be a 3 x 3 numeric matrix or mbdyn.pre.orientmat object');
             end
 

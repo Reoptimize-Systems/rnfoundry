@@ -15,9 +15,32 @@ classdef system < mbdyn.pre.base
     
     methods
         
-        function self = system ()
+        function self = system (varargin)
             
-            self.problems = { struct('tyep', 'initial value') };
+            options.Nodes = {};
+            options.Elements = {};
+            options.Drivers = {};
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.problems = { struct('type', 'initial value') };
+            
+            self.nodes = {};
+            self.elements = {};
+            self.drivers = {};
+            
+            if ~isempty (options.Nodes)
+                self.addNodes (options.Nodes)
+            end
+            
+            if ~isempty (options.Elements)
+                self.addElements (options.Elements)
+            end
+            
+            if ~isempty (options.Drivers)
+                self.addDrivers (options.Drivers)
+            end
+            
             
         end
         
@@ -51,10 +74,9 @@ classdef system < mbdyn.pre.base
             
         end
         
-        function [filename, str] = generateMBDynInputFile (self, filename)
+        function str = generateMBDynInputStr (self)
             
-            
-            % make sure labels are set
+             % make sure labels are set
             self.setLabels ();
             
 %             begin: data;
@@ -68,6 +90,7 @@ classdef system < mbdyn.pre.base
                 str = self.addOutputLine (str , sprintf('problem: %s;', self.problems{ind}.type), 1, false);
             end
             str = self.addOutputLine (str , 'end: data;', 0, false);
+            str = sprintf ('%s\n', str);
             
             %% problems section
             % write out each problem section
@@ -78,6 +101,7 @@ classdef system < mbdyn.pre.base
                 str = self.addOutputLine (str , sprintf('end: %s;', self.problems{ind}.type), 0, false);
                 
             end
+            str = sprintf ('%s\n', str);
             
             elcount = self.countControlElements ();
             
@@ -101,6 +125,7 @@ classdef system < mbdyn.pre.base
             end
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
+            str = sprintf ('%s\n', str);
             
             %% drivers section
             if numel (self.drivers) > 0
@@ -109,27 +134,40 @@ classdef system < mbdyn.pre.base
                     str = sprintf ('%s\n', self.drivers{ind}.generateOutputString ());
                 end
                 str = self.addOutputLine (str , 'end: drivers;', 0, false);
+                str = sprintf ('%s\n', str);
             end
             
             %% nodes section
             str = self.addOutputLine (str , 'begin: nodes;', 0, false);
+            str = sprintf ('%s\n', str);
+            
             for ind = 1:numel (self.nodes)
-                str = sprintf ('%s\n', self.nodes{ind}.generateOutputString ());
+                str = sprintf ('%s\n%s\n', str, self.nodes{ind}.generateOutputString ());
             end
             str = self.addOutputLine (str , 'end: nodes;', 0, false);
             
+            str = sprintf ('%s\n', str);
+            
             %% elements section
+            
             str = self.addOutputLine (str , 'begin: elements;', 0, false);
             
             str = sprintf ('%s\n', str);
             
             for ind = 1:numel (self.elements)
-                str = sprintf ('%s\n', self.elements{ind}.generateOutputString ());
+                str = sprintf ('%s\n%s\n', str, self.elements{ind}.generateOutputString ());
             end
 
             str = self.addOutputLine (str , 'end: elements;', 0, false);
             
-            %% write out the string to a file
+        end
+        
+        
+        function [filename, str] = generateMBDynInputFile (self, filename)
+            
+            str = self.generateMBDynInputStr ();
+            
+            % write out the string to a file
             if nargin < 2
                 filename = [tempname, '.mbd'];
             end
