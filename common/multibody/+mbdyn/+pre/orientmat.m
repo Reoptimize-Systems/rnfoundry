@@ -44,6 +44,52 @@ classdef orientmat
              
                     this.orientationMatrix = expm (wcrs);
                     
+                case '2vectors'
+                    
+                    % normalise the fisr vector
+                    spec.vec1 = this.unit (spec.vec1);
+                    spec.vec2 = this.unit (spec.vec2);
+                    
+                    spec.vec3 = cross (spec.vec1, spec.vec2);
+                    
+                    spec.vec2 = this.unit (cross (this.unit (spec.vec3), spec.vec1));
+                    
+                    switch spec.vec1axis
+                        
+                        case 1
+                            X = spec.vec1;
+                            if spec.vec2axis == 2
+                                Y = spec.vec2;
+                                Z = spec.vec3;
+                            elseif spec.vec2axis == 3
+                                Y = spec.vec3;
+                                Z = spec.vec2;
+                            end
+                            
+                        case 2
+                            Y = spec.vec1;
+                            if spec.vec2axis == 1
+                                X = spec.vec2;
+                                Z = spec.vec3;
+                            elseif spec.vec2axis == 3
+                                X = spec.vec3;
+                                Z = spec.vec2;
+                            end
+                            
+                        case 3
+                            Z = spec.vec1;
+                            if spec.vec2axis == 2
+                                X = spec.vec2;
+                                Y = spec.vec3;
+                            elseif spec.vec2axis == 3
+                                X = spec.vec3;
+                                Y = spec.vec2;
+                            end
+                        
+                    end
+                    
+                    this.orientationMatrix = [ X, Y, Z ];
+                    
             end 
             
         end
@@ -104,6 +150,16 @@ classdef orientmat
         function om = ctranspose (om1)
             
             om = mbdyn.pre.orientmat ('orientation', om1.orientationMatrix');
+            
+        end
+        
+    end
+    
+    methods (Access = private)
+       
+        function out = unit (self, vec)
+            
+            out = vec ./ norm (vec);
             
         end
         
