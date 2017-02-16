@@ -31,8 +31,8 @@ classdef revoluteHinge < mbdyn.pre.twoNodeJoint
             
             self.checkJointPositionOffset (position1);
             self.checkJointPositionOffset (position2);
-            self.checkJointOrientation (options.RelativeOrientation1);
-            self.checkJointOrientation (options.RelativeOrientation2);
+            self.checkJointOrientationOffset (options.RelativeOrientation1);
+            self.checkJointOrientationOffset (options.RelativeOrientation2);
             
             self.relativeOffset1 = position1;
             self.relativeOrientation1 = self.getOrientationMatrix (options.RelativeOrientation1);
@@ -72,7 +72,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeJoint
                 str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 3, false);
             end
             
-            str = self.addOutputLine (str, ';', 1, false, 'end total joint');
+            str = self.addOutputLine (str, ';', 1, false, 'end revolute hinge');
             
         end
         

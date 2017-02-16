@@ -29,9 +29,9 @@ classdef body < mbdyn.pre.element
             
             self.mass = mass;
             if isempty (cog)
-                self.relativeCentreOfMass = cog;
-            else
                 self.relativeCentreOfMass = 'null';
+            else
+                self.relativeCentreOfMass = cog;
             end
             self.inertiaMatrix = inertiamat;
             self.nodeAttached = node;
@@ -57,7 +57,7 @@ classdef body < mbdyn.pre.element
             % delete newline character and space from start
             str(1:2) = [];
             
-            str = self.addOutputLine (str, sprintf('body : %d, %s', self.label, self.nodeAttached.label), 1, true, 'label, node label');
+            str = self.addOutputLine (str, sprintf('body : %d, %d', self.label, self.nodeAttached.label), 1, true, 'label, node label');
             
             str = self.addOutputLine (str, self.commaSepList (self.mass), 2, true, 'mass');
             
