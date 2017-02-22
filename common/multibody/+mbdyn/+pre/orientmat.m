@@ -26,16 +26,61 @@ classdef orientmat
                     
                 case 'euler'
                     
-                    this.orientationMatrix = SpinCalc('EA123toDCM', rad2deg (spec), eps (), 1);
+                    om = mbdyn.pre.orientmat ('euler123', spec);
+                    this.orientationMatrix = om.orientationMatrix;
+                    clear om;
                     
                 case 'euler123'
                     
-                    this.orientationMatrix = SpinCalc('EA123toDCM', rad2deg (spec), eps (), 1);
+                    d = spec(1);
+                    dCosAlpha = cos(d);
+                    dSinAlpha = sin(d);
+                    d = spec(2);
+                    dCosBeta = cos(d);
+                    dSinBeta = sin(d);
+                    d = spec(3);
+                    dCosGamma = cos(d);
+                    dSinGamma = sin(d);
+                    
+                    this.orientationMatrix = ...
+                        [ dCosBeta*dCosGamma, dCosAlpha*dSinGamma + dSinAlpha*dSinBeta*dCosGamma, dSinAlpha*dSinGamma - dCosAlpha*dSinBeta*dCosGamma;
+                          -dCosBeta*dSinGamma, dCosAlpha*dCosGamma - dSinAlpha*dSinBeta*dSinGamma, dSinAlpha*dCosGamma + dCosAlpha*dSinBeta*dSinGamma;
+                          dSinBeta, -dSinAlpha*dCosBeta, dCosAlpha*dCosBeta ];
                     
                 case 'euler321'
+               
+                    d = spec(1);
+                    dCosAlpha = cos(d);
+                    dSinAlpha = sin(d);
+                    d = spec(2);
+                    dCosBeta = cos(d);
+                    dSinBeta = sin(d);
+                    d = spec(3);
+                    dCosGamma = cos(d);
+                    dSinGamma = sin(d);
+
+                    this.orientationMatrix = ...
+                        [ dCosAlpha*dCosBeta,  dSinAlpha*dCosBeta, -dSinBeta;
+                         -dSinAlpha*dCosGamma + dCosAlpha*dSinBeta*dSinGamma, dCosAlpha*dCosGamma + dSinAlpha*dSinBeta*dSinGamma, dCosBeta*dSinGamma;
+                         dSinAlpha*dSinGamma + dCosAlpha*dSinBeta*dCosGamma, -dCosAlpha*dSinGamma + dSinAlpha*dSinBeta*dCosGamma, dCosBeta*dCosGamma ];
                     
-                    this.orientationMatrix = SpinCalc('EA321toDCM', rad2deg (spec), eps (), 1);
+                case 'euler313'
                     
+                    d = spec(1);
+                    dCosAlpha = cos(d);
+                    dSinAlpha = sin(d);
+                    d = spec(2);
+                    dCosBeta = cos(d);
+                    dSinBeta = sin(d);
+                    d = spec(3);
+                    dCosGamma = cos(d);
+                    dSinGamma = sin(d);
+
+                    this.orientationMatrix = ...
+                        [ dCosAlpha*dCosGamma - dSinAlpha*dCosBeta*dSinGamma, dSinAlpha*dCosGamma + dCosAlpha*dCosBeta*dSinGamma, dSinBeta*dSinGamma; 
+                          -dCosAlpha*dSinGamma - dSinAlpha*dCosBeta*dCosGamma, -dSinAlpha*dSinGamma + dCosAlpha*dCosBeta*dCosGamma, dSinBeta*dCosGamma;
+                          dSinAlpha*dSinBeta, -dCosAlpha*dSinBeta, dCosBeta ];
+                      
                 case 'vector'
                     % axis and angle (angle in rad = norm of matrix)
                     wcrs = [ 0         spec(3) -spec(2)
@@ -46,49 +91,66 @@ classdef orientmat
                     
                 case '2vectors'
                     
-                    % normalise the fisr vector
-                    spec.vec1 = this.unit (spec.vec1);
-                    spec.vec2 = this.unit (spec.vec2);
-                    
-                    spec.vec3 = cross (spec.vec1, spec.vec2);
-                    
-                    spec.vec2 = this.unit (cross (this.unit (spec.vec3), spec.vec1));
-                    
-                    switch spec.vec1axis
-                        
-                        case 1
-                            X = spec.vec1;
-                            if spec.vec2axis == 2
-                                Y = spec.vec2;
-                                Z = spec.vec3;
-                            elseif spec.vec2axis == 3
-                                Y = spec.vec3;
-                                Z = spec.vec2;
-                            end
-                            
-                        case 2
-                            Y = spec.vec1;
-                            if spec.vec2axis == 1
-                                X = spec.vec2;
-                                Z = spec.vec3;
-                            elseif spec.vec2axis == 3
-                                X = spec.vec3;
-                                Z = spec.vec2;
-                            end
-                            
-                        case 3
-                            Z = spec.vec1;
-                            if spec.vec2axis == 2
-                                X = spec.vec2;
-                                Y = spec.vec3;
-                            elseif spec.vec2axis == 3
-                                X = spec.vec3;
-                                Y = spec.vec2;
-                            end
-                        
+                    if (spec.ia < 1 || spec.ia > 3)
+                        error ('Axis index A must be 1, 2, or 3')
                     end
                     
-                    this.orientationMatrix = [ X, Y, Z ];
+                    r = cell([1,3]);
+                    
+                    i1 = spec.ia - 1;
+                    i2 = mod (spec.ia, 3);
+                    i3 = mod ((spec.ia+1), 3);
+                    
+                    i1 = i1 + 1;
+                    i2 = i2 + 1;
+                    i3 = i3 + 1;
+
+                    if (spec.ib == mod (spec.ia,3)+1)
+                        d = norm(spec.vecA);
+                        if (d <= eps())
+                        	error ('first vector must be non-null');
+                        end
+                        r{i1} = spec.vecA / d;
+                        d = norm(spec.vecB);
+                        if (d <= eps())
+                        	error ('second vector must be non-null');
+                        end
+                        r{i3} = cross(r{i1}, spec.vecB);
+                        d = dot(r{i3}, r{i3});
+                        if (d <= eps())
+                        	error ('vectors must be distinct');
+                        end
+                        d = sqrt(d);
+                        r{i3} = r{i3} / d;
+                        r{i2} = cross(r{i3}, r{i1});
+
+                    elseif (spec.ib == (mod (spec.ia+1,3)+1))
+                        d = norm(spec.vecA);
+                        if (d <= eps())
+                        	error ('first vector must be non-null');
+                        end
+                        
+                        r{i1} = spec.vecA / d;
+                        d = norm(spec.vecB);
+                        if (d <= eps())
+                        	error ('second vector must be non-null');
+                        end
+
+                        r{i2} = cross(spec.vecB, r{i1});
+                        d = dot(r{i2}, r{i2});
+                        if (d <= eps())
+                        	error ('vectors must be distinct');
+                        end
+                        
+                        d = sqrt(d);
+                        r{i2} = r{i2} / d;
+                        r{i3} = cross(r{i1}, r{i2});
+                        
+                    else 
+                        error ('second index is illegal');
+                    end
+               
+                    this.orientationMatrix = [ r{1}.'; r{2}.'; r{3}.' ];
                     
             end 
             
