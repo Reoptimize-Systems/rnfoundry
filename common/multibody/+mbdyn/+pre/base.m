@@ -116,8 +116,27 @@ classdef base < handle
                     % out row-wise for mbdyn
                     mat = varargin{ind}';
                     
+                    if numel (mat) > 1 && size(mat, 1) == size (mat, 2)
+                        str = [ str, 'matr, '];
+                    end
+                    
                     for matind = 1:numel (mat)
-                        str = [ str, sprintf('%g, ', mat(matind)) ];
+                        if isint2eps (mat(matind))
+                            str = [ str, sprintf('%d.0, ', mat(matind)) ];
+                        else
+                            numstr = sprintf('%.14f', mat(matind));
+                            % strip trailing zeros from decimals
+                            n = numel (numstr);
+                            while numstr(n) ~= '.'
+                                if numstr(n) == '0'
+                                    numstr(n) = [];
+                                else
+                                    break;
+                                end
+                                n = n - 1;
+                            end
+                            str = [ str, sprintf('%s, ', numstr) ];
+                        end
                     end
                     
                 elseif ischar (varargin{ind})
@@ -129,7 +148,7 @@ classdef base < handle
             end
             
             % strip last comma and space
-            str = sprintf ( [str, '\b\b'] );
+            str(end-1:end) = [];
             
         end
         
@@ -151,6 +170,14 @@ classdef base < handle
                 str = [ str, ' # ', comment ];
             end
             
+        end
+        
+        function M = mbdynOrient2Matlab (M)
+
+            % matlabs angles are clockwise 
+
+            M = [ M(1:3,1:3).', M(1:3,4); ...
+                  0, 0, 0, 1 ];
         end
         
     end

@@ -15,6 +15,11 @@ classdef singleNodeJoint < mbdyn.pre.joint
             self.node = node;
             
         end
+        
+        function str = generateOutputString (self)
+            str = generateOutputString@mbdyn.pre.joint(self);
+        end
+        
     end
     
     methods (Access = protected)

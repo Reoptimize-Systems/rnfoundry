@@ -43,6 +43,9 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                    
             self.type = type;
             
+            self.checkOrientationMatrix (options.AbsoluteOrientation, true);
+            self.checkCartesianVector (options.AbsoluteAngularVelocity);
+            
             self.absoluteOrientation = options.AbsoluteOrientation;
             
             self.absoluteAngularVelocity = options.AbsoluteAngularVelocity;
@@ -72,7 +75,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
             str = self.addOutputLine (str, self.commaSepList (self.absolutePosition), 2, true, 'absolute position');
             
-            str = self.addOutputLine (str, self.commaSepList (self.absoluteOrientation), 2, true, 'absolute orientation');
+            str = self.addOutputLine (str, self.commaSepList (self.getOrientationMatrix (self.absoluteOrientation)), 2, true, 'absolute orientation');
             
             if ~isempty (self.orientationDescription)
                 str = self.addOutputLine (str, self.commaSepList ('orientation description', self.orientationDescription), 3, true);
@@ -98,6 +101,21 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
         end
         
+    end
+    
+    methods (Access = protected)
+        function setTransform (self)
+            
+            M = [ self.absoluteOrientation.orientationMatrix, self.absolutePosition; ...
+                  0, 0, 0, 1 ];
+            
+            % matlab uses different convention to mbdyn for rotation
+            % matrix
+            M = self.mbdynOrient2Matlab (M);
+                  
+            set ( self.transformObject, 'Matrix', M );
+            
+        end
     end
     
 end

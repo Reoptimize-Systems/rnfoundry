@@ -37,6 +37,9 @@ classdef node < mbdyn.pre.base
             
         end
         
+        function draw (self, varargin)
+            % do nothing by default
+        end
         
     end
 

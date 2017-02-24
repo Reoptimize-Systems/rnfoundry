@@ -33,6 +33,8 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             % call the superclass constructor
             self = self@mbdyn.pre.twoNodeJoint (node1, node2);
             
+            self.type = 'total joint';
+            
             self.checkJointPositionOffset (options.RelativeOffset1);
             self.checkJointPositionOffset (options.RelativeOffset2);
             self.checkJointOrientationOffset (options.RelativePositionOrientation1);
@@ -73,12 +75,7 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
         
         function str = generateOutputString (self)
             
-            str = self.addOutputLine ('' , '', 1, false, 'total joint');
-            
-            % delete newline character and space from start
-            str(1:2) = [];
-            
-            str = self.addOutputLine (str , 'total joint', 1, true);
+            str = generateOutputString@mbdyn.pre.twoNodeJoint (self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
             
@@ -122,9 +119,45 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             
         end
         
+        function draw (self, varargin)
+            
+            options.AxesHandle = self.drawAxesH;
+            options.ForceRedraw = false;
+            options.Mode = 'solid';
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            draw@mbdyn.pre.element ( self, ...
+                'AxesHandle', options.AxesHandle, ...
+                'ForceRedraw', options.ForceRedraw, ...
+                'Mode', options.Mode );
+
+            self.setTransform ();
+            
+        end
+        
     end
     
     methods (Access = protected)
+        
+        function setTransform (self)
+            
+            ref_node = mbdyn.pre.reference (self.node1.absolutePosition, ...
+                                            self.node1.absoluteOrientation, ...
+                                            [], []);
+                                        
+            ref_joint = mbdyn.pre.reference (self.relativeOffset1, self.relativePositionOrientation1, [], [], 'Parent', ref_node);
+            
+            M = [ ref_joint.orientm.orientationMatrix , ref_joint.pos; ...
+                  0, 0, 0, 1 ];
+            
+            % matlab uses different convention to mbdyn for rotation
+            % matrix
+            M = self.mbdynOrient2Matlab (M);
+                  
+            set ( self.transformObject, 'Matrix', M );
+            
+        end
         
         function checkPosStatus (self, posstatus)
             % checks if the position status choice is valid

@@ -2,15 +2,26 @@
 
 %% orientation matrix
 
-om = mbdyn.pre.orientmat ('2vectors', struct ('vec1axis', 1, 'vec1', [1;0;0], 'vec2axis', 2, 'vec2', [0;1;0])); 
+om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [1;0;0], 'ib', 2, 'vecB', [0;1;0])); 
 
 om.orientationMatrix
 
 
 %% orientation matrix
-om = mbdyn.pre.orientmat ('2vectors', struct ('vec1axis', 1, 'vec1', [cos(pi/6);sin(pi/6);0], 'vec2axis', 3, 'vec2', [0;0;1])); 
+
+pos = [1,0,0]
+
+om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [cos(pi/6);sin(pi/6);0], 'ib', 3, 'vecB', [0;0;1])); 
 
 om.orientationMatrix
+
+pos * om.orientationMatrix
+
+om = mbdyn.pre.orientmat ('euler', [0,0,pi/6]);
+
+om.orientationMatrix
+
+pos * om.orientationMatrix
 
 %% references
 
@@ -52,7 +63,7 @@ sn3dof = mbdyn.pre.structuralNode3dof ('dynamic displacement', 'Accel', true);
 
 str = sn3dof.generateOutputString ()
 
-%%
+%% Body
 
 sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 mass = 1;
@@ -100,8 +111,8 @@ jnt.generateOutputString ()
 
 gref = mbdyn.pre.globalref;
 
-theta1 = 0.1;
-theta2 = 0.1;
+theta1 = pi/2;
+theta2 = pi/2;
 L = 1;
 M = 1;
 inertiamat = diag ([0., M*L^2./12., M*L^2./12.]);
@@ -119,7 +130,8 @@ Ref_Node_Link1 = mbdyn.pre.reference ( [0.5*L; 0; 0], ...
                                        'Parent', Ref_Link1 );
 
 link1node = mbdyn.pre.structuralNode6dof ('dynamic', ...
-                                          'AbsolutePosition', Ref_Link1.pos);
+                                          'AbsolutePosition', Ref_Node_Link1.pos, ...
+                                          'AbsoluteOrientation', Ref_Node_Link1.orientm );
 
 Ref_Link2 = mbdyn.pre.reference ( [L; 0; 0], ...
                                    mbdyn.pre.orientmat ('euler', [0, -theta2, 0]), [], ...
@@ -133,12 +145,18 @@ Ref_Node_Link2 = mbdyn.pre.reference ( [0.5*L; 0; 0], ...
                                        'Parent', Ref_Link2);
 
 link2node = mbdyn.pre.structuralNode6dof ('dynamic', ...
-                                          'AbsolutePosition', Ref_Link2.pos);
+                                          'AbsolutePosition', Ref_Node_Link2.pos, ...
+                                          'AbsoluteOrientation', Ref_Node_Link2.orientm );
 
 link1 = mbdyn.pre.body (M, [], inertiamat, link1node);
 link2 = mbdyn.pre.body (M, [], inertiamat, link2node);
 
-hinges_orientation = mbdyn.pre.orientmat ('2vectors', struct ('vec1axis', 1, 'vec1', [1;0;0], 'vec2axis', 3, 'vec2', [0;1;0]));
+link1.setSize (L, L/10, L/10);
+link2.setSize (L, L/10, L/10);
+link1.setColour ('r');
+link1.setColour ('b');
+
+hinges_orientation = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [1;0;0], 'ib', 3, 'vecB', [0;1;0]));
 
 Ref_pin = mbdyn.pre.reference ([], hinges_orientation, [], [], 'Parent', Ref_Link1);
 Ref_hinge = mbdyn.pre.reference ([], hinges_orientation, [], [], 'Parent', Ref_Link2);
@@ -148,13 +166,67 @@ pinjoint = mbdyn.pre.revolutePin (link1node, Ref_Link1.pos, Ref_Link1.pos, ...
                     'PinOrientation', hinges_orientation);
                 
 linkjoint = mbdyn.pre.revoluteHinge (link1node, link2node, Ref_Link2.pos, Ref_Link2.pos, ...
+                    'Offset1Reference', 'global', ...
+                    'Offset2Reference', 'global', ...
                     'RelativeOrientation1', Ref_hinge.orientm, ...
-                    'RelativeOrientation2', Ref_hinge.orientm );
+                    'Orientation1Reference', 'global', ...
+                    'RelativeOrientation2', Ref_hinge.orientm, ...
+                    'Orientation2Reference', 'global');
+                
+pinjoint.setSize (L/10, L/10, L/10);
+pinjoint.setColour ('k');
+linkjoint.setSize (L/10, L/10, L/10);
+linkjoint.setColour ('g');
 
-mbsys = mbdyn.pre.system ( 'Nodes', {link1node, link2node}, ...
-                           'Elements', {link1, link2, pinjoint, linkjoint} );
+prb = mbdyn.pre.initialValueProblem (0, 5, 1e-3);
+
+mbsys = mbdyn.pre.system ( {prb}, ...
+                           'Nodes', {link1node, link2node}, ...
+                           'Elements', {link1, link2, pinjoint, linkjoint, mbdyn.pre.gravity()} );
 
 str = mbsys.generateMBDynInputStr ()
 
+mbsys.setStructuralNodeSize (L/10, L/10, L/10);
+mbsys.draw ('Mode','wireghost')
 
+filename = mbsys.generateMBDynInputFile ('Test_mbdyn_pre.mbd');
+
+% start mbdyn 
+% delete ('output.*');
+
+[status, cmdout] = system ( sprintf ('export LD_LIBRARY_PATH="" ; mbdyn -f "%s" -o "%s" > "%s" 2>&1 &', ...
+                    filename, ...
+                    [filename(1:end-4), '_mbd'], ...
+                    [filename(1:end-4), '_mbd.txt'] ...
+                                     ) ...
+                           );
+                       
+% [status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
+
+% linkjoint.draw ()
+
+%% Drawing
+
+el = mbdyn.pre.element ();
+% 
+el.draw ()
+el.draw('Mode', 'wireframe');
+
+%%
+
+% om = mbdyn.pre.orientmat ('2vectors', struct ('vec1axis', 1, 'vec1', [cos(pi/6);sin(pi/6);0], 'vec2axis', 3, 'vec2', [0;0;1])); 
+
+om = mbdyn.pre.orientmat ('euler', [0,0,pi/6]);
+
+sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', ...
+                                       'AbsolutePosition', [0.5; 0.5; 0], ...
+                                       'AbsoluteOrientation', om, ...
+                                       'Accel', true);
+mass = 1;
+cog = [0;0;0];
+inertiamat = eye (3);
+
+bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof);
+bd.draw ('Mode', 'wireghost')
+xlabel ('x'); ylabel ('y'); zlabel('z'); view (3)
 
