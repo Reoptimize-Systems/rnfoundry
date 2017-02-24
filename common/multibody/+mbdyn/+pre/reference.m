@@ -96,11 +96,11 @@ classdef reference < handle
            this.velocityParent = options.VelParent;
            this.omegaParent = options.OmegaParent;
            
-           if isempty (dpos)
+           if isempty (dpos) || strcmp (dpos, 'null')
                dpos = [ 0; 0; 0 ];
            end
            
-           if isempty (dorientm)
+           if isempty (dorientm) || strcmp (dorientm, 'null')
                this.dorientm = mbdyn.pre.orientmat ('orientation', eye ());
            elseif ~isa (dorientm, 'mbdyn.pre.orientmat')
                error ('RENEWNET:mbdyn:badreforientation', ...
@@ -109,16 +109,16 @@ classdef reference < handle
                this.dorientm = dorientm;
            end
            
-           if isempty (dv)
+           if isempty (dv) || strcmp (dv, 'null')
                dv = [ 0; 0; 0 ];
            end
            
-           if isempty (domega)
+           if isempty (domega) || strcmp (domega, 'null')
                domega = [ 0; 0; 0 ];
            end
            
            check.multicheck ( @(x) (isnumeric(x) && (size (x,1) == 3) && (size (x,2) == 1) ), ...
-                              'dpos, dorientm, dv, domega must all be numeric column vectors 3 elements (or empty)', ...
+                              'dpos, dv, domega must all be numeric column vectors 3 elements (or empty)', ...
                               'RENEWNET:mbdyn:badrefvalues', ...
                                 dpos, dv, domega );
                             

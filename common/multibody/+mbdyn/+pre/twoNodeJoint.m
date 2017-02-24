@@ -20,6 +20,12 @@ classdef twoNodeJoint < mbdyn.pre.joint
         end
     end
     
+    methods
+        function str = generateOutputString (self)
+            str = generateOutputString@mbdyn.pre.joint(self);
+        end
+    end
+    
     methods (Access = protected)
         
         function checkJointPositionOffset (self, offset)

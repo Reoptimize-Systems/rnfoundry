@@ -19,6 +19,9 @@ classdef body < mbdyn.pre.element
             
             options = parse_pv_pairs (options, varargin);
             
+            % call superclass constructor
+            self = self@mbdyn.pre.element ();
+            
             if ~(isscalar (mass) && isnumeric (mass))
                 error ('mass should be a numeric scalar value');
             end
@@ -74,9 +77,45 @@ classdef body < mbdyn.pre.element
             
         end
         
+        function draw (self, varargin)
+            
+            options.AxesHandle = [];
+            options.ForceRedraw = false;
+            options.Mode = 'solid';
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            draw@mbdyn.pre.element ( self, ...
+                'AxesHandle', options.AxesHandle, ...
+                'ForceRedraw', options.ForceRedraw, ...
+                'Mode', options.Mode );
+
+            self.setTransform ();
+            
+        end
+        
     end
     
     methods (Access = protected)
+        
+        function setTransform (self)
+            
+            ref_node = mbdyn.pre.reference (self.nodeAttached.absolutePosition, ...
+                                            self.nodeAttached.absoluteOrientation, ...
+                                            [], []);
+                                        
+            ref_cog = mbdyn.pre.reference (self.relativeCentreOfMass, [], [], [], 'Parent', ref_node);
+            
+            M = [ ref_cog.orientm.orientationMatrix , ref_cog.pos; ...
+                  0, 0, 0, 1 ];
+            
+            % matlab uses different convention to mbdyn for rotation
+            % matrix
+            M = self.mbdynOrient2Matlab (M);
+                  
+            set ( self.transformObject, 'Matrix', M );
+            
+        end
         
         function ok = checkInertiaMatrix (self, mat, throw)
             

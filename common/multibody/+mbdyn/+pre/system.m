@@ -13,9 +13,13 @@ classdef system < mbdyn.pre.base
         
     end
     
+    properties (GetAccess = protected, SetAccess = protected)
+        drawAxesH; % handle to figure for plotting
+    end
+    
     methods
         
-        function self = system (varargin)
+        function self = system (problems, varargin)
             
             options.Nodes = {};
             options.Elements = {};
@@ -23,7 +27,7 @@ classdef system < mbdyn.pre.base
             
             options = parse_pv_pairs (options, varargin);
             
-            self.problems = { struct('type', 'initial value') };
+            self.problems = problems;
             
             self.nodes = {};
             self.elements = {};
@@ -74,6 +78,59 @@ classdef system < mbdyn.pre.base
             
         end
         
+        function draw (self, varargin)
+            
+            if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
+                if ~isvalid (self.drawAxesH)
+                    self.drawAxesH = [];
+                end
+            end
+            
+            options.AxesHandle = self.drawAxesH;
+            options.ForceRedraw = false;
+            options.Mode = 'solid';
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            % make figure and axes if necessary
+            if isempty (options.AxesHandle)
+                figure;
+                self.drawAxesH = axes;
+            else
+                self.drawAxesH = options.AxesHandle;
+            end
+            
+%             hold all
+            for ind = 1:numel (self.nodes)
+                draw (self.nodes{ind}, ...
+                    'AxesHandle', self.drawAxesH, ...
+                    'ForceRedraw', options.ForceRedraw);
+            end
+            
+            for ind = 1:numel (self.elements)
+                draw (self.elements{ind}, ...
+                    'AxesHandle', self.drawAxesH, ...
+                    'ForceRedraw', options.ForceRedraw, ...
+                    'Mode', options.Mode );
+            end
+%             hold off
+            
+%             axis equal;
+            xlabel ('x'); ylabel ('y'); zlabel('z'); 
+            view (3);
+            axis equal
+        end
+        
+        function setStructuralNodeSize (self, sx, sy, sz)
+            % set the size of all nodes for drawing
+            
+            for ind = 1:numel (self.nodes)
+                if isa (self.nodes{ind}, 'mbdyn.pre.structuralNode')
+                    setSize (self.nodes{ind}, sx, sy, sz);
+                end
+            end
+        end
+        
         function str = generateMBDynInputStr (self)
             
              % make sure labels are set
@@ -95,11 +152,7 @@ classdef system < mbdyn.pre.base
             %% problems section
             % write out each problem section
             for ind = 1:numel (self.problems)
-                
-                str = self.addOutputLine (str , sprintf('begin: %s;', self.problems{ind}.type), 0, false);
-                
-                str = self.addOutputLine (str , sprintf('end: %s;', self.problems{ind}.type), 0, false);
-                
+                str = sprintf ('%s\n%s\n', str, self.problems{ind}.generateOutputString ());
             end
             str = sprintf ('%s\n', str);
             
@@ -122,6 +175,10 @@ classdef system < mbdyn.pre.base
             
             if elcount.Forces > 0
                 str = self.addOutputLine (str , sprintf('forces: %d;', elcount.Forces), 1, false);
+            end
+            
+            if elcount.Gravity
+                str = self.addOutputLine (str , 'gravity;', 1, false);
             end
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
@@ -172,11 +229,11 @@ classdef system < mbdyn.pre.base
                 filename = [tempname, '.mbd'];
             end
             
-            fid = fopen (filename);
+            [fid, errmsg] = fopen (filename, 'w');
             
             CC = onCleanup (@() fclose(fid));
             
-            fprintf (fid, str);
+            fprintf (fid, '%s', str);
             
         end
         
@@ -187,6 +244,28 @@ classdef system < mbdyn.pre.base
             elcount.Joints = 0;
             elcount.Forces = 0;
             elcount.FileDrivers = 0;
+            elcount.Gravity = false;
+           
+            % not yet implemented
+             elcount.AbstractNodes = 0;
+             elcount.ElectricNodes = 0;
+             elcount.HydraulicNodes = 0;
+             elcount.ParameterNodes = 0;
+             elcount.ThermalNodes = 0;
+             elcount.AerodynamicElements = 0;
+             elcount.Aeromodals = 0;
+             elcount.AirProperties = 0;
+             elcount.AutomaticStructuralElements = 0;
+             elcount.Beams = 0;
+             elcount.BulkElements = 0;
+             elcount.ElectricBulkElements = 0;
+             elcount.ElectricElements = 0;
+             elcount.ExternalElements = 0;
+             elcount.Genels = 0;        
+             elcount.HydraulicElements = 0;
+             elcount.LoadableElements = 0;
+             elcount.OutputElements = 0;
+             elcount.InducedVelocityElements = 0;
             
             for ind = 1:numel (self.nodes)
                 if isa (self.nodes{ind}, 'mbdyn.pre.structuralNode')
@@ -206,6 +285,13 @@ classdef system < mbdyn.pre.base
                 
                 if isa (self.elements{ind}, 'mbdyn.pre.body')
                     elcount.RigidBodies = elcount.RigidBodies + 1;
+                end
+                
+                if isa (self.elements{ind}, 'mbdyn.pre.gravity')
+                    if elcount.Gravity
+                        error ('Gravity present more than once');
+                    end
+                    elcount.Gravity = true;
                 end
                 
             end

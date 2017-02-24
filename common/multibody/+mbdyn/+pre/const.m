@@ -1,4 +1,4 @@
-classdef const < mbdyn.pre.drive
+classdef const < mbdyn.pre.driveCaller
     
     properties (GetAccess = public, SetAccess = private)
         value;

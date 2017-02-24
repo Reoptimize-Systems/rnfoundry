@@ -1,9 +1,10 @@
 classdef tplDriveCaller < mbdyn.pre.driveCaller
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         
         type;
-        driveCaller;
+        driveCallers;
+        direction;
     end
     
     methods
@@ -15,31 +16,38 @@ classdef tplDriveCaller < mbdyn.pre.driveCaller
                 case 'null'
                     
                 case 'single'
-                    options.Entity = [];
-                    
+                    options.Direction = [];
                 case 'component'
                     
-                otherwise
-                    error ('tplDriveCaller type must be null | single | component');
+                case 'array'
                     
             end
             
             options = parse_pv_pairs (options, varargin);
             
+            self.checkCartesianVector (options.Direction);
             
             switch type
                 
                 case 'null'
                     
                 case 'single'
-                    
-                    
+                    if numel (drivecallers) ~= 1
+                        error ('single type tplDriveCaller should have only drivecallers of length 1');
+                    end
                 case 'component'
+                    if numel (drivecallers) < 1
+                        error ('component type tplDriveCaller should have drivecallers of at least length 1');
+                    end
+                case 'array'
                     
-            end 
+                otherwise
+                    error ('tplDriveCaller type must be null | single | component');
+            end
             
             self.type = type;
             self.driveCallers = drivecallers;
+            self.direction = options.Direction;
             
         end
         
@@ -47,34 +55,26 @@ classdef tplDriveCaller < mbdyn.pre.driveCaller
         function str = generateOutputString (self)
 
             % delete newline character and space from start
-            str = self.addOutputLine (str , 'revolute pin', 0, true);
             
-            str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, true, 'node label');
+            str = self.type;
             
-            out = self.makeCellIfNot (self.relativeOffset);
-            str = self.addOutputLine (str, self.commaSepList ('position', out{:}), 3, true, 'node relative position' );
-            
-            if ~isempty (self.nodeRelativeOrientation)
-                out = self.makeCellIfNot (self.nodeRelativeOrientation);
-                str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 3, true, 'node relative orientation');
+            switch self.type
+                
+                case 'null'
+                    % do nothing further
+                    
+                case 'single'
+                    if ~isempty (self.direction)
+                        str = sprintf ('%s, %s', str, self.commaSepList (self.direction));
+                    end
+                    str = sprintf ('%s, %s', str, self.driveCallers.generateOutputString ());
+                    
+                case 'component'
+                    
+                case 'array'
+                    
             end
             
-            out = self.makeCellIfNot (self.pinPosition);
-            addcomma = ~(isempty (self.absolutePinOrientation) && isempty (self.initialTheta));
-            str = self.addOutputLine (str, self.commaSepList ('position', out{:}), 2, addcomma, 'pin absolute position');
-            
-            if ~isempty (self.absolutePinOrientation)
-                addcomma = ~isempty (self.initialTheta);
-                out = self.makeCellIfNot (self.absolutePinOrientation);
-                str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 2, addcomma, 'pin absolute orientation');
-            end
-            
-            if ~isempty (self.initialTheta)
-                out = self.makeCellIfNot (self.initialTheta);
-                str = self.addOutputLine (str, self.commaSepList ('initial theta', out{:}), 2, false, 'initial theta');
-            end
-            
-            str = self.addOutputLine (str, ';', 1, false, 'end revolute pin');
         end
         
     end

@@ -20,19 +20,25 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             options.NodeRelativeOrientation = [];
             options.PinOrientation =  [];
             options.InitialTheta = [];
+            options.NodeOffsetReference = 'global';
+            options.NodeOrientationReference = 'global';
             
             options = parse_pv_pairs (options, varargin);
             
             % call the superclass constructor
             self = self@mbdyn.pre.singleNodeJoint (node);
             
+            self.type = 'revolute pin';
+            
             self.checkCartesianVector (relative_offset, true);
             self.checkCartesianVector (absolute_pin_position, true);
             self.checkOrientationMatrix (options.NodeRelativeOrientation, true);
             self.checkOrientationMatrix (options.PinOrientation, true);
+            self.checkNodeReferenceType (options.NodeOffsetReference, true);
+            self.checkNodeReferenceType (options.NodeOrientationReference, true);
 
-            self.relativeOffset = relative_offset;
-            self.nodeRelativeOrientation = self.getOrientationMatrix (options.NodeRelativeOrientation);
+            self.relativeOffset = {'reference', options.NodeOffsetReference, relative_offset};
+            self.nodeRelativeOrientation = {'reference', options.NodeOrientationReference, self.getOrientationMatrix(options.NodeRelativeOrientation)};
 
             self.pinPosition = absolute_pin_position;
             self.absolutePinOrientation = self.getOrientationMatrix (options.PinOrientation);
@@ -43,12 +49,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
         
         function str = generateOutputString (self)
             
-            str = self.addOutputLine ('' , '', 1, false, 'revolute pin');
-            
-            % delete newline character and space from start
-            str(1:2) = [];
-            
-            str = self.addOutputLine (str , 'revolute pin', 1, true);
+            str = generateOutputString@mbdyn.pre.singleNodeJoint(self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, true, 'node label');
             
@@ -79,6 +80,50 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             
         end
         
+        function draw (self, varargin)
+            
+            options.AxesHandle = self.drawAxesH;
+            options.ForceRedraw = false;
+            options.Mode = 'solid';
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            draw@mbdyn.pre.element ( self, ...
+                'AxesHandle', options.AxesHandle, ...
+                'ForceRedraw', options.ForceRedraw, ...
+                'Mode', options.Mode );
+
+            self.setTransform ();
+            
+        end
+        
     end
+    
+    methods (Access = protected)
+        
+        function setTransform (self)
+            
+            ref_pin = mbdyn.pre.reference ( self.pinPosition, ...
+                                            mbdyn.pre.orientmat ('orientation', self.absolutePinOrientation), ...
+                                            [], []);
+                                        
+%             ref_joint = mbdyn.pre.reference (self.relativeOffset, ...
+%                 mbdyn.pre.orientmat ('orientation', self.nodeRelativeOrientation), ...
+%                 [], [], 'Parent', ref_pin);
+            
+            M = [ ref_pin.orientm.orientationMatrix , ref_pin.pos; ...
+                  0, 0, 0, 1 ];
+            
+            % matlab uses different convention to mbdyn for rotation
+            % matrix
+            M = self.mbdynOrient2Matlab (M);
+                  
+            set ( self.transformObject, 'Matrix', M );
+            
+        end
+        
+    end
+    
+    
     
 end

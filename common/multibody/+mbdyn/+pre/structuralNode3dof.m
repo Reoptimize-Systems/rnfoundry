@@ -67,4 +67,19 @@ classdef structuralNode3dof < mbdyn.pre.structuralNode
         
     end
     
+    methods (Access = protected)
+        function setTransform (self)
+            
+            M = [ eye(3), self.absolutePosition; ...
+                  0, 0, 0, 1 ];
+            
+%             % matlab uses different convention to mbdyn for rotation
+%             % matrix
+%             M = self.mbdynOrient2Matlab (M);
+%                   
+            set ( self.transformObject, 'Matrix', M );
+            
+        end
+    end
+    
 end
