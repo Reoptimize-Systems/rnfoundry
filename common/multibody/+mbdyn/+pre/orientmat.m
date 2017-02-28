@@ -151,7 +151,9 @@ classdef orientmat
                     end
                
                     this.orientationMatrix = [ r{1}.'; r{2}.'; r{3}.' ];
+                otherwise
                     
+                    error ('unrecognised specification');
             end 
             
         end
