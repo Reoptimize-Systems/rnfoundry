@@ -1,8 +1,14 @@
 classdef structuralNode6dof < mbdyn.pre.structuralNode
     
-    properties (GetAccess = public, SetAccess = protected)
+    
+    properties (GetAccess = public, SetAccess = public)
         
         absoluteOrientation;
+        
+    end
+    
+    properties (GetAccess = public, SetAccess = protected)
+        
         orientationDescription;
         
         absoluteAngularVelocity;
@@ -43,7 +49,6 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                    
             self.type = type;
             
-            self.checkOrientationMatrix (options.AbsoluteOrientation, true);
             self.checkCartesianVector (options.AbsoluteAngularVelocity);
             
             self.absoluteOrientation = options.AbsoluteOrientation;
@@ -101,6 +106,18 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
         end
         
+    end
+    
+    % getters/setters
+    methods
+        function set.absoluteOrientation (self, neworientation)
+            % set the absolute orientation of the structural node
+            
+            self.checkOrientationMatrix (neworientation, true);
+            
+            self.absoluteOrientation = neworientation;
+            
+        end
     end
     
     methods (Access = protected)
