@@ -78,6 +78,32 @@ classdef system < mbdyn.pre.base
             
         end
         
+        function setNodePosition (self, label, newposition)
+            
+            for ind = 1:numel (self.nodes)
+               
+                if self.nodes{ind}.label == label
+                    self.nodes{ind}.absolutePosition = newposition;
+                    return;
+                end
+                
+            end
+            
+        end
+        
+        function setNodeOrientation (self, label, neworientation)
+            
+            for ind = 1:numel (self.nodes)
+               
+                if self.nodes{ind}.label == label
+                    self.nodes{ind}.absoluteOrientation = neworientation;
+                    return;
+                end
+                
+            end
+            
+        end
+        
         function draw (self, varargin)
             
             if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
@@ -89,6 +115,9 @@ classdef system < mbdyn.pre.base
             options.AxesHandle = self.drawAxesH;
             options.ForceRedraw = false;
             options.Mode = 'solid';
+            options.Bodies = true;
+            options.StructuralNodes = true;
+            options.Joints = true;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -101,17 +130,27 @@ classdef system < mbdyn.pre.base
             end
             
 %             hold all
+            
             for ind = 1:numel (self.nodes)
-                draw (self.nodes{ind}, ...
-                    'AxesHandle', self.drawAxesH, ...
-                    'ForceRedraw', options.ForceRedraw);
+                if isa (self.nodes{ind}, 'mbdyn.pre.structuralNode') && options.StructuralNodes
+                    draw (self.nodes{ind}, ...
+                        'AxesHandle', self.drawAxesH, ...
+                        'ForceRedraw', options.ForceRedraw);
+                end
             end
             
             for ind = 1:numel (self.elements)
-                draw (self.elements{ind}, ...
-                    'AxesHandle', self.drawAxesH, ...
-                    'ForceRedraw', options.ForceRedraw, ...
-                    'Mode', options.Mode );
+                if isa (self.elements{ind}, 'mbdyn.pre.body') && options.Bodies
+                    draw (self.elements{ind}, ...
+                        'AxesHandle', self.drawAxesH, ...
+                        'ForceRedraw', options.ForceRedraw, ...
+                        'Mode', options.Mode );
+                elseif isa (self.elements{ind}, 'mbdyn.pre.joint') && options.Joints
+                    draw (self.elements{ind}, ...
+                        'AxesHandle', self.drawAxesH, ...
+                        'ForceRedraw', options.ForceRedraw, ...
+                        'Mode', options.Mode );
+                end
             end
 %             hold off
             
@@ -180,6 +219,8 @@ classdef system < mbdyn.pre.base
             if elcount.Gravity
                 str = self.addOutputLine (str , 'gravity;', 1, false);
             end
+            
+            str = self.addOutputLine (str, 'default orientation: orientation matrix;', 1, false);
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
             str = sprintf ('%s\n', str);

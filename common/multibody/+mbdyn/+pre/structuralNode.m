@@ -1,8 +1,15 @@
 classdef structuralNode < mbdyn.pre.node
     
+    
+    properties (GetAccess = public, SetAccess = public)
+        
+        % we can set this later
+        absolutePosition;
+        
+    end
+    
     properties (GetAccess = public, SetAccess = protected)
         
-        absolutePosition;
         absoluteVelocity;
         
         % assembly
@@ -44,7 +51,7 @@ classdef structuralNode < mbdyn.pre.node
                     error ('Accelerations should be a scalar boolean true/false');
                 end
             end
-            self.checkCartesianVector (options.AbsolutePosition, true);
+%             self.checkCartesianVector (options.AbsolutePosition, true);
             self.checkCartesianVector (options.AbsoluteVelocity, true);
             self.absolutePosition = options.AbsolutePosition;
             self.absoluteVelocity = options.AbsoluteVelocity;
@@ -134,6 +141,18 @@ classdef structuralNode < mbdyn.pre.node
             self.drawColour = newcolour;
         end
         
+    end
+    
+    % getters/setters
+    methods
+        function set.absolutePosition (self, newpos)
+            % set the absolute position of the structural node
+            
+            self.checkCartesianVector (newpos, true);
+            
+            self.absolutePosition = newpos;
+            
+        end
     end
     
     methods (Access = protected)
