@@ -21,11 +21,11 @@ pause (3);
 
 %%
 
-mb = mbdyn.MBCNodal ();
+mb = mbdyn.mint.MBCNodal ();
 
 mb.Initialize ( 'local', '/tmp/mbdyn.sock', ...
                 'NNodes', 2, ...
-                'UseLabels', true, ...
+                'UseLabels', false, ...
                 'Verbose', true );
 
 nnodes = mb.GetNodes ()
@@ -61,11 +61,11 @@ while status == 0
     
     rot = mb.GetRot()
     
-    for ind = 1:nnodes
-    
-        fprintf (1, 'Node %d has label %d\n', ind, mb.KinematicsLabel (ind));
-    
-    end
+%     for ind = 1:nnodes
+%     
+%         fprintf (1, 'Node %d has label %d\n', ind, mb.KinematicsLabel (ind));
+%     
+%     end
 
     % set the forces
     mb.F (forces)
@@ -98,8 +98,9 @@ clear mb;
 %%
 
 
-mbout = mbdyn ();
-mbout.loadResults ( mbdpath );
+mbout = mbdyn.postproc ();
+
+mbout.loadResultsFromFiles ( mbdpath );
 
 mbout.plotNodeTrajectories ()
 
