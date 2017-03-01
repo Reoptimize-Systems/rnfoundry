@@ -1,6 +1,73 @@
-function [dx, bouyancy_force, excitation_force_heave, ...
-    excitation_force_surge, radiation_force_heave, ...
-    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodeforces(t, x, xBh, vBh, vBs, buoysimoptions)
+function [ buoyancy_force, ...
+           excitation_force_heave, ...
+           excitation_force_surge, ...
+           radiation_force_heave, ...
+           radiation_force_surge, ...
+           FBDh, ...
+           FBDs, ...
+           wave_height ] = buoyodeforces (t, x, xBh, vBh, vBs, buoysimoptions)
+% calculates the hydrodynamic forces in a point absorber system
+%
+% Syntax
+%
+% [ buoyancy_force, ...
+%   excitation_force_heave, ...
+%   excitation_force_surge, ...
+%   radiation_force_heave, ...
+%   radiation_force_surge, ...
+%   FBDh, ...
+%   FBDs, ...
+%   wave_height ] = buoyodeforces(t, x, xBh, vBh, vBs, buoysimoptions)
+%
+% Description
+%
+% buoyodeforces calculates the excitation, radiation, drag and buoyancy
+% forces acting on a point absorber in ocean waves. Radiation forces are
+% calculated based on pronys method. It is intended to be used in a
+% simulation based on Matlab/Octave's ode solver routines.
+%
+% Input
+%
+%  t - the current simulation time
+%
+%  x - Vector containing the the radiation force components in heave and
+%    surge, calculated through an integration of continuous states (based
+%    on prony's method). See buoysimderivatives for the calculation of the
+%    derivatives to be integrated in time and provided in this vector.
+%
+%  xBh - buoy position in heave
+%
+%  vBh - buoy velocity in heave
+%
+%  vBs - buoy velocity in surge
+%
+%  buoysimoptions - structure containing the point absorber simulation
+%    parameters and sea state.
+%
+%
+% Output
+%
+%  buoyancy_force - buoyancy force which the current displacement in heave
+% 
+%  excitation_force_heave - wave excitation forces in heave based on WAMIT
+%    generated excitation force coefficients
+%     
+%  excitation_force_surge - wave excitation forces in surge based on WAMIT
+%    generated excitation force coefficients
+% 
+%  radiation_force_heave - wave radiation force in heave (simply a
+%    summation of the appropriate members of the input 'x')
+%     
+%  radiation_force_surge - wave radiation force in surge (simply a
+%    summation of the appropriate members of the input 'x')
+% 
+%  FBDh - fluid drag force in heave
+% 
+%  FBDs - fluid drag force in surge
+% 
+%  wave_height - the calculated instantaneous wave height 
+%
+%
 
     % copy over some values (they are not modified, and so there will be no
     % memory/speed penalty from this (in theory). The purpose of this is
@@ -14,10 +81,6 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     heave_excit_force = buoysimoptions.BuoyParameters.heave_excit_force;
     surge_excit_force = buoysimoptions.BuoyParameters.surge_excit_force;
     wave_number = buoysimoptions.SeaParameters.wave_number;
-    Hbeta = buoysimoptions.BuoyParameters.Hbeta;
-    Halpha = buoysimoptions.BuoyParameters.Halpha;
-    Sbeta = buoysimoptions.BuoyParameters.Sbeta;
-    Salpha = buoysimoptions.BuoyParameters.Salpha;
     water_depth = buoysimoptions.BuoyParameters.water_depth;
     draft = buoysimoptions.BuoyParameters.draft;
     drag_coefficient = buoysimoptions.BuoyParameters.drag_coefficient;
@@ -27,7 +90,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     surgeradcoeffinds = buoysimoptions.NRadiationCoefs+1:2*buoysimoptions.NRadiationCoefs;
     
     % Determine the simple bouyancy force: F = x*rho*g*V
-    bouyancy_force = -( xBh .* rho .* g .* pi * a^2 );
+    buoyancy_force = -( xBh .* rho .* g .* pi * a^2 );
 
     % Determine excitation force in heave and surge
     
@@ -61,28 +124,11 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     excitation_force_surge = sum(surge_force_all);
 
     % Determine the radiation forces in heave and surge
-    
-    % preallocate the array for the radiation force derivatives
-    dx = zeros(2*buoysimoptions.NRadiationCoefs,size(x,2));
-    
-    % Calculate the derivative of the radiation forces in heave
-    dx(heaveradcoeffinds,:) = ...
-        real( ...
-              bsxfun (@times, Hbeta(heaveradcoeffinds,1), x(heaveradcoeffinds,:)) ...
-                + bsxfun (@times, Halpha(heaveradcoeffinds,:), vBh) ...
-            );
-    
+
     % sum up the actual heave radiation forces (integrated in the x
     % components)
     radiation_force_heave = real (sum (x(heaveradcoeffinds,:), 1));
-
-    % Calculate the derivative of the radiation forces in surge
-    dx(surgeradcoeffinds,1) = ...
-        real ( ...
-              bsxfun (@times, Sbeta(onetoncoeffs,1), x(surgeradcoeffinds,:)) ...
-                + bsxfun (@times, Salpha(onetoncoeffs,1), vBs) ...
-             );
-                                    
+                          
     % sum up the actual surge radiation forces (integrated in the x
     % components)
     radiation_force_surge = real (sum (x(surgeradcoeffinds,:), 1));
