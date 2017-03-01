@@ -37,6 +37,7 @@ begin: control data;
   forces:
     +1  # extmodal
   ;
+  default orientation: orientation matrix;
 end: control data;
 
 begin: nodes;
@@ -68,7 +69,7 @@ begin: elements;
       no signal,
       coupling,
         tight,
-    labels, yes,
+    labels, no,
     2,                      # number of nodes to receive forces
       0, offset, null,      # first node
       1, offset, null;      # second node
