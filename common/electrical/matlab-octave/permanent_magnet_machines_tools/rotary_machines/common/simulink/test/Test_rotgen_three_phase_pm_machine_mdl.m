@@ -21,7 +21,5 @@ data.design = completedesign_RADIAL_SLOTTED (data.design, data.simoptions);
 
 open_system('Test_rotgen_three_phase_pm_machine');
 
-% set_param('Test_rotgen_three_phase_pm_machine/Three Phase Rotary PM Machine', 'UserData', data);
-
 % use the ode15s solver which is more appropriate for electrical machines
 set_param('Test_rotgen_three_phase_pm_machine','Solver','ode15s','StopTime','5')
