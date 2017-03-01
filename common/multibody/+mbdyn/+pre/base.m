@@ -87,17 +87,32 @@ classdef base < handle
                 error ('Orientation description must be a char array')
             end
             
-            ok = true;
+            ok = checkAllowedStringInputs ( odesc, {'euler123', ...
+                                                    'euler313', ...
+                                                    'euler321', ...
+                                                    'orientation vector', ...
+                                                    'orientation matrix'}, ...
+                                            throw, 'Orientation description');
             
-            if ~any(strcmp (odesc, {'euler123', 'euler313', 'euler321', 'orientation vector', 'orientation matrix'}))
-                
+        end
+        
+        function ok = checkAllowedStringInputs (input, allowedstrs, throw, inputname)
+            
+            if nargin < 4
+                inputname = 'input';
+            end
+            
+            if ~iscellstr (allowedstrs)
+                error ('allowed must be a cell array of strings containing a list of allowed values for the input');
+            end
+            
+            if ~any(strcmp (input, allowedstrs))
                 ok = false;
-                
             end
             
             if throw && ~ok
                
-                error ('Orientation description must be: euler123 | euler313 | euler321 | orientation vector | orientation matrix');
+                error ('%s must be one of: %s ', inputname, sprintf (['%s', repmat(' | %s', 1, numel(allowedstrs)-1)], allowedstrs{:}));
                 
             end
             
