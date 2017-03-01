@@ -109,10 +109,14 @@ jnt.generateOutputString ()
 
 %% system
 
+% this is intended to replicate the sky-engineering example at:
+%
+% http://www.sky-engin.jp/en/MBDynTutorial/chap15/chap15.html
+
 gref = mbdyn.pre.globalref;
 
 theta1 = pi/2;
-theta2 = pi/2;
+theta2 = 0;
 L = 1;
 M = 1;
 inertiamat = diag ([0., M*L^2./12., M*L^2./12.]);
@@ -189,6 +193,7 @@ str = mbsys.generateMBDynInputStr ()
 mbsys.setStructuralNodeSize (L/10, L/10, L/10);
 mbsys.draw ('Mode','wireghost')
 
+
 filename = mbsys.generateMBDynInputFile ('Test_mbdyn_pre.mbd');
 
 % start mbdyn 
@@ -200,7 +205,16 @@ filename = mbsys.generateMBDynInputFile ('Test_mbdyn_pre.mbd');
                     [filename(1:end-4), '_mbd.txt'] ...
                                      ) ...
                            );
-                       
+                     
+%% Post-processing
+
+mbdynpost = mbdyn.postproc (mbsys);
+mbdynpost.loadResultsFromFiles ([filename(1:end-4), '_mbd']);
+
+mbdynpost.plotNodeTrajectories ()
+
+mbdynpost.animate ('PlotTrajectories', true, 'Skip', 40)
+
 % [status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
 
 % linkjoint.draw ()
