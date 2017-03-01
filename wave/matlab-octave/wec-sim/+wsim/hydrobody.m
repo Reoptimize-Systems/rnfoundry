@@ -102,7 +102,7 @@ classdef hydrobody < handle
         oldNonLinBuoyancyF = [];
         oldNonLinBuoyancyP = [];
 
-        % wave radiation force convolution integral
+        % wave radiation force convolution integral states
         CIdt;
         radForceVelocity;
         radForceOldTime;
