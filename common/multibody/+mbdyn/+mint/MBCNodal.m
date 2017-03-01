@@ -36,7 +36,7 @@ classdef MBCNodal < cppinterface
 
             % initialise the cppinterface parent class by passing the
             % mexfunction to the superclass constructor
-            self = self@cppinterface(@mbdyn.mexMBCNodal);
+            self = self@cppinterface(@mbdyn.mint.mexMBCNodal);
 
         end
 
