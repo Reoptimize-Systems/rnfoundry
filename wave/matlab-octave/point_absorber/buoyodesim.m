@@ -44,6 +44,22 @@ function [ dx, ...
 % buoy (e.g. using buoysimsetup.m ). An equal number of components is used
 % in both heave and surge.
 %
+% Further details of the model can be found in the following publications:
+%
+% Bailey H, Bryden I. G., ‘Influence of a quadratic power take-off on
+% the behaviour of a self-contained inertial referenced wave energy
+% converter’, Proceedings of the Institution of Mechanical Engineers, Part
+% M: Journal of Engineering for the Maritime Environment, vol. 226, no. 1,
+% pp. 15–22, Feb. 2012.
+%
+% Bailey H, "Influence of a nonlinear Power Take Off on a Wave Energy
+% Converter," Ph.D thesis, School Eng., Univ.Edinburgh, 2010.
+%
+% Bailey H, Bryden IG. Experimental testing on the effect of nonlinear
+% power take off on the motions of wave energy converters. In: 2nd
+% international conference on ocean energy, Brest, France, 15–17 October
+% 2008.
+%
 %
 % Input
 %
