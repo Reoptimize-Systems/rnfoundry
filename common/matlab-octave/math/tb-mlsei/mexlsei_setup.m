@@ -1,131 +1,159 @@
-function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
+function mexlsei_setup(varargin)
 % This file contains the procedure for building the mexlsei function from
 % scratch. Not every step in this file may be necessary as some will likely
 % have been performed already, such as steps 2 and 3. 
 % 
 
+    rootdir = fullfile(fileparts(which('mexlsei_setup')));
+    
+    
+    options.F2CLibFilePath = '';
+    options.IncludePath = fullfile(rootdir, 'c');
+    options.ForceF2CLibRecompile = false;
+    options.ForceLSEIWrite = false;
+    options.Verbose = false;
+    
+    options = parse_pv_pairs (options, varargin);
+    
     fprintf (1, 'Setting up mexlsei\n');
     
-    % optional settings
-    if nargin < 1
-        forcef2clibrecompile = false;
-    end
-    
-    if nargin < 2
-        forcedlseiwrite = false;
-    end
-    
     origdir = pwd;
+    
+    % return to original directory on exit or failure
+    CC = onCleanup (@() cd(origdir));
     
     %% 1. Change to the installation directory (where this file is)
     % you may need to do this manually if mexlsei_setup is not on the path
 
-    rootdir = fullfile(fileparts(which('mexlsei_setup')));
     cd(rootdir);
 
     %% 2. Build the f2c lib which must be included if necessary
 
     % get the local machine architecture
     machine = computer('arch');
+    
+    if isempty (options.F2CLibFilePath)
+    
+        % Put the library file to the directory above
+        libfiledir = fullfile(rootdir, 'c');
 
-    % Put the library file to the directory above
-    libfiledir = fullfile(rootdir, 'c');
+        if strcmp(machine,'win32')
 
-    if strcmp(machine,'win32')
+            % To compile use Visual C++ Express Edition 2008
+            % Open the visual studio 2008 Command prompt and run the
+            % following
+            %
+            % > nmake -f makefile.vc32
 
-        % To compile use Visual C++ Express Edition 2008
-        % Open the visual studio 2008 Command prompt and run the
-        % following
-        %
-        % > nmake -f makefile.vc32
+            libfilename = 'vcf2c.lib';
+            if ~exist(libfilename, 'file') || options.ForceF2CLibRecompile
+                warning ('Manual steps are required for win32 f2c lib compilation, see comments in mexlsei_setup.m. Exiting mexlsei setup now.');
+                return;
+            end
 
-        libfilename = 'vcf2c.lib';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            fprintf(1, 'Manual steps are required for win32 f2c lib compilation');
-            return;
-        end
+        elseif strcmp(machine , 'mingw32-i686')
+            % is probably Octave on 32 bit windows
+            libfilename = 'libf2cmingw32x86.a';
+            if ~exist(libfilename, 'file') || options.ForceF2CLibRecompile
+                cd(fullfile(libfiledir, 'libf77'));
+                % compile using gcc
+                system('mingw32-make -f makefile.u');
+                movefile(libfilename, libfiledir);
+            end
 
-    elseif strcmp(machine , 'mingw32-i686')
-        % is probably Octave on 32 bit windows
-        libfilename = 'libf2cmingw32x86.a';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            cd(fullfile(libfiledir, 'libf77'));
-            % compile using gcc
-            system('mingw32-make -f makefile.u');
-            movefile(libfilename, libfiledir);
-        end
+        elseif strcmp(machine , 'mingw32-x86_64')
+            % is probably Octave on 64 bit windows
+            libfilename = 'libf2cmingw32x86_64.a';
+            if ~exist(libfilename, 'file') || options.ForceF2CLibRecompile
+                cd(fullfile(libfiledir, 'libf77'));
+                % compile using gcc
+                system('mingw32-make -f makefile.u');
+                movefile(libfilename, libfiledir);
+            end
 
-    elseif strcmp(machine, 'win64')
+        elseif strcmp(machine, 'win64')
 
-        % To compile use Visual C++ Express Edition 2008
-        % Open the visual studio Cross-Tools x64 Command prompt and run the
-        % following
-        %
-        % > nmake -f makefile.vc64
-        libfilename = 'vc64f2c.lib';
-        if ~exist(libfilename, 'file') || forcef2clibrecompile
-            fprintf(1, 'Manual steps are required for win64 f2c lib compilation');
-            return;
-        end
+            % To compile use Visual C++ Express Edition 2008
+            % Open the visual studio Cross-Tools x64 Command prompt and run the
+            % following
+            %
+            % > nmake -f makefile.vc64
+            libfilename = 'vc64f2c.lib';
+            if ~exist(libfilename, 'file') || options.ForceF2CLibRecompile
+                warning ('Manual steps are required for win64 f2c lib compilation, see comments in mexlsei_setup.m. Exiting mexlsei setup now.');
+                return;
+            end
 
-    elseif strcmp(machine,'glnxa64') || strcmp(machine, 'gnu-linux-x86_64')
+        elseif strcmp(machine,'glnxa64') || strcmp(machine, 'gnu-linux-x86_64')
 
-        % see if libf2c is installed as a system library 
-        [~,ldconfout] = system('ldconfig -p | grep libf2c');
-        
-        if isempty (ldconfout)
-            res = f2cdocontinue ();
+            % see if libf2c is installed as a system library 
+            [~,ldconfout] = system('ldconfig -p | grep libf2c');
+
+            if isempty (ldconfout)
+                res = f2cdocontinue ();
+                if ~res, return; end
+            end
+
+            libfilename = 'libf2cx64.a';
+            if (isempty(ldconfout) && ~exist(libfilename, 'file')) || options.ForceF2CLibRecompile
+                cd(fullfile(libfiledir, 'libf77'));
+                % compile using gcc on 64 bit platform
+                system('make -f makefile.lx64');
+                movefile(libfilename, libfiledir);
+            elseif ~isempty(ldconfout)
+                libfilename = 'libf2c';
+                libfiledir = '';
+            end
+
+        elseif strcmp(machine,'glnx86')
+
+            % see if libf2c is installed as a system library 
+            [~,ldconfout] = system('ldconfig -p | grep libf2c');
+
+            if isempty (ldconfout)
+                res = f2cdocontinue ();
+                if ~res, return; end
+            end
+
             if ~res, return; end
+
+            libfilename = 'libf2cx86.a';
+            if (isempty(ldconfout) && ~exist(libfilename, 'file'))  || options.ForceF2CLibRecompile
+                cd(fullfile(libfiledir, 'libf77'));
+                % compile using gcc
+                system('make -f makefile.lx86');
+                movefile(libfilename, libfiledir);
+            elseif ~isempty(ldconfout)
+                libfilename = 'libf2c';
+                libfiledir = '';
+            end
+
         end
 
-        libfilename = 'libf2cx64.a';
-        if (isempty(ldconfout) && ~exist(libfilename, 'file')) || forcef2clibrecompile
-            cd(fullfile(libfiledir, 'libf77'));
-            % compile using gcc on 64 bit platform
-            system('make -f makefile.lx64');
-            movefile(libfilename, libfiledir);
-        elseif ~isempty(ldconfout)
-            libfilename = 'f2c';
-            libfiledir = '';
-        end
-
-    elseif strcmp(machine,'glnx86')
-
-        % see if libf2c is installed as a system library 
-        [~,ldconfout] = system('ldconfig -p | grep libf2c');
-
-        if isempty (ldconfout)
-            res = f2cdocontinue ();
-            if ~res, return; end
-        end
+        % change back to mexlsei_setup directory
+        cd(rootdir);
         
-        if ~res, return; end
+        includepath = libfiledir;
+    else
+        % use provided library file details
+        [libfiledir, libfilename] = fileparts (options.F2CLibFilePath);
         
-        libfilename = 'libf2cx86.a';
-        if (isempty(ldconfout) && ~exist(libfilename, 'file'))  || forcef2clibrecompile
-            cd(fullfile(libfiledir, 'libf77'));
-            % compile using gcc
-            system('make -f makefile.lx86');
-            movefile(libfilename, libfiledir);
-        elseif ~isempty(ldconfout)
-            libfilename = 'f2c';
-            libfiledir = '';
+        if isempty (options.IncludePath)
+            includepath = libfiledir;
+        else
+            includepath = options.IncludePath;
         end
-
-    end 
-
-    % change back to mexlsei_setup directory
-    cd(rootdir);
+    end
 
     %% 3. Convert the fortran code files into a single C file dlsei.c using
     %% f2c
 
-    if ~exist(fullfile(rootdir, 'c', 'dlsei.c'), 'file') || forcedlseiwrite
+    if ~exist(fullfile(rootdir, 'c', 'dlsei.c'), 'file') || options.ForceLSEIWrite
         
         if ispc
             
             % use compiled f2c on windows
-            sysytem('type .\fortran\*.f | ".\c\f2c.exe" -A -R > .\c\dlsei.c');
+            system('type .\fortran\*.f | ".\c\f2c.exe" -A -R > .\c\dlsei.c');
 
         else
 
@@ -174,47 +202,56 @@ function mexlsei_setup(forcef2clibrecompile, forcedlseiwrite)
     % http://www.netlib.org/blas/d1mach.f
     %
 
-    if strcmp(machine,'win32')
-
-        % To compile use Visual C++ Express Edition 2008
+    if isunix || isoctave
+        ismscompiler = false;
+    else
+        cc = mex.getCompilerConfigurations ('C');
+        if strncmpi (cc.Manufacturer, 'Microsoft', 9)
+            ismscompiler = true;
+        else
+            ismscompiler = false;
+        end
+    end
+    
+    if strcmpi (libfilename(1:3), 'lib')
+        
+        libfilemexcallname = libfilename(4:end);
+        
+        [~,libfilemexcallname] = fileparts (libfilemexcallname);
+        
+    elseif strcmpi (libfilename(end-4:end), '.lib')
+        libfilemexcallname = libfilename(1:3);
+    else
+        libfilemexcallname = libfilename;
+    end
+    
+    mexinputs = { './c/mexlsei.c', ...
+                  './c/dlsei.c', ...
+                  './c/i1mach.c', ...
+                  './c/d1mach.c', ...
+                  sprintf('-l%s', libfilemexcallname) };
+              
+    
+    if ~isempty (includepath)
+        mexinputs = [mexinputs, { sprintf('-L"%s"', includepath) }];
+    end
+    
+    if options.Verbose
+        mexinputs = [mexinputs, { '-v' }];
+    end
+    
+    if ismscompiler
+        
+        % To compile useing microsoft compiler
         % I had to move the library file (vcf2c.lib) to a directory with no
         % spaces, 'C:\libraries' on my system, you will probably need to change
         % this directory for your windows machine
-        mex .\c\mexlsei.c .\c\dlsei.c .\c\i1mach.c .\c\d1mach.c -outdir . -L"C:\libraries" -lvcf2c LINKFLAGS="$LINKFLAGS /NODEFAULTLIB:LIBCMT.lib" -v
+        mexinputs = [mexinputs, { 'LINKFLAGS="$LINKFLAGS /NODEFAULTLIB:LIBCMT.lib"'}];
 
-    elseif strcmp(machine,'win64')
-        % To compile use Visual C++ Express Edition 2008
-        % I had to move the library file (vc64f2c.lib) to a directory with no
-        % spaces, 'C:\libraries' on my system, you will probably need to change
-        % this directory for your windows machine
-        mex .\c\mexlsei.c .\c\dlsei.c .\c\i1mach.c .\c\d1mach.c -outdir . -L"C:\libraries" -lvc64f2c LINKFLAGS="$LINKFLAGS /NODEFAULTLIB:LIBCMT.lib" -v
-
-    else
-
-        % is probably linux, or possibly octave on windows
-        % compile using gcc
-        if isempty(libfiledir)
-
-            mex('./c/mexlsei.c', ...
-                './c/dlsei.c', ...
-                './c/i1mach.c', ...
-                './c/d1mach.c', ...
-                ['-l', fullfile(libfiledir, libfilename)], ...
-                '-v');
-        else
-             mex('./c/mexlsei.c', ...
-                './c/dlsei.c', ...
-                './c/i1mach.c', ...
-                './c/d1mach.c', ...
-                ['-L"', libfiledir, '"'], ...
-                ['-l', fullfile(libfiledir, libfilename)], ...
-                '-v');
-            
-        end
     end
-
-    % restore the current directory
-    cd(origdir);
+    
+    % call mex
+    mex(mexinputs{:});
     
     fprintf (1, 'Finished setting up mexlsei\n');
     
@@ -225,8 +262,9 @@ function res = f2cdocontinue ()
 
     S = input ( sprintf( ...
 ['f2c is not installed in your system, it is advisable to quit and install it\n', ...
- 'using your packaging system. Otherwise mexlsei_setup will now attempt to build \n', ...
- 'f2c and libf2c from source before continuing.\n', ...
+ 'using your packaging system (if on linux, or find and download it for windows).\n', ...
+ 'Otherwise mexlsei_setup will now attempt to build f2c and libf2c from source\n', ...
+ 'before continuing.\n', ...
  '\n', ...
  'Do you wish to continue? (Y/n)'] ), 's');
  
