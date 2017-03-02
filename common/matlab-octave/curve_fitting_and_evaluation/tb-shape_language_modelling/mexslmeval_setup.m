@@ -20,6 +20,7 @@ function mexslmeval_setup (varargin)
     options.DoCrossBuildWin64 = false;
     options.Verbose = false;
     options.GSLLibDir = '';
+    options.GSLIncludeDir = '';
     
     options = parse_pv_pairs (options, varargin);
     
@@ -35,11 +36,16 @@ function mexslmeval_setup (varargin)
         mexargs = [ mexargs, {'-v'}];
     end
     
-    if (ispc && ~isempty (options.GSLLibDir)) || (~isempty (options.GSLLibDir) )
-        % on windows we need to add the locations of the 
+    if ~isempty (options.GSLLibDir)
+        % add the location of the gsl libs files
         mexargs = [ mexargs, ...
-            {['-I"' options.GSLLibDir, '"'], ...
-             ['-L"' options.GSLLibDir, '"']} ];
+            { ['-L"' options.GSLLibDir, '"'] } ];
+    end
+    
+    if ~isempty (options.GSLIncludeDir)
+        % add the location of the gsl header files
+        mexargs = [ mexargs, ...
+            { ['-I"' options.GSLIncludeDir, '"']} ];
     end
     
     if ~isempty(options.MexOpts)
