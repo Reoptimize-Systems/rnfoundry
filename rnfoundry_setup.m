@@ -113,7 +113,7 @@ function rnfoundry_setup (varargin)
         Inputs.F2CLibPath = ''; % for mlse
     else
         Inputs.GSLLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'lib'); % for mexslmeval
-        Inputs.GSLIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'include', 'gsl'); % for mexslmeval
+        Inputs.GSLIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'include'); % for mexslmeval
         Inputs.F2CLibPath = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'lib', 'libf2c.a'); % for mlse
     end
     % mex ppval related
