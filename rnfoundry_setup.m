@@ -145,6 +145,9 @@ function rnfoundry_setup (varargin)
         end
     end
     
+    % set up existfile mex function
+    mexcompile_existfile ('Verbose', Inputs.Verbose);
+    
     if Inputs.ForceMexLseiSetup && Inputs.SkipMexLseiSetup
         error ('The options ForceMexLseiSetup and SkipMexLseiSetup are both true')
     end
