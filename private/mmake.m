@@ -169,9 +169,11 @@ function [rules, vars] = implicit_mmakefile(options)
     
     % deterine the appropriate file extension for object files
     vars.OPTIMFLAGS = '';
-    if isunix || isoctave
+    if isunix () || isoctave ()
+        vars.OBJ_EXT = 'o';
         ismscompiler = false;
     else
+        vars.OBJ_EXT = 'obj';
         cc = mex.getCompilerConfigurations ('C');
         if strncmpi (cc.Manufacturer, 'Microsoft', 9)
             ismscompiler = true;
@@ -182,12 +184,6 @@ function [rules, vars] = implicit_mmakefile(options)
     vars.PWD = pwd;
     
     vars.MEXFLAGS = '-O'; % Mirror MATLAB's default, but be explicit about it
-    
-    if ispc
-        vars.OBJ_EXT = 'obj';
-    else
-        vars.OBJ_EXT = 'o';
-    end
     
     if isoctave
         vars.CFLAGSKEY   = '-W';
