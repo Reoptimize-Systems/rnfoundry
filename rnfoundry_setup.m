@@ -107,7 +107,15 @@ function rnfoundry_setup (varargin)
     % slm fitting tool related
     Inputs.ForceMexSLMSetup = false;
     Inputs.SkipMexSLMSetup = false;
-    Inputs.GSLLibDir = '';
+    if isunix
+        Inputs.GSLLibDir = ''; % for mexslmeval
+        Inputs.GSLIncludeDir = ''; % for mexslmeval
+        Inputs.F2CLibPath = ''; % for mlse
+    else
+        Inputs.GSLLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'lib'); % for mexslmeval
+        Inputs.GSLIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'include', 'gsl'); % for mexslmeval
+        Inputs.F2CLibPath = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'lib', 'libf2c.a'); % for mlse
+    end
     % mex ppval related
     Inputs.ForceMexPPValSetup = false;
     % force setting up mexmPhaseWL
@@ -143,8 +151,10 @@ function rnfoundry_setup (varargin)
     
     if ~Inputs.SkipMexLseiSetup
         if Inputs.ForceMexLseiSetup || (exist (['mexlsei.', mexext], 'file') ~= 3)
-            mexlsei_setup ( Inputs.ForceMexLseiF2cLibRecompile, ...
-                            Inputs.ForceMexLseiCFileCreation );
+            mexlsei_setup ( 'ForceF2CLibRecompile', Inputs.ForceMexLseiF2cLibRecompile, ...
+                            'ForceLSEIWrite', Inputs.ForceMexLseiCFileCreation, ...
+                            'F2CLibFilePath', Inputs.F2CLibPath, ...
+                            'Verbose', Inputs.Verbose );
         end
     end
     
@@ -157,7 +167,8 @@ function rnfoundry_setup (varargin)
     if ~Inputs.SkipMexSLMSetup
         if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mexext], 'file') ~= 3)
             mexslmeval_setup ( 'Verbose', Inputs.Verbose, ...
-                               'GSLLibDir', Inputs.GSLLibDir );
+                               'GSLLibDir', Inputs.GSLLibDir, ...
+                               'GSLIncludeDir', Inputs.GSLIncludeDir);
         end
     end
     
