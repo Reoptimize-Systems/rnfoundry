@@ -748,8 +748,18 @@ function b = file_exist(filename)
         a = javaObject ('java.io.File', filename);
         b=(a.exists() && ~a.isDirectory);
     else
-        error ('MJB:mmake:file_exist:java', ...
-               'mmake requires java support.');
+        try
+            b = existfile (filename);
+            if b == true
+                [~, msg] = fileattrib (filename);
+                if msg.directory == 1
+                    b = false;
+                end
+            end
+        catch
+            error ('MJB:mmake:file_exist', ...
+                   'mmake requires java support or the existfile function.');
+        end
     end
 end
 
@@ -762,8 +772,17 @@ function t = ftime(filename)
             t=[];
         end
     else
-        error ('MJB:mmake:file_exist:java', ...
-               'mmake requires java support.');
+        if isoctave
+            if existfile (filename)
+                info = stat (filename);
+                t = info.mtime;
+            else
+                t=[];
+            end
+        else
+            error ('MJB:mmake:file_exist:java', ...
+                   'mmake requires java support.');
+        end
     end
 end
 
