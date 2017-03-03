@@ -122,10 +122,10 @@ function rnfoundry_setup (varargin)
     Inputs.ForceMexmPhaseWLSetup = false;
     % xfemm related
     Inputs.PreventXFemmCheck = false;
-    if ispc
-        Inputs.XFemmDownloadSource = 'https://downloads.sourceforge.net/project/xfemm/Release/Release%201.8/xfemm_v1_8_mingw_win64.zip';
+    if ispc 
+        Inputs.XFemmDownloadSource = 'https://sourceforge.net/projects/xfemm/files/Release/Release%201.8/xfemm_v1_8_mingw_win64.zip/download';
     elseif isunix
-        Inputs.XFemmDownloadSource = 'https://downloads.sourceforge.net/project/xfemm/Release/Release%201.8/xfemm_v1_8_linux64.tar.gz';
+        Inputs.XFemmDownloadSource = 'https://sourceforge.net/projects/xfemm/files/Release/Release%201.8/xfemm_v1_8_linux64.tar.gz/download';
     else
         Inputs.XFemmDownloadSource = '';
     end
@@ -203,7 +203,7 @@ function rnfoundry_setup (varargin)
             while ~(strcmpi (response, 'Y') || strcmpi (response, 'N') )
                 response = input( sprintf ([ ...
                     '\n\n', ...
-                    '**************************     NOTICE    **************************', ...
+                    '**************************     NOTICE    **************************\n', ...
                     'You do not appear to have the xfemm package for performing electromagnetic\n', ...
                     'simulations which is required for many functions in the foundry\n', ...
                     'to work. Do you want to try to download and install it? (y/n): ']), 's');
