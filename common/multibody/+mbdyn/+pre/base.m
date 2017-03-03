@@ -88,12 +88,12 @@ classdef base < handle
                 error ('Orientation description must be a char array')
             end
             
-            ok = checkAllowedStringInputs ( odesc, {'euler123', ...
-                                                    'euler313', ...
-                                                    'euler321', ...
-                                                    'orientation vector', ...
-                                                    'orientation matrix'}, ...
-                                            throw, 'Orientation description');
+            ok = mbdyn.pre.base.checkAllowedStringInputs ( odesc, {'euler123', ...
+                                                                   'euler313', ...
+                                                                   'euler321', ...
+                                                                   'orientation vector', ...
+                                                                   'orientation matrix'}, ...
+                                                           throw, 'Orientation description');
             
         end
         
@@ -107,13 +107,14 @@ classdef base < handle
                 error ('allowed must be a cell array of strings containing a list of allowed values for the input');
             end
             
+            ok = true;
             if ~any(strcmp (input, allowedstrs))
                 ok = false;
             end
             
             if throw && ~ok
                
-                error ('%s must be one of: %s ', inputname, sprintf (['%s', repmat(' | %s', 1, numel(allowedstrs)-1)], allowedstrs{:}));
+                error ('%s must be one of: %s ', inputname, sprintf (['''%s''', repmat(' | ''%s''', 1, numel(allowedstrs)-1)], allowedstrs{:}));
                 
             end
             
@@ -179,7 +180,7 @@ classdef base < handle
             % add the indentation to any existing newline characters in the
             % new string to be appended so it's indentation level is
             % consistant
-            str = strrep (str, sprintf ('\n'), sprintf ('%s\n', prefix));
+            str = strrep (str, sprintf ('\n'), sprintf ('\n%s', prefix));
             
             % joint the string to the existing string with a newline and
             % the appropriate indentation
