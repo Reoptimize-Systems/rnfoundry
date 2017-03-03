@@ -201,7 +201,9 @@ function rnfoundry_setup (varargin)
             
             response = '';
             while ~(strcmpi (response, 'Y') || strcmpi (response, 'N') )
-                response = input( sprintf ([
+                response = input( sprintf ([ ...
+                    '\n\n', ...
+                    '**************************     NOTICE    **************************', ...
                     'You do not appear to have the xfemm package for performing electromagnetic\n', ...
                     'simulations which is required for many functions in the foundry\n', ...
                     'to work. Do you want to try to download and install it? (y/n): ']), 's');
@@ -243,7 +245,7 @@ function rnfoundry_setup (varargin)
 
                 end
             else
-                fprintf ('Skipping xfemm install.\n');
+                fprintf ('Skipping xfemm install. You can obtain this package from Sourceforge later if you wish.\n');
             end
             
         end
