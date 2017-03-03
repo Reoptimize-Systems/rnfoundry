@@ -1,10 +1,10 @@
 classdef tplDriveCaller < mbdyn.pre.driveCaller
     
     properties (GetAccess = public, SetAccess = protected)
-        
-        type;
+
         driveCallers;
         direction;
+        
     end
     
     methods
