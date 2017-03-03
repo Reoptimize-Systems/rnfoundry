@@ -231,9 +231,12 @@ function mexlsei_setup(varargin)
                   './c/d1mach.c', ...
                   sprintf('-l%s', libfilemexcallname) };
               
-    
     if ~isempty (includepath)
-        mexinputs = [mexinputs, { sprintf('-L"%s"', includepath) }];
+        mexinputs = [mexinputs, { sprintf('-I"%s"', includepath) }];
+    end
+    
+    if ~isempty (libfiledir)
+        mexinputs = [mexinputs, { sprintf('-L"%s"', libfiledir) }];
     end
     
     if options.Verbose
