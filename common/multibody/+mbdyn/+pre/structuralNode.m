@@ -18,8 +18,6 @@ classdef structuralNode < mbdyn.pre.node
         
         accelerations;
         
-        type;
-        
     end
     
     properties (GetAccess = protected, SetAccess = protected)

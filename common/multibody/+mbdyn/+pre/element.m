@@ -20,7 +20,6 @@ classdef element < mbdyn.pre.base
         drawAxesH; % handle to figure for plotting
         transformObject;
         defaultShape;
-        type;
         
     end
     
