@@ -140,7 +140,7 @@ void mPhaseWinding::clear(){
 void mPhaseWinding::SetCurrents(std::vector<double> cur){
 
     currents.clear(); //!< removes previous values
-    for(int i=0; i<cur.size(); ++i) currents.push_back(cur[i]);
+    for(unsigned int i=0; i<cur.size(); ++i) currents.push_back(cur[i]);
 }
 
 
@@ -272,7 +272,7 @@ double mPhaseWinding::get_phase_axis(int m){
     double x=0;
     double y=0;
 
-    for(int i=0; i<coils.size(); ++i){
+    for(unsigned int i=0; i<coils.size(); ++i){
         coil c =coils[i];
         int n = c.n();
         if (n>0){
