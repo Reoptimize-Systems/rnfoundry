@@ -27,13 +27,24 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
                         'Coupling', options.Coupling, ...
                         'SendAfterPredict', options.SendAfterPredict );
                     
-            self.checkAllowedStringInputs (options.Create, {'yes', 'no'}, true, 'Create');
+            self.type = 'socket';
+
+            if ~isempty (options.Create)
+                self.checkAllowedStringInputs (options.Create, {'yes', 'no'}, true, 'Create');
+            end
             
             if ~isempty (options.Path) && ~isempty (options.Port)
                 error ('You cannot specify both path and port option for the socket');
             end
             
+            if isempty (options.Path) && isempty (options.Port)
+                error ('You must specify either Path or Port option for the socket');
+            end
+            
             self.create = options.Create;
+            self.path = options.Path;
+            self.port = options.Port;
+            self.host = options.Host;
             
         end
         
@@ -41,13 +52,13 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             
             str = generateOutputString@mbdyn.pre.externalFileCommunicator(self);
             
-            if ~isempty (options.Create)
+            if ~isempty (self.create)
                 
                 str = self.addOutputLine (str, self.commaSepList ('create', self.create), 1, true, 'reference node');
                 
-                if strcmp (options.Create, 'no')
-                    
-                end
+%                 if strcmp (self.Create, 'no')
+%                     
+%                 end
                 
             end
             
@@ -64,7 +75,7 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
                 str = self.addOutputLine (str, strline, 1, addcomma);
             else
                 % use path
-                str = self.addOutputLine (str, self.commaSepList ('path', self.path), 1, addcomma);
+                str = self.addOutputLine (str, self.commaSepList ('path', ['"', self.path, '"']), 1, addcomma);
             end
             
             if ~isempty (self.sleepTime)

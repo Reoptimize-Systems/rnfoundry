@@ -213,7 +213,7 @@ mbdynpost.loadResultsFromFiles ([filename(1:end-4), '_mbd']);
 
 mbdynpost.plotNodeTrajectories ()
 
-mbdynpost.animate ('PlotTrajectories', true, 'Skip', 40)
+mbdynpost.animate ('PlotTrajectories', true, 'DrawLabels', true, 'Skip', 40)
 
 % [status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
 
@@ -243,4 +243,36 @@ inertiamat = eye (3);
 bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof);
 bd.draw ('Mode', 'wireghost')
 xlabel ('x'); ylabel ('y'); zlabel('z'); view (3)
+
+%% socket communicator
+
+soc = mbdyn.pre.socketCommunicator ('Path', '/tmp/mbdyn.sock');
+soc.generateOutputString ()
+
+%% external sturctural force
+
+soc = mbdyn.pre.socketCommunicator ('Path', '/tmp/mbdyn.sock');
+soc.generateOutputString ()
+
+
+sn6dof1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn6dof2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [1;0;0]);
+sn6dof3 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [2;0;0]);
+
+nodeoffsets = struct ('NodeInd', {1, 3}, ...
+                      'Offset', {[0;1;0], [1;1;1]}, ...
+                      'OffsetType', {'global', 'local'})
+                  
+extsf = mbdyn.pre.externalStructuralForce ( {sn6dof1, sn6dof2, sn6dof3}, ...
+                                            nodeoffsets, ...
+                                            soc);
+                                        
+extsf.generateOutputString ()
+                                        
+                                        
+                                        
+
+
+
+
 

@@ -48,7 +48,9 @@ classdef externalFileCommunicator < mbdyn.pre.base
                 
             end
             
-            self.checkAllowedStringInputs (options.SendAfterPredict, {'yes', 'no'}, true, 'SendAfterPredict');
+            if ~isempty (options.SendAfterPredict)
+                self.checkAllowedStringInputs (options.SendAfterPredict, {'yes', 'no'}, true, 'SendAfterPredict');
+            end
             
             self.sleepTime = options.SleepTime;
             self.coupling = options.Coupling;
