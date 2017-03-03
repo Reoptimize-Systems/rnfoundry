@@ -102,7 +102,7 @@ bool winding::compute_slot_matrix(){
     if (coils.size()<1) return false;
     for(int i=0; i<Q; ++i) slot_matrix[i] = 0;
 
-    for(int i=0; i<coils.size(); ++i){
+    for(unsigned int i=0; i<coils.size(); ++i){
         slot_matrix[coils[i].s() - 1] += coils[i].n();
         slot_matrix[coils[i].e() - 1] -= coils[i].n();
     }

@@ -59,7 +59,7 @@ using namespace Koil;
         {
             coils = WL.windings[windind].get_coils ();
             
-            for (int coilind=0; coilind<coils.size (); coilind++)
+            for (unsigned int coilind=0; coilind<coils.size (); coilind++)
             {
                 //mexPrintf ("%d, %d\n", coils[coilind].s (), coils[coilind].e ());
                 
