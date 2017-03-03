@@ -245,18 +245,23 @@ function mexlsei_setup(varargin)
     
     if ismscompiler
         
-        % To compile useing microsoft compiler
+        % To compile using microsoft compiler
         % I had to move the library file (vcf2c.lib) to a directory with no
-        % spaces, 'C:\libraries' on my system, you will probably need to change
+        % spaces, 'C:\libraries' on my system, you might need to change
         % this directory for your windows machine
         mexinputs = [mexinputs, { 'LINKFLAGS="$LINKFLAGS /NODEFAULTLIB:LIBCMT.lib"'}];
 
     end
     
     % call mex
-    mex(mexinputs{:});
-    
-    fprintf (1, 'Finished setting up mexlsei\n');
+    try
+        mex(mexinputs{:});
+        
+        fprintf (1, 'Finished setting up mexlsei\n');
+    catch err
+        warning ('mexlsei compilation falied, error message was:\n%s', ...
+            err.message);
+    end
     
 end
 
