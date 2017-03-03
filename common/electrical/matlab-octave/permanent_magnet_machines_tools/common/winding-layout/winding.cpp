@@ -38,7 +38,7 @@ double winding::get_resistance(){
 
     double R,r = 0;
 
-    for(int i=0; i<coils.size(); ++i){
+    for(unsigned int i=0; i<coils.size(); ++i){
         r = coils[i].get_resistance();
         if (r==0) return 0;    //!< return 0 if one coil has 0 resistance (length not assigned)
         else R +=r;
@@ -50,7 +50,7 @@ double winding::get_length(){
 
     double L,l=0;
 
-    for(int i=0; i<coils.size(); ++i){
+    for(unsigned int i=0; i<coils.size(); ++i){
         l = coils[i].get_length();
         if (l==0) return 0;    //!< return 0 if one coil length is not assigned
         else L +=l;
@@ -62,7 +62,7 @@ double winding::get_weight(){
 
     double W,w=0;
 
-    for(int i=0; i<coils.size(); ++i){
+    for(unsigned int i=0; i<coils.size(); ++i){
         w = coils[i].get_weight();
         if (w==0) return 0;    //!< return 0 if one coil length is not assigned
         else W +=w;
@@ -119,5 +119,5 @@ std::vector <coil> winding::get_coils(){ return coils; }
 
 void winding::set_wire(wire _w){
 
-    for(int i=0; i<coils.size(); ++i)         coils[i].set_wire(_w);
+    for(unsigned int i=0; i<coils.size(); ++i)         coils[i].set_wire(_w);
 }
