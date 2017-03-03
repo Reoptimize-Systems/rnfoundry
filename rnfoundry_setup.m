@@ -201,10 +201,10 @@ function rnfoundry_setup (varargin)
             
             response = '';
             while ~(strcmpi (response, 'Y') || strcmpi (response, 'N') )
-                response = input( [
+                response = input( sprintf ([
                     'You do not appear to have the xfemm package for performing electromagnetic\n', ...
                     'simulations which is required for many functions in the foundry\n', ...
-                    'to work. Do you want to try to download and install it? (y/n): '], 's');
+                    'to work. Do you want to try to download and install it? (y/n): ']), 's');
             end
             
             if upper(response) == 'Y'
