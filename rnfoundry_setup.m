@@ -81,6 +81,9 @@ function rnfoundry_setup (varargin)
 %    rnfoundry_setup.m, you can use this option to set this to a different
 %    directory.
 %
+
+
+
 %  'XFemmDownloadSource' : Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. rnfoundry_setup can
 %    download and install this package if desired. To change the default
@@ -122,13 +125,13 @@ function rnfoundry_setup (varargin)
     Inputs.ForceMexmPhaseWLSetup = false;
     % xfemm related
     Inputs.PreventXFemmCheck = false;
-    if ispc 
-        Inputs.XFemmDownloadSource = 'https://downloads.sourceforge.net/project/xfemm/Release/Release%201.8/xfemm_v1_8_mingw_win64.zip?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fxfemm%2Ffiles%2FRelease%2FRelease%25201.8%2F&ts=1488547864&use_mirror=netix';
-    elseif isunix
-        Inputs.XFemmDownloadSource = 'https://downloads.sourceforge.net/project/xfemm/Release/Release%201.8/xfemm_v1_8_linux64.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fxfemm%2Ffiles%2FRelease%2FRelease%25201.8%2F&ts=1488547898&use_mirror=netcologne';
-    else
-        Inputs.XFemmDownloadSource = '';
-    end
+%     if ispc 
+%         Inputs.XFemmDownloadSource = 'https://downloads.sourceforge.net/project/xfemm/Release/Release%201.8/xfemm_v1_8_mingw_win64.zip?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fxfemm%2Ffiles%2FRelease%2FRelease%25201.8%2F&ts=1488547864&use_mirror=netix';
+%     elseif isunix
+%         Inputs.XFemmDownloadSource = 'https://downloads.sourceforge.net/project/xfemm/Release/Release%201.8/xfemm_v1_8_linux64.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fxfemm%2Ffiles%2FRelease%2FRelease%25201.8%2F&ts=1488547898&use_mirror=netcologne';
+%     else
+%         Inputs.XFemmDownloadSource = '';
+%     end
     Inputs.XFemmInstallPrefix = fullfile (thisfilepath, 'common');
  
     % now parse the pv pairs
@@ -194,59 +197,71 @@ function rnfoundry_setup (varargin)
     
     cd (workdir);
     
+    xfemm_main_page_url = 'https://sourceforge.net/projects/xfemm/';
+    
     % check for the existence of xfemm package
     if ~Inputs.PreventXFemmCheck
         
         if exist ('mexfmesher', 'file') ~= 3
             
-            response = '';
-            while ~(strcmpi (response, 'Y') || strcmpi (response, 'N') )
-                response = input( sprintf ([ ...
+            fprintf (1, [ ...
                     '\n\n', ...
-                    '**************************     NOTICE    **************************\n', ...
+                    '**************************    XFEMM  NOTICE    **************************\n\n', ...
                     'You do not appear to have the xfemm package for performing electromagnetic\n', ...
                     'simulations which is required for many functions in the foundry\n', ...
-                    'to work. Do you want to try to download and install it? (y/n): ']), 's');
-            end
-            
-            if upper(response) == 'Y'
+                    'to work. You can obtain this package from Sourceforce here:\n\n', ...
+                    xfemm_main_page_url, ...
+                    '\n\n', ...
+                    '**************************    XFEMM NOTICE    **************************\n\n' ]);
                 
-                doxfemm = true;
-                if ispc
-                    xfemm_prefix = 'xfemm_mingw_win64';
-                    xfemmfile = fullfile (tempdir, [xfemm_prefix, '.zip']);
-                    urlwrite ( Inputs.XFemmDownloadSource, xfemmfile );
-                    unpackfcn = @unzip;
-                elseif isunix
-                    xfemm_prefix = 'xfemm_linux64';
-                    xfemmfile = fullfile (tempdir, [xfemm_prefix, '.tar.gz']);
-                    urlwrite ( Inputs.XFemmDownloadSource, xfemmfile );
-                    unpackfcn = @untar;
-                else
-                    fprintf ('No xfemm compiled package is currently available for mac, skipping.\n');
-                    doxfemm = false;
-                end
-
-                if doxfemm
-                    
-                    fprintf (1, 'Downloading xfemm package from:\n%s\n', Inputs.XFemmDownloadSource);
-                    
-                    % unpack the download to the appropriate location
-                    unpackfcn (xfemmfile, Inputs.XFemmInstallPrefix);
-
-                    % remove the downloaded package
-                    delete (xfemmfile);
-
-                    % add mfemm setup function location to path and run it
-                    addpath (fullfile (Inputs.XFemmInstallPrefix, xfemm_prefix, 'mfemm'));
-                    mfemm_setup ();
-                    
-                    fprintf (1, 'xfemm package installation complete\n');
-
-                end
-            else
-                fprintf ('Skipping xfemm install. You can obtain this package from Sourceforge later if you wish.\n');
-            end
+%             response = '';
+%             while ~(strcmpi (response, 'Y') || strcmpi (response, 'N') )
+%                 response = input( sprintf ([ ...
+%                     '\n\n', ...
+%                     '**************************     NOTICE    **************************\n', ...
+%                     'You do not appear to have the xfemm package for performing electromagnetic\n', ...
+%                     'simulations which is required for many functions in the foundry\n', ...
+%                     'to work. Do you want to try to download and install it? (y/n): ']), 's');
+%             end
+%             
+%             if upper(response) == 'Y'
+%                 
+%                 doxfemm = true;
+%                 if ispc
+%                     xfemm_prefix = 'xfemm_mingw_win64';
+%                     xfemmfile = fullfile (tempdir, [xfemm_prefix, '.zip']);
+%                     urlwrite ( Inputs.XFemmDownloadSource, xfemmfile );
+%                     unpackfcn = @unzip;
+%                 elseif isunix
+%                     xfemm_prefix = 'xfemm_linux64';
+%                     xfemmfile = fullfile (tempdir, [xfemm_prefix, '.tar.gz']);
+%                     urlwrite ( Inputs.XFemmDownloadSource, xfemmfile );
+%                     unpackfcn = @untar;
+%                 else
+%                     fprintf ('No xfemm compiled package is currently available for mac, skipping.\n');
+%                     doxfemm = false;
+%                 end
+% 
+%                 if doxfemm
+%                     
+%                     fprintf (1, 'Downloading xfemm package from:\n%s\n', Inputs.XFemmDownloadSource);
+%                     
+%                     % unpack the download to the appropriate location
+%                     unpackfcn (xfemmfile, Inputs.XFemmInstallPrefix);
+% 
+%                     % remove the downloaded package
+%                     delete (xfemmfile);
+% 
+%                     % add mfemm setup function location to path and run it
+%                     addpath (fullfile (Inputs.XFemmInstallPrefix, xfemm_prefix, 'mfemm'));
+%                     mfemm_setup ();
+%                     
+%                     fprintf (1, 'xfemm package installation complete\n');
+% 
+%                 end
+%             else
+%                 fprintf ('Skipping xfemm install. You can obtain this package from Sourceforge later if you wish.\n');
+%             end
             
         end
     end
