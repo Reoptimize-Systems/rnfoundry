@@ -129,6 +129,7 @@ classdef postproc < handle
         
         
         function animate (self, varargin)
+            % animate the nodes and bodies of the system
             
             options.DrawLabels = false;
             options.AxLims = [];
@@ -187,7 +188,7 @@ classdef postproc < handle
             end
             
             % clear the previous trajectory plot
-            cla;
+            cla (hax, 'reset');
             
             % TODO: the sped of all this could be improved using hgtransform
             %
