@@ -1,9 +1,10 @@
 classdef base < handle
     
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         
         label;
+        type;
         
     end
     
@@ -175,6 +176,13 @@ classdef base < handle
             
             prefix = repmat ('    ', 1, indentlevel);
             
+            % add the indentation to any existing newline characters in the
+            % new string to be appended so it's indentation level is
+            % consistant
+            str = strrep (str, sprintf ('\n'), sprintf ('%s\n', prefix));
+            
+            % joint the string to the existing string with a newline and
+            % the appropriate indentation
             str = sprintf ('%s\n%s%s', oldstr, prefix, str);
             
             if finalcomma
