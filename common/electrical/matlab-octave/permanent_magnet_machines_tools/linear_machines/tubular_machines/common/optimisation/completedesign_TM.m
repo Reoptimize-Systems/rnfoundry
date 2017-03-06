@@ -101,5 +101,7 @@ function design = completedesign_TM (design, simoptions)
 %     design.WindingLayout.Phases = repmat ((1:design.Phases)', design.Poles(1), 1);
     
     design.WindingLayout.Phases = repmat ([1, -2, 3, -1, 2, -3]', design.Poles(1)/2, 1);
+    design.Qs = design.Poles(1) * design.Phases;
+    design.Qc = design.Phases * design.Poles(1);
     
 end
