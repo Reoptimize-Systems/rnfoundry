@@ -118,7 +118,9 @@ function [design, simoptions] = simfun_TM_SLOTTED (design, simoptions)
 %   spaced from zero air gap (plus a small toperance value) to twice the air gap
 %   length.
 %
-%  MagFEASim - 
+%  MagFEASim - structure containing options specific to the magnetics
+%    finitie element analysis. The possible fields of this structure are
+%    shown below:
 %     MagnetRegionMeshSize
 %     'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
 %     'StatorOuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
