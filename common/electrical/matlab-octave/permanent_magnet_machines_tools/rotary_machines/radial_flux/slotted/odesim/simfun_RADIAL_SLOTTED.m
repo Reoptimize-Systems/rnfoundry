@@ -299,6 +299,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         % unit vector by dividing by the magnitude.
 %         coggingvector = unit([gvector(2), -gvector(1)]);
 
+        fprintf (1, 'Performing FEA simulation %d of %d\n', 1, simoptions.NMagFEAPositions);
         [ RawCoggingTorque, ...
           BxCoreLossData, ...
           ByCoreLossData, ...
@@ -326,6 +327,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
             
             parfor posind = 2:numel (feapos)
 
+                fprintf (1, 'Performing FEA simulation %d of %d\n', posind, simoptions.NMagFEAPositions);
+                
                 [ RawCoggingTorque, ...
                   BxCoreLossData, ...
                   ByCoreLossData, ...
@@ -352,6 +355,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
             
             for posind = 2:numel (feapos)
 
+                fprintf (1, 'Performing FEA simulation %d of %d\n', posind, simoptions.NMagFEAPositions);
+                
                 [ RawCoggingTorque, ...
                   BxCoreLossData, ...
                   ByCoreLossData, ...
@@ -409,6 +414,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     design.FemmDirectFluxLinkage = design.FemmDirectFluxLinkage * design.CoilTurns;
     
     if ~simoptions.SkipInductanceFEA
+        
+        fprintf (1, 'Performing FEA simulation to determine inductance\n');
     
         % perform an inductance sim
         Lcurrent = inductancesimcurrent (design.CoilArea, design.CoilTurns);
