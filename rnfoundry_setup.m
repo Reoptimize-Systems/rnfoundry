@@ -36,6 +36,14 @@ function rnfoundry_setup (varargin)
 %  'RunTests' : Flag determining whether tor runs some scripts to test the 
 %    setup after installation is complete. Default is false.
 %
+%  'ForceExistfileSetup' : Forces the recompilation of the existfile mex
+%    function. A non-mex version will be used if not present. Default is
+%    false.
+%
+%  'SkipExistfileSetup' : Skips compilation of the existfile mex
+%    function, even if it is not on the path. A non-mex version will be
+%    used if not present. Default is false.
+%
 %  'ForceMexLseiSetup' : Forces the recompilation of the mexlsei mex 
 %    function even if it already on the path. mexlsei is not required if
 %    your system has the 'quadprog' function. Default is false.
@@ -64,15 +72,23 @@ function rnfoundry_setup (varargin)
 %  'ForceMexPPValSetup' : Forces the recompilation of the mexppval mex 
 %    function even if it already on the path. Default is false.
 %
+%  'SkipMexPPValSetup' : Skips compilation of the mexppval mex function
+%    even if it is not on the path. Default is false.
+%
 %  'ForceMexmPhaseWLSetup' : Forces the recompilation of the mexmPhaseWL
 %    mex function even if it already on the path. Default is false.
 %
 %  'PreventXFemmCheck' :  Many functions in the renewnet foundry require 
-%    the 'xfemm' finite element analysis package. rnfoundry_setup can
-%    download and install this package if desired. This option determines
+%    the 'xfemm' finite element analysis package. This option determines
 %    whether rnfoundry_setup checks to see if xfemm is already installed
-%    (by looking for xfemm functions in the path). Defautl is false, so
-%    rnfoundry_setup will check to see if xfemm is installed.
+%    (by looking for xfemm functions in the path). Default is false, so
+%    rnfoundry_setup WILL check to see if xfemm is installed and display a
+%    notice if it is not.
+%
+
+
+% the following options no longer apply as https breaks the sourceforge
+% download process, might restore some day
 %
 %  'XFemmInstallPrefix' : Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. rnfoundry_setup can 
@@ -81,9 +97,6 @@ function rnfoundry_setup (varargin)
 %    rnfoundry_setup.m, you can use this option to set this to a different
 %    directory.
 %
-
-
-
 %  'XFemmDownloadSource' : Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. rnfoundry_setup can
 %    download and install this package if desired. To change the default
@@ -99,6 +112,8 @@ function rnfoundry_setup (varargin)
     thisfilepath = fileparts (which ('rnfoundry_setup'));
     addpath(genpath (thisfilepath));
     workdir = pwd ();
+    % restore working directory on error or exit
+    CC = onCleanup (@() cd (workdir));
     
     Inputs.RunTests = false;
     Inputs.Verbose = false;
@@ -121,8 +136,10 @@ function rnfoundry_setup (varargin)
     end
     % mex ppval related
     Inputs.ForceMexPPValSetup = false;
+    Inputs.SkipMexPPValSetup = false;
     % force setting up mexmPhaseWL
     Inputs.ForceMexmPhaseWLSetup = false;
+    Inputs.SkipMexmPhaseWLSetup = false;
     % xfemm related
     Inputs.PreventXFemmCheck = false;
 %     if ispc 
@@ -133,7 +150,9 @@ function rnfoundry_setup (varargin)
 %         Inputs.XFemmDownloadSource = '';
 %     end
     Inputs.XFemmInstallPrefix = fullfile (thisfilepath, 'common');
- 
+    Inputs.ForceExistfileSetup = false;
+    Inputs.SkipExistfileSetup = false;
+    
     % now parse the pv pairs
     Inputs = parse_pv_pairs (Inputs, varargin);
     
@@ -148,11 +167,22 @@ function rnfoundry_setup (varargin)
         end
     end
     
-    % set up existfile mex function
-    mexcompile_existfile ('Verbose', Inputs.Verbose);
     
+    %% existfile
+    if Inputs.ForceExistfileSetup && Inputs.SkipExistfileSetup
+        error ('The options ForceExistfileSetup and SkipExistfileSetup are both set to true');
+    end
+    
+    if ~Inputs.SkipExistfileSetup
+        if Inputs.ForceExistfileSetup || (exist (['existfile.', mexext], 'file') ~= 3)
+            % set up existfile mex function
+            mexcompile_existfile ('Verbose', Inputs.Verbose);
+        end
+    end
+    
+    %% mexlsei
     if Inputs.ForceMexLseiSetup && Inputs.SkipMexLseiSetup
-        error ('The options ForceMexLseiSetup and SkipMexLseiSetup are both true')
+        error ('The options ForceMexLseiSetup and SkipMexLseiSetup are both set to true');
     end
     
     if ~Inputs.SkipMexLseiSetup
@@ -164,10 +194,9 @@ function rnfoundry_setup (varargin)
         end
     end
     
-    cd (workdir);
-    
+    %% mexslmeval
     if Inputs.ForceMexSLMSetup && Inputs.SkipMexSLMSetup
-        error ('The options ForceMexSLMSetup and SkipMexSLMSetup are both true')
+        error ('The options ForceMexSLMSetup and SkipMexSLMSetup are both set to true');
     end
     
     if ~Inputs.SkipMexSLMSetup
@@ -178,24 +207,32 @@ function rnfoundry_setup (varargin)
         end
     end
     
-    cd (workdir);
-    
-    if Inputs.ForceMexPPValSetup ...
-            || (exist (['ppmval.', mexext], 'file') ~= 3)...
-            || (exist (['ppuval.', mexext], 'file') ~= 3)
-        
-        mexppval_setup ('Verbose', Inputs.Verbose);
-        
+    %% ppmval ppuval
+    if Inputs.ForceMexPPValSetup && Inputs.SkipMexPPValSetup
+        error ('The options ForceMexPPValSetup and SkipMexPPValSetup are both set to true');
     end
     
-    cd (workdir);
-    
-    if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mexext], 'file') ~= 3)
-        mmake ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
-        mmake ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+    if ~Inputs.SkipMexPPValSetup
+        if Inputs.ForceMexPPValSetup ...
+                || (exist (['ppmval.', mexext], 'file') ~= 3)...
+                || (exist (['ppuval.', mexext], 'file') ~= 3)
+
+            mexppval_setup ('Verbose', Inputs.Verbose);
+
+        end
     end
     
-    cd (workdir);
+    %% mexmPhaseWL
+    if Inputs.ForceMexmPhaseWLSetup && Inputs.SkipMexmPhaseWLSetup
+        error ('The options ForceMexmPhaseWLSetup and SkipMexmPhaseWLSetup are both set to true');
+    end
+    
+    if ~Inputs.SkipMexmPhaseWLSetup
+        if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mexext], 'file') ~= 3)
+            mmake ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+            mmake ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+        end
+    end
     
     xfemm_main_page_url = 'https://sourceforge.net/projects/xfemm/';
     
