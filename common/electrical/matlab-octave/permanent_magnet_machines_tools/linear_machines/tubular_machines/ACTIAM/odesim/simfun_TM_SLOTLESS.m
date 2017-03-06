@@ -8,16 +8,105 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
 %
 % Description
 %
-% simfun_TM_SLOTTED takes a slotted tubular linear machine design,
+% simfun_TM_SLOLESS takes a slotless tubular linear machine design,
 % specified in the fields of a structure and performs a series of
-% electromagnetic simulation to obtain data on the machine performance. In
+% electromagnetic simulations to obtain data on the machine performance. In
 % addition, various other calculations are  performed such as estimating
 % the resistance and inductance etc. The results of the calcualtions are
 % added as fields to the design structure, which is returned with the
 % appended fields. Also expected to be provided is a simoptions structure
 % containing fields which specify various options and settings determining
-% what simulation data will be gathered. More information on the simoptions
-% fields is given later in this help.
+% what simulation data will be gathered.
+%
+% simfun_TM_SLOTLESS is ctually a wrapper for simfun_TM_SLOTTED, so any
+% coil geometry can be created which is possible in simfun_TM_SLOTTED. The
+% protruding teeth from the back iron are split from the yoke and given
+% their own material labels (by default the same as the air gap label) to
+% create the slotless drawing.
+%
+% Input
+%
+%   DESIGN
+%     
+%   structure containing the specification of the slotless tubular
+%   machine design. See the help for completedesign_TM_SLOTLESS for a
+%   detailed description of the required contents of this structure. In
+%   addition to the input structure fields described there, the following
+%   fields may also be provided:
+%  
+%   NStrands - number of parallel strands each coil turn is made up of,
+%     default is 1
+%
+%   WireResistivityBase - base or reference resistivity of the coil
+%     material at the base temperature specified in the TemperatureBase
+%     field
+% 
+%   TemperatureBase - base or reference temperature atwhich the coil
+%     material has the resistivity in the field WireResistivityBase
+% 
+%   AlphaResistivity - resistivity temperature coefficient such that the
+%     actual resistivity may be calculated from
+% 
+%     rho = WireResistivityBase * (1 + AlphaResistivity * (T - TemperatureBase))
+% 
+%     where T is the temperature. The temperature used in the simulation
+%     is specified in the simoptions struture.
+% 
+%   FEMMTol - tolerance used in FEA drawings to determine if components
+%     are separate. Defaults to 1e-5 if not supplied.
+%
+% SIMOPTIONS 
+%
+% Also expected to be provided is a structure containing various simulation
+% options.
+%
+%  usefemm - optional flag to allow forcing the use of FEMM for FEA simulation 
+%   rather than mfemm. If true FEMM will be used, otherwise, mfemm will be used
+%   if it is available. Defaults to false if not supplied.
+%
+%  quietfemm - optional flag determining if output to the command line from
+%   mfemm should be suppressed. Defaults to true if not supplied.
+%
+%  GetVariableGapForce - optional flag determining if a series of force 
+%   simulations with various air gap sizes will be performed. Must be supplied.
+%
+%  NForcePoints - optional number of gap sizes to use if GetVariableGapForce is
+%   true. Defaults to 4 if not supplied. The force positions will be linearly
+%   spaced from zero air gap (plus a small toperance value) to twice the air gap
+%   length.
+%
+%  MagFEASim - structure containing options specific to the magnetics
+%    finitie element analysis. The possible fields of this structure are
+%    shown below:
+%    
+%    MagnetRegionMeshSize - optional mesh size in the magnet regions
+%
+%    MagnetSpacerRegionMeshSize - optional mesh size in the spacers between 
+%      magnets
+%
+%    AirGapMeshSize - optional mesh size in the air gap
+%
+%    OuterRegionsMeshSize: [46.6476e-003 -1.0000e+000]
+%
+%    YokeRegionMeshSize - optional mesh size in the armature back iron (the
+%      yoke)
+%
+%    CoilRegionMeshSize - optional mesh size in the coil regions
+%
+%    ShoeGapRegionMeshSize - optional mesh size ing the gap between tooth
+%      shoes
+%
+%    UseParFor - determines whether parfor will be used to split
+%      computation of the fea over multiple processors. Default is false if
+%      not supplied.
+%
+%  SkipMainFEA - optional flag which allows skipping the main fea simulations.
+%   This can be desirable when only coil winding configurations change etc.
+%   Defaults to false if not supplied.
+%
+%  SkipInductanceFEA - optional flag which allows skipping the inductance fea
+%   simulations. This can be desirable when only coil winding configurations
+%   change etc. Defaults to false if not supplied.
 %
 
 
@@ -80,61 +169,6 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
 % further information.
 %
 % In addition some further design option fields may be specified if desired:
-%
-%   NStrands               1
-%
-%   NStages                1
-%
-%   MagnetSkew             0
-%
-%   FEMMTol - tolerance used in FEA drawings to determine if components are
-%    separate. Defaults to 1e-5 if not supplied.
-%
-%   WireResistivityBase    1.7e-8
-%
-%   AlphaResistivity       3.93e-3
-%
-%   TemperatureBase        20
-%
-%
-% SIMOPTIONS 
-%
-% Also expected to be provided is a structure containing various simulation
-% options.
-%
-%
-%  usefemm - optional flag to allow forcing the use of FEMM for FEA simulation 
-%   rather than mfemm. If true FEMM will be used, otherwise, mfemm will be used
-%   if it is available. Defaults to false if not supplied.
-%
-%  quietfemm - optional flag determining if output to the command line from
-%   mfemm should be suppressed. Defaults to true if not supplied.
-%
-%  GetVariableGapForce - optional flag determining if a series of force 
-%   simulations with various air gap sizes will be performed. Must be supplied.
-%
-%  NForcePoints - optional number of gap sizes to use if GetVariableGapForce is
-%   true. Defaults to 4 if not supplied. The force positions will be linearly
-%   spaced from zero air gap (plus a small toperance value) to twice the air gap
-%   length.
-%
-%  MagFEASim - 
-%     MagnetRegionMeshSize
-%     'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
-%     'StatorOuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
-%     'RotorOuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
-%     'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
-%     'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
-%     'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
-%     'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize
-%
-%  SkipMainFEA - optional flag which allows skipping the main fea simulations.
-%   This can be desirable when only coil winding configurations change etc.
-%   Defaults to false if not supplied.
-%
-%  SkipInductanceFEA - optional flag which allows skipping the inductance fea
-%   simulations. This can be desirable when only coil winding configurations
-%   change etc. Defaults to false if not supplied.
 %
 %  
 %
@@ -247,6 +281,8 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
         if strcmp (simoptions.MagFEASimType, 'single')
             
             design.FirstSlotCenter = 0;
+            
+            fprintf (1, 'Performing FEA simulation 1 of 1\n')
                                    
             [ RawCoggingForce, ...
               BxCoreLossData, ...
@@ -326,6 +362,8 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
             feapos = linspace (0, 1, simoptions.NMagFEAPositions);
             design.MagFEASimPositions = feapos;
 
+            fprintf (1, 'Performing FEA simulation %d of %d\n', 1, simoptions.NMagFEAPositions);
+            
             [ RawCoggingForce, ...
               BxCoreLossData, ...
               ByCoreLossData, ...
@@ -352,6 +390,8 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
             if simoptions.MagFEASim.UseParFor
 
                 parfor posind = 2:numel (feapos)
+                    
+                    fprintf (1, 'Performing FEA simulation %d of %d\n', posind, simoptions.NMagFEAPositions);
 
                     [ RawCoggingForce, ...
                       BxCoreLossData, ...
@@ -378,6 +418,8 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
             else
 
                 for posind = 2:numel (feapos)
+                    
+                    fprintf (1, 'Performing FEA simulation %d of %d\n', posind, simoptions.NMagFEAPositions);
 
                     [ RawCoggingForce, ...
                       BxCoreLossData, ...
@@ -441,6 +483,8 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
     end
     
     if ~simoptions.SkipInductanceFEA
+        
+        fprintf (1, 'Performing inductance FEA simulation\n');
     
         % perform an inductance sim
         Lcurrent = inductancesimcurrent (design.CoilArea, design.CoilTurns);
