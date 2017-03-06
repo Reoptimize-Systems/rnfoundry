@@ -1,5 +1,9 @@
 function design = test_design_TM_SLOTLESS (spectype)
 
+    if nargin < 1
+        spectype = 'dims';
+    end
+    
     design.ArmatureType = 'external';
     
     % Number of phases in machine
