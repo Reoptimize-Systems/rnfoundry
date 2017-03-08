@@ -274,11 +274,29 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
     % on the basic winding
     NPolePairs = max(1, ceil (design.pb/2));
     
-    simoptions = setfieldifabsent (simoptions, 'MagFEASimType', 'single');
+    if ~isfield (simoptions, 'MagFEASimType')
+        
+        if (design.zcgVzs ~= design.zcyVzs) ...
+                || (design.rsb > 0) ...
+                || (design.rc(2) > 1e-3)
+
+            simoptions.MagFEASimType = 'multiple';
+        else
+            simoptions.MagFEASimType = 'single';
+        end
     
+    end
+  
     if ~simoptions.SkipMainFEA
         
         if strcmp (simoptions.MagFEASimType, 'single')
+            
+            if (design.zcgVzs ~= design.zcyVzs) ...
+                || (design.rsb > 0) ...
+                || (design.rc(2) > 1e-3)
+            
+                error ('Flux linkage from single fea sim is currently only possible when coils are rectangular in cross-section, set simoptions.MagFEASimType to ''multiple''');
+            end
             
             design.FirstSlotCenter = 0;
             
