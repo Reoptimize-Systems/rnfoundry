@@ -16,7 +16,36 @@ classdef orientmat
         %
         % Input
         %
-        % 
+        %  spectype - string stating how the orientation matrix is to be
+        %    specified, possible options are: 'orientation', 'euler',
+        %    'euler123', 'euler321', 'euler313', 'vector' and '2vectors'
+        %
+        %  spec - orientation, the value of spec is dementdent on the value
+        %    of spectype with the following possibilities:
+        %
+        %    'orientation' - spec should be a (3 x 3) full orientation
+        %      matrix aka direction-cosine aka rotation matrix
+        %
+        %    'euler' - same as for 'euler123'
+        %
+        %    'euler123' - spec should be a 3 element vector representing
+        %      the euler angles using the 123 convention
+        %
+        %    'euler321' - spec should be a 3 element vector representing
+        %      the euler angles using the 321 convention
+        %
+        %    'euler313' - spec should be a 3 element vector representing
+        %      the euler angles using the 313 convention
+        %
+        %    'vector' - spec should be a 3 element vector. The rotation is
+        %      the magnitude of the vector and is performed around the axis
+        %      formed by the vector direction.
+        %
+        %    '2vectors' - spec should be a structure containing the fields
+        %      'ia', 'vecA', 'ib' and 'vecB'.
+        %
+        %
+        %
         
             switch spectype
                 
@@ -90,6 +119,17 @@ classdef orientmat
                     this.orientationMatrix = expm (wcrs);
                     
                 case '2vectors'
+                    
+                    % make sure vectors etc are good
+                    if numel (spec.vecA) ~= 3 ...
+                            || numel (spec.vecB) ~= 3 ...
+                            || ~(isscalar (spec.ia) && isnumeric(spec.ia) && isint2eps (spec.ia)) ...
+                            || ~(isscalar (spec.ib) && isnumeric(spec.ib) && isint2eps (spec.ib))
+                        error ('ia and ib must be integers and vecA and vecB must be 3 element vectors');
+                    end
+                    
+                    spec.vecA = spec.vecA(:);
+                    spec.vecB = spec.vecB(:);
                     
                     if (spec.ia < 1 || spec.ia > 3)
                         error ('Axis index A must be 1, 2, or 3')
