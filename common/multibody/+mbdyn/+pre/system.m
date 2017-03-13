@@ -27,11 +27,12 @@ classdef system < mbdyn.pre.base
             
             options = parse_pv_pairs (options, varargin);
             
-            self.problems = problems;
-            
+            self.problems = {};
             self.nodes = {};
             self.elements = {};
             self.drivers = {};
+            
+            self.addProblems (problems);
             
             if ~isempty (options.Nodes)
                 self.addNodes (options.Nodes)
@@ -45,6 +46,16 @@ classdef system < mbdyn.pre.base
                 self.addDrivers (options.Drivers)
             end
             
+            
+        end
+        
+        function addProblems (self, problems)
+            
+            problems = self.makeCellIfNot (problems);
+            
+            self.checkCellArrayClass (problems, 'mbdyn.pre.problem');
+            
+            self.problems = [self.problems, problems];
             
         end
         
@@ -118,6 +129,7 @@ classdef system < mbdyn.pre.base
             options.Bodies = true;
             options.StructuralNodes = true;
             options.Joints = true;
+            options.Light = false;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -153,6 +165,10 @@ classdef system < mbdyn.pre.base
                 end
             end
 %             hold off
+            
+            if options.Light
+                light (self.drawAxesH);
+            end
             
 %             axis equal;
             xlabel ('x'); ylabel ('y'); zlabel('z'); 
