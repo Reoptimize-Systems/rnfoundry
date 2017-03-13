@@ -25,7 +25,12 @@ classdef element < mbdyn.pre.base
     
     methods
         
-        function self = element ()
+        function self = element (varargin)
+            
+            options.STLFile = '';
+            options.UseSTLName = false;
+            
+            options = parse_pv_pairs (options, varargin);
             
             self.stlLoaded = false;
             self.drawColour = [0.8, 0.8, 1.0];
@@ -35,11 +40,19 @@ classdef element < mbdyn.pre.base
             self.sy = 1;
             self.sz = 1;
             
+            if ~isempty (options.STLFile)
+                if exist (options.STLFile, 'file')
+                    self.loadSTL (options.STLFile, options.UseSTLName);
+                else
+                    error ('Supplied STL file %s does not appear to exist', options.STLFile);
+                end
+            end
+            
         end
         
         function loadSTL (self, filename, usename)
             
-            [self.shapeData.vertices, self.shapeData.faces, self.shapeData.n, stlname] = stl.stlRead(filename);
+            [self.shapeData(1).Vertices, self.shapeData(1).Faces, self.shapeData(1).N, stlname] = stl.read(filename);
             
             if usename
                 self.name = stlname;
@@ -60,11 +73,12 @@ classdef element < mbdyn.pre.base
             self.drawColour = newcolour;
         end
         
-        function draw (self, varargin)
+        function hax = draw (self, varargin)
             
             options.AxesHandle = [];
             options.ForceRedraw = false;
             options.Mode = 'solid';
+            options.Light = false;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -156,6 +170,12 @@ classdef element < mbdyn.pre.base
                 
                 self.shapeDataChanged = false;
                 
+                if options.Light
+                    light (self.drawAxesH);
+                end
+                
+                
+                
             end
             
             switch options.Mode
@@ -187,6 +207,9 @@ classdef element < mbdyn.pre.base
                     
             end
             
+            if nargout > 0
+                hax = self.drawAxesH;
+            end
         end
         
     end
