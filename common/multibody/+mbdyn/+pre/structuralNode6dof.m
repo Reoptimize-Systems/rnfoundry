@@ -115,6 +115,10 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
             self.checkOrientationMatrix (neworientation, true);
             
+            if ~isa (neworientation, 'mbdyn.pre.orientmat')
+                neworientation = mbdyn.pre.orientmat ('orientation', neworientation);
+            end
+            
             self.absoluteOrientation = neworientation;
             
         end
@@ -125,6 +129,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
             M = [ self.absoluteOrientation.orientationMatrix, self.absolutePosition; ...
                   0, 0, 0, 1 ];
+              
             
             % matlab uses different convention to mbdyn for rotation
             % matrix
