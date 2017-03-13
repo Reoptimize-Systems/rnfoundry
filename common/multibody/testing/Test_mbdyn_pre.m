@@ -213,7 +213,11 @@ mbdynpost.loadResultsFromFiles ([filename(1:end-4), '_mbd']);
 
 mbdynpost.plotNodeTrajectories ()
 
-mbdynpost.animate ('PlotTrajectories', true, 'DrawLabels', true, 'Skip', 40)
+mbdynpost.animate ( 'PlotTrajectories', true, ...
+                    'DrawLabels', true, ...
+                    'Skip', 40, ...
+                    'DrawMode', 'solid', ...
+                    'Light', true );
 
 % [status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
 
@@ -268,10 +272,6 @@ extsf = mbdyn.pre.externalStructuralForce ( {sn6dof1, sn6dof2, sn6dof3}, ...
                                             soc);
                                         
 extsf.generateOutputString ()
-                                        
-                                        
-                                        
-
 
 
 
