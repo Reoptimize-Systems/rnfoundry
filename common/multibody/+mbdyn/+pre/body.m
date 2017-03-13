@@ -16,11 +16,14 @@ classdef body < mbdyn.pre.element
         function self = body (mass, cog, inertiamat, node, varargin)
         
             options.InertialOrientation = [];
+            options.STLFile = '';
+            options.UseSTLName = false;
             
             options = parse_pv_pairs (options, varargin);
             
             % call superclass constructor
-            self = self@mbdyn.pre.element ();
+            self = self@mbdyn.pre.element ('STLFile', options.STLFile, ...
+                                           'UseSTLName', options.UseSTLName);
             
             if ~(isscalar (mass) && isnumeric (mass))
                 error ('mass should be a numeric scalar value');
@@ -77,18 +80,20 @@ classdef body < mbdyn.pre.element
             
         end
         
-        function draw (self, varargin)
+        function hax = draw (self, varargin)
             
             options.AxesHandle = [];
             options.ForceRedraw = false;
             options.Mode = 'solid';
+            options.Light = false;
             
             options = parse_pv_pairs (options, varargin);
             
-            draw@mbdyn.pre.element ( self, ...
-                'AxesHandle', options.AxesHandle, ...
-                'ForceRedraw', options.ForceRedraw, ...
-                'Mode', options.Mode );
+            hax = draw@mbdyn.pre.element ( self, ...
+                    'AxesHandle', options.AxesHandle, ...
+                    'ForceRedraw', options.ForceRedraw, ...
+                    'Mode', options.Mode, ...
+                    'Light', options.Light );
 
             self.setTransform ();
             
