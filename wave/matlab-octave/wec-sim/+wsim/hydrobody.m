@@ -117,160 +117,88 @@ classdef hydrobody < handle
     % public pre-processing related methods (and constructor)
     methods (Access = 'public') %modify object = T; output = F
 
-        function obj = hydrobody (filename, caseDir)
-
-            if nargin < 2
-                obj.caseDir = pwd();
-            else
-                obj.caseDir = caseDir;
+        function obj = hydrobody (filename, varargin)
+            % constructor for the hydrobody class
+            %
+            % Syntax
+            %
+            % hb = hydrobody (filename)
+            % hb = hydrobody (filename, caseDir)
+            %
+            % Input
+            %
+            %  filename - string containing the h5 file containing the
+            %    hydrodynamic data for the body
+            %
+            %  caseDir - optional string containng the path to the case
+            %    directory. If not supplied, the case directory is stored
+            %    as the current working directory.
+            %
+            % Output
+            %
+            %  hb - a hydrobody object
+            %
+            %
+            
+%             options.Waves = [];
+%             options.Simu = [];
+            options.CaseDirectory = pwd();
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if exist (fullfile (options.CaseDirectory, filename), 'file') ~= 2
+                if exist (options.CaseDirectory, 'dir') ~= 7
+                    error ('The case directory %s does not appear to exist', options.CaseDirectory);
+                else
+                    error ('The h5 file was not found in the case directory:\n%s', options.CaseDirectory);
+                end
             end
 
             % hydro data file
             obj.h5File = filename;
-
-        end
-
-        function odeSimReset (obj)
-
-            obj.oldForce    = [];
-            obj.oldWp       = [];
-            obj.oldWpMeanFs = [];
-
-            % reset non-linear buoyancy calc stuff
-            obj.oldNonLinBuoyancyF = [];
-            obj.oldNonLinBuoyancyP = [];
-
-            % reset radiation force related stuff
-            if isa (obj.radForceSS, 'stateSpace')
-                obj.radForceSS.reset ();
-            end
-
-        end
-
-        function odeSimSetup (obj, waves, simu, bodynum)
-
-            assert (isa (simu, 'simulationClass'), 'waves must be a simulationClass object')
-            assert (isa (waves, 'waveClass'), 'waves must be a wavesClass object');
-            assert (isscalar (bodynum) &&  isint2eps (bodynum) , 'bodynum must be a scalar integer')
-
-            % store waves and simu for later access
-            obj.waves = waves;
-            obj.simu = simu;
-            obj.bodyNumber = bodynum;
-
-            % Morrison Element
-            if obj.simu.morrisonElement == 0
-                obj.doMorrisonElementViscousDrag = false;
-            elseif obj.simu.morrisonElement == 1
-                obj.doMorrisonElementViscousDrag = true;
-            end
-
-            % Wave type
-
-            % linear excitation type
-            if obj.waves.typeNum < 10
-                obj.excitationMethod = 'no waves';
-                obj.excitationMethodNum = 0;
-            elseif obj.waves.typeNum >= 10 && obj.waves.typeNum < 20
-                obj.excitationMethod = 'regular waves';
-                obj.excitationMethodNum = 1;
-            elseif obj.waves.typeNum >= 20 && obj.waves.typeNum < 30
-                obj.excitationMethod = 'irregular waves';
-                obj.excitationMethodNum = 2;
-            elseif obj.waves.typeNum >= 30
-                obj.excitationMethod = 'user defined waves';
-                obj.excitationMethodNum = 3;
-            end
-
-            % nonlinear excitation type
-            if obj.simu.nlHydro == 0
-                obj.doNonLinearFKExcitation = false;
-            elseif obj.simu.nlHydro > 0
-                obj.doNonLinearFKExcitation = true;
-            end
-
-            if obj.simu.nlHydro < 2
-                obj.freeSurfaceMethod = 'mean';
-                obj.freeSurfaceMethodNum = 0;
-            elseif obj.simu.nlHydro == 2
-                obj.freeSurfaceMethod = 'instantaneous';
-                obj.freeSurfaceMethodNum = 1;
-            end
-
-            % Radiation Damping
-            if obj.waves.typeNum == 0 || obj.waves.typeNum == 10 %'noWave' & 'regular'
-                % constant radiation coefficients
-                obj.radiationMethod = 'constant radiation coefficients';
-                obj.radiationMethodNum = 0;
-            elseif obj.simu.ssCalc == 1
-                % state space radiation forces
-                obj.radiationMethod = 'state space representation';
-                obj.radiationMethodNum = 2;
-            else
-                % convolution integral radiation forces
-                obj.radiationMethod = 'convolution integral';
-                obj.radiationMethodNum = 1;
-            end
-
-            % Body2Body
-            if obj.simu.b2b == 0
-                obj.bodyToBodyInteraction = false;
-            else
-                obj.bodyToBodyInteraction = true;
-            end
-
-            % first reset everything
-            odeSimReset (obj);
-
-            % then do the setup again
-            obj.hydroForcePre( obj.waves.w, ...
-                               obj.waves.waveDir, ...
-                               obj.simu.CIkt, ...
-                               obj.simu.CTTime, ...
-                               obj.waves.numFreq, ...
-                               obj.simu.dt, ...
-                               obj.simu.rho, ...
-                               obj.simu.g, ...
-                               obj.waves.type, ...
-                               obj.waves.waveAmpTime, ...
-                               obj.bodyNumber, ...
-                               obj.simu.numWecBodies, ...
-                               obj.simu.ssCalc, ...
-                               obj.simu.nlHydro, ...
-                               obj.simu.b2b );
-
-            % Radiation Damping
-            if obj.radiationMethodNum == 1 && ~isempty (fieldnames(obj.hydroForce))
-
-                % reset the radiation force convolution integral related states
-                obj.CIdt = obj.simu.CTTime(2) - obj.simu.CTTime(1);
-
-                obj.radForceVelocity = zeros(length(obj.lenJ),length(obj.simu.CTTime));
-
-                obj.radForceOldTime = 0;
-
-                obj.radForceOldF_FM = zeros(6,1);
-
-                IRKB_reordered = permute(obj.hydroForce.irkb, [3 1 2]);
-
-                interp_factor = 1;
-
-                obj.radForce_IRKB_interp = IRKB_reordered(:,1:interp_factor:end, :);
-
-            elseif obj.radiationMethodNum == 2
-
-                % initialise the radiation force state space solver object
-                obj.radForceSS = stateSpace ( obj.hydroForce.ssRadf.A, ...
-                                              obj.hydroForce.ssRadf.B, ...
-                                              obj.hydroForce.ssRadf.C, ...
-                                              obj.hydroForce.ssRadf.D, ...
-                                              zeros (size (A,2), 1) );
-            end
+            obj.caseDir = options.CaseDirectory;
 
         end
 
         function readH5File(obj)
-            % Reads h5 file
+            % Reads the HDF5 file containing the hydrodynamic data for the
+            % body
+            %
+            % Syntax
+            %
+            % readH5File(hb)
+            %
+            % Description
+            %
+            % readH5File reads the HDF5 file containing the hydrodynamic
+            % data for the body and stores it in the body properties. The
+            % file location is expected to be in the case directory
+            % provided on construction of the object.
+            %
+            % Generating the hydrodynamic data:
+            %
+            % The hydrobody requires frequency-domain hydrodynamic
+            % coefficients (added mass, radiation damping, and wave
+            % excitation). Typically, these hydrodynamic coefficients for
+            % each body of the WEC device are generated using a boundary
+            % element method (BEM) code (e.g., WAMIT, NEMOH or AQWA). The
+            % HDF5 file must then be generated from the output of these
+            % codes.
+            %
+            % Create HDF5 file:
+            %
+            % readH5File reads the hydrodynamic data in HDF5 format from
+            % the (<hydrodata_file_name>.h5) file provided when the object
+            % was constructed. A helper tool, BEMIO, is avaialable to parse
+            % BEM solutions (from WAMIT, NEMOH and AQWA) into the required
+            % HDF5 data structure. 
+            %
+            % Input
+            %
+            %  hb - hydrobody object
+            %
+            %
+            
             filename = fullfile (obj.caseDir, obj.h5File);
             name = ['/body' num2str(obj.bodyNumber)];
             obj.cg = h5read(filename,[name '/properties/cg']);
@@ -307,7 +235,10 @@ classdef hydrobody < handle
 
         function loadHydroData(obj, hydroData)
             % Loads hydroData structure from matlab variable as alternative
-            % to reading the h5 file. Used in wecSimMCR
+            % to reading the h5 file. Used when doing multiple condition
+            % runs on the same system
+            %
+            
             obj.hydroData = hydroData;
             obj.cg        = hydroData.properties.cg';
             obj.dispVol   = hydroData.properties.disp_vol;
@@ -484,7 +415,9 @@ classdef hydrobody < handle
         end
 
         function triCenter(obj)
-            %Function to caculate the center coordinate of a triangle
+            % Calculate the center coordinate of the body geometries'
+            % triangles
+            %
             points = obj.bodyGeometry.vertex;
             faces = obj.bodyGeometry.face;
             c = zeros(length(faces),3);
@@ -733,8 +666,196 @@ classdef hydrobody < handle
 
     % public transient simulation methods
     methods (Access = 'public')
+        
+        
+        function odeSimSetup (obj, waves, simu, bodynum)
+            % sets up the body in preparation for a transient simulation
+            %
+            % Syntax
+            %
+            % odeSimSetup (hb, waves, simu, bodynum)
+            %
+            % Desciription
+            %
+            % odeSimSetup initialises various parmaters and settings in
+            % preparation for performing a transient simulation based on
+            % the ODE solver routines. 
+            %
+            % Input
+            %
+            %   hb - hydrobody object
+            %
+            %   waves - waveClass object with the desired wave parameters
+            %     to be used in the simulation
+            %
+            %   simu - simulationClass Object with the desired simulation
+            %     parameters to be used in the simulation
+            %
+            %   bodynum - the number associated with this body. Typically
+            %     this is generated by a parent hydrosys object
+            %
+            % 
+            
+            assert (isa (simu, 'simulationClass'), 'waves must be a simulationClass object')
+            assert (isa (waves, 'waveClass'), 'waves must be a wavesClass object');
+            assert (isscalar (bodynum) &&  isint2eps (bodynum) , 'bodynum must be a scalar integer')
 
-        function [forces, out] = hydroForces (obj, t, x, vel, accel, elv)
+            % store waves and simu for later access
+            obj.waves = waves;
+            obj.simu = simu;
+            obj.bodyNumber = bodynum;
+
+            % Morrison Element
+            if obj.simu.morrisonElement == 0
+                obj.doMorrisonElementViscousDrag = false;
+            elseif obj.simu.morrisonElement == 1
+                obj.doMorrisonElementViscousDrag = true;
+            end
+
+            % Wave type
+
+            % linear excitation type
+            if obj.waves.typeNum < 10
+                obj.excitationMethod = 'no waves';
+                obj.excitationMethodNum = 0;
+            elseif obj.waves.typeNum >= 10 && obj.waves.typeNum < 20
+                obj.excitationMethod = 'regular waves';
+                obj.excitationMethodNum = 1;
+            elseif obj.waves.typeNum >= 20 && obj.waves.typeNum < 30
+                obj.excitationMethod = 'irregular waves';
+                obj.excitationMethodNum = 2;
+            elseif obj.waves.typeNum >= 30
+                obj.excitationMethod = 'user defined waves';
+                obj.excitationMethodNum = 3;
+            end
+
+            % nonlinear excitation type
+            if obj.simu.nlHydro == 0
+                obj.doNonLinearFKExcitation = false;
+            elseif obj.simu.nlHydro > 0
+                obj.doNonLinearFKExcitation = true;
+            end
+
+            if obj.simu.nlHydro < 2
+                obj.freeSurfaceMethod = 'mean';
+                obj.freeSurfaceMethodNum = 0;
+            elseif obj.simu.nlHydro == 2
+                obj.freeSurfaceMethod = 'instantaneous';
+                obj.freeSurfaceMethodNum = 1;
+            end
+
+            % Radiation Damping
+            if obj.waves.typeNum == 0 || obj.waves.typeNum == 10 %'noWave' & 'regular'
+                % constant radiation coefficients
+                obj.radiationMethod = 'constant radiation coefficients';
+                obj.radiationMethodNum = 0;
+            elseif obj.simu.ssCalc == 1
+                % state space radiation forces
+                obj.radiationMethod = 'state space representation';
+                obj.radiationMethodNum = 2;
+            else
+                % convolution integral radiation forces
+                obj.radiationMethod = 'convolution integral';
+                obj.radiationMethodNum = 1;
+            end
+
+            % Body2Body
+            if obj.simu.b2b == 0
+                obj.bodyToBodyInteraction = false;
+            else
+                obj.bodyToBodyInteraction = true;
+            end
+
+            % first reset everything
+            odeSimReset (obj);
+
+            % then do the setup again
+            obj.hydroForcePre( obj.waves.w, ...
+                               obj.waves.waveDir, ...
+                               obj.simu.CIkt, ...
+                               obj.simu.CTTime, ...
+                               obj.waves.numFreq, ...
+                               obj.simu.dt, ...
+                               obj.simu.rho, ...
+                               obj.simu.g, ...
+                               obj.waves.type, ...
+                               obj.waves.waveAmpTime, ...
+                               obj.bodyNumber, ...
+                               obj.simu.numWecBodies, ...
+                               obj.simu.ssCalc, ...
+                               obj.simu.nlHydro, ...
+                               obj.simu.b2b );
+
+            % Radiation Damping
+            if obj.radiationMethodNum == 1 && ~isempty (fieldnames(obj.hydroForce))
+
+                % reset the radiation force convolution integral related states
+                obj.CIdt = obj.simu.CTTime(2) - obj.simu.CTTime(1);
+
+                obj.radForceVelocity = zeros(length(obj.lenJ),length(obj.simu.CTTime));
+
+                obj.radForceOldTime = 0;
+
+                obj.radForceOldF_FM = zeros(6,1);
+
+                IRKB_reordered = permute(obj.hydroForce.irkb, [3 1 2]);
+
+                interp_factor = 1;
+
+                obj.radForce_IRKB_interp = IRKB_reordered(:,1:interp_factor:end, :);
+
+            elseif obj.radiationMethodNum == 2
+
+                % initialise the radiation force state space solver object
+                obj.radForceSS = stateSpace ( obj.hydroForce.ssRadf.A, ...
+                                              obj.hydroForce.ssRadf.B, ...
+                                              obj.hydroForce.ssRadf.C, ...
+                                              obj.hydroForce.ssRadf.D, ...
+                                              zeros (size (A,2), 1) );
+            end
+
+        end
+        
+        
+        function odeSimReset (obj)
+            % resets the body in readiness for a transient simulation
+            %
+            % Syntax
+            %
+            % odeSimReset (hb)
+            %
+            % Desciription
+            %
+            % odeSimReset resets various internal storeage parameters and
+            % settings in preparation for performing a transient simulation
+            % based on the ODE solver routines, returning the hydrobody to
+            % the state it is in just after calling odeSimSetup. This
+            % should be called before re-running a transient simulation
+            % with the same parameters.
+            %
+            % Input
+            %
+            %   hb - hydrobody object
+            %
+            %
+            
+            obj.oldForce    = [];
+            obj.oldWp       = [];
+            obj.oldWpMeanFs = [];
+
+            % reset non-linear buoyancy calc stuff
+            obj.oldNonLinBuoyancyF = [];
+            obj.oldNonLinBuoyancyP = [];
+
+            % reset radiation force related stuff
+            if isa (obj.radForceSS, 'stateSpace')
+                obj.radForceSS.reset ();
+            end
+
+        end
+        
+
+        function [forces, out] = hydroForces (obj, t, pos, vel, accel, elv)
             % hydroForces calculates the hydrodynamic forces acting on a
             % body
             %
@@ -748,7 +869,8 @@ classdef hydrobody < handle
             %
             %  t - global simulation time
             %
-            %  x - (6 x 1) displcement of this body
+            %  pos - (6 x 1) displcement of this body in x,y and z and
+            %    rotatation around the x, y and z axes
             %
             %  vel - (6 x n) velocities of all bodies in system
             %
@@ -775,11 +897,11 @@ classdef hydrobody < handle
             [out.F_addedmass, out.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
 
             % hydrostatic restoring forces
-            [out.F_Restoring, out.BodyHSPressure ] =  hydrostaticForces (obj, t, x, elv);
+            [out.F_Restoring, out.BodyHSPressure ] =  hydrostaticForces (obj, t, pos, elv);
 
             if obj.doNonLinearFKExcitation
 
-                [out.F_ExcitLinNonLin, out.wavenonlinearpressure, out.wavelinearpressure] = nonlinearExcitationForces (obj, t, x, elv);
+                [out.F_ExcitLinNonLin, out.wavenonlinearpressure, out.wavelinearpressure] = nonlinearExcitationForces (obj, t, pos, elv);
 
             else
                 out.F_ExcitLinNonLin = zeros (6, 1);
@@ -787,7 +909,7 @@ classdef hydrobody < handle
 
             if obj.doMorrisonElementViscousDrag
 
-                out.F_MorrisonElement = morrisonElementForce (obj, t, x, vel(:,obj.bodyNumber), accel(:,obj.bodyNumber));
+                out.F_MorrisonElement = morrisonElementForce (obj, t, pos, vel(:,obj.bodyNumber), accel(:,obj.bodyNumber));
 
             else
 
@@ -815,7 +937,7 @@ classdef hydrobody < handle
 
         end
 
-        function forces = morrisonElementForce (obj, t, x, vel, accel)
+        function forces = morrisonElementForce (obj, t, pos, vel, accel)
 
             % TODO: convert morrison element simulink models
             switch obj.excitationMethodNum
@@ -837,7 +959,14 @@ classdef hydrobody < handle
         end
 
         function forces = linearExcitationForces (obj, t)
-            % calculates wave excitation forces during transient simulation
+            % calculates linear wave excitation forces during transient
+            % simulation
+            %
+            % Syntax
+            %
+            % forces = linearExcitationForces (obj, t)
+            %
+            % Input
 
             switch obj.excitationMethodNum
 
@@ -903,11 +1032,11 @@ classdef hydrobody < handle
 
         end
 
-        function [forces, wavenonlinearpressure, wavelinearpressure] = nonlinearExcitationForces (obj, t, x, elv)
+        function [forces, wavenonlinearpressure, wavelinearpressure] = nonlinearExcitationForces (obj, t, pos, elv)
 
-                x = x - [ obj.hydroData.properties.cg, 0, 0, 0];
+                pos = pos - [ obj.hydroData.properties.cg, 0, 0, 0];
 
-                [forces, wavenonlinearpressure, wavelinearpressure]  = nonFKForce (obj, t, x, elv);
+                [forces, wavenonlinearpressure, wavelinearpressure]  = nonFKForce (obj, t, pos, elv);
 
         end
 
@@ -916,7 +1045,7 @@ classdef hydrobody < handle
             %
             % Syntax
             %
-            % [F_addedmass, F_RadiationDamping] = radiationForces (obj, t, x, vel, accel)
+            % [F_addedmass, F_RadiationDamping] = radiationForces (obj, t, vel, accel)
             %
             % Input
             %
@@ -966,9 +1095,9 @@ classdef hydrobody < handle
 
         end
 
-        function [forces, body_hspressure_out] =  hydrostaticForces (obj, t, x, waveElv)
+        function [forces, body_hspressure_out] =  hydrostaticForces (obj, t, pos, waveElv)
 
-            x = x - [ obj.cg; 0; 0; 0 ];
+            pos = pos - [ obj.cg; 0; 0; 0 ];
 
             switch obj.freeSurfaceMethodNum
 
@@ -976,7 +1105,7 @@ classdef hydrobody < handle
 
                     body_hspressure_out = [];
 
-                    forces = obj.hydroForce.linearHydroRestCoef * x;
+                    forces = obj.hydroForce.linearHydroRestCoef * pos;
 
                     % Add Net Bouyancy Force to Z-Direction
                     forces(3) = forces(3) + ...
@@ -984,7 +1113,7 @@ classdef hydrobody < handle
 
                 case 1
 
-                    [forces, body_hspressure_out]  = nonLinearBuoyancy( obj, x, waveElv, t );
+                    [forces, body_hspressure_out]  = nonLinearBuoyancy( obj, pos, waveElv, t );
 
                     % Add Net Bouyancy Force to Z-Direction
                     forces = -forces + [ 0, 0, (obj.simu.g .* obj.hydroForce.storage.mass), 0, 0, 0 ];
@@ -1014,7 +1143,7 @@ classdef hydrobody < handle
 
         end
 
-        function [f, wp, wpMeanFS]  = nonFKForce (obj, t, x, elv)
+        function [f, wp, wpMeanFS]  = nonFKForce (obj, t, pos, elv)
             % Function to calculate wave exitation force and moment on a
             % triangulated surface
             %
@@ -1028,7 +1157,7 @@ classdef hydrobody < handle
                 % no need to have all these inputs as they could be
                 % accessed directly from the class properties in the
                 % subfunction
-                [f, wp, wpMeanFS] = calc_nonFKForce ( obj, x, elv, t );
+                [f, wp, wpMeanFS] = calc_nonFKForce ( obj, pos, elv, t );
                 obj.oldForce = f;
                 obj.oldWp = wp;
                 obj.oldWpMeanFs = wpMeanFS;
@@ -1043,7 +1172,7 @@ classdef hydrobody < handle
 
         end
 
-        function [f, wp, wpMeanFS]  = calc_nonFKForce (obj, x, elv, t)
+        function [f, wp, wpMeanFS]  = calc_nonFKForce (obj, pos, elv, t)
             % Function to apply translation and rotation, and calculate
             % forces.
 
@@ -1052,16 +1181,16 @@ classdef hydrobody < handle
             avMeanFS     = obj.bodyGeometry.tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
 
             % Compute new tri coords after cog rotation and translation
-            center = hydrobody.rotateXYZ (obj.bodyGeometry.center, [1 0 0], x(4));
-            center = hydrobody.rotateXYZ (center, [0 1 0], x(5));
-            center = hydrobody.rotateXYZ (center, [0 0 1], x(6));
-            center = hydrobody.offsetXYZ (center, x);
+            center = hydrobody.rotateXYZ (obj.bodyGeometry.center, [1 0 0], pos(4));
+            center = hydrobody.rotateXYZ (center, [0 1 0], pos(5));
+            center = hydrobody.rotateXYZ (center, [0 0 1], pos(6));
+            center = hydrobody.offsetXYZ (center, pos);
             center = hydrobody.offsetXYZ (center, obj.hydroData.properties.cg);
 
             % Compute new normal vectors coords after cog rotation and translation
-            tnorm = hydrobody.rotateXYZ (obj.bodyGeometry.tnorm, [1 0 0], x(4));
-            tnorm = hydrobody.rotateXYZ (tnorm, [0 1 0], x(5));
-            tnorm = hydrobody.rotateXYZ (tnorm, [0 0 1], x(6));
+            tnorm = hydrobody.rotateXYZ (obj.bodyGeometry.tnorm, [1 0 0], pos(4));
+            tnorm = hydrobody.rotateXYZ (tnorm, [0 1 0], pos(5));
+            tnorm = hydrobody.rotateXYZ (tnorm, [0 0 1], pos(6));
 
             % Compute area vectors
             av = tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
@@ -1073,7 +1202,7 @@ classdef hydrobody < handle
 
             % Calculate forces
             f_linear    = FK ( centerMeanFS,          obj.hydroData.properties.cg, avMeanFS, wpMeanFS );
-            f_nonLinear = FK ( center      , x(1:3) + obj.hydroData.properties.cg,       av,       wp );
+            f_nonLinear = FK ( center      , pos(1:3) + obj.hydroData.properties.cg,       av,       wp );
             f = f_nonLinear - f_linear;
 
         end
@@ -1178,14 +1307,14 @@ classdef hydrobody < handle
 
         end
 
-        function [f,p]  = nonLinearBuoyancy (obj, x, elv, t)
+        function [f,p]  = nonLinearBuoyancy (obj, pos, elv, t)
             % Function to calculate buoyancy force and moment on a
             % triangulated surface NOTE: This function assumes that the STL
             % file is imported with its CG at 0,0,0
 
             if isempty(obj.oldNonLinBuoyancyF)
 
-                [f,p] = calc_nonLinearBuoyancy (obj, x, elv);
+                [f,p] = calc_nonLinearBuoyancy (obj, pos, elv);
 
                 obj.oldNonLinBuoyancyF  = f;
 
@@ -1195,7 +1324,7 @@ classdef hydrobody < handle
 
                 if mod(t, obj.simu.dtFeNonlin) < obj.simu.dt/2
 
-                    [f,p] = calc_nonLinearBuoyancy (obj, x,elv);
+                    [f,p] = calc_nonLinearBuoyancy (obj, pos,elv);
 
                     obj.oldNonLinBuoyancyF  = f;
 
@@ -1211,25 +1340,25 @@ classdef hydrobody < handle
             end
         end
 
-        function [f,p] = calc_nonLinearBuoyancy (obj, x, elv)
+        function [f,p] = calc_nonLinearBuoyancy (obj, pos, elv)
             % Function to apply translation and rotation and calculate forces
 
             % Compute new tri coords after cog rotation and translation
-            center = hydrobody.rotateXYZ(obj.bodyGeometry.center, [1 0 0], x(4));
-            center = hydrobody.rotateXYZ(center, [0 1 0], x(5));
-            center = hydrobody.rotateXYZ(center, [0 0 1], x(6));
-            center = hydrobody.offsetXYZ(center, x);
+            center = hydrobody.rotateXYZ(obj.bodyGeometry.center, [1 0 0], pos(4));
+            center = hydrobody.rotateXYZ(center, [0 1 0], pos(5));
+            center = hydrobody.rotateXYZ(center, [0 0 1], pos(6));
+            center = hydrobody.offsetXYZ(center, pos);
             center = hydrobody.offsetXYZ(center, obj.cg);
 
             % Compute new normal vectors coords after cog rotation
-            tnorm = hydrobody.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], x(4));
-            tnorm = hydrobody.rotateXYZ(tnorm, [0 1 0], x(5));
-            tnorm = hydrobody.rotateXYZ(tnorm, [0 0 1], x(6));
+            tnorm = hydrobody.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], pos(4));
+            tnorm = hydrobody.rotateXYZ(tnorm, [0 1 0], pos(5));
+            tnorm = hydrobody.rotateXYZ(tnorm, [0 0 1], pos(6));
 
             % Calculate the hydrostatic forces
             av = tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
 
-            [f,p] = fHydrostatic (obj, center, elv, x(1:3) + obj.cg, av);
+            [f,p] = fHydrostatic (obj, center, elv, pos(1:3) + obj.cg, av);
 
         end
 
