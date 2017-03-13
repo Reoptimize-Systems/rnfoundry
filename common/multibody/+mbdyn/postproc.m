@@ -139,6 +139,7 @@ classdef postproc < handle
             options.DrawNodes = true;
             options.DrawBodies = true;
             options.Skip = 1;
+            options.Light = false;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -220,7 +221,8 @@ classdef postproc < handle
                                               'Mode', options.DrawMode, ...
                                               'Bodies', options.DrawBodies, ...
                                               'StructuralNodes', options.DrawNodes, ...
-                                              'Joints', false );
+                                              'Joints', false, ...
+                                              'Light', options.Light );
                                       
                 end
                 
