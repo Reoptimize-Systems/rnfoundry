@@ -13,7 +13,7 @@ function mexmbdyn_setup (varargin)
 % option is supposted: 'Verbose' which is a flag determining whether
 % verbose output from the compilation is provided. e.g.
 %
-%  mexppval_setup ('Verbose', true)
+%  mexmbdyn_setup ('Verbose', true)
 %
 % prints the additional information.
 %
@@ -28,7 +28,7 @@ function mexmbdyn_setup (varargin)
     
     fprintf (1, 'Setting up mexMBCNodal.\n');
     
-    cd(fullfile(getmfilepath (mfilename), '+mbdyn'));
+    cd(fullfile(getmfilepath (mfilename), '+mbdyn', '+mint'));
 
     mexMBCNodal_mexargs = {'mexMBCNodal.cpp', '-lmbc'};
     
