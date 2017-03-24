@@ -37,32 +37,23 @@ classdef inline < mbdyn.pre.twoNodeJoint
             
             self.type = 'in line';
             
-            self.checkCartesianVector (options.RelativeLinePosition, true);
-            self.checkJointOrientationOffset (options.RelativeOrientation);
-            self.checkJointPositionOffset (options.RelativeOffset);
-            
-            self.checkNodeReferenceType (options.LinePositionReference, true);
-            self.checkNodeReferenceType (options.OrientationReference, true);
-            self.checkNodeReferenceType (options.OffsetReference, true);
-            
-            self.linePositionReference = options.LinePositionReference;
-            self.orientationReference = options.OrientationReference;
-            self.offsetReference = options.OffsetReference;
-            
             if ~isempty (options.RelativeLinePosition)
-                self.relativeLinePosition = {'reference', self.linePositionReference, options.RelativeLinePosition};
+                self.relativeLinePosition = self.checkJointPositionOffset ({options.LinePositionReference, options.RelativeLinePosition});
+                self.linePositionReference = options.LinePositionReference;
             else
                 self.relativeLinePosition = options.RelativeLinePosition;
             end
             
             if ~isempty (options.RelativeOrientation)
-                self.relativeOrientation = {'reference', self.orientationReference, self.getOrientationMatrix(options.RelativeOrientation)};
+                self.relativeOrientation = self.checkJointOrientationOffset ({options.OrientationReference, options.RelativeOrientation});
+                self.orientationReference = options.OrientationReference;
             else
                 self.relativeOrientation = options.RelativeOrientation;
             end
             
             if ~isempty (options.RelativeOffset)
-                self.relativeOffset = {'reference', self.offsetReference, options.RelativeOffset};
+                self.relativeOffset = self.checkJointPositionOffset ({options.OffsetReference, options.RelativeOffset});
+                self.offsetReference = options.OffsetReference;
             else
                 self.relativeOffset = options.RelativeOffset;
             end
@@ -78,12 +69,15 @@ classdef inline < mbdyn.pre.twoNodeJoint
             if ~isempty (self.relativeLinePosition)
                 out = self.makeCellIfNot (self.relativeLinePosition);
                 str = self.addOutputLine (str, self.commaSepList ('position', out{:}), 3, true, 'relative line position');
+                
+                if ~isempty (self.relativeOrientation)
+                    out = self.makeCellIfNot (self.relativeOrientation);
+                    str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 3, true, 'relative orientation');
+                end
+            
             end
             
-            if ~isempty (self.relativeOrientation)
-                out = self.makeCellIfNot (self.relativeOrientation);
-                str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 3, true, 'relative orientation');
-            end
+            
             
             addcomma = ~isempty (self.relativeOffset);
             str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, addcomma, 'node 2 label');

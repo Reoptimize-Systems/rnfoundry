@@ -3,12 +3,18 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
     properties (GetAccess = public, SetAccess = protected)
         
         relativeOffset1;
+        relativeOffset1Reference;
         relativePositionOrientation1;
+        relativePositionOrientation1Reference;
         relativeRotOrientation1;
+        relativeRotOrientation1Reference;
             
         relativeOffset2;
+        relativeOffset2Reference;
         relativePositionOrientation2;
+        relativePositionOrientation2Reference;
         relativeRotOrientation2;
+        relativeRotOrientation2Reference;
         
         positionStatus;
         orientationStatus;
@@ -21,12 +27,18 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
         function self = totalJoint (node1, node2, posstatus, orientstatus, varargin)
             
             options.RelativeOffset1 = [];
+            options.RelativeOffset1Reference = 'node';
             options.RelativePositionOrientation1 =  [];
+            options.RelativePositionOrientation1Reference = 'node';
             options.RelativeRotOrientation1 =  [];
+            options.RelativeRotOrientation1Reference = 'node';
             
             options.RelativeOffset2 =  [];
+            options.RelativeOffset2Reference = 'node';
             options.RelativePositionOrientation2 =  [];
+            options.RelativePositionOrientation2Reference = 'node';
             options.RelativeRotOrientation2 =  [];
+            options.RelativeRotOrientation2Reference = 'node';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -35,18 +47,41 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             
             self.type = 'total joint';
             
-            self.checkJointPositionOffset (options.RelativeOffset1);
-            self.checkJointPositionOffset (options.RelativeOffset2);
-            self.checkJointOrientationOffset (options.RelativePositionOrientation1);
-            self.checkJointOrientationOffset (options.RelativePositionOrientation2);
+            if ~isempty (options.RelativeOffset1)
+                self.relativeOffset1 = self.checkJointPositionOffset ({options.RelativeOffset1Reference, options.RelativeOffset1});
+            else
+                self.relativeOffset1 = [];
+            end
             
-            self.relativeOffset1 = options.RelativeOffset1;
-            self.relativePositionOrientation1 = self.getOrientationMatrix (options.RelativePositionOrientation1);
-            self.relativeRotOrientation1 = self.getOrientationMatrix (options.RelativeRotOrientation1);
-
-            self.relativeOffset2 = options.RelativeOffset2;
-            self.relativePositionOrientation2 = self.getOrientationMatrix (options.RelativePositionOrientation2);
-            self.relativeRotOrientation2 = self.getOrientationMatrix (options.RelativeRotOrientation2);
+            if ~isempty (options.RelativePositionOrientation1)
+                self.relativePositionOrientation1 = self.checkJointOrientationOffset ({options.RelativePositionOrientation1Reference, options.RelativePositionOrientation1});
+            else
+                self.relativePositionOrientation1 = [];
+            end
+            
+            if ~isempty (options.RelativeRotOrientation1)
+                self.relativeRotOrientation1 = self.checkJointOrientationOffset ({options.RelativeRotOrientation1Reference, options.RelativeRotOrientation1});
+            else
+                self.relativeRotOrientation1 = [];
+            end
+            
+            if ~isempty (options.RelativeOffset2)
+                self.relativeOffset2 = self.checkJointPositionOffset ({options.RelativeOffset2Reference, options.RelativeOffset2});
+            else
+                self.relativeOffset2 = [];
+            end
+            
+            if ~isempty (options.RelativePositionOrientation2)
+                self.relativePositionOrientation2 = self.checkJointOrientationOffset ({options.RelativePositionOrientation2Reference, options.RelativePositionOrientation2});
+            else
+                self.relativePositionOrientation2 = [];
+            end
+            
+            if ~isempty (options.RelativeRotOrientation2)
+                self.relativeRotOrientation2 = self.checkJointOrientationOffset ({options.RelativeRotOrientation2Reference, options.RelativeRotOrientation2});
+            else
+                self.relativeRotOrientation2 = [];
+            end
             
             self.checkPosStatus (posstatus);
             self.checkOrientStatus (orientstatus);
@@ -115,7 +150,7 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             
             str = self.addOutputLine (str, self.orientationStatus, 2, false, 'orientation constraint status');
             
-            str = self.addOutputLine (str, ';', 1, false, 'end total joint');
+            str = self.addOutputLine (str, ';', 1, false, sprintf ('end %s', self.type));
             
         end
         
