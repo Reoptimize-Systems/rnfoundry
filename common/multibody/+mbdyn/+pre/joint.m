@@ -22,6 +22,8 @@ classdef joint < mbdyn.pre.element
 
                     case 'node'
                         ok = true;
+                    case 'local'
+                        ok = true;
                     case 'global'
                         ok = true;
 
