@@ -50,7 +50,6 @@ classdef hydrosys < handle
             
             % Waves and Simu: check inputs
             self.waves.checkinputs ();
-            self.simu.checkinputs ();
             
             % initialise the number of WEC bodies in the sim to 0, this
             % will be incremented as they are added
@@ -200,6 +199,7 @@ classdef hydrosys < handle
             %  hsys - hydrosys object
             
             % simulation setup
+            self.simu.checkinputs ();
             self.simu.setupSim ();
             
             % wave setup
@@ -233,30 +233,155 @@ classdef hydrosys < handle
             
         end
         
-        function [forces, out] = hydroForces (self, t, x, vel, accel, elv)
+        function [forces, breakdown] = hydroForces (self, t, pos, vel, accel)
+            % calculates hydrodynamic forces acting on all bodies in a
+            % hydrodynamic system
+            %
+            % [forces, breakdown] = hydroForces (hsys, t, x, vel, accel)
+            %
+            % Input
+            %
+            %  hsys - hydrosys object
+            % 
+            %  t - current time
+            %
+            %  pos - (6 x nBodies) cartesian and angular positions of the
+            %    bodies in the system. Each column of pos is the positions
+            %    of one body, with the first three elements being the x, y,
+            %    and z positions and the second the three the angular
+            %    orientations in radians using the extrinsic Euler 123
+            %    (xyz) convention.
+            %
+            %  vel - (6 x nBodies) cartesian and angular velocities of the
+            %    bodies in the system. The velocites correspond to the
+            %    equvalent values in 'pos'.
+            %
+            %  accel - (6 x nBodies) cartesian and angular accelerations of
+            %    the bodies in the system. The accelerations correspond to
+            %    the equvalent values in 'pos'.
+            %
+            % Output
+            %
+            %  forces - (6 x nBodies) matrix of translational and angular
+            %    forces acting on the body. 
+            %
+            %  breakdown - structure containing a more detailed breakdown
+            %    of the forces and additional information. The fields which
+            %    will be present depend on the details of the simulation
+            %    chosen, but can include the following:
+            %
+            %    F_ExcitLin : 
+            %
+            %    F_Excit : 
+            %
+            %    F_ExcitRamp : 
+            %
+            %    F_ViscousDamping : 
+            %
+            %    F_addedmass : 
+            %
+            %    F_RadiationDamping : 
+            %
+            %    F_Restoring : 
+            %
+            %    BodyHSPressure : 
+            %
+            %    F_ExcitLinNonLin : 
+            %
+            %    WaveNonLinearPressure :
+            %
+            %    WaveLinearPressure : 
+            %
+            %    F_MorrisonElement : 
+            %
+            %
             
             forces = nan * ones (6, self.simu.numWecBodies );
             
             for bodyind = 1:numel(self.hydroBodies)
-                [forces(:,bodyind), out(bodyind)] = hydroForces (self.hydroBodies(bodyind), ...
-                                                                 t, ...
-                                                                 x(:,bodyind), ...
-                                                                 vel, ...
-                                                                 accel, ...
-                                                                 elv );
+                [forces(:,bodyind), bodybreakdown] ...
+                        = hydroForces ( self.hydroBodies(bodyind), ...
+                                        t, ...
+                                        pos(:,bodyind), ...
+                                        vel, ...
+                                        accel );
+                
+                if nargout > 1
+                    if bodyind == 1
+                        fnames = fieldnames (bodybreakdown);
+                    end
+
+                    for bdfind = 1:numel(fnames)
+                        if isempty (bodybreakdown.(fnames{bdfind}))
+                            breakdown.(fnames{bdfind}) = [];
+                        else
+                            breakdown.(fnames{bdfind})(:,bodyind) = bodybreakdown.(fnames{bdfind});
+                        end
+                    end
+                end
+            end
+            
+        end
+        
+        function advanceStep (self, t, accel)
+            % advance to the next time step, accepting the current time
+            % step and data into stored solution histories
+            
+            for bodyind = 1:numel(self.hydroBodies)
+                if self.simu.b2b
+                    self.hydroBodies(bodyind).advanceStep (t, accel(:));
+                else
+                    self.hydroBodies(bodyind).advanceStep (t, accel(:,bodyind));
+                end
             end
             
         end
         
         function [F_Total, F_AddedMass] = correctAddedMassForce (self, forceTotal, forceAddedMass, accel)
-            % recalcualte the added mass and total forces on bodies
+            % recalculate the added mass and total forces on bodies
+            %
+            % Syntax
+            %
+            % [F_Total, F_AddedMass] = correctAddedMassForce (hsys, forceTotal, forceAddedMass, accel)
+            %
+            % Input
+            %
+            %  hsys - hydrosys object
+            %
+            %  forceTotal - the total force calculated in a transient
+            %    simulation before added mass force correction (as output
+            %    by hydrosys.hydroForces)
+            %
+            %  forceAddedMass - the added mass force calculated in a
+            %    transient simulation before added mass force correction
+            %    (as output by hydrosys.hydroForces)
+            %
+            %  accel - (6 x n x nBodies) matrix of accelerations calculated
+            %    during a transient simulation 
+            %
+            % Output
+            %
+            %  F_Total - 
+            %
+            %  F_AddedMass - 
+            %
+            %
             
             F_Total = forceTotal + forceAddedMass;
             F_AddedMass = nan * ones (size (forceAddedMass));
             
             for bodyind = 1:numel(self.hydroBodies)
                 self.hydroBodies(bodyind).restoreMassMatrix ();
-                F_AddedMass(:,:,bodyind) = self.hydroBodies(bodyind).forceAddedMass(accel(:,:,bodyind), self.simu.b2b);
+                
+                % body.forceAddedMass returns an (n x 6) matrix of values,
+                % with the rows being the time series history. We reshpe
+                % this into a (6 x 1 x n) matrix for insertion into the
+                % F_AddedMass matrix in the appropriate location. To get
+                % the right shape we have to transpose the result of
+                % body.forceAddedMass before reshaping
+                F_AddedMass(:,bodyind,:) = reshape ( ...
+                    self.hydroBodies(bodyind).forceAddedMass(squeeze(accel(:,bodyind,:)).', self.simu.b2b).', ...
+                                                     6, 1, []);
             end
             
             F_Total = F_Total - F_AddedMass;
