@@ -26,7 +26,7 @@ classdef externalStructuralForce < mbdyn.pre.structuralForce
         function self = externalStructuralForce (nodes, nodeoffsets, communicator, varargin)
             
             options.ReferenceNode = [];
-            options.Labels = 'yes';
+            options.Labels = 'no';
             options.Sorted = 'yes';
             options.Orientation = 'orientation matrix';
             options.Accelerations = 'yes';
@@ -96,6 +96,11 @@ classdef externalStructuralForce < mbdyn.pre.structuralForce
             
             self.checkAllowedStringInputs ( options.Labels, {'yes', 'no'}, true, 'Labels');
             self.checkAllowedStringInputs ( options.Sorted, {'yes', 'no'}, true, 'Sorted');
+            
+            if strcmp (options.Labels, 'no') && strcmp (options.Sorted, 'no')
+                error ('"no labels" and "unsorted" incompatible');
+            end
+            
             self.checkOrientationDescription ( options.Orientation, true);
             self.checkAllowedStringInputs ( options.Accelerations, {'yes', 'no'}, true, 'Accelerations');
             self.checkAllowedStringInputs ( options.Accelerations, {'yes', 'no'}, true, 'Accelerations');
@@ -144,11 +149,13 @@ classdef externalStructuralForce < mbdyn.pre.structuralForce
                 str = self.addOutputLine (str, self.commaSepList ('accelerations', self.accelerations), 2, true);
             end
             
-            if ~isempty (self.useReferenceNodeForces)
-                str = self.addOutputLine (str, self.commaSepList ('use reference node forces', self.useReferenceNodeForces), 2, true);
-                
-                if ~isempty (self.rotateReferenceNodeForces)
-                    str = self.addOutputLine (str, self.commaSepList ('rotate reference node forces', self.rotateReferenceNodeForces), 3, true);
+            if ~isempty (self.referenceNode)
+                if ~isempty (self.useReferenceNodeForces)
+                    str = self.addOutputLine (str, self.commaSepList ('use reference node forces', self.useReferenceNodeForces), 2, true);
+
+                    if ~isempty (self.rotateReferenceNodeForces)
+                        str = self.addOutputLine (str, self.commaSepList ('rotate reference node forces', self.rotateReferenceNodeForces), 3, true);
+                    end
                 end
             end
             
@@ -173,7 +180,7 @@ classdef externalStructuralForce < mbdyn.pre.structuralForce
             end
 
             if ~isempty (self.echo)
-                str = self.addOutputLine (str, self.commaSepList ('echo', self.echo), 2, false, 'echo output to file');
+                str = self.addOutputLine (str, self.commaSepList ('echo', ['"', self.echo, '"']), 2, false, 'echo output to file');
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf ('end %s', self.type));
