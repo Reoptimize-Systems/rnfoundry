@@ -34,12 +34,20 @@ classdef base < handle
         function ok = checkCartesianVector (vec, throw)
             
             ok = true;
-            if ~((isnumeric (vec) && iscolumn (vec) && size (vec,1) == 3) || isempty (vec))
+            if ischar (vec)
+                if ~strcmp (vec, 'null')
+                    ok = false;
+                
+                    if throw
+                        error ('position, velocity or angular velocity must be a 3 element numeric column vector, or ''null''')
+                    end
+                end
+            elseif ~((isnumeric (vec) && iscolumn (vec) && size (vec,1) == 3) || isempty (vec))
                 
                 ok = false;
                 
                 if throw
-                    error ('position, velocity or angular velocity must be a 3 element numeric column vector')
+                    error ('position, velocity or angular velocity must be a 3 element numeric column vector, or ''null''')
                 end
             end
             
@@ -138,22 +146,8 @@ classdef base < handle
                     end
                     
                     for matind = 1:numel (mat)
-                        if isint2eps (mat(matind))
-                            str = [ str, sprintf('%d.0, ', mat(matind)) ];
-                        else
-                            numstr = sprintf('%.14f', mat(matind));
-                            % strip trailing zeros from decimals
-                            n = numel (numstr);
-                            while numstr(n) ~= '.'
-                                if numstr(n) == '0'
-                                    numstr(n) = [];
-                                else
-                                    break;
-                                end
-                                n = n - 1;
-                            end
-                            str = [ str, sprintf('%s, ', numstr) ];
-                        end
+                        numstr = mbdyn.pre.base.formatNumber (mat(matind));
+                        str = [ str, sprintf('%s, ', numstr) ];
                     end
                     
                 elseif ischar (varargin{ind})
@@ -166,6 +160,32 @@ classdef base < handle
             
             % strip last comma and space
             str(end-1:end) = [];
+            
+        end
+        
+        function numstr = formatNumber (num)
+            % fomats a decimal number for pretty output to mbdyn file
+            %
+            % If it is an integer (to machine precision), it will be output
+            % with one decimal place. If a float it will be output to 14
+            % decimal places, but with any trailing zeros stripped to
+            % shorten it.
+            
+            if isint2eps (num)
+                numstr = sprintf('%d.0', num);
+            else
+                numstr = sprintf('%.14f', num);
+                % strip trailing zeros from decimals
+                n = numel (numstr);
+                while numstr(n) ~= '.'
+                    if numstr(n) == '0'
+                        numstr(n) = [];
+                    else
+                        break;
+                    end
+                    n = n - 1;
+                end
+            end
             
         end
         
