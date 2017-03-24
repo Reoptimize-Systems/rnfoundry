@@ -30,29 +30,83 @@ function resultCell = startmulticoremaster2(evalfcns, fcnparams, settings)
 %
 %   settings.multicoreDir:
 %     Directory for temporary files (standard directory is used if empty)
+%
 %   settings.nrOfEvalsAtOnce:
 %     Number of function evaluations gathered to a single job.
+%
 %   settings.maxEvalTimeSingle:
 %     Timeout for a single function evaluation. Choose this parameter
 %     appropriately to get optimum performance.
+%
 %   settings.masterIsWorker:
 %     If true, master process acts as worker and coordinator, if false the
 %     master acts only as coordinator.
 %   settings.preProcessHandle:
 %     A handle to a function to be called before evaluation of the jobs,
 %     default is an empty matrix meaning no prepreocessing is performed
+%
 %   settings.preProcessUserData:
 %     A cell array of arguments to be passed to the function in
 %     settings.preProcessHandle, default is empty cell array
+%
 %   settings.debugMode:
 %     Display detailed info for debugging if true, or not if false
+%
 %   settingsDefault.showWarnings:
 %     Display more info about progress, a subset of the info supplied if
 %     settings.debugMode is true
+%
 %   settingsDefault.nResults:
 %     Integer value determining the number of return arguments from the
 %     functions in the evalfcns to be captued and returned in the
 %     results cell array.
+%
+%   settings.monitorFunction:
+%     A handle to a function to be called periodically every time the
+%     master process checks on the status of the current jobs. This option
+%     is intended to allow the user to supply a function which monitors the
+%     progress of the multicore process and takes action if needed. This
+%     function must have the following calling sequence:
+%
+%     monitorstatedata = myMonitorFunction (monitorUserData)
+%
+%     and 
+%
+%     monitorstatedata = myMonitorFunction (monitorUserData, monitorstatedata)
+%
+%     The first argument is data which can be provided via the
+%     settings.monitorUserData field (see below). This data is provided on
+%     every call to the monitor function. The second argument is intended
+%     to allow the monitor function to maintain state data between calls.
+%     The monitor function is used in the following way:
+%
+%     During initialisation it is called with a single argument called like
+%     the following:
+%
+%     monitorstatedata = myMonitorFunction (monitorUserData)
+%
+%     this creates the initial state data which is stored in
+%     monitorstatedata. Subsequently the function is called every time the
+%     master completes a loop of checking on the status of jobs, loading
+%     results and regenerating working files etc. In these calles, it is
+%     called with two argumetns like so:
+%
+%     monitorstatedata = myMonitorFunction (monitorUserData, monitorstatedata)
+%     
+%     where the input monitorstatedata was the data generated in the
+%     previous call, and the output is the updated state data.
+%
+%     startmulticoremaster2 does not do anything with this variable other
+%     than supply it to (and receive it from) the monitorFunction when
+%     required, so could just be empty if no state data is required to be
+%     maintained.
+%
+%     If not supplied, default is an empty matrix meaning no monitoring is
+%     performed.
+%
+%   settings.monitorUserData:
+%     This is user data to be supplied as the first input argument to the
+%     monitorFunction (see above).
 %
 %   Please refer to the heavily commented demo function MULTICOREDEMO for
 %   details and explanations of the settings.
