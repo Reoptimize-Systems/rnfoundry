@@ -74,7 +74,7 @@ bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof);
 
 str = bd.generateOutputString ()
 
-%%
+%% Body
 
 sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 mass = 1;
@@ -103,9 +103,17 @@ jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
 jnt.generateOutputString ()
 
 jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
-    'RelativeOffset1', {'other node', [1; 2; 3]});
+    'RelativeOffset1', [1; 2; 3], ...
+    'RelativeOffset1Reference', 'other node');
 jnt.generateOutputString ()
 
+%% Revolute Rotation
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+jnt = mbdyn.pre.revoluteRotation (sn1, sn2);
+jnt.generateOutputString ()
 
 %% system
 
@@ -115,8 +123,8 @@ jnt.generateOutputString ()
 
 gref = mbdyn.pre.globalref;
 
-theta1 = pi/2;
-theta2 = 0;
+theta1 = pi/2 + 0.2;
+theta2 = 0.1;
 L = 1;
 M = 1;
 inertiamat = diag ([0., M*L^2./12., M*L^2./12.]);
