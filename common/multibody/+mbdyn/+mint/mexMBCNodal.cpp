@@ -71,15 +71,15 @@ public:
             {
                 refnoderot = MBCBase::NONE;
             }
-            else if (refnoderotargstr.compare ("theta") == 0)
+            else if (refnoderotargstr.compare ("orientation vector") == 0)
             {
                 refnoderot = MBCBase::THETA;
             }
-            else if (refnoderotargstr.compare ("mat") == 0)
+            else if (refnoderotargstr.compare ("orientation matrix") == 0)
             {
                 refnoderot = MBCBase::MAT;
             }
-            else if (refnoderotargstr.compare ("euler123") == 0)
+            else if (refnoderotargstr.compare ("euler 123") == 0)
             {
                 refnoderot = MBCBase::EULER_123;
             }
@@ -123,15 +123,15 @@ public:
         {
             rot = MBCBase::NONE;
         }
-        else if (rotargstr.compare ("theta") == 0)
+        else if (rotargstr.compare ("orientation vector") == 0)
         {
             rot = MBCBase::THETA;
         }
-        else if (rotargstr.compare ("mat") == 0)
+        else if (rotargstr.compare ("orientation matrix") == 0)
         {
             rot = MBCBase::MAT;
         }
-        else if (rotargstr.compare ("euler123") == 0)
+        else if (rotargstr.compare ("euler 123") == 0)
         {
             rot = MBCBase::EULER_123;
         }
@@ -389,6 +389,15 @@ public:
     
     void Theta (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
+        
+        MBCBase::Rot rottype = mbc->GetRot ();
+        
+        if (rottype != MBCBase::THETA)
+        {
+            mexErrMsgIdAndTxt ("MBCNodal:Theta:wrongrottype",
+                    "Rotation type is not set to orientation vector, so you cannot use Theta method.");
+        }
+        
         std::vector<int> nallowed;
         
         // one arg, the node number 
@@ -927,6 +936,10 @@ public:
         
         int iterflag = mxnthargscalarbool (nrhs, prhs, 1, 2);
         
+        #ifdef DEBUG
+        mexPrintf ("PutForces iterflag %d\n", iterflag);
+        #endif
+                
         int result = mbc->PutForces (iterflag);
         
         mxSetLHS (result, 1, nlhs, plhs);
