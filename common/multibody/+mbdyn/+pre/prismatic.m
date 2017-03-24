@@ -33,17 +33,19 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
             
             self.type = 'prismatic';
             
-            self.checkJointOrientationOffset (options.RelativeOrientation1);
-            self.checkJointOrientationOffset (options.RelativeOrientation2);
+            if ~isempty (self.relativeOrientation1)
+                self.relativeOrientation1 = self.checkJointOrientationOffset ({options.Orientation1Reference, ptions.RelativeOrientation1});
+                self.orientation1Reference = options.Orientation1Reference;
+            else
+                self.relativeOrientation1 = [];
+            end
             
-            self.checkNodeReferenceType (options.Orientation1Reference, true);
-            self.checkNodeReferenceType (options.Orientation2Reference, true);
-            
-            self.orientation1Reference = options.Orientation1Reference;
-            self.orientation2Reference = options.Orientation2Reference;
-            
-            self.relativeOrientation1 = {'reference', self.orientation1Reference, self.getOrientationMatrix(options.RelativeOrientation1)};
-            self.relativeOrientation2 = {'reference', self.orientation2Reference, self.getOrientationMatrix(options.RelativeOrientation2)};
+            if ~isempty (self.relativeOrientation2)
+                self.relativeOrientation2 = self.checkJointOrientationOffset ({options.Orientation2Reference, options.RelativeOrientation2});
+                self.orientation2Reference = options.Orientation2Reference;
+            else
+                self.relativeOrientation2 = [];
+            end
             
         end
         

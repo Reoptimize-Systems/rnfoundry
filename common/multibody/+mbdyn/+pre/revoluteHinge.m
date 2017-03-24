@@ -42,26 +42,17 @@ classdef revoluteHinge < mbdyn.pre.twoNodeJoint
             
             self.type = 'revolute hinge';
             
-            self.checkJointPositionOffset (position1);
-            self.checkJointPositionOffset (position2);
-            self.checkJointOrientationOffset (options.RelativeOrientation1);
-            self.checkJointOrientationOffset (options.RelativeOrientation2);
-            
-            self.checkNodeReferenceType (options.Offset1Reference, true);
-            self.checkNodeReferenceType (options.Offset2Reference, true);
-            self.checkNodeReferenceType (options.Orientation1Reference, true);
-            self.checkNodeReferenceType (options.Orientation2Reference, true);
-            
+            self.relativeOffset1 = self.checkJointPositionOffset ({options.Offset1Reference, position1});
             self.offset1Reference = options.Offset1Reference;
-            self.orientation1Reference = options.Orientation1Reference;
-            self.offset2Reference = options.Offset2Reference;
-            self.orientation2Reference = options.Orientation2Reference;
             
-            self.relativeOffset1 = {'reference', self.offset1Reference, position1};
-            self.relativeOrientation1 = {'reference', self.orientation1Reference, self.getOrientationMatrix(options.RelativeOrientation1)};
-
-            self.relativeOffset2 = {'reference', self.offset2Reference, position2};
-            self.relativeOrientation2 = {'reference', self.orientation2Reference, self.getOrientationMatrix(options.RelativeOrientation2)};
+            self.relativeOrientation1 = self.checkJointOrientationOffset ({options.Orientation1Reference, options.RelativeOrientation1});
+            self.orientation1Reference = options.Orientation1Reference;
+            
+            self.relativeOffset2 = self.checkJointPositionOffset ({options.Offset2Reference, position2});
+            self.offset2Reference = options.Offset2Reference;
+            
+            self.relativeOrientation2 = self.checkJointOrientationOffset ({options.Orientation2Reference, options.RelativeOrientation2});
+            self.orientation2Reference = options.Orientation2Reference;
             
         end
         
@@ -90,7 +81,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeJoint
                 str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 3, false);
             end
             
-            str = self.addOutputLine (str, ';', 1, false, 'end revolute hinge');
+            str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             
         end
         
