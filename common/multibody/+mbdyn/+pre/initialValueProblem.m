@@ -12,8 +12,10 @@ classdef initialValueProblem < mbdyn.pre.problem
         
         function self = initialValueProblem (itime, ftime, tstep, varargin)
             
-            options.MaxIterations = 10;
-            options.Tolerance = 1e-6;
+            options.MaxIterations = 20;
+            options.Tolerance = 1e-9;
+            options.SolutionTolerance = [];
+            options.Method = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -39,11 +41,11 @@ classdef initialValueProblem < mbdyn.pre.problem
             
             str = self.addOutputLine (str , 'begin: initial value;', 0, false);
             
-            str = self.addOutputLine (str, sprintf('initial time: %.8f;', self.initialTime), 1, false);
-            str = self.addOutputLine (str, sprintf('final time: %.8f;', self.finalTime), 1, false);
-            str = self.addOutputLine (str, sprintf('time step: %.8f;', self.timeStep), 1, false);
+            str = self.addOutputLine (str, sprintf('initial time: %s;', self.formatNumber (self.initialTime)), 1, false);
+            str = self.addOutputLine (str, sprintf('final time: %s;', self.formatNumber (self.finalTime)), 1, false);
+            str = self.addOutputLine (str, sprintf('time step: %s;', self.formatNumber (self.timeStep)), 1, false);
             str = self.addOutputLine (str, sprintf('max iterations: %d;', self.maxIterations), 1, false);
-            str = self.addOutputLine (str, sprintf('tolerance: %.8f;', self.tolerance), 1, false);
+            str = self.addOutputLine (str, sprintf('tolerance: %e;', self.tolerance), 1, false);
             
             str = self.addOutputLine (str, 'end: initial value;', 0, false);
             
