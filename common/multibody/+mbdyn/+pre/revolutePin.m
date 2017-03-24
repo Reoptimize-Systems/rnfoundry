@@ -76,7 +76,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
                 str = self.addOutputLine (str, self.commaSepList ('initial theta', out{:}), 2, false, 'initial theta');
             end
             
-            str = self.addOutputLine (str, ';', 1, false, 'end revolute pin');
+            str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             
         end
         
