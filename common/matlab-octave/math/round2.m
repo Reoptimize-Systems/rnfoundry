@@ -31,8 +31,8 @@ function z = round2(x,y)
 % See also ROUND.
 
 %% defensive programming
-error(nargchk(2,2,nargin))
-error(nargoutchk(0,1,nargout))
+narginchk(2,2)
+nargoutchk(0,1)
 if numel(y)>1
   error('Y must be scalar')
 end
