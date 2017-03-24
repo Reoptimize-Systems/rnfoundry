@@ -101,16 +101,27 @@ classdef hydrobody < handle
         % nonlinear buoyancy
         oldNonLinBuoyancyF = [];
         oldNonLinBuoyancyP = [];
+        
+        % history of last few time steps
+        timeStepHist;
+            
+        % accel history store (used by added mass calc transport delay)
+        accelHist;
+        
+        stepCount;
 
         % wave radiation force convolution integral states
         CIdt;
         radForceVelocity;
         radForceOldTime;
-        radForceOldF_FM = zeros(6,1);
+        radForceOldF_FM;
         radForce_IRKB_interp;
 
         % wave radiation forces state-space system object
         radForceSS;
+        
+        % wave elevation
+        oldElev;
 
     end
 
@@ -839,6 +850,24 @@ classdef hydrobody < handle
             %
             %
             
+            obj.stepCount = 0;
+            
+            nsteps = 3;
+            
+            % reset time history store
+            obj.timeStepHist = zeros (1,nsteps);
+            
+            % reset accel history store (used by added mass calc transport
+            % delay)
+            if obj.simu.b2b
+                obj.accelHist = zeros (nsteps, 6 * obj.simu.numWecBodies);
+            else
+                obj.accelHist = zeros (nsteps, 6);
+            end
+            
+            % reset wave elevation
+            obj.oldElev = [];
+            
             obj.oldForce    = [];
             obj.oldWp       = [];
             obj.oldWpMeanFs = [];
@@ -854,14 +883,30 @@ classdef hydrobody < handle
 
         end
         
-
-        function [forces, out] = hydroForces (obj, t, pos, vel, accel, elv)
+        function advanceStep (obj, t, accel)
+            % advance to the next time step, accepting the current time
+            % step and data into stored solution histories
+            
+            obj.timeStepHist = circshift (obj.timeStepHist, [0,-1]);
+            
+            obj.timeStepHist(end) = t;
+            
+            % update the acceleration history
+            obj.accelHist = circshift (obj.accelHist, [-1,0]);
+            
+            obj.accelHist(end,:) = accel';
+            
+            obj.stepCount = obj.stepCount + 1;
+            
+        end
+        
+        function [forces, breakdown] = hydroForces (obj, t, pos, vel, accel)
             % hydroForces calculates the hydrodynamic forces acting on a
             % body
             %
             % Syntax
             %
-            %  [forces, out] = hydroForces (hb, t, x, vel, accel, elv)
+            %  [forces, breakdown] = hydroForces (hb, t, x, vel, accel, elv)
             %
             % Input
             %
@@ -882,52 +927,82 @@ classdef hydrobody < handle
             %
             %  forces - (6 x 1) forces and moments acting on the body
             %
-            %  out - structure containing more detailed breakdown of the
-            %    forces
+            %  breakdown - structure containing more detailed
+            %    breakdown of the forces acting on the body. The fields
+            %    present depend on the simulation settings and can include
+            %    the following:
             %
+            %    F_ExcitLin : 
             %
+            %    F_Excit : 
+            %
+            %    F_ExcitRamp : 
+            %
+            %    F_ViscousDamping : 
+            %
+            %    F_addedmass : 
+            %
+            %    F_RadiationDamping : 
+            %
+            %    F_Restoring : 
+            %
+            %    BodyHSPressure : 
+            %
+            %    F_ExcitLinNonLin : 
+            %
+            %    WaveNonLinearPressure :
+            %
+            %    WaveLinearPressure : 
+            %
+            %    F_MorrisonElement : 
+            %
+            
 
+            
             % always do linear excitation forces
-            out.F_ExcitLin = linearExcitationForces (obj, t);
+            breakdown.F_ExcitLin = linearExcitationForces (obj, t);
 
             % always do viscous damping
-            out.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
+            breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
 
             % always do radiation forces
-            [out.F_addedmass, out.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
+            [breakdown.F_addedmass, breakdown.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
 
+            % calculate the wave elevation
+            elv = waveElevation(obj, pos, t);
+            
             % hydrostatic restoring forces
-            [out.F_Restoring, out.BodyHSPressure ] =  hydrostaticForces (obj, t, pos, elv);
+            [breakdown.F_Restoring, breakdown.BodyHSPressure ] =  hydrostaticForces (obj, t, pos, elv);
 
             if obj.doNonLinearFKExcitation
 
-                [out.F_ExcitLinNonLin, out.wavenonlinearpressure, out.wavelinearpressure] = nonlinearExcitationForces (obj, t, pos, elv);
+                [breakdown.F_ExcitLinNonLin, breakdown.WaveNonLinearPressure, breakdown.WaveLinearPressure] = nonlinearExcitationForces (obj, t, pos, elv);
 
             else
-                out.F_ExcitLinNonLin = zeros (6, 1);
+                breakdown.F_ExcitLinNonLin = zeros (6, 1);
             end
 
             if obj.doMorrisonElementViscousDrag
 
-                out.F_MorrisonElement = morrisonElementForce (obj, t, pos, vel(:,obj.bodyNumber), accel(:,obj.bodyNumber));
+                breakdown.F_MorrisonElement = morrisonElementForce (obj, t, pos, vel(:,obj.bodyNumber), accel(:,obj.bodyNumber));
 
             else
 
-                out.F_MorrisonElement = zeros (6, 1);
+                breakdown.F_MorrisonElement = zeros (6, 1);
 
             end
 
 
-            out.F_Excit = out.F_ExcitLin + out.F_ExcitLinNonLin;
+            breakdown.F_Excit = breakdown.F_ExcitLin + breakdown.F_ExcitLinNonLin;
 
-            out.F_ExcitRamp = applyRamp (obj, t, out.F_Excit);
+            breakdown.F_ExcitRamp = applyRamp (obj, t, breakdown.F_Excit);
 
-            forces = out.F_ExcitRamp ...
-                     - out.F_ViscousDamping ...
-                     - out.F_addedmass ...
-                     - out.F_Restoring ...
-                     - out.F_RadiationDamping ...
-                     - out.F_MorrisonElement;
+            forces = breakdown.F_ExcitRamp ...
+                     - breakdown.F_ViscousDamping ...
+                     - breakdown.F_addedmass ...
+                     - breakdown.F_Restoring ...
+                     - breakdown.F_RadiationDamping ...
+                     - breakdown.F_MorrisonElement;
 
         end
 
@@ -1071,11 +1146,20 @@ classdef hydrobody < handle
             %
 
             % matrix multiplication with acceleration
-%             if t > (obj.simu.startTime + 10e-8)
-                F_addedmass = obj.hydroForce.fAddedMass * accel(:);
-%             else
-%                 F_addedmass = 0;
-%             end
+            delay = 10e-8;
+            if t > (obj.simu.startTime + delay)
+                if obj.stepCount > 2
+                    % extrapolate acceleration from previous time steps
+                    thisaccel = interp1 (obj.timeStepHist', obj.accelHist, t-delay, 'linear', 'extrap');
+                elseif obj.stepCount == 2
+                    thisaccel = interp1 (obj.timeStepHist(end-obj.stepCount+1:end)', obj.accelHist(end-obj.stepCount+1:end,:), t-delay, 'linear', 'extrap');
+                elseif obj.stepCount == 1
+                    thisaccel = obj.accelHist (end,:)';
+                end
+                F_addedmass = obj.hydroForce.fAddedMass * thisaccel(:);
+            else
+                F_addedmass = [0;0;0;0;0;0];
+            end
 
             switch obj.radiationMethodNum
 
@@ -1094,9 +1178,38 @@ classdef hydrobody < handle
             end
 
         end
+        
+        function statederivs = radForceSSDerivatives (obj, u)
+            
+            statederivs = obj.radForceSS.derivatives (u);
+            
+        end
+        
+        function status = radForceODEOutputfcn (obj, t, x, flag, varargin)
+            % OutputFcn to be called after every completed ode time step
+            % when using the state-space representation of the radiation
+            % forces
+            %
+            % Syntax
+            %
+            % radForceODEOutputfcn (hb, t, x, flag)
+            %
+            %
+            % Input
+            %
+            %  hb - hydrobody oject
+            %
+            %  t - current time step
+            %
+            %  x - state variables at the current time step
+            
+            status = obj.radForceSS.outputfcn (t, x, flag);
+            
+        end
 
         function [forces, body_hspressure_out] =  hydrostaticForces (obj, t, pos, waveElv)
-
+            % calculates the hydrostatic forces acting on the body
+            
             pos = pos - [ obj.cg; 0; 0; 0 ];
 
             switch obj.freeSurfaceMethodNum
@@ -1123,7 +1236,31 @@ classdef hydrobody < handle
 %             forces = forces;
 
         end
+        
+        function f = waveElevation(obj, pos, t)
+            % Function to calculate the wave elevation at the ceontroids of triangulated surface
+            % NOTE: This function assumes that the STL file is imported with its CG at 0,0,0
 
+            if obj.freeSurfaceMethodNum == 1
+                
+                if isempty(obj.oldElev)
+                    f = calc_elev(pos,t);
+                    obj.oldElev = f;
+                else
+                    if mod(t, obj.simu.dtFeNonlin) < obj.simu.dt/2
+                        f = calc_elev (pos,t);
+                        obj.oldElev = f;
+                    else
+                        f = obj.oldElev;
+                    end
+                end
+                
+            else
+                f = 0;
+            end
+        end
+
+        
     end
 
     % non-public transient simulation methods
@@ -1383,6 +1520,58 @@ classdef hydrobody < handle
 
             f(4:6)= sum(cross(center2cgVec,pressureVect));
         end
+        
+        function f = calc_elev(obj, pos, t)
+            % Function to rotate and translate body and call wave elevation function at new locations 
+
+            % Compute new tri center coords after cog rotation and translation
+            center = obj.rotateXYZ (obj.bodyGeometry.center, [1, 0, 0], pos(4));
+            center = obj.rotateXYZ (center, [0, 1, 0], pos(5));
+            center = obj.rotateXYZ (center, [0, 0, 1], pos(6));
+            center = obj.offsetXYZ (center, pos);
+            center = obj.offsetXYZ (center, obj.cg);
+            
+            % Calculate the free surface
+            f = waveElev (center,t);
+        end
+        
+        function f = waveElev (obj, center, t)
+            % Function to calculate the wave elevation at an array of points
+            
+            f = zeros(length(center(:,3)),1);
+            
+            cx = center(:,1);
+            cy = center(:,2);
+            
+            X = cx * cos (obj.waves.waveDir * pi/180) ...
+                + cy * sin (obj.waves.waveDir * pi/180);
+            
+            if obj.waves.typeNum <10
+                
+            elseif obj.waves.typeNum <20
+                
+                f = obj.waves.AH(1) .* cos(obj.waves.k(1) .* X - obj.waves.w(1) * t);
+                
+            elseif obj.waves.typeNum <30
+                
+                tmp = sqrt (obj.waves.AH .* obj.waves.dw);
+                
+                tmp1 = ones (1, length (center(:,1)));
+                
+                tmp2 = (obj.waves.w .* t + obj.waves.phaseRand) * tmp1;
+                
+                tmp3 = cos (obj.waves.k * X'- tmp2);
+                
+                f(:,1) = tmp3' * tmp;
+                
+            end
+            
+            % apply ramp if we are not past the initial ramp time
+            if t <= obj.simu.rampT
+                rampF = (1 + cos (pi + pi * t / rampT)) / 2;
+                f = f .* rampF;
+            end
+        end
 
     end
 
@@ -1390,12 +1579,35 @@ classdef hydrobody < handle
     methods (Access = 'public') %modify object = F; output = T
 
         function fam = forceAddedMass(obj,acc,B2B)
-            % Calculates and outputs the real added mass force time history
+            % Recomputes the real added mass force time history for the
+            % body
+            %
+            % Syntax
+            %
+            % fam = forceAddedMass(hb,acc,B2B)
+            %
+            % Input
+            %
+            %  hb - hydrobody object
+            %
+            %  acc - (n x 6) time history of body accelerations for which
+            %   the added mass is to be recalculated
+            %
+            %  B2B - flag indicating whether body-to-body interactions are
+            %    present
+            %
+            % Output
+            %
+            %  fam - added mass recalculated from time history of
+            %    accelerations and body added mass.
+            %
+            %
+            
             iBod = obj.bodyNumber;
             fam = zeros(size(acc));
             for i =1:6
                 tmp = zeros(length(acc(:,i)),1);
-                for j =1:6
+                for j = 1:6
                     if B2B == 1
                         jj = (iBod-1)*6+j;
                     else
@@ -1508,6 +1720,7 @@ classdef hydrobody < handle
 
     end
 
+    % Static methods
     methods (Static)
 
         function xn = rotateXYZ (x, ax, theta)
