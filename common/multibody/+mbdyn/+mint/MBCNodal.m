@@ -104,7 +104,7 @@ classdef MBCNodal < cppinterface
             options.UseRefNode = false; 
             options.RefNodeOrientationType = 'none'; % refnode rotation type 'none'. Will be ignored if UseRefNode is false
             options.NNodes = 0; % number of nodes, should match up with problem file?
-            options.NodeOrientationType = 'mat';
+            options.NodeOrientationType = 'orientation matrix';
             options.UseLabels = true;
             options.UseAccelerations = false; % don't handle accelerations by default
             options.HostPort = []; % inet port to use with commethod 'inet'
@@ -278,7 +278,7 @@ classdef MBCNodal < cppinterface
             
             for ind = 1:numel (n)
                 
-               pos (1:3,ind) = X(self, n(ind));
+               pos (1:3,ind) = X (self, n(ind));
                
             end
             
@@ -295,8 +295,8 @@ classdef MBCNodal < cppinterface
             % Input
             %
             %  n - vector of one or more node numbers for which to get the
-            %    position. If not supplied, the velocities of all nodes will
-            %    be returned.
+            %    velocity. If not supplied, the velocities of all nodes
+            %    will be returned.
             %
             % Output
             %
@@ -315,13 +315,161 @@ classdef MBCNodal < cppinterface
             
             for ind = 1:numel (n)
                 
-               vel (1:3,ind) = XP(self, n(ind));
+               vel (1:3,ind) = XP (self, n(ind));
                
             end
             
         end
         
-        function pos = X(self, n)
+        function accel = NodeAccelerations (self, n)
+            % gets the accelerations of one or more nodes
+            %
+            % Syntax
+            %
+            % NodeAccelerations ()
+            % NodeAccelerations (n)
+            %
+            % Input
+            %
+            %  n - vector of one or more node numbers for which to get the
+            %    acceleration. If not supplied, the velocities of all nodes
+            %    will be returned.
+            %
+            % Output
+            %
+            %  accel - (3 x k) matrix of k node accelerations, one for each
+            %    node number supplied in input 'n'. Each column represents
+            %    a node. Will contain the accelerations of all nodes if n
+            %    is not supplied
+            %
+            %
+            
+            if nargin < 2
+                n = 1:self.NNodes;
+            end
+            
+            accel = nan * ones (3, numel(n));
+            
+            for ind = 1:numel (n)
+                
+               accel (1:3,ind) = XPP (self, n(ind));
+               
+            end
+            
+        end
+        
+        function pos = NodeThetas (self, n)
+            % gets the angular positions of one or more nodes
+            %
+            % Syntax
+            %
+            % NodeThetas ()
+            % NodeThetas (n)
+            %
+            % Input
+            %
+            %  n - vector of one or more node numbers for which to get the
+            %    angular position. If not supplied, the angular positions
+            %    of all nodes will be returned.
+            %
+            % Output
+            %
+            %  pos - (3 x k) matrix of k node angular positions, one for each
+            %    node number supplied in input 'n'. Each column represents
+            %    a node. Will contain the angular positions of all nodes if
+            %    n is not supplied
+            %
+            %
+            
+            if nargin < 2
+                n = 1:self.NNodes;
+            end
+            
+            pos = nan * ones (3, numel(n));
+            
+            for ind = 1:numel (n)
+                
+               pos (1:3,ind) = Theta (self, n(ind));
+               
+            end
+            
+        end
+        
+        function vel = NodeOmegas (self, n)
+            % gets the angular velocities of one or more nodes
+            %
+            % Syntax
+            %
+            % NodeOmegas ()
+            % NodeOmegas (n)
+            %
+            % Input
+            %
+            %  n - vector of one or more node numbers for which to get the
+            %    angular velocity. If not supplied, the angular velocities
+            %    of all nodes will be returned.
+            %
+            % Output
+            %
+            %  vel - (3 x k) matrix of k node angular velocities, one for
+            %    each node number supplied in input 'n'. Each column
+            %    represents a node. Will contain the angular velocities of
+            %    all nodes if n is not supplied
+            %
+            %
+            
+            if nargin < 2
+                n = 1:self.NNodes;
+            end
+            
+            vel = nan * ones (3, numel(n));
+            
+            for ind = 1:numel (n)
+                
+               vel (1:3,ind) = Omega (self, n(ind));
+               
+            end
+            
+        end
+        
+        function accel = NodeAngularAccels (self, n)
+            % gets the angular accelerations of one or more nodes
+            %
+            % Syntax
+            %
+            % NodeAngularAccels ()
+            % NodeAngularAccels (n)
+            %
+            % Input
+            %
+            %  n - vector of one or more node numbers for which to get the
+            %    angular acceleration. If not supplied, the angular
+            %    accelerations of all nodes will be returned.
+            %
+            % Output
+            %
+            %  accel - (3 x k) matrix of k node angular accelerations, one
+            %    for each node number supplied in input 'n'. Each column
+            %    represents a node. Will contain the angular accelerations
+            %    of all nodes if n is not supplied
+            %
+            %
+            
+            if nargin < 2
+                n = 1:self.NNodes;
+            end
+            
+            accel = nan * ones (3, numel(n));
+            
+            for ind = 1:numel (n)
+                
+               accel (1:3,ind) = OmegaP (self, n(ind));
+               
+            end
+            
+        end
+        
+        function pos = X (self, n)
             % gets the position of a single node with number n
             %
             % Syntax
