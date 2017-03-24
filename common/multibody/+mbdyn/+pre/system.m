@@ -167,7 +167,10 @@ classdef system < mbdyn.pre.base
 %             hold off
             
             if options.Light
-                light (self.drawAxesH);
+                camHandle = findobj(gcf,'Type','light');
+                if isempty (camHandle)
+                    light (self.drawAxesH);
+                end
             end
             
 %             axis equal;
@@ -286,7 +289,7 @@ classdef system < mbdyn.pre.base
                 filename = [tempname, '.mbd'];
             end
             
-            [fid, errmsg] = fopen (filename, 'w');
+            [fid, errmsg] = fopen (filename, 'wt');
             
             CC = onCleanup (@() fclose(fid));
             
