@@ -200,6 +200,27 @@ classdef orientmat
         
     end
     
+    methods
+        
+       function eul = euler123 (this)
+           % returns the extrinsic euler123 angles corresponding to the
+           % orientation matrix
+
+           alpha = -atan2 ( this.orientationMatrix(2,3) , this.orientationMatrix(3,3) );
+           
+           beta = atan2 ( this.orientationMatrix(1,3) ...
+                            , ( cos (alpha)*this.orientationMatrix(3,3) - sin (alpha)*this.orientationMatrix(2,3) ) );
+           
+           gamma = atan2 ( ( cos (alpha)*this.orientationMatrix(2,1) - sin (alpha)*this.orientationMatrix(3,1) ) ...
+                           , ( cos (alpha)*this.orientationMatrix(2,2) - sin (alpha)*this.orientationMatrix(3,2) ) );
+           
+           eul = [ alpha;
+                   beta;
+                   gamma ];
+       end
+        
+    end
+    
     % operator overloading
     methods 
         
