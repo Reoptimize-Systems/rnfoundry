@@ -218,6 +218,62 @@ classdef orientmat
                    beta;
                    gamma ];
        end
+       
+       function [hquiv, hax] = draw (this, varargin)
+           
+           options.PlotAxes = [];
+           options.Title = true;
+           options.Parent = [];
+           options.Offset = [];
+           options.DrawGlobal = true;
+           options.Scale = 1;
+           
+           options = parse_pv_pairs (options, varargin);
+           
+           if isempty (options.PlotAxes)
+               figure;
+               hax = axes;
+           else
+               hax = options.PlotAxes;
+           end
+           
+           x = options.Scale * [1;0;0];
+           y = options.Scale * [0;1;0];
+           z = options.Scale * [0;0;1];
+           
+           ox = this.orientationMatrix * (0.5*x);
+           oy = this.orientationMatrix * (0.5*y);
+           oz = this.orientationMatrix * (0.5*z);
+           
+           % orientation frame
+           hquiv(1) = vect.plotvec3 (ox, options.Offset, 'Properties', {'Color', 'r', 'LineWidth', 4, 'LineStyle', ':'}, 'PlotAxes', hax);           
+           hquiv(2) = vect.plotvec3 (oy, options.Offset, 'Properties', {'Color', 'g', 'LineWidth', 4, 'LineStyle', ':'}, 'PlotAxes', hax);           
+           hquiv(3) = vect.plotvec3 (oz, options.Offset, 'Properties', {'Color', 'b', 'LineWidth', 4, 'LineStyle', ':'}, 'PlotAxes', hax);
+           
+           if options.DrawGlobal
+               % global frame
+               hquiv(4) = vect.plotvec3 (x, options.Offset, 'Properties', {'Color', 'r'}, 'PlotAxes', hax);
+               hquiv(5) = vect.plotvec3 (y, options.Offset, 'Properties', {'Color', 'g'}, 'PlotAxes', hax);
+               hquiv(6) = vect.plotvec3 (z, options.Offset, 'Properties', {'Color', 'b'}, 'PlotAxes', hax);
+           end
+           
+           xlabel (hax, 'x');
+           ylabel (hax, 'y');
+           zlabel (hax, 'z');
+           
+           set (hax, 'XLim', [-1.1, 1.1]);
+           set (hax, 'YLim', [-1.1, 1.1]);
+           set (hax, 'ZLim', [-1.1, 1.1]);
+           
+           if options.Title
+               title ('Orientation Matrix Plot')
+           end
+           
+           axis equal;
+           
+           view (3);
+           
+       end
         
     end
     
