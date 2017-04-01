@@ -2,6 +2,7 @@ classdef reference < handle
     
    properties (GetAccess = public, SetAccess = private)
        
+       name;
        positionParent;
        orientParent;
        velocityParent;
@@ -32,6 +33,7 @@ classdef reference < handle
            options.OrientParent = [];
            options.VelParent = [];
            options.OmegaParent = [];
+           options.Name = '';
            
            options = parse_pv_pairs (options, varargin);
            
@@ -101,7 +103,7 @@ classdef reference < handle
            end
            
            if isempty (dorientm) || strcmp (dorientm, 'null')
-               this.dorientm = mbdyn.pre.orientmat ('orientation', eye ());
+               this.dorientm = mbdyn.pre.orientmat ('orientation', eye (3));
            elseif ~isa (dorientm, 'mbdyn.pre.orientmat')
                error ('RENEWNET:mbdyn:badreforientation', ...
                   'dorientm should be a mbdyn.pre.orientmat  object or empty' );
@@ -121,6 +123,12 @@ classdef reference < handle
                               'dpos, dv, domega must all be numeric column vectors 3 elements (or empty)', ...
                               'RENEWNET:mbdyn:badrefvalues', ...
                                 dpos, dv, domega );
+                            
+           if ischar (options.Name)
+               this.name = options.Name;
+           else
+               error ('Name must be a char array.')
+           end
                             
            this.dpos = dpos;
            this.dv = dv;
@@ -144,6 +152,41 @@ classdef reference < handle
            value = this.get_omega ();
        end
        
+       function [hax, hquiv] = draw (this, varargin)
+           
+           options.PlotAxes = [];
+           options.Title = true;
+           options.DrawGlobal = true;
+           options.Scale = 1;
+           
+           options = parse_pv_pairs (options, varargin);
+
+           [hquiv, hax] = draw ( this.orientm, ...
+                                 'PlotAxes', options.PlotAxes, ...
+                                 'Title', false, ...
+                                 'Offset', this.pos, ...
+                                 'DrawGlobal', false, ...
+                                 'Scale', options.Scale );
+                             
+           x = options.Scale * [1;0;0];
+           y = options.Scale * [0;1;0];
+           z = options.Scale * [0;0;1];
+           
+           if options.DrawGlobal
+               % global frame
+               hquiv(4) = vect.plotvec3 (x, [], 'Properties', {'Color', 'r'}, 'PlotAxes', hax);
+               hquiv(5) = vect.plotvec3 (y, [], 'Properties', {'Color', 'g'}, 'PlotAxes', hax);
+               hquiv(6) = vect.plotvec3 (z, [], 'Properties', {'Color', 'b'}, 'PlotAxes', hax);
+           end
+           
+           if options.Title
+               title ('Reference Plot')
+           end
+           
+           axis (hax, 'equal');
+           
+       end
+       
    end
    
    methods (Access = private)
@@ -152,19 +195,21 @@ classdef reference < handle
        % properties of the parent reference from this class
        
        function value = get_pos (this)
-           % return cartesian position in global frame
+           % return absolute cartesian position in global frame
+           %
            
-           % rotate translation vector in parent's orientation
-           newdpos = this.dpos.' * this.orientParent.orientm.orientationMatrix;
-           
-           % translate points
-           value = this.positionParent.pos + newdpos';
+           value = this.positionParent.pos ...
+               + this.orientParent.orientm.orientationMatrix * this.dpos;
+
        end
        
        function value = get_orientm (this)
-           % get the orientation of this reference relative to parent
+           % get the absolute orientation of this reference in the global
+           % frame
            %
-           value =  this.dorientm * this.orientParent.orientm;
+           
+           value =  this.orientParent.orientm * this.dorientm;
+           
        end
        
        function value = get_v (this)
