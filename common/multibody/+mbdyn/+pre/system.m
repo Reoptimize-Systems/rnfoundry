@@ -116,6 +116,7 @@ classdef system < mbdyn.pre.base
         end
         
         function draw (self, varargin)
+            % draw the mbdyn system
             
             if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
                 if ~isvalid (self.drawAxesH)
@@ -130,6 +131,7 @@ classdef system < mbdyn.pre.base
             options.StructuralNodes = true;
             options.Joints = true;
             options.Light = false;
+            options.AxLims = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -175,8 +177,18 @@ classdef system < mbdyn.pre.base
             
 %             axis equal;
             xlabel ('x'); ylabel ('y'); zlabel('z'); 
+            
+            if ~isempty (options.AxLims)
+                set (self.drawAxesH, 'XLim', options.AxLims (1,1:2));
+                set (self.drawAxesH, 'YLim', options.AxLims (2,1:2));
+                set (self.drawAxesH, 'Zlim', options.AxLims (3,1:2));
+                axis (self.drawAxesH, 'equal')
+            else
+                axis (self.drawAxesH, 'equal')
+            end
+            
             view (3);
-            axis equal
+            
         end
         
         function setStructuralNodeSize (self, sx, sy, sz)
