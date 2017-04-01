@@ -6,20 +6,24 @@ classdef postproc < handle
         resultsLoaded;
         nNodes;
         nodes;
+        nodeNames;
         bodies;
         joints;
+        simInfo;
         
     end
     
     methods
         
-        function self = postproc (preprocsys)
+        function self = postproc (info)
             
             if nargin > 0
-                if isa (preprocsys, 'mbdyn.pre.system')
-                    self.preProcSystem = preprocsys;
+                if isa (info, 'mbdyn.pre.system')
+                    self.preProcSystem = info;
+                elseif isstruct (info) 
+                    self.simInfo = info;
                 else
-                    error ('preprocsys must be a mbdyn.pre.system object')
+                    error ('preprocsys must be a mbdyn.pre.system object or a structure')
                 end
             else
                 self.preProcSystem = [];
@@ -88,9 +92,10 @@ classdef postproc < handle
             % load .ine file
             inefile = fullfile (pathstr, [name, '.ine']);
             
-            
             % load .frc file
             frcfile = fullfile (pathstr, [name, '.frc']);
+            
+            self.nodeNames = fieldnames (self.nodes);
             
             self.resultsLoaded = true;
             
@@ -103,18 +108,20 @@ classdef postproc < handle
         
         function [hfig, hax] = plotNodeTrajectories (self)
            
-            nodenames = fieldnames (self.nodes);
+            if ~self.resultsLoaded
+                error ('No results have been loaded yet for plotting')
+            end
             
             hfig = figure;
             hax = axes;
             
             hold on;
             
-            for ind = 1:numel (nodenames)
+            for ind = 1:numel (self.nodeNames)
                 
-                plot3 ( self.nodes.(nodenames{ind}).Position(:,1), ...
-                        self.nodes.(nodenames{ind}).Position(:,2), ...
-                        self.nodes.(nodenames{ind}).Position(:,3), ...
+                plot3 ( self.nodes.(self.nodeNames{ind}).Position(:,1), ...
+                        self.nodes.(self.nodeNames{ind}).Position(:,2), ...
+                        self.nodes.(self.nodeNames{ind}).Position(:,3), ...
                         '-' );
             
             end
@@ -122,8 +129,10 @@ classdef postproc < handle
             hold off;
             
             axis equal;
+%             axis square;
             
             view(3);
+            drawnow;
             
         end
         
@@ -131,15 +140,21 @@ classdef postproc < handle
         function animate (self, varargin)
             % animate the nodes and bodies of the system
             
+            if ~self.resultsLoaded
+                error ('No results have been loaded yet for plotting')
+            end
+            
             options.DrawLabels = false;
             options.AxLims = [];
-            options.PlotTrajectories = false;
+            options.PlotTrajectories = isempty (self.preProcSystem);
             options.NodeSize = [];
             options.DrawMode = 'wireghost';
             options.DrawNodes = true;
             options.DrawBodies = true;
             options.Skip = 1;
             options.Light = false;
+            options.VideoFile = [];
+            options.VideoSpeed = 1;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -147,146 +162,223 @@ classdef postproc < handle
                 error ('No results have been loaded yet');
             end
             
-            % plot the trajectories once to get appropriate axis limits
-            [hfig, hax] = plotNodeTrajectories (self);
+            plotdata.HAx = [];
             
-            set(hfig,'WindowStyle','docked');
+            for tind = 1:options.Skip:size(self.nodes.(self.nodeNames{1}).Position,1)
+                
+                if tind > 1
+                    % clear old node label drawings
+%                     delete (hnode);
+                    if options.DrawLabels
+                        delete (plotdata.HNodeLabels);
+                    end
+                    % clear the axes
+                    cla (plotdata.HAx);
+                end
+                
+                plotdata = self.drawStep(tind, ...
+                              'NodeSize', options.NodeSize, ...
+                              'DrawLabels', options.DrawLabels, ...
+                              'AxLims', options.AxLims, ...
+                              'DrawMode', options.DrawMode, ...
+                              'DrawNodes', options.DrawNodes, ...
+                              'DrawBodies', options.DrawBodies, ...
+                              'Light', options.Light, ...
+                              'PlotAxes', plotdata.HAx);
+                
+                for indii = 1:self.nNodes
+                    
+                    if options.PlotTrajectories
+                        if tind == 1
+                            htraj(indii) = animatedline ( plotdata.HAx, ...
+                                self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
+                                self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
+                                self.nodes.(self.nodeNames{indii}).Position(tind,3) ...
+                                );
+                            
+                        else
+                            
+                            addpoints ( htraj(indii), ...
+                                self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
+                                self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
+                                self.nodes.(self.nodeNames{indii}).Position(tind,3) );
+                        end
+                    end
+                    
+                end
+                
+                if ~isempty(options.VideoFile)
+
+                    if tind == 1
+                        FPS = options.VideoSpeed ...
+                               * numel (1:options.Skip:size(self.nodes.(self.nodeNames{1}).Position,1)) ...
+                                        / (self.preProcSystem.problems{1}.finalTime - self.preProcSystem.problems{1}.initialTime);
+                        
+                        mov = VideoWriter(options.VideoFile); %#ok<TNMLP>
+                        mov.FrameRate = FPS;
+                        mov.Quality = 100;
+
+                        F = getframe(plotdata.HFig);
+                        open(mov);
+                        writeVideo(mov,F);
+                    else
+                        F = getframe(plotdata.HFig);
+                        writeVideo(mov,F);
+                    end
+                    
+                end
+            
+            end
+            
+            if ~isempty (options.VideoFile)
+                close(mov);
+            end
+            
+        end
+    
+        function plotdata = drawStep (self, tind, varargin)
+            
+            if ~self.resultsLoaded
+                error ('No results have been loaded yet for plotting')
+            end
+            
+            options.PlotAxes = [];
+            options.DrawLabels = false;
+            options.AxLims = [];
+            options.NodeSize = [];
+            options.DrawMode = 'wireghost';
+            options.DrawNodes = true;
+            options.DrawBodies = true;
+            options.Light = false;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.PlotAxes)
+                % plot the trajectories once to get appropriate axis limits
+                [plotdata.HFig, plotdata.HAx] = plotNodeTrajectories (self);
+                maximize (plotdata.HFig);
+                cla (plotdata.HAx);
+            else
+                plotdata.HAx = options.PlotAxes;
+                plotdata.HFig = get (plotdata.HAx, 'Parent');
+            end
+            
+%             set(hfig,'WindowStyle','docked');
             
             if isempty (options.AxLims)
                 stretchfactor = 0.25;
                 
-                axXlim = get (hax, 'XLim');
+                axXlim = get (plotdata.HAx, 'XLim');
                 axXlim(1) = axXlim(1) - stretchfactor*abs(axXlim(1));
                 axXlim(2) = axXlim(2) + stretchfactor*abs(axXlim(2));
                 
-                axYlim = get (hax, 'YLim');
+                axYlim = get (plotdata.HAx, 'YLim');
                 axYlim(1) = axYlim(1) - stretchfactor*abs(axYlim(1));
                 axYlim(2) = axYlim(2) + stretchfactor*abs(axYlim(2));
                 
-                axZlim = get (hax, 'ZLim');
+                axZlim = get (plotdata.HAx, 'ZLim');
                 axZlim(1) = axZlim(1) - stretchfactor*abs(axZlim(1));
                 axZlim(2) = axZlim(2) + stretchfactor*abs(axZlim(2));
+                
             else
                 axXlim = options.AxLims (1,1:2);
                 axYlim = options.AxLims (2,1:2);
                 axZlim = options.AxLims (3,1:2);
             end
             
-            nodenames = fieldnames (self.nodes);
-            
-            nnodes = numel (nodenames);
-            
             if isempty (options.NodeSize)
                 % choose 
-                nodesz = repmat (0.03 * mean ( diff ([axXlim; axYlim; axZlim ], 1, 2) ), ...
-                             1, nnodes);
+                plotdata.nodeSize = repmat (0.03 * mean ( diff ([axXlim; axYlim; axZlim ], 1, 2) ), ...
+                             1, self.nNodes);
             else
                 if isscalar (options.NodeSize)
-                    nodesz = repmat (options.NodeSize, 1, nnodes);
-                elseif numel (options.NodeSize) ~= nnodes
+                    plotdata.nodeSize = repmat (options.NodeSize, 1, self.nNodes);
+                elseif numel (options.NodeSize) ~= self.nNodes
                     error ('You supplied a vector of node sizes which is not the same size as the number of nodes.')
                 end
             end
             
-            % clear the previous trajectory plot
-            cla (hax, 'reset');
-            
-            % TODO: the sped of all this could be improved using hgtransform
-            %
-            % see https://uk.mathworks.com/help/matlab/creating_plots/transform-objects.html
-            %
-            for tind = 1:options.Skip:size(self.nodes.(nodenames{1}).Position,1)
+            if ~isempty (self.preProcSystem)
                 
-                if tind > 1
-                    % clear old node drawings
-%                     delete (hnode);
-                    if options.DrawLabels
-                        delete (hlabel);
-                    end
-                end
-                    
-%                 hold on;
-
-                if ~isempty (self.preProcSystem)
-                    
-                    for indii = 1:nnodes
-                        % set the node positions and orientations
-                        self.preProcSystem.setNodePosition (self.nodes.(nodenames{indii}).Label, self.nodes.(nodenames{indii}).Position(tind,:)');
-                        om = mbdyn.pre.orientmat ('orientation', reshape (self.nodes.(nodenames{indii}).Orientation(tind,:), 3, 3));
-                        self.preProcSystem.setNodeOrientation (self.nodes.(nodenames{indii}).Label, om);
-                    end
-
-                    % draw the system 
-                    self.preProcSystem.draw ( 'AxesHandle', hax, ...
-                                              'Mode', options.DrawMode, ...
-                                              'Bodies', options.DrawBodies, ...
-                                              'StructuralNodes', options.DrawNodes, ...
-                                              'Joints', false, ...
-                                              'Light', options.Light );
-                                      
+                for indii = 1:self.nNodes
+                    % set the node positions and orientations
+                    self.preProcSystem.setNodePosition (self.nodes.(self.nodeNames{indii}).Label, self.nodes.(self.nodeNames{indii}).Position(tind,:)');
+                    % get the transpose of the matrix as mbdyn writes it
+                    % out row-wise, not columnwise
+                    om = mbdyn.pre.orientmat ('orientation', reshape (self.nodes.(self.nodeNames{indii}).Orientation(tind,:), 3, 3)');
+                    self.preProcSystem.setNodeOrientation (self.nodes.(self.nodeNames{indii}).Label, om);
                 end
                 
-                for indii = 1:nnodes    
-%                     plot3 ( self.nodes.(nodenames{indii}).Position(tind,1), ...
-%                             self.nodes.(nodenames{indii}).Position(tind,2), ...
-%                             self.nodes.(nodenames{indii}).Position(tind,3), ...
-%                             'o' );
-
-                    
-%                     hnode(indii) = drawnode (self, self.nodes.(nodenames{indii}).Position(tind,:), ...
-%                               -self.nodes.(nodenames{indii}).Orientation(tind,:), ...
-%                               nodesz(indii), nodesz(indii), nodesz(indii) ...
-%                               ... % 0.5, 0.5, 0.5 
-%                              );
-                        
-                    if options.DrawLabels
-                        hlabel(indii) = text ( self.nodes.(nodenames{indii}).Position(tind,1) + nodesz(indii), ...
-                                self.nodes.(nodenames{indii}).Position(tind,2), ...
-                                self.nodes.(nodenames{indii}).Position(tind,3) + nodesz(indii), ...
-                                nodenames{indii}, ...
-                                'Interpreter', 'none');
-                    end
-                    
-                    if options.PlotTrajectories
-                        if tind == 1
-                            htraj(indii) = animatedline ( ...
-                                        self.nodes.(nodenames{indii}).Position(tind,1), ...
-                                        self.nodes.(nodenames{indii}).Position(tind,2), ...
-                                        self.nodes.(nodenames{indii}).Position(tind,3) ...
-                                                        );
-%                             drawnow;
-                            
-                        else
-                            
-                            addpoints ( htraj(indii), ...
-                                        self.nodes.(nodenames{indii}).Position(tind,1), ...
-                                        self.nodes.(nodenames{indii}).Position(tind,2), ...
-                                        self.nodes.(nodenames{indii}).Position(tind,3) );
-%                             drawnow;
-                        end
-                    end
-
-                end
+                % draw the system
+                self.preProcSystem.draw ( 'AxesHandle', plotdata.HAx, ...
+                    'Mode', options.DrawMode, ...
+                    'Bodies', options.DrawBodies, ...
+                    'StructuralNodes', options.DrawNodes, ...
+                    'Joints', false, ...
+                    'Light', options.Light );
                 
-%                 hold off;
-
-                title (hax, sprintf ('t = %.2fs', (tind-1)*self.preProcSystem.problems{1}.timeStep));
-                
-                set (hax, 'XLim', axXlim);
-                set (hax, 'YLim', axYlim);
-                set (hax, 'ZLim', axZlim);
-                
-%                 axis equal;
-                view(3);
-                
-                drawnow;
-%                 pause (1e-4)
             end
+            
+            for indii = 1:self.nNodes
+                %                     plot3 ( self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
+                %                             self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
+                %                             self.nodes.(self.nodeNames{indii}).Position(tind,3), ...
+                %                             'o' );
+                
+                
+                %                     hnode(indii) = drawnode (self, self.nodes.(self.nodeNames{indii}).Position(tind,:), ...
+                %                               -self.nodes.(self.nodeNames{indii}).Orientation(tind,:), ...
+                %                               nodesz(indii), nodesz(indii), nodesz(indii) ...
+                %                               ... % 0.5, 0.5, 0.5
+                %                              );
+                
+                if options.DrawLabels
+                    plotdata.HNodeLabels(indii) ...
+                        = text ( plotdata.HAx, ...
+                                 self.nodes.(self.nodeNames{indii}).Position(tind,1) + plotdata.nodeSize(indii), ...
+                                 self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
+                                 self.nodes.(self.nodeNames{indii}).Position(tind,3) + plotdata.nodeSize(indii), ...
+                                 self.nodeNames{indii}, ...
+                                 'Interpreter', 'none');
+                end
+                
+%                 if options.PlotTrajectories
+%                     if tind == 1
+%                         htraj(indii) = animatedline ( ...
+%                             self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
+%                             self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
+%                             self.nodes.(self.nodeNames{indii}).Position(tind,3) ...
+%                             );
+%                         %                             drawnow;
+%                         
+%                     else
+%                         
+%                         addpoints ( htraj(indii), ...
+%                             self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
+%                             self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
+%                             self.nodes.(self.nodeNames{indii}).Position(tind,3) );
+%                         %                             drawnow;
+%                     end
+%                 end
+                
+            end
+            
+            if ~isempty (self.preProcSystem)
+                title (plotdata.HAx, sprintf ('t = %.2fs', (tind-1)*self.preProcSystem.problems{1}.timeStep));
+            end
+            
+            set (plotdata.HAx, 'XLim', axXlim);
+            set (plotdata.HAx, 'YLim', axYlim);
+            set (plotdata.HAx, 'ZLim', axZlim);
+            
+            %                 axis equal;
+            view(3);
+            
+            drawnow;
         end
-        
-        
-        
+
     end
+    
     
     % internal methods
     methods (Access = protected)
