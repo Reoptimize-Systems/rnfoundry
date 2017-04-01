@@ -174,7 +174,7 @@ classdef base < handle
             if isint2eps (num)
                 numstr = sprintf('%d.0', num);
             else
-                numstr = sprintf('%.14f', num);
+                numstr = sprintf('%.18f', num);
                 % strip trailing zeros from decimals
                 n = numel (numstr);
                 while numstr(n) ~= '.'
@@ -220,8 +220,54 @@ classdef base < handle
 
             % matlabs angles are clockwise 
 
-            M = [ M(1:3,1:3).', M(1:3,4); ...
-                  0, 0, 0, 1 ];
+%             M = [ M(1:3,1:3).', M(1:3,4); ...
+%                   0, 0, 0, 1 ];
+%             M = [ M(1:3,1:3), M(1:3,4); ...
+%                   0, 0, 0, 1 ];
+        end
+        
+        function drawReferences (refs, varargin)
+            
+            options.PlotAxes = [];
+            options.Title = true;
+            options.DrawGlobal = true;
+            options.Scale = 1;
+           
+            options = parse_pv_pairs (options, varargin);
+            
+            hax = draw ( refs{1}, ...
+                         'PlotAxes', options.PlotAxes, ...
+                         'Title', true, ...
+                         'DrawGlobal', true, ...
+                         'Scale', options.Scale);
+           
+            text ( refs{1}.pos(1) + 0.1*options.Scale, ...
+                   refs{1}.pos(2), ...
+                   refs{1}.pos(3) + 0.1*options.Scale, ...
+                   refs{1}.name, ...
+                   'Interpreter', 'none');
+                             
+            for ind = 2:numel (refs)
+                draw ( refs{ind}, ...
+                       'PlotAxes', hax, ...
+                       'Title', false, ...
+                       'DrawGlobal', false, ...
+                       'Scale', options.Scale );
+                
+                
+                if isempty (refs{ind}.name)
+                    label = sprintf ('Reference %d', ind);
+                else
+                    label = refs{ind}.name;
+                end
+                
+                text ( refs{ind}.pos(1) + 0.1*options.Scale, ...
+                       refs{ind}.pos(2), ...
+                       refs{ind}.pos(3) + 0.1*options.Scale, ...
+                       label, ...
+                       'Interpreter', 'none');
+            end
+            
         end
         
     end
