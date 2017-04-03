@@ -143,11 +143,17 @@ classdef system < mbdyn.pre.base
                 self.drawAxesH = options.AxesHandle;
             end
             
-%             hold all
-            
-            for ind = 1:numel (self.nodes)
-                if isa (self.nodes{ind}, 'mbdyn.pre.structuralNode') && options.StructuralNodes
-                    draw (self.nodes{ind}, ...
+            if islogical (options.StructuralNodes)
+                if options.StructuralNodes == false
+                    options.StructuralNodes = [];
+                else
+                    options.StructuralNodes = 1:numel(self.nodes);
+                end
+            end
+
+            for ind = 1:numel (options.StructuralNodes)
+                if isa (self.nodes{options.StructuralNodes(ind)}, 'mbdyn.pre.structuralNode')
+                    draw (self.nodes{options.StructuralNodes(ind)}, ...
                         'AxesHandle', self.drawAxesH, ...
                         'ForceRedraw', options.ForceRedraw);
                 end
@@ -166,7 +172,6 @@ classdef system < mbdyn.pre.base
                         'Mode', options.Mode );
                 end
             end
-%             hold off
             
             if options.Light
                 camHandle = findobj(gcf,'Type','light');
