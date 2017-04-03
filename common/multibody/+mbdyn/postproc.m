@@ -10,6 +10,7 @@ classdef postproc < handle
         bodies;
         joints;
         simInfo;
+        mBDynOutFileName;
         
     end
     
@@ -32,14 +33,25 @@ classdef postproc < handle
         end
         
         function loadResultsFromFiles (self, mbdoutfilename)
-            
-%             if ~exist (mbdfilename, 'file')
-%                 error ('input file not found');
-%             end
+            % load results from mbdyn output files
+            %
+            % Syntax
+            %
+            % loadResultsFromFiles (mbp, mbdoutfilename)
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  mbdoutfilename - root name of the mbdyn output files
+            %
+            %
             
             [pathstr, name, ~] = fileparts (mbdoutfilename);
             
             self.clear ();
+            
+            self.mBDynOutFileName = mbdoutfilename;
             
             % load .log file
             %
@@ -52,6 +64,10 @@ classdef postproc < handle
             % load .mov file
             movfile = fullfile (pathstr, [name, '.mov']);
             
+            if ~exist (movfile, 'file')
+                error ('MBDyn output file %s not found', movfile);
+            end
+
             movdata = dlmread(movfile);
             
             self.nNodes = 0;
@@ -106,7 +122,53 @@ classdef postproc < handle
             self.nNodes = [];
         end
         
-        function [hfig, hax] = plotNodeTrajectories (self)
+        function [hfig, hax] = plotNodeTrajectories (self, varargin)
+            % plot the trajectories of the nodes
+            %
+            % Syntax
+            %
+            % [hfig, hax] = plotNodeTrajectories (mbp, 'Parameter', value, ...)
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  Addtional optional arguments are supplied as paramter-value
+            %  pairs. The avaialable options are:
+            %
+            %  'AxLims' - (3 x 2) matrix containing limits the plot axes
+            %    should be set to, each row is the x, y and z axes limits
+            %    respectively. Uselful to focus on a particular region of
+            %    the system. If not supplied, suitable axes limits will be
+            %    determined based on the motion data.
+            %
+            %  'Legend' - flag determining whether to add a legend to the
+            %    trajectory plot. Default is true.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    trajectory plot. Default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will have their trajectoris plotted. By default all
+            %    node trajectories are plotted.
+            %
+            % Output
+            %
+            %  hfig - handle to figure created
+            %
+            %  hax - handle to plot axes created
+            %
+            %
+            
+            options.AxLims = [];
+            options.Legend = true;
+            options.OnlyNodes = 1:self.nNodes;
+            options.Title = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            % don't repeat nodes
+            options.OnlyNodes = unique (options.OnlyNodes(:));
            
             if ~self.resultsLoaded
                 error ('No results have been loaded yet for plotting')
@@ -116,20 +178,98 @@ classdef postproc < handle
             hax = axes;
             
             hold on;
+            legstrings = cell (1, numel(options.OnlyNodes));
             
-            for ind = 1:numel (self.nodeNames)
+            for ind = 1:numel(options.OnlyNodes)
                 
-                plot3 ( self.nodes.(self.nodeNames{ind}).Position(:,1), ...
-                        self.nodes.(self.nodeNames{ind}).Position(:,2), ...
-                        self.nodes.(self.nodeNames{ind}).Position(:,3), ...
+                plot3 ( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1), ...
+                        self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2), ...
+                        self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3), ...
                         '-' );
+                
+                if isempty (options.AxLims)
+                    if ind == 1
+                        axXlim = [ min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)), ...
+                                  max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ];
+                        axYlim = [ min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)), ...
+                                  max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ];
+                        axZlim = [ min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)), ...
+                                  max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ];
+
+                    else
+
+                        axXlim = [ min( axXlim(1), min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ), ...
+                                  max( axXlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ) ];
+                        axYlim = [ min( axYlim(1), min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ), ...
+                                  max( axYlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ) ];
+                        axZlim = [ min( axZlim(1), min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ), ...
+                                  max( axZlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ) ];
+
+                    end
+                end
+                
+                if options.Legend
+                    legstrings{ind} = self.nodeNames{options.OnlyNodes(ind)};
+                end
             
             end
             
             hold off;
             
-            axis equal;
-%             axis square;
+%             axis equal;
+%             axis (hax, 'square');
+            daspect (hax, [1,1,1]);
+            
+            if isempty (options.AxLims)
+                stretchfactor = 0.25;
+                
+                minsize = mean ([diff(axXlim), diff(axYlim), diff(axZlim)]) / 10;
+                
+                axXlim(1) = axXlim(1) - stretchfactor*abs(axXlim(1));
+                axXlim(2) = axXlim(2) + stretchfactor*abs(axXlim(2));
+                
+                if diff (axXlim) < minsize
+                    axXlim(1) = axXlim(1) - (minsize/2);
+                    axXlim(2) = axXlim(2) + (minsize/2);
+                end
+                
+                axYlim(1) = axYlim(1) - stretchfactor*abs(axYlim(1));
+                axYlim(2) = axYlim(2) + stretchfactor*abs(axYlim(2));
+                
+                if diff (axYlim) < minsize
+                    axYlim(1) = axYlim(1) - (minsize/2);
+                    axYlim(2) = axYlim(2) + (minsize/2);
+                end
+                
+                axZlim(1) = axZlim(1) - stretchfactor*abs(axZlim(1));
+                axZlim(2) = axZlim(2) + stretchfactor*abs(axZlim(2));
+                
+                if diff (axZlim) < minsize
+                    axZlim(1) = axZlim(1) - (minsize/2);
+                    axZlim(2) = axZlim(2) + (minsize/2);
+                end
+                
+            else
+                axXlim = options.AxLims (1,1:2);
+                axYlim = options.AxLims (2,1:2);
+                axZlim = options.AxLims (3,1:2);
+            end
+            
+            set (hax, 'XLim', axXlim);
+            set (hax, 'YLim', axYlim);
+            set (hax, 'ZLim', axZlim);
+            
+            xlabel (hax, 'x');
+            ylabel (hax, 'y');
+            zlabel (hax, 'z');
+            
+            if options.Legend
+                legend (hax, legstrings, 'Interpreter', 'none');
+            end
+            
+            if options.Title
+                title (sprintf ('Node trajectories plot for results file:\n%s', self.mBDynOutFileName));
+            end
             
             view(3);
             drawnow;
@@ -139,6 +279,57 @@ classdef postproc < handle
         
         function animate (self, varargin)
             % animate the nodes and bodies of the system
+            %
+            % Syntax
+            %
+            % animate (mbp, 'Parameter', value) 
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  Addtional optional arguments are supplied as parameter-value
+            %  pairs. The available options are:
+            %
+            %  'PlotAxes' - handle to plot axes in which to draw the
+            %    trajectories. If not supplied a new figure and axes are
+            %    created for the plot.
+            %
+            %  'AxLims' - (3 x 2) matrix containing limits the plot axes
+            %    should be set to, each row is the x, y and z axes limits
+            %    respectively. Uselful to focus on a particular region of
+            %    the system. If not supplied, suitable axes limits will be
+            %    determined based on the motion data.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    system plot. Default is true.
+            %
+            %  'DrawMode' - string indicating the drawing mode. Can be one
+            %    of: 'solid', 'ghost', 'wire', 'wireghost'.
+            %
+            %  'DrawLabels' - flag indicating whether to draw node labels,
+            %    default is false.
+            %
+            %  'DrawNodes' - flag determining whether to draw nodes,
+            %    default is true
+            %
+            %  'DrawBodies' - flag determining whether to draw bodies,
+            %    default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will be plotted. By default all nodes are plotted if
+            %    'DrawNodes' is true. This setting is ignored if
+            %    'DrawNodes' is false.
+            %
+            %  'Light' - flag determining whether to light the scene to
+            %    give a more realistic look. Best used with 'solid' option.
+            %
+            %  'NodeSize' - scalar value indicating how large the nodes
+            %    should be drawn (in the same units as the plot). If not
+            %    supplied, the nodes are drawn with a size based on the
+            %    axes limits.
+            %
+            %
             
             if ~self.resultsLoaded
                 error ('No results have been loaded yet for plotting')
@@ -155,6 +346,7 @@ classdef postproc < handle
             options.Light = false;
             options.VideoFile = [];
             options.VideoSpeed = 1;
+            options.OnlyNodes = 1:self.nNodes;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -168,7 +360,6 @@ classdef postproc < handle
                 
                 if tind > 1
                     % clear old node label drawings
-%                     delete (hnode);
                     if options.DrawLabels
                         delete (plotdata.HNodeLabels);
                     end
@@ -184,7 +375,87 @@ classdef postproc < handle
                               'DrawNodes', options.DrawNodes, ...
                               'DrawBodies', options.DrawBodies, ...
                               'Light', options.Light, ...
-                              'PlotAxes', plotdata.HAx);
+                              'PlotAxes', plotdata.HAx, ...
+                              'Title', false, ...
+                              'OnlyNodes', options.OnlyNodes);
+                          
+                if tind == 1
+                    
+                    if isempty (options.AxLims)
+                        % determine suitible axes limits for the entire sim
+                        % duration
+                        
+                        for ind = 1:numel(options.OnlyNodes)
+
+                            if ind == 1
+                                xExcursion = [ min( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1) ...
+                                                    - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,1) ), ...
+                                               max( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1) ...
+                                                    - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,1)) ...
+                                             ];
+                                          
+                                yExcursion = [ min( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2) ...
+                                                   - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,2) ), ...
+                                              max( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2) ...
+                                                   - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,2)) ...
+                                             ];
+                                               
+                                zExcursion = [ min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3) ...
+                                                   - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,3)), ...
+                                              max( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3) ...
+                                                   - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,3) ) ...
+                                             ];
+
+                            else
+
+                                xExcursion = [ min( xExcursion(1), ...
+                                                    min( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1) ...
+                                                         - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,1) ) ), ...
+                                               max( xExcursion(2), ...
+                                                    max( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1) ...
+                                                         - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,1) ) ) ];
+                                                     
+                                yExcursion = [ min( yExcursion(1), ...
+                                                    min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2) ...
+                                                        - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,2)) ), ...
+                                               max( yExcursion(2), ...
+                                                    max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2) ...
+                                                        - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,2)) ) ];
+                                          
+                                zExcursion = [ min( zExcursion(1), ...
+                                                    min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3) ...
+                                                        - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,3)) ), ...
+                                               max( zExcursion(2), ...
+                                                    max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3) ...
+                                                        - self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(1,3)) ) ];
+
+                            end
+
+                        end
+                        
+                        axXlim = get (plotdata.HAx, 'XLim');
+
+                        axYlim = get (plotdata.HAx, 'YLim');
+
+                        axZlim = get (plotdata.HAx, 'ZLim');
+                        
+                        % stretch the axes a bit and add node excursions to
+                        % axes limits
+                        stretchfactor = 0.1;
+
+                        axXlim(1) = axXlim(1) - stretchfactor*abs(axXlim(1)) - min (xExcursion(1), 0);
+                        axXlim(2) = axXlim(2) + stretchfactor*abs(axXlim(2)) + max (xExcursion(2), 0);
+
+                        axYlim(1) = axYlim(1) - stretchfactor*abs(axYlim(1)) - min (yExcursion(1), 0);
+                        axYlim(2) = axYlim(2) + stretchfactor*abs(axYlim(2)) + max (yExcursion(2), 0);
+
+                        axZlim(1) = axZlim(1) - stretchfactor*abs(axZlim(1)) - min (zExcursion(1), 0);
+                        axZlim(2) = axZlim(2) + stretchfactor*abs(axZlim(2)) + max (zExcursion(2), 0);
+                        
+                        options.AxLims = [axXlim; axYlim; axZlim];
+                    end
+                    
+                end
                 
                 for indii = 1:self.nNodes
                     
@@ -206,6 +477,10 @@ classdef postproc < handle
                     end
                     
                 end
+                
+                set (plotdata.HAx, 'XLim', axXlim);
+                set (plotdata.HAx, 'YLim', axYlim);
+                set (plotdata.HAx, 'ZLim', axZlim);
                 
                 if ~isempty(options.VideoFile)
 
@@ -237,6 +512,64 @@ classdef postproc < handle
         end
     
         function plotdata = drawStep (self, tind, varargin)
+            % draw the system at the given time step index
+            %
+            % Syntax
+            %
+            % plotdata = drawStep (mbp, tind, 'Parameter', value)
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  Addtional optional arguments are supplied as parameter-value
+            %  pairs. The available options are:
+            %
+            %  'PlotAxes' - handle to plot axes in which to draw the
+            %    trajectories. If not supplied a new figure and axes are
+            %    created for the plot.
+            %
+            %  'AxLims' - (3 x 2) matrix containing limits the plot axes
+            %    should be set to, each row is the x, y and z axes limits
+            %    respectively. Uselful to focus on a particular region of
+            %    the system. If not supplied, suitable axes limits will be
+            %    determined based on the motion data.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    system plot. Default is true.
+            %
+            %  'DrawMode' - string indicating the drawing mode. Can be one
+            %    of: 'solid', 'ghost', 'wire', 'wireghost'.
+            %
+            %  'DrawLabels' - flag indicating whether to draw node labels,
+            %    default is false.
+            %
+            %  'DrawNodes' - flag determining whether to draw nodes,
+            %    default is true
+            %
+            %  'DrawBodies' - flag determining whether to draw bodies,
+            %    default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will be plotted. By default all nodes are plotted if
+            %    'DrawNodes' is true. This setting is ignored if
+            %    'DrawNodes' is false.
+            %
+            %  'Light' - flag determining whether to light the scene to
+            %    give a more realistic look. Best used with 'solid' option.
+            %
+            %  'NodeSize' - scalar value indicating how large the nodes
+            %    should be drawn (in the same units as the plot). If not
+            %    supplied, the nodes are drawn with a size based on the
+            %    axes limits.
+            %
+            % Output
+            %
+            %  hfig - handle to figure created
+            %
+            %  hax - handle to plot axes created
+            %
+            %
             
             if ~self.resultsLoaded
                 error ('No results have been loaded yet for plotting')
@@ -250,52 +583,21 @@ classdef postproc < handle
             options.DrawNodes = true;
             options.DrawBodies = true;
             options.Light = false;
+            options.Title = true;
+            options.OnlyNodes = 1:self.nNodes;
             
             options = parse_pv_pairs (options, varargin);
             
+            if options.DrawNodes == false
+                options.OnlyNodes = false;
+            end
+            
             if isempty (options.PlotAxes)
-                % plot the trajectories once to get appropriate axis limits
-                [plotdata.HFig, plotdata.HAx] = plotNodeTrajectories (self);
-                maximize (plotdata.HFig);
-                cla (plotdata.HAx);
+                plotdata.HFig = figure;
+                plotdata.HAx = axes;
             else
                 plotdata.HAx = options.PlotAxes;
                 plotdata.HFig = get (plotdata.HAx, 'Parent');
-            end
-            
-%             set(hfig,'WindowStyle','docked');
-            
-            if isempty (options.AxLims)
-                stretchfactor = 0.25;
-                
-                axXlim = get (plotdata.HAx, 'XLim');
-                axXlim(1) = axXlim(1) - stretchfactor*abs(axXlim(1));
-                axXlim(2) = axXlim(2) + stretchfactor*abs(axXlim(2));
-                
-                axYlim = get (plotdata.HAx, 'YLim');
-                axYlim(1) = axYlim(1) - stretchfactor*abs(axYlim(1));
-                axYlim(2) = axYlim(2) + stretchfactor*abs(axYlim(2));
-                
-                axZlim = get (plotdata.HAx, 'ZLim');
-                axZlim(1) = axZlim(1) - stretchfactor*abs(axZlim(1));
-                axZlim(2) = axZlim(2) + stretchfactor*abs(axZlim(2));
-                
-            else
-                axXlim = options.AxLims (1,1:2);
-                axYlim = options.AxLims (2,1:2);
-                axZlim = options.AxLims (3,1:2);
-            end
-            
-            if isempty (options.NodeSize)
-                % choose 
-                plotdata.nodeSize = repmat (0.03 * mean ( diff ([axXlim; axYlim; axZlim ], 1, 2) ), ...
-                             1, self.nNodes);
-            else
-                if isscalar (options.NodeSize)
-                    plotdata.nodeSize = repmat (options.NodeSize, 1, self.nNodes);
-                elseif numel (options.NodeSize) ~= self.nNodes
-                    error ('You supplied a vector of node sizes which is not the same size as the number of nodes.')
-                end
             end
             
             if ~isempty (self.preProcSystem)
@@ -313,25 +615,37 @@ classdef postproc < handle
                 self.preProcSystem.draw ( 'AxesHandle', plotdata.HAx, ...
                     'Mode', options.DrawMode, ...
                     'Bodies', options.DrawBodies, ...
-                    'StructuralNodes', options.DrawNodes, ...
+                    'StructuralNodes', options.OnlyNodes, ...
                     'Joints', false, ...
                     'Light', options.Light );
                 
             end
             
+            if isempty (options.AxLims)
+                axXlim = get (plotdata.HAx, 'XLim');
+                axYlim = get (plotdata.HAx, 'YLim');
+                axZlim = get (plotdata.HAx, 'ZLim');
+            else
+                axXlim = options.AxLims (1,1:2);
+                axYlim = options.AxLims (2,1:2);
+                axZlim = options.AxLims (3,1:2);
+            end
+            
+            if isempty (options.NodeSize)
+                % choose suitable node size based on the axis size if not
+                % supplied
+                plotdata.nodeSize = repmat (0.03 * mean ( diff ([axXlim; axYlim; axZlim ], 1, 2) ), ...
+                             1, self.nNodes);
+            else
+                if isscalar (options.NodeSize)
+                    plotdata.nodeSize = repmat (options.NodeSize, 1, self.nNodes);
+                elseif numel (options.NodeSize) ~= self.nNodes
+                    error ('You supplied a vector of node sizes which is not the same size as the number of nodes.')
+                end
+            end
+            
             for indii = 1:self.nNodes
-                %                     plot3 ( self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
-                %                             self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
-                %                             self.nodes.(self.nodeNames{indii}).Position(tind,3), ...
-                %                             'o' );
-                
-                
-                %                     hnode(indii) = drawnode (self, self.nodes.(self.nodeNames{indii}).Position(tind,:), ...
-                %                               -self.nodes.(self.nodeNames{indii}).Orientation(tind,:), ...
-                %                               nodesz(indii), nodesz(indii), nodesz(indii) ...
-                %                               ... % 0.5, 0.5, 0.5
-                %                              );
-                
+
                 if options.DrawLabels
                     plotdata.HNodeLabels(indii) ...
                         = text ( plotdata.HAx, ...
@@ -342,36 +656,23 @@ classdef postproc < handle
                                  'Interpreter', 'none');
                 end
                 
-%                 if options.PlotTrajectories
-%                     if tind == 1
-%                         htraj(indii) = animatedline ( ...
-%                             self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
-%                             self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
-%                             self.nodes.(self.nodeNames{indii}).Position(tind,3) ...
-%                             );
-%                         %                             drawnow;
-%                         
-%                     else
-%                         
-%                         addpoints ( htraj(indii), ...
-%                             self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
-%                             self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
-%                             self.nodes.(self.nodeNames{indii}).Position(tind,3) );
-%                         %                             drawnow;
-%                     end
-%                 end
-                
-            end
-            
-            if ~isempty (self.preProcSystem)
-                title (plotdata.HAx, sprintf ('t = %.2fs', (tind-1)*self.preProcSystem.problems{1}.timeStep));
             end
             
             set (plotdata.HAx, 'XLim', axXlim);
             set (plotdata.HAx, 'YLim', axYlim);
             set (plotdata.HAx, 'ZLim', axZlim);
             
-            %                 axis equal;
+            if options.Title
+                if ~isempty (self.preProcSystem)
+                    title (plotdata.HAx, sprintf ('System plot at time t = %.2fs for MBDyn results file:\n%s', ...
+                            (tind-1)*self.preProcSystem.problems{1}.timeStep, self.mBDynOutFileName));
+                else
+                    title (plotdata.HAx, sprintf ('System plot at time index %d for MBDyn results file:\n%s', tind, self.mBDynOutFileName));
+                end
+            end
+            
+            daspect (plotdata.HAx, [1,1,1]);
+            
             view(3);
             
             drawnow;
