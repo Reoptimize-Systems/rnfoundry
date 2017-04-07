@@ -51,6 +51,10 @@ public:
         nallowed.push_back (12);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
         
+        #ifdef DEBUG
+        mexPrintf ("nargin: %d\n", nargin);
+        #endif
+        
         userefnode = mxnthargscalarbool (nrhs, prhs, 1, 2);
         
         #ifdef DEBUG
@@ -212,7 +216,7 @@ public:
         }
         else if (commethod.compare ("inet") == 0)
         {
-            if (nargin != 9)
+            if (nargin != 12)
             {
                 mexErrMsgIdAndTxt ( "MBCNodal:noport",
                    "No inet port number was supplied.");
@@ -220,6 +224,10 @@ public:
             
             int port = int (mxnthargscalar (nrhs, prhs, 12, 2));
             
+            #ifdef DEBUG
+            mexPrintf ("port: %i\n", port);
+            #endif
+        
             /* initialize INET socket (host, port) */
             if (mbc->Init (comstring, port))
             {
