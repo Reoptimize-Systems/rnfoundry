@@ -9,7 +9,7 @@ simu = simulationClass(getmfilepath ('test_wsim_RM3.run'));    %Create the Simul
 simu.startTime = 0;                   %Simulation Start Time [s]
 simu.endTime=400;                       %Simulation End bdcloseTime [s]
 simu.solver = 'ode4';                   %simu.solver = 'ode4' for fixed step & simu.solver = 'ode45' for variable step 
-simu.dt = 0.1; 							%Simulation time-step [s]
+simu.dt = 0.25; % 0.1; 							%Simulation time-step [s]
 simu.rampT = 100;                       %Wave Ramp Time Length [s]
 simu.multibodySolver = 'MBDyn';
 simu.b2b = 1;
@@ -157,7 +157,7 @@ socket_force = mbdyn.pre.externalStructuralForce ({float_node, spar_node}, [], c
                                                   'Echo', fullfile (simu.caseDir, 'output', 'socket_echo.txt'));
 
 prob = mbdyn.pre.initialValueProblem (simu.startTime, simu.endTime, simu.dt, ...
-                                'Tol', 1e-6, 'MaxIterations', 20);
+                                'Tol', 1e-6, 'MaxIterations', 200);
 
 % assemble the system
 mbsys = mbdyn.pre.system ( prob, ...
@@ -165,7 +165,9 @@ mbsys = mbdyn.pre.system ( prob, ...
                            'Elements', {float_mb_body, spar_mb_body, jclamp, j1, j2, j3, j4 socket_force} );
                        
 % draw it
-mbsys.draw ('Mode', 'wireghost', 'Light', false);
+setSize (float_node, 10, 10, 10);
+setSize (spar_node, 10, 10, 10);
+mbsys.draw ('Mode', 'solid', 'Light', true, 'StructuralNodes', false, 'AxLims', [-35, 35; -35, 35; -35, 35]);
 
 mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
 
@@ -176,9 +178,35 @@ mbsys.generateMBDynInputFile (mbdpath);
 % 
 % k = 0;
 % c = 1200000;
-% initptodpos = ref_float.pos - ref_spar.pos; 
+initptodpos = ref_float.pos - ref_spar.pos; 
 
 % set up the nested generator simulation
+
+load ('/home/rcrozier/Sync/work/enercro/Projects/WES-Wavedrive/Outputs/design_004_converted_to_rnfoundry.mat');
+
+simoptions = struct ();
+
+simoptions.set_CoilResistance = 0.497091;
+
+simoptions.GetVariableGapForce = false;
+simoptions.MagFEASimType = 'multiple';
+simoptions.UseParFor = false;
+simoptions.MagFEASim.UseParFor = false;
+% simoptions.AddPhaseCurrentsComponents = true;
+
+design.RlVRp = 4;
+design = completedesign_TM_SLOTLESS (design, simoptions);
+design.zs = design.zp / 3;
+
+% Set up Common Parameters
+simoptions.Lmode = 0;
+simoptions.NoOfMachines = 1;
+
+[design, simoptions] = simfun_TM_SLOTLESS(design, simoptions);
+[design, simoptions] = finfun_TM_SLOTLESS(design, simoptions);
+
+simoptions.ODESim.ForceFcn = 'forcefcn_linear_pscbmot';
+simoptions.ODESim.ForceFcnArgs = {};
 
 innert0 = 0;
 innerx0 = [0,0,0];
@@ -297,10 +325,12 @@ hsys.advanceStep (time(end), accel);
     
 ind = 2;
 
+verbose = false;
 plotvectors = false;
 checkoutputs = false;
-miniters = 3;
+miniters = 0;
 maxiters = prob.maxIterations;
+forcetol = 1;
 
 if plotvectors
     figure;
@@ -313,6 +343,7 @@ vRpto = 0;
 xRptoVec = [0;0;0];
 vRptoVec = [0;0;0];
     
+tic
 while status == 0
     
     status = mb.GetMotion ();
@@ -337,7 +368,9 @@ while status == 0
         mbtime = C{3};
 
         if round2 (mbtime, 0.001) ~= round2 (time(end), 0.001)
-            fprintf (1, 'times diverged at t = %f\n', mbtime);
+            if verbose
+                fprintf (1, 'times diverged at t = %f\n', mbtime);
+            end
             ind = ind - 1;
             convflag = true;
         else
@@ -390,12 +423,11 @@ while status == 0
     
 %     ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
     
-    machinesolver.solve (time(end), [xRpto; vRpto]);
+    machinesolver.solve (time(end), [xRpto(ind); vRpto(ind)]);
     
     results = machinesolver.getOutputs ();
     
-    % get the outputs from this
-    results = simoptions.ODESim.NestedSim.GeneratorSolver.getOutputs ();
+    ptoforce(ind) = results.Fpto;
     
 %     FptoVec = om.orientationMatrix * [0; 0; -ptoforce(ind)];
     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * om.orientationMatrix)' ;
@@ -406,21 +438,8 @@ while status == 0
 	mb.F (forces(1:3,:,ind));
     mb.M (forces(4:6,:,ind));
     
-%     f = dir([ outputfile_prefix, '.out']);
-%     outsize = f.bytes;
-    
     mbconv = mb.applyForcesAndMoments (false);
     
-%     pause (1);
-%     
-%     f = dir([ outputfile_prefix, '.out']);
-%     
-%     if outsize == f.bytes
-%         fprintf (1, 'outfile size did not change size at time t = %f\n', time(ind));
-%     end
-%     
-%     fprintf (1, '    time: %f, ind %d, mbconv: %d\n', time(ind), ind, mbconv);
-
     status = mb.GetMotion ();
     
     if status ~= 0
@@ -438,9 +457,9 @@ while status == 0
     vel(:,:,ind) = [ mb.NodeVelocities(); mb.NodeOmegas() ];
     accel(:,:,ind) = [ mb.NodeAccelerations(); mb.NodeAngularAccels() ];
 
-    [hydroforces, out] = hsys.hydroForces (time(ind), pos(:,:,ind), vel(:,:,ind), accel(:,:,ind));
+    [newhydroforces, out] = hsys.hydroForces (time(ind), pos(:,:,ind), vel(:,:,ind), accel(:,:,ind));
 
-    forces (:,:,ind) = hydroforces;
+    forces (:,:,ind) = newhydroforces;
     
 	% calculate spring damping PTO force here
     xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
@@ -454,7 +473,12 @@ while status == 0
     xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
     vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
     
-    ptoforce(ind) = -k*xRpto(ind) - c*vRpto(ind);
+    machinesolver.solve (time(end), [xRpto(ind); vRpto(ind)]);
+    
+    results = machinesolver.getOutputs ();
+    
+    ptoforce(ind) = results.Fpto;
+%     ptoforce(ind) = -k*xRpto(ind) - c*vRpto(ind);
     
     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))';
     
@@ -467,11 +491,16 @@ while status == 0
     mbconv = mb.applyForcesAndMoments (false);
     
 %     fprintf (1, '    time: %f, mbconv: %d\n', time(ind), mbconv);
+    forcediff = abs (hydroforces - newhydroforces);
     
     itercount = 1;
-    while mbconv ~= 0 || itercount < miniters
+    while mbconv ~= 0 || itercount < miniters || (max (forcediff(:)) > forcetol)
         
-%         fprintf (1, '    time: %f, ind: %d, iterating, mbconv: %d, iteration: %d\n', time(ind), ind, mbconv, itercount);
+        if verbose
+            fprintf (1, '    time: %f, ind: %d, iterating, mbconv: %d, iteration: %d, max forcediff: %g\n', time(ind), ind, mbconv, itercount, max (forcediff(:)));
+        end
+        
+        hydroforces = newhydroforces;
         
         status = mb.GetMotion ();
         
@@ -490,9 +519,9 @@ while status == 0
         vel(:,:,ind) = [ mb.NodeVelocities(); mb.NodeOmegas() ];
         accel(:,:,ind) = [ mb.NodeAccelerations(); mb.NodeAngularAccels() ];
 
-        [hydroforces, out] = hsys.hydroForces (time(ind), pos(:,:,ind), vel(:,:,ind), accel(:,:,ind));
+        [newhydroforces, out] = hsys.hydroForces (time(ind), pos(:,:,ind), vel(:,:,ind), accel(:,:,ind));
 
-        forces (:,:,ind) = hydroforces;
+        forces (:,:,ind) = newhydroforces;
 
         % calculate spring damping PTO force here
         xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
@@ -506,7 +535,13 @@ while status == 0
         xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
         vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
 
-        ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
+        machinesolver.solve (time(end), [xRpto(ind); vRpto(ind)]);
+    
+        results = machinesolver.getOutputs ();
+        
+        ptoforce(ind) = results.Fpto;
+        
+%         ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
 
         FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))' ;
 
@@ -523,6 +558,8 @@ while status == 0
         if itercount > maxiters
             error ('mbdyn iterations exceeded max allowed');
         end
+        
+        forcediff = abs (hydroforces - newhydroforces);
     
     end
     
@@ -537,7 +574,9 @@ while status == 0
 
     mbconv = mb.applyForcesAndMoments (true);
     
-    fprintf (1, 'time: %f, tind: %d, final status: %d\n', time(ind), ind, status);
+    if verbose
+        fprintf (1, 'time: %f, tind: %d, final status: %d\n', time(ind), ind, status);
+    end
 
     if plotvectors && time(ind) > 150
         
@@ -605,13 +644,60 @@ while status == 0
     % accept the last data into the time history of solutions
     hsys.advanceStep (time(end), accel(:,:,ind));
     
+    % get the full output from the last generator sim
+    
+    results = machinesolver.getOutputs ({}, true);
+    
+    fnames = fieldnames (results);
+    
+    for fnind = 1:numel (fnames)
+        if ind == 2
+            genresults = results;
+        else
+            genresults.(fnames{fnind}) = [ genresults.(fnames{fnind}); results.(fnames{fnind})(2:end,:) ];        
+        end
+    end
+    
+    if ind == 2
+        genresults.time = machinesolver.sol.x';
+        genresults.PhaseCurents = machinesolver.sol.y';
+    else
+        genresults.time = [ genresults.time;
+                            machinesolver.sol.x(2:end)'];
+                        
+        genresults.PhaseCurents = [ genresults.PhaseCurents; 
+                                    machinesolver.sol.y(:,2:end)' ];
+    end
+    
+    machinesolver.acceptState ([xRpto(ind); vRpto(ind)]);
+    
     ind = ind + 1;
     
 end
 
+[F_Total, F_AddedMassCorrected] = correctAddedMassForce (hsys, forces, F_addedmass, accel);
+
+toc
+
+% close the socket connection
 clear mb;
 
-[F_Total, F_AddedMassCorrected] = correctAddedMassForce (hsys, forces, F_addedmass, accel);
+%% generator outputs
+
+figure;
+tmin =32;
+tmax = 44;
+plotinds =  time>=tmin & time<=tmax;
+genplotinds = genresults.time>=tmin & genresults.time<=tmax;
+[ax, hI, hvRpto] = plotyy ( genresults.time(genplotinds), genresults.PhaseCurents(genplotinds,:), ...
+                            time(plotinds), vRpto(plotinds));
+                        
+ylabel(ax(1), 'Phase Current (A)');
+ylabel(ax(2), 'Relative Velocity (ms^{-1})');
+xlabel (ax(1), 'Time (s)');
+
+legend ('I_A', 'I_b', 'I_c', 'vRpto');
+
 
 %%
 figure;
@@ -642,10 +728,6 @@ plotyy (time(plotinds), ...
         ...squeeze(F_Excit(3,bodyind,plotinds)), ...
         ...squeeze(F_ExcitRamp(3,bodyind,plotinds)), ...
         ...ptoforce(plotinds)', ...
-        output.bodies(bodyind).forceExcitation(plotinds,:), ...
-        output.bodies(bodyind).forceAddedMass(plotinds,:), ...
-        output.bodies(bodyind).forceRestoring(plotinds,:), ...
-        output.bodies(bodyind).forceRadiationDamping(plotinds,:), ...
         ], ...
         time(plotinds), vRpto(plotinds) );
     
@@ -676,34 +758,6 @@ legend ( 'my F ExcitRamp x', ...
          'my M RadiationDamping x', ...
          'my M RadiationDamping y', ...
          'my M RadiationDamping z', ...
-         ...
-         'their F ExcitRamp x', ...
-         'their F ExcitRamp y', ...
-         'their F ExcitRamp z', ...
-         'their M ExcitRamp x', ...
-         'their M ExcitRamp y', ...
-         'their M ExcitRamp z', ...
-         ... 'F ViscousDamping',  ...
-         'their F addedmass x',  ...
-         'their F addedmass y',  ...
-         'their F addedmass z',  ...
-         'their M addedmass x',  ...
-         'their M addedmass y',  ...
-         'their M addedmass z',  ...
-         ...
-         'their F Restoring x',  ...
-         'their F Restoring y',  ...
-         'their F Restoring z',  ...
-         'their M Restoring x',  ...
-         'their M Restoring y',  ...
-         'their M Restoring z',  ...
-         ...
-         'their F RadiationDamping x', ...
-         'their F RadiationDamping y', ...
-         'their F RadiationDamping z', ...
-         'their M RadiationDamping x', ...
-         'their M RadiationDamping y', ...
-         'their M RadiationDamping z', ...
          ... 'ptoforce',  ...
          'vRpto' );
 
@@ -712,15 +766,19 @@ legend ( 'my F ExcitRamp x', ...
 
 mbout = mbdyn.postproc ( mbsys );
 
+
 mbout.loadResultsFromFiles ( outputfile_prefix );
 
-mbout.plotNodeTrajectories (); axis square;
+[hfig, hax] = mbout.plotNodeTrajectories ('OnlyNodes', [1,2]); 
 
 %%
 mbout.animate ( 'DrawMode', 'solid', ...
                 'Light', true, ...
-                'skip', 5, ...
-                'AxLims', [-30, 30; -30, 30; -35, 35])
+                'skip', 2, ...
+                ...'AxLims', [-30, 30; -30, 30; -35, 35], ...
+                'VideoFile', 'rm3_with_linear_gen_ds.avi', ...
+                'VideoSpeed', 3, ...
+                'OnlyNodes', [1,2])
 
 
 %% Compare to origninal WEC-Sim
@@ -728,79 +786,79 @@ mbout.animate ( 'DrawMode', 'solid', ...
 %
 % Requires to have run the RM3 example first using original WEC-Sim
 
-doplot = false;
-
-if doplot
-    for bodyind = 1:numel (output.bodies)
-
-        figure;
-        plot (output.bodies(bodyind).time, output.bodies(bodyind).forceTotal, ...
-              time, squeeze(forces(:,bodyind,:)));
-        legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
-        figure;
-        plot (output.bodies(bodyind).time, output.bodies(bodyind).forceTotal,  ...
-              time, squeeze(F_Total(:,bodyind,:)));
-        legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
-        title (sprintf ('forceTotal vs F\\_Total for body %d', bodyind));
+% doplot = false;
+% 
+% if doplot
+%     for bodyind = 1:numel (output.bodies)
+% 
 %         figure;
-%         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceExcitation,  output.bodies(bodyind).time, squeeze(F_ExcitRamp(:,bodyind,:))); 
-        figure;
-        plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
-              output.bodies(bodyind).time, squeeze(F_addedmass(:,bodyind,:)));
-        title (sprintf ('forceAddedMass vs F\\_addedmass for body %d', bodyind));
-        legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
-        figure;
-        plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
-              output.bodies(bodyind).time, squeeze(F_AddedMassCorrected(:,bodyind,:)));
-        title (sprintf ('forceAddedMass vs F\\_AddedMassCorrected for body %d', bodyind));
-        legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
-        figure;
-        plot (output.bodies(bodyind).time, output.bodies(bodyind).forceRadiationDamping,  ...
-              time, squeeze(F_RadiationDamping(:,bodyind,:)));
-        title (sprintf ('forceRadiationDamping vs F\\_RadiationDamping for body %d', bodyind));
-        legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
+%         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceTotal, ...
+%               time, squeeze(forces(:,bodyind,:)));
+%         legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
 %         figure;
-%         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceRestoring,  output.bodies(bodyind).time, squeeze(F_Restoring(:,bodyind,:)));
-        figure;
-        plot (output.bodies(bodyind).time, output.bodies(bodyind).position,  ...
-              time, squeeze(pos(:,bodyind,:)));
-        title (sprintf ('output.bodies(%d).position vs pos for body %d', bodyind, bodyind));
-        legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
-    end
+%         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceTotal,  ...
+%               time, squeeze(F_Total(:,bodyind,:)));
+%         legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
+%         title (sprintf ('forceTotal vs F\\_Total for body %d', bodyind));
+% %         figure;
+% %         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceExcitation,  output.bodies(bodyind).time, squeeze(F_ExcitRamp(:,bodyind,:))); 
+%         figure;
+%         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
+%               output.bodies(bodyind).time, squeeze(F_addedmass(:,bodyind,:)));
+%         title (sprintf ('forceAddedMass vs F\\_addedmass for body %d', bodyind));
+%         legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
+%         figure;
+%         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
+%               output.bodies(bodyind).time, squeeze(F_AddedMassCorrected(:,bodyind,:)));
+%         title (sprintf ('forceAddedMass vs F\\_AddedMassCorrected for body %d', bodyind));
+%         legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
+%         figure;
+%         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceRadiationDamping,  ...
+%               time, squeeze(F_RadiationDamping(:,bodyind,:)));
+%         title (sprintf ('forceRadiationDamping vs F\\_RadiationDamping for body %d', bodyind));
+%         legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
+% %         figure;
+% %         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceRestoring,  output.bodies(bodyind).time, squeeze(F_Restoring(:,bodyind,:)));
+%         figure;
+%         plot (output.bodies(bodyind).time, output.bodies(bodyind).position,  ...
+%               time, squeeze(pos(:,bodyind,:)));
+%         title (sprintf ('output.bodies(%d).position vs pos for body %d', bodyind, bodyind));
+%         legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
+%     end
+% 
+% end
 
-end
-
-tmin = 0;
-tmax = 400;
-
-bodyind = 1;
-
-tmax = min ( [tmax, time(end), output.bodies(bodyind).time(end)]);
-plotinds =  time>=tmin & time<=tmax;
-
-figure;
-plotyy ( output.bodies(bodyind).time(plotinds), ...
-         [output.ptos(1).forceTotal(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
-         time(plotinds), ...
-         [vRptoVec(plotinds)', [ output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3)] ] );
-title (sprintf ('output.ptos(%d).forceTotal vs FptoVec for body %d', bodyind, bodyind));
-legend ('1', '2', '3', '4', '5', '6', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
-
-figure;
-plotyy ( output.bodies(bodyind).time(plotinds), ...
-        [output.ptos(1).forceTotalWorld(plotinds,:) - output.ptos(1).forceConstraintWorld(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
-        time(plotinds), ...
-        [vRptoVec(:,plotinds)', output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3) ] );
-title (sprintf ('output.ptos(1).forceTotalWorld - output.ptos(1).forceConstraintWorld vs FptoVec for body %d', bodyind, bodyind));
-legend ('1', '2', '3', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
-
-figure;
-plot ( output.bodies(bodyind).time(plotinds), ...
-       output.ptos(1).forceInternalMechanics(plotinds,3),  ...
-       time(plotinds), ...
-       squeeze(ptoforce(plotinds)));
-title (sprintf ('output.ptos(%d).forceInternalMechanics(:,3) vs ptoforce for body %d', bodyind, bodyind));
-legend ('forceInternalMechanics(:,3)', 'ptoforce');
+% tmin = 0;
+% tmax = 400;
+% 
+% bodyind = 1;
+% 
+% tmax = min ( [tmax, time(end), output.bodies(bodyind).time(end)]);
+% plotinds =  time>=tmin & time<=tmax;
+% 
+% figure;
+% plotyy ( output.bodies(bodyind).time(plotinds), ...
+%          [output.ptos(1).forceTotal(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
+%          time(plotinds), ...
+%          [vRptoVec(plotinds)', [ output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3)] ] );
+% title (sprintf ('output.ptos(%d).forceTotal vs FptoVec for body %d', bodyind, bodyind));
+% legend ('1', '2', '3', '4', '5', '6', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
+% 
+% figure;
+% plotyy ( output.bodies(bodyind).time(plotinds), ...
+%         [output.ptos(1).forceTotalWorld(plotinds,:) - output.ptos(1).forceConstraintWorld(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
+%         time(plotinds), ...
+%         [vRptoVec(:,plotinds)', output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3) ] );
+% title (sprintf ('output.ptos(1).forceTotalWorld - output.ptos(1).forceConstraintWorld vs FptoVec for body %d', bodyind, bodyind));
+% legend ('1', '2', '3', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
+% 
+% figure;
+% plot ( output.bodies(bodyind).time(plotinds), ...
+%        output.ptos(1).forceInternalMechanics(plotinds,3),  ...
+%        time(plotinds), ...
+%        squeeze(ptoforce(plotinds)));
+% title (sprintf ('output.ptos(%d).forceInternalMechanics(:,3) vs ptoforce for body %d', bodyind, bodyind));
+% legend ('forceInternalMechanics(:,3)', 'ptoforce');
         
 % 
 % % figure;
