@@ -153,6 +153,39 @@ classdef reference < handle
        end
        
        function [hax, hquiv] = draw (this, varargin)
+           % draw the reference in a figure
+           %
+           % Syntax
+           %
+           % draw (ref, 'Parameter', value)
+           %
+           % Description
+           %
+           % Draws a reference objects. The reference is represented as a
+           % three-axis coordinate system.
+           %
+           % Input
+           %
+           %  ref - mbdyn.pre.reference object
+           %
+           % Additional optional arguments can be provided using
+           % parameter-value pairs. The available options are:
+           %
+           %  'PlotAxes' - axes in which to create the plot. If not
+           %    supplied a new figure and axes will be created.
+           %
+           %  'Title' - flag determining whether to add a title to the
+           %    plot. Default is true.
+           %
+           %  'DrawGlobal' - flag determining whether the global axes will
+           %    be drawn in the plot for reference. Default is true
+           %
+           %  'Scale' - scalar value. The reference is drawn with a
+           %    default size, this option may be used to adjust this by
+           %    scaling the length of its axes up or down. Default is 1,
+           %    no scaling.
+           %
+           %
            
            options.PlotAxes = [];
            options.Title = true;
