@@ -1,4 +1,5 @@
 classdef base < handle
+    % base class for the mbdyn preprocessing tools
     
     
     properties (GetAccess = public, SetAccess = protected)
@@ -227,6 +228,39 @@ classdef base < handle
         end
         
         function drawReferences (refs, varargin)
+            % draw a collection of mbdyn.pre.reference objects
+            %
+            % Syntax
+            %
+            % drawReferences (refs, 'Parameter', value)
+            %
+            % Description
+            %
+            % Draws a collection of reference objects in one figure. Each
+            % reference is represented as a three-axis coordinate system.
+            %
+            % Input
+            %
+            %  refs - cell array of 2 or more mbdyn.pre.reference objects
+            %
+            % Additional optional arguments can be provided using
+            % parameter-value pairs. The available options are:
+            %
+            %  'PlotAxes' - axes in which to create the plot. If not
+            %    supplied a new figure and axes will be created.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    plot. Default is true.
+            %
+            %  'DrawGlobal' - flag determining whether the global axes will
+            %    be drawn in the plot for reference. Default is true
+            %
+            %  'Scale' - scalar value. References are drawn with a default 
+            %    size, this option may be used to adjust this by scaling
+            %    the length of their axes plots up or down. Default is 1,
+            %    no scaling.
+            %
+            %
             
             options.PlotAxes = [];
             options.Title = true;
@@ -271,6 +305,5 @@ classdef base < handle
         end
         
     end
-    
     
 end
