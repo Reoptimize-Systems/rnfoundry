@@ -1,27 +1,80 @@
-classdef revoluteHinge < mbdyn.pre.twoNodeJoint
+classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
     
     
     properties (GetAccess = public, SetAccess = protected)
         
-        relativeOffset1;
-        relativeOrientation1;
-        offset1Reference;
-        orientation1Reference;
-            
-        relativeOffset2;
-        relativeOrientation2;
-        offset2Reference;
-        orientation2Reference;
-        
-    end
-    
-    properties (Dependent)
-        absoluteJointPosition;
     end
     
     methods
         
         function self = revoluteHinge (node1, node2, position1, position2, varargin)
+            % revoluteHinge constructor
+            %
+            % Syntax
+            %
+            %  rh = revoluteHinge (node1, node2, position1, position2, 'Parameter', value)
+            %
+            % Input
+            %
+            %  node1 - mbdyn.pre.structuralNode (or derived class) object
+            %    representing to first node the joint connects
+            %
+            %  node2 - mbdyn.pre.structuralNode (or derived class) object
+            %    representing to second node the joint connects
+            %
+            %  position1 - (3 x 1) vector containing the offset of the
+            %    joint relative to the first node. To provide an
+            %    alternative reference you can use the optional
+            %    Offset1Reference parameter (see below)
+            %
+            %  position2 - (3 x 1) vector containing the offset of the
+            %    joint relative to the second node. To provide an
+            %    alternative reference you can use the optional
+            %    Offset1Reference parameter (see below)
+            %
+            % Additional arguments can be supplied as parameter-value
+            % pairs. Available options are:
+            %
+            %  'Offset1Reference' - by default the positions provided in
+            %    position1 and position2 are relaive to the respective
+            %    nodes in their reference frame. An alternative reference
+            %    frame can be provided using this argument. Possible
+            %    value for this are: 
+            %      'node'          : the default behaviour
+            %      'global' -      : the global reference frame
+            %      'other node'    : the frame of the other node the joint  
+            %                        is attached to
+            %      'other position': a relative position in the other 
+            %                        node's reference frame, with respect 
+            %                        to the relative position already 
+            %                        specified for the other node
+            %
+            %  'Offset2Reference' - same as Offset1Reference, but for the
+            %    second node
+            %
+            %  'RelativeOrientation1' - 
+            %
+            %  'RelativeOrientation2' - 
+            %
+            %  'Orientation1Reference' = 'node';
+            %
+            %  'Orientation2Reference' - 
+            %
+            %  'InitialTheta' - 
+            %
+            %  'Friction' - 
+            %
+            %  'Preload'' - 
+            %
+            %  'FrictionModel' - 
+            %
+            %  'ShapeFunction' - 
+            %  
+            % Output
+            %
+            %  rh - mbdyn.pre.revoluteHinge object
+            %
+            %
             
             options.RelativeOrientation1 =  [];
             options.RelativeOrientation2 =  [];
@@ -38,21 +91,17 @@ classdef revoluteHinge < mbdyn.pre.twoNodeJoint
             options = parse_pv_pairs (options, varargin);
             
             % call the superclass constructor
-            self = self@mbdyn.pre.twoNodeJoint (node1, node2);
+            self = self@mbdyn.pre.twoNodeOffsetJoint (node1, node2, ...
+                        'RelativeOffset1', position1, ...
+                        'RelativeOffset2', position2, ...
+                        'RelativeOrientation1', options.RelativeOrientation1, ...
+                        'RelativeOrientation2', options.RelativeOrientation2, ...
+                        'Offset1Reference', options.Offset1Reference, ...
+                        'Offset2Reference', options.Offset2Reference, ...
+                        'Orientation1Reference', options.Orientation1Reference, ...
+                        'Orientation2Reference', options.Orientation2Reference );
             
             self.type = 'revolute hinge';
-            
-            self.relativeOffset1 = self.checkJointPositionOffset ({options.Offset1Reference, position1});
-            self.offset1Reference = options.Offset1Reference;
-            
-            self.relativeOrientation1 = self.checkJointOrientationOffset ({options.Orientation1Reference, options.RelativeOrientation1});
-            self.orientation1Reference = options.Orientation1Reference;
-            
-            self.relativeOffset2 = self.checkJointPositionOffset ({options.Offset2Reference, position2});
-            self.offset2Reference = options.Offset2Reference;
-            
-            self.relativeOrientation2 = self.checkJointOrientationOffset ({options.Orientation2Reference, options.RelativeOrientation2});
-            self.orientation2Reference = options.Orientation2Reference;
             
         end
         
@@ -104,105 +153,14 @@ classdef revoluteHinge < mbdyn.pre.twoNodeJoint
         
     end
     
-%     % gettters setters
-%     methods
-%         
-%         function pos = get.absoluteJointPosition (self)
-%             
-%             if isa (self.offset1Reference, 'mbdyn.pre.reference')
-%                 
-%             elseif ischar (self.offset1Reference)
-%                 
-%                 
-%             end
-%             
-%         end
-%         
-%     end
-    
     methods (Access = protected)
         
         function setTransform (self)
             
-            switch self.offset1Reference
-                
-                case ''
-                    ref_pos_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                        self.node1.absoluteOrientation, ...
-                                                        self.node1.absoluteVelocity, ...
-                                                        self.node1.absoluteAngularVelocity);
-                                                    
-                case 'node'
-                    ref_pos_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                        self.node1.absoluteOrientation, ...
-                                                        self.node1.absoluteVelocity, ...
-                                                        self.node1.absoluteAngularVelocity);
-                                                    
-                case 'local'
-                    ref_pos_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                        self.node1.absoluteOrientation, ...
-                                                        self.node1.absoluteVelocity, ...
-                                                        self.node1.absoluteAngularVelocity);
-                                                    
-                case 'other node'
-                    ref_pos_base = mbdyn.pre.reference (self.node2.absolutePosition, ...
-                                                        self.node2.absoluteOrientation, ...
-                                                        self.node2.absoluteVelocity, ...
-                                                        self.node2.absoluteAngularVelocity);
-                                                    
-                case 'global'
-                    ref_pos_base = mbdyn.pre.globalref;
-            end
+            om = self.absoluteJointOrientation;
             
-            switch self.orientation1Reference
-                
-                case ''
-                    ref_orient_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                           self.node1.absoluteOrientation, ...
-                                                           self.node1.absoluteVelocity, ...
-                                                           self.node1.absoluteAngularVelocity);
-                                                       
-                case 'node'
-                    ref_orient_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                           self.node1.absoluteOrientation, ...
-                                                           self.node1.absoluteVelocity, ...
-                                                           self.node1.absoluteAngularVelocity);
-                case 'local'
-                    ref_orient_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                           self.node1.absoluteOrientation, ...
-                                                           self.node1.absoluteVelocity, ...
-                                                           self.node1.absoluteAngularVelocity);
-                                                       
-                case 'other node'
-                    ref_orient_base = mbdyn.pre.reference (self.node2.absolutePosition, ...
-                                                           self.node2.absoluteOrientation, ...
-                                                           self.node2.absoluteVelocity, ...
-                                                           self.node2.absoluteAngularVelocity);
-                                                       
-                case 'global'
-                    ref_orient_base = mbdyn.pre.globalref;
-                    
-            end
-
-%                                         
-            ref_joint_offset = mbdyn.pre.reference (self.relativeOffset1{end}, ...
-                            mbdyn.pre.orientmat ('orientation', self.relativeOrientation1{end}), ...
-                            [], ...
-                            [], ...
-                            'Parent', ref_pos_base);
-            
-            ref_joint_orient = mbdyn.pre.reference (self.relativeOffset1{end}, ...
-                            mbdyn.pre.orientmat ('orientation', self.relativeOrientation1{end}), ...
-                            [], ...
-                            [], ...
-                            'Parent', ref_orient_base);
-                        
-            M = [ ref_joint_orient.orientm.orientationMatrix, ref_joint_offset.pos; ...
+            M = [ om.orientationMatrix, self.absoluteJointPosition; ...
                   0, 0, 0, 1 ];
-            
-            % matlab uses different convention to mbdyn for rotation
-            % matrix
-            M = self.mbdynOrient2Matlab (M);
                   
             set ( self.transformObject, 'Matrix', M );
             
