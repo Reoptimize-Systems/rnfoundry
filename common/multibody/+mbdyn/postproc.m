@@ -1,14 +1,29 @@
 classdef postproc < handle
-   
-    properties 
+    % postproc   class for post-processing and display of mbdyn output
+    %
+    % Description
+    %
+    % postproc is a class for the post-processing and visualisation of
+    % mbdyn output files.
+    %
+    % postproc Methods:
+    %  postproc - constructor
+    %  loadResultsFromFiles - loads mbdyn output data
+    %  clear - clears all data (loaded by loadResultsFromFiles)
+    %  plotNodeTrajectories - create plot of the trajectories of all or a
+    %     subset of nodes
+    %  drawStep - draw the system at the given time step index
+    %  animate - animate the system
+    %
+    % 
+    
+    properties (GetAccess = public, SetAccess = private)
         
         preProcSystem;
         resultsLoaded;
         nNodes;
         nodes;
         nodeNames;
-        bodies;
-        joints;
         simInfo;
         mBDynOutFileName;
         
@@ -16,19 +31,61 @@ classdef postproc < handle
     
     methods
         
-        function self = postproc (info)
+        function self = postproc (mbdoutfilename, info)
+            % constructor for the mbdyn postproc (post-processing) class
+            %
+            % Syntax
+            %
+            % postproc(mbdoutfilename, info)
+            %
+            % Description
+            %
+            % mbdyn.postproc(mbdoutfilename, info) creates a new postpoc
+            % class
+            %
+            % Input
+            %
+            %  mbdoutfilename - root path of the mbdyn output files, e.g.
+            %   if the files are mysim_results.out, mysim_results.move etc.
+            %   this should be 'mysim_results' ( or the full path without
+            %   extension e.g. /home/jblogs/mysim_results )
+            %
+            %  info - information about the system which has been solved.
+            %    This can be either a structure or a class of type
+            %    mbdyn.pre.system. If a mbdyn.pre.system this must
+            %    represent the system which has been simulated, it is
+            %    intended that it is the system which was actually used to
+            %    generate the mbdyn input file for the simulation to be
+            %    post-processed. Alternatively, if it is a structure, it
+            %    must have the following fields:
+            %
+            %    InitialTime - scalar value of the intial simualtion time
+            %    TimeStep - scalar value of the time step used in the
+            %      simulation
+            %
             
-            if nargin > 0
+            
+            if nargin > 1
                 if isa (info, 'mbdyn.pre.system')
                     self.preProcSystem = info;
-                elseif isstruct (info) 
-                    self.simInfo = info;
+                    
+                    self.simInfo = struct ( 'InitialTime', self.preProcSystem.problems{1}.initialTime, ...
+                                            ...'FinalTime', self.preProcSystem.problems{1}.finalTime, ...
+                                            'TimeStep', self.preProcSystem.problems{1}.timeStep );
+                    
+                elseif isstruct (info)
+                    if all (isfield (info, {'InitialTime', 'TimeStep'}))
+                        self.simInfo = info;
+                    else
+                        error ('Simulation info structure provided does not have all required fields');
+                    end
                 else
                     error ('preprocsys must be a mbdyn.pre.system object or a structure')
                 end
-            else
-                self.preProcSystem = [];
             end
+            
+            % load the results
+            loadResultsFromFiles (self, mbdoutfilename)
             
         end
         
@@ -39,25 +96,28 @@ classdef postproc < handle
             %
             % loadResultsFromFiles (mbp, mbdoutfilename)
             %
+            % Description
+            %
+            % loadResultsFromFiles loads the data output by MBDyn during a
+            % simulation in preparation for post-processing. Any previous
+            % data loded from output files is cleared.
+            %
             % Input
             %
             %  mbp - mbdyn.postproc object
             %
-            %  mbdoutfilename - root name of the mbdyn output files
+            %  mbdoutfilename - root path of the mbdyn output files, e.g.
+            %   if the files are mysim_results.out, mysim_results.move etc.
+            %   this should be 'mysim_results' ( or the full path without
+            %   extension e.g. /home/jblogs/mysim_results )
             %
             %
             
-            [pathstr, name, ~] = fileparts (mbdoutfilename);
+            [pathstr, name, ext] = fileparts (mbdoutfilename);
             
-            self.clear ();
+            self.clearData ();
             
             self.mBDynOutFileName = mbdoutfilename;
-            
-            % load .log file
-            %
-            % The log file contains a description of the problem in it's
-            % intial state including bodies and their labels
-            logfile = fullfile (pathstr, [name, '.log']);
             
 %             self.parseLogFile (logfile);
             
@@ -65,7 +125,15 @@ classdef postproc < handle
             movfile = fullfile (pathstr, [name, '.mov']);
             
             if ~exist (movfile, 'file')
-                error ('MBDyn output file %s not found', movfile);
+                % in case file root name has dots in it
+                movfile = fullfile (pathstr, [name, ext, '.mov']);
+                if ~exist  (movfile, 'file')
+                    error ('MBDyn output file %s not found', movfile);
+                end
+            else
+                % make ext empty sp we can add it to the other files below
+                % whether it's needed or not
+                ext = '';
             end
 
             movdata = dlmread(movfile);
@@ -105,11 +173,20 @@ classdef postproc < handle
                 
             end
             
+            % determine the final time
+            self.simInfo.FinalTime = self.simInfo.InitialTime + (size(movdata,1)-1)*self.simInfo.TimeStep;
+            
+            % load .log file
+            %
+            % The log file contains a description of the problem in it's
+            % intial state including bodies and their labels
+            logfile = fullfile (pathstr, ext, [name, '.log']);
+            
             % load .ine file
-            inefile = fullfile (pathstr, [name, '.ine']);
+            inefile = fullfile (pathstr, ext, [name, '.ine']);
             
             % load .frc file
-            frcfile = fullfile (pathstr, [name, '.frc']);
+            frcfile = fullfile (pathstr, ext, [name, '.frc']);
             
             self.nodeNames = fieldnames (self.nodes);
             
@@ -117,9 +194,24 @@ classdef postproc < handle
             
         end
         
-        function clear (self)
+        function clearData (self)
+            % clears all the data in the object, resetting it
+            
             self.nodes = [];
             self.nNodes = [];
+            self.resultsLoaded = false;
+            self.nodeNames = {};
+            self.mBDynOutFileName = '';
+            
+        end
+        
+        function clearAll (self)
+            % clears all the data in the object, resetting it
+            
+            self.clearData ();
+            
+            self.preProcSystem = [];
+            simInfo = [];
         end
         
         function [hfig, hax] = plotNodeTrajectories (self, varargin)
@@ -216,8 +308,7 @@ classdef postproc < handle
             
             hold off;
             
-%             axis equal;
-%             axis (hax, 'square');
+            % set data aspect ratios so that there is no distortion
             daspect (hax, [1,1,1]);
             
             if isempty (options.AxLims)
@@ -478,16 +569,16 @@ classdef postproc < handle
                     
                 end
                 
-                set (plotdata.HAx, 'XLim', axXlim);
-                set (plotdata.HAx, 'YLim', axYlim);
-                set (plotdata.HAx, 'ZLim', axZlim);
+                set (plotdata.HAx, 'XLim', options.AxLims(1,1:2));
+                set (plotdata.HAx, 'YLim', options.AxLims(2,1:2));
+                set (plotdata.HAx, 'ZLim', options.AxLims(3,1:2));
                 
                 if ~isempty(options.VideoFile)
 
                     if tind == 1
                         FPS = options.VideoSpeed ...
                                * numel (1:options.Skip:size(self.nodes.(self.nodeNames{1}).Position,1)) ...
-                                        / (self.preProcSystem.problems{1}.finalTime - self.preProcSystem.problems{1}.initialTime);
+                                        / (self.simInfo.FinalTime - self.simInfo.InitialTime);
                         
                         mov = VideoWriter(options.VideoFile); %#ok<TNMLP>
                         mov.FrameRate = FPS;
