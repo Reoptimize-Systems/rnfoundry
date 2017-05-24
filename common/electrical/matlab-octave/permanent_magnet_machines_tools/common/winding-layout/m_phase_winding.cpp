@@ -77,7 +77,7 @@ std::vector<double> mPhaseWinding::Get_MMF_a(int Nmax){
     if (ws <= 0) ws=1e-3; //Use a default value for the slop opening
 
     if (currents.size()==0){ //! If no current is set, create the default current set to compute the MMF harmonics
-        for(int m=0; m < windings.size(); ++m){ currents.push_back(cos(2*pi/windings.size()*m)); }
+        for(unsigned int m=0; m < windings.size(); ++m){ currents.push_back(cos(2*pi/windings.size()*m)); }
     }
 
     fill_slot_cur_matrix();
@@ -109,7 +109,7 @@ std::vector<double> mPhaseWinding::Get_MMF_b(int Nmax){
     if (ws <= 0) ws=1e-3;
 
     if (currents.size()==0){ //! If no current is set, create the default current set to compute the MMF harmonics
-        for(int m=0; m < windings.size(); ++m){ currents.push_back(cos(2*pi/windings.size()*m)); }
+        for(unsigned int m=0; m < windings.size(); ++m){ currents.push_back(cos(2*pi/windings.size()*m)); }
     }
 
     fill_slot_cur_matrix();
@@ -140,7 +140,7 @@ void mPhaseWinding::clear(){
 void mPhaseWinding::SetCurrents(std::vector<double> cur){
 
     currents.clear(); //!< removes previous values
-    for(int i=0; i<cur.size(); ++i) currents.push_back(cur[i]);
+    for(unsigned int i=0; i<cur.size(); ++i) currents.push_back(cur[i]);
 }
 
 
@@ -272,7 +272,7 @@ double mPhaseWinding::get_phase_axis(int m){
     double x=0;
     double y=0;
 
-    for(int i=0; i<coils.size(); ++i){
+    for(unsigned int i=0; i<coils.size(); ++i){
         coil c =coils[i];
         int n = c.n();
         if (n>0){

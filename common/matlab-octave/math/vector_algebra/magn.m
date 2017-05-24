@@ -1,8 +1,8 @@
 function b = magn (a, varargin)
 %MAGN   Magnitude (or Euclidian norm) of vectors.
-%   If A is a vector (e.g. a P×1, 1×P, or 1×1×P array):
+%   If A is a vector (e.g. a Px1, 1xP, or 1x1xP array):
 %
-%      B = MAGN(A) is a scalar (1×1), equal to the magnitude of vector A.
+%      B = MAGN(A) is a scalar (1x1), equal to the magnitude of vector A.
 %
 %      B = MAGN(A, DIM) is eqivalent to MAGN(A) if DIM is the non-singleton
 %      dimension of A; it is equal to A if DIM is a singleton dimension.
@@ -16,12 +16,12 @@ function b = magn (a, varargin)
 %      vectors constructed along the dimension DIM of A.
 %
 %   Examples:
-%   If A is a 3×10 matrix, then B = MAGN (A) is a 1×10 row vector listing
+%   If A is a 3x10 matrix, then B = MAGN (A) is a 1x10 row vector listing
 %   the magnitudes of the ten column vectors contained in A, and 
-%   B = MAGN(A, 2) is a column vector (3×1) listing the magnitudes of the
+%   B = MAGN(A, 2) is a column vector (3x1) listing the magnitudes of the
 %   three row vectors contained in A.
 %
-%   If A is a 4×5×25 3-D array, then B = MAGN (A, 2) is a 4×1×25 3-D array
+%   If A is a 4x5x25 3-D array, then B = MAGN (A, 2) is a 4x1x25 3-D array
 %   containing the magnitudes of the 100 row vectors constructed along the
 %   second dimension of A.
 %   

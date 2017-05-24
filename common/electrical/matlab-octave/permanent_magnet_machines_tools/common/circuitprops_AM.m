@@ -147,6 +147,9 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
     
     % determine the DC resistance at the base temperature 
     design.RDCPhase = diag(design.PhaseResistance);
+    % copy the value into the RPhase field so it's present even if we don't
+    % look at frequency dependance later
+    design.RPhase = design.RDCPhase; 
     design.RLoad = diag(repmat(design.LoadResistance, size(design.PhaseResistance)));
     
     if ~isfield(design, 'LoadInductance')

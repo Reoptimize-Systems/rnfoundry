@@ -71,7 +71,7 @@ simoptions.Lmode = 1;
 simoptions.ODESim.InitialConditions = [0, 0, 0];
 % the number of calculations to skip when producing output after the ode
 % solver finishes
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 % the time span of the simulation
 simoptions.ODESim.TimeSpan = [0, 9];   
 % Additional absolute tolerances on the components of the solution

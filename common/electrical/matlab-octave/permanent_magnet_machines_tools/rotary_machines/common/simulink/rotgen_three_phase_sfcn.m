@@ -88,7 +88,7 @@ function setup(block)
     
     
     % Register Dialog parameters
-    block.NumDialogPrms     = 0;
+    block.NumDialogPrms     = 4;
 %     block.NumDialogPrms     = 1;
 %     block.DialogPrmsTunable = {'Nontunable'};
 
@@ -101,7 +101,7 @@ function setup(block)
 
     % Register all relevant block methods
 %     block.RegBlockMethod('CheckParameters',      @CheckPrms);
-%     block.RegBlockMethod('Start', @Start);
+    block.RegBlockMethod('Start', @Start);
     block.RegBlockMethod('Outputs', @Outputs);
 %     block.RegBlockMethod('Derivatives', @Derivatives);
     block.RegBlockMethod('Terminate', @Terminate);
@@ -110,62 +110,66 @@ function setup(block)
     
 end
 
-% function Start(block)
-% % check and initialises block just prior to simulation
-% 
-%     % get the UserData for the block
-%     data = get(block.BlockHandle, 'UserData');
-%     
-%     if isempty(data) || ~isfield(data, 'design') || ~isfield(data, 'simoptions')
-%         error('PM machine design and simoptions structure not both present in UserData.')
-%     end
-%     
-%     if data.design.Phases ~= 3
-%         error('Design must have three Phases.')
-%     end
-%     
-%     if ~isfield(data.design, 'slm_fluxlinkage')
-%         error('Design data does not appear to be complete (no flux linage info)')
-%     end
-%     
-%     % now check if we are in a Three Phase PM Machine Block, and if so, set
-%     % the windings impedances
-%     parent_block = get(block.BlockHandle, 'Parent');
-%     
-%     if ~isempty(strfind(parent_block, 'Three Phase Rotary PM Machine'))
-% 
-%         % find the windings block in this subsystem
-%         windings_blk = find_system([parent_block '/Windings'], 'SearchDepth', 1);
-%         
-%         if numel(data.design.PhaseResistance) ~= 3
-%             data.design.PhaseResistance = repmat(data.design.PhaseResistance(1), 1, 3);
-%         end
-%         
-%         windings_blk = get_param(windings_blk, 'RuntimeObject');
-%         
-%         % pause the simulation so the block can be updated
-%         set_param(bdroot, 'SimulationCommand', 'pause');
-%         
-%         set(windings_blk{1}.BlockHandle, 'SelfImpedance1', sprintf('[%f %f]', data.design.PhaseResistance(1), data.design.PhaseInductance(1)));
-%         set(windings_blk{1}.BlockHandle, 'SelfImpedance2', sprintf('[%f %f]', data.design.PhaseResistance(1), data.design.PhaseInductance(1)));
-%         set(windings_blk{1}.BlockHandle, 'SelfImpedance3', sprintf('[%f %f]', data.design.PhaseResistance(1), data.design.PhaseInductance(1)));
-%         
-% %         set_param(windings_blk, 'SelfImpedance1', sprintf('[%f %f]', data.design.PhaseResistance(1), data.design.PhaseInductance(1)));
-% %         set_param(windings_blk, 'SelfImpedance2', sprintf('[%f %f]', data.design.PhaseResistance(2), data.design.PhaseInductance(1)));
-% %         set_param(windings_blk, 'SelfImpedance3', sprintf('[%f %f]', data.design.PhaseResistance(3), data.design.PhaseInductance(1)));
-%         
-%         if numel(data.design.PhaseInductance) == 2
-%             set(windings_blk{1}.BlockHandle, 'MutualImpedance', sprintf('[0 %f]', data.design.PhaseInductance(2)));
-%         else
-%             set(windings_blk{1}.BlockHandle, 'MutualImpedance', '[0 0]');
-%         end
-%         
-%         set_param(gcs, 'SimulationCommand', 'update');
-%         set_param(gcs, 'SimulationCommand', 'continue');
-%     
-%     end
-% 
-% end
+function Start(block)
+% check and initialises block just prior to simulation
+
+    % get the UserData for the block
+    data = get (block.BlockHandle, 'UserData');
+    
+    if isempty(data)
+        % get the data from the parameters
+
+        % get the value of the drop down to see if we are getting design data
+        % from file or workspace
+        file_or_workspace = block.DialogPrm(1).Data;
+
+        if file_or_workspace == 1 % strcmp (file_or_workspace, 'From File')
+
+            % get the file name
+            design_data_file = block.DialogPrm(2).Data;
+
+            % check it exists
+            if exist (design_data_file, 'file')
+                % check if right data is in file
+                try
+                    load (design_data_file, 'design', 'simoptions');
+                catch ME
+                    error ('RENEWNET:lineargen_three_phase_sfcn:badfile', ...
+                    'Loading design data from file\n: %s\nfailed with the following error message:\n"%s"\n', ...
+                        design_data_file, ME.message);
+                end
+
+            else
+                error ('RENEWNET:lineargen_three_phase_sfcn:badfile', ...
+                    'Design data file\n: %s\ndoes not appear to exist', design_data_file);
+            end
+
+        elseif file_or_workspace == 2 % strcmp (file_or_workspace, 'From Workspace')
+            % get the variable names 
+            design = block.DialogPrm(3).Data;
+            simoptions = block.DialogPrm(4).Data;
+        else
+            error ('RENEWNET:lineargen_three_phase_sfcn:baddatatype', ...
+                'Invalid Data Type popup value')
+        end
+
+        % do some checks on the data
+
+        if design.Phases ~= 3
+            error('Design must have three Phases.')
+        end
+
+        if ~isfield(design, 'slm_fluxlinkage')
+            error('Design data does not appear to be complete (no flux linage info)')
+        end
+
+        % put the data into UserData for the block
+        set(block.BlockHandle, 'UserData', struct ('design', design, ...
+                                                   'simoptions', simoptions))
+                                           
+    end
+
+end
 
 function SetInputPortSamplingMode(block, idx, fd)
 % Set the port sampling modes
@@ -193,11 +197,11 @@ function Outputs(block)
     data = get(block.BlockHandle, 'UserData');
 
     % get the simulation data from the input ports
-    theta             = block.InputPort(1).Data;
-    omega             = block.InputPort(2).Data;
-    phasecurrent(1)   = block.InputPort(3).Data;
-    phasecurrent(2)   = block.InputPort(4).Data;
-    phasecurrent(3)   = block.InputPort(5).Data;
+    theta               = block.InputPort(1).Data;
+    omega               = block.InputPort(2).Data;
+    phasecurrent(1,1)   = block.InputPort(3).Data;
+    phasecurrent(2,1)   = block.InputPort(4).Data;
+    phasecurrent(3,1)   = block.InputPort(5).Data;
 
     [EMF, torque, flux, data.design] = rotgensfcn_common(data.design, ...
                                       data.simoptions,...

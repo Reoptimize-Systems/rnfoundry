@@ -1,4 +1,4 @@
-function R = coilresistance_TM(RoVRm, Rm, g, N, rwire)
+function design = coilresistance_TM (design)
 % Calculates the resistance of a coil in a tubular machine
 %
 % Arguments: (input)
@@ -23,8 +23,19 @@ function R = coilresistance_TM(RoVRm, Rm, g, N, rwire)
 
 % Created by Richard Crozier 2013
 
-    length = wirelength_TM(RoVRm, N, Rm, g);
+    if ~isfield (design, 'MTL')
+        
+        % for a tubular machine the MTL is the radial distance to the coil
+        % 2D shape centroid
+        if isfield (design, 'CoilCentroid')
+            design.MTL = design.CoilCentroid(1);
+        else
+            % if not avaialble use the 
+            design.MTL = 2 * pi * design.Rcm;
+        end
+
+    end
     
-    R = 1.68e-8 * length / (pi*rwire^2);
+    design.CoilResistance = wireresistancedc ('round', design.Dc, design.MTL*design.CoilTurns);
 
 end

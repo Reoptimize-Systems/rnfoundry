@@ -52,14 +52,26 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     % a split ode simulation
     simoptions = setfieldifabsent(simoptions, 'ODESim', struct());
     
-    simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SolutionComponents', struct());
+%     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SolutionComponents', struct());
+    simoptions.ODESim = odesim_set_recurse (simoptions.ODESim, 'SolutionComponents', struct());
     
     % set the number of outputs to use in the calcualtion of ode results
-    simoptions = setfieldifabsent(simoptions, 'skip', 1);
+%     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'ResultsTSkip', 1);
+    simoptions.ODESim = odesim_set_recurse (simoptions.ODESim, 'ResultsTSkip', 1);
     
-    simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SaveSplitResults', false);
+%     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'SaveSplitResults', false);
+    simoptions.ODESim = odesim_set_recurse (simoptions.ODESim, 'SaveSplitResults', false);
+    
+    % by default do not store all the results when getting splitting ode
+    % solution into chunks
+%     simoptions.ODESim = setfieldifabsent(simoptions.ODESim, 'StoreFullResults', false);
+    simoptions.ODESim = odesim_set_recurse (simoptions.ODESim, 'StoreFullResults', false);
     
     simoptions = setfieldifabsent(simoptions, 'GetVariableGapForce', true);
+    
+    simoptions = setfieldifabsent (simoptions, 'TempDependantResistivity', false);
+    
+    simoptions = setfieldifabsent (simoptions, 'FreqDependantResistance', false);
     
     simoptions = setfieldifabsent(simoptions, 'basescorefcn', 'costscore_AM');
 
@@ -113,13 +125,19 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     minIofinterest = min(design.ConductorArea * 0.1e6, ...
                          (10 / (design.Maxdlambdadx)) ) * design.Branches;
 
-    % create the phase current solution component specification
-    simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
-                                          'PhaseCurrents', ...
-                                          struct ('InitialConditions', zeros (1, design.Phases), ...
-                                                  'AbsTol', repmat (minIofinterest, 1, design.Phases) ) ...
-                                                            );
-
+    % by default we will add the phase currents to the list of solution
+    % components to be solved
+    simoptions = setfieldifabsent (simoptions, 'AddPhaseCurrentsComponents', true);
+    
+    if simoptions.AddPhaseCurrentsComponents
+        % create the phase current solution component specification
+        simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
+                                              'PhaseCurrents', ...
+                                              struct ('InitialConditions', zeros (1, design.Phases), ...
+                                                      'AbsTol', repmat (minIofinterest, 1, design.Phases) ) ...
+                                                                );
+    end
+    
     % set infinite allowed deflection factor if none is supplied
     simoptions = setfieldifabsent(simoptions, 'maxAllowedDeflectionFactor', inf);
     
@@ -142,4 +160,18 @@ function [design, simoptions] = finfun_AM(design, simoptions)
         
     end
     
+end
+
+
+function ODESim = odesim_set_recurse (ODESim, fieldname, defaultval)
+% recursively sets a default option for ODESim simulations and any Nested
+% ODESim simulations
+%
+
+    if isfield (ODESim, 'NestedSim')
+        ODESim.NestedSim = odesim_set_recurse (ODESim.NestedSim, fieldname, defaultval);
+    end
+    
+    ODESim = setfieldifabsent (ODESim, fieldname, defaultval);
+
 end

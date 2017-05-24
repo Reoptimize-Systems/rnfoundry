@@ -20,7 +20,17 @@ function d = skindepth(rho, mu_r, freq)
 %   its value has fallen to around 1/e of that on the surface)
 %
 
-    d = sqrt(2 .* rho ./ (mu_r .* mu_0 .* 2 .* pi .* freq));
+      % formula is:
+      %
+      % sqrt(2 .* rho ./ (mu_r .* mu_0 .* 2 .* pi .* freq));
+      % 
+      % To reduce operations (why? it might be called many times):
+      %
+      % 2 cancels top and bottom
+      %
+      % mu_0 * pi = 4e-7 * pi * pi = 3.947841760435743e-06
+      %
+      d = sqrt (rho ./ (mu_r .* 3.947841760435743e-06 .* freq);
     
     
 end

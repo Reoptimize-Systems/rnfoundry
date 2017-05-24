@@ -178,6 +178,8 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
     
     info.InnerCentres = zeros(size(wrapperthickness)) * NaN;
     
+    innert = toffset - tmag/2;
+    
     % wrapperthickness(1,1) is the first inner region thickness
     if wrapperthickness(1,1) > Inputs.Tol
         % add the nodes and segments for the inner side
@@ -188,7 +190,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                 'wrapper thickness cannot be greater than magnet leftmost position.');
         end
         
-        innert = toffset - tmag/2 - wrapperthickness(1,1);
+        innert = innert - wrapperthickness(1,1);
         
         % First node is to left of first node in 'nodes' matrix. this is at
         % the bottom of the sim
@@ -252,6 +254,8 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
         % Set the region thickness to be exactly zero so this can be tested
         % later
         wrapperthickness(1,1) = 0;
+        topnodeid = info.OuterNodeIDs(1);
+        botnodeid = info.OuterNodeIDs(4);
     end
     
     % now add all subsequent inner wrappers
@@ -334,10 +338,12 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
     % Now we dow the wrappers on the other side
     info.OuterCentres = zeros(size(wrapperthickness)) * NaN;
     
+    outert = toffset + tmag/2;
+    
     % wrapperthickness(1,2) is the first outer region thickness
     if wrapperthickness(1,2) > Inputs.Tol
         
-        outert = toffset + tmag/2 + wrapperthickness(1,2);
+        outert = outert + wrapperthickness(1,2);
 
         % First node is to right of second node in 'nodes' matrix. this is at
         % the bottom of the sim
@@ -403,6 +409,8 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
         % Set the region thickness to be exactly zero so this can be tested
         % later
         wrapperthickness(1,2) = 0;
+        topnodeid = info.OuterNodeIDs(2);
+        botnodeid = info.OuterNodeIDs(3);
     end
     
     % now add all subsequent right hand wrappers

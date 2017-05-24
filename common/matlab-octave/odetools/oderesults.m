@@ -1,12 +1,11 @@
-function results = oderesults(T, Y, odeevfcn, odeargs, skip, skipfields)
+function results = oderesults (T, Y, odeevfcn, varargin)
 % oderesults: extracts results from an appropriately coded ode which were
 % not variables of the integration.
 %
 % Syntax
 %
-% results = oderesults(T, Y, odeevfcn)
-% results = oderesults(T, Y, odeevfcn, odeargs)
-% results = oderesults(T, Y, odeevfcn, odeargs, skip)
+% results = oderesults (T, Y, odeevfcn)
+% results = oderesults (T, Y, odeevfcn, 'Parameter', value)
 %
 % Description
 %
@@ -32,56 +31,75 @@ function results = oderesults(T, Y, odeevfcn, odeargs, skip, skipfields)
 %   of the vector on each call must remain the same as they will be
 %   concatenated into a matrix.
 %
-% odeargs in an optional cell array of additional arguments to passed to the
-%   ode solution function, cal be an empty cell array if no arguments are
-%   desired, but the 'skip' input is to be used.
+% Additional options may be supplied using parameter-value pairs, with the
+% following options avaialable:
 %
-% skip is a scalar integer which determines how much of the solution to
+% 'ODEArgs' - an optional cell array of additional arguments to passed to
+%   the ode solution function, defaults to empty cell array if not
+%   supplied.
+%
+% 'Skip' - scalar integer which determines how much of the solution to
 %   recalculate. If skip is greater than 1, only every 'skip'th value is
-%   recalculated.
+%   recalculated. Default is 1 if not supplied.
+%
+% 'Skipfields' - optional cell array of output field names to ignore when
+%   populating the results structure.
 %
 % See also: prallocresfcn.m
 %
 
-    if nargin < 4
-        odeargs = {};
-    end
+    options.OutputFcn = [];
+    options.ODEArgs = {};
+    options.Skip = 1;
+    options.SkipFields = {};
     
-    if nargin < 5
-        skip = 1;
-    end
+    options = parse_pv_pairs (options, varargin);
     
-    if nargin < 6
-        skipfields = {};
+    if isempty (options.OutputFcn)
+        hasoutputfcn = false;
+    else
+        hasoutputfcn = true;
     end
 
     % preallocate the results structure with fields containing arrays of
     % zeros
-    [results, fn, nOut] = prallocresfcn(T, Y, odeevfcn, odeargs, skip);
+    [results, fn, nOut] = prallocresfcn (T, Y, odeevfcn, options.ODEArgs, options.Skip);
     
-    if skip ~= 1
+    if options.Skip ~= 1
         % store the times the results values occur at if we are skipping
         % some in the results structure
-        results.Tskip = T(1:skip:length(T));
+        results.Tskip = T(1:options.Skip:length(T));
     end
     
     k = 0;
     
     outArgs = cell(1, nOut);
     
+    if hasoutputfcn
+        status = feval (options.OutputFcn, T(1), Y(1,:)', 'init', options.ODEArgs{:});
+    end
+    
     % now recalculate the values and put them in the results structure
-    for i = 1:skip:length(T)
+    for i = 1:options.Skip:length(T)
 
         k = k + 1;
         
-        [outArgs{1:nOut}] = feval(odeevfcn, T(i), Y(i,:)', odeargs{:});
+        [outArgs{1:nOut}] = feval (odeevfcn, T(i), Y(i,:)', options.ODEArgs{:});
         
         for j = 1:nOut
-            if ~ismember (fn{j}, skipfields)
+            if ~ismember (fn{j}, options.SkipFields)
                 results.(fn{j})(k,:) = outArgs{j};
             end
         end
+        
+        if hasoutputfcn && i > 1
+            status = feval (options.OutputFcn, T(i), Y(i,:)', '', options.ODEArgs{:});
+        end
     
+    end
+    
+    if hasoutputfcn
+        status = feval (options.OutputFcn, T(i), Y(i,:)', 'done', options.ODEArgs{:});
     end
     
 end

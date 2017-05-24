@@ -20,10 +20,10 @@ function [loss, d] = eddycurrentloss(width, thickness, Bpeak, freq, rho, mu_r, d
 %     </---------------------------------------> / . depth
 %     /_________________________________________/ .
 %     |                    x    x    x          |  ^
-%     |                                         |  ¦
-%     |                    x    B    x          |  ¦
-%     |                                         |  ¦ thickness
-%     |                    x    x    x          | /¦
+%     |                                         |  :
+%     |                    x    B    x          |  :
+%     |                                         |  : thickness
+%     |                    x    x    x          | /:
 %     |_________________________________________|/ v
 %
 %

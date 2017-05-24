@@ -28,7 +28,7 @@ NSsimoptions.BuoySim.SeaParameters = seasetup('PMPeakFreq', 1/9);
 NSsimoptions.BuoySim.tether_length = 5;
 
 % simoptions.ODESim.InitialConditions = [0,0,0];
-NSsimoptions.skip = 1;
+NSsimoptions.ODESim.ResultsTSkip = 1;
 NSsimoptions.ODESim.TimeSpan = [0, 90];
 % simoptions.Lmode = 0;
 

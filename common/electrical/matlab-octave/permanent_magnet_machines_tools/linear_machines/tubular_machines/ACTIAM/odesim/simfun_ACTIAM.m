@@ -14,9 +14,10 @@ function [design, simoptions] = simfun_ACTIAM(design, simoptions)
     % been supplied
     if ~isfield (design, 'CoreLoss')
         % Coreloss will be the armature back iron data
-        [design.CoreLoss.fq, ...
-         design.CoreLoss.Bq, ...
-         design.CoreLoss.Pq ] = m36assheared26gagecorelossdata (false);
+        [ design.CoreLoss.kh, ...
+          design.CoreLoss.kc, ...
+          design.CoreLoss.ke, ...
+          design.CoreLoss.beta ] = corelosscoeffs ('M-36', '26', 'InterpolateMissing', false);
     end
     
     [design, simoptions] = simfun_TM (design, simoptions);
@@ -69,7 +70,7 @@ function [design, simoptions] = simfun_ACTIAM(design, simoptions)
         % reset the boundary points to actually be at the boundary
         xycoords(boundinds,2) = 1;
 
-        % store the indformation in the design structure
+        % store the information in the design structure
         design.A = reshape (p(1,:)', size (design.X));
         design.Bx = reshape (p(2,:)', size (design.X));
         design.By = reshape (p(3,:)', size (design.X));
@@ -93,8 +94,8 @@ function [design, simoptions] = simfun_ACTIAM(design, simoptions)
 
         p = solution.getpointvalues (meshx(:), meshy(:));
 
-        design.CoreLoss(1).By = reshape (p(2,:)', size (meshx))';
-        design.CoreLoss(1).Bx = reshape (p(3,:)', size (meshx))';
+        design.CoreLoss(1).By = reshape (p(2,:)', size (meshx))'; % Br in fea
+        design.CoreLoss(1).Bx = reshape (p(3,:)', size (meshx))'; % Bz in fea
         design.CoreLoss(1).Bz = zeros (size(design.CoreLoss(1).Bx));
         design.CoreLoss(1).Hy = reshape (p(6,:)', size (meshx))';
         design.CoreLoss(1).Hx = reshape (p(7,:)', size (meshx))';

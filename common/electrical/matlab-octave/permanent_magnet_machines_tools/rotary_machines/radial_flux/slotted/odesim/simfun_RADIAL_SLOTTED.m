@@ -136,20 +136,29 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %
 % In addition some further design option fields may be specified if desired:
 %
-%   NStrands               1
+%   MagnetSkew - skew in the rotor or stator specified as a fraction of a
+%     pole width
 %
-%   NStages                1
+%   NStrands - number of parallel strands each coil turn is made up of,
+%     default is 1
 %
-%   MagnetSkew             0
+%   WireResistivityBase - base or reference resistivity of the coil
+%     material at the base temperature specified in the TemperatureBase
+%     field
+%
+%   TemperatureBase - base or reference temperature atwhich the coil
+%     material has the resistivity in the field WireResistivityBase
+%
+%   AlphaResistivity - resistivity temperature coefficient such that the
+%     actual resistivity may be calculated from
+%
+%     rho = WireResistivityBase * (1 + AlphaResistivity * (T - TemperatureBase))
+%
+%     where T is the temperature. The temperature used in the simulation is
+%     specified in the simoptions struture.
 %
 %   FEMMTol - tolerance used in FEA drawings to determine if components are
 %    separate. Defaults to 1e-5 if not supplied.
-%
-%   WireResistivityBase    1.7e-8
-%
-%   AlphaResistivity       3.93e-3
-%
-%   TemperatureBase        20
 %
 %
 % SIMOPTIONS 
@@ -173,15 +182,31 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %   spaced from zero air gap (plus a small toperance value) to twice the air gap
 %   length.
 %
-%  MagFEASim - 
-%     MagnetRegionMeshSize
-%     'BackIronRegionMeshSize', simoptions.femmmeshoptions.BackIronRegionMeshSize, ...
-%     'StatorOuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
-%     'RotorOuterRegionsMeshSize', simoptions.femmmeshoptions.OuterRegionsMeshSize, ...
-%     'AirGapMeshSize', simoptions.femmmeshoptions.AirGapMeshSize, ...
-%     'ShoeGapRegionMeshSize', simoptions.femmmeshoptions.ShoeGapRegionMeshSize, ...
-%     'YokeRegionMeshSize', simoptions.femmmeshoptions.YokeRegionMeshSize, ...
-%     'CoilRegionMeshSize', simoptions.femmmeshoptions.CoilRegionMeshSize
+%  MagFEASim - structure containing options specific to the magnetics
+%    finitie element analysis. The possible fields of this structure are
+%    shown below:
+%
+%    MagnetRegionMeshSize - optional mesh size in the magnet regions
+%
+%    BackIronRegionMeshSize - optional mesh size in the rotor back iron
+%
+%    AirGapMeshSize - optional mesh size in the air gap
+%
+%    StatorOuterRegionsMeshSize - 
+%
+%    RotorOuterRegionsMeshSize - 
+%
+%    YokeRegionMeshSize - optional mesh size in the armature back iron (the
+%      yoke)
+%
+%    CoilRegionMeshSize - optional mesh size in the coil regions
+%
+%    ShoeGapRegionMeshSize - optional mesh size ing the gap between tooth
+%      shoes
+%
+%    UseParFor - determines whether parfor will be used to split
+%      computation of the fea over multiple processors. Default is false if
+%      not supplied.
 %
 %  SkipMainFEA - optional flag which allows skipping the main fea simulations.
 %   This can be desirable when only coil winding configurations change etc.
@@ -299,6 +324,7 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         % unit vector by dividing by the magnitude.
 %         coggingvector = unit([gvector(2), -gvector(1)]);
 
+        fprintf (1, 'Performing FEA simulation %d of %d\n', 1, simoptions.NMagFEAPositions);
         [ RawCoggingTorque, ...
           BxCoreLossData, ...
           ByCoreLossData, ...
@@ -326,6 +352,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
             
             parfor posind = 2:numel (feapos)
 
+                fprintf (1, 'Performing FEA simulation %d of %d\n', posind, simoptions.NMagFEAPositions);
+                
                 [ RawCoggingTorque, ...
                   BxCoreLossData, ...
                   ByCoreLossData, ...
@@ -352,6 +380,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
             
             for posind = 2:numel (feapos)
 
+                fprintf (1, 'Performing FEA simulation %d of %d\n', posind, simoptions.NMagFEAPositions);
+                
                 [ RawCoggingTorque, ...
                   BxCoreLossData, ...
                   ByCoreLossData, ...
@@ -409,6 +439,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     design.FemmDirectFluxLinkage = design.FemmDirectFluxLinkage * design.CoilTurns;
     
     if ~simoptions.SkipInductanceFEA
+        
+        fprintf (1, 'Performing FEA simulation to determine inductance\n');
     
         % perform an inductance sim
         Lcurrent = inductancesimcurrent (design.CoilArea, design.CoilTurns);

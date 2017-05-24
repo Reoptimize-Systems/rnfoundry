@@ -44,7 +44,7 @@ simoptions.BuoySim.tether_length = 5;
 simoptions.water_depth = 40;
 
 % simoptions.ODESim.InitialConditions = [0,0,0];
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.ODESim.TimeSpan = [0, 10];
 % simoptions.Lmode = 0;
 

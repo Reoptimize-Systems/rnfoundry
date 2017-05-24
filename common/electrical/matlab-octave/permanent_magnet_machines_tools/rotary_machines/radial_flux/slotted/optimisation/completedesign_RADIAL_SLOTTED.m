@@ -65,8 +65,9 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions, setchoice)
 %    RyiVRyo -  Ryi to Ryo ratio
 %    tsgVtsb -  tsg to tsb ratio
 %    thetamVthetap - thetam to thetap ratio
-%    thetasgVthetacg -  thetasg to thetacg ratio
-%    thetasgVthetacy -  thetasg to thetacy ratio
+%    thetacgVthetas - thetacg to thetas ratio
+%    thetacyVthetas - thetacy to thetas ratio
+%    thetasgVthetacg - thetasg to thetacg ratio
 %    lsVtm - ls to tm ratio
 %
 % or all the fields
@@ -141,8 +142,9 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions, setchoice)
 %    RbiVRmi - Rbi to Rmi ratio
 %    tsgVtsb - tsg to tsb ratio
 %    thetamVthetap - thetam to thetap ratio
+%    thetacgVthetas - thetacg to thetas ratio
+%    thetacyVthetas - thetacy to thetas ratio
 %    thetasgVthetacg - thetasg to thetacg ratio
-%    thetasgVthetacy - thetasg to thetacy ratio
 %    lsVtm - ls to tm ratio
 %
 % or all the fields:

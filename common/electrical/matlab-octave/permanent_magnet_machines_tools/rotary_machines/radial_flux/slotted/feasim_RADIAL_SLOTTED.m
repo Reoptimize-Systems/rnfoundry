@@ -173,7 +173,7 @@ function [ RawTorque, ...
 
     % get the torque, this will include the cogging torque, and will in fact
     % be only the cogging torque if the coils currents are zero
-    RawTorque = design.Poles(1) * (solution.blockintegral (22) / 2);
+    RawTorque = design.Poles(1) * (solution.blockintegral (22) / (2*Inputs.NPolePairs));
     
     if Inputs.GatherVectorPotentialData
         
@@ -279,7 +279,7 @@ function design = corelosssetup_SLOTTED (design, feapos, groups, volscalefac, so
             design.CoreLoss(gpind).dV = solution.getgroupareas (groups(gpind)) .* volscalefac;
 
             % get the location we will use to estimate the flux in the element
-            temp = solution.getgroupcentroids (design.FemmProblem.Groups.ArmatureBackIron);
+            temp = solution.getgroupcentroids (groups(gpind));
             design.CoreLoss(gpind).meshx = temp(:,1);
             design.CoreLoss(gpind).meshy = temp(:,2);
 

@@ -45,7 +45,7 @@ function [results, tspan] = odesplit(odefcn, odeevfcn, tspan, y0, odeoptions, sp
 %           process of evaluation odesplit is at. The following values of
 %           'flag' are possible:
 %           
-%           0 - this indicates odesplit is in the initialisation stageat
+%           0 - this indicates odesplit is in the initialisation stage. At
 %               this point spfcn should return an initialized variable
 %               (results) which will subsequently be passed in to it at
 %               each split point in the integration along with the ode

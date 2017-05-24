@@ -42,7 +42,7 @@ simoptions.NoOfMachines = 1;
 
 speed = 1;
 simoptions.ODESim.InitialConditions = zeros(1, design.Phases);
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.ODESim.TimeSpan = [0, 5];
 simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2)/2:simoptions.ODESim.TimeSpan(2);
 simoptions.vT = repmat(speed, size(simoptions.drivetimes));
@@ -62,7 +62,7 @@ simoptions.ODESim.PostPreProcFcn = ['finfun_', mname];
 %% Test with sinusoidal motion
 
 simoptions.ODESim.InitialConditions = zeros(1, design.Phases);
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.xTperiod = 3;
 simoptions.xTamplitude = 1;
 simoptions.ODESim.TimeSpan = [0, 9];
