@@ -1,4 +1,4 @@
-classdef MBCNodal < cppinterface
+classdef MBCNodal < mbdyn.mint.cppinterface
     % MBCNodal: interface for MBDyn multibody dynamics library using sockets. 
     %
     % Description
@@ -36,7 +36,7 @@ classdef MBCNodal < cppinterface
 
             % initialise the cppinterface parent class by passing the
             % mexfunction to the superclass constructor
-            self = self@cppinterface(@mbdyn.mint.mexMBCNodal);
+            self = self@mbdyn.mint.cppinterface(@mbdyn.mint.mexMBCNodal);
 
         end
 
