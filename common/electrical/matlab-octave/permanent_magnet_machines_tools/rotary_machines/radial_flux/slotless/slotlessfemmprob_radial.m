@@ -172,6 +172,8 @@ function [FemmProblem, rotorinfo, statorinfo] = slotlessfemmprob_radial(design, 
     [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial ( design, Inputs );
     
     if design.tc(2) == 0
+        % there is no curved slot/coil base, so we need to link up the
+        % corners of adjacent slots to form the inner boundary of the yoke
        
         % calculate slot corner node locations
         thetaLower = linspace (-design.thetacy/2, ...

@@ -94,7 +94,7 @@ design.MagCouple.N = 12;
 
 %%
 
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.ODESim.TimeSpan = [0, 60];
 simoptions.Lmode = 1;
 simoptions.ODESim.InitialConditions = [0, 0, 0, 0, 0];

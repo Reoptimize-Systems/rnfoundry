@@ -45,7 +45,7 @@ options.coilYieldStrength = 70e6;
 % % Test with linear motion
 % speed = 1;
 % simoptions.ODESim.InitialConditions = 0;
-% simoptions.skip = 1;
+% simoptions.ODESim.ResultsTSkip = 1;
 % simoptions.ODESim.TimeSpan = [0, 10];
 % simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2);
 % simoptions.vT = repmat(speed, size(simoptions.drivetimes));
@@ -68,7 +68,7 @@ simoptions.BuoySim.tether_length = 5;
 simoptions.water_depth = 40;
 
 simoptions.ODESim.InitialConditions = [0,0,0];
-simoptions.skip = 1;
+simoptions.ODESim.ResultsTSkip = 1;
 simoptions.ODESim.TimeSpan = [0, 45];
 simoptions.Lmode = 0;
 

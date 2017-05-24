@@ -163,13 +163,13 @@ void StarOfSlot::CreateSectors(){
         n_sec.push_back(sec); //! negative
     }
 
-    for (int i=0; i<star.size() ; ++i){ //! Populate the sectors with the slots number
+    for (unsigned int i=0; i<star.size() ; ++i){ //! Populate the sectors with the slots number
         //! Check for positive sectors
-        for (int j=0; j<p_sec.size() ; ++j){
+        for (unsigned int j=0; j<p_sec.size() ; ++j){
             if (p_sec[j].AngleInside(star[i].angle))
                 p_sec[j].slot.push_back(star[i].id);
         }
-        for (int j=0; j<n_sec.size() ; ++j){
+        for (unsigned int j=0; j<n_sec.size() ; ++j){
             if (n_sec[j].AngleInside(star[i].angle))
                 n_sec[j].slot.push_back(star[i].id);
         }
@@ -208,7 +208,7 @@ void StarOfSlot::PopulateWinding(mPhaseWinding * Win, bool SL){
     for (int i=0; i<m; ++i){
         winding w(Q, p);
         //! Add the coils of the positive sectors
-        for (int j=0; j<p_sec[i].slot.size(); ++j){
+        for (unsigned int j=0; j<p_sec[i].slot.size(); ++j){
             if (SL && (p_sec[i].slot[j]%2==0) ) {
 //                qDebug()<<p_sec[i].slot[j];
                 continue;
@@ -219,7 +219,7 @@ void StarOfSlot::PopulateWinding(mPhaseWinding * Win, bool SL){
             w.add_coil(c);
         }
         //! Add the coils of the negative sectors
-        for (int j=0; j<n_sec[i].slot.size(); ++j){
+        for (unsigned int j=0; j<n_sec[i].slot.size(); ++j){
             if (SL && (n_sec[i].slot[j]%2==0) ) {
 //            qDebug()<<n_sec[i].slot[j];
             continue;

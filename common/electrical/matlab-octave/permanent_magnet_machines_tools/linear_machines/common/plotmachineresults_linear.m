@@ -4,7 +4,7 @@ function [hax, legendstrings] = plotmachineresults_linear(T, varargin)
     Inputs.vF = [];
     Inputs.xA = [];
     Inputs.vA = [];
-    Inputs.Icoils = [];
+    Inputs.Iphases = [];
     Inputs.EMF = [];
     Inputs.xT = [];
     Inputs.vT = [];
@@ -100,10 +100,10 @@ function [hax, legendstrings] = plotmachineresults_linear(T, varargin)
     end
     
     % Now plot the current on its own axes
-    addaxis(T(:), Inputs.Icoils(:,1), [-max(abs([Inputs.Icoils(:,1); 1e-10])), max(abs([Inputs.Icoils(:,1); 1e-10]))], '-k');
+    addaxis(T(:), Inputs.Iphases(:,1), [-max(abs([Inputs.Iphases(:,1); 1e-10])), max(abs([Inputs.Iphases(:,1); 1e-10]))], '-k');
     addaxislabel(3, 'Current, A');
 
-    legendstrings = [legendstrings, {'I : Coil Current, A'}];
+    legendstrings = [legendstrings, {'I : Phase Current, A'}];
     
     % Now plot the EMF on its own axes
     addaxis(T(:), Inputs.EMF(:,1),  [-max(abs([Inputs.EMF(:,1); 1e-10])), max(abs([Inputs.EMF(:,1); 1e-10]))], '-','color', rgb('DarkGreen'));

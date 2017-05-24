@@ -145,8 +145,8 @@ function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, row
         colheadings = {};
     end
 
-    if nargin >= 6 && ~iscellstr(rowheadings)
-        error ('row headings must be cell array of strings');
+    if nargin >= 6 && (~iscellstr(rowheadings) || ~isvector(rowheadings))
+        error ('row headings must be vector cell array of strings');
     end
     
     % get the numbers of rows and columns of data

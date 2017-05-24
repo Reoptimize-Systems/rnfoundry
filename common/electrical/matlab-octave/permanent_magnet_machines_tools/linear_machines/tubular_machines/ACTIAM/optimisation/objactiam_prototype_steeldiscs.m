@@ -116,7 +116,7 @@ function ObjVal = objactiam_prototype_steeldiscs(Chrom, rtn_type)
            design = dimensions2ratios_ACTIAM(design);
 
            simoptions.ODESim.InitialConditions = 0;
-           simoptions.skip = 1;
+           simoptions.ODESim.ResultsTSkip = 1;
            simoptions.ODESim.TimeSpan = [0, 5*2*design.Wp / speed];
            simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2)/10:simoptions.ODESim.TimeSpan(2);
            simoptions.vT = repmat(speed, size(simoptions.drivetimes));

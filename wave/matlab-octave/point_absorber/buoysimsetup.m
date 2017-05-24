@@ -118,7 +118,7 @@ function buoysimoptions = buoysimsetup(buoy, buoysimoptions)
         
     end
     
-    if min(buoysimoptions.SeaParameters.sigma / (2*pi)) < buoysimoptions.BuoyParameters.maxfreq
+    if min(buoysimoptions.SeaParameters.sigma / (2*pi)) < buoysimoptions.BuoyParameters.minfreq
        
         warning('Min sea frequency less than min buoy frequency, sea will be modified (lower frequencies stripped).')
         

@@ -1,6 +1,6 @@
 function u = unit(a, dim)
 %UNIT   Normalizing vectors with respect to their magnitude.
-%   If A is a vector (e.g. a P×1, 1×P, or 1×1×P array):
+%   If A is a vector (e.g. a Px1, 1xP, or 1x1xP array):
 %
 %      U = UNIT(A) returns A normalized for magnitude (see function MAGN).
 %      If A represents a vectorial quantity, such as the position of a
@@ -19,9 +19,9 @@ function u = unit(a, dim)
 %      of the vectors constructed along the dimension DIM of A.
 %
 %   Example:
-%   A 5×3×2 array may be considered to be a block array containing ten
+%   A 5x3x2 array may be considered to be a block array containing ten
 %   3-element vectors along dimension 2. In this case, its size is denoted
-%   by 5×(3)×2. If A is a 5×(3)×2 array, U = UNIT(A, 2) is an array of the
+%   by 5x(3)x2. If A is a 5x(3)x2 array, U = UNIT(A, 2) is an array of the
 %   same size containing unit vectors. 
 %   
 %   See also MAGN, DOT2, CROSS2, CROSSDIV, OUTER, PROJECTION, REJECTION.

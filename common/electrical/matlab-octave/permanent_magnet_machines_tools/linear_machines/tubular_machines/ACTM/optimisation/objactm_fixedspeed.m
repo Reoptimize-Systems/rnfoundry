@@ -121,7 +121,7 @@ function ObjVal = objactm_fixedspeed(Chrom, rtn_type)
 %            design.Ra = design.RaVRo * design.Ro;
 
            simoptions.ODESim.InitialConditions = 0;
-           simoptions.skip = 1;
+           simoptions.ODESim.ResultsTSkip = 1;
            simoptions.ODESim.TimeSpan = [0, 5*2*design.Wp / speed];
            simoptions.drivetimes = 0:simoptions.ODESim.TimeSpan(2)/10:simoptions.ODESim.TimeSpan(2);
            simoptions.vT = repmat(speed, size(simoptions.drivetimes));

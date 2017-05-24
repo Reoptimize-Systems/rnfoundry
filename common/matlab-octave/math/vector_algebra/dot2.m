@@ -3,7 +3,7 @@ function c = dot2(a, b, idA, idB)
 %   This function exploits the MULTIPROD engine (MATLAB Central, file
 %   #8773), which enables multiple products and array expansion (AX).
 %
-%   When A and B are vectors (e.g. P×1, 1×P, or 1×1×P arrays):
+%   When A and B are vectors (e.g. Px1, 1xP, or 1x1xP arrays):
 %
 %       C = DOT2(A, B) returns their scalar product. A and B must have the
 %       same length. If A and B are both column vectors, DOT2(A, B) is the
@@ -26,15 +26,15 @@ function c = dot2(a, b, idA, idB)
 %       along dimension IDB. These vectors must have the same length 
 %       P = SIZE(A,IDA) = SIZE(B,IDB). A and B are viewed as "block
 %       arrays". IDA and IDB are referred to as their "internal dimensions"
-%       (IDs). For instance, a 5×6×2 array may be viewed as an array
+%       (IDs). For instance, a 5x6x2 array may be viewed as an array
 %       containing twelve 5-element blocks. In this case, its size is
-%       denoted by (5)×6×2, and its ID is 1. Since AX is enabled, A and B
+%       denoted by (5)x6x2, and its ID is 1. Since AX is enabled, A and B
 %       may have different size, and IDA may not coincide with IDB (see
 %       MULTIPROD).
 %
 %       C = DOT2(A, B, IDA, IDB) calls C = MULTIPROD(CONJ(A), B, IDA, IDB)
 %       (MATLAB Central, file #8773), which virtually turns the vectors
-%       found in CONJ(A) and B into 1×P and P×1 matrices, respectively,
+%       found in CONJ(A) and B into 1xP and Px1 matrices, respectively,
 %       then returns their products.
 %
 %       Input and output format (see MULTIPROD, syntax 4b):
@@ -46,13 +46,13 @@ function c = dot2(a, b, idA, idB)
 %           -------------------------------------------
 %
 %   Examples:
-%       If A and B are both (5)×6×2 arrays of vectors,
-%       C = DOT2(A, B) is a (1)×6×2 array  of scalars.
+%       If A and B are both (5)x6x2 arrays of vectors,
+%       C = DOT2(A, B) is a (1)x6x2 array  of scalars.
 %
 %       A single vector B multiplies thirty vectors contained in A: 
-%       If  A is .............. a 5×6×(3) array of 30 vectors,
-%       and B is .............. a (3)×1   vector,
-%       C = DOT2(A, B, 3, 1) is a 5×6×(1) array of 30 scalars.
+%       If  A is .............. a 5x6x(3) array of 30 vectors,
+%       and B is .............. a (3)x1   vector,
+%       C = DOT2(A, B, 3, 1) is a 5x6x(1) array of 30 scalars.
 %
 %   See also DOT, CROSS2, CROSSDIV, OUTER, MAGN, UNIT, PROJECTION,
 %            REJECTION, MULTIPROD, TESTDOT2.

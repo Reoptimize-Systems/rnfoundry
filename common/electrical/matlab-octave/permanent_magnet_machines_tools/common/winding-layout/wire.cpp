@@ -30,7 +30,7 @@ void wire::add_wire_size(wire_size size) {wires.push_back(size);}
 double wire::get_resistivity(){
 
     double a,b=0;
-    for (int i=0; i<wires.size(); ++i){
+    for (unsigned int i=0; i<wires.size(); ++i){
         a += wires[i].get_section();
         b += wires[i].get_section()/wires[i].get_resistivity();
         }
@@ -40,13 +40,13 @@ return a/b;
 double wire::get_section(){
 
     double S = 0;
-    for (int i=0; i<wires.size(); ++i)  S += wires[i].get_section();
+    for (unsigned int i=0; i<wires.size(); ++i)  S += wires[i].get_section();
     return S;
 }
 
 double wire::get_specific_weight(){
 
     double W = 0;
-    for (int i=0; i<wires.size(); ++i)  W += wires[i].get_specific_weight();
+    for (unsigned int i=0; i<wires.size(); ++i)  W += wires[i].get_specific_weight();
     return W;
 }

@@ -1,4 +1,4 @@
-function mmake(target,mmakefilename)
+function mmake(target,mmakefilename,varargin)
 %MMAKE A minimal subset of GNU make, implemented in MATLAB for MATLAB.
 %   GNU Make "is a tool which controls the generation of executables and 
 %   other non-source files of a program from the program's source files.
@@ -99,7 +99,7 @@ if nargin < 2
         mmakefilename = '';
     end
 end
-if nargin < 3
+% if nargin < 3
     % Validate mmakefilename
     if ~is_absolute_path(mmakefilename) && ~isempty(mmakefilename)
         mmakefilename = fullfile(pwd,mmakefilename);
@@ -107,8 +107,23 @@ if nargin < 3
     if ~file_exist(mmakefilename)
         error('MJB:mmake:no_mmakefile','MMakefile (%s) not found', mmakefilename)
     end
+% end
+
+% parse optinosl arguements passed as parameter-value pairs
+options.DoCrossBuildWin64 = false;
+options.CrossMexOptsFile = '';
+options.FcnMakeFileArgs = {};
+
+options = parse_pv_pairs (options, varargin);
+
+if options.DoCrossBuildWin64
+    if isempty (options.CrossMexOptsFile)
+        error('MJB:mmake:no_crossmexoptsfile', ...
+            'If DoCrossBuildWin64 == true you must supply a path to the corss mex opts shell script using ''CrossMexOptsFile''')
+    end
 end
-if nargin >=3, error('MJB:mmake:arguments','*** Too many arguments'); end;
+
+% if nargin > 3, error('MJB:mmake:arguments','*** Too many arguments'); end;
 
 %% Make the target
 % Move to the correct directory
@@ -121,8 +136,8 @@ else
 end
 % try
     % Read the makefile
-    [state.implicitRules, state.vars] = implicit_mmakefile();
-    state = read_mmakefile(state,mmakefilename);
+    [state.implicitRules, state.vars] = implicit_mmakefile(options);
+    state = read_mmakefile(state, mmakefilename, options.FcnMakeFileArgs);
 
     if isempty(target)
         target = state.rules(1).target{1};
@@ -149,19 +164,21 @@ end %function
 
 %% Private functions %%
 
-function [rules, vars] = implicit_mmakefile()
+function [rules, vars] = implicit_mmakefile(options)
     vars.MEX_EXT = mexext;
     
     % deterine the appropriate file extension for object files
     vars.OPTIMFLAGS = '';
-    if isunix || isoctave
+    if isunix () || isoctave ()
         vars.OBJ_EXT = 'o';
+        ismscompiler = false;
     else
+        vars.OBJ_EXT = 'obj';
         cc = mex.getCompilerConfigurations ('C');
         if strncmpi (cc.Manufacturer, 'Microsoft', 9)
-            vars.OBJ_EXT = 'obj';
+            ismscompiler = true;
         else
-            vars.OBJ_EXT = 'o';
+            ismscompiler = false;
         end
     end
     vars.PWD = pwd;
@@ -178,9 +195,8 @@ function [rules, vars] = implicit_mmakefile()
         vars.CXXFLAGS = '';
         vars.FFLAGS   = '';
         vars.LDFLAGS  = '';
-        
     else
-        if ispc
+        if ismscompiler
             % WHY, MATHWORKS, WHY!?
             vars.CFLAGSKEY   = 'COMPFLAGS';
             vars.CXXFLAGSKEY = 'COMPFLAGS';
@@ -240,26 +256,52 @@ function [rules, vars] = implicit_mmakefile()
         rules(idx).deps     = {'%.mdl'};
         rules(idx).commands = {'rtwbuild(''$*'')'};
     else
-        idx = 1;
-        rules(idx).target   = {['%.' mexext]};
-        rules(idx).deps     = {'%.c'};
-        rules(idx).commands = {'mex ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CFLAGSKEY}="${CFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -output $@'};
-        idx = idx+1;
-        rules(idx).target   = {['%.' mexext]};
-        rules(idx).deps     = {'%.cpp'};
-        rules(idx).commands = {'mex ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -output $@'};
-        idx = idx+1;
-        rules(idx).target   = {['%.' vars.OBJ_EXT]}; % Note: in a normal function-style MMakefile.m, variable expansion is performed on targets and deps
-        rules(idx).deps     = {'%.c'};
-        rules(idx).commands = {'mex -c ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CFLAGSKEY}="${CFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -outdir $&'};
-        idx = idx+1;
-        rules(idx).target   = {['%.' vars.OBJ_EXT]};
-        rules(idx).deps     = {'%.cpp'};
-        rules(idx).commands = {'mex -c ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -outdir $&'};
-        idx = idx+1;
-        rules(idx).target   = {'%.dlm'};
-        rules(idx).deps     = {'%.mdl'};
-        rules(idx).commands = {'rtwbuild(''$*'')'};
+        
+        if options.DoCrossBuildWin64
+            idx = 1;
+            rules(idx).target   = {['%.' 'mexw64']};
+            rules(idx).deps     = {'%.c'};
+            rules(idx).commands = {'mex ${MEXFLAGS} -f "', options.CrossMexOptsFile, '" ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CFLAGSKEY}="${CFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -output $@'};
+            idx = idx+1;
+            rules(idx).target   = {['%.' 'mexw64']};
+            rules(idx).deps     = {'%.cpp'};
+            rules(idx).commands = {'mex ${MEXFLAGS} -f "', options.CrossMexOptsFile, '" ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -output $@'};
+            idx = idx+1;
+            rules(idx).target   = {['%.' vars.OBJ_EXT]}; % Note: in a normal function-style MMakefile.m, variable expansion is performed on targets and deps
+            rules(idx).deps     = {'%.c'};
+            rules(idx).commands = {'mex -c ${MEXFLAGS} -f "', options.CrossMexOptsFile, '" ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CFLAGSKEY}="${CFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -outdir $&'};
+            idx = idx+1;
+            rules(idx).target   = {['%.' vars.OBJ_EXT]};
+            rules(idx).deps     = {'%.cpp'};
+            rules(idx).commands = {'mex -c ${MEXFLAGS} -f "', options.CrossMexOptsFile, '" ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -outdir $&'};
+            idx = idx+1;
+            rules(idx).target   = {'%.dlm'};
+            rules(idx).deps     = {'%.mdl'};
+            rules(idx).commands = {'rtwbuild(''$*'')'};
+        else
+            
+            idx = 1;
+            rules(idx).target   = {['%.' mexext]};
+            rules(idx).deps     = {'%.c'};
+            rules(idx).commands = {'mex ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CFLAGSKEY}="${CFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -output $@'};
+            idx = idx+1;
+            rules(idx).target   = {['%.' mexext]};
+            rules(idx).deps     = {'%.cpp'};
+            rules(idx).commands = {'mex ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -output $@'};
+            idx = idx+1;
+            rules(idx).target   = {['%.' vars.OBJ_EXT]}; % Note: in a normal function-style MMakefile.m, variable expansion is performed on targets and deps
+            rules(idx).deps     = {'%.c'};
+            rules(idx).commands = {'mex -c ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CFLAGSKEY}="${CFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -outdir $&'};
+            idx = idx+1;
+            rules(idx).target   = {['%.' vars.OBJ_EXT]};
+            rules(idx).deps     = {'%.cpp'};
+            rules(idx).commands = {'mex -c ${MEXFLAGS} ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" $< -outdir $&'};
+            idx = idx+1;
+            rules(idx).target   = {'%.dlm'};
+            rules(idx).deps     = {'%.mdl'};
+            rules(idx).commands = {'rtwbuild(''$*'')'};
+        
+        end
     end
 end
 
@@ -366,23 +408,23 @@ function result = make(target, state)
     end
 end
 
-function state = read_mmakefile(state,path)
+function state = read_mmakefile(state,path,fcnfileargs)
     if regexp(path,'\.m$','once')
-        state = read_functional_mmakefile(state,path);
+        state = read_functional_mmakefile(state,path,fcnfileargs);
     else
         state = read_gnu_mmakefile(state,path);
     end
 end
 
 % Parse a MATLAB-function style MMakefile.
-function state = read_functional_mmakefile(state,path)
+function state = read_functional_mmakefile(state,path,fcnfileargs)
     % We have an m-file function
     [~,fcn] = fileparts(path);
     assert(strcmp(path,which(fcn)),'Function that is called (%s) and filename (%s) do not match',which(fcn),path);
     
     if ~isfield(state,'vars'), state.vars = struct; end;
     try
-        [state.rules, vars] = feval(fcn);
+        [state.rules, vars] = feval(fcn, fcnfileargs{:});
     catch EX
         error(['MJB:mmake:' EX.identifier],'Error reading MMakefile (%s):%s',path,EX.message);
     end
@@ -698,17 +740,29 @@ end
 % exist(*,'file') SEARCHES the path,
 % dir(file) returns bad information for directories.
 function b = file_exist(filename)
-    if isempty (javachk ('jvm'))
+    tmp = javachk ('jvm');
+    if isempty (tmp)
         a = javaObject ('java.io.File', filename);
         b=(a.exists() && ~a.isDirectory);
     else
-        error ('MJB:mmake:file_exist:java', ...
-               'mmake requires java support.');
+        try
+            b = existfile (filename);
+            if b == true
+                [~, msg] = fileattrib (filename);
+                if msg.directory == 1
+                    b = false;
+                end
+            end
+        catch
+            error ('MJB:mmake:file_exist', ...
+                   'mmake requires java support or the existfile function.');
+        end
     end
 end
 
 function t = ftime(filename)
-    if isempty (javachk ('jvm'))
+    tmp = javachk ('jvm');
+    if isempty (tmp)
         a = javaObject ('java.io.File', filename);
         if a.exists()
             t=a.lastModified();
@@ -716,8 +770,17 @@ function t = ftime(filename)
             t=[];
         end
     else
-        error ('MJB:mmake:file_exist:java', ...
-               'mmake requires java support.');
+        if isoctave
+            if existfile (filename)
+                info = stat (filename);
+                t = info.mtime;
+            else
+                t=[];
+            end
+        else
+            error ('MJB:mmake:file_exist:java', ...
+                   'mmake requires java support.');
+        end
     end
 end
 

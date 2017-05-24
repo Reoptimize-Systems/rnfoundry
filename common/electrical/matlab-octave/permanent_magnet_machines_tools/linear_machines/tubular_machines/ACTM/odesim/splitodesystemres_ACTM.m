@@ -46,27 +46,27 @@ function results = splitodesystemres_ACTM(results, sol, design, simoptions)
         % We may not want to recalculate and plot every single solution step,
         % so we use the skip value to allow us to skip every x solution points,
         % e.g. skip = 2 would calculate only every other solution point.
-        simoptions.skip = 1;
+        simoptions.ODESim.ResultsTSkip = 1;
 
         % Recalculate the final solution values
-        temp.ydot = zeros(ceil(size(sol.y,2)/simoptions.skip), size(simoptions.ODESim.InitialConditions,2));
-        temp.dpsidxR = zeros(ceil(length(sol.x)/simoptions.skip), 3);
-        temp.EMF = zeros(ceil(length(sol.x)/simoptions.skip), 3);
-        temp.Ffea = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.xT = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.vT = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.excitation_force_heave = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.excitation_force_surge = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.radiation_force_heave = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.radiation_force_surge = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.buoyancy_force = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.FBDh = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.FBDs = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.Ffea_heave = zeros(ceil(length(sol.x)/simoptions.skip), 1);
-        temp.Ffea_surge = zeros(ceil(length(sol.x)/simoptions.skip), 1);
+        temp.ydot = zeros(ceil(size(sol.y,2)/simoptions.ODESim.ResultsTSkip), size(simoptions.ODESim.InitialConditions,2));
+        temp.dpsidxR = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 3);
+        temp.EMF = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 3);
+        temp.Ffea = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.xT = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.vT = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.excitation_force_heave = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.excitation_force_surge = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.radiation_force_heave = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.radiation_force_surge = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.buoyancy_force = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.FBDh = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.FBDs = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.Ffea_heave = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
+        temp.Ffea_surge = zeros(ceil(length(sol.x)/simoptions.ODESim.ResultsTSkip), 1);
 
         k = 0;
-        for z = 1:simoptions.skip:length(sol.x)
+        for z = 1:simoptions.ODESim.ResultsTSkip:length(sol.x)
 
             k = k + 1;
 

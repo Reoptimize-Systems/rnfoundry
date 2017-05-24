@@ -1,5 +1,5 @@
 function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
-% returns table of losses per kg for a variety of Steel
+% returns table of losses per cubic metre for a variety of Steel
 % laminations grades at a number of frequencies and field strengths in Tesla
 %
 % Syntax
@@ -68,7 +68,7 @@ function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
     
     if Inputs.InterpolateMissing
 
-        lossperkgnonans = infillpower(freqs, losspervol);
+        losspervolnonans = infillpower(freqs, losspervol);
 
         % add a row of zeros along the top
         losspervolnonans = [zeros(1, size(losspervolnonans, 2)); losspervolnonans];
@@ -101,8 +101,8 @@ function [fq, Bq, Pq] = corelossdata(grade, gage, varargin)
     else
     
         if Inputs.AddZeros
-            lossperkg = [ zeros(1, size(lossperkg,2)+1);  ...
-                          [zeros(size(lossperkg,1),1), lossperkg] ];
+            losspervol = [ zeros(1, size(losspervol,2)+1);  ...
+                          [zeros(size(losspervol,1),1), losspervol] ];
                       
             freqs = [0, freqs];
             tesla = [0, tesla];

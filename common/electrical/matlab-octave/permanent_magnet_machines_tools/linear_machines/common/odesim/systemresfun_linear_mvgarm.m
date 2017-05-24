@@ -8,7 +8,7 @@ function [results, design] = systemresfun_linear_mvgarm(T, Y, design, simoptions
     % We may not want to recalculate and plot every single solution step,
     % so we use the skip value to allow us to skip every x solution points,
     % e.g. skip = 2 would calculate only every other solution point.
-%     simoptions.skip = 1;
+%     simoptions.ODESim.ResultsTSkip = 1;
 
     if ~isfield(simoptions, 'ODEPhaseCurrentCol')
         simoptions.ODEPhaseCurrentCol = 7;

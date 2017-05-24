@@ -1,4 +1,4 @@
-function [design, simoptions] = finfun_linear(design, simoptions)
+function [design, simoptions] = finfun_linear (design, simoptions)
 % finfun_linear: sets up common parameters for all linear machines
 %
 % Syntax

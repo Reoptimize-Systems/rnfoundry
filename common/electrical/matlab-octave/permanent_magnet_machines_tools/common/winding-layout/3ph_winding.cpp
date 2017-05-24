@@ -187,19 +187,19 @@ void Threephase_winding::slot_matrix()
     }
 
 //! Slot matrix computation
-    for(int i=0; i<coils_A.size(); ++i)
+    for(unsigned int i=0; i<coils_A.size(); ++i)
     {
         mat_A[coils_A[i].s-1]=mat_A[coils_A[i].s-1] + 0.5;// coils_A[i].nc;
         mat_A[coils_A[i].e-1]=mat_A[coils_A[i].e-1] - 0.5;// coils_A[i].nc;
     }
 
-    for(int i=0; i<coils_B.size(); ++i)
+    for(unsigned int i=0; i<coils_B.size(); ++i)
     {
         mat_B[coils_B[i].s-1]=mat_B[coils_B[i].s-1] + 0.5;// coils_B[i].nc;
         mat_B[coils_B[i].e-1]=mat_B[coils_B[i].e-1] - 0.5;// coils_B[i].nc;
     }
 
-    for(int i=0; i<coils_C.size(); ++i)
+    for(unsigned int i=0; i<coils_C.size(); ++i)
     {
         mat_C[coils_C[i].s-1]=mat_C[coils_C[i].s-1] + 0.5;// coils_C[i].nc;
         mat_C[coils_C[i].e-1]=mat_C[coils_C[i].e-1] - 0.5;// coils_C[i].nc;
@@ -224,7 +224,7 @@ void Threephase_winding::write_slot_matrix(const char * Filename)
     out<< "-- slot matrix of phase A. Elements: "<<mat_A.size()<<endl;
     out<< "ka = {"<<endl;
     int cont = 1;
-    for(int i=0; i<mat_A.size()-1; i++)
+    for(unsigned int i=0; i<mat_A.size()-1; i++)
     {
         if(cont<10)
         {
@@ -242,7 +242,7 @@ void Threephase_winding::write_slot_matrix(const char * Filename)
     out<< "-- slot matrix of phase B. Elements: "<<mat_B.size()<<endl;
     out<< "kb = {"<<endl;
     cont = 1;
-    for(int i=0; i<mat_B.size()-1; i++)
+    for(unsigned int i=0; i<mat_B.size()-1; i++)
     {
         if(cont<10)
         {
@@ -260,7 +260,7 @@ void Threephase_winding::write_slot_matrix(const char * Filename)
     out<< "-- slot matrix of phase C. Elements: "<<mat_C.size()<<endl;
     out<< "kc = {"<<endl;
     cont = 1;
-    for(int i=0; i<mat_C.size()-1; i++)
+    for(unsigned int i=0; i<mat_C.size()-1; i++)
     {
         if(cont<10)
         {
@@ -293,17 +293,17 @@ void Threephase_winding::write_report(char * Filename)
     out<<"--------------------------------------------------------------------------------"<<endl<<endl;
 
     out<<"Phase A coils ("<<coils_A.size()<<" elements):"<<endl;
-    for(int i=0; i<coils_A.size(); ++i)
+    for(unsigned int i=0; i<coils_A.size(); ++i)
         out<<coils_A[i];//.s<<"  "<<coils_A[i].e<<endl;
     out<<endl;
 
     out<<"Phase B coils ("<<coils_B.size()<<" elements):"<<endl;
-    for(int i=0; i<coils_B.size(); ++i)
+    for(unsigned int i=0; i<coils_B.size(); ++i)
         out<<coils_B[i];//.s<<"  "<<coils_B[i].e<<endl;
     out<<endl;
 
     out<<"Phase C coils ("<<coils_C.size()<<" elements):"<<endl;
-    for(int i=0; i<coils_C.size(); ++i)
+    for(unsigned int i=0; i<coils_C.size(); ++i)
         out<<coils_C[i];//.s<<"  "<<coils_C[i].e<<endl;
     out<<endl;
 

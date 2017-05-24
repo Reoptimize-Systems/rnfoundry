@@ -11,28 +11,26 @@ function [results, fn, nOut] = prallocresfcn(T, Y, odeevfcn, odeargs, skip)
 % Input
 %
 % T - vector of time points as produced by the ode solver acting on the
-%     solution function.
+%   solution function.
 %
-% Y - matlrix of values of the solution variables at each time step in T.
-%     Each column of Y should be a solution variable.
+% Y - matrix of values of the solution variables at each time step in T.
+%   Each column of Y should be a solution variable.
 %
 % odeevfcn - function handle or string containing the name of the ode
-%            evaluation function used to generate the results. This
-%            function must return a cell array of strings containing the
-%            names of the variables returned by the function. These will be
-%            used to populate a structure containing fields with the same
-%            names.
+%   evaluation function used to generate the results. This function must
+%   return a cell array of strings containing the names of the variables
+%   returned by the function. These will be used to populate a structure
+%   containing fields with the same names.
 %
 % odeargs - (optional) a cell array extra arguments which must be passed to 
-%           the ode function.
+%   the ode function.
 %
 % skip - (optional) a variable to determine if we must extract results for
-%        every time in T, or if some can be skipped. The elements
-%        1:skip:numel(T) are to be evaluated, and so an appropriate
-%        allocation of space will be made for this. If not supplied a value
-%        of 1 is used, and space is reserved for every time step. If skip
-%        is to be used, but no extra odeargs are required, odeargs can be
-%        an empty cell array. 
+%   every time in T, or if some can be skipped. The elements
+%   1:skip:numel(T) are to be evaluated, and so an appropriate allocation
+%   of space will be made for this. If not supplied a value of 1 is used,
+%   and space is reserved for every time step. If skip is to be used, but
+%   no extra odeargs are required, odeargs can be an empty cell array.
 %
 
     if nargin < 5

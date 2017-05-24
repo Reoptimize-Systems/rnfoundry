@@ -9,6 +9,9 @@
  *
  */
 
+int dlsei_(double*, long*, long*, long*, long*, long*, double *, double *, double *, double *, long*, double *, double *);
+
+
 /* the gateway function */
 void mexFunction( int nlhs, mxArray *plhs[],
                   int nrhs, const mxArray *prhs[])

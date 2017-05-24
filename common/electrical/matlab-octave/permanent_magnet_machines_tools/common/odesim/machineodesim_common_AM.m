@@ -2,23 +2,27 @@ function design = machineodesim_common_AM (design, simoptions, vCoilRelToField)
 
     % Now modify the resistance matrix to account for temperature
     
-    % get the temperature dependent resistivity
-    rho = tempdepresistivity ( design.WireResistivityBase, ...
-                               design.AlphaResistivity, ...
-                               design.TemperatureBase, ...
-                               simoptions.Temperature );
+    if simoptions.TempDependantResistivity
+        % get the temperature dependent resistivity
+        rho = tempdepresistivity ( design.WireResistivityBase, ...
+                                   design.AlphaResistivity, ...
+                                   design.TemperatureBase, ...
+                                   simoptions.Temperature );
+                               
+        % modify the resistance matrix to account for temperature
+        design.RPhase = design.RDCPhase .* rho ./ design.WireResistivityBase;
+    end
     
-    % modify the resistance matrix to account for temperature
-    design.RPhase = design.RDCPhase * rho / design.WireResistivityBase;
-    
-    % calculate the electrical frequency
-    fe = velocity2electricalfreq (vCoilRelToField, design.PoleWidth);
-    
-    % Then modify to account for skin depth
-    design.RPhase = design.NStrands * ...
-        roundwirefreqdepresistance (design.WireStrandDiameter/2, ...
-                                    design.RPhase./design.NStrands, ...
-                                    rho, 1, fe);
+    if simoptions.FreqDependantResistance
+        % calculate the electrical frequency
+        fe = abs(vCoilRelToField) ./ (2 .* design.PoleWidth);  %velocity2electricalfreq (vCoilRelToField, design.PoleWidth);
+
+        % Then modify to account for skin depth
+        design.RPhase = design.NStrands .* ...
+            roundwirefreqdepresistance (design.WireStrandDiameter./2, ...
+                                        design.RPhase./design.NStrands, ...
+                                        rho, 1, fe);
+    end
                                 
 end
 
@@ -104,7 +108,7 @@ function Rac = roundwirefreqdepresistance(Dc, Rdc, rho, mu_r, freq)
         
     else
         
-        Rac = Rdc .* ( 1 + Dc^2 / (4*delta^2) );
+        Rac = Rdc .* ( 1 + realpow (Dc,2) / ( 4 .* realpow (delta,2) ) );
         
     end
 

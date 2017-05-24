@@ -1,12 +1,18 @@
-function [dx, bouyancy_force, excitation_force_heave, ...
-    excitation_force_surge, radiation_force_heave, ...
-    radiation_force_surge, FBDh, FBDs, wave_height] = buoyodesim(t, x, buoysimoptions, Fexternal)
+function [ dx, ...
+           buoyancy_force, ...
+           excitation_force_heave, ...
+           excitation_force_surge, ...
+           radiation_force_heave, ...
+           radiation_force_surge, ...
+           FBDh, ...
+           FBDs, ...
+           wave_height ] = buoyodesim(t, x, buoysimoptions, Fexternal)
 % solves the rhs of the system of ODEs describing a heaving buoy
 %
 % Syntax
 %
 % 
-% [ dx, bouyancy_force, ...
+% [ dx, buoyancy_force, ...
 %   excitation_force_heave, excitation_force_surge...
 %   radiation_force_heave, radiation_force_surge, ...
 %   FBDh, FBDs, ...
@@ -38,6 +44,22 @@ function [dx, bouyancy_force, excitation_force_heave, ...
 % buoy (e.g. using buoysimsetup.m ). An equal number of components is used
 % in both heave and surge.
 %
+% Further details of the model can be found in the following publications:
+%
+% Bailey H, Bryden I. G., ‘Influence of a quadratic power take-off on
+% the behaviour of a self-contained inertial referenced wave energy
+% converter’, Proceedings of the Institution of Mechanical Engineers, Part
+% M: Journal of Engineering for the Maritime Environment, vol. 226, no. 1,
+% pp. 15–22, Feb. 2012.
+%
+% Bailey H, "Influence of a nonlinear Power Take Off on a Wave Energy
+% Converter," Ph.D thesis, School Eng., Univ.Edinburgh, 2010.
+%
+% Bailey H, Bryden IG. Experimental testing on the effect of nonlinear
+% power take off on the motions of wave energy converters. In: 2nd
+% international conference on ocean energy, Brest, France, 15–17 October
+% 2008.
+%
 %
 % Input
 %
@@ -45,11 +67,46 @@ function [dx, bouyancy_force, excitation_force_heave, ...
 %
 %  x - values of the variables of integration at the previous time step
 %
+%     x = [ xBh;
+%           vBh;
+%           xBs;
+%           vBs;
+%           heave radiation force components;
+%           surge radiation force components; ]
+%
+%    The number of radiation force components in heave and surge is
+%    determined by the value stored in buoysimoptions.NRadiationCoefs (see
+%    below), and will therefore be of length 4+2*NRadiationCoefs. The more
+%    components used, the closer the integration will be to the convolution
+%    being approximated using prony's method.
+%
+%  buoysimoptions - structure containing the point absorber simulation
+%    parameters and sea state.
+%
+%  Fexternal - 2 element vector containing external heave and surge forces
+%    acting on the buoy
+%
 % Output
 %
-%  dx - derivatives of the buoy system 
+%  dx - derivatives of the buoy system consisting of the velocity and
+%    acceleration in heave and surge, and the radiation force component
+%    derivatives. i.e.
+%
+%    dx = [ vBh;
+%           aBh;
+%           vBs;
+%           aBs;
+%           heave radiation force component derivatives;
+%           surge radiation force component derivatives; ]
+%
+%  dx - derivatives of the radiation force components in heave and surge.
+%    The length of the vector will be determined by the number of radiation
+%    coefficients specified in the buoysimoptions structure in the field
+%    'NRadiationCoefs'. dx will be of length 2*NRadiationCoefs, the first
+%    half being the heave radiation components , the rest being the surge
+%    radiation components.
 % 
-%  bouyancy_force - buoyancy force which the current displacement in heave
+%  buoyancy_force - buoyancy force which the current displacement in heave
 % 
 %  excitation_force_heave - wave excitation forces in heave based on WAMIT
 %    generated excitation force coefficients
@@ -110,8 +167,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     buoyradinds = (5:4+(2*buoysimoptions.NRadiationCoefs));
     
     % calculate the forces acting on the buoy
-    [ buoyforcedx, ...
-      bouyancy_force, ...
+    [ buoyancy_force, ...
       excitation_force_heave, ...
       excitation_force_surge, ...
       radiation_force_heave, ...
@@ -119,8 +175,11 @@ function [dx, bouyancy_force, excitation_force_heave, ...
       FBDh, ...
       FBDs, ...
       wave_height]  = buoyodeforces (t, x(buoyradinds,:), xBh, vBh, vBs, buoysimoptions);
-
-    % copy the force derivatives to the derivatives vector at the
+         
+    % calculate the radiation force derivatives
+    buoyforcedx = buoysimderivatives (x(buoyradinds,:), vBh, vBs, buoysimoptions);
+    
+    % copy the radiation force derivatives to the derivatives vector at the
     % appropriate point
     dx(buoyradinds,:) = buoyforcedx;
     
@@ -128,7 +187,7 @@ function [dx, bouyancy_force, excitation_force_heave, ...
     
     % sum the forces in heave
     heaveforce = excitation_force_heave + radiation_force_heave + ...
-                   bouyancy_force + FBDh + Fexternal(1);
+                   buoyancy_force + FBDh + Fexternal(1);
 
 	% calculate the acceleration
     dx(2,:) = real ( heaveforce / (buoysimoptions.BuoyParameters.mass_external + ...
