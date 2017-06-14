@@ -67,7 +67,7 @@ function [gf] = gfit2(t,y,gFitMeasure,options)
 % 30 JUN 2009: Added verbose option
 % ***********************************************************************
 %% INPUT ARGUMENTS CHECK
-    error(nargchk(2,4,nargin));
+    narginchk(2,4);
     
     % reshape matrices into vectors (order of data is not important)
     t = reshape(t,1,[]);
@@ -118,9 +118,9 @@ function [gf] = gfit2(t,y,gFitMeasure,options)
     
     gf = ones(1,size(gFitMeasure,2)); % preallocate array
     
-    for i = 1:size(gFitMeasure,2)
+    for i = 1:numel(gFitMeasure)
         
-        switch char(gFitMeasure(i))
+        switch gFitMeasure{i}
 
         case '1'                      % mean squared error
             gf(i) = mean(e.^2);        % 0 - perfect match between output and target
