@@ -5,6 +5,36 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
 %
 % [score, design, simoptions] = addpenalty_AM(design, simoptions, type, quantityfname, base_score, score)
 %
+% Description
+%
+% addpenalty_AM searches the design structure for the field name specified
+% in the quantityfname variable. Depending on what type of penalty is
+% desired (specified in 'type') the simoptions sturture is then searched
+% for a two matching fields such as max_<quantity name>, min_<quantity
+% name> or target_<quantity name> and max_<quantity name>_penfactor etc.
+% which determines what penlty function is applied (see documentation for
+% type below for more information). An an example, for a maximum limit on a
+% field called bannanas in the design structure it works in the following
+% way. If the simoptions field is a single number a linear penalty funciton
+% will be appplied calculated like so:
+%
+%   penalty = simoptions.max_bananas_penfactor * base_score * (design.bananas / simoptions.max_bananas) 
+% 
+% if simoptions is a two element vector a quadratic funtion is applied like
+% so:
+%
+%   penalty = simoptions.max_bananas_penfactor(1) * base_score * (design.bananas / simoptions.max_bananas) ...
+%              + base_score * (simoptions.max_bananas_penfactor(2) * design.bananas / simoptions.max_bananas)^2
+%
+% This would be done like so:
+%
+% score = 0
+% base_score = 1
+% design.bananas = 10
+% simoptions.max_bananas = 8
+% simoptions.max_bananas_penfactor = 5
+% [score, design, simoptions] = addpenalty_AM(design, simoptions, 'upper', 'bananas', base_score, score)
+%
 % Input
 %
 %   design, 
@@ -28,17 +58,31 @@ function [score, design, simoptions] = addpenalty_AM(design, simoptions, type, q
 %              the value of the quantity to be tested falls below this
 %              value, a penalty will be applied.
 %
-%     'target' In this case the test is for a lower limit on a value. If
-%              the value of the quantity to be tested falls below this
-%              value, a penalty will be applied.
+%     'target' In this case the test is for a target value forthe quantity.
+%              This applies a max and min penalty to the quantity with some
+%              tolerance around the target value. If
+%              simoptions.target_<quantity name> is a single value a
+%              default tolerance of +/-10% of the target value is used
+%              (i.e. 20% variation). If simoptions.target_<quantity name>
+%              is a two-element vector, the second value is a factor which
+%              determines the tolerance in terms of the value of the
+%              quantity, e.g 
 %
+%              simoptions.target_<quantity name> = [100, 0.05] 
+%
+%              sets a target value of 100 and allows a +/-5% tolerance on
+%              the value, i.e. +/-5 in this case.
 %     
 % 
 %   quantityfname - name of the field in the design structure containing
 %     the quantity which will be compared to the limit to generate the
 %     penalty.
 % 
-%   score
+%   base_score - base score which will be used as the basis for the
+%     penalty. A function either linear or quadratic will be applied to the
+%     base score to generate the penalty value. 
+%
+%   score - the input score plus the newly generated penalty
 %
 % 
 
