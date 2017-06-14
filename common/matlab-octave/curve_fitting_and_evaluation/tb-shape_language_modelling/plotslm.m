@@ -1,13 +1,22 @@
-function hfig = plotslm(slm, plotoptions)
+function hfig = plotslm(slm, plotstyle, varargin)
 % plotslm: plots a Shape Language Model (slm) or its derivatives
 % usage: plotslm(slm)
 % usage: hfig = plotslm(slm)
 %
 %
 % arguments: (input)
-%  slm - slm struct, as returned by slmengine or slmfit,
-%        or evaluated by slmeval
+%  slm - slm struct, as returned by slmengine or slmfit, or evaluated by 
+%    slmeval
 %
+%  plotstyle - char or cellarrays of strings determining the style of plot
+%    to be made
+%
+% Additional arguments may be supplied a Parameter-Value pairs
+%
+%  'Title' - string containing the figure title, default is 'Function plot'
+%  'XLabel' - string containing the label for the first x-axis, default is 
+%      'f(X)'
+%  'YLabel' - string containing the y-axis label, default is 'X'
 %
 % arguments: (output)
 %  hfig - figure handle. Only returned if an output argument
@@ -58,26 +67,40 @@ function hfig = plotslm(slm, plotoptions)
 % ------------------           licence           --------------------
 
 if nargin < 2
-    plotoptions = {''};
-elseif ~iscell(plotoptions)
-    plotoptions = {plotoptions};
+    plotstyle = {''};
+elseif ~iscell(plotstyle)
+    plotstyle = {plotstyle};
 end
+
+options.Title = 'Function plot';
+options.XLabel = 'X';
+options.YLabel = 'f(X)';
+options.ShowKnots = true;
+options.ShowData = true;
+
+options = parse_pv_pairs (options, varargin);
 
 % initial plot parameters
 params.LineStyle = '-';
-params.LineColor = 'r';
+params.LineColor = [0.4660, 0.6740, 0.1880]; %'r';
 params.LineWidth = 0.5;
 
+params.ShowData = options.ShowData;
 params.DataMarker = 'o';
-params.DataColor = 'b';
+params.DataColor = [0, 0.4470, 0.7410]; %'b';
 params.DataSize = 3;
 
+params.ShowKnots = options.ShowKnots;
 params.KnotStyle = '--';
 params.KnotColor = 'g';
 
 params.Grid = 'off';
 
 params.NumberOfPoints = 1001;
+
+params.Title = options.Title;
+params.XLabel = options.XLabel;
+params.YLabel = options.YLabel;
 
 % is it a slm or pp or old style hermite form?
 if isstruct(slm)
@@ -118,10 +141,10 @@ figuregen
 
 % and plot the model. The options will be
 % 'fundata', 'fun', 'residuals', 'dy', 'dy2', 'dy3', 'integral'
-if isempty(plotoptions)
+if isempty(plotstyle)
     plotcurve(params.PlotStyle)
 else
-    plotcurve([params.PlotStyle, plotoptions]);
+    plotcurve([params.PlotStyle, plotstyle]);
 end
 
 % any further interactions will be by callbacks.
@@ -339,7 +362,7 @@ if any(strcmp(plotstyle{1}, {'fundata' 'fun'}))
         'LineStyle',params.LineStyle, ...
         'LineWidth',params.LineWidth)
     
-    if ~knotsplotted
+    if ~knotsplotted && params.ShowKnots
 
         hold on
 
@@ -365,11 +388,9 @@ if any(strcmp(plotstyle{1}, {'fundata' 'fun'}))
 
     end
     
-
-
-    xlabel 'X'
-    ylabel 'f(X)'
-    title 'Function plot'
+    xlabel (params.XLabel)
+    ylabel (params.YLabel)
+    title  (params.Title)
     
 end
 
@@ -443,7 +464,7 @@ for i = 2:numel(plotstyle)
             % plot the curve
             h = addaxis(xev,ypred);
 
-            derivLineColor = 'm';
+            derivLineColor = [0.8500, 0.3250, 0.0980]; %'m';
             
             setaddaxisprops(i, 'YColor', derivLineColor);
             
@@ -519,7 +540,9 @@ end % end plotstyle cell array loop
 
 if any(strcmp('fundata', plotstyle))
   % we must also plot the data
-  if isfield(params.model,'x') && ~isempty(params.model.x)
+  if params.ShowData ...
+          && isfield(params.model,'x') ...
+          && ~isempty(params.model.x)
 
     h = addaxisplot(params.model.x,params.model.y,1);
     
