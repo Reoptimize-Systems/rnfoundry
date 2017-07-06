@@ -110,12 +110,6 @@ else
   echo "Not copying gsl gslcblas and f2c libraries"
 fi
 
-if [ "$make_zip" = true ]; then
-  # zip up the result
-  cd $working_copy_dir
-  zip -qr ${release_name}.zip $release_name/
-fi
-
 if [ "$skip_mex" = false ]; then
   if ! [ -x "$(command -v matlab)" ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
@@ -124,6 +118,12 @@ if [ "$skip_mex" = false ]; then
     matlab -nodesktop -r "restoredefaultpath; cd('$release_dir'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true); quit"
     #matlab -nodesktop -r "restoredefaultpath; cd('$release_dir'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true, 'CrossBuildW64', true); quit"
   fi
+fi
+
+if [ "$make_zip" = true ]; then
+  # zip up the result
+  cd $working_copy_dir
+  zip -qr ${release_name}.zip $release_name/
 fi
 
 if [ "$run_tests" = true ]; then
