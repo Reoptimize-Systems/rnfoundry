@@ -3,6 +3,10 @@ classdef hydrosys < handle
     % waves and each other hydrodynamically
     %
     %
+    % Methods:
+    %
+    %  addHydroBodies
+    %  initialiseHydrobodies
     
     properties (GetAccess = private, SetAccess = private)
         
@@ -374,7 +378,7 @@ classdef hydrosys < handle
                 self.hydroBodies(bodyind).restoreMassMatrix ();
                 
                 % body.forceAddedMass returns an (n x 6) matrix of values,
-                % with the rows being the time series history. We reshpe
+                % with the rows being the time series history. We reshape
                 % this into a (6 x 1 x n) matrix for insertion into the
                 % F_AddedMass matrix in the appropriate location. To get
                 % the right shape we have to transpose the result of
