@@ -41,8 +41,8 @@ function rnfoundry_setup (varargin)
 %    false.
 %
 %  'SkipExistfileSetup' : Skips compilation of the existfile mex
-%    function, even if it is not on the path. A non-mex version will be
-%    used if not present. Default is false.
+%    function, even if it is not on the path. A slower non-mex version will
+%    be used if not present. Default is false.
 %
 %  'ForceMexLseiSetup' : Forces the recompilation of the mexlsei mex 
 %    function even if it already on the path. mexlsei is not required if
@@ -65,8 +65,8 @@ function rnfoundry_setup (varargin)
 %    requires the GNU scientific library (libgsl and libgslblas). Default
 %    is false.
 %
-%  'SkipMexSLMSetup' : Sips the recompilation of the mexslmeval mex 
-%    function even if it already on the path. A slower non-compiled version
+%  'SkipMexSLMSetup' : Skips the recompilation of the mexslmeval mex 
+%    function even if it is not on the path. A slower non-compiled version
 %    will be used if the compiled version is not present. Default is false.
 %
 %  'ForceMexPPValSetup' : Forces the recompilation of the mexppval mex 
@@ -77,6 +77,22 @@ function rnfoundry_setup (varargin)
 %
 %  'ForceMexmPhaseWLSetup' : Forces the recompilation of the mexmPhaseWL
 %    mex function even if it already on the path. Default is false.
+%
+%  'SkipMexmPhaseWLSetup' : Skips the recompilation of the mexmPhaseWL
+%    mex function even if it is not on the path. There is no non-mex
+%    alternative so winding design funcitons will not work. Default is
+%    false.
+%
+%  'ForceMBDynSetup' : Forces the recompilation of the mbdyn related
+%    mex functions even if they are already on the path. Default is false.
+%
+%  'SkipMBDynSetup' : Skips the recompilation of the mbdyn related
+%    mex functions even if it they are not on the path. There is no non-mex
+%    alternative multibody dynamics modelling functions will not work.
+%    Default is false.
+%
+%  'ForceAllMex' : Equivalent to setting all the Force* options above to
+%    true. Default is false.
 %
 %  'PreventXFemmCheck' :  Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. This option determines
@@ -117,6 +133,7 @@ function rnfoundry_setup (varargin)
     
     Inputs.RunTests = false;
     Inputs.Verbose = false;
+    Inputs.ForceAllMex = false;
     % mexlsei related
     Inputs.ForceMexLseiSetup = false;
     Inputs.SkipMexLseiSetup = false;
@@ -125,14 +142,25 @@ function rnfoundry_setup (varargin)
     % slm fitting tool related
     Inputs.ForceMexSLMSetup = false;
     Inputs.SkipMexSLMSetup = false;
+    % mbdyn
+    Inputs.ForceMBDynSetup = false;
+    Inputs.SkipMBDynSetup = false;
     if isunix
         Inputs.GSLLibDir = ''; % for mexslmeval
         Inputs.GSLIncludeDir = ''; % for mexslmeval
         Inputs.F2CLibPath = ''; % for mlse
+        Inputs.MBCLibDir = ''; % for mbdyn
+        Inputs.MBCIncludeDir = '';
     else
-        Inputs.GSLLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'lib'); % for mexslmeval
-        Inputs.GSLIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'include'); % for mexslmeval
-        Inputs.F2CLibPath = fullfile (thisfilepath, 'x86_64-w64-mingw32_static', 'lib', 'libf2c.a'); % for mlse
+        Inputs.GSLLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib'); % for mexslmeval
+        Inputs.GSLIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'include'); % for mexslmeval
+        if isoctave
+            Inputs.F2CLibPath = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib', 'libf2c.a'); % for mlse
+        else
+            Inputs.F2CLibPath = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib', 'f2c.lib'); % for mlse
+        end
+        Inputs.MBCLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib'); % for mbdyn
+        Inputs.MBCLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'include'); % for mbdyn
     end
     % mex ppval related
     Inputs.ForceMexPPValSetup = false;
@@ -155,6 +183,13 @@ function rnfoundry_setup (varargin)
     
     % now parse the pv pairs
     Inputs = parse_pv_pairs (Inputs, varargin);
+    
+    if Inputs.ForceAllMex
+        Inputs.ForceMexLseiSetup = true;
+        Inputs.ForceMexSLMSetup = true;
+        Inputs.ForceMBDynSetup = true;
+        Inputs.ForceMexPPValSetup = true;
+    end
     
     if ~isoctave
         cc = mex.getCompilerConfigurations('C++');
@@ -204,6 +239,19 @@ function rnfoundry_setup (varargin)
             mexslmeval_setup ( 'Verbose', Inputs.Verbose, ...
                                'GSLLibDir', Inputs.GSLLibDir, ...
                                'GSLIncludeDir', Inputs.GSLIncludeDir);
+        end
+    end
+    
+    %% mbdyn
+    if Inputs.ForceMBDynSetup && Inputs.SkipMBDynSetup
+        error ('The options ForceMBDynSetup and SkipMBDynSetup are both set to true');
+    end
+    
+    if ~Inputs.SkipMBDynSetup
+        if Inputs.ForceMexSLMSetup || (exist (fullfile(getmfilepath('mbdyn.mint.mexMBCNodal'), ['mexMBCNodal.', mexext]), 'file') ~= 3)
+            mexmbdyn_setup ( 'Verbose', Inputs.Verbose, ...
+                             'MBCLibDir', Inputs.MBCLibDir, ...
+                             'MBCIncludeDir', Inputs.MBCIncludeDir);
         end
     end
     
