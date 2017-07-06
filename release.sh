@@ -13,15 +13,27 @@ set -e
 OPTIND=1  # Reset in case getopts has been used previously in the shell.
 
 # Initialize our own variables:
-version="0_4"
+version="dev"
 working_copy_dir=$(pwd)
 run_tests=false
 copy_win_libs=true
+skip_mex=false
+make_zip=true
 
-while getopts "h?v:t:w" opt; do
+usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z]  -- creates Renewnet Foundry release
+
+where:
+    -h  show this help text
+    -v  set the release version string (default: $version)
+    -t  run tests
+    -w  copy windows libraries etc
+    -m  skip building mex files (requires matlab)
+    -z  don't create zip file"
+
+while getopts "h?:vtwmz" opt; do
     case "$opt" in
     h|\?)
-        echo "Release script for Renewnet Foundry"
+        echo "$usage"
         exit 0
         ;;
     v)  version=$OPTARG
@@ -33,6 +45,11 @@ while getopts "h?v:t:w" opt; do
     w)  copy_win_libs=false
         echo "copy_win_libs: $copy_win_libs"
         ;;
+    m)  skip_mex=true
+        echo "skip_mex: $skip_mex"
+        ;;
+    z)  make_zip=false
+        echo "make_zip: $make_zip"
     esac
 done
 
@@ -62,32 +79,49 @@ if [ "$copy_win_libs" = true ]; then
 
     # we need to copy a bunch of files cross-compiled using MXE to the
     # release so it can be built on windows machines
-    mkdir $release_dir/x86_64-w64-mingw32_static
-    mkdir $release_dir/x86_64-w64-mingw32_static/include
-    mkdir $release_dir/x86_64-w64-mingw32_static/lib
+    mkdir $release_dir/x86_64-w64-mingw32
+    mkdir $release_dir/x86_64-w64-mingw32/include
+    mkdir $release_dir/x86_64-w64-mingw32/lib
 
     # gsl
-    # octave require standard unix lib names (.a)
-    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgsl.a  $release_dir/x86_64-w64-mingw32_static/lib/
-    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a $release_dir/x86_64-w64-mingw32_static/lib/
+    # octave requires standard unix lib names (.a)
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgsl.a  $release_dir/x86_64-w64-mingw32/lib/
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a $release_dir/x86_64-w64-mingw32/lib/
     # matlab needs libraries to have a different name (.lib)
-    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgsl.a  $release_dir/x86_64-w64-mingw32_static/lib/gsl.lib
-    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a $release_dir/x86_64-w64-mingw32_static/lib/gslcblas.lib
-    cp -r /opt/mxe/usr/x86_64-w64-mingw32.static/include/gsl/ $release_dir/x86_64-w64-mingw32_static/include/
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgsl.a  $release_dir/x86_64-w64-mingw32/lib/gsl.lib
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a $release_dir/x86_64-w64-mingw32/lib/gslcblas.lib
+    cp -r /opt/mxe/usr/x86_64-w64-mingw32.static/include/gsl/ $release_dir/x86_64-w64-mingw32/include/
 
     # f2c
     # octave requires standard unix lib names (.a)
-    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libf2c.a  $release_dir/x86_64-w64-mingw32_static/lib/
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libf2c.a  $release_dir/x86_64-w64-mingw32/lib/
     # matlab needs libraries to have a different name (.lib)
-    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libf2c.a  $release_dir/x86_64-w64-mingw32_static/lib/f2c.lib
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libf2c.a  $release_dir/x86_64-w64-mingw32/lib/f2c.lib
+
+    # mbdyn
+    cp -r ~/build/mbdyn/windows/* $release_dir/x86_64-w64-mingw32/
+    # matlab needs libraries to have a different name (.lib)
+    cp ~/build/mbdyn/windows/lib/libmbc.a  $release_dir/x86_64-w64-mingw32/lib/mbc.lib
 
 else
   echo "Not copying gsl gslcblas and f2c libraries"
 fi
 
-# zip up the result
-cd $working_copy_dir
-zip -qr ${release_name}.zip $release_name/
+if [ "$make_zip" = true ]; then
+  # zip up the result
+  cd $working_copy_dir
+  zip -qr ${release_name}.zip $release_name/
+fi
+
+if [ "$skip_mex" = false ]; then
+  if ! [ -x "$(command -v matlab)" ]; then
+    echo 'matlab is not installed, not building mex files using Matlab.' >&2
+  else
+    # buld the mex files using matlab
+    matlab -nodesktop -r "restoredefaultpath; cd('$release_dir'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true); quit"
+    #matlab -nodesktop -r "restoredefaultpath; cd('$release_dir'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true, 'CrossBuildW64', true); quit"
+  fi
+fi
 
 if [ "$run_tests" = true ]; then
   # test
