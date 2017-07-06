@@ -1150,13 +1150,29 @@ classdef hydrobody < handle
             if t > (obj.simu.startTime + delay)
                 if obj.stepCount > 2
                     % extrapolate acceleration from previous time steps
-                    thisaccel = interp1 (obj.timeStepHist', obj.accelHist, t-delay, 'linear', 'extrap');
+%                     thisaccel = interp1 (obj.timeStepHist', obj.accelHist, t-delay, 'linear', 'extrap');
+
+%                     thisaccel = zeros (size (obj.accelHist,2), 1);
+%                     for ind = 1:numel (thisaccel)
+% %                         thisaccel(ind) = obj.lagrangeinterp (obj.timeStepHist',obj.accelHist(:,ind),t-delay);
+% 
+%                         p = polyfit (obj.timeStepHist(end-1:end)', obj.accelHist(end-1:end,ind), 1);
+%                         thisaccel(ind) = polyval (p, t-delay);
+%                     end
+
+                thisaccel = obj.linearInterp ( obj.timeStepHist(end-1), ...
+                                               obj.timeStepHist(end), ...
+                                               obj.accelHist(end-1,:), ...
+                                               obj.accelHist(end,:), ...
+                                               t-delay );
+                    
                 elseif obj.stepCount == 2
                     thisaccel = interp1 (obj.timeStepHist(end-obj.stepCount+1:end)', obj.accelHist(end-obj.stepCount+1:end,:), t-delay, 'linear', 'extrap');
                 elseif obj.stepCount == 1
                     thisaccel = obj.accelHist (end,:)';
                 end
                 F_addedmass = obj.hydroForce.fAddedMass * thisaccel(:);
+%                 F_addedmass = obj.hydroForce.fAddedMass * accel(:);
             else
                 F_addedmass = [0;0;0;0;0;0];
             end
@@ -1178,6 +1194,8 @@ classdef hydrobody < handle
             end
 
         end
+        
+        
         
         function statederivs = radForceSSDerivatives (obj, u)
             
@@ -1747,6 +1765,30 @@ classdef hydrobody < handle
             verts_out(:,1) = verts(:,1) + x(1);
             verts_out(:,2) = verts(:,2) + x(2);
             verts_out(:,3) = verts(:,3) + x(3);
+        end
+        
+        function v = lagrangeInterp (x,y,u)
+            
+            n = length(x);
+            v = zeros(size(u));
+            
+            for k = 1:n
+                w = ones(size(u));
+                for j = [1:k-1 k+1:n]
+                    w = (u-x(j))./(x(k)-x(j)).*w;
+                end
+                v = v + w*y(k);
+            end
+            
+        end
+        
+        function v = linearInterp (x1, x2, y1, y2, u)
+            
+            m = (y2 - y1) ./ (x2 - x1);
+            c = y1 - m.*x1;
+            
+            v = m.*u + c;
+            
         end
 
     end
