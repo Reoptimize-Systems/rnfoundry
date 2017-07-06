@@ -160,7 +160,7 @@ function rnfoundry_setup (varargin)
             Inputs.F2CLibPath = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib', 'f2c.lib'); % for mlse
         end
         Inputs.MBCLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib'); % for mbdyn
-        Inputs.MBCLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'include'); % for mbdyn
+        Inputs.MBCIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'include'); % for mbdyn
     end
     % mex ppval related
     Inputs.ForceMexPPValSetup = false;
