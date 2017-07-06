@@ -1,10 +1,9 @@
-%% nova_innovation_example_radial_flux_permanent_magnet_machine_sim.m
+%% example_radial_flux_permanent_magnet_machine_sim.m
 %
 % This script sets up an example simulation of a radial flux permanent
-% magnet machine using the nova Innovation simulation module built on top
-% of the RenewNet Foundry permanent magnet machine toolbox. It also
-% demonstrates some other capabilities of the toolbox, such as the
-% underlying common functions used by the machine simulations.
+% magnet machine using the RenewNet Foundry permanent magnet machine
+% toolbox. It also demonstrates some other capabilities of the toolbox,
+% such as the underlying common functions used by the machine simulations.
 %
 % A machine design is always defined using fields of a structure which we
 % usually named 'design'. Throughout the toolbox this is the name used. In
@@ -264,9 +263,8 @@ design.Branches = 1;
 % points. For more information on slm objects, see slmengine.m and the
 % tutorial examples in slm_tutorial. The flux linkage slm is saved in the
 % field slm_fluxlinkage. We can plot this, with the knot points shown using
-% green dashed lines using plotslm
-
-plotslm( design.slm_fluxlinkage, {'dy'})
+% green dashed lines using plotfluxlinkage.m
+plotfluxlinkage (design)
 
 % Note that the fit is performed over two poles and normalised to the
 % number of poles, rather than being the actual displacement. This is
