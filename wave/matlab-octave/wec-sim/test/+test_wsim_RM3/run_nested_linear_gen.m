@@ -685,8 +685,8 @@ clear mb;
 %% generator outputs
 
 figure;
-tmin =32;
-tmax = 44;
+tmin =0;
+tmax = 150;
 plotinds =  time>=tmin & time<=tmax;
 genplotinds = genresults.time>=tmin & genresults.time<=tmax;
 [ax, hI, hvRpto] = plotyy ( genresults.time(genplotinds), genresults.PhaseCurents(genplotinds,:), ...
@@ -714,7 +714,13 @@ tmax = 400;
 
 bodyind = 2;
 
-tmax = min ( [tmax, time(end), output.bodies(bodyind).time(end) ]);
+
+tmax = min ( tmax, time(end));
+
+if exist ('output', 'var')
+    tmax = min (tmax, output.bodies(bodyind).time(end)); 
+end
+
 plotinds =  time>=tmin & time<=tmax;
 
 plotyy (time(plotinds), ...
@@ -761,6 +767,7 @@ legend ( 'my F ExcitRamp x', ...
          ... 'ptoforce',  ...
          'vRpto' );
 
+     
 
 %%
 
