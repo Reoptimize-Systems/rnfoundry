@@ -684,7 +684,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             end
             
             % Sends the forces to the mbdyn system
-            result = self.cppcall ('PutForces', boolean (convergence_flag) );
+            result = self.cppcall ('PutForces', logical (convergence_flag) );
         end
 
     end
