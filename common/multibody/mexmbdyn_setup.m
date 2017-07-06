@@ -48,7 +48,7 @@ function mexmbdyn_setup (varargin)
     mexMBCNodal_mexargs = {'mexMBCNodal.cpp', '-lmbc', 'CXXFLAGS="$CXXFLAGS -std=c++11"'};
     
     if ispc
-        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lws2_32.lib'}];
+        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lws2_32'}];
     end
     
     if ~isempty (options.MBCIncludeDir)
