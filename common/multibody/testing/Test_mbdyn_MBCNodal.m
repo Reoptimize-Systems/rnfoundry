@@ -1,20 +1,28 @@
 %% Test_mbdyn_MBCNodal
 
-
 % start mbdyn 
 delete ('output.*');
 
-mbdpath = fullfile (getmfilepath ('Test_mbdyn_MBCNodal'), 'socket.mbd');
-% start mbdyn 
+if ispc
+    mbdpath = fullfile (getmfilepath ('Test_mbdyn_MBCNodal'), 'socket_inet.mbd');
+    precmd = '';
+    mbdyncmd = ['"', fullfile(getmfilepath ('mexmbdyn_setup'), 'mbdyn_win64', 'bin', 'mbdyn.exe'), '"'];
+else
+    mbdpath = fullfile (getmfilepath ('Test_mbdyn_MBCNodal'), 'socket.mbd');
+    precmd = 'export LD_LIBRARY_PATH="" ;';
+    mbdyncmd = 'mbdyn';
+end
 
-[status, cmdout] = system ( sprintf ('export LD_LIBRARY_PATH="" ; mbdyn -f "%s" -o "%s" > "%s" 2>&1 &', ...
+[status, cmdout] = system ( sprintf ('%s %s -f "%s" -o "%s" > "%s" 2>&1 &', ...
+                    precmd, ...
+                    mbdyncmd, ...
                     mbdpath, ...
                     mbdpath(1:end-4), ...
                     [mbdpath(1:end-4), '.txt'] ...
                                      ) ...
                            );
                        
-[status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
+% [status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
 
 % wait a few seconds for mbdyn to initialise
 pause (3);
@@ -23,18 +31,25 @@ pause (3);
 
 mb = mbdyn.mint.MBCNodal ();
 
-mb.Initialize ( 'local', '/tmp/mbdyn.sock', ...
-                'NNodes', 2, ...
-                'UseLabels', false, ...
-                'Verbose', true );
-
+if ispc
+    mb.Initialize ( 'inet', '127.0.0.1', ...
+                    'HostPort', 5500, ...
+                    'NNodes', 2, ...
+                    'UseLabels', false, ...
+                    'Verbose', true );
+else
+    mb.Initialize ( 'local', '/tmp/mbdyn.sock', ...
+                    'NNodes', 2, ...
+                    'UseLabels', false, ...
+                    'Verbose', true );
+end
 nnodes = mb.GetNodes ()
 
 
 maxiter = 3; % to match example program 
 
-forces = [ 0., 0., 1.;
-           0., 0., 1. ].';
+forces = [ 0., 0., 0.;
+           0., 0., 0.1 ].';
 
 status = 0;
 while status == 0
@@ -98,9 +113,9 @@ clear mb;
 %%
 
 
-mbout = mbdyn.postproc ();
+mbout = mbdyn.postproc (mbdpath);
 
-mbout.loadResultsFromFiles ( mbdpath );
+% mbout.loadResultsFromFiles ( mbdpath );
 
 mbout.plotNodeTrajectories ()
 
