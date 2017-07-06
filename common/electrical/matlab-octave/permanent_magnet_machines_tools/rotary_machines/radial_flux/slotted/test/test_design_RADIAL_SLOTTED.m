@@ -23,19 +23,20 @@ function design = test_design_RADIAL_SLOTTED (armtype)
     design.thetacy = (2*pi / design.Qs) * 0.9;
     design.thetac = [design.thetacg, design.thetacy];
     design.thetasg = design.thetacg * 0.6;
-    design.tm = 0.0010;
-    design.tbi = 0.001;
-    design.ty = 0.001;
-    design.tc = 0.003;
-    design.tsb = 0.001;
+    design.tm = 5e-3;
+    design.tbi = 2 * design.tm;
+    design.ty = design.tbi;
+    design.tc = 20e-3;
+    design.tsb = 0.1 * design.tc;
     design.tsg = design.tsb * 0.3; %0; %0.01;
-    design.g = 3/1000;
-    design.Rmo = 0.05;
-    design.Rmi = 0.05;
-    design.ls = 0.03;
+    design.g = 3e-3;
+    
+    % rought scale of the machine
+    R = 200e-3;
+    design.ls = 2 * R;
 
     if strcmp(design.ArmatureType, 'external')
-        design.Rmo = 0.05;
+        design.Rmo = R;
         design.Rmi = design.Rmi - design.tm;
         design.Rmm = mean([design.Rmi, design.Rmo]);
         design.Rci = design.Rmo + design.g + design.tsb;
@@ -48,7 +49,7 @@ function design = test_design_RADIAL_SLOTTED (armtype)
         design.Ryo = design.Rco + design.ty;
         design.Rym = mean([design.Ryi, design.Ryo]);
     elseif strcmp(design.ArmatureType, 'internal')
-        design.Rmi = 0.05;
+        design.Rmi = R;
         design.Rmo = design.Rmi + design.tm;
         design.Rmm = mean([design.Rmi, design.Rmo]);
         design.Rco = design.Rmi - design.g - design.tsb;
@@ -66,7 +67,7 @@ function design = test_design_RADIAL_SLOTTED (armtype)
     design.Dc = design.Rcm * mean (design.thetac) / 100;
     design.CoilFillFactor = 0.7;
 
-    design.Hc = design.tc / design.CoilLayers;
+%     design.Hc = design.tc / design.CoilLayers;
     design.CoilTurns = 25;
 
     design.NCoilsPerPhase = design.Qc / design.Phases;
