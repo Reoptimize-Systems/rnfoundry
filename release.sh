@@ -30,7 +30,7 @@ where:
     -m  skip building mex files (requires matlab)
     -z  don't create zip file"
 
-while getopts "h?:vtwmz" opt; do
+while getopts "h?v:twmz" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -50,6 +50,7 @@ while getopts "h?:vtwmz" opt; do
         ;;
     z)  make_zip=false
         echo "make_zip: $make_zip"
+        ;;
     esac
 done
 
@@ -100,8 +101,10 @@ if [ "$copy_win_libs" = true ]; then
 
     # mbdyn
     cp -r ~/build/mbdyn/windows/* $release_dir/x86_64-w64-mingw32/
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libws2_32.a $release_dir/x86_64-w64-mingw32/lib/
     # matlab needs libraries to have a different name (.lib)
     cp ~/build/mbdyn/windows/lib/libmbc.a  $release_dir/x86_64-w64-mingw32/lib/mbc.lib
+    cp /opt/mxe/usr/x86_64-w64-mingw32.static/lib/libws2_32.a $release_dir/x86_64-w64-mingw32/lib/ws2_32.lib
 
 else
   echo "Not copying gsl gslcblas and f2c libraries"
