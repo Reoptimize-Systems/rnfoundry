@@ -82,6 +82,9 @@ classdef postproc < handle
                 else
                     error ('preprocsys must be a mbdyn.pre.system object or a structure')
                 end
+            else
+                self.simInfo = struct ('InitialTime', 0, 'TimeStep', 1);
+                warning ('No simulation info supplied, using initial time of 0 and time step of 1.')
             end
             
             % load the results
