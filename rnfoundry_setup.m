@@ -248,7 +248,7 @@ function rnfoundry_setup (varargin)
     end
     
     if ~Inputs.SkipMBDynSetup
-        if Inputs.ForceMexSLMSetup || (exist (fullfile(getmfilepath('mbdyn.mint.mexMBCNodal'), ['mexMBCNodal.', mexext]), 'file') ~= 3)
+        if Inputs.ForceMBDynSetup || (exist (fullfile(getmfilepath('mbdyn.mint.MBCNodal'), ['mexMBCNodal.', mexext]), 'file') ~= 3)
             mexmbdyn_setup ( 'Verbose', Inputs.Verbose, ...
                              'MBCLibDir', Inputs.MBCLibDir, ...
                              'MBCIncludeDir', Inputs.MBCIncludeDir);
