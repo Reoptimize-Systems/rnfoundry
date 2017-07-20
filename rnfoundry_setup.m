@@ -191,17 +191,7 @@ function rnfoundry_setup (varargin)
         Inputs.ForceMexPPValSetup = true;
     end
     
-    if ~isoctave
-        cc = mex.getCompilerConfigurations('C++');
-        
-        if numel (cc) == 0
-           warning ( ['The renewnet foundry code will have best performance if ' ...
-                      'you have set up a C++ compiler for matlab using "mex -setup". ' ...
-                      'No C++ compiler seems to have been set up on your system yet. ' ... 
-                      'You may wish to set this up and re-run rnfoundry_setup.']) 
-        end
-    end
-    
+    didcompwarn = false;
     
     %% existfile
     if Inputs.ForceExistfileSetup && Inputs.SkipExistfileSetup
@@ -210,8 +200,13 @@ function rnfoundry_setup (varargin)
     
     if ~Inputs.SkipExistfileSetup
         if Inputs.ForceExistfileSetup || (exist (['existfile.', mexext], 'file') ~= 3)
+            didcompwarn = compilerwarning (didcompwarn);
             % set up existfile mex function
             mexcompile_existfile ('Verbose', Inputs.Verbose);
+        else
+            if Inputs.Verbose
+                fprintf (1, 'Not compiling %s mex as it already exists\n', 'existfile')
+            end
         end
     end
     
@@ -222,10 +217,15 @@ function rnfoundry_setup (varargin)
     
     if ~Inputs.SkipMexLseiSetup
         if Inputs.ForceMexLseiSetup || (exist (['mexlsei.', mexext], 'file') ~= 3)
+            didcompwarn = compilerwarning (didcompwarn);
             mexlsei_setup ( 'ForceF2CLibRecompile', Inputs.ForceMexLseiF2cLibRecompile, ...
                             'ForceLSEIWrite', Inputs.ForceMexLseiCFileCreation, ...
                             'F2CLibFilePath', Inputs.F2CLibPath, ...
                             'Verbose', Inputs.Verbose );
+        else
+            if Inputs.Verbose
+                fprintf (1, 'Not compiling %s mex as it already exists\n', 'lsei')
+            end
         end
     end
     
@@ -236,9 +236,14 @@ function rnfoundry_setup (varargin)
     
     if ~Inputs.SkipMexSLMSetup
         if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mexext], 'file') ~= 3)
+            didcompwarn = compilerwarning (didcompwarn);
             mexslmeval_setup ( 'Verbose', Inputs.Verbose, ...
                                'GSLLibDir', Inputs.GSLLibDir, ...
                                'GSLIncludeDir', Inputs.GSLIncludeDir);
+        else
+            if Inputs.Verbose
+                fprintf (1, 'Not compiling %s mex as it already exists\n', 'slmeval')
+            end
         end
     end
     
@@ -249,9 +254,14 @@ function rnfoundry_setup (varargin)
     
     if ~Inputs.SkipMBDynSetup
         if Inputs.ForceMBDynSetup || (exist (fullfile(getmfilepath('mbdyn.mint.MBCNodal'), ['mexMBCNodal.', mexext]), 'file') ~= 3)
+            didcompwarn = compilerwarning (didcompwarn);
             mexmbdyn_setup ( 'Verbose', Inputs.Verbose, ...
                              'MBCLibDir', Inputs.MBCLibDir, ...
                              'MBCIncludeDir', Inputs.MBCIncludeDir);
+        else
+            if Inputs.Verbose
+                fprintf (1, 'Not compiling %s mex as it already exists\n', 'mbdyn')
+            end
         end
     end
     
@@ -264,9 +274,12 @@ function rnfoundry_setup (varargin)
         if Inputs.ForceMexPPValSetup ...
                 || (exist (['ppmval.', mexext], 'file') ~= 3)...
                 || (exist (['ppuval.', mexext], 'file') ~= 3)
-
+            didcompwarn = compilerwarning (didcompwarn);
             mexppval_setup ('Verbose', Inputs.Verbose);
-
+        else
+            if Inputs.Verbose
+                fprintf (1, 'Not compiling %s mex as they already exists', 'ppmval and ppuval')
+            end
         end
     end
     
@@ -277,8 +290,13 @@ function rnfoundry_setup (varargin)
     
     if ~Inputs.SkipMexmPhaseWLSetup
         if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mexext], 'file') ~= 3)
+            didcompwarn = compilerwarning (didcompwarn);
             mmake ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
             mmake ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+        else
+            if Inputs.Verbose
+                fprintf (1, 'Not compiling %s mex as it already exists\n', 'mPhaseWL')
+            end
         end
     end
     
@@ -353,6 +371,17 @@ function rnfoundry_setup (varargin)
     
     cd (workdir);
     
+    
+    if ~isoctave
+        % print message about adding files to the path (octave currently
+        % doesn't support displaying help in subfunctions)
+        fprintf(1, '\n\n');
+        help rnfoundry_setup>addedtopathmsg
+
+        fprintf (1, '\n');
+    
+    end
+    
     if Inputs.RunTests
         runtests ();
     end
@@ -384,5 +413,45 @@ function runtests ()
     example_radial_flux_pm_with_ratio_specification
     clearvars ('-except', vars{:});
     close all;
+    
+end
+
+
+function addedtopathmsg ()
+% rnfoundry_setup has added the directories containing mfiles to the search
+% path. This change will not be saved when you close Matlab/Octave. You
+% will need to have these directories on the path in future for the
+% RenewNet Foundry code to work when you restart Matlab/Octave. You can add
+% them again by using the 'Set path' dialog in Matlab, or using the
+% 'addpath' command, or by rerunning rnfoundry_setup again, which calls
+% addpath internally to do this. rnfoundry_setup will not recompile the mex
+% functions if they already exist and will just modify your path.
+%
+% If you open the 'Set path' dialog now, you could also save the changes
+% that have just been made.
+%
+% Run the command 'help path' for more information on the path. In general
+% you can save changes to the Matlab path that persist across sessions
+% using the 'Set path' dialog, or you can make a startup.m file which runs
+% every time Matlab starts (.octaverc in Octave) containing the addpath
+% commands.
+%
+
+end
+
+function didcompwarn = compilerwarning (didcompwarn)
+
+    if (didcompwarn == false) && (isoctave == false)
+        cc = mex.getCompilerConfigurations('C++');
+        
+        if numel (cc) == 0
+           warning ( ['The renewnet foundry code will have best performance if ' ...
+                      'you have set up a C++ compiler for matlab using "mex -setup". ' ...
+                      'No C++ compiler seems to have been set up on your system yet. ' ... 
+                      'You may wish to set this up and re-run rnfoundry_setup.']) 
+        end
+    end
+    
+    didcompwarn = true;
     
 end
