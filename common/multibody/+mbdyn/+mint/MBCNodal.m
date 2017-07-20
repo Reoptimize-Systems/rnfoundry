@@ -14,6 +14,17 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         useRefNode; % Flag indicating whether there is a reference node
         
         useMoments; % Flag indicating whether moments are to be used
+        dataAndNext;
+        
+        
+        host;
+        port;
+        path;
+        commMethod;
+        MBDynInputFile;
+        MBDynExecutable;
+        MBDynStartWaitTime;
+        MBDynOutputFile;
         
     end
     
@@ -27,49 +38,97 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         % forces before advancing 
         needForces;
         
+        mbsys;
+        outputPrefix;
+        nodeOrientiationType;
+        
     end
     
     methods
         
         % Constructor
-        function self = MBCNodal ()
-
-            % initialise the cppinterface parent class by passing the
-            % mexfunction to the superclass constructor
-            self = self@mbdyn.mint.cppinterface(@mbdyn.mint.mexMBCNodal);
-
-        end
-
-        function Initialize (self, commethod, comstring, varargin)
-            %  Initialize nodal mbdyn simulation
-            %  
+        function self = MBCNodal (varargin)
+            % Creates an MBCNodal object
+            %
             % Syntax
             %
-            % MBCNodal.Initialize (commethod, commpath)
-            % MBCNodal.Initialize (..., 'Parameter', Value)
+            % mb = MBCNodal ()
             %
             % Input
+            % 
+            % Arguments are be supplied using parameter-value pair syntax.
+            % Which arguments are required and which are optional depends
+            % on how the system is defined.
             %
-            %  commethod - string determining what type of socket
-            %    communication to use to communicate with MBDyn. The
-            %    avaialble options are: 'local' and 'inet'. The 'local'
-            %    options used a file based method and you must supply the
-            %    file location in the commpath argument (see below). The
-            %    'inet' method used TCP/IP over a network and the address
-            %    to use must be supplied in commpath. If using 'inet' you
-            %    must also supply a host port to use for communication
-            %    using the 'HostPort' optional argument described below.
+            % 'MBDynPreProc' - use this option to supply an
+            %   mbdyn.pre.system object from which the communication data
+            %   will be determined. If this options is used, the optional
+            %   arguments 'NNodes', 'NodeOrientationType', 'UseLabels',
+            %   'UseAccelerations', 'UseRefNode' and
+            %   'RefNodeOrientationType' will be ignored as they will be
+            %   set through examination of the external structual force
+            %   element in the MBDyn system description. Note that
+            %   'UseMoments' will still be used, this is not set in the
+            %   input file.
             %
-            %  comstring - a string containing the communication path to
-            %    use. The contents depends on the value of commethod above.
+            % 'MBDynInputFile' - MBDyn input file name. This is the file
+            %   containing the problem description for MBDyn. This can
+            %   either be a pre-existing file, or can be created by
+            %   MBCNodal from a mbdyn.pre.system supplied using the
+            %   'MBDynPreProc' option. If no mbdyn.pre.system object is
+            %   supplied, this must be a preexisting file.
             %
-            % Further arguments may be supplied as parameter-value pairs,
-            % where the required or desired options depend on the
-            % particular configuration to be set up.
+            % 'CreateInputFile' - if a mbdyn.pre.system object is supplied
+            %   using the MBDynPreProc option, the input mbd file for MBDyn
+            %   can be created from the system. This options is a logical
+            %   flag determining whether the file should be generated. If
+            %   no file path is supplied via the 'MBDynInputFile' option, a
+            %   random temporary file name will be generated. The name of
+            %   the resulting file will be stored in the MBDynInputFile
+            %   class property. Default is true.
             %
-            % 'HostPort' - if the inet communication method is to be used,
-            %   this is the port number to use for communication, and must
-            %   be supplied.
+            % 'OverwriteInputFile' - if a mbdyn.pre.system object is
+            %   supplied, and 'CreateInputFile' is true, this flag
+            %   determines whether to overwrite any existing file in that
+            %   location. Default is true. 
+            %
+            % 'OutputPrefix' - used to specify the output path prefix. This
+            %   is the name of output files, but without their file
+            %   extension. e.g. /home/jbloggs/my_mbdyn_sim will create the
+            %   files:
+            %
+            %   /home/jbloggs/my_mbdyn_sim.frc
+            %   /home/jbloggs/my_mbdyn_sim.ine
+            %   /home/jbloggs/my_mbdyn_sim.out
+            %   /home/jbloggs/my_mbdyn_sim.mov
+            %   /home/jbloggs/my_mbdyn_sim.jnt
+            %   /home/jbloggs/my_mbdyn_sim.log
+            %
+            %   A windows example might look like
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim 
+            %   producing the files:
+            %
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim.frc
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim.ine
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim.out
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim.mov
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim.jnt
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim.log
+            %
+            % 'MBDynExecutable' - used to specify the full path to the
+            %   mbdyn executeable file. If not supplied, MBCNodal will look
+            %   in various standard location where it might be found. An
+            %   error will be thrown if MBDyn cannot be located. Default is
+            %   an empty string, meaning MBCNodal will search for MBDyn.
+            %
+            % 'UseMoments' - optional logical flag indicating whether data
+            %   on moments is to be exchanged. Default is false.
+            %
+            % 'DataAndNext' - optional logical flag indicating when data
+            %   will be exchanged. Default is true.
+            %
+            % The following options are used when the MBDynPreProc options
+            % is not used to supply a mbdyn.pre.system object.
             %
             % 'NNodes' - scalar number of nodes in the problem, should
             %   match up with problem file. This MUST be supplied if you
@@ -99,85 +158,247 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %   'none', the value supplied in the 'NodeOrientationType'
             %   option will be used. Default is 'none'.
             %
-            %
+            % 
             
+            options.MBDynInputFile = '';
+            options.CreateInputFile = true;
+            options.OverwriteInputFile = true;
+            options.OutputPrefix = '';
+            options.MBDynExecutable = '';
+            options.UseMoments = false;
+            options.DataAndNext = true;
+            
+            % mbdyn.pre.system is supplied via this
+            options.MBDynPreProc = [];
+            
+            % the following only used if no mbdyn.pre.system is supplied
+            options.Host = '';
+            options.Port = '';
+            options.Path = '';
             options.UseRefNode = false; 
             options.RefNodeOrientationType = 'none'; % refnode rotation type 'none'. Will be ignored if UseRefNode is false
-            options.NNodes = 0; % number of nodes, should match up with problem file?
+            options.NNodes = 0; % number of nodes, should match up with problem file
             options.NodeOrientationType = 'orientation matrix';
             options.UseLabels = true;
             options.UseAccelerations = false; % don't handle accelerations by default
-            options.HostPort = []; % inet port to use with commethod 'inet'
-            options.UseMoments = false;
-            options.DataAndNext = true;
-            options.Timeout = -1;
-            options.Verbose = false;
+            
             
             options = parse_pv_pairs (options, varargin);
             
-            if (options.NNodes <= 0) && options.RefNode == 0
+            assert (ischar (options.MBDynInputFile), 'MBDynInputFile must be a char array');
+            assert (islogical (options.CreateInputFile), 'CreateInputFile must be a logical type (true/false)');
+            assert (islogical (options.OverwriteInputFile), 'OverwriteInputFile must be a logical type (true/false)');
+            assert (ischar (options.OutputPrefix), 'OutputPrefix must be a char array');
+            assert (ischar (options.MBDynExecutable), 'MBDynExecutable must be a char array');
+            assert (islogical (options.UseMoments), 'UseMoments must be a logical type (true/false)');
+            assert (islogical (options.DataAndNext), 'DataAndNext must be a logical type (true/false)');
+            
+            % initialise the cppinterface parent class by passing the
+            % mexfunction to the superclass constructor
+            self = self@mbdyn.mint.cppinterface(@mbdyn.mint.mexMBCNodal);
+            
+            if ~isempty (options.MBDynPreProc)
                 
-                error ('MBCNodal:gaveportforlocal', ...
-                    'NNodes and RefNode cannot both be zero');
+                % use the information in the MBDynPreProc class to set up
+                % the sim communication
+                if isa (options.MBDynPreProc, 'mbdyn.pre.system')
+                    
+                    self.mbsys = options.MBDynPreProc;
+                    
+                    comminfo = self.mbsys.externalStructuralCommInfo ();
+                    
+                    self.commMethod = comminfo.commMethod;
+                    
+                    if strcmp (comminfo.commMethod, 'inet socket')
+                        self.host = comminfo.host;
+                        self.port = comminfo.port;
+                    elseif strcmp (comminfo.commMethod, 'local socket')
+                        self.path = comminfo.path;
+                    end
+                    
+                else
+                    error ('MBDynPreProc is not empty or an mbdyn.pre.system object');
+                end
                 
+                if ~isempty (options.MBDynInputFile)
+                    self.MBDynInputFile = options.MBDynInputFile;
+                else
+                    [pathstr, name] = fileparts (tempname ());
+                    self.MBDynInputFile = fullfile (pathstr, ['mbdyn_input_file_', name, '.mbd']);
+                end
+                
+                if exist (self.MBDynInputFile, 'file') == 2
+                    % file exists
+                    if options.OverwriteInputFile
+                        self.mbsys.generateMBDynInputFile (self.MBDynInputFile);
+                    end
+                else
+                    if options.CreateInputFile
+                        self.mbsys.generateMBDynInputFile (self.MBDynInputFile);
+                    end
+                end
+                
+                self.useMoments = options.UseMoments;
+                
+                extfinfo = self.mbsys.externalStructuralInfo ();
+                
+                % copy some of the chosen options over to the class properties
+                self.useLabels = extfinfo.UseLabels;
+                self.useAccelerations = extfinfo.UseAccelerations;
+                self.useRefNode = extfinfo.UseRefNode;
+                self.nodeOrientiationType = extfinfo.NodeOrientationType;
+                
+                self.NNodes = extfinfo.NNodes;
+                
+            else
+                % No mbsys object supplied
+                if ~isempty (options.MBDynInputFile)
+                    if exist (options.MBDynInputFile, 'file') == 2
+                        self.MBDynInputFile = options.MBDynInputFile;
+                    else
+                        error ('MBDynInputFile does not exist');
+                    end
+                else
+                    error ('MBDynInputFile is empty');
+                end
+            
+                if ~isempty (options.Path)
+                    self.commMethod = 'local socket';
+                    self.path = options.Path;
+                else
+                    self.commMethod = 'inet socket';
+                    self.host = options.Host;
+                    self.port = options.Port;
+                end
+                
+                if (options.NNodes <= 0) && options.RefNode == 0
+                
+                    error ('MBCNodal:gaveportforlocal', ...
+                        'NNodes and RefNode cannot both be zero');
+                else
+                    self.NNodes = options.NNodes;
+                end
+
+                % copy some of the chosen options over to the class properties
+                self.useLabels = options.UseLabels;
+                self.useAccelerations = options.UseAccelerations;
+                self.useRefNode = options.UseRefNode;
+                self.useMoments = options.UseMoments;
+                self.nodeOrientiationType = options.NodeOrientationType;
+            
             end
             
-            if options.UseLabels == true
+            if self.useLabels == true
                 error ('MBCNodal:uselablesbug', ...
                     ['You have set UseLabels to true, unfortunately there is a bug in MBDyn that \n', ...
                      'means this option is not currently possible and will cause MBDyn to abort when \n', ...
                      'using external socket forces.']);
             end
-            
-            % copy some of the chosen options over to the class properties
-            self.useLabels = options.UseLabels;
-            self.useAccelerations = options.UseAccelerations;
-            self.useRefNode = options.UseRefNode;  
-            
-            self.useMoments = options.UseMoments;
-            
-            if strcmp (commethod, 'local')
                 
-                if ~isempty (options.HostPort)
-                    warning ('MBCNodal:gaveportforlocal', ...
-                        'You have specified a port number with the ''local'' connection method which is file based.');
+            if isempty (options.OutputPrefix)
+                [pathstr, name] = fileparts (self.MBDynInputFile);
+                self.outputPrefix = fullfile (pathstr, name);
+            else
+                [pathstr, ~] = fileparts (options.OutputPrefix);
+                if exist (pathstr, 'dir') ~= 7
+                    error ('Output prefix directory does not exist');
                 end
+            end
+            
+            if isempty (options.MBDynExecutable)
+                self.MBDynExecutable = self.findMBDyn ();
+            else
+                if exist (options.MBDynExecutable, 'file') == 2
+                    self.MBDynExecutable = options.MBDynExecutable;
+                else
+                    error ('The specified MBDynExecutable location does not exist');
+                end
+            end
+            
+            self.MBDynOutputFile = [self.outputPrefix, '.txt'];
+            
+            self.dataAndNext = options.DataAndNext;
+            
+        end
+
+        function start (self, varargin)
+            % Start mbdyn simulation
+            %  
+            % Syntax
+            %
+            % Start (mb)
+            % Start (..., 'Parameter', Value)
+            %
+            % Input
+            %
+            % Some optional arguments may be supplied as parameter-value
+            % pairs, where the required or desired options depend on the
+            % particular configuration to be set up.
+            %
+            %
+            % 'StartMBDyn' - determines whether the MBDyn process should be
+            %   started. Default is true.
+            %
+            % 'Verbose' - 
+            %
+            % 'Timeout' - 
+            %
+            %
+            
+            options.Timeout = -1;
+            options.Verbose = false;
+            options.StartMBDyn = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            assert (islogical (options.StartMBDyn) && isscalar (options.StartMBDyn), 'StartMBDyn must be a logical type (true/false)');
+            
+            if options.StartMBDyn
+                if options.Verbose
+                    fprintf (1, 'Starting MBDyn\n');
+                end
+                % start mbdyn
+                self.startMBdyn ();
+            end
+            
+            % now initialise communication
+            if strcmp (self.commMethod, 'local socket')
                 
                 self.cppcall ( 'Initialize', ...
-                               options.UseRefNode, ...
-                               options.RefNodeOrientationType, ...
-                               options.NNodes, ...
-                               options.UseLabels, ...
-                               options.NodeOrientationType, ...
-                               options.UseAccelerations, ...
-                               options.DataAndNext, ...
+                               self.useRefNode, ...
+                               self.nodeOrientiationType, ...options.RefNodeOrientationType,
+                               self.NNodes, ...
+                               self.useLabels, ...
+                               self.nodeOrientiationType, ...
+                               self.useAccelerations, ...
+                               self.dataAndNext, ...
                                options.Verbose, ...
                                options.Timeout, ...
-                               commethod, ...
-                               comstring );
+                               'local', ...
+                               self.path );
                            
                 self.NNodes = GetNodes (self);
                 
-            elseif strcmp (commethod, 'inet')
+            elseif strcmp (self.commMethod, 'inet socket')
                 
-                if isempty (options.HostPort)
-                    error ('MBCNodal:noportforinet', ...
-                        'You have specified commethod ''inet'', but not specified a host port number with the ''HostPort'' option.');
-                end
+%                 if isempty (options.HostPort)
+%                     error ('MBCNodal:noportforinet', ...
+%                         'You have specified commethod ''inet'', but not specified a host port number with the ''HostPort'' option.');
+%                 end
                 
                 self.cppcall ( 'Initialize', ...
-                               options.UseRefNode, ...
-                               options.RefNodeOrientationType, ...
-                               options.NNodes, ...
-                               options.UseLabels, ...
-                               options.NodeOrientationType, ...
-                               options.UseAccelerations, ...
-                               options.DataAndNext, ...
+                               self.useRefNode, ...
+                               self.nodeOrientiationType, ...options.RefNodeOrientationType,
+                               self.NNodes, ...
+                               self.useLabels, ...
+                               self.nodeOrientiationType, ...
+                               self.useAccelerations, ...
+                               self.dataAndNext, ...
                                options.Verbose, ...
                                options.Timeout, ...
-                               commethod, ...
-                               comstring, ...
-                               options.HostPort );
+                               'inet', ...
+                               self.host, ...
+                               self.port );
                            
                 self.NNodes = GetNodes (self);
                 
@@ -687,6 +908,89 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             result = self.cppcall ('PutForces', logical (convergence_flag) );
         end
 
+    end
+    
+    methods (Access = protected)
+        
+        function startMBdyn (self)
+            
+%             delete ([outputfile_prefix, '.*']);
+
+            
+            
+            % start mbdyn
+            cmdline = sprintf ('%s -f "%s" -o "%s" > "%s" 2>&1 &', ...
+                                self.MBDynExecutable, ...
+                                self.MBDynInputFile, ...
+                                self.outputPrefix, ...
+                                self.MBDynOutputFile  ...
+                                                 );
+
+                                             
+            [status, cmdout] = cleansystem ( cmdline );
+            
+            pause (self.MBDynStartWaitTime);
+            
+        end
+        
+        function path = findMBDyn (self)
+            
+            candidate_locs = { ...
+                fullfile(pwd (), 'mbdyn'), ...
+                fullfile(pwd (), 'mbdyn.exe'), ...
+                'c:\Program Files (x86)\MBDyn\mbdyn.exe', ...
+                'c:\Program Files\MBDyn\mbdyn.exe', ...
+                '/usr/local/bin/mbdyn/mbdyn', ...
+                '/usr/local/bin/mbdyn' ...
+                             };
+            
+            switch computer ('arch')
+
+                case 'win64'
+                    candidate_locs = [candidate_locs, ...
+                        fullfile(getmfilepath ('mexmbdyn_setup'), 'x86_64-w64-mingw32', 'bin', 'mbdyn.exe')];
+                case 'win32'
+                    candidate_locs = [candidate_locs, ...
+                        fullfile(getmfilepath ('mexmbdyn_setup'), 'i686-w64-mingw32', 'bin', 'mbdyn.exe')];
+                case 'glnxa64'
+                    candidate_locs = [candidate_locs, ...
+                        fullfile(getmfilepath ('mexmbdyn_setup'), 'x86_64-linux-gnu', 'bin', 'mbdyn')];
+                case 'glnxa32'
+                    candidate_locs = [candidate_locs, ...
+                        fullfile(getmfilepath ('mexmbdyn_setup'), 'i686-linux-gnu', 'bin', 'mbdyn')];
+
+            end
+            
+            if exist ('rnfoundry_setup', 'file') == 2
+                switch computer ('arch')
+
+                    case 'win64'
+                        candidate_locs = [candidate_locs, ...
+                            fullfile(getmfilepath ('rnfoundry_setup'), 'x86_64-w64-mingw32', 'bin', 'mbdyn.exe')];
+                    case 'win32'
+                        candidate_locs = [candidate_locs, ...
+                            fullfile(getmfilepath ('rnfoundry_setup'), 'i686-w64-mingw32', 'bin', 'mbdyn.exe')];
+                    case 'glnxa64'
+                        candidate_locs = [candidate_locs, ...
+                            fullfile(getmfilepath ('rnfoundry_setup'), 'x86_64-linux-gnu', 'bin', 'mbdyn')];
+                    case 'glnxa32'
+                        candidate_locs = [candidate_locs, ...
+                            fullfile(getmfilepath ('rnfoundry_setup'), 'i686-linux-gnu', 'bin', 'mbdyn')];
+
+                end
+            end
+            
+            for ind = 1:numel (candidate_locs)
+                if exist (candidate_locs{ind}, 'file') == 2
+                    path = candidate_locs{ind};
+                    return;
+                end
+            end
+            
+            error ('The MBDyn executeable could not be found.');
+            
+        end
+        
     end
 
 end
