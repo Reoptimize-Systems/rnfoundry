@@ -1,6 +1,6 @@
 classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
     
-    properties
+    properties (GetAccess = public, SetAccess = private)
         create;
         port;
         path;
@@ -45,6 +45,12 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             self.path = options.Path;
             self.port = options.Port;
             self.host = options.Host;
+            
+            if isempty (options.Path)
+                self.commMethod = 'inet socket';
+            else
+                self.commMethod = 'local socket';
+            end
             
         end
         
@@ -95,6 +101,24 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
                 str = self.addOutputLine (str, self.commaSepList ('send after predict', self.sendAfterPredict), 1, false);
             end
             
+        end
+        
+        function comminfo = commInfo (self)
+            % gets communication info for the socket communicator.
+            %
+            %
+            
+            comminfo.commMethod = self.commMethod;
+            
+            if strcmp (self.commMethod, 'local socket')
+                comminfo.path = self.path;
+            elseif strcmp (self.commMethod, 'inet socket')
+                comminfo.host = self.host;
+                comminfo.port = self.port;
+            else
+                error ('unrecognised communication type');
+            end
+
         end
         
     end

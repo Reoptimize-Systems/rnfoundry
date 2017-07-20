@@ -115,6 +115,73 @@ classdef system < mbdyn.pre.base
             
         end
         
+        function comminfo = externalStructuralCommInfo (self)
+            % gets communication info for an external structural force.
+            % Throws an error if there is no external structural force in
+            % the system
+            %
+            %
+            
+            for ind = 1:numel (self.elements)
+                if isa (self.elements{ind}, 'mbdyn.pre.externalStructuralForce')
+                    
+                    el = self.elements{ind};
+                    
+                    comminfo = el.communicator.commInfo ();
+                    
+                    return;
+                end
+            end
+            
+            error ('No external structural force was in the system.');
+            
+        end
+        
+        function extforceinfo = externalStructuralInfo (self)
+            
+            testyesno = @(x) strcmp (x, 'yes');
+            
+            for ind = 1:numel (self.elements)
+                if isa (self.elements{ind}, 'mbdyn.pre.externalStructuralForce')
+                    
+                    el = self.elements{ind};
+                    
+                    if isempty (el.labels) 
+                        extforceinfo.UseLabels = false;
+                    else
+                        extforceinfo.UseLabels = testyesno (el.labels);
+                    end
+                    
+                    if isempty (el.accelerations) 
+                        extforceinfo.UseAccelerations = false;
+                    else
+                        extforceinfo.UseAccelerations = testyesno (el.accelerations);
+                    end
+                    
+                    if isempty (el.useReferenceNodeForces) 
+                        extforceinfo.UseRefNode = false;
+                    else
+                        extforceinfo.UseRefNode = testyesno (el.useReferenceNodeForces);
+                    end
+                    
+                    if isempty (el.orientation) 
+                        extforceinfo.NodeOrientationType = false;
+                    else
+                        extforceinfo.NodeOrientationType = el.orientation;
+                    end
+                    
+                    extforceinfo.NNodes = numel (el.nodes);
+                    
+                    return;
+                end
+            end
+            
+            error ('No external structural force was in the system.');
+            
+            
+            
+        end
+        
         function draw (self, varargin)
             % draw the mbdyn system
             

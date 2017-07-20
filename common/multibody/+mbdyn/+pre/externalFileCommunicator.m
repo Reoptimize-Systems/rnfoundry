@@ -5,6 +5,7 @@ classdef externalFileCommunicator < mbdyn.pre.base
         coupling;
         precision;
         sendAfterPredict;
+        commMethod;
     end
     
     methods
@@ -64,6 +65,24 @@ classdef externalFileCommunicator < mbdyn.pre.base
             str = sprintf ('%s,', self.type);
             
         end
+        
+%         function comminfo = commInfo (self)
+%             % gets communication info for the socket communicator.
+%             %
+%             %
+%             
+%             comminfo.commMethod = self.commMethod;
+%             
+%             if strcmp (self.commMethod, 'local socket')
+%                 comminfo.path = self.path;
+%             elseif strcmp (self.commMethod, 'inet socket')
+%                 comminfo.host = self.host;
+%                 comminfo.port = self.port;
+%             else
+%                 error ('unrecognised communication type');
+%             end
+% 
+%         end
         
     end
     
