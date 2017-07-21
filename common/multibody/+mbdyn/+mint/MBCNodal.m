@@ -52,7 +52,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             % Syntax
             %
-            % mb = MBCNodal ()
+            % mb = MBCNodal ('Parameter', value)
             %
             % Input
             % 
@@ -303,6 +303,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 if exist (pathstr, 'dir') ~= 7
                     error ('Output prefix directory does not exist');
                 end
+                self.outputPrefix = options.OutputPrefix;
             end
             
             if isempty (options.MBDynExecutable)
@@ -913,10 +914,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
     methods (Access = protected)
         
         function startMBdyn (self)
-            
-%             delete ([outputfile_prefix, '.*']);
-
-            
+            % run mbdyn with the appropriate commands
             
             % start mbdyn
             cmdline = sprintf ('%s -f "%s" -o "%s" > "%s" 2>&1 &', ...
@@ -926,7 +924,6 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                                 self.MBDynOutputFile  ...
                                                  );
 
-                                             
             [status, cmdout] = cleansystem ( cmdline );
             
             pause (self.MBDynStartWaitTime);
@@ -934,6 +931,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         end
         
         function path = findMBDyn (self)
+            % locate the mbdyn executeable
             
             candidate_locs = { ...
                 fullfile(pwd (), 'mbdyn'), ...
