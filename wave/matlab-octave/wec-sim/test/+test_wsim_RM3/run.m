@@ -3,7 +3,7 @@
 clear waves simu hsys mbsys float_hbody spar_hbody ref_float ref_spar mb
 
 %% Hydro Simulation Data
-simu = simulationClass(getmfilepath ('test_wsim_RM3.run'));    %Create the Simulation Variable
+simu = wsim.simsettings (getmfilepath ('test_wsim_RM3.run'));  % Create the Simulation Variable
 % simu.mode = 'normal';                 %Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
 % simu.explorer='on';                   %Turn SimMechanics Explorer (on/off)
 simu.startTime = 0;                   %Simulation Start Time [s]
@@ -12,7 +12,7 @@ simu.solver = 'ode4';                   %simu.solver = 'ode4' for fixed step & s
 simu.dt = 0.1; 							%Simulation time-step [s]
 simu.rampT = 100;                       %Wave Ramp Time Length [s]
 simu.multibodySolver = 'MBDyn';
-simu.b2b = 1;
+simu.b2b = true;
 
 %% Wave Information 
 
@@ -21,7 +21,7 @@ simu.b2b = 1;
 %%%%%%%%%%%%%%%%%%%
 
 % Regular Waves
-waves = waveClass('regularCIC');        %Create the Wave Variable and Specify Type                               
+waves = wsim.wavesettings ('regularCIC');        %Create the Wave Variable and Specify Type                               
 waves.H = 2.5;                          %Wave Height [m]
 waves.T = 8;                            %Wave Period [s]
 %%%%%%%%%%%%%%%%%%%
