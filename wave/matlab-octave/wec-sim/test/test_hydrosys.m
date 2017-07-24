@@ -2,50 +2,59 @@
 
 clear waves simu hydrobodies hsys
 
+%% Run original wecSim RM3 example
+
+casedir = fullfile ( getmfilepath ('wecSim'), '..', 'tutorials', 'RM3');
+
+cd (casedir);
+
+wecSim;
+
 %% Simulation Data
-simu = simulationClass('/home/rcrozier/src/WEC-Sim-git/tutorials/RM3');    %Create the Simulation Variable
-% simu.mode = 'normal';                 %Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
-% simu.explorer='on';                   %Turn SimMechanics Explorer (on/off)
-% simu.startTime = 0;                   %Simulation Start Time [s]
-simu.endTime=400;                       %Simulation End bdcloseTime [s]
-simu.solver = 'ode4';                   %simu.solver = 'ode4' for fixed step & simu.solver = 'ode45' for variable step 
-simu.dt = 0.1; 							%Simulation time-step [s]
-simu.rampT = 100;                       %Wave Ramp Time Length [s]
+simu = wsim.simsettings ('/home/rcrozier/src/WEC-Sim-git/tutorials/RM3');    %Create the Simulation Variable
+% simu.mode = 'normal';                 % Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
+% simu.explorer='on';                   % Turn SimMechanics Explorer (on/off)
+% simu.startTime = 0;                   % Simulation Start Time [s]
+simu.endTime = 400;                     % Simulation End bdcloseTime [s]
+simu.solver = 'ode4';                   % simu.solver = 'ode4' for fixed step & simu.solver = 'ode45' for variable step 
+simu.dt = 0.1; 							% Simulation time-step [s]
+simu.rampT = 100;                       % Wave Ramp Time Length [s]
 
 simu.b2b = 1;
 
 %% Wave Information 
 %% noWaveCIC, no waves with radiation CIC  
-% waves = waveClass('noWaveCIC');       %Create the Wave Variable and Specify Type      
+% waves = waveClass('noWaveCIC');       % Create the Wave Variable and Specify Type      
 
 %% Regular Waves  
-waves = waveClass('regularCIC');        %Create the Wave Variable and Specify Type                               
-waves.H = 2.5;                          %Wave Height [m]
-waves.T = 8;                            %Wave Period [s]
+waves = wsim.wavesettings ('regularCIC');        % Create the Wave Variable and Specify Type                               
+waves.H = 2.5;                          % Wave Height [m]
+waves.T = 8;                            % Wave Period [s]
 
 %% Irregular Waves using PM Spectrum with Convolution Integral Calculation
-% waves = waveClass('irregular');       %Create the Wave Variable and Specify Type
-% waves.H = 2.5;                        %Significant Wave Height [m]
-% waves.T = 8;                          %Peak Period [s]
+% waves = wsim.wavesettings ('irregular');       % Create the Wave Variable and Specify Type
+% waves.H = 2.5;                        % Significant Wave Height [m]
+% waves.T = 8;                          % Peak Period [s]
 % waves.spectrumType = 'PM';
 
 %% Irregular Waves using BS Spectrum with State Space Calculation
-% waves = waveClass('irregular');       %Create the Wave Variable and Specify Type
-% waves.H = 2.5;                        %Significant Wave Height [m]
-% waves.T = 8;                          %Peak Period [s]
+% waves = wsim.wavesettings ('irregular');       % Create the Wave Variable and Specify Type
+% waves.H = 2.5;                        % Significant Wave Height [m]
+% waves.T = 8;                          % Peak Period [s]
 % waves.spectrumType = 'BS';
-% simu.ssCalc = 1;						%Control option to use state space model 
+% simu.ssCalc = 1;						% Control option to use state space model 
 
 %% Irregular Waves using User-Defined Spectrum
-% waves = waveClass('irregularImport');  %Create the Wave Variable and Specify Type
-% waves.spectrumDataFile = 'ndbcBuoyData.txt';  %Name of User-Defined Spectrum File [2,:] = [omega, Sf]
+% waves = wsim.wavesettings ('irregularImport');  % Create the Wave Variable and Specify Type
+% waves.spectrumDataFile = 'ndbcBuoyData.txt';  % Name of User-Defined Spectrum File [2,:] = [omega, Sf]
 
 %% User-Defined Time-Series
-% waves = waveClass('userDefined');     %Create the Wave Variable and Specify Type
+% waves = wsim.wavesettings ('userDefined');     % Create the Wave Variable and Specify Type
 % waves.etaDataFile = 'umpqua46229_6_2008.mat'; % Name of User-Defined Time-Series File [:,2] = [time, wave_elev]
 
 %% Body Data
-%% Float
+
+% Float
 hydrobodies(1) = wsim.hydrobody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir);      
     %Create the wsim.hydrobody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
@@ -55,7 +64,7 @@ hydrobodies(1).mass = 'equilibrium';
 hydrobodies(1).momOfInertia = [20907301 21306090.66 37085481.11];  %Moment of Inertia [kg*m^2]     
 hydrobodies(1).geometryFile = 'geometry/float.stl';    %Location of Geomtry File
 
-%% Spar/Plate
+% Spar/Plate
 hydrobodies(2) = wsim.hydrobody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir); 
 hydrobodies(2).mass = 'equilibrium';                   
 hydrobodies(2).momOfInertia = [94419614.57 94407091.24 28542224.82];
