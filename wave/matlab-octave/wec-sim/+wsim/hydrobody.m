@@ -171,7 +171,7 @@ classdef hydrobody < handle
 
         end
 
-        function readH5File(obj)
+        function readH5File (obj)
             % Reads the HDF5 file containing the hydrodynamic data for the
             % body
             %
@@ -200,7 +200,7 @@ classdef hydrobody < handle
             %
             % readH5File reads the hydrodynamic data in HDF5 format from
             % the (<hydrodata_file_name>.h5) file provided when the object
-            % was constructed. A helper tool, BEMIO, is avaialable to parse
+            % was constructed. A helper tool, BEMIO, is available to parse
             % BEM solutions (from WAMIT, NEMOH and AQWA) into the required
             % HDF5 data structure. 
             %
@@ -244,7 +244,7 @@ classdef hydrobody < handle
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
         end
 
-        function loadHydroData(obj, hydroData)
+        function loadHydroData (obj, hydroData)
             % Loads hydroData structure from matlab variable as alternative
             % to reading the h5 file. Used when doing multiple condition
             % runs on the same system
@@ -256,50 +256,66 @@ classdef hydrobody < handle
             obj.name      = hydroData.properties.name;
         end
 
-        function hydroForcePre(obj,w,waveDir,CIkt,CTTime,numFreq,dt,rho,g,waveType,waveAmpTime,iBod,numBod,ssCalc,nlHydro,B2B)
+        function hydroForcePre(obj)
             % HydroForce Pre-processing calculations
             % 1. Set the linear hydrodynamic restoring coefficient, viscous
             %    drag, and linear damping matrices
             % 2. Set the wave excitation force
-            obj.setMassMatrix(rho,nlHydro)
+                  
+            rho = obj.simu.rho;
+            g = obj.simu.g;
+            
+            obj.setMassMatrix(rho, obj.simu.nlHydro)
+            
             k = obj.hydroData.hydro_coeffs.linear_restoring_stiffness;
-            obj.hydroForce.linearHydroRestCoef = k .*rho .*g;
-            obj.hydroForce.visDrag = diag(0.5*rho.*obj.viscDrag.cd.*obj.viscDrag.characteristicArea);
-            obj.hydroForce.linearDamping = diag(obj.linearDamping);
-            obj.hydroForce.userDefinedFe = zeros(length(waveAmpTime(:,2)),6);   %initializing userDefinedFe for non user-defined cases
-            switch waveType
+            
+            obj.hydroForce.linearHydroRestCoef = k .* rho .* g;
+            
+            obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
+            
+            obj.hydroForce.linearDamping = diag (obj.linearDamping);
+            
+            obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)),6);   %initializing userDefinedFe for non user-defined cases
+            
+            switch obj.waves.type
                 case {'noWave'}
-                    obj.noExcitation()
-                    obj.constAddedMassAndDamping(w,CIkt,rho,B2B);
+                    obj.noExcitation ()
+                    obj.constAddedMassAndDamping ();
                     obj.excitationMethodNum = 0;
+                    
                 case {'noWaveCIC'}
-                    obj.noExcitation()
-                    obj.irfInfAddedMassAndDamping(CIkt,CTTime,ssCalc,iBod,rho,B2B);
+                    obj.noExcitation ()
+                    obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 0;
+                    
                 case {'regular'}
-                    obj.regExcitation(w,waveDir,rho,g);
-                    obj.constAddedMassAndDamping(w,CIkt,rho,B2B);
+                    obj.regExcitation ();
+                    obj.constAddedMassAndDamping ();
                     obj.excitationMethodNum = 1;
+                    
                 case {'regularCIC'}
-                    obj.regExcitation(w,waveDir,rho,g);
-                    obj.irfInfAddedMassAndDamping(CIkt,CTTime,ssCalc,iBod,rho,B2B);
+                    obj.regExcitation ();
+                    obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 1;
+                    
                 case {'irregular','irregularImport'}
-                    obj.irrExcitation(w,numFreq,waveDir,rho,g);
-                    obj.irfInfAddedMassAndDamping(CIkt,CTTime,ssCalc,iBod,rho,B2B);
+                    obj.irrExcitation ();
+                    obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 2;
+                    
                 case {'userDefined'}
-                    obj.userDefinedExcitation(waveAmpTime,dt,waveDir,rho,g);
-                    obj.irfInfAddedMassAndDamping(CIkt,CTTime,ssCalc,iBod,rho,B2B);
+                    obj.userDefinedExcitation (obj.waves.waveAmpTime);
+                    obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 3;
+                    
             end
 
             % store the description of the wave type for information later
-            obj.excitationMethod = waveType;
+            obj.excitationMethod = obj.waves.type;
 
         end
 
-        function adjustMassMatrix(obj,adjMassWeightFun,B2B)
+        function adjustMassMatrix(obj)
             % Merge diagonal term of added mass matrix to the mass matrix
             % 1. Store the original mass and added-mass properties
             % 2. Add diagonal added-mass inertia to moment of inertia
@@ -308,9 +324,11 @@ classdef hydrobody < handle
             obj.hydroForce.storage.mass = obj.mass;
             obj.hydroForce.storage.momOfInertia = obj.momOfInertia;
             obj.hydroForce.storage.fAddedMass = obj.hydroForce.fAddedMass;
-            if B2B == 1
-                tmp.fadm=diag(obj.hydroForce.fAddedMass(:,1+(iBod-1)*6:6+(iBod-1)*6));
-                tmp.adjmass = sum(tmp.fadm(1:3))*adjMassWeightFun;
+            
+            if obj.simu.b2b == true
+                
+                tmp.fadm = diag (obj.hydroForce.fAddedMass(:,1+(iBod-1)*6:6+(iBod-1)*6));
+                tmp.adjmass = sum(tmp.fadm(1:3)) * obj.simu.adjMassWeightFun;
                 obj.mass = obj.mass + tmp.adjmass;
                 obj.momOfInertia = obj.momOfInertia+tmp.fadm(4:6)';
                 obj.hydroForce.fAddedMass(1,1+(iBod-1)*6) = obj.hydroForce.fAddedMass(1,1+(iBod-1)*6) - tmp.adjmass;
@@ -319,17 +337,20 @@ classdef hydrobody < handle
                 obj.hydroForce.fAddedMass(4,4+(iBod-1)*6) = 0;
                 obj.hydroForce.fAddedMass(5,5+(iBod-1)*6) = 0;
                 obj.hydroForce.fAddedMass(6,6+(iBod-1)*6) = 0;
+                
             else
-                tmp.fadm=diag(obj.hydroForce.fAddedMass);
-                tmp.adjmass = sum(tmp.fadm(1:3))*adjMassWeightFun;
+                
+                tmp.fadm = diag(obj.hydroForce.fAddedMass);
+                tmp.adjmass = sum (tmp.fadm(1:3)) * obj.simu.adjMassWeightFun;
                 obj.mass = obj.mass + tmp.adjmass;
-                obj.momOfInertia = obj.momOfInertia+tmp.fadm(4:6)';
+                obj.momOfInertia = obj.momOfInertia + tmp.fadm(4:6)';
                 obj.hydroForce.fAddedMass(1,1) = obj.hydroForce.fAddedMass(1,1) - tmp.adjmass;
                 obj.hydroForce.fAddedMass(2,2) = obj.hydroForce.fAddedMass(2,2) - tmp.adjmass;
                 obj.hydroForce.fAddedMass(3,3) = obj.hydroForce.fAddedMass(3,3) - tmp.adjmass;
                 obj.hydroForce.fAddedMass(4,4) = 0;
                 obj.hydroForce.fAddedMass(5,5) = 0;
                 obj.hydroForce.fAddedMass(6,6) = 0;
+                
             end
         end
 
@@ -385,25 +406,25 @@ classdef hydrobody < handle
         function bodyGeo(obj,fname)
             % Reads mesh file and calculates areas and centroids
             try
-                [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast(fname,1,1);
+                [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,1);
             catch
-                [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast(fname,1,2);
+                [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,2);
             end
-            obj.bodyGeometry.numFace = length(obj.bodyGeometry.face);
-            obj.bodyGeometry.numVertex = length(obj.bodyGeometry.vertex);
-            obj.checkStl();
-            obj.triArea();
-            obj.triCenter();
+            obj.bodyGeometry.numFace = length (obj.bodyGeometry.face);
+            obj.bodyGeometry.numVertex = length (obj.bodyGeometry.vertex);
+            obj.checkStl ();
+            obj.triArea ();
+            obj.triCenter ();
         end
 
         function triArea(obj)
             % Function to calculate the area of a triangle
             points = obj.bodyGeometry.vertex;
             faces = obj.bodyGeometry.face;
-            v1 = points(faces(:,3),:)-points(faces(:,1),:);
-            v2 = points(faces(:,2),:)-points(faces(:,1),:);
-            av_tmp =  1/2.*(cross(v1,v2));
-            area_mag = sqrt(av_tmp(:,1).^2 + av_tmp(:,2).^2 + av_tmp(:,3).^2);
+            v1 = points(faces(:,3),:) - points(faces(:,1),:);
+            v2 = points(faces(:,2),:) - points(faces(:,1),:);
+            av_tmp =  1/2 .* (cross(v1,v2));
+            area_mag = sqrt (av_tmp(:,1).^2 + av_tmp(:,2).^2 + av_tmp(:,3).^2);
             obj.bodyGeometry.area = area_mag;
         end
 
@@ -418,9 +439,9 @@ classdef hydrobody < handle
             %    warning(['The order of triangle vertices in ' obj.geometryFile ' do not follow the right hand rule. ' ...
             %        'This will causes visualization errors in the SimMechanics Explorer'])
             %end
-            norm_mag = sqrt(tnorm(:,1).^2 + tnorm(:,2).^2 + tnorm(:,3).^2);
+            norm_mag = sqrt (tnorm(:,1).^2 + tnorm(:,2).^2 + tnorm(:,3).^2);
             check = sum(norm_mag)/length(norm_mag);
-            if check>1.01 || check<0.99
+            if check > 1.01 || check < 0.99
                 error(['length of normal vectors in ' obj.geometryFile ' is not equal to one.'])
             end
         end
@@ -431,10 +452,10 @@ classdef hydrobody < handle
             %
             points = obj.bodyGeometry.vertex;
             faces = obj.bodyGeometry.face;
-            c = zeros(length(faces),3);
-            c(:,1) = (points(faces(:,1),1)+points(faces(:,2),1)+points(faces(:,3),1))./3;
-            c(:,2) = (points(faces(:,1),2)+points(faces(:,2),2)+points(faces(:,3),2))./3;
-            c(:,3) = (points(faces(:,1),3)+points(faces(:,2),3)+points(faces(:,3),3))./3;
+            c = zeros (length (faces), 3);
+            c(:,1) = ( points(faces(:,1),1) + points(faces(:,2),1) + points(faces(:,3),1) ) ./ 3;
+            c(:,2) = ( points(faces(:,1),2) + points(faces(:,2),2) + points(faces(:,3),2) ) ./ 3;
+            c(:,3) = ( points(faces(:,1),3) + points(faces(:,2),3) + points(faces(:,3),3) ) ./ 3;
             obj.bodyGeometry.center = c;
         end
 
@@ -446,8 +467,8 @@ classdef hydrobody < handle
             n = obj.bodyGeometry.norm;
             figure()
             hold on
-            trimesh(tri,p(:,1),p(:,2),p(:,3))
-            quiver3(c(:,1),c(:,2),c(:,3),n(:,1),n(:,2),n(:,3))
+            trimesh (tri,p(:,1),p(:,2),p(:,3))
+            quiver3 (c(:,1),c(:,2),c(:,3),n(:,1),n(:,2),n(:,3))
         end
 
         function checkinputs(obj)
@@ -475,176 +496,250 @@ classdef hydrobody < handle
             obj.hydroForce.fExt.im=zeros(1,6);
         end
 
-        function regExcitation(obj,w,waveDir,rho,g)
+        function regExcitation(obj)
             % Regular wave excitation force
             % Used by hydroForcePre
-            re = obj.hydroData.hydro_coeffs.excitation.re(:,:,:) .*rho.*g;
-            im = obj.hydroData.hydro_coeffs.excitation.im(:,:,:) .*rho.*g;
-            obj.hydroForce.fExt.re=zeros(1,6);
-            obj.hydroForce.fExt.im=zeros(1,6);
+            re = obj.hydroData.hydro_coeffs.excitation.re(:,:,:) .* obj.simu.rho .* obj.simu.g;
+            im = obj.hydroData.hydro_coeffs.excitation.im(:,:,:) .* obj.simu.rho .* obj.simu.g;
+            obj.hydroForce.fExt.re = zeros(1,6);
+            obj.hydroForce.fExt.im = zeros(1,6);
+            
             for ii=1:6
+                
                 if length(obj.hydroData.simulation_parameters.wave_dir) > 1
-                    [X,Y] = meshgrid(obj.hydroData.simulation_parameters.w, obj.hydroData.simulation_parameters.wave_dir);
-                    obj.hydroForce.fExt.re(ii) = interp2(X, Y, squeeze(re(ii,:,:)), w, waveDir);
-                    obj.hydroForce.fExt.im(ii) = interp2(X, Y, squeeze(im(ii,:,:)), w, waveDir);
-                elseif obj.hydroData.simulation_parameters.wave_dir == waveDir
-                    obj.hydroForce.fExt.re(ii) = interp1(obj.hydroData.simulation_parameters.w,squeeze(re(ii,1,:)),w,'spline');
-                    obj.hydroForce.fExt.im(ii) = interp1(obj.hydroData.simulation_parameters.w,squeeze(im(ii,1,:)),w,'spline');
+                    
+                    [X,Y] = meshgrid ( obj.hydroData.simulation_parameters.w, ...
+                                       obj.hydroData.simulation_parameters.wave_dir);
+                    
+                    obj.hydroForce.fExt.re(ii) = interp2 (X, Y, squeeze(re(ii,:,:)), obj.waves.w, obj.waves.waveDir);
+                    obj.hydroForce.fExt.im(ii) = interp2 (X, Y, squeeze(im(ii,:,:)), obj.waves.w, obj.waves.waveDir);
+                    
+                elseif obj.hydroData.simulation_parameters.wave_dir == obj.waves.waveDir
+                    
+                    obj.hydroForce.fExt.re(ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(re(ii,1,:)), obj.waves.w, 'spline');
+                    obj.hydroForce.fExt.im(ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(im(ii,1,:)), obj.waves.w, 'spline');
+                    
                 end
+                
             end
+            
         end
 
-        function irrExcitation(obj,wv,numFreq,waveDir,rho,g)
+        function irrExcitation(obj)
             % Irregular wave excitation force
             % Used by hydroForcePre
-            re = obj.hydroData.hydro_coeffs.excitation.re(:,:,:) .*rho.*g;
-            im = obj.hydroData.hydro_coeffs.excitation.im(:,:,:) .*rho.*g;
-            obj.hydroForce.fExt.re=zeros(numFreq,6);
-            obj.hydroForce.fExt.im=zeros(numFreq,6);
+            re = obj.hydroData.hydro_coeffs.excitation.re(:,:,:) .* obj.simu.rho .* obj.simu.g;
+            im = obj.hydroData.hydro_coeffs.excitation.im(:,:,:) .* obj.simu.rho .* obj.simu.g;
+            
+            obj.hydroForce.fExt.re = zeros (obj.waves.numFreq, 6);
+            obj.hydroForce.fExt.im = zeros (obj.waves.numFreq, 6);
+            
             for ii=1:6
-                if length(obj.hydroData.simulation_parameters.wave_dir) > 1
-                    [X,Y] = meshgrid(obj.hydroData.simulation_parameters.w, obj.hydroData.simulation_parameters.wave_dir);
-                    obj.hydroForce.fExt.re(:,ii) = interp2(X, Y, squeeze(re(ii,:,:)), wv, waveDir);
-                    obj.hydroForce.fExt.im(:,ii) = interp2(X, Y, squeeze(im(ii,:,:)), wv, waveDir);
-                elseif obj.hydroData.simulation_parameters.wave_dir == waveDir
-                    obj.hydroForce.fExt.re(:,ii) = interp1(obj.hydroData.simulation_parameters.w,squeeze(re(ii,1,:)),wv,'spline');
-                    obj.hydroForce.fExt.im(:,ii) = interp1(obj.hydroData.simulation_parameters.w,squeeze(im(ii,1,:)),wv,'spline');
+                if length (obj.hydroData.simulation_parameters.wave_dir) > 1
+                    
+                    [X,Y] = meshgrid (obj.hydroData.simulation_parameters.w, ...
+                                      obj.hydroData.simulation_parameters.wave_dir);
+                                  
+                    obj.hydroForce.fExt.re(:,ii) = interp2 (X, Y, squeeze(re(ii,:,:)), obj.waves.w, obj.waves.waveDir);
+                    
+                    obj.hydroForce.fExt.im(:,ii) = interp2 (X, Y, squeeze(im(ii,:,:)), obj.waves.w, obj.waves.waveDir);
+                    
+                elseif obj.hydroData.simulation_parameters.wave_dir == obj.waves.waveDir
+                    
+                    obj.hydroForce.fExt.re(:,ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(re(ii,1,:)), obj.waves.w, 'spline');
+                    
+                    obj.hydroForce.fExt.im(:,ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(im(ii,1,:)), obj.waves.w, 'spline');
+                    
                 end
             end
         end
 
-        function userDefinedExcitation(obj,waveAmpTime,dt,waveDir,rho,g)
+        function userDefinedExcitation(obj, waveAmpTime)
             % Calculated User-Defined wave excitation force with non-causal convolution
             % Used by hydroForcePre
-            kf = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f .*rho .*g;
+            kf = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f .* obj.simu.rho .* obj.simu.g;
             kt = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t;
-            t =  min(kt):dt:max(kt);
+            t =  min(kt):obj.simu.dt:max(kt);
+            
             for ii = 1:6
-                if length(obj.hydroData.simulation_parameters.wave_dir) > 1
-                    [X,Y] = meshgrid(kt, obj.hydroData.simulation_parameters.wave_dir);
-                    kernel = squeeze(kf(ii,:,:));
-                    obj.userDefinedExcIRF = interp2(X, Y, kernel, t, waveDir);
-                elseif obj.hydroData.simulation_parameters.wave_dir == waveDir
-                    kernel = squeeze(kf(ii,1,:));
-                    obj.userDefinedExcIRF = interp1(kt,kernel,min(kt):dt:max(kt));
+                if length (obj.hydroData.simulation_parameters.wave_dir) > 1
+                    
+                    [X,Y] = meshgrid (kt, obj.hydroData.simulation_parameters.wave_dir);
+                    
+                    kernel = squeeze (kf(ii,:,:));
+                    
+                    obj.userDefinedExcIRF = interp2 (X, Y, kernel, t, obj.waves.waveDir);
+                    
+                elseif obj.hydroData.simulation_parameters.wave_dir == obj.waves.waveDir
+                    
+                    kernel = squeeze (kf(ii,1,:));
+                    
+                    obj.userDefinedExcIRF = interp1 (kt,kernel,min(kt):obj.simu.dt:max(kt));
+                    
                 end
-                obj.hydroForce.userDefinedFe(:,ii) = conv(waveAmpTime(:,2),obj.userDefinedExcIRF,'same')*dt;
+                obj.hydroForce.userDefinedFe(:,ii) = conv (waveAmpTime(:,2), obj.userDefinedExcIRF, 'same') * obj.simu.dt;
+                
             end
-            obj.hydroForce.fExt.re=zeros(1,6);
-            obj.hydroForce.fExt.im=zeros(1,6);
+            
+            obj.hydroForce.fExt.re = zeros(1,6);
+            obj.hydroForce.fExt.im = zeros(1,6);
+            
         end
 
-        function constAddedMassAndDamping(obj,w,CIkt,rho,B2B)
+        function constAddedMassAndDamping(obj)
             % Set added mass and damping for a specific frequency
             % Used by hydroForcePre
-            am = obj.hydroData.hydro_coeffs.added_mass.all .*rho;
-            rd = obj.hydroData.hydro_coeffs.radiation_damping.all .*rho;
-            for i=1:length(obj.hydroData.simulation_parameters.w)
-                rd(:,:,i) = rd(:,:,i) .*obj.hydroData.simulation_parameters.w(i);
+            
+            am = obj.hydroData.hydro_coeffs.added_mass.all .* obj.simu.rho;
+            
+            rd = obj.hydroData.hydro_coeffs.radiation_damping.all .* obj.simu.rho;
+            
+            for i = 1:length (obj.hydroData.simulation_parameters.w)
+                rd(:,:,i) = rd(:,:,i) .* obj.hydroData.simulation_parameters.w(i);
             end
             % Change matrix size: B2B [6x6n], noB2B [6x6]
-            switch B2B
-                case {1}
-                    lenJ = 6*obj.bodyTotal;
-                    obj.hydroForce.fAddedMass = zeros(6,lenJ);
-                    obj.hydroForce.fDamping = zeros(6,lenJ);
-                    obj.hydroForce.totDOF  =zeros(6,lenJ);
-                    for ii=1:6
-                        for jj=1:lenJ
-                            obj.hydroForce.fAddedMass(ii,jj) = interp1(obj.hydroData.simulation_parameters.w,squeeze(am(ii,jj,:)),w,'spline');
-                            obj.hydroForce.fDamping  (ii,jj) = interp1(obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jj,:)),w,'spline');
-                        end
+            if obj.simu.b2b == true
+                
+                lenJ = 6*obj.bodyTotal;
+                obj.hydroForce.fAddedMass = zeros(6,lenJ);
+                obj.hydroForce.fDamping = zeros(6,lenJ);
+                obj.hydroForce.totDOF  =zeros(6,lenJ);
+                for ii=1:6
+                    for jj=1:lenJ
+                        obj.hydroForce.fAddedMass(ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(am(ii,jj,:)), obj.waves.w, 'spline');
+                        obj.hydroForce.fDamping  (ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jj,:)), obj.waves.w, 'spline');
                     end
-                otherwise
-                    lenJ = 6;
-                    obj.hydroForce.fAddedMass = zeros(6,lenJ);
-                    obj.hydroForce.fDamping = zeros(6,lenJ);
-                    obj.hydroForce.totDOF  =zeros(6,lenJ);
-                    for ii=1:6
-                        for jj=1:lenJ
-                            jjj = 6*(obj.bodyNumber-1)+jj;
-                            obj.hydroForce.fAddedMass(ii,jj) = interp1(obj.hydroData.simulation_parameters.w,squeeze(am(ii,jjj,:)),w,'spline');
-                            obj.hydroForce.fDamping  (ii,jj) = interp1(obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jjj,:)),w,'spline');
-                        end
+                end
+                    
+            else
+                lenJ = 6;
+                obj.hydroForce.fAddedMass = zeros(6,lenJ);
+                obj.hydroForce.fDamping = zeros(6,lenJ);
+                obj.hydroForce.totDOF  =zeros(6,lenJ);
+
+                for ii=1:6
+                    for jj=1:lenJ
+                        jjj = 6*(obj.bodyNumber-1)+jj;
+                        obj.hydroForce.fAddedMass(ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(am(ii,jjj,:)), obj.waves.w, 'spline');
+                        obj.hydroForce.fDamping  (ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jjj,:)), obj.waves.w, 'spline');
                     end
+                end
+                    
             end
         end
 
-        function irfInfAddedMassAndDamping(obj,CIkt,CTTime,ssCalc,iBod,rho,B2B)
+        function irfInfAddedMassAndDamping(obj)
             % Set radiation force properties using impulse response function
             % Used by hydroForcePre
             % Added mass at infinite frequency
             % Convolution integral raditation damping
             % State space formulation
-            if B2B == 1;
+            
+            iBod = obj.simu.numWecBodies;
+            
+            if obj.simu.b2b == true
                 lenJ = obj.bodyTotal*6;
             else
                 lenJ = 6;
             end
+            
             % Convolution integral formulation
-            if B2B == 1;
-                obj.hydroForce.fAddedMass=obj.hydroData.hydro_coeffs.added_mass.inf_freq .*rho;
+            if obj.simu.b2b == true
+                obj.hydroForce.fAddedMass = obj.hydroData.hydro_coeffs.added_mass.inf_freq .* obj.simu.rho;
             else
-                obj.hydroForce.fAddedMass=obj.hydroData.hydro_coeffs.added_mass.inf_freq(1:6,(iBod-1)*6+1:(iBod-1)*6+6) .*rho;
+                obj.hydroForce.fAddedMass = obj.hydroData.hydro_coeffs.added_mass.inf_freq(1:6,(iBod-1)*6+1:(iBod-1)*6+6) .* obj.simu.rho;
             end
+            
             % Radition IRF
             obj.hydroForce.fDamping=zeros(6,lenJ);
-            irfk = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K  .*rho;
+            irfk = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K .* obj.simu.rho;
             irft = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t;
             %obj.hydroForce.irkb=zeros(CIkt,6,lenJ);
-            if B2B == 1;
+            if obj.simu.b2b == true
                 for ii=1:6
                     for jj=1:lenJ
-                        obj.hydroForce.irkb(:,ii,jj) = interp1(irft,squeeze(irfk(ii,jj,:)),CTTime,'spline');
+                        obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jj,:)), obj.simu.CTTime, 'spline');
                     end
                 end
             else
                 for ii=1:6
                     for jj=1:lenJ
                         jjj = (iBod-1)*6+jj;
-                        obj.hydroForce.irkb(:,ii,jj) = interp1(irft,squeeze(irfk(ii,jjj,:)),CTTime,'spline');
+                        obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jjj,:)), obj.simu.CTTime, 'spline');
                     end
                 end
             end
             % State Space Formulation
-            if ssCalc == 1
-                if B2B == 1
+            if obj.simu.ssCalc == 1
+                
+                if obj.simu.b2b == 1
+                    
                     for ii = 1:6
+                        
                         for jj = 1:lenJ
+                            
                             arraySize = obj.hydroData.hydro_coeffs.radiation_damping.state_space.it(ii,jj);
+                            
                             if ii == 1 && jj == 1 % Begin construction of combined state, input, and output matrices
+                                
                                 Af(1:arraySize,1:arraySize) = obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all(ii,jj,1:arraySize,1:arraySize);
-                                Bf(1:arraySize,jj)        = obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all(ii,jj,1:arraySize,1);
+                                
+                                Bf(1:arraySize,jj)          = obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all(ii,jj,1:arraySize,1);
+                                
                                 Cf(ii,1:arraySize)          = obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all(ii,jj,1,1:arraySize);
+                                
                             else
-                                Af(size(Af,1)+1:size(Af,1)+arraySize,size(Af,2)+1:size(Af,2)+arraySize)     = obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all(ii,jj,1:arraySize,1:arraySize);
+                                
+                                Af(size(Af,1)+1:size(Af,1)+arraySize,size(Af,2)+1:size(Af,2)+arraySize) ...
+                                    = obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all(ii,jj,1:arraySize,1:arraySize);
+                                
                                 Bf(size(Bf,1)+1:size(Bf,1)+arraySize,jj) = obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all(ii,jj,1:arraySize,1);
-                                Cf(ii,size(Cf,2)+1:size(Cf,2)+arraySize)   = obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all(ii,jj,1,1:arraySize);
+                                
+                                Cf(ii,size(Cf,2)+1:size(Cf,2)+arraySize) = obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all(ii,jj,1,1:arraySize);
+                                
                             end
+                            
                         end
+                        
                     end
-                    obj.hydroForce.ssRadf.D = zeros(6,lenJ);
+                    
+                    obj.hydroForce.ssRadf.D = zeros (6,lenJ);
+                    
                 else
+                    
                     for ii = 1:6
+                        
                         for jj = (iBod-1)*6+1:(iBod-1)*6+6
+                            
                             jInd = jj-(iBod-1)*6;
+                            
                             arraySize = obj.hydroData.hydro_coeffs.radiation_damping.state_space.it(ii,jj);
+                            
                             if ii == 1 && jInd == 1 % Begin construction of combined state, input, and output matrices
+                                
                                 Af(1:arraySize,1:arraySize) = obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all(ii,jj,1:arraySize,1:arraySize);
                                 Bf(1:arraySize,jInd)        = obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all(ii,jj,1:arraySize,1);
                                 Cf(ii,1:arraySize)          = obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all(ii,jj,1,1:arraySize);
+                                
                             else
+                                
                                 Af(size(Af,1)+1:size(Af,1)+arraySize,size(Af,2)+1:size(Af,2)+arraySize) = obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all(ii,jj,1:arraySize,1:arraySize);
                                 Bf(size(Bf,1)+1:size(Bf,1)+arraySize,jInd) = obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all(ii,jj,1:arraySize,1);
                                 Cf(ii,size(Cf,2)+1:size(Cf,2)+arraySize)   = obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all(ii,jj,1,1:arraySize);
+                                
                             end
+                            
                         end
+                        
                     end
-                    obj.hydroForce.ssRadf.D = zeros(6,6);
+                    
+                    obj.hydroForce.ssRadf.D = zeros (6,6);
                 end
+                
                 obj.hydroForce.ssRadf.A = Af;
                 obj.hydroForce.ssRadf.B = Bf;
-                obj.hydroForce.ssRadf.C = Cf .*rho;
+                obj.hydroForce.ssRadf.C = Cf .* obj.simu.rho;
+                
             end
         end
 
@@ -707,8 +802,8 @@ classdef hydrobody < handle
             %
             % 
             
-            assert (isa (simu, 'simulationClass'), 'waves must be a simulationClass object')
-            assert (isa (waves, 'waveClass'), 'waves must be a wavesClass object');
+            assert (isa (simu, 'wsim.simsettings'), 'waves must be a wsim.simsettings object')
+            assert (isa (waves, 'wsim.wavesettings'), 'waves must be a wsim.wavesettings object');
             assert (isscalar (bodynum) &&  isint2eps (bodynum) , 'bodynum must be a scalar integer')
 
             % store waves and simu for later access
@@ -781,21 +876,7 @@ classdef hydrobody < handle
             odeSimReset (obj);
 
             % then do the setup again
-            obj.hydroForcePre( obj.waves.w, ...
-                               obj.waves.waveDir, ...
-                               obj.simu.CIkt, ...
-                               obj.simu.CTTime, ...
-                               obj.waves.numFreq, ...
-                               obj.simu.dt, ...
-                               obj.simu.rho, ...
-                               obj.simu.g, ...
-                               obj.waves.type, ...
-                               obj.waves.waveAmpTime, ...
-                               obj.bodyNumber, ...
-                               obj.simu.numWecBodies, ...
-                               obj.simu.ssCalc, ...
-                               obj.simu.nlHydro, ...
-                               obj.simu.b2b );
+            obj.hydroForcePre ();
 
             % Radiation Damping
             if obj.radiationMethodNum == 1 && ~isempty (fieldnames(obj.hydroForce))

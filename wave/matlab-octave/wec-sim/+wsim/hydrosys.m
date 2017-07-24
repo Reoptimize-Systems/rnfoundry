@@ -10,9 +10,9 @@ classdef hydrosys < handle
     
     properties (GetAccess = private, SetAccess = private)
         
-        simu;        % simulation setup
-        waves;       % wave setup
-        hydroBodies; % array of hydrobody objects
+        simu;        % simulation setings (wsim.simsettings object)
+        waves;       % wave settings (wsim.wavesettings object)
+        hydroBodies; % array of wsim.hydrobody objects
         hydroBodyInds = []; % array of indices of the hydrobodies
         
         odeSimInitialised = false;
@@ -173,8 +173,19 @@ classdef hydrosys < handle
                     self.hydroBodies(bodyind).loadHydroData (hydroData(bodyind));
                     
                 else
+                    % load the ghydrodynamic data
+                    self.hydroBodies(bodyind).readH5File ();
                     
-                    self.hydroBodies(bodyind).readH5File;
+%                     % check water depth is the same as the previously added
+%                     % body
+%                     if bodyind > 1
+%                         if self.hydroBodies(bodyind).hydroData.simulation_parameters.water_depth ...
+%                                 ~= self.hydroBodies(bodyind-1).hydroData.simulation_parameters.water_depth
+%                             
+%                             error ('Water depth for body %d is not the same as water depth for body %d', bodyind, bodyind-1)
+%                             
+%                         end
+%                     end
                     
                 end
                 
@@ -186,7 +197,7 @@ classdef hydrosys < handle
                     self.hydroBodies(bodyind).lenJ = zeros (6, 1);
                 end
                 
-            end 
+            end
 
         end
         
@@ -216,7 +227,7 @@ classdef hydrosys < handle
                                   self.simu.endTime );
                               
             % Non-linear hydro
-            if (self.simu.nlHydro >0) || (self.simu.paraview == 1)
+            if (self.simu.nlHydro > 0) || (self.simu.paraview == 1)
                 for bodyind = 1:length(self.hydroBodies(1,:))
                     self.hydroBodies(bodyind).bodyGeo (body(bodyind).geometryFile)
                 end
@@ -230,7 +241,7 @@ classdef hydrosys < handle
             end
             
             for bodyind = 1:numel(self.hydroBodies)
-                self.hydroBodies(bodyind).adjustMassMatrix(self.simu.adjMassWeightFun,self.simu.b2b);
+                self.hydroBodies(bodyind).adjustMassMatrix ();
             end
             
             self.odeSimInitialised = true;
