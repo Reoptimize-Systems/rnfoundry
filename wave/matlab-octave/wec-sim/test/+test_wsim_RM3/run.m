@@ -27,14 +27,14 @@ waves.T = 8;                            %Wave Period [s]
 %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using PM Spectrum with Convolution Integral Calculation
-% waves = waveClass('irregular');       %Create the Wave Variable and Specify Type
+% waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
 % waves.H = 2.5;                        %Significant Wave Height [m]
 % waves.T = 8;                          %Peak Period [s]
 % waves.spectrumType = 'PM';
 %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using BS Spectrum with State Space Calculation
-% waves = waveClass('irregular');       %Create the Wave Variable and Specify Type
+% waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
 % waves.H = 2.5;                        %Significant Wave Height [m]
 % waves.T = 8;                          %Peak Period [s]
 % waves.spectrumType = 'BS';
@@ -43,12 +43,12 @@ waves.T = 8;                            %Wave Period [s]
 %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using User-Defined Spectrum
-% waves = waveClass('irregularImport');  %Create the Wave Variable and Specify Type
+% waves = wsim.wavesettings ('irregularImport');  %Create the Wave Variable and Specify Type
 % waves.spectrumDataFile = 'ndbcBuoyData.txt';  %Name of User-Defined Spectrum File [2,:] = [omega, Sf]
 %%%%%%%%%%%%%%%%%%%
 
 % User-Defined Time-Series
-% waves = waveClass('userDefined');     %Create the Wave Variable and Specify Type
+% waves = wsim.wavesettings ('userDefined');     %Create the Wave Variable and Specify Type
 % waves.etaDataFile = 'umpqua46229_6_2008.mat'; % Name of User-Defined Time-Series File [:,2] = [time, wave_elev]
 %%%%%%%%%%%%%%%%%%%
 
