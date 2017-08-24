@@ -255,6 +255,18 @@ public:
 
     }
 
+    void GetStatus (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        std::vector<int> nallowed;
+
+        nallowed.push_back (0);
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+
+        int status = mbc->GetStatus ();
+
+        mxSetLHS (status, 1, nlhs, plhs);
+    }
+
     void GetMotion (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         std::vector<int> nallowed;
@@ -983,6 +995,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      BEGIN_MEX_CLASS_WRAPPER(MBCNodal_wrapper)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,Initialize)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetMotion)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetStatus)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetNodes)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,KinematicsLabel)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,X)
