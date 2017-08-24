@@ -215,7 +215,7 @@ mb = mbdyn.mint.MBCNodal ('MBDynPreProc', mbsys, ...
                           'OutputPrefix', outputfile_prefix ...
                           );
                       
-mb.start ('Verbose', true);
+mb.start ('Verbosity', 0);
 
 %%
 nnodes = mb.GetNodes ();
@@ -296,7 +296,8 @@ plotvectors = false;
 checkoutputs = false;
 miniters = 0;
 maxiters = prob.maxIterations;
-forcetol = 0.1;
+absforcetol = 100;
+relforcetol = 1e-3;
 
 if plotvectors
     figure;
@@ -459,8 +460,16 @@ while status == 0
 %     fprintf (1, '    time: %f, mbconv: %d\n', time(ind), mbconv);
     
     forcediff = abs (hydroforces - newhydroforces);
+
+    maxforces = max(hydroforces, newhydroforces);
+    relforcediff = abs(forcediff) ./ abs(maxforces);
+    relforcediff(maxforces == 0) = 0;
+%     disp(relforcediff)
     itercount = 1;
-    while mbconv ~= 0 || itercount < miniters || (max (forcediff(:)) > forcetol)
+    while mbconv ~= 0 ...
+        || itercount < miniters ...
+        || (max (forcediff(:)) > absforcetol) ...
+        || (ind > 3 && (max (relforcediff(:)) > relforcetol))
         
 %         fprintf (1, '    time: %f, ind: %d, iterating, mbconv: %d, iteration: %d\n', time(ind), ind, mbconv, itercount);
             
@@ -518,6 +527,9 @@ while status == 0
         end
         
         forcediff = abs (hydroforces - newhydroforces);
+        maxforces = max(hydroforces, newhydroforces);
+        relforcediff = abs(forcediff) ./ abs(maxforces);
+        relforcediff(maxforces == 0) = 0;
     
     end
     
@@ -532,7 +544,7 @@ while status == 0
 
     mbconv = mb.applyForcesAndMoments (true);
     
-    fprintf (1, 'time: %f, tind: %d, final status: %d\n', time(ind), ind, status);
+%     fprintf (1, 'time: %f, tind: %d, final status: %d\n', time(ind), ind, status);
 
     if plotvectors && time(ind) > 150
         
