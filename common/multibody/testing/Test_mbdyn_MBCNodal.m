@@ -25,26 +25,28 @@ end
 % [status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
 
 % wait a few seconds for mbdyn to initialise
-pause (3);
+% pause (3);
 
 %%
 
-mb = mbdyn.mint.MBCNodal ();
-
 if ispc
-    mb.Initialize ( 'inet', '127.0.0.1', ...
+    mb = mbdyn.mint.MBCNodal ( 'CommMethod', 'inet socket', ...
+                    'Host', '127.0.0.1', ...
                     'HostPort', 5500, ...
                     'NNodes', 2, ...
                     'UseLabels', false, ...
-                    'Verbose', true );
+                    'MBDynInputFile', mbdpath);
 else
-    mb.Initialize ( 'local', '/tmp/mbdyn.sock', ...
+    mb = mbdyn.mint.MBCNodal (  'CommMethod', 'local socket', ...
+                    'Path', '/tmp/mbdyn.sock', ...
                     'NNodes', 2, ...
                     'UseLabels', false, ...
-                    'Verbose', true );
+                    'MBDynInputFile', mbdpath);
 end
-nnodes = mb.GetNodes ()
 
+mb.start ('Verbose', true);
+
+nnodes = mb.GetNodes ();
 
 maxiter = 3; % to match example program 
 
