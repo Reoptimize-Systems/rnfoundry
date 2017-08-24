@@ -297,8 +297,19 @@ int mxnarginchk (int nargs, std::vector<int> nallowed, int offset=0)
            "No allowed number of arguments supplied.");
   }
   
+  std::string s;
+  
+  for (int i = 0; i < nallowed.size (); i++)
+  {
+      s.append (std::to_string(nallowed[i]));
+      if (i != nallowed.size () - 1)
+      {
+          s.append (", ");
+      }
+  }
+  
   mexErrMsgIdAndTxt("CPP:mxnarginchk",
-         "Incorrect number of input arguments. You supplied %i args with an offset of %i", nargs, offset);
+         "Incorrect number of input arguments. You supplied %i args with an offset of %i. Allowed numbers of arguments are: %s", nargs, offset, s.c_str ());
   
   return offsetnargs;
 }
