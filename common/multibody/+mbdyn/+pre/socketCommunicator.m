@@ -60,7 +60,7 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             
             if ~isempty (self.create)
                 
-                str = self.addOutputLine (str, self.commaSepList ('create', self.create), 1, true, 'reference node');
+                str = self.addOutputLine (str, self.commaSepList ('create', self.create), 1, true, 'will mbdyn create socket?');
                 
 %                 if strcmp (self.Create, 'no')
 %                     
