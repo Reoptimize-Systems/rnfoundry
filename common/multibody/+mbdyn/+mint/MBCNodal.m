@@ -20,6 +20,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         host;
         port;
         path;
+        sharedMemoryName;
         commMethod;
         MBDynInputFile;
         MBDynExecutable;
@@ -43,6 +44,15 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         nodeOrientiationType;
         
     end
+    
+	% enum not yet implemented in Octave
+%     enumeration
+%         NOT_READY,
+% 		INITIALIZED,
+% 		SHARED_MEMORY_READY,
+% 		READY,
+% 		FINISHED
+%     end
     
     methods
         
@@ -172,16 +182,17 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             options.MBDynPreProc = [];
             
             % the following only used if no mbdyn.pre.system is supplied
+            options.CommMethod = '';
             options.Host = '';
             options.Port = '';
             options.Path = '';
+            options.SharedMemoryName = '';
             options.UseRefNode = false; 
             options.RefNodeOrientationType = 'none'; % refnode rotation type 'none'. Will be ignored if UseRefNode is false
             options.NNodes = 0; % number of nodes, should match up with problem file
             options.NodeOrientationType = 'orientation matrix';
             options.UseLabels = true;
             options.UseAccelerations = false; % don't handle accelerations by default
-            
             
             options = parse_pv_pairs (options, varargin);
             
@@ -193,9 +204,46 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             assert (islogical (options.UseMoments), 'UseMoments must be a logical type (true/false)');
             assert (islogical (options.DataAndNext), 'DataAndNext must be a logical type (true/false)');
             
-            % initialise the cppinterface parent class by passing the
-            % mexfunction to the superclass constructor
-            self = self@mbdyn.mint.cppinterface(@mbdyn.mint.mexMBCNodal);
+            if isa (options.MBDynPreProc, 'mbdyn.pre.system')
+                
+                comminfo = options.MBDynPreProc.externalStructuralCommInfo ();
+                
+                if strcmp (comminfo.commMethod, 'inet socket') ...
+                    || strcmp (comminfo.commMethod, 'local socket')
+                        % initialise the cppinterface parent class by passing the
+                        % mexfunction to the superclass constructor
+                        mexfcn = @mbdyn.mint.mexMBCNodal;
+                elseif strcmp (comminfo.commMethod, 'shared memory')
+                        mexfcn = @mbdyn.mint.mexMBCNodalSharedMem;
+                else
+                    error ('unrecognised communication method');
+                end
+                
+            else
+                
+                switch options.CommMethod
+                    
+                    case 'inet socket'
+                        
+                        mexfcn = @mbdyn.mint.mexMBCNodal;
+                        
+                    case 'local socket'
+                        
+                        mexfcn = @mbdyn.mint.mexMBCNodal;
+                        
+                    case 'shared memory'
+                        
+                        mexfcn = @mbdyn.mint.mexMBCNodalSharedMem;
+                        
+                    otherwise
+                        
+                end
+                
+            end
+            
+            self = self@mbdyn.mint.cppinterface(mexfcn);
+                
+            
             
             if ~isempty (options.MBDynPreProc)
                 
@@ -214,6 +262,8 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                         self.port = comminfo.port;
                     elseif strcmp (comminfo.commMethod, 'local socket')
                         self.path = comminfo.path;
+                    elseif strcmp (comminfo.commMethod, 'shared memory')
+                        self.sharedMemoryName = comminfo.shared_mem_name;
                     end
                     
                 else
@@ -262,13 +312,23 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     error ('MBDynInputFile is empty');
                 end
             
-                if ~isempty (options.Path)
-                    self.commMethod = 'local socket';
-                    self.path = options.Path;
+                if isempty (options.CommMethod)
+                    
+                    error ('You must supply a communication method with ''CommMethod'' options if not supplying an mbsys object')
                 else
-                    self.commMethod = 'inet socket';
-                    self.host = options.Host;
-                    self.port = options.Port;
+                    
+                    if ~isempty (options.SharedMemoryName)
+                        self.commMethod = 'shared memory';
+                        self.sharedMemoryName = options.SharedMemoryName;
+                    elseif ~isempty (options.Path)
+                        self.commMethod = 'local socket';
+                        self.path = options.Path;
+                    else
+                        self.commMethod = 'inet socket';
+                        self.host = options.Host;
+                        self.port = options.Port;
+                    end
+                    
                 end
                 
                 if (options.NNodes <= 0) && options.RefNode == 0
@@ -347,19 +407,23 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             
             options.Timeout = -1;
-            options.Verbose = false;
+            options.Verbosity = 0;
             options.StartMBDyn = true;
+            options.MBDynStartWaitTime = 1;
             
             options = parse_pv_pairs (options, varargin);
             
             assert (islogical (options.StartMBDyn) && isscalar (options.StartMBDyn), 'StartMBDyn must be a logical type (true/false)');
+            assert (isnumeric (options.MBDynStartWaitTime) && isscalar (options.MBDynStartWaitTime), 'MBDynStartWaitTime must be a scalar numberic value (number of seconds)');
+            
+            self.MBDynStartWaitTime = options.MBDynStartWaitTime;
             
             if options.StartMBDyn
-                if options.Verbose
+                if options.Verbosity > 0
                     fprintf (1, 'Starting MBDyn\n');
                 end
                 % start mbdyn
-                self.startMBdyn ();
+                self.startMBdyn ('Verbosity', options.Verbosity);
             end
             
             % now initialise communication
@@ -373,7 +437,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                                self.nodeOrientiationType, ...
                                self.useAccelerations, ...
                                self.dataAndNext, ...
-                               options.Verbose, ...
+                               options.Verbosity > 0, ...
                                options.Timeout, ...
                                'local', ...
                                self.path );
@@ -395,7 +459,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                                self.nodeOrientiationType, ...
                                self.useAccelerations, ...
                                self.dataAndNext, ...
-                               options.Verbose, ...
+                               options.Verbosity > 0, ...
                                options.Timeout, ...
                                'inet', ...
                                self.host, ...
@@ -403,10 +467,37 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                            
                 self.NNodes = GetNodes (self);
                 
+            elseif strcmp (self.commMethod, 'shared memory')
+                
+%                 if isempty (options.HostPort)
+%                     error ('MBCNodal:noportforinet', ...
+%                         'You have specified commethod ''inet'', but not specified a host port number with the ''HostPort'' option.');
+%                 end
+                
+                self.cppcall ( 'Initialize', ...
+                               self.useRefNode, ...
+                               self.nodeOrientiationType, ...options.RefNodeOrientationType,
+                               self.NNodes, ...
+                               self.useLabels, ...
+                               self.nodeOrientiationType, ...
+                               self.useAccelerations, ...
+                               self.dataAndNext, ...
+                               options.Verbosity > 0, ...
+                               options.Timeout, ...
+                               self.sharedMemoryName );
+                           
+                self.NNodes = GetNodes (self);
+                
             else
                 error ('MBCNodal:badcommmethod', ...
                     'Unrecognised communication method ''%s'' specified', commethod);
             end
+        end
+        
+        function status = GetStatus ()
+            
+            status = self.cppcall ( 'GetStatus');
+            
         end
 
         function status = GetMotion (self)
@@ -913,16 +1004,31 @@ classdef MBCNodal < mbdyn.mint.cppinterface
     
     methods (Access = protected)
         
-        function startMBdyn (self)
+        function startMBdyn (self, varargin)
             % run mbdyn with the appropriate commands
             
+            options.Verbosity = 0;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if options.Verbosity > 0
+                Pcmds = ['-', repmat('P', [1, options.Verbosity])];
+            else
+                Pcmds = '';
+            end
+            
             % start mbdyn
-            cmdline = sprintf ('%s -f "%s" -o "%s" > "%s" 2>&1 &', ...
+            cmdline = sprintf ('%s %s -f "%s" -o "%s" > "%s" 2>&1 &', ...
                                 self.MBDynExecutable, ...
+                                Pcmds, ...
                                 self.MBDynInputFile, ...
                                 self.outputPrefix, ...
                                 self.MBDynOutputFile  ...
                                                  );
+                                             
+            if options.Verbosity > 0
+                fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
+            end
 
             [status, cmdout] = cleansystem ( cmdline );
             
@@ -988,6 +1094,28 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             error ('The MBDyn executeable could not be found.');
             
         end
+        
+        
+        function status = cppstatus2statusenum (cppstatus)
+        
+            switch cppstatus
+                
+                case -1
+                    
+                case -2
+                    
+                case 0
+                    
+                case 1
+                    
+                otherwise
+                    
+                    error ('Unknown status number');
+                    
+            end
+            
+        end
+             
         
     end
 
