@@ -8,6 +8,7 @@
 %
 %
 
+clear t0 SS A B C D x0 tspan legstrs odeopts yss tss x K p1 p2 p3 sys_cl u dx y T X
 t0 = 0;
 tspan = 2;
 
@@ -161,6 +162,35 @@ plot (T, y(1,:))
 hold off
 legstrs = [ legstrs, sprintf('stateSpace classdef method using ode23, RelTol %g', odeopts.RelTol)];
 
+%% rkfixed
+
+SS.reset ();
+
+odeopts.MaxStep = tspan / (1.5*numel(T));
+
+[T, X] = rkfixed (@(t,x) test_state_space_odefcn (t, x, SS, K), [t0,t0+tspan],  x0, odeopts);
+
+% recalculate outputs
+SS.reset ()
+
+dx = [];
+y = [];
+
+for ind = 1:numel (T)
+
+    [dx(:,ind),y(:,ind)]  = test_state_space_odefcn (T(ind), X(ind,:)', SS, K);
+
+    SS.update (X(ind,:)');
+
+end
+
+%% plot the results
+
+hold on
+plot (T, y(1,:))
+hold off
+legstrs = [ legstrs, sprintf('stateSpace classdef method using rkfixed, RelTol %g', odeopts.RelTol)];
+
 %% compare to simulink
 
 % load_system ('state_space_simulink_compare');
@@ -184,11 +214,37 @@ if exist ('sim', 'builtin')
 
 end
 
-%%
 
-% complete the figure by adding the legend strings
+%% test internal fixed step integration
+
+ufcn = @(arg1, arg2) -K * arg2;
+
+SS.initIntegration (0, ufcn);
+
+
+dT = T(2) - T(1);
+
+y(:,1) = SS.outputs (ufcn(T(1), SS.x));
+
+for ind = 1:numel (T)-1
+    
+    SS.stepIntegrate (dT);
+    
+    SS.update ();
+    
+    y(:,ind+1) = SS.outputs (ufcn(T(ind+1), SS.x));
+    
+end
+
+%% plot the results
+
+hold on
+plot (T, y(1,:))
+hold off
+legstrs = [ legstrs, sprintf('stateSpace class internal fixed step integration')];
+
+%% complete the figure by adding the legend strings
 legend (legstrs);
-
 
 
 
