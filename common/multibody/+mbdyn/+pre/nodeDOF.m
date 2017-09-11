@@ -59,7 +59,7 @@ classdef nodeDOF < mbdyn.pre.base
                 args = [args, {self.algebraicOrDifferential}];
             end
             
-            str = self.addOutputLine ('', self.commaSepList (args{:}), 1, false);
+            str = self.commaSepList (args{:});
 
 %             str = [str, ';'];
             
