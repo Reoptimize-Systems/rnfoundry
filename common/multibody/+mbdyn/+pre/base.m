@@ -191,9 +191,113 @@ classdef base < handle
         end
         
         function str = addOutputLine (oldstr, str, indentlevel, finalcomma, comment)
+            % add a line of output to the output string representing the
+            % contents of an MBDyn input file. 
+            %
+            % Syntax
+            %
+            %  str = addOutputLine (oldstr, str)
+            %  str = addOutputLine (..., indentlevel)
+            %  str = addOutputLine (..., indentlevel, finalcomma)
+            %  str = addOutputLine (..., indentlevel, finalcomma, comment)
+            %
+            % Description
+            %
+            % addOutputLine is a utility function to help create readable,
+            % structured MBDyn input files. It is intended to be used in
+            % the generateOutputString methods of mbdyn preprocessing
+            % objects like elements and nodes. It assists with keeping
+            % consistant indentation levels in files. See the examples
+            % section for examples of it's use.
+            %
+            % Input
+            %
+            %  oldstr - existing string to which new line is to be
+            %   appended.  An empty string is acceptable.
+            %
+            %  str - new string containing text to be appended to oldstr
+            %
+            %  indentlevel - (optional) scalar integer. The indentation
+            %   level of the new line to be added. One indentation level is
+            %   four spaces. If the new string contains newline characters,
+            %   the same indentation will be inserted before every new
+            %   line. The indentation level is absolute, not relative to
+            %   oldstr. Default value is zero if not supplied.
+            %
+            %  finalcomma - (optional) scalar logical. Flag determining
+            %    whether to append a comma chachter (',') to the end of the
+            %    new line. Default is true if not supplied.
+            %
+            %  comment - (optional) string which will be inserted as a
+            %    comment after newstring.
+            %
+            % Output
+            %
+            %  str - string comprised of "oldstr", a newline character, and
+            %   then the new string in "str", possibly modified to have the
+            %   specified indentation level
+            %
+            % Examples
+            %
+            %
+            % >> mbdyn.pre.base.addOutputLine ('old string', 'new line of output')
+            % 
+            % ans =
+            % 
+            % old string
+            % new line of output,
+            % 
+            % >> mbdyn.pre.base.addOutputLine ('old string', 'new line of output', 1)
+            % 
+            % ans =
+            % 
+            % old string
+            %     new line of output,
+            % 
+            % >> mbdyn.pre.base.addOutputLine ('old string', 'new line of output', 2)
+            % 
+            % ans =
+            % 
+            % old string
+            %         new line of output,
+            %
+            % % 2 lines of output
+            % >> mbdyn.pre.base.addOutputLine ('old string', sprintf('2 new lines\nof output'), 1)
+            % 
+            % ans =
+            % 
+            % old string
+            %     2 new lines
+            %     of output,
+            %
+            % % 2 lines of output, but don't add a final comma
+            % >> mbdyn.pre.base.addOutputLine ('old string', sprintf('2 new lines\nof output'), 1, false)
+            % 
+            % ans =
+            % 
+            % old string
+            %     2 new lines
+            %     of output
+            %
+            % % using comment
+            % >> mbdyn.pre.base.addOutputLine ('old string', sprintf('2 new lines\nof output'), 1, false, 'this is a comment')
+            % 
+            % ans =
+            % 
+            % old string
+            %     2 new lines
+            %     of output # this is a comment
+            %
+            %
+            % See also: mbdyn.pre.base.formatNumber, 
+            %           mbdyn.pre.base.commaSepList
+            
+            if nargin < 4
+                finalcomma = true;
+            end
             
             if nargin < 3
-                finalcomma = true;
+                indentlevel = 0;
             end
             
             prefix = repmat ('    ', 1, indentlevel);
