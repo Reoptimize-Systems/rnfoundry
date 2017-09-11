@@ -20,6 +20,23 @@ classdef base < handle
         end
         
         function ok = checkIsStructuralNode (node, throw)
+            % checks if input is a mbdyn.pre.structuralNode
+            %
+            % Syntax
+            %
+            %  ok = checkIsStructuralNode (node, throw)
+            %
+            % Input
+            %
+            %  node - value to be tested if it is a mbdyn.pre.structuralNode
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkIsStructuralNode if node fails check
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
             
             ok = true;
             if ~isa (node, 'mbdyn.pre.structuralNode')
@@ -33,6 +50,26 @@ classdef base < handle
         end
         
         function ok = checkCartesianVector (vec, throw)
+            % checks if input is a 3 element numeric column vector,
+            % suitible for position, angular position, velocity, angular
+            % velocity etc.
+            %
+            % Syntax
+            %
+            %  ok = checkCartesianVector (vec, throw)
+            %
+            % Input
+            %
+            %  vec - value to be tested if it is a 3 element numeric
+            %    column vector
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkCartesianVector if vec fails check
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
             
             ok = true;
             if ischar (vec)
@@ -65,6 +102,23 @@ classdef base < handle
         end
         
         function ok = checkOrientationMatrix (mat, throw)
+            % checks if input is a valid orientation matrix
+            %
+            % Syntax
+            %
+            %  ok = checkOrientationMatrix (mat, throw)
+            %
+            % Input
+            %
+            %  mat - value to be tested if it is a valid orientation matrix
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkOrientationMatrix if mat fails check
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
             
             mat = mbdyn.pre.base.getOrientationMatrix (mat);
             
@@ -77,6 +131,23 @@ classdef base < handle
         end
         
         function ok = check3X3Matrix (mat, throw)
+            % checks if input is a 3x3 numeric matrix
+            %
+            % Syntax
+            %
+            %  ok = check3X3Matrix (mat, throw)
+            %
+            % Input
+            %
+            %  mat - value to be tested if it is a 3x3 numeric matrix
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by check3X3Matrix if mat fails check
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
             
             ok = true;
             if ~((isnumeric (mat) && size (mat,1) == 3 && size (mat,2) == 3) || isempty (mat))
@@ -92,6 +163,25 @@ classdef base < handle
         
         function ok = checkOrientationDescription (odesc, throw)
             % checks if the orientation description choice is valid
+            %
+            % Syntax
+            %
+            %  ok = checkOrientationDescription (odesc, throw)
+            %
+            % Input
+            %
+            %  odesc - value to be tested if it is a valid orientation
+            %   description string. Valid values are: 'euler123',
+            %   'euler313', 'euler321', 'orientation vector', 
+            %   'orientation matrix
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkOrientationDescription if odesc fails check
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
             
             if ~ischar (odesc)
                 error ('Orientation description must be a char array')
@@ -107,6 +197,32 @@ classdef base < handle
         end
         
         function ok = checkAllowedStringInputs (input, allowedstrs, throw, inputname)
+            % checks is string is one of a set of allowed values
+            %
+            % Syntax
+            %
+            %  ok = checkAllowedStringInputs (input, allowedstrs, throw)
+            %  ok = checkAllowedStringInputs (..., inputname)
+            %
+            % Input
+            %
+            %  input - value to be tested if it is a valid string. The
+            %   string will be compared to the list of valid strings in
+            %   allowedstrs.
+            %
+            %  allowedstrs - cell string array of valid strings for
+            %    comparison with input.
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkOrientationDescription if input fails check
+            %
+            %  inputname - (optional) string with name to use in error
+            %    thrown by checkAllowedStringInputs (if 'throw' is true).
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
             
             if nargin < 4
                 inputname = 'input';
@@ -130,7 +246,7 @@ classdef base < handle
         end
        
         function str = commaSepList (varargin)
-            % generates a comma separated list from input ariables
+            % generates a comma separated list from input variables
             
             str = '';
             
@@ -138,17 +254,28 @@ classdef base < handle
                 
                 if isnumeric (varargin{ind})
                     
-                    % get the transpose of the matrix as it must be written
-                    % out row-wise for mbdyn
-                    mat = varargin{ind}';
+                    mat = varargin{ind};
                     
-                    if numel (mat) > 1 && size(mat, 1) == size (mat, 2)
-                        str = [ str, 'matr, '];
-                    end
-                    
-                    for matind = 1:numel (mat)
-                        numstr = mbdyn.pre.base.formatNumber (mat(matind));
-                        str = [ str, sprintf('%s, ', numstr) ];
+                    if numel (mat) > 1 && size(mat, 1) ~= 1 && size (mat, 2) ~= 1
+                        % matrix, not vector or scalar
+                        if ind > 1
+                            % write matrix on it's own lines for clarity
+                            str = [ str, sprintf('\n') ];
+                        end
+                        
+                        str = [ str, mbdyn.pre.base.writeMatrix(mat)];
+                        
+                        % add a comma and newline to end of matrix so rest
+                        % of comma separated list continues on next line
+                        str = [ str, sprintf(',\n') ];
+                        
+                    else
+                        % handle vectors and scalars
+                        for matind = 1:numel (mat)
+                            numstr = mbdyn.pre.base.formatNumber (mat(matind));
+                            str = [ str, sprintf('%s, ', numstr) ];
+                        end
+                        
                     end
                     
                 elseif ischar (varargin{ind})
@@ -159,8 +286,28 @@ classdef base < handle
                 
             end
             
-            % strip last comma and space
+            % strip last comma and space (or newline if matrix was last)
             str(end-1:end) = [];
+            
+        end
+        
+        function str = writeMatrix (mat)
+            % format a matrix to a string for an mbdyn input file
+            
+            str = sprintf('matr,\n');
+
+            % write out matrix row-wise for mbdyn
+            for rowind = 1:size (mat, 1)
+                for colind = 1:size (mat, 2)
+                    numstr = mbdyn.pre.base.formatNumber (mat(rowind,colind));
+                    str = [ str, sprintf('%s, ', numstr) ];
+                end
+                % add a newline after each row
+                str = sprintf('%s\n', str);
+            end
+            
+            % strip last comma, space and newline
+            str(end-2:end) = [];
             
         end
         
