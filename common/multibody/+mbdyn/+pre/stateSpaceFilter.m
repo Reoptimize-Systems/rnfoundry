@@ -94,9 +94,7 @@ classdef stateSpaceFilter < mbdyn.pre.genel
             
 %             str = self.addOutputLine (str, sprintf('body : %d, %d', self.label, self.nodeAttached.label), 1, true, 'label, node label');
 
-            str = '';
-            
-            str = self.addOutputLine (str, self.commaSepList (self.stateOrder), 0, true, 'state order');
+            str = [self.commaSepList(self.stateOrder), ', # state order'];
             
             if ~isempty (self.E)
                 str = self.addOutputLine (str, self.commaSepList ('Matrix E', self.E), 0, true);
