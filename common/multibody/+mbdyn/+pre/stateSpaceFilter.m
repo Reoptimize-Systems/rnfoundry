@@ -17,11 +17,11 @@ classdef stateSpaceFilter < mbdyn.pre.genel
     
     methods
         
-        function self = stateSpaceFilter (state_order, A, B , C, varargin)
+        function self = stateSpaceFilter (state_order, A, B, C, varargin)
             
             options.E = [];
             options.D = [];
-            options.Gain = [];
+            options.Gain = []; % If a gain is supplied, all the coefficients of B are multiplied by the gain.
             options.Balance = '';
             options.Value = [];
             options.Derivative = [];
@@ -45,19 +45,28 @@ classdef stateSpaceFilter < mbdyn.pre.genel
             end
             
             if ~isempty (options.Gain)
-                
-                
+                assert (isnumeric (options.Gain) ...
+                         && isscalar (options.Gain) ...
+                         && isreal (options.Gain), ...
+                        'Gain must be a real scalar numeric value');
             end
             
             if ~isempty (options.Value)
-                self.checkCartesianVector
+                assert (isnumeric (options.Value) ...
+                         && isvector (options.Value) ...
+                         && isreal (options.Value), ...
+                        'Value must be a vector of real numeric values');
             end
             
             if ~isempty (options.Derivative)
                 if isempty (options.Value)
                     error ('If you specify ''Derivative'' options, you must also specify ''Value''');
                 end
-                
+                assert (isnumeric (options.Derivative) ...
+                         && isvector (options.Derivative) ...
+                         && isreal (options.Derivative) ...
+                         && samesize (options.Value, options.Derivative), ...
+                        'Derivative must be a vector of real numeric values, the same size as ''Value''');
             end
             
             
@@ -73,7 +82,6 @@ classdef stateSpaceFilter < mbdyn.pre.genel
             self.balance = options.Balance;
             self.value = options.Value;
             self.derivative = options.Derivative;
-            
             
         end
         
@@ -133,24 +141,24 @@ classdef stateSpaceFilter < mbdyn.pre.genel
             
         end
         
-        function hax = draw (self, varargin)
-            
-            options.AxesHandle = [];
-            options.ForceRedraw = false;
-            options.Mode = 'solid';
-            options.Light = false;
-            
-            options = parse_pv_pairs (options, varargin);
-            
-            hax = draw@mbdyn.pre.element ( self, ...
-                    'AxesHandle', options.AxesHandle, ...
-                    'ForceRedraw', options.ForceRedraw, ...
-                    'Mode', options.Mode, ...
-                    'Light', options.Light );
-
-            self.setTransform ();
-            
-        end
+%         function hax = draw (self, varargin)
+%             
+%             options.AxesHandle = [];
+%             options.ForceRedraw = false;
+%             options.Mode = 'solid';
+%             options.Light = false;
+%             
+%             options = parse_pv_pairs (options, varargin);
+%             
+%             hax = draw@mbdyn.pre.element ( self, ...
+%                     'AxesHandle', options.AxesHandle, ...
+%                     'ForceRedraw', options.ForceRedraw, ...
+%                     'Mode', options.Mode, ...
+%                     'Light', options.Light );
+% 
+%             self.setTransform ();
+%             
+%         end
         
     end
     
