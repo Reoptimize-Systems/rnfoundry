@@ -28,8 +28,8 @@ classdef bodyMultiMass < mbdyn.pre.element
             options = parse_pv_pairs (options, varargin);
             
             % call superclass constructor
-%             self = self@mbdyn.pre.element ('STLFile', options.STLFile, ...
-%                                            'UseSTLName', options.UseSTLName);
+            self = self@mbdyn.pre.element ('STLFile', [], ...
+                                           'UseSTLName', options.UseSTLName);
             
             if ~( isnumeric (mass) && isreal (mass) )
                 error ('mass should be a numeric array of one or more mass values.');
