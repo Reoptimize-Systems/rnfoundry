@@ -12,6 +12,10 @@ classdef body < mbdyn.pre.element
         
     end
     
+    properties (GetAccess = protected, SetAccess = protected)
+        isPointMass;
+    end
+    
     methods
         
         function self = body (mass, cog, inertiamat, node, varargin)
@@ -30,30 +34,40 @@ classdef body < mbdyn.pre.element
                 error ('mass should be a numeric scalar value');
             end
             
-            self.checkCOGVector (cog, true);
-            self.checkInertiaMatrix (inertiamat, true);
-            self.checkIsStructuralNode (node, true);
+            self.isPointMass = false;
+            if isa (node, 'mbdyn.pre.structuralNode3dof')
+               self.isPointMass = true; 
+            end
             
             self.mass = mass;
             self.nodeAttached = node;
-            if isempty (cog)
-                self.relativeCentreOfMass = 'null';
-            else
-                self.relativeCentreOfMass = cog;
-            end
-            self.inertiaMatrix = inertiamat;
             
-            if ~isempty (options.InertialOrientation)
-                if ischar (options.InertialOrientation) ...
-                    if ~strcmp (options.InertialOrientation, 'node')
-                        error ('InertialOrientation must be an orientation matrix or the keyword ''node''')
-                    end
-                else
-                    self.checkOrientationMatrix (options.InertialOrientation, true);
-                end
-            end
+            if ~self.isPointMass
                 
-            self.inertialOrientation = self.getOrientationMatrix (options.InertialOrientation);
+                self.checkCOGVector (cog, true);
+                self.checkInertiaMatrix (inertiamat, true);
+                self.checkIsStructuralNode (node, true);
+            
+                if isempty (cog)
+                    self.relativeCentreOfMass = 'null';
+                else
+                    self.relativeCentreOfMass = cog;
+                end
+                self.inertiaMatrix = inertiamat;
+
+                if ~isempty (options.InertialOrientation)
+                    if ischar (options.InertialOrientation) ...
+                        if ~strcmp (options.InertialOrientation, 'node')
+                            error ('InertialOrientation must be an orientation matrix or the keyword ''node''')
+                        end
+                    else
+                        self.checkOrientationMatrix (options.InertialOrientation, true);
+                    end
+                end
+
+                self.inertialOrientation = self.getOrientationMatrix (options.InertialOrientation);
+            
+            end
             
         end
         
@@ -65,16 +79,21 @@ classdef body < mbdyn.pre.element
             str(1:2) = [];
             
             str = self.addOutputLine (str, sprintf('body : %d, %d', self.label, self.nodeAttached.label), 1, true, 'label, node label');
+
+            addcomma = ~self.isPointMass;
+            str = self.addOutputLine (str, self.commaSepList (self.mass), 2, addcomma, 'mass');
+                
+            if ~self.isPointMass
+
+                str = self.addOutputLine (str, self.commaSepList (self.relativeCentreOfMass), 2, true, 'relative centre of mass');
+
+                addcomma = ~isempty (self.inertialOrientation);
+                str = self.addOutputLine (str, self.commaSepList (self.inertiaMatrix), 2, addcomma, 'inertia matrix');
+
+                if ~isempty (self.inertialOrientation)
+                    str = self.addOutputLine (str, self.commaSepList ('inertial', self.inertialOrientation), 2, false);
+                end
             
-            str = self.addOutputLine (str, self.commaSepList (self.mass), 2, true, 'mass');
-            
-            str = self.addOutputLine (str, self.commaSepList (self.relativeCentreOfMass), 2, true, 'relative centre of mass');
-            
-            addcomma = ~isempty (self.inertialOrientation);
-            str = self.addOutputLine (str, self.commaSepList (self.inertiaMatrix), 2, addcomma, 'inertia matrix');
-            
-            if ~isempty (self.inertialOrientation)
-                str = self.addOutputLine (str, self.commaSepList ('inertial', self.inertialOrientation), 2, false);
             end
             
             str = self.addOutputLine (str, ';', 1, false, 'end one-mass body');
