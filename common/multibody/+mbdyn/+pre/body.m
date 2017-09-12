@@ -2,10 +2,11 @@ classdef body < mbdyn.pre.element
     
     properties (GetAccess = public, SetAccess = protected)
         
-        mass;
-        relativeCentreOfMass;
-        inertiaMatrix;
-        inertialOrientation;
+        mass;                 % the mass of the body
+        relativeCentreOfMass; % the location of the center of mass with respect to the node in the reference frame of the node
+        inertiaMatrix;        % Inertia_matrix referred to the center of mass of the mass
+        inertialOrientation; 
+        nMasses;
         
         nodeAttached;
         
@@ -34,13 +35,13 @@ classdef body < mbdyn.pre.element
             self.checkIsStructuralNode (node, true);
             
             self.mass = mass;
+            self.nodeAttached = node;
             if isempty (cog)
                 self.relativeCentreOfMass = 'null';
             else
                 self.relativeCentreOfMass = cog;
             end
             self.inertiaMatrix = inertiamat;
-            self.nodeAttached = node;
             
             if ~isempty (options.InertialOrientation)
                 if ischar (options.InertialOrientation) ...
@@ -120,33 +121,7 @@ classdef body < mbdyn.pre.element
                   
             set ( self.transformObject, 'Matrix', M );
             
-        end
-        
-        function ok = checkInertiaMatrix (self, mat, throw)
-            
-            ok = self.check3X3Matrix (mat, false);
-            
-            if ~ok && throw
-                error ('Inertia matrix must be a 3 x 3 numeric matrix');
-            end
-
-        end
-        
-        function ok = checkCOGVector (self, cog, throw)
-
-            if isempty (cog) || (ischar (cog) && strcmp (cog, 'null'))
-                ok = true;
-            else
-                ok = self.checkCartesianVector (cog, false);
-            end
-            
-            if ~ok && throw
-                error ('Centre of gravity offset must 3 element numeric column vector, or keyword ''null'' or empty');
-            end
-                
-            
-        end
-        
+        end        
         
     end
     
