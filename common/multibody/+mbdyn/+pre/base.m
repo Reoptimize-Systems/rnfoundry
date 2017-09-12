@@ -52,7 +52,8 @@ classdef base < handle
         function ok = checkCartesianVector (vec, throw)
             % checks if input is a 3 element numeric column vector,
             % suitible for position, angular position, velocity, angular
-            % velocity etc.
+            % velocity etc. It can also be a string: 'null' which
+            % represents [ 0, 0, 0].
             %
             % Syntax
             %
@@ -61,7 +62,7 @@ classdef base < handle
             % Input
             %
             %  vec - value to be tested if it is a 3 element numeric
-            %    column vector
+            %    column vector, or the keyword 'null'
             %
             %  throw - logical flag determining whether an error is thrown
             %   by checkCartesianVector if vec fails check
