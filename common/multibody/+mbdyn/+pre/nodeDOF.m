@@ -5,6 +5,7 @@ classdef nodeDOF < mbdyn.pre.base
         nodeType;
         dofNumber;
         algebraicOrDifferential;
+        node;
         
     end
     
@@ -21,15 +22,38 @@ classdef nodeDOF < mbdyn.pre.base
             
             checkForAlgebraicOrDifferential = false;
             
-            if isa (node, 'mbdyn.pre.structuralNode') 
+            if isa (node, 'mbdyn.pre.structuralNode6dof') 
                 
+%                 if isempty (options.AlgebraicOrDifferential ) ...
+%                         || strcmp (options.AlgebraicOrDifferential, 'algebraic')
+%                     assert ( ~isempty (options.DOFNumber) ...
+%                              && (options.DOFNumber == 1 ...
+%                                  || options.DOFNumber == 2 ...
+%                                  || options.DOFNumber == 3) ...
+%                              , 'For an mbdyn.pre.structuralNode6dof, DOFNumber must be supplied and be 1, 2 or 3 when ''algebraic'' is specified');
+%                 else
+                    assert ( ~isempty (options.DOFNumber) ...
+                             && (options.DOFNumber == 1 ...
+                                 || options.DOFNumber == 2 ...
+                                 || options.DOFNumber == 3 ...
+                                 || options.DOFNumber == 4 ...
+                                 || options.DOFNumber == 5 ...
+                                 || options.DOFNumber == 6 ) ...
+                             , 'For an mbdyn.pre.structuralNode6dof, DOFNumber must be supplied and be between 1 and 6');
+                    
+%                 end
+                
+                checkForAlgebraicOrDifferential = true;
+                
+                self.nodeType = 'structural';
+                
+            elseif isa (node, 'mbdyn.pre.structuralNode3dof') 
+
                 assert ( ~isempty (options.DOFNumber) ...
                          && (options.DOFNumber == 1 ...
                              || options.DOFNumber == 2 ...
                              || options.DOFNumber == 3) ...
-                         , 'For an mbdyn.pre.structuralNode, DOFNumber must be supplied and be 1, 2 or 3');
-                     
-                checkForAlgebraicOrDifferential = true;
+                         , 'For an mbdyn.pre.structuralNode3dof, DOFNumber must be supplied and be 1, 2 or 3');
                 
                 self.nodeType = 'structural';
                 
@@ -41,6 +65,8 @@ classdef nodeDOF < mbdyn.pre.base
                 self.checkAllowedStringInputs  ( options.AlgebraicOrDifferential, {'algebraic', 'differential'}, true, 'AgabraicOrDifferential');
             end
             
+            self.type = 'node dof';
+            self.node = node;
             self.dofNumber = options.DOFNumber;
             self.algebraicOrDifferential = options.AlgebraicOrDifferential;
             
@@ -49,7 +75,7 @@ classdef nodeDOF < mbdyn.pre.base
         function str = generateOutputString (self)
             
 
-            args = {self.nodeType};
+            args = {self.node.label, self.nodeType};
             
             if ~isempty (self.dofNumber)
                 args = [args, {sprintf('%d', self.dofNumber)}];
