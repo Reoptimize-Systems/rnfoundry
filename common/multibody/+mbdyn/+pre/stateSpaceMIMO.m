@@ -59,7 +59,7 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
         
         function str = generateOutputString (self)
             
-            % base indent level is 0ne
+            % base indent level is one
             str = generateOutputString@mbdyn.pre.genel(self);
             
             str = self.addOutputLine (str, self.commaSepList (self.numberOfOutputs), 2, true, 'number of outputs');
@@ -76,11 +76,11 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
                 
                 if isa (self.inputList{ind}, 'mbdyn.pre.nodeDOF')
                     
-                    str = self.addOutputLine (str, self.commaSepList ('node dof', self.outputNodeDOFs(ind).generateOutputString ()), 3, true);
+                    str = self.addOutputLine (str, self.commaSepList ('node dof', self.inputList{ind}.generateOutputString ()), 3, true);
                     
                 elseif isa (self.inputList{ind}, 'mbdyn.pre.drive') 
                     
-                    str = self.addOutputLine (str, self.commaSepList ('drive', self.outputNodeDOFs(ind).generateOutputString ()), 3, true);
+                    str = self.addOutputLine (str, self.commaSepList ('drive', self.inputList{ind}.generateOutputString ()), 3, true);
                     
                 end
                 
@@ -89,7 +89,7 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
             % generate common part of stste-space filter
             str = self.addOutputLine (str, generateOutputString@mbdyn.pre.stateSpaceFilter(self), 2, false); 
             
-            str = self.addOutputLine (str, ';', 1, false, 'end state space MIMO');
+            str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             
         end
         
