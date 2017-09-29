@@ -125,8 +125,6 @@ classdef hydrosys < handle
             
             options = parse_pv_pairs (options, varargin);
             
-            
-            
             % Bodies: count, check inputs, read hdf5 file
             
 %             for bodyind = 1:numel (self.hydroBodies)
@@ -173,7 +171,7 @@ classdef hydrosys < handle
                     self.hydroBodies(bodyind).loadHydroData (hydroData(bodyind));
                     
                 else
-                    % load the ghydrodynamic data
+                    % load the hydrodynamic data
                     self.hydroBodies(bodyind).readH5File ();
                     
 %                     % check water depth is the same as the previously added
@@ -198,7 +196,7 @@ classdef hydrosys < handle
                 end
                 
             end
-
+            
         end
         
         function odeSimSetup (self)
@@ -245,6 +243,127 @@ classdef hydrosys < handle
             end
             
             self.odeSimInitialised = true;
+            
+        end
+        
+        function [mbnodes, mbbodies, mbelements] = makeMBDynComponents (self)
+            
+            if self.odeSimInitialised
+                            
+                mbnodes = {};
+                mbbodies = {};
+                mbelements = {};
+                
+                input_list = {};
+                
+                
+                % make the structural nodes and bodies
+                for bodyind = 1:numel (self.hydroBodies)
+                    
+                    [node, body] = self.hydroBodies(bodyind).makeMBDynComponents ();
+                
+                    mbnodes = [mbnodes, {node}];
+                    mbbodies = [mbbodies, {body}];
+                    
+                end
+                
+                absnodes = {};
+                forces = {};
+                if self.simu.ssCalc == 2
+                    % need to create abstract nodes for the moments of the
+                    % structural nodes as these cannot be addressed
+                    % directly
+                    
+                    for mbnodeind = 1:numel(mbnodes)
+                        if isa (mbnodes{mbnodeind}, 'mbdyn.pre.structuralNode6dof')
+                            % create three abstract nodes, one for each
+                            % moment
+                            
+                            newabsnodes = {mbdyn.pre.abstractNode('AlgebraicOrDifferential', 'algebraic'), ...
+                                           mbdyn.pre.abstractNode('AlgebraicOrDifferential', 'algebraic'), ...
+                                           mbdyn.pre.abstractNode('AlgebraicOrDifferential', 'algebraic'), ...
+                                           mbdyn.pre.abstractNode('AlgebraicOrDifferential', 'algebraic'), ...
+                                           mbdyn.pre.abstractNode('AlgebraicOrDifferential', 'algebraic'), ...
+                                           mbdyn.pre.abstractNode('AlgebraicOrDifferential', 'algebraic') };
+                                       
+                            absnodes = [ absnodes, newabsnodes ];
+                            
+                            % next create a moment which uses the output of
+                            % these nodes to apply a couple to the
+                            % structural node
+                            drivecallers = { mbdyn.pre.nodeDrive(newabsnodes{1}, mbdyn.pre.directDrive()), ...
+                                        	 mbdyn.pre.nodeDrive(newabsnodes{2}, mbdyn.pre.directDrive()), ...
+                                             mbdyn.pre.nodeDrive(newabsnodes{3}, mbdyn.pre.directDrive()), ...
+                                             mbdyn.pre.nodeDrive(newabsnodes{4}, mbdyn.pre.directDrive()), ...
+                                        	 mbdyn.pre.nodeDrive(newabsnodes{5}, mbdyn.pre.directDrive()), ...
+                                             mbdyn.pre.nodeDrive(newabsnodes{6}, mbdyn.pre.directDrive()) };
+                            
+                            fdc = mbdyn.pre.componentTplDriveCaller (drivecallers(1:3));
+                            mdc = mbdyn.pre.componentTplDriveCaller (drivecallers(4:6));
+                            
+                            forces = [forces, { mbdyn.pre.absoluteForce(mbnodes{mbnodeind}, 'null', fdc), ...
+                                                mbdyn.pre.absoluteCouple(mbnodes{mbnodeind}, mdc) } ];
+                            
+                        end
+                    end
+                end
+                
+                for bodyind = 1:numel (self.hydroBodies)
+                    
+                    if self.simu.ssCalc == 2
+                
+                        if self.simu.b2b
+                            % inputs are all the nodes velocities
+                            for mbnodeind = 1:numel(mbnodes)
+                                % forces on node
+                                input_list = [input_list, {mbdyn.pre.nodeDrive(mbnodes{mbnodeind}, mbdyn.pre.directDrive (), 'String', 'XP[1]')}];
+                                input_list = [input_list, {mbdyn.pre.nodeDrive(mbnodes{mbnodeind}, mbdyn.pre.directDrive (), 'String', 'XP[2]')}];
+                                input_list = [input_list, {mbdyn.pre.nodeDrive(mbnodes{mbnodeind}, mbdyn.pre.directDrive (), 'String', 'XP[3]')}];
+                                % moments on node, cannot be addressed
+                                % directly, so use Node Drive
+                                input_list = [input_list, {mbdyn.pre.nodeDrive(mbnodes{mbnodeind}, mbdyn.pre.directDrive (), 'String', 'Omega[1]')}];
+                                input_list = [input_list, {mbdyn.pre.nodeDrive(mbnodes{mbnodeind}, mbdyn.pre.directDrive (), 'String', 'Omega[2]')}];
+                                input_list = [input_list, {mbdyn.pre.nodeDrive(mbnodes{mbnodeind}, mbdyn.pre.directDrive (), 'String', 'Omega[3]')}];
+                            end
+                        else
+                            % inputs are just this body's node velocities
+                            input_list = { mbdyn.pre.nodeDrive(mbnodes{bodyind}, mbdyn.pre.directDrive (), 'String', 'XP[1]'), ...
+                                           mbdyn.pre.nodeDrive(mbnodes{bodyind}, mbdyn.pre.directDrive (), 'String', 'XP[2]'), ...
+                                           mbdyn.pre.nodeDrive(mbnodes{bodyind}, mbdyn.pre.directDrive (), 'String', 'XP[3]'), ...
+                                           mbdyn.pre.nodeDrive(mbnodes{bodyind}, mbdyn.pre.directDrive (), 'String', 'Omega[1]'), ...
+                                           mbdyn.pre.nodeDrive(mbnodes{bodyind}, mbdyn.pre.directDrive (), 'String', 'Omega[2]'), ...
+                                           mbdyn.pre.nodeDrive(mbnodes{bodyind}, mbdyn.pre.directDrive (), 'String', 'Omega[3]') };
+                        end
+
+%                         output_node_list = mbdyn.pre.nodeDOF (mbnodes{bodyind}, 'DOFNumber', 1);
+%                         output_node_list(2) = mbdyn.pre.nodeDOF (mbnodes{bodyind}, 'DOFNumber', 2);
+%                         output_node_list(3) = mbdyn.pre.nodeDOF (mbnodes{bodyind}, 'DOFNumber', 3);
+                        output_node_list = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+1}, 'AlgebraicOrDifferential', 'algebraic');
+                        output_node_list(2) = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+2}, 'AlgebraicOrDifferential', 'algebraic');
+                        output_node_list(3) = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+3}, 'AlgebraicOrDifferential', 'algebraic');
+                        output_node_list(4) = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+4}, 'AlgebraicOrDifferential', 'algebraic');
+                        output_node_list(5) = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+5}, 'AlgebraicOrDifferential', 'algebraic');
+                        output_node_list(6) = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+6}, 'AlgebraicOrDifferential', 'algebraic');
+
+                        mbelements = [ mbelements, ...
+                                       { mbdyn.pre.stateSpaceMIMO( size (self.hydroBodies(bodyind).hydroForce.ssRadf.A, 1), ...
+                                                            self.hydroBodies(bodyind).hydroForce.ssRadf.A, ...
+                                                            self.hydroBodies(bodyind).hydroForce.ssRadf.B, ...
+                                                            self.hydroBodies(bodyind).hydroForce.ssRadf.C, ...
+                                                            output_node_list, ...
+                                                            input_list, ...
+                                                            'D', self.hydroBodies(bodyind).hydroForce.ssRadf.D ) }, ...
+                                        ];
+                    end
+                end
+                
+                mbelements = [ mbelements, forces ];
+                mbnodes = [mbnodes, absnodes];
+                
+            else
+                error ('You must call odeSimSetup before attempting to create the mbdyn components.');
+            end
+            
             
         end
         
