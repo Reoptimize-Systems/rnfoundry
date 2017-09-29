@@ -94,22 +94,30 @@ classdef stateSpaceFilter < mbdyn.pre.genel
             
 %             str = self.addOutputLine (str, sprintf('body : %d, %d', self.label, self.nodeAttached.label), 1, true, 'label, node label');
 
-            str = [self.commaSepList(self.stateOrder), ', # state order'];
+            str = [self.formatInteger(self.stateOrder), ', # state order'];
             
             if ~isempty (self.E)
-                str = self.addOutputLine (str, self.commaSepList ('Matrix E', self.E), 0, true);
+                str = self.addOutputLine (str, self.commaSepList ('Matrix E'), 0, true);
+                str = self.addOutputLine (str, self.writeMatrix (self.E, false), 0, true);
             end
             
-            str = self.addOutputLine (str, self.commaSepList ('Matrix A', self.A), 0, true);
-            str = self.addOutputLine (str, self.commaSepList ('Matrix B', self.B), 0, true);
+            str = self.addOutputLine (str, self.commaSepList ('Matrix A'), 0, true);
+            
+            str = self.addOutputLine (str, self.writeMatrix (self.A, false), 0, true);
+            
+            str = self.addOutputLine (str, self.commaSepList ('Matrix B'), 0, true);
+            
+            str = self.addOutputLine (str, self.writeMatrix (self.B, false), 0, true);
             
             addcomma = ~isempty (self.D) || ~isempty (self.gain) || ~isempty (self.balance) || ~isempty (self.value);
-            str = self.addOutputLine (str, self.commaSepList ('Matrix C', self.C), 0, addcomma);
+            str = self.addOutputLine (str, self.commaSepList ('Matrix C'), 0, true);
+            str = self.addOutputLine (str, self.writeMatrix (self.C, false), 0, addcomma);
             
             addcomma = ~isempty (self.gain) || ~isempty (self.balance) || ~isempty (self.value);
             
             if ~isempty (self.D)
-                str = self.addOutputLine (str, self.commaSepList ('Matrix D', self.D), 0, addcomma);
+                str = self.addOutputLine (str, self.commaSepList ('Matrix D'), 0, true);
+                str = self.addOutputLine (str, self.writeMatrix (self.D, false), 0, addcomma);
             end
             
             addcomma = ~isempty (self.balance) || ~isempty (self.value);

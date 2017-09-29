@@ -307,6 +307,10 @@ classdef system < mbdyn.pre.base
                 str = self.addOutputLine (str , sprintf('structural nodes: %d;', elcount.StructuralNodes), 1, false);
             end
             
+            if elcount.AbstractNodes > 0
+                str = self.addOutputLine (str , sprintf('abstract nodes: %d;', elcount.AbstractNodes), 1, false);
+            end
+            
             if elcount.RigidBodies > 0
                 str = self.addOutputLine (str , sprintf('rigid bodies: %d;', elcount.RigidBodies), 1, false);
             end
@@ -317,6 +321,10 @@ classdef system < mbdyn.pre.base
             
             if elcount.Forces > 0
                 str = self.addOutputLine (str , sprintf('forces: %d;', elcount.Forces), 1, false);
+            end
+            
+            if elcount.Genels > 0
+                str = self.addOutputLine (str , sprintf('genels: %d;', elcount.Genels), 1, false);
             end
             
             if elcount.Gravity
@@ -389,32 +397,39 @@ classdef system < mbdyn.pre.base
             elcount.Forces = 0;
             elcount.FileDrivers = 0;
             elcount.Gravity = false;
-           
+            elcount.Genels = 0;
+            elcount.AbstractNodes = 0;
+            
             % not yet implemented
-             elcount.AbstractNodes = 0;
-             elcount.ElectricNodes = 0;
-             elcount.HydraulicNodes = 0;
-             elcount.ParameterNodes = 0;
-             elcount.ThermalNodes = 0;
-             elcount.AerodynamicElements = 0;
-             elcount.Aeromodals = 0;
-             elcount.AirProperties = 0;
-             elcount.AutomaticStructuralElements = 0;
-             elcount.Beams = 0;
-             elcount.BulkElements = 0;
-             elcount.ElectricBulkElements = 0;
-             elcount.ElectricElements = 0;
-             elcount.ExternalElements = 0;
-             elcount.Genels = 0;        
-             elcount.HydraulicElements = 0;
-             elcount.LoadableElements = 0;
-             elcount.OutputElements = 0;
-             elcount.InducedVelocityElements = 0;
+            elcount.ElectricNodes = 0;
+            elcount.HydraulicNodes = 0;
+            elcount.ParameterNodes = 0;
+            elcount.ThermalNodes = 0;
+            elcount.AerodynamicElements = 0;
+            elcount.Aeromodals = 0;
+            elcount.AirProperties = 0;
+            elcount.AutomaticStructuralElements = 0;
+            elcount.Beams = 0;
+            elcount.BulkElements = 0;
+            elcount.ElectricBulkElements = 0;
+            elcount.ElectricElements = 0;
+            elcount.ExternalElements = 0;
+            
+            elcount.HydraulicElements = 0;
+            elcount.LoadableElements = 0;
+            elcount.OutputElements = 0;
+            elcount.InducedVelocityElements = 0;
             
             for ind = 1:numel (self.nodes)
+                
                 if isa (self.nodes{ind}, 'mbdyn.pre.structuralNode')
                     elcount.StructuralNodes = elcount.StructuralNodes + 1;
                 end
+                
+                if isa (self.nodes{ind}, 'mbdyn.pre.abstractNode')
+                    elcount.AbstractNodes = elcount.AbstractNodes + 1;
+                end
+                
             end
             
             for ind = 1:numel (self.elements)
@@ -423,8 +438,13 @@ classdef system < mbdyn.pre.base
                     elcount.Joints = elcount.Joints + 1;
                 end
                 
-                if isa (self.elements{ind}, 'mbdyn.pre.force')
+                if isa (self.elements{ind}, 'mbdyn.pre.force') ...
+                        || isa (self.elements{ind}, 'mbdyn.pre.couple')
                     elcount.Forces = elcount.Forces + 1;
+                end
+                
+                if isa (self.elements{ind}, 'mbdyn.pre.genel')
+                    elcount.Genels = elcount.Genels + 1;
                 end
                 
                 if isa (self.elements{ind}, 'mbdyn.pre.body')

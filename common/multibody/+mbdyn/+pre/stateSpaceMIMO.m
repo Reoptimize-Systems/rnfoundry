@@ -41,9 +41,9 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
              end
              
              for ind = 1:numel (input_list)
-                 if ~ (isa (input_list{ind}, 'mbdyn.pre.nodeDOF') ...
-                       || isa (input_list{ind}, 'mbdyn.pre.drive') )
-                    error ('input_list must be a cell array of mbdyn.pre.nodeDOF objects and/or mbdyn.pre.driveCaller objects')
+                 if ~ ( isa (input_list{ind}, 'mbdyn.pre.nodeDOF') ...
+                        || isa (input_list{ind}, 'mbdyn.pre.drive') )
+                    error ('input_list must be a cell array of mbdyn.pre.nodeDOF objects')
                  end
              end
              
@@ -62,15 +62,22 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
             % base indent level is one
             str = generateOutputString@mbdyn.pre.genel(self);
             
-            str = self.addOutputLine (str, self.commaSepList (self.numberOfOutputs), 2, true, 'number of outputs');
+            str = self.addOutputLine (str, self.formatInteger (self.numberOfOutputs), 2, true, 'number of outputs');
             
             for ind = 1:self.numberOfOutputs
                 
-                str = self.addOutputLine (str, self.commaSepList (self.outputNodeDOFs(ind).generateOutputString ()), 3, true);
+%                 if isa (self.outputNodeDOFsind}, 'mbdyn.pre.nodeDOF')
+                    
+                    str = self.addOutputLine (str, self.commaSepList (self.outputNodeDOFs(ind).generateOutputString ()), 3, true);
+                    
+%                 elseif isa (self.outputNodeDOFs{ind}, 'mbdyn.pre.abstractNode')
+%                     
+%                     str = self.addOutputLine (str, self.commaSepList ('drive', self.inputList{ind}.generateOutputString ()), 3, true);
+%                 end
                 
             end
             
-            str = self.addOutputLine (str, self.commaSepList (self.numberOfInputs), 2, true, 'number of inputs');
+            str = self.addOutputLine (str, self.formatInteger (self.numberOfInputs), 2, true, 'number of inputs');
             
             for ind = 1:self.numberOfInputs
                 
@@ -87,7 +94,7 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
             end
             
             % generate common part of stste-space filter
-            str = self.addOutputLine (str, generateOutputString@mbdyn.pre.stateSpaceFilter(self), 2, false); 
+            str = self.addOutputLine (str, generateOutputString@mbdyn.pre.stateSpaceFilter (self), 2, false); 
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             
