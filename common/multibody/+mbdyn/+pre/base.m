@@ -9,6 +9,12 @@ classdef base < handle
         
     end
     
+    methods 
+        function setLabel (self, label)
+            self.label = label;
+        end
+    end
+    
     methods (Static)
         
         function out = makeCellIfNot (in)
@@ -92,7 +98,49 @@ classdef base < handle
             
         end
         
+        function ok = checkNumericScalar (num, throw, name)
+            % checks if input is a 3 element numeric column vector,
+            % suitible for position, angular position, velocity, angular
+            % velocity etc. It can also be a string: 'null' which
+            % represents [ 0, 0, 0].
+            %
+            % Syntax
+            %
+            %  ok = checkCartesianVector (vec, throw)
+            %
+            % Input
+            %
+            %  vec - value to be tested if it is a 3 element numeric
+            %    column vector, or the keyword 'null'
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkCartesianVector if vec fails check
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'value';
+            end
+            
+            ok = true;
+            if ~( isnumeric (num) && isscalar (num) && isreal (num) )
+                
+                ok = false;
+                
+                if throw
+                    error ('%s must be a scalar numeric value', name);
+                end
+            end
+            
+        end
+        
         function mat = getOrientationMatrix (om)
+            % gets the raw 3x3 orientation matrix
+            %
+            % Syntax
             
             if isa (om, 'mbdyn.pre.orientmat')
                 mat = om.orientationMatrix;
@@ -245,6 +293,90 @@ classdef base < handle
             end
             
         end
+        
+        function ok = checkTplDriveCaller (drv, throw, inputname)
+            % checks if input is a mbdyn.pre.driveCaller object
+            %
+            % Syntax
+            %
+            %  ok = checkTplDriveCaller (drv, throw)
+            %  ok = checkTplDriveCaller (drv, throw, inputname)
+            %
+            % Input
+            %
+            %  drv - value to be tested if it is a valid
+            %   mbdyn.pre.driveCaller object or an object derived from
+            %   this class
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkTplDriveCaller if drv fails check
+            %
+            %  inputname - (optional) string containing name of variable.
+            %   Error message will be customised to include the string. If
+            %   not supplied 'input' is used.
+            %
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                inputname = 'input';
+            end
+            
+            ok = true;
+            if (~isempty (drv)) && (~isa (drv, 'mbdyn.pre.driveCaller'))
+                ok = false;
+            end
+            
+            if ~ok && throw
+                error ('%s must be a mbdyn.pre.driveCaller object', inputname);
+            end
+
+        end
+        
+        function ok = checkDrive (drv, throw, inputname)
+            % checks if input is a mbdyn.pre.drive object
+            %
+            % Syntax
+            %
+            %  ok = checkDrive (drv, throw)
+            %  ok = checkDrive (drv, throw, inputname)
+            %
+            % Input
+            %
+            %  drv - value to be tested if it is a valid
+            %   mbdyn.pre.drive object or an object derived from
+            %   this class
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkDrive if drv fails check
+            %
+            %  inputname - (optional) string containing name of variable.
+            %   Error message will be customised to include the string. If
+            %   not supplied 'input' is used.
+            %
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                inputname = 'input';
+            end
+            
+            ok = true;
+            if (~isempty (drv)) && (~isa (drv, 'mbdyn.pre.drive'))
+                ok = false;
+            end
+            
+            if ~ok && throw
+                error ('%s must be a mbdyn.pre.drive object', inputname);
+            end
+
+        end
        
         function str = commaSepList (varargin)
             % generates a comma separated list from input variables
@@ -292,10 +424,18 @@ classdef base < handle
             
         end
         
-        function str = writeMatrix (mat)
+        function str = writeMatrix (mat, usematr)
             % format a matrix to a string for an mbdyn input file
             
-            str = sprintf('matr,\n');
+            if nargin < 2
+                usematr = true;
+            end
+            
+            if usematr
+                str = sprintf('matr,\n');
+            else
+                str = '';
+            end
 
             % write out matrix row-wise for mbdyn
             for rowind = 1:size (mat, 1)
@@ -321,9 +461,9 @@ classdef base < handle
             % shorten it.
             
             if isint2eps (num)
-                numstr = sprintf('%d.0', num);
+                numstr = sprintf ('%d.0', num);
             else
-                numstr = sprintf('%.18f', num);
+                numstr = sprintf ('%.18f', num);
                 % strip trailing zeros from decimals
                 n = numel (numstr);
                 while numstr(n) ~= '.'
@@ -334,6 +474,18 @@ classdef base < handle
                     end
                     n = n - 1;
                 end
+            end
+            
+        end
+        
+        function numstr = formatInteger (num)
+            % fomats a non-decimal integer number for output to mbdyn file
+            %
+            
+            if isint2eps (num)
+                numstr = sprintf ('%d', num);
+            else
+                error ('Supplied number is not an integer (to machine precision), cannot format');
             end
             
         end
@@ -477,6 +629,26 @@ classdef base < handle
 %                   0, 0, 0, 1 ];
 %             M = [ M(1:3,1:3), M(1:3,4); ...
 %                   0, 0, 0, 1 ];
+        end
+        
+        function nodeType = getNodeType (node)
+            
+            if isa (node, 'mbdyn.pre.structuralNode6dof') 
+                
+                nodeType = 'structural';
+                
+            elseif isa (node, 'mbdyn.pre.structuralNode3dof') 
+
+                nodeType = 'structural';
+                
+            elseif isa (node, 'mbdyn.pre.abstractNode') 
+                
+                nodeType = 'abstract';
+                
+            else
+                error ('Supplied node type is not yet implemented in preprocessor')
+            end 
+            
         end
         
         function drawReferences (refs, varargin)

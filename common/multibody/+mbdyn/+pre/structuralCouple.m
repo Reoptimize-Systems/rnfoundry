@@ -1,4 +1,4 @@
-classdef structuralForce < mbdyn.pre.force
+classdef structuralCouple < mbdyn.pre.couple
     
     properties (GetAccess = public, SetAccess = protected)
         
@@ -10,7 +10,7 @@ classdef structuralForce < mbdyn.pre.force
     
     methods
         
-        function self = structuralForce (node, varargin)
+        function self = structuralCouple (node, varargin)
             
             % 'Postion' - vector defining the offset with respect to the
             %   node of the point where the force is applied.
@@ -30,7 +30,7 @@ classdef structuralForce < mbdyn.pre.force
         
         function str = generateOutputString (self)
             
-            str = generateOutputString@mbdyn.pre.force(self);
+            str = generateOutputString@mbdyn.pre.couple (self);
             
         end
         

@@ -1,4 +1,5 @@
 classdef structuralNode < mbdyn.pre.node
+    % generic structural node class, ancestor of all structural type nodes 
     
     
     properties (GetAccess = public, SetAccess = public)
@@ -39,8 +40,16 @@ classdef structuralNode < mbdyn.pre.node
             options.AbsolutePosition = [0;0;0];
             options.AbsoluteVelocity = [0;0;0];
             options.Accelerations = [];
+            options.HumanReadableLabel = '';
+            options.Scale = [];
+            options.Output = [];
             
             options = parse_pv_pairs (options, varargin);
+            
+            self = self@mbdyn.pre.node ( ...
+                       'HumanReadableLabel', options.HumanReadableLabel, ...
+                       'Scale', options.Scale, ...
+                       'Output', options.Output );
             
             if ~isempty (options.Accelerations)
                 if islogical (options.Accelerations) && isscalar (options.Accelerations)
@@ -65,7 +74,10 @@ classdef structuralNode < mbdyn.pre.node
             self.sy = 1;
             self.sz = 1;
             
-            
+        end
+        
+        function str = generateOutputString (self)
+            str = generateOutputString@mbdyn.pre.node (self);
         end
         
         function draw (self, varargin)

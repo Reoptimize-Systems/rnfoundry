@@ -14,7 +14,7 @@ classdef nodeDOF < mbdyn.pre.base
         function self = nodeDOF(node, varargin)
             
             options.DOFNumber = [];
-            options.AlgebraicOrDifferential = '';
+            options.AlgebraicOrDifferential = 'algebraic';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -45,8 +45,6 @@ classdef nodeDOF < mbdyn.pre.base
                 
                 checkForAlgebraicOrDifferential = true;
                 
-                self.nodeType = 'structural';
-                
             elseif isa (node, 'mbdyn.pre.structuralNode3dof') 
 
                 assert ( ~isempty (options.DOFNumber) ...
@@ -54,9 +52,12 @@ classdef nodeDOF < mbdyn.pre.base
                              || options.DOFNumber == 2 ...
                              || options.DOFNumber == 3) ...
                          , 'For an mbdyn.pre.structuralNode3dof, DOFNumber must be supplied and be 1, 2 or 3');
-                
-                self.nodeType = 'structural';
-                
+                     
+            elseif isa (node, 'mbdyn.pre.abstractNode') 
+                if ~isempty (options.DOFNumber)
+                    error ('DOFNumber is not possible for abstract node type');
+                end
+                options.AlgebraicOrDifferential = [];
             else
                 error ('Supplied node type is not yet implemented in preprocessor')
             end
@@ -67,6 +68,7 @@ classdef nodeDOF < mbdyn.pre.base
             
             self.type = 'node dof';
             self.node = node;
+            self.nodeType = self.getNodeType (node);
             self.dofNumber = options.DOFNumber;
             self.algebraicOrDifferential = options.AlgebraicOrDifferential;
             
@@ -75,7 +77,7 @@ classdef nodeDOF < mbdyn.pre.base
         function str = generateOutputString (self)
             
 
-            args = {self.node.label, self.nodeType};
+            args = {sprintf('%d', self.node.label), self.nodeType};
             
             if ~isempty (self.dofNumber)
                 args = [args, {sprintf('%d', self.dofNumber)}];

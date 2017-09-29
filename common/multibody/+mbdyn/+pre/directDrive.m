@@ -1,22 +1,16 @@
-classdef tplDriveCaller < mbdyn.pre.driveCaller
+classdef directDrive < mbdyn.pre.drive
     
     properties (GetAccess = public, SetAccess = protected)
-
-        driveCallers;
+        
         
     end
     
     methods
         
-        function self = tplDriveCaller ()
-            
-            
-        end
-        
         
         function str = generateOutputString (self)
-
-           str = '';
+            
+            str = 'direct';
             
         end
         

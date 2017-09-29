@@ -7,6 +7,7 @@ classdef initialValueProblem < mbdyn.pre.problem
         maxIterations;
         tolerance;
         derivativesTolerance;
+        output;
     end
     
     methods
@@ -18,11 +19,35 @@ classdef initialValueProblem < mbdyn.pre.problem
             options.SolutionTolerance = [];
             options.Method = [];
             options.DerivativesTolerance = [];
+            options.Output = {};
+            
             options = parse_pv_pairs (options, varargin);
             
-            check.multicheck (@(x) (isscalar(x) && isnumeric(x)), ...
-                'initial time, final time, tolerance must all be scalar numeric values', '', ...
-                itime, ftime, tstep, options.Tolerance );
+            self.checkNumericScalar (itime, true, 'itime');
+            self.checkNumericScalar (ftime, true, 'ftime');
+            self.checkNumericScalar (tstep, true, 'tstep');
+            self.checkNumericScalar (options.Tolerance , true, 'Tolerance');
+            
+            if ~isempty (options.Output)
+               if ~iscellstr (options.Output)
+                  error ('Output must be a cell array of strings');
+               end
+               for ind = 1:numel(options.Output)
+                   self.checkAllowedStringInputs (options.Output{ind}, ...
+                       { 'iterations', ...
+                         'residual', ...
+                         'solution', ...
+                         'jacobian matrix', ...
+                         'messages', ...
+                         'counter', ...
+                         'bailout', ...
+                         'matrix condition number', ...
+                         'solver condition number', ...
+                         'cpu time', ...
+                         'none' }, ...
+                       true, sprintf('Output(%d)', ind));
+               end
+            end
             
             self.initialTime = itime;
             self.finalTime = ftime;
@@ -30,6 +55,7 @@ classdef initialValueProblem < mbdyn.pre.problem
             self.maxIterations = options.MaxIterations;
             self.tolerance = options.Tolerance;
             self.derivativesTolerance = options.DerivativesTolerance;
+            self.output = options.Output;
             self.type = 'initial value';
             
         end
@@ -57,6 +83,10 @@ classdef initialValueProblem < mbdyn.pre.problem
             
             if ~isempty (self.derivativesTolerance)
                 str = self.addOutputLine (str, sprintf('derivatives tolerance: %e;', self.derivativesTolerance), 1, false);
+            end
+            
+            if ~isempty (self.output)
+                str = self.addOutputLine (str, sprintf('output: %s;', self.commaSepList(self.output{:})), 1, false);
             end
             
             str = self.addOutputLine (str, 'end: initial value;', 0, false);

@@ -1,4 +1,4 @@
-classdef externalStructuralForce < mbdyn.pre.structuralForce
+classdef externalStructuralForce < mbdyn.pre.force
     
     properties (GetAccess = public, SetAccess = protected)
         
@@ -125,7 +125,7 @@ classdef externalStructuralForce < mbdyn.pre.structuralForce
         
         function str = generateOutputString (self)
             
-            str = generateOutputString@mbdyn.pre.structuralForce(self);
+            str = generateOutputString@mbdyn.pre.force (self);
             
             str = self.addOutputLine (str, self.communicator.generateOutputString (), 2, true);
             
