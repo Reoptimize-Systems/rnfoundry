@@ -16,11 +16,11 @@
 
 classdef hydrobody < handle
 
-    properties (SetAccess = 'private', GetAccess = 'public') %hdf5 file
+    properties (SetAccess = 'private', GetAccess = 'public') % hdf5 file
         hydroData         = struct()                                            % Hydrodynamic data from BEM or user defined.
     end
 
-    properties (SetAccess = 'public', GetAccess = 'public') %input file
+    properties (SetAccess = 'public', GetAccess = 'public') % input file
         name              = []                                                  % Body name. For WEC bodies this is given in the h5 file.
         mass              = []                                                  % Mass in kg or specify 'equilibrium' to have mass= dis vol * density
         momOfInertia      = []                                                  % Moment of inertia [Ixx Iyy Izz] in kg*m^2
@@ -48,7 +48,7 @@ classdef hydrobody < handle
 %         nhBody            = 0                                                   % Flag for non-hydro body
     end
 
-    properties (SetAccess = 'public', GetAccess = 'public') %body geometry stl file
+    properties (SetAccess = 'public', GetAccess = 'public') % body geometry stl file
         bodyGeometry      = struct(...                                          % Structure defining body's mesh
                                    'numFace', [], ...                               % Number of faces
                                    'numVertex', [], ...                             % Number of vertices
@@ -70,7 +70,7 @@ classdef hydrobody < handle
     end
 
 
-    properties (SetAccess = 'private', GetAccess = 'public') %internal
+    properties (SetAccess = 'private', GetAccess = 'public') % internal
 
         excitationMethod;
         doNonLinearFKExcitation;
@@ -83,7 +83,7 @@ classdef hydrobody < handle
 
     end
 
-    properties (SetAccess = 'private', GetAccess = 'private') %internal
+    properties (SetAccess = 'private', GetAccess = 'private') % internal
 
         waves;
         simu;
@@ -141,9 +141,9 @@ classdef hydrobody < handle
             %  filename - string containing the h5 file containing the
             %    hydrodynamic data for the body
             %
-            %  caseDir - optional string containng the path to the case
-            %    directory. If not supplied, the case directory is stored
-            %    as the current working directory.
+            %  CaseDirectory - optional string containng the path to the 
+            %    case directory. If not supplied, the case directory is
+            %    assumed to be the current working directory.
             %
             % Output
             %
@@ -484,6 +484,25 @@ classdef hydrobody < handle
                     fullfile (obj.caseDir, obj.geometryFile))
             end
         end
+        
+        function [node, body] = makeMBDynComponents (obj)
+            
+            gref = mbdyn.pre.globalref;
+            
+            ref_hydrobody = mbdyn.pre.reference ( obj.cg, [], [], [], 'Parent', gref);
+
+            node = mbdyn.pre.structuralNode6dof ('dynamic', 'AbsolutePosition', ref_hydrobody.pos);
+
+            body = mbdyn.pre.body ( obj.mass,  ...
+                                  [0;0;0], ...
+                                  diag (obj.momOfInertia), ...
+                                  node, ...
+                                  'STLFile', fullfile (obj.caseDir, obj.geometryFile) );
+
+            
+        end
+        
+        
     end
 
     % non-public pre-processing methods
@@ -555,8 +574,8 @@ classdef hydrobody < handle
         end
 
         function userDefinedExcitation(obj, waveAmpTime)
-            % Calculated User-Defined wave excitation force with non-causal convolution
-            % Used by hydroForcePre
+            % Calculated User-Defined wave excitation force with non-causal
+            % convolution Used by hydroForcePre
             kf = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f .* obj.simu.rho .* obj.simu.g;
             kt = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t;
             t =  min(kt):obj.simu.dt:max(kt);
@@ -670,7 +689,7 @@ classdef hydrobody < handle
                 end
             end
             % State Space Formulation
-            if obj.simu.ssCalc == 1
+            if obj.simu.ssCalc > 0
                 
                 if obj.simu.b2b == 1
                     
@@ -859,6 +878,10 @@ classdef hydrobody < handle
                 % state space radiation forces
                 obj.radiationMethod = 'state space representation';
                 obj.radiationMethodNum = 2;
+            elseif obj.simu.ssCalc == 2
+                % state space radiation forces
+                obj.radiationMethod = 'state space representation using external solver';
+                obj.radiationMethodNum = 3;
             else
                 % convolution integral radiation forces
                 obj.radiationMethod = 'convolution integral';
@@ -903,7 +926,13 @@ classdef hydrobody < handle
                                               obj.hydroForce.ssRadf.B, ...
                                               obj.hydroForce.ssRadf.C, ...
                                               obj.hydroForce.ssRadf.D, ...
-                                              zeros (size (A,2), 1) );
+                                              zeros (size (obj.hydroForce.ssRadf.A,2), 1) );
+                                          
+                % initialise the fixed step integration
+                ufcn = @(arg1, arg2) -K * arg2;
+
+                obj.radForceSS.initIntegration (0, ufcn);
+                
             end
 
         end
@@ -964,7 +993,7 @@ classdef hydrobody < handle
 
         end
         
-        function advanceStep (obj, t, accel)
+        function advanceStep (obj, t, accel, vel)
             % advance to the next time step, accepting the current time
             % step and data into stored solution histories
             
@@ -1057,7 +1086,9 @@ classdef hydrobody < handle
 
             if obj.doNonLinearFKExcitation
 
-                [breakdown.F_ExcitLinNonLin, breakdown.WaveNonLinearPressure, breakdown.WaveLinearPressure] = nonlinearExcitationForces (obj, t, pos, elv);
+                [ breakdown.F_ExcitLinNonLin, ...
+                  breakdown.WaveNonLinearPressure, ...
+                  breakdown.WaveLinearPressure ] = nonlinearExcitationForces (obj, t, pos, elv);
 
             else
                 breakdown.F_ExcitLinNonLin = zeros (6, 1);
@@ -1065,7 +1096,9 @@ classdef hydrobody < handle
 
             if obj.doMorrisonElementViscousDrag
 
-                breakdown.F_MorrisonElement = morrisonElementForce (obj, t, pos, vel(:,obj.bodyNumber), accel(:,obj.bodyNumber));
+                breakdown.F_MorrisonElement = morrisonElementForce ( obj, t, pos, ...
+                                                                     vel(:,obj.bodyNumber), ...
+                                                                     accel(:,obj.bodyNumber) );
 
             else
 
@@ -1159,7 +1192,7 @@ classdef hydrobody < handle
 
                     B1 = sin (bsxfun (@plus, A1, obj.waves.phaseRand));
 
-                    B11 = sin (bsxfun (@plus, w*time, obj.waves.phaseRand));
+                    B11 = sin (bsxfun (@plus, obj.waves.w * t, obj.waves.phaseRand));
 
                     C1 = sqrt (bsxfun (@times, obj.waves.A, obj.waves.dw));
 
@@ -1171,7 +1204,7 @@ classdef hydrobody < handle
 
                     E11 = bsxfun (@times, B11, D11);
 
-                    forces = sum (bsxfun (@minus, E1, E11));
+                    forces = sum (bsxfun (@minus, E1, E11))';
 
 
                 case 3
@@ -1270,13 +1303,16 @@ classdef hydrobody < handle
 
                 case 2
                     % state space
-                    F_RadiationDamping = obj.radForceSS.outputs ();
+                    F_RadiationDamping = obj.radForceSS.outputs (vel(:));
+                    
+                case 3
+                    % state space, but calculated by some external solver,
+                    % e.g. by supplying MBDyn with the state-space matrices
+                    F_RadiationDamping = [0;0;0;0;0;0];
 
             end
 
         end
-        
-        
         
         function statederivs = radForceSSDerivatives (obj, u)
             
@@ -1358,7 +1394,6 @@ classdef hydrobody < handle
                 f = 0;
             end
         end
-
         
     end
 
