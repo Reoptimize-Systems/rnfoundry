@@ -1,4 +1,4 @@
-classdef solver < mbdyn.pre.base
+classdef nonlinearSolver < mbdyn.pre.base
     
     properties (GetAccess = public, SetAccess = protected)
         
