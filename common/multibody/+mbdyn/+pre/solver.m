@@ -1,8 +1,7 @@
 classdef solver < mbdyn.pre.base
     
-    
     properties (GetAccess = public, SetAccess = protected)
-       modified;
+        
     end
     
     methods
