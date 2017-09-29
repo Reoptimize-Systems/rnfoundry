@@ -1,4 +1,4 @@
-classdef newtonRaphsonSolver < mbdyn.pre.base
+classdef newtonRaphsonSolver < mbdyn.pre.solver
     
     
     properties (GetAccess = public, SetAccess = protected)
