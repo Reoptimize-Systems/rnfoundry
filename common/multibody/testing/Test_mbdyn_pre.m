@@ -1,119 +1,245 @@
-% 
-% 
-% %% orientation matrix
-% 
-% om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [1;0;0], 'ib', 2, 'vecB', [0;1;0])); 
-% 
-% om.orientationMatrix
-% 
-% 
-% %% orientation matrix
-% 
-% pos = [1,0,0]
-% 
-% om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [cos(pi/6);sin(pi/6);0], 'ib', 3, 'vecB', [0;0;1])); 
-% 
-% om.orientationMatrix
-% 
-% pos * om.orientationMatrix
-% 
-% om = mbdyn.pre.orientmat ('euler', [0,0,pi/6]);
-% 
-% om.orientationMatrix
-% 
-% pos * om.orientationMatrix
-% 
-% %% references
-% 
-% gref = mbdyn.pre.globalref
-% 
-% theta1 = 0.0;
-% theta2 = pi/4;
-% L = 1;
-% 
-% Ref_Link1 = mbdyn.pre.reference ([], mbdyn.pre.orientmat ('euler', [0, pi/2 - theta1, 0]), [], [], 'Parent', gref)
-% 
-% Ref_Link1.pos
-% 
-% Ref_Link2 = mbdyn.pre.reference ([L; 0; 0], mbdyn.pre.orientmat ('euler', [0, -theta2, 0]), [], [], 'Parent', Ref_Link1)
-% 
-% Ref_Link2.pos
-% 
-% Node_Link2 = mbdyn.pre.reference ([0.5*L; 0; 0], mbdyn.pre.orientmat ('orientation', eye(3)), [], [], 'Parent', Ref_Link2)
-% 
-% fcalc = [ L*sin(theta1)+(L/2)*sin(theta1+theta2); 
-%           0; 
-%           -L*cos(theta1)-(L/2)*cos(theta1+theta2) ];
-% 
-%       
-% [ fcalc, Node_Link2.pos ]
-% 
-% 
-% % om = mbdyn.pre.orientmat ('euler', [0, pi-(theta1+theta2), 0])
-% 
-% %% structuralNode6dof
-% 
-% 
-% sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
-% 
-% str = sn6dof.generateOutputString ()
-% 
-% %%
-% sn3dof = mbdyn.pre.structuralNode3dof ('dynamic displacement', 'Accel', true);
-% 
-% str = sn3dof.generateOutputString ()
-% 
-% %% Body
-% 
-% sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
-% mass = 1;
-% cog = [0;0;0];
-% inertiamat = eye (3);
-% 
-% bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof);
-% 
-% str = bd.generateOutputString ()
-% 
-% %% Body
-% 
-% sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
-% mass = 1;
-% cog = [0;0;0];
-% inertiamat = eye (3);
-% 
-% bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof, 'InertialOrientation', eye (3));
-% 
-% str = bd.generateOutputString ()
-% 
-% 
-% %% Total Joint
-% 
-% sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
-% sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
-% 
-% posstatus = 'active';
-% orientstatus = true;
-% 
-% jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus);
-% jnt.generateOutputString ()
-% 
-% 
-% jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
-%     'RelativeOffset1', [1; 2; 3]);
-% jnt.generateOutputString ()
-% 
-% jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
-%     'RelativeOffset1', [1; 2; 3], ...
-%     'RelativeOffset1Reference', 'other node');
-% jnt.generateOutputString ()
-% 
-% %% Revolute Rotation
-% 
-% sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
-% sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
-% 
-% jnt = mbdyn.pre.revoluteRotation (sn1, sn2);
-% jnt.generateOutputString ()
+%% initial value
+
+itime = 0;
+ftime = 1; 
+tstep = 0.1;
+pbm = mbdyn.pre.initialValueProblem (itime, ftime, tstep, 'Output', {'iterations', 'residual'});
+
+str = pbm.generateOutputString ()
+
+pbm = mbdyn.pre.initialValueProblem (itime, ftime, tstep, ...
+                    'Output', {'iterations', 'residual'}, ...
+                    'ResidualTolerance', 1e-6);
+
+str = pbm.generateOutputString ()
+
+pbm = mbdyn.pre.initialValueProblem (itime, ftime, tstep, ...
+                    'Output', {'iterations', 'residual'}, ...
+                    'ResidualTolerance', {1e-6, 'test', 'minmax', 'scale'}, ...
+                    'SolutionTolerance', {1e-6, 'test', 'minmax'});
+
+str = pbm.generateOutputString ()
+
+%% orientation matrix
+
+om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [1;0;0], 'ib', 2, 'vecB', [0;1;0])); 
+
+om.orientationMatrix
+
+
+%% orientation matrix
+
+pos = [1,0,0]
+
+om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [cos(pi/6);sin(pi/6);0], 'ib', 3, 'vecB', [0;0;1])); 
+
+om.orientationMatrix
+
+pos * om.orientationMatrix
+
+om = mbdyn.pre.orientmat ('euler', [0,0,pi/6]);
+
+om.orientationMatrix
+
+pos * om.orientationMatrix
+
+%% references
+
+gref = mbdyn.pre.globalref
+
+theta1 = 0.0;
+theta2 = pi/4;
+L = 1;
+
+Ref_Link1 = mbdyn.pre.reference ([], mbdyn.pre.orientmat ('euler', [0, pi/2 - theta1, 0]), [], [], 'Parent', gref)
+
+Ref_Link1.pos
+
+Ref_Link2 = mbdyn.pre.reference ([L; 0; 0], mbdyn.pre.orientmat ('euler', [0, -theta2, 0]), [], [], 'Parent', Ref_Link1)
+
+Ref_Link2.pos
+
+Node_Link2 = mbdyn.pre.reference ([0.5*L; 0; 0], mbdyn.pre.orientmat ('orientation', eye(3)), [], [], 'Parent', Ref_Link2)
+
+fcalc = [ L*sin(theta1)+(L/2)*sin(theta1+theta2); 
+          0; 
+          -L*cos(theta1)-(L/2)*cos(theta1+theta2) ];
+
+      
+[ fcalc, Node_Link2.pos ]
+
+
+% om = mbdyn.pre.orientmat ('euler', [0, pi-(theta1+theta2), 0])
+
+%% base node
+
+abn = mbdyn.pre.node ();
+
+str = abn.generateOutputString ()
+
+
+abn = mbdyn.pre.node ('Scale', 3);
+
+str = abn.generateOutputString ()
+
+abn = mbdyn.pre.node ('Scale', 'default');
+
+str = abn.generateOutputString ()
+
+try
+abn = mbdyn.pre.node ('Scale', 'fdasfsa');
+catch
+    disp ('Correctly caught bad Scale string');
+end
+
+abn = mbdyn.pre.node ('Output', 'no');
+
+str = abn.generateOutputString ()
+
+abn = mbdyn.pre.node ('Scale', 3, 'Output', 'yes');
+
+str = abn.generateOutputString ()
+
+try
+abn = mbdyn.pre.node ('Output', 'fdasfsa');
+catch
+    disp ('Correctly caught bad Output string');
+end
+
+try
+abn = mbdyn.pre.node ('Output', 9);
+catch
+    disp ('Correctly caught bad Output value');
+end
+
+%% abstract node
+
+abn = mbdyn.pre.abstractNode ();
+
+str = abn.generateOutputString ()
+
+abn = mbdyn.pre.abstractNode ('Value', 10);
+
+str = abn.generateOutputString ()
+
+abn = mbdyn.pre.abstractNode  ('Value', 10, 'Derivative', 100);
+
+str = abn.generateOutputString ()
+
+abn = mbdyn.pre.abstractNode  ('Derivative', 100)
+
+str = abn.generateOutputString ()
+
+abn = mbdyn.pre.abstractNode ('Value', 10, 'Scale', 3, 'Output', 'yes');
+
+str = abn.generateOutputString ()
+
+%% structuralNode6dof
+
+
+sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+str = sn6dof.generateOutputString ()
+
+sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, ...
+                        'Scale', 3, 'Output', 'yes');
+                    
+str = sn6dof.generateOutputString ()
+
+%%
+sn3dof = mbdyn.pre.structuralNode3dof ('dynamic displacement', 'Accel', true);
+
+str = sn3dof.generateOutputString ()
+
+%% Body
+
+sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+mass = 1;
+cog = [0;0;0];
+inertiamat = eye (3);
+
+bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof);
+
+str = bd.generateOutputString ()
+
+%% Body
+
+sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+mass = 1;
+cog = [0;0;0];
+inertiamat = eye (3);
+
+bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof, 'InertialOrientation', eye (3));
+
+str = bd.generateOutputString ()
+
+%% Body
+
+sn3dof = mbdyn.pre.structuralNode3dof ('dynamic displacement', 'Accel', true);
+
+mass = 1;
+
+bd = mbdyn.pre.body (mass, [], [], sn3dof);
+
+str = bd.generateOutputString ()
+
+%% Multiple Mass Body
+
+% body: BODY_LABEL, NODE_LABEL,
+% condense, 3,
+%   4., # mass 1 (mid)
+%   reference, node, 0., 0., 0., # c.m. offset 1
+%   diag, .4, .4, .2, # inertia tensor 1
+%   2., # mass 2 (top)
+%   reference, node, 0., 0., 1., # c.m. offset 2
+%   diag, .2, .2, .1, # inertia tensor 2
+%   2., # mass 3 (bottom)
+%   reference, node, 0., 0., -1., # c.m. offset 3
+%   diag, .2, .2, .1; # inertia tensor 3
+
+sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+mass = [4, 2, 2];
+cog = { [0;0;0], [0;0;1], [0;0;-1] };
+inertiamat = { diag([0.4, 0.4, 0.2]), diag([0.2,0.2,0.1]), diag([0.2,0.2,0.1]) };
+
+bd = mbdyn.pre.bodyMultiMass (mass, cog, inertiamat, sn6dof);
+
+str = bd.generateOutputString ()
+
+bd.setSize (1, 0.2, 0.2, 0.2);
+bd.setSize (2, 0.1, 0.1, 0.1);
+bd.setSize (3, 0.1, 0.1, 0.1);
+bd.draw ()
+
+
+%% Total Joint
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+posstatus = 'active';
+orientstatus = true;
+
+jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus);
+jnt.generateOutputString ()
+
+
+jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
+    'RelativeOffset1', [1; 2; 3]);
+jnt.generateOutputString ()
+
+jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
+    'RelativeOffset1', [1; 2; 3], ...
+    'RelativeOffset1Reference', 'other node');
+jnt.generateOutputString ()
+
+%% Revolute Rotation
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+jnt = mbdyn.pre.revoluteRotation (sn1, sn2);
+jnt.generateOutputString ()
 
 %% system
 
@@ -311,4 +437,285 @@ extsf.generateOutputString ()
 
 
 
+%% stateSpaceFilter
+
+state_order = 2;
+A = [ 1, 2; 3, 4 ];
+B = [ 1, 2; 3, 4 ] * 2;
+C = [ 1, 2; 3, 4 ] * 3;
+D = [ 1, 2; 3, 4 ] * 4;
+E = [ 1, 2; 3, 4 ] * 5;
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+%%
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'gain', 1, ...
+                                  'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'D', D);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'E', E);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'D', D, 'E', E);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'D', D, 'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'E', E, 'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'D', D, 'E', E, 'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'D', D, 'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'E', E, 'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
+                                  'D', D, 'E', E, 'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+%% nodeDOF
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+dof = mbdyn.pre.nodeDOF(sn1, 'DOFNumber', 2, 'Alge', 'algebraic');
+
+dof.generateOutputString ()
+
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+dof2 = mbdyn.pre.nodeDOF(sn1, 'DOFNumber', 1, 'Alge', 'algebraic');
+
+isa ([dof, dof2], 'mbdyn.pre.nodeDOF')
+
+%% stateSpaceMIMO
+
+state_order = 2;
+A = [ 1, 2; 3, 4 ];
+B = [ 1, 2; 3, 4 ] * 2;
+C = [ 1, 2; 3, 4 ] * 3;
+D = [ 1, 2; 3, 4 ] * 4;
+E = [ 1, 2; 3, 4 ] * 5;
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+dof1 = mbdyn.pre.nodeDOF(sn1, 'DOFNumber', 2, 'Alge', 'algebraic');
+
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+dof2 = mbdyn.pre.nodeDOF(sn1, 'DOFNumber', 1, 'Alge', 'algebraic');
+
+output_node_list = [dof1, dof2];
+input = {dof1, dof2};
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'gain', 1, ...
+                                  'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'D', D);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'E', E);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'D', D, 'E', E);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'D', D, 'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'E', E, 'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'D', D, 'E', E, 'gain', 1);
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'D', D, 'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'E', E, 'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
+                                  'D', D, 'E', E, 'balance', 'no');
+
+SSF.generateOutputString ()
+fprintf (1, '\n\n');
+
+
+%% nodeDrive
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+func_drive = mbdyn.pre.directDrive ();
+
+nd = mbdyn.pre.nodeDrive (sn1, func_drive, 'Index', 2);
+
+nd.generateOutputString ()
+
+nd = mbdyn.pre.nodeDrive (sn1, func_drive,  'String', 'XP[1]');
+
+nd.generateOutputString ()
+
+
+%% compnent template drive caller
+
+drivecallers = {mbdyn.pre.const(1), 'inactive', mbdyn.pre.const(2)};
+
+dc = mbdyn.pre.componentTplDriveCaller (drivecallers);
+
+dc.generateOutputString ()
+
+dc = mbdyn.pre.componentTplDriveCaller (drivecallers, 'ShapeType', 'sym');
+
+dc.generateOutputString ()
+
+dc = mbdyn.pre.componentTplDriveCaller (drivecallers, 'ShapeType', 'diag');
+
+dc.generateOutputString ()
+
+dc = mbdyn.pre.componentTplDriveCaller (drivecallers, 'ShapeType', 'bum');
+
+dc.generateOutputString ()
+
+
+%% total force
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+drivecallers = {mbdyn.pre.const(1), 'inactive', mbdyn.pre.const(2)};
+dc = mbdyn.pre.componentTplDriveCaller (drivecallers);
+
+tf = mbdyn.pre.totalForce  (sn1, 'Force', dc);
+
+tf.generateOutputString ()
+
+tf = mbdyn.pre.totalForce  (sn1, 'Force', dc, 'Moment', dc);
+
+tf.generateOutputString ()
+
+
+newabsnodes = {mbdyn.pre.abstractNode(), mbdyn.pre.abstractNode(), mbdyn.pre.abstractNode()};
+
+drivecallers = { mbdyn.pre.nodeDrive(newabsnodes{1}, mbdyn.pre.directDrive()), ...
+                 mbdyn.pre.nodeDrive(newabsnodes{2}, mbdyn.pre.directDrive()), ...
+                 mbdyn.pre.nodeDrive(newabsnodes{3}, mbdyn.pre.directDrive()) };
+
+dc = mbdyn.pre.componentTplDriveCaller (drivecallers);
+
+tf = mbdyn.pre.totalForce  (sn1, 'Moment', dc);
+
+tf.generateOutputString ()
 
