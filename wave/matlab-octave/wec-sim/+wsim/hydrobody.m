@@ -654,7 +654,7 @@ classdef hydrobody < handle
             % Convolution integral raditation damping
             % State space formulation
             
-            iBod = obj.simu.numWecBodies;
+            iBod = obj.bodyNumber;
             
             if obj.simu.b2b == true
                 lenJ = obj.bodyTotal*6;
