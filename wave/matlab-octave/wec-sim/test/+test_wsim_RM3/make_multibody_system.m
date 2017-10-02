@@ -1,19 +1,13 @@
-function mbsys = make_multibody_system (waves, spar_hbody, float_hbody)
+function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements)
 
     gref = mbdyn.pre.globalref;
 
     ref_seabed = mbdyn.pre.reference ( [0;0;-waves.waterDepth], [], [], [], 'Parent', gref); 
 
     % Float
-    ref_float = mbdyn.pre.reference ( float_hbody.cg, [], [], [], 'Parent', gref);
+    float_node = hydro_mbnodes{1};
 
-    float_node = mbdyn.pre.structuralNode6dof ('dynamic', 'AbsolutePosition', ref_float.pos);
-
-    float_mb_body = mbdyn.pre.body ( float_hbody.mass,  ...
-                                     [0;0;0], ...
-                                     diag (float_hbody.momOfInertia), ...
-                                     float_node, ...
-                                     'STLFile', fullfile (simu.caseDir, float_hbody.geometryFile) );
+    float_mb_body = hydro_mbbodies{1};
 
     float_mb_body.setSize (20, 20, 5);
 
@@ -21,15 +15,9 @@ function mbsys = make_multibody_system (waves, spar_hbody, float_hbody)
     float_mb_body.setColour ([247, 244, 17]./255);
 
     % Spar
-    ref_spar = mbdyn.pre.reference ( spar_hbody.cg, [], [], [], 'Parent', gref);
+    spar_node = hydro_mbnodes{2};
 
-    spar_node = mbdyn.pre.structuralNode6dof ('dynamic', 'AbsolutePosition', ref_spar.pos);
-
-    spar_mb_body = mbdyn.pre.body ( spar_hbody.mass, ...
-                                    [0;0;0], ...
-                                    diag (spar_hbody.momOfInertia), ...
-                                    spar_node, ...
-                                    'STLFile', fullfile (simu.caseDir, spar_hbody.geometryFile) );
+    spar_mb_body = hydro_mbbodies{2};
 
     spar_mb_body.setSize (6, 6, 38);
 
@@ -91,11 +79,16 @@ function mbsys = make_multibody_system (waves, spar_hbody, float_hbody)
                                                       );
 
     prob = mbdyn.pre.initialValueProblem (simu.startTime, simu.endTime, simu.dt, ...
-                                    'Tol', 1e-6, 'MaxIterations', 20);
+                                    'ResidualTol', 1e-6, ...
+                                    'MaxIterations', 200, ...
+                                    'Output', {'iterations', 'residual', 'solution', 'jacobian matrix'}, ... %, 'bailout', 'jacobian matrix'});
+                                    'NonlinearSolver', mbdyn.pre.lineSearchSolver()); 
 
     % assemble the system
     mbsys = mbdyn.pre.system ( prob, ...
-                               'Nodes', {float_node, spar_node, clamped_node}, ...
-                               'Elements', {float_mb_body, spar_mb_body, jclamp, j1, j2, j3, j4 socket_force} );
+                               'Nodes', [hydro_mbnodes, {clamped_node}], ...
+                               'Elements', [{float_mb_body, spar_mb_body, jclamp, j1, j2, j3, j4 socket_force}, hydro_mbelements] );
+                           
+	initptodpos = float_node.absolutePosition - spar_node.absolutePosition; 
 
 end
