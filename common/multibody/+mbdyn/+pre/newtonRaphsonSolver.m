@@ -49,7 +49,7 @@ classdef newtonRaphsonSolver < mbdyn.pre.nonlinearSolver
                 end
             end
             
-            str = [ self.commaSepList (args{:}), ';'];
+            str = self.commaSepList (args{:});
             
         end
          

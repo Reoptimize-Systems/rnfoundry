@@ -8,6 +8,7 @@ classdef initialValueProblem < mbdyn.pre.problem
         tolerance;
         derivativesTolerance;
         output;
+        nonlinearSolver;
     end
     
     methods
@@ -15,18 +16,21 @@ classdef initialValueProblem < mbdyn.pre.problem
         function self = initialValueProblem (itime, ftime, tstep, varargin)
             
             options.MaxIterations = 20;
-            options.Tolerance = 1e-9;
-            options.SolutionTolerance = [];
+            options.ResidualTolerance = 1e-9;
+            options.SolutionTolerance = {};
             options.Method = [];
             options.DerivativesTolerance = [];
             options.Output = {};
+            options.NonlinearSolver = [];
             
             options = parse_pv_pairs (options, varargin);
             
             self.checkNumericScalar (itime, true, 'itime');
             self.checkNumericScalar (ftime, true, 'ftime');
             self.checkNumericScalar (tstep, true, 'tstep');
-            self.checkNumericScalar (options.Tolerance , true, 'Tolerance');
+            
+            ResidualTolerance = self.checkResidualTolerance (options.ResidualTolerance);
+            SolutionTolerance = self.checkSolutionTolerance (options.SolutionTolerance);
             
             if ~isempty (options.Output)
                if ~iscellstr (options.Output)
@@ -49,13 +53,21 @@ classdef initialValueProblem < mbdyn.pre.problem
                end
             end
             
+            if ~isempty (options.NonlinearSolver) ...
+                    && ~isa (options.NonlinearSolver, 'mbdyn.pre.nonlinearSolver')
+                
+                error ('NonlinearSolver must be an object derived from the mbdyn.pre.nonlinearSolver class');
+                
+            end
+            
             self.initialTime = itime;
             self.finalTime = ftime;
             self.timeStep = tstep;
             self.maxIterations = options.MaxIterations;
-            self.tolerance = options.Tolerance;
+            self.tolerance = [ ResidualTolerance, SolutionTolerance ];
             self.derivativesTolerance = options.DerivativesTolerance;
             self.output = options.Output;
+            self.nonlinearSolver = options.NonlinearSolver;
             self.type = 'initial value';
             
         end
@@ -73,12 +85,16 @@ classdef initialValueProblem < mbdyn.pre.problem
             str = self.addOutputLine (str, sprintf('final time: %s;', self.formatNumber (self.finalTime)), 1, false);
             str = self.addOutputLine (str, sprintf('time step: %s;', self.formatNumber (self.timeStep)), 1, false);
             
+            if ~isempty (self.tolerance)
+                str = self.addOutputLine (str, sprintf ('tolerance: %s;', self.commaSepList (self.tolerance{:})), 1, false);
+            end
+            
             if ~isempty (self.maxIterations)
                 str = self.addOutputLine (str, sprintf('max iterations: %d;', self.maxIterations), 1, false);
             end
             
-            if ~isempty (self.tolerance)
-                str = self.addOutputLine (str, sprintf('tolerance: %e;', self.tolerance), 1, false);
+            if ~isempty (self.nonlinearSolver)
+                str = self.addOutputLine (str, sprintf('nonlinear solver: %s ;', self.nonlinearSolver.generateOutputString ()), 1, false);
             end
             
             if ~isempty (self.derivativesTolerance)
@@ -93,6 +109,92 @@ classdef initialValueProblem < mbdyn.pre.problem
             
         end
        
+    end
+    
+    methods (Access = protected)
+        
+        function ResidualTolerance = checkResidualTolerance (self, tolerance)
+            
+            if isempty (tolerance)
+                
+                % return empty cell array
+                ResidualTolerance = {};
+                
+            else
+                
+                if ~iscell (tolerance)
+                    tolerance = {tolerance};
+                end
+
+                if ~( (ischar (tolerance{1}) && strcmp (tolerance{1}, 'null')) ...
+                        || self.checkNumericScalar (tolerance{1}, false, 'Tolerance') )
+
+                    error ('First ResidualTolerance value must be a numeric scalar value (or the keyword ''null''');
+
+                end
+
+                if numel (tolerance) > 1
+                    if strcmp (tolerance{2}, 'test')
+
+                        self.checkAllowedStringInputs ( tolerance{3}, ...
+                           { 'none', 'norm', 'minmax' }, true, 'residual tolerance test');
+
+                       if numel (tolerance) > 3
+                           if ~strcmp (tolerance{4}, 'scale')
+                               error ('The last value in the residual tolerance specification is not the keyword ''scale''');
+                           end
+                       end
+
+                    else
+                        error ('Missing ''test'' keyword in residual tolerance cell array')
+                    end
+                end
+
+                ResidualTolerance = tolerance;
+            end
+            
+        end
+        
+        function SolutionTolerance = checkSolutionTolerance (self, tolerance)
+            
+            if isempty (tolerance)
+                
+                % return empty cell array
+                SolutionTolerance = {};
+                
+            else
+                
+                if ~iscell (tolerance)
+                    tolerance = {tolerance};
+                end
+
+                if ~( (ischar (tolerance{1}) && strcmp (tolerance{1}, 'null')) ...
+                        || self.checkNumericScalar (tolerance{1}, false) )
+
+                    error ('First SolutionTolerance value must be a numeric scalar value (or the keyword ''null''');
+
+                end
+
+                if numel (tolerance) > 1
+                    if strcmp (tolerance{2}, 'test')
+
+                        self.checkAllowedStringInputs ( tolerance{3}, ...
+                           { 'none', 'norm', 'minmax' }, true, 'solution tolerance test' );
+
+                       if numel (tolerance) > 3
+                           error ('The SolutionTolerance has too many members, cell array length is greater than 3.');
+                       end
+
+                    else
+                        error ('Missing ''test'' keyword in SolutionTolerance cell array')
+                    end
+                end
+
+                SolutionTolerance = tolerance;
+            end
+            
+        end
+        
     end
     
 end
