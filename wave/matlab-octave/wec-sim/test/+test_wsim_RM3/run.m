@@ -80,14 +80,15 @@ spar_hbody.geometryFile = fullfile ('geometry', 'plate.stl');
 % make a hydrosys object for simulation
 hsys = wsim.hydrosys (waves, simu, [float_hbody, spar_hbody]);
 
-% set up ode simulation
+% set up transient simulation
 hsys.initialiseHydrobodies ();
 hsys.odeSimSetup ();
+[hydro_mbnodes, hydro_mbbodies, hydro_mbelements] = hsys.makeMBDynComponents ();
 
 %% Multibody dynamics system specification (mbdyn)
 
-mbsys =  test_wsim_RM3.make_multibody_system (waves, spar_hbody, float_hbody);
-                       
+[mbsys, initptodpos] = test_wsim_RM3.make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements);
+                     
 % draw it
 % mbsys.draw ('Mode', 'wireghost', 'Light', false);
 
@@ -103,7 +104,6 @@ mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
 
 k = 0;
 c = 1200000;
-initptodpos = ref_float.pos - ref_spar.pos; 
 
 %% Run the simulation
 
@@ -125,9 +125,19 @@ mb.start ('Verbosity', 0);
 %%
 nnodes = mb.GetNodes ();
 
-time = prob.initialTime;
+time = mbsys.problems{1}.initialTime;
+
+% set the forces
+mb.F (zeros(3,nnodes));
+mb.M (zeros(3,nnodes));
+
+mbconv = mb.applyForcesAndMoments (true);
 
 status = mb.GetMotion ();
+
+if status ~= 0
+    error ('mbdyn returned %d, aborting sim, check output file:\n%s\nfor clues at to why.', status, mb.MBDynOutputFile)
+end
 
 eul = zeros (3,nnodes);
 
@@ -200,7 +210,7 @@ ind = 2;
 plotvectors = false;
 checkoutputs = false;
 miniters = 0;
-maxiters = prob.maxIterations;
+maxiters = mbsys.problems{1}.maxIterations;
 absforcetol = 100;
 relforcetol = 1e-3;
 
@@ -245,10 +255,10 @@ while status == 0
             convflag = true;
         else
             convflag = false;
-            time(ind) = time(ind-1) + prob.timeStep;
+            time(ind) = time(ind-1) + mbsys.problems{1}.timeStep;
         end
     else
-        time(ind) = time(ind-1) + prob.timeStep;
+        time(ind) = time(ind-1) + mbsys.problems{1}.timeStep;
     end
     
 %     for ind = 1:nnodes
