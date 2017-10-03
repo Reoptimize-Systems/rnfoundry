@@ -9,6 +9,7 @@ classdef initialValueProblem < mbdyn.pre.problem
         derivativesTolerance;
         output;
         nonlinearSolver;
+        linearSolver;
     end
     
     methods
@@ -22,6 +23,7 @@ classdef initialValueProblem < mbdyn.pre.problem
             options.DerivativesTolerance = [];
             options.Output = {};
             options.NonlinearSolver = [];
+            options.LinearSolver = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -60,6 +62,13 @@ classdef initialValueProblem < mbdyn.pre.problem
                 
             end
             
+            if ~isempty (options.LinearSolver) ...
+                    && ~isa (options.LinearSolver, 'mbdyn.pre.linearSolver')
+                
+                error ('LinearSolver must be an object derived from the mbdyn.pre.linearSolver class');
+                
+            end
+            
             self.initialTime = itime;
             self.finalTime = ftime;
             self.timeStep = tstep;
@@ -68,6 +77,7 @@ classdef initialValueProblem < mbdyn.pre.problem
             self.derivativesTolerance = options.DerivativesTolerance;
             self.output = options.Output;
             self.nonlinearSolver = options.NonlinearSolver;
+            self.linearSolver = options.LinearSolver;
             self.type = 'initial value';
             
         end
@@ -95,6 +105,10 @@ classdef initialValueProblem < mbdyn.pre.problem
             
             if ~isempty (self.nonlinearSolver)
                 str = self.addOutputLine (str, sprintf('nonlinear solver: %s ;', self.nonlinearSolver.generateOutputString ()), 1, false);
+            end
+            
+            if ~isempty (self.linearSolver)
+                str = self.addOutputLine (str, sprintf('linear solver: %s ;', self.linearSolver.generateOutputString ()), 1, false);
             end
             
             if ~isempty (self.derivativesTolerance)
