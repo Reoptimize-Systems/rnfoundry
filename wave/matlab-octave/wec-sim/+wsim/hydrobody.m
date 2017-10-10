@@ -119,6 +119,7 @@ classdef hydrobody < handle
 
         % wave radiation forces state-space system object
         radForceSS;
+        velHist;
         
         % wave elevation
         oldElev;
@@ -928,10 +929,16 @@ classdef hydrobody < handle
                                               obj.hydroForce.ssRadf.D, ...
                                               zeros (size (obj.hydroForce.ssRadf.A,2), 1) );
                                           
+                
+                
                 % initialise the fixed step integration
-                ufcn = @(arg1, arg2) -K * arg2;
+                ufcn = @(t, arg2) getVelHist (obj, t);
 
-                obj.radForceSS.initIntegration (0, ufcn);
+                obj.radForceSS.initIntegration (obj.simu.startTime, ufcn);
+                
+            elseif obj.radiationMethodNum == 3
+                % do nothing, an external solver is handling the radiation
+                % forces
                 
             end
 
@@ -975,6 +982,10 @@ classdef hydrobody < handle
                 obj.accelHist = zeros (nsteps, 6);
             end
             
+            if obj.radiationMethodNum == 2
+                obj.velHist = obj.accelHist;
+            end
+            
             % reset wave elevation
             obj.oldElev = [];
             
@@ -993,9 +1004,44 @@ classdef hydrobody < handle
 
         end
         
-        function advanceStep (obj, t, accel, vel)
+        function advanceStep (obj, t, vel, accel)
             % advance to the next time step, accepting the current time
             % step and data into stored solution histories
+            %
+            % Syntax
+            %
+            % advanceStep (hb, t, vel, accel)
+            %
+            % Description
+            %
+            % advanceStep must be called at the end of each integration
+            % time step to update the history of the solution. This is
+            % required for the radiation forces when using either the
+            % convolution integral method, or the state-space integration
+            % using the default internal integration provided by this class
+            % (invoked with simu.ssCalc = 1).
+            %
+            % Input
+            %
+            %  hb - hydrobody object
+            %
+            %  t - the last computed time step (the step at which the vel
+            %    and accel values are being provided).
+            %
+            %  vel - vector of velocities and angular velocities, of size
+            %    (6 x 1) if there is no body to body interaction (just the
+            %    velocities of this body), or size (6*nbodies x 1) if there
+            %    is body to body interaction (the velocities of all bodies
+            %    in the system).
+            %
+            %  accel - vector of accelerations and angular accelerations,
+            %    of size (6 x 1) if there is no body to body interaction
+            %    (just the velocities of this body), or size (6*nbodies x
+            %    1) if there is body to body interaction (the accelerations
+            %    of all bodies in the system).
+            %
+            % 
+            
             
             obj.timeStepHist = circshift (obj.timeStepHist, [0,-1]);
             
@@ -1006,7 +1052,43 @@ classdef hydrobody < handle
             
             obj.accelHist(end,:) = accel';
             
+            if obj.radiationMethodNum == 2
+                % update the velocity history
+                obj.velHist = circshift (obj.velHist, [-1,0]);
+
+                obj.velHist(end,:) = vel';
+            end
+            
             obj.stepCount = obj.stepCount + 1;
+            
+        end
+        
+        function vel = getVelHist (obj, t)
+            
+            if obj.stepCount > 1
+                % extrapolate acceleration from previous time steps
+                %                     thisaccel = interp1 (obj.timeStepHist', obj.accelHist, t-delay, 'linear', 'extrap');
+                
+                %                     thisaccel = zeros (size (obj.accelHist,2), 1);
+                %                     for ind = 1:numel (thisaccel)
+                % %                         thisaccel(ind) = obj.lagrangeinterp (obj.timeStepHist',obj.accelHist(:,ind),t-delay);
+                %
+                %                         p = polyfit (obj.timeStepHist(end-1:end)', obj.accelHist(end-1:end,ind), 1);
+                %                         thisaccel(ind) = polyval (p, t-delay);
+                %                     end
+                
+%                 vel = obj.linearInterp ( obj.timeStepHist(end-1), ...
+%                     obj.timeStepHist(end), ...
+%                     obj.velHist(end-1,:), ...
+%                     obj.velHist(end,:), ...
+%                     t );
+                
+%             elseif obj.stepCount == 2
+                vel = interp1 (obj.timeStepHist', obj.velHist, t);
+                
+            elseif obj.stepCount == 1
+                vel = obj.velHist (end,:)';
+            end
             
         end
         
@@ -1303,7 +1385,11 @@ classdef hydrobody < handle
 
                 case 2
                     % state space
-                    F_RadiationDamping = obj.radForceSS.outputs (vel(:));
+%                     if obj.simu.b2b
+                        F_RadiationDamping = obj.radForceSS.outputs (vel(:));
+%                     else
+%                         F_RadiationDamping = obj.radForceSS.outputs (vel(:,obj.bodyNumber));
+%                     end
                     
                 case 3
                     % state space, but calculated by some external solver,
@@ -1556,6 +1642,9 @@ classdef hydrobody < handle
         function F_FM = convolutionIntegral(obj, vel, t)
             % Function to calculate convolution integral
 
+            % TODO: we could use advanceStep to ensure histories are
+            % updated properly instead of the following test
+            % TODO: allow nonuniform time spacing for convolutionIntegral
             if abs(t - obj.radForceOldTime - obj.CIdt) < 1e-8
 
                 obj.radForceVelocity      = circshift(obj.radForceVelocity, 1, 2);
