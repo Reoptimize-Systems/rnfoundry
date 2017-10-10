@@ -58,10 +58,23 @@ classdef body < nemoh.base
     methods
         
         function self = body (inputdir, varargin)
+            % constuctor for the nemoh.body object
+            %
+            % Syntax
+            %
+            % 
             
             options.MeshProgPath = '';
             
             options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.MeshProgPath)
+                if ispc
+                    options.MeshProgPath = 'Mesh.exe';
+                else
+                    options.MeshProgPath = 'mesh';
+                end
+            end
             
             if ~isempty (options.MeshProgPath)
                 
@@ -81,6 +94,32 @@ classdef body < nemoh.base
         end
         
         function setMeshProgPath (self, meshprogpath)
+            % set the path on which to call the Nemoh meshing program
+            %
+            % Syntax
+            %
+            % setMeshProgPath (n, meshprogpath)
+            %
+            % Description
+            %
+            % sets the path on which to call the Nemoh meshing program. If
+            % the meshing program is on your program path, this can just be
+            % the program name (e.g. 'Mesh.exe' on windows and 'mesh' on
+            % other platforms. This is the default if you do not set this
+            % value by calling setMeshProgPath of using the optional
+            % 'MeshProgPath' option when constructing the body.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  meshprogpath - string containing the full path to the Nemoh
+            %    meshing program executeable. 
+            %
+            %
+            
+            
+            
             self.meshProgPath = meshprogpath;
         end
         
@@ -101,6 +140,27 @@ classdef body < nemoh.base
         end
         
         function setID (self, id)
+            % set the id of the body
+            %
+            % Syntax
+            %
+            % setID (nb, id)
+            %
+            % Description
+            %
+            % setID sets the integer value identifying the body. This id is
+            % used to generate the body's name, which is also used by
+            % default in the mesh file name. When the body is put into a
+            % nemoh.system object the system sets all body ids in the
+            % system automatically (by callng this method).
+            % 
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  id - new id, should be a sclar integer value
+            %
+            %
             
             self.checkNumericScalar (id, true, 'id');
             
@@ -111,6 +171,53 @@ classdef body < nemoh.base
         end
         
         function makeAxiSymmetricMesh (self, r, z, ntheta, zCoG, varargin)
+            % initialise a mesh based on a 2D profile rotated around z axis
+            %
+            % Syntax
+            %
+            % makeAxiSymmetricMesh (nb, r, z, ntheta, zCoG)
+            % makeAxiSymmetricMesh (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % makeAxiSymmetricMesh initialises a 3D mesh of an axisymmetric
+            % body described using a 2D profile in the (r,z) plane, defined
+            % using polar coordinates (r,theta,z). The 3D shape is the
+            % profile swept out when the profile is rotated around the z
+            % axis The shape is rotated ony 180 degrees as Nemoh is able to
+            % take advantage of the shape's symmetry.
+            %
+            % Once created, the mesh must be refined using the Nemoh
+            % meshing program. This is done by frst writing the basic mesh
+            % description to disk using writeMesh, and then calling
+            % processMesh to run the Nemoh mesing program on the input
+            % files and load the results.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  r - vector of n radial positons of the profile points
+            %
+            %  z - vector of n axial positons of the profile points
+            %
+            %  ntheta - number of steps to rotate around the z axis
+            %
+            %  zCoG - vertical position of the centre of gravity of the
+            %    body.
+            %
+            % Additional optional arguments may be supplied using
+            % parameter-value pairs. The avaialable options are:
+            %
+            % 'Verbose' - logical flag (true/false), if true some text
+            %   information about the mesh will be output to the command
+            %   line. Default is false.
+            %
+            % 'NPanelsTarget' - scalar target number of panels for the
+            %   refined mesh Default is 250.
+            %
+            %
+            
             
             options.Verbose = true;
             options.NPanelsTarget = 250;
@@ -178,6 +285,34 @@ classdef body < nemoh.base
         end
         
         function drawMesh (self, varargin)
+            % plot the mesh for this body
+            %
+            % Syntax
+            %
+            % drawMesh (nb)
+            % drawMesh (nb, 'Parameter', value)
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            % Additional optional arguments are provided as parameter-value
+            % pairs. The avaialable options are:
+            %
+            % 'Axes' - handle for existing figure axes in which to do the
+            %   mesh plot. f not supplied, a new figure and axes are
+            %   created.
+            %
+            % 'PlotForces' - logical flag indiacting whether to plot the
+            %   calculated hydrostatic forces if they are available.
+            %   Default is true if not supplied.
+            %
+            % Output
+            %
+            %  None
+            %
+            %
+            
             
             options.Axes = [];
             options.PlotForces = true;
@@ -216,6 +351,7 @@ classdef body < nemoh.base
         end
         
         function writeMesh (self, varargin)
+            % write the mesh description to disk (if necessary)
             
             options.MeshFileName = sprintf ('%s.dat', self.name);
             
@@ -244,6 +380,16 @@ classdef body < nemoh.base
         
         function processMesh (self)
             % runs the Nemoh 'mesh' program on the mesh and loads results
+            %
+            % Syntax
+            %
+            % processMesh (nb)
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %
             
             if self.meshProcessed
                 warning ('Processing mesh for body with meshProcessed == true');
@@ -440,7 +586,20 @@ classdef body < nemoh.base
             %
             % Syntax
             %
-            % 
+            % writeAxiMesh (nb, 'Parameter', Value)
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            % Additional optional inputs may be provided through
+            % parameter-value pairs. The avaialable options are:
+            %
+            % 'MeshFileName' - string containing the name of the input mesh
+            %   file for Nemoh. If not supplied a file name is generated
+            %   from the body's id property, i.e. body_<id>.dat
+            %
+            %
             
             options.MeshFileName = sprintf ('%s.dat', self.name);
             
