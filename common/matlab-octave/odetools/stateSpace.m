@@ -63,6 +63,13 @@ classdef stateSpace < handle
             
         end
         
+        function y = outputs (SS, u)
+            % get the state-space system outputs
+            
+            y = SS.C * SS.x + SS.D * u;
+            
+        end
+        
         function initIntegration (SS, t0, ufcn, a, b, c)
             
             SS.t0 = t0;
@@ -81,7 +88,6 @@ classdef stateSpace < handle
                 SS.ufcn = @(t, x) 0;
             else
                 SS.ufcn = ufcn;
-            
             end
             
             SS.nx = numel(SS.x0);   % Number of states
@@ -116,13 +122,6 @@ classdef stateSpace < handle
             else
                 error ('State-space integrator has not been initialised')
             end
-            
-        end
-        
-        function y = outputs (SS, u)
-            % get the state-space system outputs
-            
-            y = SS.C * SS.x + SS.D * u;
             
         end
         
