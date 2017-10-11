@@ -1,16 +1,54 @@
 classdef body < nemoh.base
+    % class representing a body in a Nemoh hydrodynamic calculation
+    %
+    % Syntax
+    %
+    % nb = nemoh.body (inputdir)
+    % nb = nemoh.body (inputdir, 'Parameter', value)
+    %
+    % Description
+    %
+    % the nemoh.body class represents a hydrodynamic body for input to a
+    % Nemoh calculation. One or more body classes are used together with
+    % the nemoh.system object to generate Nemoh input files and compatible
+    % meshes to perform hydrodynamic BEM calculations. For the general
+    % workflow of running a calculation see the help for the nemoh.system
+    % class.
+    %
+    % body Methods:
+    % 
+    %  body - constructor for the body object
+    %  makeAxiSymmetricMesh - initialises a mesh of an axisymmetric body
+    %    defined by a 2D profile rotated around z axis.
+    %  drawMesh - plots the body mesh in a figure
+    %  meshInfo - prints some information about the body mesh to the
+    %    command line
+    %  
+    % The folowing methods are mainly for use by a nemoh.system object to
+    % which the body has been added:
+    %
+    %  writeMesh - writes mesh input files, these usually require procesing
+    %    by calling processMesh after writing the files. 
+    %  processMesh - process the mesh files written by writeMesh, e.g. by
+    %    running the Nemoh meshing program. 
+    %  setMeshProgPath - sets the path to the Nemoh meshing program
+    %  setRho - sets the water density for the problem
+    %  setg - sets the gravitational acceleration for the problem
+    %  setID - sets the integer ID of the body
+    %  generateBodyStr - create a string for the body representing the body
+    %    section of a Nemoh.cal file
+    %
+    % See also: nemoh.system
+    %
     
     properties (GetAccess = public, SetAccess = private)
         
         meshProgPath; % nemoh mesh program file path
-        preProcProgPath; % nemoh preProc program file path
-        solverProgPath; % nemoh solver program file path
-        postProcProgPath; % nemoh postProc program file path
         
-        inputDataDirectory;
+        inputDataDirectory; % directory where Nemoh mesh files will be created
         
-        meshR;
-%         meshZ;
+        axiMeshR;
+        axiMeshZ;
         
         meshX;
         meshY;
@@ -42,7 +80,7 @@ classdef body < nemoh.base
         WPA;
         inertia; % inertia matrix (estimated assuming mass is distributed on wetted surface)
         
-        meshProcessed;
+        meshProcessed; % flag showing whether the current body mesh is ready for writing or needs processing
         
         meshFileName;
         meshDirectory;
@@ -54,15 +92,38 @@ classdef body < nemoh.base
         
     end
     
+    properties (GetAccess = private, SetAccess = private)
+       meshPlottable; 
+    end
     
     methods
         
         function self = body (inputdir, varargin)
-            % constuctor for the nemoh.body object
+            % constructor for the nemoh.body object
             %
             % Syntax
             %
-            % 
+            % nb = nemoh.body (inputdir)
+            % nb = nemoh.body (inputdir, 'Parameter', value)
+            %
+            % Input
+            %
+            %  inputdir - string containing the directory where the Nemoh
+            %    input files are to be generated and evaluated
+            %
+            % Additional optional arguments can be supplied using
+            % parameter-value pairs. The available options are:
+            %
+            % 'MeshProgPath' - string containng the path of the Nemoh 
+            %   meshing program executeable. If not supplied, the default
+            %   is an empty string, which means the meshing program must be
+            %   on your computer's program path (it will be invoked by just
+            %   calling the mesh program's name). MeshProgPath can be set
+            %   later using the setMeshProgPath method. When the body is
+            %   added to a nemoh.system object, the system object calls
+            %   setMeshProgPath to match the path set in the system object.
+            %
+            %
             
             options.MeshProgPath = '';
             
@@ -76,18 +137,20 @@ classdef body < nemoh.base
                 end
             end
             
-            if ~isempty (options.MeshProgPath)
-                
-                if ~exist (options.MeshProgPath, 'file')
-                    error ('MeshProgPath does not exist');
+            if ~exist (inputdir, 'file')
+                [status, msg] = mkdir (options.MeshProgPath);
+                if status == false
+                    error ('inputdir does not exist and creation failed with the following message:\n%s', ...
+                        msg);
                 end
-                
             end
             
-            self.meshProgPath = options.MeshProgPath;
-            self.inputDataDirectory = inputdir;
-            self.meshProcessed = false;
+            self.setMeshProgPath (options.MeshProgPath)
             
+            self.inputDataDirectory = inputdir;
+            
+            self.clearMeshAndForceData ();
+
             self.id = 1;
             self.name = sprintf('body_id_%d', self.id);
             
@@ -118,12 +181,19 @@ classdef body < nemoh.base
             %
             %
             
-            
+            if ~isempty (options.MeshProgPath)
+                
+                if ~exist (options.MeshProgPath, 'file')
+                    error ('MeshProgPath does not exist');
+                end
+                
+            end
             
             self.meshProgPath = meshprogpath;
         end
         
         function setRho (self, rho)
+            % sets rho, the water density for the problem
             
             self.checkNumericScalar (rho, true, 'rho');
             
@@ -132,6 +202,7 @@ classdef body < nemoh.base
         end
         
         function setg (self, g)
+            % sets g, the gravitational acceleration for the problem
             
             self.checkNumericScalar (g, true, 'g');
             
@@ -228,6 +299,13 @@ classdef body < nemoh.base
             
             self.nPanelsTarget = options.NPanelsTarget;
             
+            % clear any previous mesh and force data
+            self.clearMeshAndForceData ();
+            
+            % store profile for inspection later
+            self.axiMeshR = r;
+            self.axiMeshZ = z;
+            
             n = numel (r);
             
             if numel (z) ~= n
@@ -281,6 +359,7 @@ classdef body < nemoh.base
             end
             
             self.meshType = 'axi';
+            self.meshPlottable = true;
             
         end
         
@@ -313,40 +392,45 @@ classdef body < nemoh.base
             %
             %
             
-            
             options.Axes = [];
             options.PlotForces = true;
             
             options = parse_pv_pairs (options, varargin);
             
-            if isempty (options.Axes)
-                figure;
-                axes;
+            if self.meshPlottable == true
+                
+                if isempty (options.Axes)
+                    figure;
+                    axes;
+                else
+                    % make desired axes current (no way to set axes for plot
+                    % using trimes directly)
+                    axes (options.Axes);
+                end
+
+                trimesh ( self.triMesh, ...
+                          self.meshX, ...
+                          self.meshY, ...
+                          self.meshZ, ...
+                          zeros (self.nMeshNodes,1) );
+
+                % plot forces if requested, and available
+                if options.PlotForces && ~isempty (self.hydrostaticForceX)
+                    hold on;
+                    quiver3 ( self.hydrostaticX, ...
+                              self.hydrostaticY, ...
+                              self.hydrostaticZ, ...
+                              self.hydrostaticForceX, ...
+                              self.hydrostaticForceY, ...
+                              self.hydrostaticForceZ );
+                    hold off
+                end
+
+                title('Mesh for Nemoh Body');
+            
             else
-                % make desired axes current (no way to set axes for plot
-                % using trimes directly)
-                axes (options.Axes);
+                error ('body %s mesh is not available for plotting', self.name);
             end
-            
-            trimesh ( self.triMesh, ...
-                      self.meshX, ...
-                      self.meshY, ...
-                      self.meshZ, ...
-                      zeros (self.nMeshNodes,1) );
-            
-            % plot forces if requested, and available
-            if options.PlotForces && ~isempty (self.hydrostaticForceX)
-                hold on;
-                quiver3 ( self.hydrostaticX, ...
-                          self.hydrostaticY, ...
-                          self.hydrostaticZ, ...
-                          self.hydrostaticForceX, ...
-                          self.hydrostaticForceY, ...
-                          self.hydrostaticForceZ );
-                hold off
-            end
-            
-            title('Mesh for Nemoh Body');
             
         end
         
@@ -524,6 +608,7 @@ classdef body < nemoh.base
             movefile (self.meshFilePath, self.inputDataDirectory);
             
             self.meshProcessed = true;
+            self.meshPlottable = true;
             
         end
         
@@ -680,6 +765,31 @@ classdef body < nemoh.base
             % mark the mesh as not processed since we've just rewriten the
             % mesh program input files
             self.meshProcessed = false;
+            
+        end
+        
+        function clearMeshAndForceData (self)
+            
+            self.axiMeshR = [];
+            self.axiMeshZ = [];
+            self.meshX = [];
+            self.meshY = [];
+            self.meshZ = [];
+            self.quadMesh = [];
+            self.triMesh = [];
+            self.nMeshNodes = [];
+            self.nQuads = [];
+            self.nTriangles = [];
+            self.hydrostaticForceX = [];
+            self.hydrostaticForceY = [];
+            self.hydrostaticForceZ = [];
+            self.hydrostaticX = [];
+            self.hydrostaticY = [];
+            self.hydrostaticZ = [];
+            
+            self.meshProcessed = false;
+            self.meshPlottable = false;
+            self.meshType = 'none';
             
         end
         
