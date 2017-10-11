@@ -99,22 +99,25 @@ classdef base < handle
         end
         
         function ok = checkNumericScalar (num, throw, name)
-            % checks if input is a 3 element numeric column vector,
-            % suitible for position, angular position, velocity, angular
-            % velocity etc. It can also be a string: 'null' which
-            % represents [ 0, 0, 0].
+            % checks if input is a real scalar value
             %
             % Syntax
             %
-            %  ok = checkCartesianVector (vec, throw)
+            %  ok = checkNumericScalar (vec, throw)
+            %  ok = checkNumericScalar (..., name)
             %
             % Input
             %
-            %  vec - value to be tested if it is a 3 element numeric
-            %    column vector, or the keyword 'null'
+            %  num - value to be tested if it is a real numeric
+            %    scalar
             %
             %  throw - logical flag determining whether an error is thrown
-            %   by checkCartesianVector if vec fails check
+            %   by checkNumericScalar if num fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be <name> must be a scalar numeric value.
+            %   Default is 'value' if not supplied.
+            %
             %
             % Output
             %
