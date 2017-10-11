@@ -1,4 +1,12 @@
 classdef simulation < nemoh.base
+    % class for generating Nemoh hydrodynamic BEM solver input files
+    %
+    % Syntax
+    %
+    % ns = simulation (inputdir, installdir)
+    % ns = simulation (..., 'Parameter', value)
+    %
+    % 
     
     properties (GetAccess = public, SetAccess = private)
         
@@ -7,45 +15,78 @@ classdef simulation < nemoh.base
         solverProgPath; % nemoh solver program file path
         postProcProgPath; % nemoh postProc program file path
         
-        inputDataDirectory;
+        inputDataDirectory; % directory where Nemoh input files will be created
 
-        rho;
-        g;
+        rho; % density of fluid (kg/m^3)
+        g; % accleration due to gravity (m/s^2)
         
         bodies;
+        simReady;
         
     end
     
     
     methods
         
-        function self = simulation (inputdir, installdir, varargin)
+        function self = simulation (inputdir, varargin)
+            % constructor for the nemoh.simulation class
+            %
+            % Syntax
+            %
+            % ns = simulation (inputdir, installdir)
+            % ns = simulation (..., 'Parameter', value)
+            %
+            % Input
+            %
+            %  inputdir - directory where Nemoh input files will be created
+            %
+            % Additional optional arguments may be supplied as
+            % parameter-value pairs. The available options are:
+            %
+            % 'InstallDir' - directory where the Nemoh executeables can be
+            %   found. If not supplied, the executeables are assumed to be
+            %   on the computer's path so they can be invoked without the
+            %   full file path by just using their name.
+            %
+            % 'rho' - Density of water in the simulation (kg/m^3), Default
+            %   is 1025 if not supplied.
+            %
+            % 'g' - Graviational acceleration used in the simulation
+            %   (m/s^2). 9.81 is used if not supplied.
+            %
+            % 'Bodies' - an array of one or more nemoh.body objects to be
+            %   added to the simulation. Bodies can also be added later
+            %   using the addBody method.
+            %
+            % Output
+            %
+            %  ns - a nemoh.system object
+            %
             
-            options.rho  =  1025;
-            options.g  =  9.81;
+            options.rho = 1025;
+            options.g = 9.81;
             options.Bodies = [];
+            options.InstallDir = '';
             
             options = parse_pv_pairs (options, varargin);
             
-            prognames = {'mesh', 'preProc', 'solver', 'postProc'};
-            
             if ispc
-                for ind = 1:numel (prognames)
-                    prognames(ind) = [prognames{ind}, '.exe'];
-                end
+                prognames = {'Mesh.exe', 'preProc.exe', 'solver.exe', 'postProc.exe'};
+            else
+                prognames = {'mesh', 'preProc', 'solver', 'postProc'};
             end
             
             for ind = 1:numel (prognames)
-                if ~exist (fullfile (installdir, prognames{ind}), 'file')
+                if ~exist (fullfile (options.InstallDir, prognames{ind}), 'file')
                     error ('%s binary was not found in provided install directory:\n%s', ...
-                        prognames{ind}, installdir);
+                        prognames{ind}, options.InstallDir);
                 end
             end
             
-            self.meshProgPath = fullfile (installdir, prognames{1});
-            self.preProcProgPath = fullfile (installdir, prognames{2});
-            self.solverProgPath = fullfile (installdir, prognames{3});
-            self.postProcProgPath = fullfile (installdir, prognames{4});
+            self.meshProgPath = fullfile (options.InstallDir, prognames{1});
+            self.preProcProgPath = fullfile (options.InstallDir, prognames{2});
+            self.solverProgPath = fullfile (options.InstallDir, prognames{3});
+            self.postProcProgPath = fullfile (options.InstallDir, prognames{4});
             self.inputDataDirectory = inputdir;
             self.rho = options.rho;
             self.g = options.g;
@@ -56,48 +97,91 @@ classdef simulation < nemoh.base
                 end
             end
             
+            % mark sim as not ready to run
+            self.simReady = false;
+            
         end
         
         function run (self, varargin)
+            % run Nemoh on the simulation input files
+            %
+            % Syntax
+            %
+            % run (ns)
+            % run (ns, 'Parameter', value)
+            %
+            % Description
+            %
+            % run invokes the Nemo programs on the generated input files.
+            % Before running it also first generates the ID.dat file and
+            % input.txt file for the problem. See the Nemoh documentation
+            % for more information about these files. After generating the
+            % files, the preprocessor, solver and postprocessor are all run
+            % on the input files in sequence.
+            %
+            % Input
+            %
+            %  ns - nemoh.system object
+            %
+            % Additional optional arguments may be supplied as
+            % parameter-value pairs. The available options are:
+            %
+            % 'Verbose' - logical (true/false) flag determning whether to
+            %   display some text on the command line informing on the
+            %   progress of the simulation.
+            %
             
             options.Verbose = false;
             
             options = parse_pv_pairs (options, varargin);
             
-            CC = onCleanup (@() cd (pwd));
-            cd (self.inputDataDirectory);
-            
-            % write ID file
-            fid = fopen ('ID.dat', 'w');
-            CC = onCleanup (@() fclose (fid));
-            
-            fprintf (fid, '1\n.');
-            
-            clear CC;
-            
-            % write input.txt
-            fid = fopen ('input.txt', 'w');
-            CC = onCleanup (@() fclose (fid));
-            
-            fprintf (fid, ' \n 0 ');
-            
-            clear CC;
-            
-            if options.Verbose, fprintf('\n------ Starting NEMOH ----------- \n'); end
-            
-            system(sprintf ('"%s"', self.preProcProgPath));
-            
-            if options.Verbose, fprintf('------ Solving BVPs ------------- \n'); end
-            
-            system(sprintf ('"%s"', self.solverProgPath));
-            
-            if options.Verbose, fprintf('------ Postprocessing results --- \n'); end
-            
-            system(sprintf ('"%s"', self.postProcProgPath));
+            if self.simReady
+                
+                CC = onCleanup (@() cd (pwd));
+                cd (self.inputDataDirectory);
+                
+                % write ID file
+                fid = fopen ('ID.dat', 'w');
+                CC = onCleanup (@() fclose (fid));
+                
+                fprintf (fid, '1\n.');
+                
+                clear CC;
+                
+                % write input.txt
+                fid = fopen ('input.txt', 'w');
+                CC = onCleanup (@() fclose (fid));
+                
+                fprintf (fid, ' \n 0 ');
+                
+                clear CC;
+                
+                if options.Verbose, fprintf('------ Starting NEMOH pre-processor----------- \n'); end
+                
+                system(sprintf ('"%s"', self.preProcProgPath));
+                
+                if options.Verbose, fprintf('------ Solving BVPs ------------- \n'); end
+                
+                system(sprintf ('"%s"', self.solverProgPath));
+                
+                if options.Verbose, fprintf('------ Postprocessing results --- \n'); end
+                
+                system(sprintf ('"%s"', self.postProcProgPath));
+                
+                if options.Verbose, fprintf('------ Analysis complete --- \n'); end
+                
+            else
+                
+                error ('Nemoh simulation is not ready to be run.');
+                
+            end
             
         end
         
         function addBody (self, body)
+            % add a body to the simulation
+            %
+            % Syntax
             
             if ~isa (body, 'nemoh.body')
                 error ('body must be a nemoh.body object');
@@ -112,6 +196,8 @@ classdef simulation < nemoh.base
             self.bodies(end).setRho (self.rho);
             
             self.bodies(end).setg (self.g);
+            
+            self.simReady = false;
             
         end
         
@@ -278,6 +364,8 @@ classdef simulation < nemoh.base
             fprintf (fid,'%d\t%d\t%s\t%s\t! Free surface elevation \t! Number of points in x direction (0 for no calculations) and y direction and dimensions of domain in x and y direction\n', ...
                 options.FreeSurfacePoints(1), options.FreeSurfacePoints(2), self.formatNumber (options.DomainSize(1)), self.formatNumber (options.DomainSize(2)) );
             fprintf (fid,'---');
+            
+            self.simReady = true;
             
         end
 

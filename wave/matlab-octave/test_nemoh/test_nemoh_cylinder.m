@@ -21,7 +21,8 @@ cylinder.makeAxiSymmetricMesh (r, z, ntheta, verticalCentreOfGravity);
 
 %%
 
-sim = nemoh.simulation ( inputdir, '/home/rcrozier/src/nemoh-hg/bin', ...
+sim = nemoh.simulation ( inputdir, ...
+                         'InstallDir', '/home/rcrozier/src/nemoh-hg/bin', ...
                          'Bodies', cylinder );
 
 %%

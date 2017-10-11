@@ -181,9 +181,9 @@ classdef body < nemoh.base
             %
             %
             
-            if ~isempty (options.MeshProgPath)
+            if ~isempty (meshprogpath)
                 
-                if ~exist (options.MeshProgPath, 'file')
+                if ~exist (meshprogpath, 'file')
                     error ('MeshProgPath does not exist');
                 end
                 
