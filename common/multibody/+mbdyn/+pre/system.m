@@ -1,5 +1,61 @@
 classdef system < mbdyn.pre.base
-    % class representing an mbdyn system
+    % class representing an mbdyn multibody dynamics system
+    %
+    % Syntax
+    %
+    % 
+    %
+    % Description
+    %
+    % This class represents a multibody system and associated problem data
+    % and can be used to generate an input file for MBDyn. This class
+    % depends on the many other classes in the mbdyn.pre namespace which
+    % represent the various things which make up an mbdyn problem
+    % description, such as nodes, forces, drives, bodies etc.
+    %
+    % The class can also be used to create a visual representaiton of the
+    % system, and node positons and orientations can be set, allowing
+    % simulations to be visualised at any time point.
+    %
+    % system Methods:
+    %   addDrivers - adds drives to the system
+    %   addElements - adds elements to the system (bodies, joints, forces, 
+    %     drives etc.)
+    %   addNodes - adds nodes to the system
+    %   addProblems - adds problems to the system
+    %   draw - draws the system in a figure window
+    %   externalStructuralCommInfo - returns information about the
+    %     communication method used in any external structural force element
+    %   externalStructuralInfo - returns information about any external
+    %     structural force element in the system
+    %   generateMBDynInputFile - gerates an mbdyn input file for the system
+    %   generateMBDynInputStr - gerates a string representing an mbdyn
+    %     input file contents
+    %   setNodeOrientation - sets a node's orientation (useful for drawing)
+    %   setNodePosition - sets a node's position (useful for drawing)
+    %   setStructuralNodeSize - sets the size of all nodes for drawing
+    %   system - constructor
+    %
+    % About MBDyn
+    % -----------
+    %
+    % MBDyn is the first and possibly the only free general purpose
+    % Multibody Dynamics analysis software, released under GNU's GPL 2.1
+    % (get a cached copy here).
+    % 
+    % It has been developed at the Dipartimento di Scienze e Tecnologie
+    % Aerospaziali (formerly Dipartimento di Ingegneria Aerospaziale) of
+    % the University "Politecnico di Milano", Italy.
+    % 
+    % MBDyn features the integrated multidisciplinary simulation of
+    % multibody, multiphysics systems, including nonlinear mechanics of
+    % rigid and flexible bodies (geometrically exact & composite-ready beam
+    % and shell finite elements, component mode synthesis elements, lumped
+    % elements) subjected to kinematic constraints, along with smart
+    % materials, electric networks, active control, hydraulic networks, and
+    % essential fixed-wing and rotorcraft aerodynamics.
+    %
+    
     
     properties
         
@@ -24,6 +80,8 @@ classdef system < mbdyn.pre.base
             options.Nodes = {};
             options.Elements = {};
             options.Drivers = {};
+            options.DefaultOutput = {};
+            options.DefaultOrientation = '';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -46,6 +104,20 @@ classdef system < mbdyn.pre.base
                 self.addDrivers (options.Drivers)
             end
             
+            if ~isempty (options.DefaultOutput)
+                if ~iscellstr (options.DefaultOutput)
+                    error ('DefaultOutput must be a cell array of strings if supplied');
+                end
+            end
+            
+            if ~isempty (options.DefaultOrientation)
+                self.checkAllowedStringInputs (options.DefaultOrientation, ...
+                    {'euler123', 'euler313', 'euler321', 'orientation vector', 'orientation matrix'}, ...
+                    true, 'DefaultOrientation');
+            end
+            
+            self.controlData.DefaultOutput = options.DefaultOutput;
+            self.controlData.DefaultOrientation = options.DefaultOrientation;
             
         end
         
@@ -178,8 +250,6 @@ classdef system < mbdyn.pre.base
             
             error ('No external structural force was in the system.');
             
-            
-            
         end
         
         function draw (self, varargin)
@@ -274,13 +344,25 @@ classdef system < mbdyn.pre.base
         end
         
         function str = generateMBDynInputStr (self)
+            % creates a string representing the contents of an MBDyn input file
+            %
+            % Syntax
+            %
+            % str = generateMBDynInputStr (mbs)
+            %
+            % Input
+            %
+            %  mbs - mbdyn.pre.system object
+            %
+            % Output
+            %
+            %  str - the contents of the MBDyn input representing the
+            %    system file as a string
+            %
             
-             % make sure labels are set
+            % make sure labels are set
             self.setLabels ();
             
-%             begin: data;
-%                 problem: initial value; # the default
-%             end: data;
             str = '';
             
             %% data section
@@ -331,7 +413,13 @@ classdef system < mbdyn.pre.base
                 str = self.addOutputLine (str , 'gravity;', 1, false);
             end
             
-            str = self.addOutputLine (str, 'default orientation: orientation matrix;', 1, false);
+            if ~isempty (self.controlData.DefaultOutput)
+                str = self.addOutputLine (str, sprintf ('default output: %s;', self.commaSepList (self.controlData.DefaultOutput{:})), 1, false);
+            end
+            
+            if ~isempty (self.controlData.DefaultOrientation)
+                str = self.addOutputLine (str, sprintf ('default orientation: %s;', self.controlData.DefaultOrientation), 1, false);
+            end
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
             str = sprintf ('%s\n', str);
@@ -373,6 +461,26 @@ classdef system < mbdyn.pre.base
         
         
         function [filename, str] = generateMBDynInputFile (self, filename)
+            % creates an input file for mbdyn based on the system
+            %
+            % Syntax
+            %
+            % [filename, str] = generateMBDynInputFile (mbs, filename)
+            %
+            % Input
+            %
+            %  mbs - mbdyn.pre.system object
+            %
+            %  filename - (optional) string containing path where mbdyn input file
+            %    will be written. If not provided, the file will be created
+            %    in an automatically generated temporary location.
+            %
+            % Output
+            %
+            %  filename - path to generated MBDyn input file
+            %
+            %  str - the contents of the file as a string
+            %
             
             str = self.generateMBDynInputStr ();
             
@@ -388,6 +496,10 @@ classdef system < mbdyn.pre.base
             fprintf (fid, '%s', str);
             
         end
+        
+    end
+    
+    methods (Access = protected)
         
         function elcount = countControlElements (self)
             
@@ -461,10 +573,6 @@ classdef system < mbdyn.pre.base
             end
             
         end
-        
-    end
-    
-    methods (Access = protected)
         
         function ok = checkCellArrayClass (self, CC, classname, throw)
             
