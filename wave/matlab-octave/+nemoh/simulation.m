@@ -76,10 +76,13 @@ classdef simulation < nemoh.base
                 prognames = {'mesh', 'preProc', 'solver', 'postProc'};
             end
             
-            for ind = 1:numel (prognames)
-                if ~exist (fullfile (options.InstallDir, prognames{ind}), 'file')
-                    error ('%s binary was not found in provided install directory:\n%s', ...
-                        prognames{ind}, options.InstallDir);
+            if ~isempty (options.InstallDir)
+                % check files actually exist
+                for ind = 1:numel (prognames)
+                    if ~exist (fullfile (options.InstallDir, prognames{ind}), 'file')
+                        error ('%s binary was not found in provided install directory:\n%s', ...
+                            prognames{ind}, options.InstallDir);
+                    end
                 end
             end
             
