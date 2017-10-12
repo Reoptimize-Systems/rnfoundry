@@ -10,10 +10,10 @@ classdef body < nemoh.base
     %
     % the nemoh.body class represents a hydrodynamic body for input to a
     % Nemoh calculation. One or more body classes are used together with
-    % the nemoh.system object to generate Nemoh input files and compatible
-    % meshes to perform hydrodynamic BEM calculations. For the general
-    % workflow of running a calculation see the help for the nemoh.system
-    % class.
+    % the nemoh.simulation object to generate Nemoh input files and
+    % compatible meshes to perform hydrodynamic BEM calculations. For the
+    % general workflow of running a calculation see the help for the
+    % nemoh.simulation class.
     %
     % body Methods:
     % 
@@ -24,8 +24,8 @@ classdef body < nemoh.base
     %  meshInfo - prints some information about the body mesh to the
     %    command line
     %  
-    % The folowing methods are mainly for use by a nemoh.system object to
-    % which the body has been added:
+    % The folowing methods are mainly for use by a nemoh.simulation object
+    % to which the body has been added:
     %
     %  writeMesh - writes mesh input files, these usually require procesing
     %    by calling processMesh after writing the files. 
@@ -38,7 +38,7 @@ classdef body < nemoh.base
     %  generateBodyStr - create a string for the body representing the body
     %    section of a Nemoh.cal file
     %
-    % See also: nemoh.system
+    % See also: nemoh.simulation, example_nemoh_cylinder.m
     %
     
     properties (GetAccess = public, SetAccess = private)
@@ -47,18 +47,18 @@ classdef body < nemoh.base
         
         inputDataDirectory; % directory where Nemoh mesh files will be created
         
-        axiMeshR;
-        axiMeshZ;
+        axiMeshR; % radial coordinates of axisymmetric body profile data
+        axiMeshZ; % axial coordinates of axisymmetric body profile data
         
-        meshX;
-        meshY;
-        meshZ;
+        meshX; % body mesh vertices x coordinates
+        meshY; % body mesh vertices y coordinates
+        meshZ; % body mesh vertices z coordinates
         
+        nQuads;
         quadMesh;
+        nTriangles;
         triMesh;
         nMeshNodes;
-        nQuads;
-        nTriangles;
         nPanelsTarget; % Target for number of panels in mesh refinement
         centreOfGravity;
         
@@ -69,8 +69,8 @@ classdef body < nemoh.base
         hydrostaticY;
         hydrostaticZ;
         
-        rho;
-        g;
+        rho; % fluid density for problem
+        g; % acceleration due to gravity for problem
         
         xB; % x cordinate of centre of buoyancy
         yB; % y cordinate of centre of buoyancy
@@ -82,13 +82,13 @@ classdef body < nemoh.base
         
         meshProcessed; % flag showing whether the current body mesh is ready for writing or needs processing
         
-        meshFileName;
-        meshDirectory;
-        meshFilePath;
+        meshFileName; % mesh filename (without full path)
+        meshDirectory; % directory mesh will be written to 
+        meshFilePath; % full path to mesh ('.dat') file
         
-        id;
-        name;
-        meshType;
+        id; % integer body id 
+        name; % string body name, usually generated from id
+        meshType; % string indicating the type of mesh specification used for the body (e.g. 'axi')
         
     end
     
@@ -120,7 +120,7 @@ classdef body < nemoh.base
             %   on your computer's program path (it will be invoked by just
             %   calling the mesh program's name). MeshProgPath can be set
             %   later using the setMeshProgPath method. When the body is
-            %   added to a nemoh.system object, the system object calls
+            %   added to a nemoh.simulation object, the system object calls
             %   setMeshProgPath to match the path set in the system object.
             %
             %
@@ -222,7 +222,7 @@ classdef body < nemoh.base
             % setID sets the integer value identifying the body. This id is
             % used to generate the body's name, which is also used by
             % default in the mesh file name. When the body is put into a
-            % nemoh.system object the system sets all body ids in the
+            % nemoh.simulation object the system sets all body ids in the
             % system automatically (by callng this method).
             % 
             % Input

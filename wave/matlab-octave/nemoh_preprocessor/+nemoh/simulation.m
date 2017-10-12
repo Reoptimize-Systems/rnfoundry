@@ -1,12 +1,29 @@
 classdef simulation < nemoh.base
-    % class for generating Nemoh hydrodynamic BEM solver input files
+    % class for running NEMOH hydrodynamic BEM solver simulations
     %
     % Syntax
     %
-    % ns = simulation (inputdir, installdir)
-    % ns = simulation (..., 'Parameter', value)
+    % ns = nemoh.simulation (inputdir, installdir)
+    % ns = nemoh.simulation (..., 'Parameter', value)
     %
-    % 
+    % Description
+    %
+    % nemoh.simulation is a class used to generate input files for the
+    % NEMOH hydrodynamic BEM solver programs and run the solver on them.
+    %
+    % simulation Methods:
+    %
+    %   simulation - constructor
+    %   addBody - add a nemoh body to the simulation
+    %   writeMeshes - writes the mesh data for all bodies to disk
+    %   processMeshes - performs pre-simulation mesh processing for all
+    %     bodies
+    %   writeNemoh - writes the NEMOH input file (Nemoh.cal)
+    %   run - runs the NEMOH programs on the generated input files
+    %
+    %
+    % See also: example_nemoh_cylinder.m
+    %
     
     properties (GetAccess = public, SetAccess = private)
         
@@ -33,8 +50,8 @@ classdef simulation < nemoh.base
             %
             % Syntax
             %
-            % ns = simulation (inputdir, installdir)
-            % ns = simulation (..., 'Parameter', value)
+            % ns = nemoh.simulation (inputdir, installdir)
+            % ns = nemoh.simulation (..., 'Parameter', value)
             %
             % Input
             %
@@ -124,7 +141,7 @@ classdef simulation < nemoh.base
             %
             % Input
             %
-            %  ns - nemoh.system object
+            %  ns - nemoh.simulation object
             %
             % Additional optional arguments may be supplied as
             % parameter-value pairs. The available options are:
@@ -185,6 +202,27 @@ classdef simulation < nemoh.base
             % add a body to the simulation
             %
             % Syntax
+            %
+            % addBody (ns, body)
+            %
+            % Description
+            %
+            % Adds a nemoh body to the simulation. The bodies' data are
+            % used to generate the bodies section of the Nemoh.cal input
+            % file. When added, the id of the body is set to a new value,
+            % the values for rho and g are set to the simulation values and
+            % the MeshProgPath value is set to the same value as the
+            % simulation property. Adding a body means that the simulation
+            % is reset, so wrteMeshes, processMeshes and writeNemoh must
+            % all be re-run before the simulation can be run again (i.e. by
+            % using the 'run' method).
+            %
+            % Input
+            %
+            %  ns - nemoh.simulation object.
+            %
+            %  body - nemoh.body object
+            %
             
             if ~isa (body, 'nemoh.body')
                 error ('body must be a nemoh.body object');
@@ -233,6 +271,37 @@ classdef simulation < nemoh.base
         
         function writeMeshes (self)
             % writes nemoh mesh input files
+            %
+            % Syntax
+            %
+            % writeMeshes (ns)
+            %
+            % Description
+            %
+            % writeMeshes calls the writeMesh method for each body in the
+            % simulation. This method writes mesh related files to disk.
+            % What files are written depends on the type of the mesh for
+            % that body. e.g. for a axisymmetric mesh specified using a 2D
+            % profile it will write the course mesh files to disk ready for
+            % processing by the Nemoh meshing program.
+            %
+            % After running writeMeshes, processMeshes should be called to
+            % do any post-processing. e.g. for the example just given,
+            % processMeshes runs the Nemoh meshing program on the course
+            % input mesh files for the body to generate the refined mesh
+            % file in the format Nemoh can read and loads some initial
+            % calulations performed by the meshing function.
+            %
+            % Input
+            %
+            %  ns - nemoh.simulation object
+            %
+            % Output
+            %
+            %
+            %
+            % See Also: 
+            %
             
             for ind = 1:numel (self.bodies)
                 self.bodies(ind).writeMesh ();
@@ -241,10 +310,26 @@ classdef simulation < nemoh.base
         end
         
         function processMeshes (self)
-            % runs the Nemoh 'mesh' program on the body meshes if required
-            % and loads results
+            % performs post-processing on mesh files in prep for simulation
             %
-            % 
+            % Syntax
+            %
+            % processMeshes (ns)
+            %
+            % Description
+            %
+            % After running writeMeshes, processMeshes should be called to
+            % do any post-processing. e.g. for a axisymmetric mesh
+            % specified using a 2D profile, processMeshes runs the Nemoh
+            % meshing program on the course input mesh files for the body
+            % (created by writeMeshes) to generate the refined mesh file in
+            % the format Nemoh can read and loads some initial calulations
+            % performed by the meshing function.
+            %
+            % Input
+            %
+            %  ns - nemoh.simulation object
+            %
             
             for ind = 1:numel (self.bodies)
                 if self.bodies(ind).meshProcessed == false
@@ -255,13 +340,89 @@ classdef simulation < nemoh.base
         end
         
         function writeNemoh (self, varargin)
+            % generates the Nemoh.cal input file for NEMOH
+            %
+            % Syntax
+            %
+            % writeNemoh (ns)
+            % writeNemoh (ns, 'Parameter', value)
+            %
+            % Description
+            %
+            % writeNemoh generates the Nemoh.cal input file for the NEMOH
+            % BEM solver programs.
+            %
+            % Input
+            %
+            %  ns - nemoh.simulation object
+            %
+            % Additional optional arguments may be supplied as
+            % parameter-value pairs. The available options are:
+            %
+            %  'DoIRFCalculation' - logical (true/false) flag determining
+            %    whether the impulse response function for the radiation
+            %    force is calculated. Default is true if not supplied.
+            %
+            %  'IRFTimeStep' - Scalar time step in seconds to be used for
+            %    the IRF calcualtion. Default is 0.1 if not supplied.
+            %
+            %  'IRFDuration' - Scalar duration in seconds for the IRF
+            %    calculation. Default is 10 if not supplied.
+            %
+            %  'NWaveFreqs' - Scalar integer number of wave frequencies for
+            %    which to calculate the hydrodynamic date. Default is 1 if
+            %    not supplied.
+            %
+            %  'MinMaxWaveFreqs' - If NWaveFreqs is set to 1, this is a
+            %    scalar value, the wave frequency at which to do the
+            %    simulation, in this case a two element vector with both
+            %    values the same is also acceptable. If NWaveFreqs > 1,
+            %    this must be a two element vector containing the min and
+            %    max values of the frequency range to be computed. Default
+            %    is 0.8 if not supplied.
+            %
+            %  'NDirectionAngles' - Number of directions to be used to
+            %    calculate the Kochin function. Default is 0 if not
+            %    supplied, meaning no Kochin function calculation is
+            %    performed.
+            %
+            %  'MinMaxDirectionAngles' - Two element vector containing the
+            %    min and max angles for the Kochin function calculation.
+            %    Default is 0 if not supplied.
+            %
+            %  'FreeSurfacePoints' - Two element vector containing the
+            %    number of points at which to calcualte the free surface
+            %    elevation. The first element is the number of points in
+            %    the x direction (0 for no calculations) and y direction
+            %    By default no calculations are performed (the default
+            %    value used to set the input in Nemoh.cal is [0,50]).
+            %
+            %  'DomainSize' - Two element vector containing the domain size
+            %    in the x and y direction. Default is [400, 400] if not
+            %    supplied.
+            %
+            %  'WaterDepth' - Scalar value of the water depth, a value of 0
+            %    means infinite depth. Default is 0 if not supplied.
+            %
+            %  'WaveMeasurementPoint' - Two element vector containing the
+            %    wave measurement point [XEFF YEFF]. Default is [0, 0] if
+            %    not supplied.
+            %
+            %
+            % Output
+            %
+            %  The Nemoh.cal file is generated in the specified input data
+            %  directory.
+            %
+            % See Also: nemoh.simulation/run
+            %
             
-            options.DorIRFCalculation = true;
+            options.DoIRFCalculation = true;
             options.IRFTimeStep = 0.1;
             options.IRFDuration = 10;
             options.NWaveFreqs = 1;
-            options.MinMaxWaveFreqs = [0.8, 0.8];
-            options.NDirectionAngles = 1;
+            options.MinMaxWaveFreqs = 0.8;
+            options.NDirectionAngles = 0;
             options.MinMaxDirectionAngles = [0, 0];
             options.FreeSurfacePoints = [0, 50];
             options.DomainSize = [400, 400];
@@ -270,8 +431,8 @@ classdef simulation < nemoh.base
             
             options = parse_pv_pairs (options, varargin);
             
-            assert (islogical (options.DorIRFCalculation), ...
-                'DorIRFCalculation must be a logical value (true or false)');
+            assert (islogical (options.DoIRFCalculation), ...
+                'DoIRFCalculation must be a logical value (true or false)');
             
             assert (numel (options.NWaveFreqs) == 1 && isint2eps (options.NWaveFreqs), ...
                 'NWaveFreqs must be a scalar integer');
@@ -336,7 +497,7 @@ classdef simulation < nemoh.base
             assert (numel (options.WaveMeasurementPoint) == 2, ...
                 'WaveMeasurementPoint must be a two element vector.');
             
-            if options.DorIRFCalculation
+            if options.DoIRFCalculation
                 doirf = '1';
             else
                 doirf = '0';
@@ -377,6 +538,8 @@ classdef simulation < nemoh.base
     methods (Access = private)
         
         function writeBodies (self, fid)
+            % writes all body sections of Nemoh.cal to the specified file
+            %
             
             str = generateBodiesStr(self);
             
