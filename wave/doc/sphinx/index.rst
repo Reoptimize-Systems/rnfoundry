@@ -3,26 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. highlight:: matlab
-
-EWST (Edinburgh Wave Simulation Toolbox)
+|TNShort| (|TNFull|)
 ****************************************
 
-The EWST (Edinburgh Wave Simulation Toolbox) is a suite of tools for the
-simulation of wave energy devices. EWST has the ability to model devices that
+The |TNShort| (|TNFull|) is a suite of tools for the
+simulation of wave energy devices. |TNShort| has the ability to model devices that
 are comprised of rigid bodies, power-take-off systems, and mooring systems.
 Simulations are performed in the time-domain by solving the governing WEC
 equations of motion in 6 degrees-of-freedom.
 
-EWST is derived from `WEC-Sim`_, an open-source wave energy converter simulation tool developed in Matlab/Simulink
-using the multi-body dynamics solver Simscape Multibody. The EWST is also
+|TNShort| is derived from `WEC-Sim`_, an open-source wave energy converter simulation tool developed in Matlab/Simulink
+using the multi-body dynamics solver Simscape Multibody. The |TNShort| is also
 developed in Matlab, but drops the requirement for Simulink or Simscape
 Multibody. It also aims to be compatible with `Octave`_,
 an alternative system able to process much of the standard Matlab code base.
 The hydrodynamic data format for both is identical, so hydrodynamic data can
 be easily ported between systems.
 
-EWST replaces the mutlibody modelling parts of the code with the `MBDyn`_.
+|TNShort| replaces the mutlibody modelling parts of the code with the `MBDyn`_.
 An advanced Matlab code based MBDyn preprocessor is available to ease the creation
 of MBDyn model input files in Matlab. Detailed documentation of thie preprocesing
 tool may be found in it's own dedicated document.
@@ -34,7 +32,7 @@ tool may be found in it's own dedicated document.
 Purpose
 =======
 
-With the existance of Wec-Sim the need for EWST may nt be obvious. EWST addresses
+With the existance of Wec-Sim the need for |TNShort| may nt be obvious. |TNShort| addresses
 several main perceived issues with Wec-Sim.
 
 1. *Maintainability:* Wec-Sim being heavily based in Simulink does not lend itself
@@ -47,8 +45,8 @@ in Simulink, as the ability to step through the code and navigate the different 
 of the system is more advanced.
 purely code-based
 
-3. *Interface design:* The developers of EWST have a different interface design
-philosophy which is more conventional than the WEC-Sim method. The EWST interface
+3. *Interface design:* The developers of |TNShort| have a different interface design
+philosophy which is more conventional than the WEC-Sim method. The |TNShort| interface
 is more oriented toward automation and batch processing than the original WEC-Sim
 interface. This is mainly to facilitate randomised simulation and optimisation
 algorithms.
@@ -56,11 +54,11 @@ algorithms.
 4. *Modifiability:* Being purely code based, and with all code in one location
 (rather than spread throughout Simulink models)
 
-5. *Cost:* WEC-Sim requires many commercial platforms to be operated, EWST can be run
+5. *Cost:* WEC-Sim requires many commercial platforms to be operated, |TNShort| can be run
 entirely on free software (although the performance on Matlab will be
 superior).
 
-The EWST developers recognise that not everyone will agree with the points above
+The |TNShort| developers recognise that not everyone will agree with the points above
 or that they justify the creation of a separate system, but it was these needs which
 drove it's creation.
 
@@ -80,6 +78,7 @@ Developers and Contributers
    self
    installation
    getting_started
+   nemoh
 
 
 
