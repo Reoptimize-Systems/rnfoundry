@@ -1,3 +1,19 @@
+%% mbdyn.pre.matrixFreeSolver('bicgstab')
+
+slv = mbdyn.pre.matrixFreeSolver('bicgstab');
+
+str = slv.generateOutputString ()
+
+%% linearsolver
+
+lslv = mbdyn.pre.linearSolver ('umfpack');
+
+str = lslv.generateOutputString ()
+
+lslv = mbdyn.pre.linearSolver ('umfpack', 'BlockSize', 32);
+
+str = lslv.generateOutputString ()
+
 %% initial value
 
 itime = 0;
