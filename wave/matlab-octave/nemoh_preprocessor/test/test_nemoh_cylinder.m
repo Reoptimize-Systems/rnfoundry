@@ -48,7 +48,6 @@ sim.processMeshes ();
 %% Draw all meshes in one figure
 
 sim.drawMesh ();
-
 axis equal;
 
 %% Generate the Nemoh input file
