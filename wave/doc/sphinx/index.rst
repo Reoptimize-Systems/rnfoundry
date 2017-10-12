@@ -71,6 +71,11 @@ possible between the two systems
 Developers and Contributers
 ===========================
 
+The |TNFull| has been created by The Institute for Energy Systems at The University
+of Edinburgh as part of the EPSRC funded project "All Electrical Drive Train for
+Marine Energy Converters (EDRIVE-MEC)", grant No. EP/N021452/1. The main contributor
+is Dr. Richard Crozier.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
