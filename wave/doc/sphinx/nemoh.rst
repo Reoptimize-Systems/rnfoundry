@@ -33,7 +33,7 @@ and ``nemoh.system``. The use of the preprocessor is best demonstrated
 with a simple example, as shown in the listing below, which shows how to
 simulate a simple cylinder using the NEMOH preprocessor.
 
-.. literalinclude:: /../../matlab-octave/nemoh_preprocessor/examples/example_nemoh_cylinder.m
+.. literalinclude:: /examples/example_nemoh_cylinder.m
    :linenos:
 
 This script can be broken down as follows. The fist section simply does
