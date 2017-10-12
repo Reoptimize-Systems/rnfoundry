@@ -22,13 +22,28 @@ smart materials, electric networks, active control, hydraulic
 networks, and essential fixed-wing and rotorcraft aerodynamics.
 
 MBDYn does not feature a GUI and requires that problems are 
-described using a text based input files. 
+described using a text based input files. The MBDyn Matlab Toolbox 
+includes a preprocessor for generating these files using Matlab code, 
+with visualisation tools to assist development, an interface for 
+communication of forces and motions between Matlab and MBDyn during 
+a simulation and a post-processor with visualisation and animation 
+capabilities.
 
-The MBDyn Matalb Toolbox includes a preprocessor for generating 
-these files using Matlab code, with visualisation 
-tools to assist development, an interface for communication of forces 
-and motions between Matlab and MBDyn during a simulation and a 
-post-processor with visualisation and animation capabilities.
+Octave
+======
+
+The MBDyn Matlab Toolbox aims to also target `Octave`_, and most parts
+of the toolbox will also be supported on this platform. However, 
+there are some limitations. The main area where Octave is not fully 
+compatible is the visualisation tools. Some of these tools currently use
+functions and classes not available in Octave at the time of writing. 
+The Octave developers aim for compatibility with Matlab, so it is expected  
+that the functions will become available in due course. Otherwise,  
+throughout this documentation you may consider "Matlab" to be 
+interchangeable with "Octave".
+
+.. _Octave: https://www.gnu.org/software/octave/
+
 
 Developers and Contributers
 ===========================
