@@ -60,8 +60,8 @@ classdef simulation < nemoh.base
             % Additional optional arguments may be supplied as
             % parameter-value pairs. The available options are:
             %
-            % 'InstallDir' - directory where the Nemoh executeables can be
-            %   found. If not supplied, the executeables are assumed to be
+            % 'InstallDir' - directory where the Nemoh executables can be
+            %   found. If not supplied, the executables are assumed to be
             %   on the computer's path so they can be invoked without the
             %   full file path by just using their name.
             %
@@ -252,6 +252,7 @@ classdef simulation < nemoh.base
             if isempty (options.Axes)
                 hfig = figure ();
                 hax = axes ();
+                view (3);
             else
                 hax = options.Axes;
                 hfig = get (hax, 'parent');
@@ -474,8 +475,8 @@ classdef simulation < nemoh.base
                 else
                     error ('MinMaxDirectionAngles must be a 1 or 2 element vector when NDirectionAngles is 1');
                 end
-            elseif options.NDirectionAngles < 1
-                error ('NWaveFreqs must be greater than or equal to 1');
+            elseif options.NDirectionAngles < 0
+                error ('NDirectionAngles must be greater than or equal to 0');
             else
                 if numel (options.MinMaxWaveFreqs) ~= 2
                     error ('If NDirectionAngles is greater than 1, MinMaxDirectionAngles must be a 2 element vector');
