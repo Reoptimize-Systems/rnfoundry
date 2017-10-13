@@ -29,11 +29,28 @@ communication of forces and motions between Matlab and MBDyn during
 a simulation and a post-processor with visualisation and animation 
 capabilities.
 
+Below are some examples of the visualisation capabilites.
+
 .. figure:: /images/double_pendulum_setup.svg
    
-   Double pendulum problem static visualisation.
+   Double pendulum problem static visualisation, showing inertial nodes as crosses and using default shapes for bodies and joints.
+
+.. figure:: /images/double_pendulum_plot_with_references.svg
+   
+   Same double pendulum problem also showing orientation/location references.
+
+.. figure:: /images/double_pendulum_node_trajectories.svg
+   
+   Double pendulum node trajectories after evaluation by MBDyn.
 
 .. youtube:: https://www.youtube.com/watch?v=DdoBRinQrEk
+
+And the following is an example Matlab script to do all of the above. It is 
+around 150 lines as fomatted here, but only about 40 actualy commands in 
+total.
+
+.. literalinclude:: /examples/example_double_pendulum.m
+
 
 Octave
 ======
