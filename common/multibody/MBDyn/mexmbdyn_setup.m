@@ -9,13 +9,27 @@ function mexmbdyn_setup (varargin)
 % 
 % Inputs
 %
-% Inputs may be supplied as parameter-value paris, currently only one
-% option is supposted: 'Verbose' which is a flag determining whether
-% verbose output from the compilation is provided. e.g.
+% Inputs may be supplied as parameter-value pairs, the available options
+% are:
+%
+% 'Verbose' - logical (true/false) flag determining whether verbose output
+%   from the compilation is provided. Default is false if not supplied.
+%
+% 'Debug' - logical (true/false) flag determining whether to perform a
+%   debug build (with debugging symbols and -DDEBUG). Default is false if
+%   not supplied.
+%
+% 'MBCLibDir' - directory in which to look for the MBDyn mbc library header
+%   file. The default value of this arguement is platform-dependant.
+%
+% 'MBCIncludeDir' -  directory in which to look for the MBDyn mbc library 
+%   file. The default value of this arguement is platform-dependant.
+%
+% Example
 %
 %  mexmbdyn_setup ('Verbose', true)
 %
-% prints the additional information.
+% 
 %
 %
 
