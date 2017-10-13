@@ -362,7 +362,7 @@ classdef postproc < handle
             end
             
             if options.Title
-                title (sprintf ('Node trajectories plot for results file:\n%s', self.mBDynOutFileName));
+                title (sprintf ('Node trajectories plot for results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
             end
             
             view(3);
@@ -757,11 +757,18 @@ classdef postproc < handle
             set (plotdata.HAx, 'ZLim', axZlim);
             
             if options.Title
+                filestr = strrep (self.mBDynOutFileName, '_', '\_');
                 if ~isempty (self.preProcSystem)
-                    title (plotdata.HAx, sprintf ('System plot at time t = %.2fs for MBDyn results file:\n%s', ...
-                            (tind-1)*self.preProcSystem.problems{1}.timeStep, self.mBDynOutFileName));
+                    title ( plotdata.HAx, ...
+                            sprintf ( 'System plot at time t = %.2fs for MBDyn results file:\n%s', ...
+                                      (tind-1)*self.preProcSystem.problems{1}.timeStep, ...
+                                      filestr ) ...
+                          );
                 else
-                    title (plotdata.HAx, sprintf ('System plot at time index %d for MBDyn results file:\n%s', tind, self.mBDynOutFileName));
+                    title ( plotdata.HAx, ...
+                            sprintf ( 'System plot at time index %d for MBDyn results file:\n%s', ...
+                                      tind, filestr ) ...
+                          );
                 end
             end
             
