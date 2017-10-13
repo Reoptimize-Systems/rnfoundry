@@ -14,7 +14,7 @@ classdef gravity < mbdyn.pre.element
         function self = gravity (varargin)
             
             options.GravityModel = 'uniform';
-            options.GravityAcceleration = mbdyn.pre.tplDriveCaller ('single', mbdyn.pre.const (9.81), 'Direction', [0;0;-1]);
+            options.GravityAcceleration = mbdyn.pre.singleTplDriveCaller ([0;0;-1], mbdyn.pre.const (9.81));
             options.Origin = [0;0;0];
             options.Mass = nan;
             options.G = 'si';
@@ -37,10 +37,10 @@ classdef gravity < mbdyn.pre.element
                             gaccel = options.GravityAcceleration(end);
                             
                             options.GravityAcceleration = ...
-                                mbdyn.pre.tplDriveCaller ('single', mbdyn.pre.const (gaccel), 'Direction', dirvec);
+                                mbdyn.pre.singleTplDriveCaller (dirvec, mbdyn.pre.const (gaccel));
                     end
                     
-                    if isa (options.GravityAcceleration, 'mbdyn.pre.tplDriveCaller')
+                    if isa (options.GravityAcceleration, 'mbdyn.pre.driveCaller')
                         self.gravityAcceleration = options.GravityAcceleration;
                     else
                         error ('GravityAcceleration must be a template drive caller')
