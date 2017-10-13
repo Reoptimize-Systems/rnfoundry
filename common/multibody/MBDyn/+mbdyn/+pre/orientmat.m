@@ -220,6 +220,9 @@ classdef orientmat
        end
        
        function [hquiv, hax] = draw (this, varargin)
+           % plot an orientation matrix representing it as three axes
+           %
+           % 
            
            options.PlotAxes = [];
            options.Title = true;
@@ -233,6 +236,8 @@ classdef orientmat
            if isempty (options.PlotAxes)
                figure;
                hax = axes;
+               view (3);
+               axis (hax, 'equal');
            else
                hax = options.PlotAxes;
            end
@@ -246,15 +251,26 @@ classdef orientmat
            oz = this.orientationMatrix * (0.5*z);
            
            % orientation frame
-           hquiv(1) = vect.plotvec3 (ox, options.Offset, 'Properties', {'Color', 'r', 'LineWidth', 4, 'LineStyle', ':'}, 'PlotAxes', hax);           
-           hquiv(2) = vect.plotvec3 (oy, options.Offset, 'Properties', {'Color', 'g', 'LineWidth', 4, 'LineStyle', ':'}, 'PlotAxes', hax);           
-           hquiv(3) = vect.plotvec3 (oz, options.Offset, 'Properties', {'Color', 'b', 'LineWidth', 4, 'LineStyle', ':'}, 'PlotAxes', hax);
+           hquiv(1) = vect.plotvec3 (ox, options.Offset, 'Properties', {'Color', 'r', 'LineWidth', 2, 'LineStyle', ':'}, 'PlotAxes', hax);           
+           hquiv(2) = vect.plotvec3 (oy, options.Offset, 'Properties', {'Color', 'g', 'LineWidth', 2, 'LineStyle', ':'}, 'PlotAxes', hax);           
+           hquiv(3) = vect.plotvec3 (oz, options.Offset, 'Properties', {'Color', 'b', 'LineWidth', 2, 'LineStyle', ':'}, 'PlotAxes', hax);
+           
+           % plot reverse axes, but invisible so plot axes limits are set
+           % nicely
+           vect.plotvec3 (-ox, options.Offset, 'Properties', {'LineStyle', 'none'}, 'PlotAxes', hax);           
+           vect.plotvec3 (-oy, options.Offset, 'Properties', {'LineStyle', 'none'}, 'PlotAxes', hax);           
+           vect.plotvec3 (-oz, options.Offset, 'Properties', {'LineStyle', 'none'}, 'PlotAxes', hax);
            
            if options.DrawGlobal
                % global frame
                hquiv(4) = vect.plotvec3 (x, options.Offset, 'Properties', {'Color', 'r'}, 'PlotAxes', hax);
                hquiv(5) = vect.plotvec3 (y, options.Offset, 'Properties', {'Color', 'g'}, 'PlotAxes', hax);
                hquiv(6) = vect.plotvec3 (z, options.Offset, 'Properties', {'Color', 'b'}, 'PlotAxes', hax);
+               % plot reverse axes, but invisible so plot axes limits are set
+               % nicely
+               vect.plotvec3 (-x, options.Offset, 'Properties', {'LineStyle', 'none'}, 'PlotAxes', hax);           
+               vect.plotvec3 (-y, options.Offset, 'Properties', {'LineStyle', 'none'}, 'PlotAxes', hax);           
+               vect.plotvec3 (-z, options.Offset, 'Properties', {'LineStyle', 'none'}, 'PlotAxes', hax);
            end
            
            xlabel (hax, 'x');
@@ -268,10 +284,6 @@ classdef orientmat
            if options.Title
                title ('Orientation Matrix Plot')
            end
-           
-           axis equal;
-           
-           view (3);
            
        end
         
