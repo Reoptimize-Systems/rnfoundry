@@ -59,6 +59,9 @@ om.orientationMatrix
 
 pos * om.orientationMatrix
 
+% plot the orientation matrix as 3 axes
+om.draw ();
+
 %% references
 
 gref = mbdyn.pre.globalref
@@ -84,6 +87,8 @@ fcalc = [ L*sin(theta1)+(L/2)*sin(theta1+theta2);
       
 [ fcalc, Node_Link2.pos ]
 
+% plot thre references
+mbdyn.pre.base.drawReferences ({Ref_Link1, Ref_Link2}, 'Scale', 0.5)
 
 % om = mbdyn.pre.orientmat ('euler', [0, pi-(theta1+theta2), 0])
 
@@ -278,11 +283,6 @@ Ref_Link1 = mbdyn.pre.reference ( [], ...
                                   'Parent', gref, ...
                                   'Name', 'Ref_Link1');
                               
-% Ref_Link1 = mbdyn.pre.reference ( [], ...
-%                                   mbdyn.pre.orientmat ('euler', [0, pi/2 - theta1, 0]), ...
-%                                   [], ...
-%                                   [], ...
-%                                   'Parent', gref);
 
 Ref_Node_Link1 = mbdyn.pre.reference ( [0.5*L; 0; 0], ...
                                        [], ...
@@ -300,12 +300,6 @@ Ref_Link2 = mbdyn.pre.reference ( [L; 0; 0], ...
                                    [], ...
                                    'Parent', Ref_Link1, ...
                                    'Name', 'Ref_Link2');
-                               
-% Ref_Link2 = mbdyn.pre.reference ( [L; 0; 0], ...
-%                                    mbdyn.pre.orientmat ('euler', [0, -theta2, 0]), [], ...
-%                                    [], ...
-%                                    'Parent', Ref_Link1, ...
-%                                    'Name', 'Ref_Link2');
 
 Ref_Node_Link2 = mbdyn.pre.reference ( [0.5*L; 0; 0], ...
                                        mbdyn.pre.orientmat ('orientation', eye(3)), ...
@@ -353,42 +347,46 @@ pinjoint.setColour ('k');
 linkjoint.setSize (L/10, L/10, L/10);
 linkjoint.setColour ('g');
 
-prb = mbdyn.pre.initialValueProblem (0, 10, 1e-3, 'Tolerance', 1e-9) %, 'DerivativesTolerance', 100000);
+prb = mbdyn.pre.initialValueProblem (0, 10, 1e-3, 'ResidualTolerance', 1e-9) %, 'DerivativesTolerance', 100000);
 
 mbsys = mbdyn.pre.system ( {prb}, ...
                            'Nodes', {link1node, link2node}, ...
-                           'Elements', {link1, link2, pinjoint, linkjoint, mbdyn.pre.gravity()} );
+                           'Elements', {link1, link2, pinjoint, linkjoint, mbdyn.pre.gravity()}, ...
+                           'References', {Ref_Link1, Ref_Node_Link1, Ref_Link2, Ref_Node_Link2, Ref_pin, Ref_hinge}, ...
+                           'DefaultOrientation', 'orientation matrix');
 
 str = mbsys.generateMBDynInputStr ()
 
 mbsys.setStructuralNodeSize (L/10, L/10, L/10);
+
+mbsys.draw ('Mode', 'wireghost', 'References', true, 'ReferenceScale', 0.5)
+
 mbsys.draw ('Mode','wireghost', 'AxLims', [-2, 2; -2, 2; -2, 2;])
 
 %%
-filename = mbsys.generateMBDynInputFile ('Test_mbdyn_pre.mbd');
+inputfile = mbsys.generateMBDynInputFile ('Test_mbdyn_pre.mbd');
+
+% create the mbdyn input file
+mbsys.generateMBDynInputFile (inputfile);
 
 % start mbdyn 
-% delete ('output.*');
+mbdyn.mint.start_mbdyn (inputfile);
 
-[status, cmdout] = system ( sprintf ('export LD_LIBRARY_PATH="" ; mbdyn -f "%s" -o "%s" > "%s" 2>&1 &', ...
-                    filename, ...
-                    [filename(1:end-4), '_mbd'], ...
-                    [filename(1:end-4), '_mbd.txt'] ...
-                                     ) ...
-                           );
-                     
 %% Post-processing
 
-mbdynpost = mbdyn.postproc ([filename(1:end-4), '_mbd'], mbsys);
+% load data into post-processing object
+mbdynpost = mbdyn.postproc (inputfile(1:end-4), mbsys);
 
-%%
+%% Plot Trajectories
+
 mbdynpost.plotNodeTrajectories ();
 
-%%
+%% Plot a particular time step of interest
 
-mbdynpost.drawStep (500, 'AxLims', [-3.1, 3.1; -1.5, 1.5;  -3, 3]);
+mbdynpost.drawStep (500, 'AxLims', [-1.1, 1.1; -0.5, 0.5;  -2, 1]);
 
 %% Animate
+
 mbdynpost.animate ( 'PlotTrajectories', true, ...
                     'DrawLabels', true, ...
                     'Skip', 20, ...
@@ -396,10 +394,6 @@ mbdynpost.animate ( 'PlotTrajectories', true, ...
                     'Light', true, ...
                     'AxLims', [-3.1, 3.1; -1.5, 1.5;  -3, 3], ...
                     'VideoFile', 'double_pendulum.avi');
-
-% [status, cmdout] = system (sprintf ('mbdyn -f "%s" -o output > output.txt 2>&1 &', mbdpath))
-
-% linkjoint.draw ()
 
 %% Drawing
 
