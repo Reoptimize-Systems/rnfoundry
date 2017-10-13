@@ -367,7 +367,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             end
             
             if isempty (options.MBDynExecutable)
-                self.MBDynExecutable = self.findMBDyn ();
+                self.MBDynExecutable = mbdyn.mint.findmbdyn ();
             else
                 if exist (options.MBDynExecutable, 'file') == 2
                     self.MBDynExecutable = options.MBDynExecutable;
@@ -413,8 +413,8 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             options = parse_pv_pairs (options, varargin);
             
-            assert (islogical (options.StartMBDyn) && isscalar (options.StartMBDyn), 'StartMBDyn must be a logical type (true/false)');
-            assert (isnumeric (options.MBDynStartWaitTime) && isscalar (options.MBDynStartWaitTime), 'MBDynStartWaitTime must be a scalar numberic value (number of seconds)');
+            mbdyn.pre.base.checkLogicalScalar (options.StartMBDyn, true, 'StartMBDyn');
+            mbdyn.pre.base.checkNumericScalar (options.MBDynStartWaitTime, true, 'MBDynStartWaitTime');
             
             self.MBDynStartWaitTime = options.MBDynStartWaitTime;
             
@@ -1036,64 +1036,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
         end
         
-        function path = findMBDyn (self)
-            % locate the mbdyn executeable
-            
-            candidate_locs = { ...
-                fullfile(pwd (), 'mbdyn'), ...
-                fullfile(pwd (), 'mbdyn.exe'), ...
-                'c:\Program Files (x86)\MBDyn\mbdyn.exe', ...
-                'c:\Program Files\MBDyn\mbdyn.exe', ...
-                '/usr/local/bin/mbdyn/mbdyn', ...
-                '/usr/local/bin/mbdyn' ...
-                             };
-            
-            switch computer ('arch')
-
-                case 'win64'
-                    candidate_locs = [candidate_locs, ...
-                        fullfile(getmfilepath ('mexmbdyn_setup'), 'x86_64-w64-mingw32', 'bin', 'mbdyn.exe')];
-                case 'win32'
-                    candidate_locs = [candidate_locs, ...
-                        fullfile(getmfilepath ('mexmbdyn_setup'), 'i686-w64-mingw32', 'bin', 'mbdyn.exe')];
-                case 'glnxa64'
-                    candidate_locs = [candidate_locs, ...
-                        fullfile(getmfilepath ('mexmbdyn_setup'), 'x86_64-linux-gnu', 'bin', 'mbdyn')];
-                case 'glnxa32'
-                    candidate_locs = [candidate_locs, ...
-                        fullfile(getmfilepath ('mexmbdyn_setup'), 'i686-linux-gnu', 'bin', 'mbdyn')];
-
-            end
-            
-            if exist ('rnfoundry_setup', 'file') == 2
-                switch computer ('arch')
-
-                    case 'win64'
-                        candidate_locs = [candidate_locs, ...
-                            fullfile(getmfilepath ('rnfoundry_setup'), 'x86_64-w64-mingw32', 'bin', 'mbdyn.exe')];
-                    case 'win32'
-                        candidate_locs = [candidate_locs, ...
-                            fullfile(getmfilepath ('rnfoundry_setup'), 'i686-w64-mingw32', 'bin', 'mbdyn.exe')];
-                    case 'glnxa64'
-                        candidate_locs = [candidate_locs, ...
-                            fullfile(getmfilepath ('rnfoundry_setup'), 'x86_64-linux-gnu', 'bin', 'mbdyn')];
-                    case 'glnxa32'
-                        candidate_locs = [candidate_locs, ...
-                            fullfile(getmfilepath ('rnfoundry_setup'), 'i686-linux-gnu', 'bin', 'mbdyn')];
-
-                end
-            end
-            
-            for ind = 1:numel (candidate_locs)
-                if exist (candidate_locs{ind}, 'file') == 2
-                    path = candidate_locs{ind};
-                    return;
-                end
-            end
-            
-            error ('The MBDyn executeable could not be found.');
-            
-        end
+        
         
         
         function status = cppstatus2statusenum (cppstatus)
