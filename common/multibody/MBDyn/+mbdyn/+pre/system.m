@@ -59,7 +59,7 @@ classdef system < mbdyn.pre.base
     
     properties
         
-%        references;
+       references;
        data;
        problems;
        controlData;
@@ -82,6 +82,7 @@ classdef system < mbdyn.pre.base
             options.Drivers = {};
             options.DefaultOutput = {};
             options.DefaultOrientation = '';
+            options.References = {};
             
             options = parse_pv_pairs (options, varargin);
             
@@ -89,6 +90,7 @@ classdef system < mbdyn.pre.base
             self.nodes = {};
             self.elements = {};
             self.drivers = {};
+            self.references = {};
             
             self.addProblems (problems);
             
@@ -102,6 +104,10 @@ classdef system < mbdyn.pre.base
             
             if ~isempty (options.Drivers)
                 self.addDrivers (options.Drivers)
+            end
+            
+            if ~isempty (options.References)
+                self.addReferences (options.References)
             end
             
             if ~isempty (options.DefaultOutput)
@@ -158,6 +164,16 @@ classdef system < mbdyn.pre.base
             self.checkCellArrayClass (drivers, 'mbdyn.pre.driver');
             
             self.drivers = [self.drivers, drivers];
+            
+        end
+        
+        function addReferences (self, refs)
+            
+            refs = self.makeCellIfNot (refs);
+            
+            self.checkCellArrayClass (refs, 'mbdyn.pre.reference');
+            
+            self.references = [self.references, refs];
             
         end
         
@@ -254,6 +270,49 @@ classdef system < mbdyn.pre.base
         
         function draw (self, varargin)
             % draw the mbdyn system
+            %
+            % Syntax
+            %
+            %
+            % Description
+            %
+            %
+            %
+            % Input
+            %
+            %  mbsys - mbdyn.pre.system object
+            %
+            % Additional optional arguments may be supplied using parameter
+            %-value pairs. The available options are:
+            %
+            % 'AxesHandle' - self.drawAxesH
+            %
+            % 'ForceRedraw' - Default is false
+            %
+            % 'Mode' - Default is 'solid'
+            %
+            % 'Bodies' - Default is true
+            %
+            % 'StructuralNodes' - Default is true
+            %
+            % 'Joints' - Default is true
+            %
+            % 'Light' - Default is false
+            %
+            % 'AxLims' - (3 x 2) matrix containing new axis limites for the
+            %   X,Y and Z axes. Each row has the new limits for the X,Y and
+            %   Z axes respectively. Default is empty matrix meaning axis
+            %   limites are not modified from the automatic values.
+            %
+            % 'References' - logical flag determining whether to draw the
+            %   references (if there are any present in the system object).
+            %
+            % Output
+            %
+            %
+            %
+            % See Also: 
+            %
             
             if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
                 if ~isvalid (self.drawAxesH)
@@ -269,8 +328,19 @@ classdef system < mbdyn.pre.base
             options.Joints = true;
             options.Light = false;
             options.AxLims = [];
+            options.References = false;
+            options.ReferenceScale = 1;
+            options.GlobalReference = true;
             
             options = parse_pv_pairs (options, varargin);
+            
+            self.checkLogicalScalar (options.ForceRedraw, true, 'ForceRedraw');
+            self.checkLogicalScalar (options.Bodies, true, 'Bodies');
+            self.checkLogicalScalar (options.Joints, true, 'Joints');
+            self.checkLogicalScalar (options.Light, true, 'Light');
+            self.checkLogicalScalar (options.References, true, 'References');
+            self.checkNumericScalar (options.ReferenceScale, true, 'ReferenceScale');
+            self.checkLogicalScalar (options.GlobalReference, true, 'GlobalReference');
             
             % make figure and axes if necessary
             if isempty (options.AxesHandle)
@@ -280,12 +350,25 @@ classdef system < mbdyn.pre.base
                 self.drawAxesH = options.AxesHandle;
             end
             
+            if options.References
+                if ~isempty (self.references)
+                    self.drawReferences ( self.references, ...
+                                          'Scale', options.ReferenceScale, ...
+                                          'Title', false, ...
+                                          'PlotAxes', self.drawAxesH, ...
+                                          'DrawGlobal', options.GlobalReference );
+                end
+            end
+            
             if islogical (options.StructuralNodes)
                 if options.StructuralNodes == false
                     options.StructuralNodes = [];
                 else
                     options.StructuralNodes = 1:numel(self.nodes);
                 end
+            else
+                assert (isnumeric (options.StructuralNodes) && isvector (options.StructuralNodes), ...
+                    'error StructuralNodes must be a logical true/false flag, or a vector of integers indicating which nodes to plot');
             end
 
             for ind = 1:numel (options.StructuralNodes)
