@@ -3,8 +3,8 @@
 MBDyn Matlab Toolbox
 ********************
 
-The MBDyn Matalb Toolbox is a suite of tools for interacting with 
-MBDyn from matlab.
+The MBDyn Matlab Toolbox is a suite of tools for interacting with 
+MBDyn from Matlab code.
 
 `MBDyn`_ is a free Multibody Dynamics analysis software, released under 
 GNU's GPL 2.1 developed at the Dipartimento di Scienze e Tecnologie 
@@ -21,13 +21,19 @@ lumped elements) subjected to kinematic constraints, along with
 smart materials, electric networks, active control, hydraulic 
 networks, and essential fixed-wing and rotorcraft aerodynamics.
 
-MBDYn does not feature a GUI and requires that problems are 
+MBDyn does not feature a GUI and requires that problems are 
 described using a text based input files. The MBDyn Matlab Toolbox 
 includes a preprocessor for generating these files using Matlab code, 
 with visualisation tools to assist development, an interface for 
 communication of forces and motions between Matlab and MBDyn during 
 a simulation and a post-processor with visualisation and animation 
 capabilities.
+
+.. figure:: /images/double_pendulum_setup.svg
+   
+   Double pendulum problem static visualisation.
+
+.. youtube:: https://www.youtube.com/watch?v=DdoBRinQrEk
 
 Octave
 ======
