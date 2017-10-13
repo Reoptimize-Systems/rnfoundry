@@ -140,6 +140,46 @@ classdef base < handle
             
         end
         
+        function ok = checkLogicalScalar (tfvalue, throw, name)
+            % checks if input is a scalar logical value
+            %
+            % Syntax
+            %
+            %  ok = checkNumericScalar (vec, throw)
+            %  ok = checkNumericScalar (..., name)
+            %
+            % Input
+            %
+            %  tfvalue - value to be tested if it is a scalar logical value
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkLogicalScalar if tfvalue fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be "<name> must be a scalar logical
+            %   (true/false) value". Default is 'value' if not supplied.
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'value';
+            end
+            
+            ok = true;
+            if ~( islogical (tfvalue) && isscalar (tfvalue) )
+                
+                ok = false;
+                
+                if throw
+                    error ('%s must be a scalar logical value', name);
+                end
+            end
+            
+        end
+        
         function mat = getOrientationMatrix (om)
             % gets the raw 3x3 orientation matrix
             %
@@ -687,25 +727,51 @@ classdef base < handle
             %    the length of their axes plots up or down. Default is 1,
             %    no scaling.
             %
+            %  'ShowLabels' - flag determining whether labels will be added 
+            %    for each reference. The labels will be the reference name
+            %    (from the name property of the reference), or, if this is
+            %    empty, a label based on the index of the reference in the
+            %    input cell aray, e.g. Reference 1 for the first label,
+            %    Reference 2 for the second etc. Default is true.
+            %
             %
             
             options.PlotAxes = [];
             options.Title = true;
             options.DrawGlobal = true;
             options.Scale = 1;
+            options.ShowLabels = true;
+            options.XLim = [];
+            options.YLim = [];
+            options.ZLim = [];
            
             options = parse_pv_pairs (options, varargin);
             
+            mbdyn.pre.base.checkLogicalScalar (options.Title, true, 'Title' );
+            mbdyn.pre.base.checkLogicalScalar (options.DrawGlobal, true, 'DrawGlobal' );
+            mbdyn.pre.base.checkLogicalScalar (options.ShowLabels, true, 'ShowLabels' );
+            mbdyn.pre.base.checkNumericScalar (options.Scale, true, 'Scale' );
+            
             hax = draw ( refs{1}, ...
                          'PlotAxes', options.PlotAxes, ...
-                         'Title', true, ...
-                         'DrawGlobal', true, ...
+                         'Title', options.Title, ...
+                         'DrawGlobal', options.DrawGlobal, ...
                          'Scale', options.Scale);
            
+            if options.ShowLabels
+                if isempty (refs{1}.name)
+                    label = sprintf ('Reference %d', 1);
+                else
+                    label = refs{1}.name;
+                end
+            else
+                label = '';
+            end
+                
             text ( refs{1}.pos(1) + 0.1*options.Scale, ...
                    refs{1}.pos(2), ...
                    refs{1}.pos(3) + 0.1*options.Scale, ...
-                   refs{1}.name, ...
+                   label, ...
                    'Interpreter', 'none');
                              
             for ind = 2:numel (refs)
@@ -715,11 +781,14 @@ classdef base < handle
                        'DrawGlobal', false, ...
                        'Scale', options.Scale );
                 
-                
-                if isempty (refs{ind}.name)
-                    label = sprintf ('Reference %d', ind);
+                if options.ShowLabels
+                    if isempty (refs{ind}.name)
+                        label = sprintf ('Reference %d', ind);
+                    else
+                        label = refs{ind}.name;
+                    end
                 else
-                    label = refs{ind}.name;
+                    label = '';
                 end
                 
                 text ( refs{ind}.pos(1) + 0.1*options.Scale, ...
@@ -727,6 +796,18 @@ classdef base < handle
                        refs{ind}.pos(3) + 0.1*options.Scale, ...
                        label, ...
                        'Interpreter', 'none');
+            end
+            
+            if ~isempty (options.XLim)
+                set (hax, 'XLim', options.XLim);
+            end
+            
+            if ~isempty (options.YLim)
+                set (hax, 'YLim', options.YLim);
+            end
+            
+            if ~isempty (options.ZLim)
+                set (hax, 'ZLim', options.ZLim);
             end
             
         end
