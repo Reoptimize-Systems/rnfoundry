@@ -305,9 +305,9 @@ classdef orientmat
                     dSinGamma = sin(d);
                     
                     this.orientationMatrix = ...
-                        [ dCosBeta*dCosGamma, dCosAlpha*dSinGamma + dSinAlpha*dSinBeta*dCosGamma, dSinAlpha*dSinGamma - dCosAlpha*dSinBeta*dCosGamma;
-                          -dCosBeta*dSinGamma, dCosAlpha*dCosGamma - dSinAlpha*dSinBeta*dSinGamma, dSinAlpha*dCosGamma + dCosAlpha*dSinBeta*dSinGamma;
-                          dSinBeta, -dSinAlpha*dCosBeta, dCosAlpha*dCosBeta ];
+                        [ dCosBeta*dCosGamma,                                -dCosBeta*dSinGamma,                                 dSinBeta;
+                          dCosAlpha*dSinGamma + dSinAlpha*dSinBeta*dCosGamma, dCosAlpha*dCosGamma - dSinAlpha*dSinBeta*dSinGamma, -dSinAlpha*dCosBeta;
+                          dSinAlpha*dSinGamma - dCosAlpha*dSinBeta*dCosGamma, dSinAlpha*dCosGamma + dCosAlpha*dSinBeta*dSinGamma, dCosAlpha*dCosBeta; ];
                     
                 case 'euler321'
                     
@@ -324,9 +324,9 @@ classdef orientmat
                     dSinGamma = sin(d);
 
                     this.orientationMatrix = ...
-                        [ dCosAlpha*dCosBeta,  dSinAlpha*dCosBeta, -dSinBeta;
-                         -dSinAlpha*dCosGamma + dCosAlpha*dSinBeta*dSinGamma, dCosAlpha*dCosGamma + dSinAlpha*dSinBeta*dSinGamma, dCosBeta*dSinGamma;
-                         dSinAlpha*dSinGamma + dCosAlpha*dSinBeta*dCosGamma, -dCosAlpha*dSinGamma + dSinAlpha*dSinBeta*dCosGamma, dCosBeta*dCosGamma ];
+                        [ dCosAlpha*dCosBeta,  -dSinAlpha*dCosGamma + dCosAlpha*dSinBeta*dSinGamma, dSinAlpha*dSinGamma + dCosAlpha*dSinBeta*dCosGamma
+                          dSinAlpha*dCosBeta,  dCosAlpha*dCosGamma + dSinAlpha*dSinBeta*dSinGamma, -dCosAlpha*dSinGamma + dSinAlpha*dSinBeta*dCosGamma
+                          -dSinBeta,           dCosBeta*dSinGamma,                                 dCosBeta*dCosGamma ];
                     
                 case 'euler313'
                     
@@ -343,9 +343,9 @@ classdef orientmat
                     dSinGamma = sin(d);
 
                     this.orientationMatrix = ...
-                        [ dCosAlpha*dCosGamma - dSinAlpha*dCosBeta*dSinGamma, dSinAlpha*dCosGamma + dCosAlpha*dCosBeta*dSinGamma, dSinBeta*dSinGamma; 
-                          -dCosAlpha*dSinGamma - dSinAlpha*dCosBeta*dCosGamma, -dSinAlpha*dSinGamma + dCosAlpha*dCosBeta*dCosGamma, dSinBeta*dCosGamma;
-                          dSinAlpha*dSinBeta, -dCosAlpha*dSinBeta, dCosBeta ];
+                        [ dCosAlpha*dCosGamma - dSinAlpha*dCosBeta*dSinGamma,  -dCosAlpha*dSinGamma - dSinAlpha*dCosBeta*dCosGamma, dSinAlpha*dSinBeta; 
+                          dSinAlpha*dCosGamma + dCosAlpha*dCosBeta*dSinGamma,  -dSinAlpha*dSinGamma + dCosAlpha*dCosBeta*dCosGamma, -dCosAlpha*dSinBeta;
+                          dSinBeta*dSinGamma,                                  dSinBeta*dCosGamma,                                  dCosBeta; ];
                       
                 case {'vector', 'orientation vector'}
                     % axis and angle (angle in rad = norm of matrix)
