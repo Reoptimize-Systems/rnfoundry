@@ -116,11 +116,11 @@ classdef reference < handle
             
             options = parse_pv_pairs (options, varargin);
             
-            options.Parent = processParentInput (options.Parent);
-            options.PositionParent = processParentInput (options.PositionParent, options.Parent);
-            options.OrientParent = processParentInput (options.OrientParent, options.Parent);
-            options.VelParent = processParentInput (options.VelParent, options.Parent);
-            options.OmegaParent = processParentInput (options.OmegaParent, options.Parent);
+            options.Parent = this.processParentInput (options.Parent);
+            options.PositionParent = this.processParentInput (options.PositionParent, options.Parent);
+            options.OrientParent = this.processParentInput (options.OrientParent, options.Parent);
+            options.VelParent = this.processParentInput (options.VelParent, options.Parent);
+            options.OmegaParent = this.processParentInput (options.OmegaParent, options.Parent);
             
             this.positionParent = options.PositionParent;
             this.orientParent = options.OrientParent;
@@ -355,7 +355,7 @@ classdef reference < handle
             value = this.orientParent.orientm.orientationMatrix * this.domega + this.omegaParent.omega;
         end
         
-        function parentref = processParentInput (parentinput, defaultparent)
+        function parentref = processParentInput (this, parentinput, defaultparent)
             
             if nargin > 1
                 if isempty (parentinput)
@@ -387,6 +387,10 @@ classdef reference < handle
                 
                 error ('RENEWNET:mbdyn:badrefparent', ...
                     'The parent must be another reference object, the global object or a node');
+                
+            else
+                
+                parentref = parentinput;
                 
             end
             
