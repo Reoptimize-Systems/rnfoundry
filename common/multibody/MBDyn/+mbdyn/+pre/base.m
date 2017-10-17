@@ -98,6 +98,46 @@ classdef base < handle
             
         end
         
+        function ok = check3ElementNumericVector (vec, throw, name)
+            % checks if input is a 3 element numeric vector
+            %
+            % Syntax
+            %
+            %  ok = check3ElementNumericVector (vec, throw)
+            %
+            % Input
+            %
+            %  vec - value to be tested if it is a 3 element numeric
+            %    column vector, or the keyword 'null'
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by check3ElementNumericVector if vec fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be <name> must be a 3 element numeric vector.
+            %   Default is 'input' if not supplied.
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'input';
+            end
+            
+            ok = true;
+            if ~(isnumeric (vec) && isvector (vec) && numel (vec) == 3)
+                
+                ok = false;
+                
+                if throw
+                    error ('%s must be a 3 element numeric vector', name)
+                end
+            end
+            
+        end
+        
         function ok = checkNumericScalar (num, throw, name)
             % checks if input is a real scalar value
             %
@@ -135,6 +175,47 @@ classdef base < handle
                 
                 if throw
                     error ('%s must be a scalar numeric value', name);
+                end
+            end
+            
+        end
+        
+        function ok = checkScalarInteger (num, throw, name)
+            % checks if input is an integer value to machine precision
+            %
+            % Syntax
+            %
+            %  ok = checkScalarInteger (num, throw)
+            %  ok = checkScalarInteger (..., name)
+            %
+            % Input
+            %
+            %  num - value to be tested if it is a scalar integer
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkScalarInteger if num fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be <name> must be a scalar integer (to
+            %   machine precision). Default is 'value' if not supplied.
+            %
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'value';
+            end
+            
+            ok = true;
+            if ~( isnumeric (num) && isscalar (num) && isreal (num) && isint2eps (num) )
+                
+                ok = false;
+                
+                if throw
+                    error ('%s must be a scalar integer (to machine precision)', name);
                 end
             end
             
@@ -193,12 +274,13 @@ classdef base < handle
             
         end
         
-        function ok = checkOrientationMatrix (mat, throw)
+        function ok = checkOrientationMatrix (mat, throw, name)
             % checks if input is a valid orientation matrix
             %
             % Syntax
             %
             %  ok = checkOrientationMatrix (mat, throw)
+            %  ok = checkOrientationMatrix (..., name)
             %
             % Input
             %
@@ -207,27 +289,37 @@ classdef base < handle
             %  throw - logical flag determining whether an error is thrown
             %   by checkOrientationMatrix if mat fails check
             %
+            %  name - optional string used to customise the error message.
+            %   The error will be "<name> must be a 3 x 3 numeric matrix or
+            %   mbdyn.pre.orientmat object". Default is 'orientation
+            %   matrix' if not supplied.
+            %
             % Output
             %
             %  ok - logical flag indicating if check was passed
             %
+            
+            if nargin < 3
+                name = 'orientation matrix';
+            end
             
             mat = mbdyn.pre.base.getOrientationMatrix (mat);
             
             ok = mbdyn.pre.base.check3X3Matrix (mat, false);
             
             if ~ok && throw
-                error ('orientation matrix must be a 3 x 3 numeric matrix or mbdyn.pre.orientmat object');
+                error ('%s must be a 3 x 3 numeric matrix or mbdyn.pre.orientmat object', name);
             end
 
         end
         
-        function ok = check3X3Matrix (mat, throw)
+        function ok = check3X3Matrix (mat, throw, name)
             % checks if input is a 3x3 numeric matrix
             %
             % Syntax
             %
             %  ok = check3X3Matrix (mat, throw)
+            %  ok = check3X3Matrix (..., name)
             %
             % Input
             %
@@ -236,24 +328,33 @@ classdef base < handle
             %  throw - logical flag determining whether an error is thrown
             %   by check3X3Matrix if mat fails check
             %
+            %  name - optional string used to customise the error message.
+            %   The error will be "<name> must be a 3 x 3 numeric matrix".
+            %   Default is 'input' if not supplied.
+            %
             % Output
             %
             %  ok - logical flag indicating if check was passed
             %
             
+            if nargin < 3
+                name = 'input';
+            end
+            
             ok = true;
-            if ~((isnumeric (mat) && size (mat,1) == 3 && size (mat,2) == 3) || isempty (mat))
+            if ~( (isnumeric (mat) && size (mat,1) == 3 && size (mat,2) == 3) ...
+                    || isempty (mat) )
                 
                 ok = false;
                 
                 if throw
-                    error ('input must be a 3 x 3 numeric matrix')
+                    error ('%s must be a 3 x 3 numeric matrix', name)
                 end
             end
             
         end
         
-        function ok = checkOrientationDescription (odesc, throw)
+        function ok = checkOrientationDescription (odesc, throw, name)
             % checks if the orientation description choice is valid
             %
             % Syntax
@@ -270,10 +371,20 @@ classdef base < handle
             %  throw - logical flag determining whether an error is thrown
             %   by checkOrientationDescription if odesc fails check
             %
+            %  name - optional string used to customise the error message.
+            %   The error will be "<name> must be one of: 'euler123' |
+            %   'euler313' | 'euler321' | 'orientation vector' |
+            %   'orientation matrix'". Default is 'Orientation description'
+            %   if not supplied.
+            %
             % Output
             %
             %  ok - logical flag indicating if check was passed
             %
+            
+            if nargin < 3
+                name = 'Orientation description';
+            end
             
             if ~ischar (odesc)
                 error ('Orientation description must be a char array')
@@ -284,7 +395,7 @@ classdef base < handle
                                                                    'euler321', ...
                                                                    'orientation vector', ...
                                                                    'orientation matrix'}, ...
-                                                           throw, 'Orientation description');
+                                                           throw, name);
             
         end
         
@@ -310,6 +421,9 @@ classdef base < handle
             %
             %  inputname - (optional) string with name to use in error
             %    thrown by checkAllowedStringInputs (if 'throw' is true).
+            %    The error will be "<name> must be one of: 'string 1' |
+            %   'string 2' | 'string 3'" where allowedstrs is {'string 1',
+            %   'string 2', 'string 3'}.
             %
             % Output
             %
@@ -321,7 +435,7 @@ classdef base < handle
             end
             
             if ~iscellstr (allowedstrs)
-                error ('allowed must be a cell array of strings containing a list of allowed values for the input');
+                error ('allowedstrs must be a cell array of strings containing a list of allowed values for the input');
             end
             
             ok = true;
