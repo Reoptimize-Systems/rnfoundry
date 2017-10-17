@@ -62,6 +62,14 @@ pos * om.orientationMatrix
 % plot the orientation matrix as 3 axes
 om.draw ();
 
+om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [1,0,0], 'ib', 2, 'vecB', 'guess')); 
+
+om.draw ()
+
+om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [0.5,0.5,0], 'ib', 2, 'vecB', [])); 
+
+om.draw ()
+
 %% references
 
 gref = mbdyn.pre.globalref
@@ -91,6 +99,7 @@ fcalc = [ L*sin(theta1)+(L/2)*sin(theta1+theta2);
 mbdyn.pre.base.drawReferences ({Ref_Link1, Ref_Link2}, 'Scale', 0.5)
 
 % om = mbdyn.pre.orientmat ('euler', [0, pi-(theta1+theta2), 0])
+
 
 %% base node
 
@@ -352,8 +361,8 @@ prb = mbdyn.pre.initialValueProblem (0, 10, 1e-3, 'ResidualTolerance', 1e-9) %, 
 mbsys = mbdyn.pre.system ( {prb}, ...
                            'Nodes', {link1node, link2node}, ...
                            'Elements', {link1, link2, pinjoint, linkjoint, mbdyn.pre.gravity()}, ...
-                           'References', {Ref_Link1, Ref_Node_Link1, Ref_Link2, Ref_Node_Link2, Ref_pin, Ref_hinge}, ...
-                           'DefaultOrientation', 'orientation matrix');
+                           'References', {Ref_pin, Ref_hinge}, ... {Ref_Link1, Ref_Node_Link1, Ref_Link2, Ref_Node_Link2, Ref_pin, Ref_hinge}
+                           'DefaultOrientation', 'euler123');
 
 str = mbsys.generateMBDynInputStr ()
 
