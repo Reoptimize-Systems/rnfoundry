@@ -469,7 +469,7 @@ classdef postproc < handle
             
             options.DrawLabels = false;
             options.AxLims = [];
-            options.PlotTrajectories = isempty (self.preProcSystem);
+            options.PlotTrajectories = false;
             options.NodeSize = [];
             options.DrawMode = 'wireghost';
             options.DrawNodes = true;
@@ -487,6 +487,7 @@ classdef postproc < handle
             end
             
             plotdata.HAx = [];
+            plotdata.htraj = [];
             
             for tind = 1:options.Skip:size(self.nodes.(self.nodeNames{1}).Position,1)
                 
@@ -495,8 +496,13 @@ classdef postproc < handle
                     if options.DrawLabels
                         delete (plotdata.HNodeLabels);
                     end
+                    
+%                     if ~isempty (plotdata.htraj)
+%                         delete (plotdata.htraj);
+%                     end
+                    
                     % clear the axes
-                    cla (plotdata.HAx);
+%                     cla (plotdata.HAx);
                 end
                 
                 plotdata = self.drawStep(tind, ...
@@ -509,7 +515,8 @@ classdef postproc < handle
                               'Light', options.Light, ...
                               'PlotAxes', plotdata.HAx, ...
                               'Title', false, ...
-                              'OnlyNodes', options.OnlyNodes);
+                              'OnlyNodes', options.OnlyNodes, ...
+                              'ForceRedraw', true);
                           
                 if tind == 1
                     
@@ -589,9 +596,10 @@ classdef postproc < handle
                     
                 end
                 
-                for indii = 1:self.nNodes
+                if options.PlotTrajectories
                     
-                    if options.PlotTrajectories
+                    for indii = 1:self.nNodes
+                    
                         if tind == 1
                             htraj(indii) = animatedline ( plotdata.HAx, ...
                                 self.nodes.(self.nodeNames{indii}).Position(tind,1), ...
@@ -606,6 +614,18 @@ classdef postproc < handle
                                 self.nodes.(self.nodeNames{indii}).Position(tind,2), ...
                                 self.nodes.(self.nodeNames{indii}).Position(tind,3) );
                         end
+%                         holdstatus = ishold (plotdata.HAx);
+%                         hold (plotdata.HAx, 'on');
+%                         plotdata.htraj(indii) = line ( plotdata.HAx, ...
+%                                 self.nodes.(self.nodeNames{indii}).Position(1:options.Skip:tind,1), ...
+%                                 self.nodes.(self.nodeNames{indii}).Position(1:options.Skip:tind,2), ...
+%                                 self.nodes.(self.nodeNames{indii}).Position(1:options.Skip:tind,3) );
+%                         if holdstatus
+%                             hold (plotdata.HAx, 'on');
+%                         else
+%                             hold (plotdata.HAx, 'off');
+%                         end
+                        
                     end
                     
                 end
@@ -613,6 +633,8 @@ classdef postproc < handle
                 set (plotdata.HAx, 'XLim', options.AxLims(1,1:2));
                 set (plotdata.HAx, 'YLim', options.AxLims(2,1:2));
                 set (plotdata.HAx, 'ZLim', options.AxLims(3,1:2));
+                
+%                 drawnow;
                 
                 if ~isempty(options.VideoFile)
 
@@ -717,6 +739,7 @@ classdef postproc < handle
             options.Light = false;
             options.Title = true;
             options.OnlyNodes = 1:self.nNodes;
+            options.ForceRedraw = false;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -756,7 +779,8 @@ classdef postproc < handle
                     'Bodies', options.DrawBodies, ...
                     'StructuralNodes', options.OnlyNodes, ...
                     'Joints', false, ...
-                    'Light', options.Light );
+                    'Light', options.Light, ...
+                    'ForceRedraw', options.ForceRedraw);
                 
             end
             

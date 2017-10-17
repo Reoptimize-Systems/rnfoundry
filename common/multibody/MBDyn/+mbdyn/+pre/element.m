@@ -82,18 +82,33 @@ classdef element < mbdyn.pre.base
             
             options = parse_pv_pairs (options, varargin);
             
-            % try to figure out if there is a valid axees to plot to
+            if options.ForceRedraw
+                if ~isempty (self.patchObject) && isvalid (self.patchObject) 
+                    delete (self.patchObject);
+                end
+                self.patchObject = [];
+            end
+            
+            % try to figure out if there is a valid set of axes to plot to
             if isa (options.AxesHandle, 'matlab.graphics.axis.Axes')
                 if ~isvalid (options.AxesHandle)
                     error ('provided axes object is not valid');
                 end
                 self.drawAxesH = options.AxesHandle;
+                % we need to redraw, as we're plotting in a new set of axes
+                options.ForceRedraw = true;
+                % abandon existing patch object
+                self.patchObject = [];
+                self.transformObject = [];
             elseif isempty (options.AxesHandle)
-                % plot in the existing axes if possible and no new axes
+                % plot in the existing axes if possible as no new axes
                 % supplied
                 if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
                     if ~isvalid (self.drawAxesH)
                         self.drawAxesH = [];
+                        options.ForceRedraw = true;
+                        self.patchObject = [];
+                        self.transformObject = [];
                     end
                 end
             end
@@ -123,7 +138,8 @@ classdef element < mbdyn.pre.base
             if isempty (self.patchObject) ...
                     || ~isvalid (self.patchObject) ...
                     || options.ForceRedraw ...
-                    || self.shapeDataChanged
+                    || self.shapeDataChanged ...
+                    || isempty (self.drawAxesH)
                 
                 % delete the current patch object
                 if ~isempty (self.patchObject) && isvalid (self.patchObject) 

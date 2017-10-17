@@ -87,29 +87,58 @@ classdef structuralNode < mbdyn.pre.node
             
             options = parse_pv_pairs (options, varargin);
             
-            % try to figure out if there is a valid axees to plot to
+            if options.ForceRedraw
+                % delete the current drawing object
+                if ~isempty (self.drawObjects)
+                    for ind = 1:numel (self.drawObjects)
+                        if isvalid (self.drawObjects(ind)) 
+                            delete (self.drawObjects(ind));
+                        end
+                    end
+                end
+                self.drawObjects = [];
+            end
+            
+            % try to figure out if there is a valid set of axes to plot to
             if isa (options.AxesHandle, 'matlab.graphics.axis.Axes')
+                
                 if ~isvalid (options.AxesHandle)
                     error ('provided axes object is not valid');
                 end
                 self.drawAxesH = options.AxesHandle;
+                % we need to redraw, as we're plotting in a new set of axes
+                options.ForceRedraw = true;
+                % abandon existing patch objects 
+                self.drawObjects = [];
+                % abandon existing transform object
+                self.transformObject = [];
+                
             elseif isempty (options.AxesHandle)
-                % plot in the existing axes if possible and no new axes
+                
+                % plot in the existing axes if possible as no new axes
                 % supplied
                 if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
                     if ~isvalid (self.drawAxesH)
                         self.drawAxesH = [];
+                        options.ForceRedraw = true;
+                        self.transformObject = [];
                     end
                 end
+                
             end
             
-            if isempty (self.drawObjects) ...
-                    || ~all(isvalid (self.drawObjects)) ...
-                    || options.ForceRedraw
+            if isempty (self.drawObjects) ... % we need to create new plot as there's nothing in exsiting one
+                    || ~all(isvalid (self.drawObjects)) ... % we need to create new plot as existing pathces have been destroyed
+                    || options.ForceRedraw ... % new plot is forced by caller
+                    || isempty (self.drawAxesH) % if self.drawAxesH is empty we need to create new axes and new plot
                 
                 % delete the current patch object
-                if ~isempty (self.drawObjects) && all(isvalid (self.drawObjects)) 
-                    delete (self.drawObjects);
+                if ~isempty (self.drawObjects)
+                    for ind = 1:numel (self.drawObjects)
+                        if isvalid (self.drawObjects(ind)) 
+                            delete (self.drawObjects(ind));
+                        end
+                    end
                 end
                 self.drawObjects = [];
                 
