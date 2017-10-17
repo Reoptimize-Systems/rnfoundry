@@ -116,81 +116,11 @@ classdef reference < handle
             
             options = parse_pv_pairs (options, varargin);
             
-            if isa (options.Parent, 'mbdyn.pre.structuralNode3dof')
-                % replace node with reference
-                node = options.Parent;
-                
-                options.Parent = mbdyn.pre.reference ( ...
-                    node.absolutePosition, ...
-                    node.absoluteOrientation, ...
-                    node.absoluteVelocity, ...
-                    node.absoluteAngularVelocity );
-                
-            elseif isa (options.Parent, 'mbdyn.pre.structuralNode6dof')
-                % replace node with reference
-                node = options.Parent;
-                
-                options.Parent = mbdyn.pre.reference ( ...
-                    node.absolutePosition, ...
-                    node.absoluteOrientation, ...
-                    node.absoluteVelocity, ...
-                    node.absoluteAngularVelocity );
-                
-            elseif ~ ( isa (options.Parent, 'mbdyn.pre.reference') ...
-                    || isa (options.Parent, 'mbdyn.pre.globalref') )
-                
-                error ('RENEWNET:mbdyn:badrefparent', ...
-                    'The parent must be another reference object or the global object');
-                
-            end
-            
-            if isempty (options.PositionParent)
-                options.PositionParent = options.Parent;
-            else
-                if ~ ( isa (options.PositionParent, 'mbdyn.pre.reference') ...
-                        || isa (options.PositionParent, 'mbdyn.pre.globalref') )
-                    
-                    error ('RENEWNET:mbdyn:badrefparent', ...
-                        'The PositionParent must be another reference object or the global object');
-                    
-                end
-            end
-            
-            if isempty (options.OrientParent)
-                options.OrientParent = options.Parent;
-            else
-                if ~ ( isa (options.OrientParent, 'mbdyn.pre.reference') ...
-                        || isa (options.OrientParent, 'mbdyn.pre.globalref') )
-                    
-                    error ('RENEWNET:mbdyn:badrefparent', ...
-                        'The OrientParent must be another reference object or the global object');
-                    
-                end
-            end
-            
-            if isempty (options.VelParent)
-                options.VelParent = options.Parent;
-            else
-                if ~ ( isa (options.VelParent, 'mbdyn.pre.reference') ...
-                        || isa (options.VelParent, 'mbdyn.pre.globalref') )
-                    
-                    error ('RENEWNET:mbdyn:badrefparent', ...
-                        'The OrientParent must be another reference object or the global object');
-                    
-                end
-            end
-            
-            if isempty (options.OmegaParent)
-                options.OmegaParent = options.Parent;
-            else
-                if ~ ( isa (options.OmegaParent, 'mbdyn.pre.reference') ...
-                        || isa (options.OmegaParent, 'mbdyn.pre.globalref') )
-                    
-                    error ('RENEWNET:mbdyn:badrefparent', ...
-                        'The OrientParent must be another reference object or the global object');
-                    
-                end
-            end
+            options.Parent = processParentInput (options.Parent);
+            options.PositionParent = processParentInput (options.PositionParent, options.Parent);
+            options.OrientParent = processParentInput (options.OrientParent, options.Parent);
+            options.VelParent = processParentInput (options.VelParent, options.Parent);
+            options.OmegaParent = processParentInput (options.OmegaParent, options.Parent);
             
             this.positionParent = options.PositionParent;
             this.orientParent = options.OrientParent;
@@ -425,11 +355,17 @@ classdef reference < handle
             value = this.orientParent.orientm.orientationMatrix * this.domega + this.omegaParent.omega;
         end
         
-        function parentref = processParentInput (parentinput)
+        function parentref = processParentInput (parentinput, defaultparent)
+            
+            if nargin > 1
+                if isempty (parentinput)
+                    parentinput = defaultparent;
+                end
+            end
             
             if isa (parentinput, 'mbdyn.pre.structuralNode3dof')
+                
                 % replace node with reference
-                node = options.Parent;
                 
                 parentref = mbdyn.pre.reference ( ...
                     parentinput.absolutePosition, ...
@@ -450,7 +386,7 @@ classdef reference < handle
                     || isa (parentinput, 'mbdyn.pre.globalref') )
                 
                 error ('RENEWNET:mbdyn:badrefparent', ...
-                    'The parent must be another reference object or the global object');
+                    'The parent must be another reference object, the global object or a node');
                 
             end
             
