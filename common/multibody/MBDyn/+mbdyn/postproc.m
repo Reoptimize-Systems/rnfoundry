@@ -40,8 +40,7 @@ classdef postproc < handle
             %
             % Description
             %
-            % mbdyn.postproc(mbdoutfilename, info) creates a new postpoc
-            % class
+            % mbdyn.postproc(mbdoutfilename, info) creates a new postpoc class
             %
             % Input
             %
@@ -56,12 +55,22 @@ classdef postproc < handle
             %    represent the system which has been simulated, it is
             %    intended that it is the system which was actually used to
             %    generate the mbdyn input file for the simulation to be
-            %    post-processed. Alternatively, if it is a structure, it
-            %    must have the following fields:
+            %    post-processed. 
+            %
+            %    Alternatively, if it is a structure, it must have the
+            %    following fields:
             %
             %    InitialTime - scalar value of the intial simualtion time
+            %
             %    TimeStep - scalar value of the time step used in the
             %      simulation
+            %
+            %    DefaultOrientation - string describing the default orientation
+            %      format used in '.mov' output file (set using the
+            %      'default orientation' keyword in the MBDyn input file,
+            %      MBDyn's default is 'euler123' if this is not set). The
+            %      possible values are: 'euler123', 'euler313', 'euler321',
+            %      'orientation vector' or 'orientation matrix'.
             %
             
             
@@ -71,10 +80,11 @@ classdef postproc < handle
                     
                     self.simInfo = struct ( 'InitialTime', self.preProcSystem.problems{1}.initialTime, ...
                                             ...'FinalTime', self.preProcSystem.problems{1}.finalTime, ...
-                                            'TimeStep', self.preProcSystem.problems{1}.timeStep );
+                                            'TimeStep', self.preProcSystem.problems{1}.timeStep, ...
+                                            'DefaultOrientation', self.preProcSystem.controlData.DefaultOrientation);
                     
                 elseif isstruct (info)
-                    if all (isfield (info, {'InitialTime', 'TimeStep'}))
+                    if all (isfield (info, {'InitialTime', 'TimeStep', 'DefaultOrientation'}))
                         self.simInfo = info;
                     else
                         error ('Simulation info structure provided does not have all required fields');
@@ -83,8 +93,11 @@ classdef postproc < handle
                     error ('preprocsys must be a mbdyn.pre.system object or a structure')
                 end
             else
-                self.simInfo = struct ('InitialTime', 0, 'TimeStep', 1);
-                warning ('No simulation info supplied, using initial time of 0 and time step of 1.')
+                self.simInfo = struct ( 'InitialTime', 0, ...
+                                        'TimeStep', 1, ...
+                                        'DefaultOrientation', 'euler123' );
+                warning ( 'No simulation info supplied, using initial time of 0, time step of 1, and default orientation %s.', ...
+                          self.simInfo.DefaultOrientation );
             end
             
             % load the results
@@ -93,28 +106,28 @@ classdef postproc < handle
         end
         
         function loadResultsFromFiles (self, mbdoutfilename)
-            % load results from mbdyn output files
-            %
-            % Syntax
-            %
-            % loadResultsFromFiles (mbp, mbdoutfilename)
-            %
-            % Description
-            %
-            % loadResultsFromFiles loads the data output by MBDyn during a
-            % simulation in preparation for post-processing. Any previous
-            % data loded from output files is cleared.
-            %
-            % Input
-            %
-            %  mbp - mbdyn.postproc object
-            %
-            %  mbdoutfilename - root path of the mbdyn output files, e.g.
-            %   if the files are mysim_results.out, mysim_results.move etc.
-            %   this should be 'mysim_results' ( or the full path without
-            %   extension e.g. /home/jblogs/mysim_results )
-            %
-            %
+        % load results from mbdyn output files
+        %
+        % Syntax
+        %
+        % loadResultsFromFiles (mbp, mbdoutfilename)
+        %
+        % Description
+        %
+        % loadResultsFromFiles loads the data output by MBDyn during a
+        % simulation in preparation for post-processing. Any previous data
+        % loded from output files is cleared.
+        %
+        % Input
+        %
+        %  mbp - mbdyn.postproc object
+        %
+        %  mbdoutfilename - root path of the mbdyn output files, e.g.
+        %   if the files are mysim_results.out, mysim_results.move etc.
+        %   this should be 'mysim_results' ( or the full path without
+        %   extension e.g. /home/jblogs/mysim_results )
+        %
+        %
             
             [pathstr, name, ext] = fileparts (mbdoutfilename);
             
@@ -143,6 +156,31 @@ classdef postproc < handle
             
             self.nNodes = 0;
             
+            posinds = 2:4;
+            
+            switch self.simInfo.DefaultOrientation
+                
+                case {'euler123', 'euler313', 'euler321', 'orientation vector'}
+                    
+                    orientinds = 5:7;
+                    velinds = 8:10;
+                    omegainds = 11:13;
+                    
+                case 'orientation matrix'
+                    
+                    orientinds = 5:13;
+                    velinds = 14:16;
+                    omegainds = 17:19;
+                    
+                otherwise
+                    
+                    error ('Invalid DefaultOrientation: %s', ...
+                        self.simInfo.DefaultOrientation);
+                    
+            end
+            
+            
+            % TODO: loading results only works for orientation matrix format
             for ind = 1:size(movdata,1)
                 
                 label = movdata(ind,1);
@@ -154,23 +192,23 @@ classdef postproc < handle
                     self.nodes.(nodename) = struct ( ...
                                                'Label', label, ...
                                                'Name', nodename, ...
-                                               'Position', movdata(ind,2:4), ...
-                                               'Orientation', movdata(ind,5:13), ...
-                                               'Velocity', movdata(ind,14:16), ...
-                                               'AngularVelocity', movdata(ind,17:19) ...
+                                               'Position', movdata(ind,posinds), ...
+                                               'Orientation', movdata(ind,orientinds), ...
+                                               'Velocity', movdata(ind,velinds), ...
+                                               'AngularVelocity', movdata(ind,omegainds) ...
                                               );
                                           
                     self.nNodes = self.nNodes + 1;
                     
                 else
                     
-                    self.nodes.(nodename).Position = [self.nodes.(nodename).Position; movdata(ind,2:4)];
+                    self.nodes.(nodename).Position = [self.nodes.(nodename).Position; movdata(ind,posinds)];
                     
-                    self.nodes.(nodename).Orientation = [self.nodes.(nodename).Orientation; movdata(ind,5:13)];
+                    self.nodes.(nodename).Orientation = [self.nodes.(nodename).Orientation; movdata(ind,orientinds)];
                     
-                    self.nodes.(nodename).Velocity = [self.nodes.(nodename).Velocity; movdata(ind,14:16)];
+                    self.nodes.(nodename).Velocity = [self.nodes.(nodename).Velocity; movdata(ind,velinds)];
                     
-                    self.nodes.(nodename).AngularVelocity = [self.nodes.(nodename).AngularVelocity; movdata(ind,17:19)];
+                    self.nodes.(nodename).AngularVelocity = [self.nodes.(nodename).AngularVelocity; movdata(ind,omegainds)];
                                 
                 end
                 
@@ -696,12 +734,19 @@ classdef postproc < handle
             
             if ~isempty (self.preProcSystem)
                 
+                defaultOrientationIsMatrix = strcmpi (self.simInfo.DefaultOrientation, 'orientation matrix');
+                
                 for indii = 1:self.nNodes
                     % set the node positions and orientations
                     self.preProcSystem.setNodePosition (self.nodes.(self.nodeNames{indii}).Label, self.nodes.(self.nodeNames{indii}).Position(tind,:)');
-                    % get the transpose of the matrix as mbdyn writes it
-                    % out row-wise, not columnwise
-                    om = mbdyn.pre.orientmat ('orientation', reshape (self.nodes.(self.nodeNames{indii}).Orientation(tind,:), 3, 3)');
+                    
+                    if defaultOrientationIsMatrix
+                        % get the transpose of the matrix as mbdyn writes
+                        % it out row-wise, not columnwise
+                        om = mbdyn.pre.orientmat (self.simInfo.DefaultOrientation, reshape (self.nodes.(self.nodeNames{indii}).Orientation(tind,:), 3, 3)');
+                    else
+                        om = mbdyn.pre.orientmat (self.simInfo.DefaultOrientation, deg2rad ( self.nodes.(self.nodeNames{indii}).Orientation(tind,:) ));
+                    end
                     self.preProcSystem.setNodeOrientation (self.nodes.(self.nodeNames{indii}).Label, om);
                 end
                 
