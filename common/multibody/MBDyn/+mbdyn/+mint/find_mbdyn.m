@@ -1,5 +1,34 @@
-function path = findmbdyn ()
+function path = find_mbdyn (throw)
 % locate the mbdyn executeable
+%
+% Syntax
+%
+% path = find_mbdyn ()
+%
+% Description
+%
+% findmbdyn searches in set of predetermined locations for an MBDyn
+% executable. It first searched the current directory, then various
+% directories in which it might be expected to be found on different
+% systems.
+%
+% Input
+%
+%  throw - flag determining whether to throw an error if mbdyn is not found
+%
+% Output
+%
+%  path - path to the MBDyn executeable which was found
+%
+%
+% See Also: mbdyn.mint.start_mbdyn
+%
+
+    if nargin < 1
+        throw = true;
+    end
+    
+    mbdyn.pre.base.checkLogicalScalar (throw, true, 'throw');
 
     candidate_locs = { ...
         fullfile(pwd (), 'mbdyn'), ...
@@ -46,6 +75,7 @@ function path = findmbdyn ()
         end
     end
 
+    path = '';
     for ind = 1:numel (candidate_locs)
         if exist (candidate_locs{ind}, 'file') == 2
             path = candidate_locs{ind};
@@ -53,6 +83,8 @@ function path = findmbdyn ()
         end
     end
 
-    error ('The MBDyn executeable could not be found.');
+    if throw
+        error ('The MBDyn executeable could not be found.');
+    end
 
 end
