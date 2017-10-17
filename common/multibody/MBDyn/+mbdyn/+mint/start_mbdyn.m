@@ -3,7 +3,7 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
 
     options.Verbosity = 0;
     options.StartWaitTime = 2;
-    options.MBDynExecutable = mbdyn.mint.findmbdyn ();
+    options.MBDynExecutable = mbdyn.mint.find_mbdyn (false);
     options.MBDynOutputFile = '';
     options.OutputPrefix = '';
     
