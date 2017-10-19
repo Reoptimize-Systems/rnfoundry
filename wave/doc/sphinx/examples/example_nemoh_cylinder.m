@@ -13,15 +13,14 @@ inputdir = fullfile (dir, 'example_nemoh_cylinder_output');
 % create a body object which will be the cylinder
 cylinder = nemoh.body (inputdir);
 
-n = 3; % 3 points are required for describing the shape
-raidus = 5; % Radius of the cylinder
+radius = 5; % Radius of the cylinder
 draft = -10; % Height of the submerged part
-r = [raidus  raidus  0]; 
+r = [radius  radius  0]; 
 z = [0       draft   draft];
 ntheta = 30;
 verticalCentreOfGravity = -2;
 
-% define the body shape using a 3D profile rotated around the z axis
+% define the body shape using a 2D profile rotated around the z axis
 cylinder.makeAxiSymmetricMesh (r, z, ntheta, verticalCentreOfGravity);
 
 %% draw the course body mesh (will be refined later)
