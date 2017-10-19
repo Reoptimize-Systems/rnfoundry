@@ -1,5 +1,5 @@
 classdef body < nemoh.base
-    % class representing a body in a Nemoh hydrodynamic calculation
+    % class representing a body in a NEMOH hydrodynamic calculation
     %
     % Syntax
     %
@@ -9,8 +9,8 @@ classdef body < nemoh.base
     % Description
     %
     % the nemoh.body class represents a hydrodynamic body for input to a
-    % Nemoh calculation. One or more body classes are used together with
-    % the nemoh.simulation object to generate Nemoh input files and
+    % NEMOH calculation. One or more body classes are used together with
+    % the nemoh.simulation object to generate NEMOH input files and
     % compatible meshes to perform hydrodynamic BEM calculations. For the
     % general workflow of running a calculation see the help for the
     % nemoh.simulation class.
@@ -30,13 +30,13 @@ classdef body < nemoh.base
     %  writeMesh - writes mesh input files, these usually require procesing
     %    by calling processMesh after writing the files. 
     %  processMesh - process the mesh files written by writeMesh, e.g. by
-    %    running the Nemoh meshing program. 
-    %  setMeshProgPath - sets the path to the Nemoh meshing program
+    %    running the NEMOH meshing program. 
+    %  setMeshProgPath - sets the path to the NEMOH meshing program
     %  setRho - sets the water density for the problem
     %  setg - sets the gravitational acceleration for the problem
     %  setID - sets the integer ID of the body
     %  generateBodyStr - create a string for the body representing the body
-    %    section of a Nemoh.cal file
+    %    section of a NEMOH.cal file
     %
     % See also: nemoh.simulation, example_nemoh_cylinder.m
     %
@@ -45,7 +45,7 @@ classdef body < nemoh.base
         
         meshProgPath; % nemoh mesh program file path
         
-        inputDataDirectory; % directory where Nemoh mesh files will be created
+        inputDataDirectory; % directory where NEMOH mesh files will be created
         
         axiMeshR; % radial coordinates of axisymmetric body profile data
         axiMeshZ; % axial coordinates of axisymmetric body profile data
@@ -108,13 +108,13 @@ classdef body < nemoh.base
             %
             % Input
             %
-            %  inputdir - string containing the directory where the Nemoh
+            %  inputdir - string containing the directory where the NEMOH
             %    input files are to be generated and evaluated
             %
             % Additional optional arguments can be supplied using
             % parameter-value pairs. The available options are:
             %
-            % 'MeshProgPath' - string containng the path of the Nemoh 
+            % 'MeshProgPath' - string containng the path of the NEMOH 
             %   meshing program executeable. If not supplied, the default
             %   is an empty string, which means the meshing program must be
             %   on your computer's program path (it will be invoked by just
@@ -157,7 +157,7 @@ classdef body < nemoh.base
         end
         
         function setMeshProgPath (self, meshprogpath)
-            % set the path on which to call the Nemoh meshing program
+            % set the path on which to call the NEMOH meshing program
             %
             % Syntax
             %
@@ -165,7 +165,7 @@ classdef body < nemoh.base
             %
             % Description
             %
-            % sets the path on which to call the Nemoh meshing program. If
+            % sets the path on which to call the NEMOH meshing program. If
             % the meshing program is on your program path, this can just be
             % the program name (e.g. 'Mesh.exe' on windows and 'mesh' on
             % other platforms. This is the default if you do not set this
@@ -176,7 +176,7 @@ classdef body < nemoh.base
             %
             %  nb - nemoh.body object
             %
-            %  meshprogpath - string containing the full path to the Nemoh
+            %  meshprogpath - string containing the full path to the NEMOH
             %    meshing program executeable. 
             %
             %
@@ -253,15 +253,19 @@ classdef body < nemoh.base
             %
             % makeAxiSymmetricMesh initialises a 3D mesh of an axisymmetric
             % body described using a 2D profile in the (r,z) plane, defined
-            % using polar coordinates (r,theta,z). The 3D shape is the
-            % profile swept out when the profile is rotated around the z
-            % axis The shape is rotated ony 180 degrees as Nemoh is able to
-            % take advantage of the shape's symmetry.
+            % using cylindrical coordinates (r,theta,z). The 3D shape is
+            % the profile swept out when the profile is rotated around the
+            % z axis The shape is rotated only 180 degrees as NEMOH is able
+            % to take advantage of the shape's symmetry.
             %
-            % Once created, the mesh must be refined using the Nemoh
+            % Note that the profile must be created starting from the
+            % topmost point to ensure the faces point outward as required
+            % by NEMOH.
+            %
+            % Once created, the mesh must be refined using the NEMOH
             % meshing program. This is done by frst writing the basic mesh
             % description to disk using writeMesh, and then calling
-            % processMesh to run the Nemoh mesing program on the input
+            % processMesh to run the NEMOH mesing program on the input
             % files and load the results.
             %
             % Input
@@ -275,7 +279,7 @@ classdef body < nemoh.base
             %  ntheta - number of steps to rotate around the z axis
             %
             %  zCoG - vertical position of the centre of gravity of the
-            %    body.
+            %    body relative to the mean water level.
             %
             % Additional optional arguments may be supplied using
             % parameter-value pairs. The avaialable options are:
@@ -363,6 +367,229 @@ classdef body < nemoh.base
             
         end
         
+        
+        function makeCylinderMesh (self, radius, draft, height, varargin)
+            % create a course mesh of a cylinder
+            %
+            % Syntax
+            %
+            %
+            %
+            % Description
+            %
+            % makeCylinderMesh creates a course cylinder mesh for the body
+            % of a given radius. Being axisymmetric, only half the cylinder
+            % is meshed, and only those portions piercing or under the mean
+            % water surface.
+            %
+            % Input
+            %
+            %  radius - cylinder radius
+            %
+            %  draft - depth of base below mean water level (this is a
+            %    positive number, the absolute depth)
+            %
+            %  height - cylinder height, used to determine if cylinder is
+            %    surface piecing or not. Can be empty ([]) in which case
+            %    the cylinder is assumed to be surface piercing. If height
+            %    is not empty, and the optional VerticalCentreOfGravity
+            %    argument is not used (see below), the cylinder is assumed
+            %    to be of uniform density, and the vertical centre of mass
+            %    is set to the position corresponding to half the height of
+            %    the cylinder from its base at the given draft. If the
+            %    height is empty, the VerticalCentreOfGravity options must
+            %    be used.
+            %
+            % Additional optional arguments may be supplied using
+            % parameter-value pairs. The available options are:
+            %
+            % 'NTheta' - The cylinder is created by rotating an 'L' shape 
+            %   around the z axis. This option allows you to choose the
+            %   number of rotational increments around z axis to create the
+            %   (half) cylinder mesh. Default is 30 if not supplied.
+            %
+            % 'VerticalCentreOfGravity' - Vertical location of the
+            %   cylinder's centre of mass relative to the mean water
+            %   surface. You can alternatively specify the 'Height' option
+            %   described below. If neither option is supplied, the
+            %   vertical centre of mass is set to -draft/3.
+            %
+            % 'Verbose' - logical flag (true/false), if true some text
+            %   information about the mesh will be output to the command
+            %   line. Default is false.
+            %
+            % 'NPanelsTarget' - scalar target number of panels for the
+            %   refined mesh Default is 250.
+            %
+            % Output
+            %
+            %  none
+            %
+            %
+            % See Also: nemoh.body.makeAxiSymmetricMesh
+            %
+
+            options.NTheta = 30;
+            options.VerticalCentreOfGravity = [];
+            options.NPanelsTarget = 250;
+            options.Verbose = false;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            assert (draft > 0, 'draft must be greater than zero');
+
+            if isempty (height)
+                
+                self.checkNumericScalar (options.VerticalCentreOfGravity, true, 'VerticalCentreOfGravity');
+                
+                verticalCentreOfGravity = options.VerticalCentreOfGravity;
+            else
+                
+                assert (height > 0, 'height must be greater than zero');
+                
+                if isempty (options.VerticalCentreOfGravity)
+                    verticalCentreOfGravity = (height./2) - draft;
+                else
+                    self.checkNumericScalar (options.VerticalCentreOfGravity, true, 'VerticalCentreOfGravity');
+                     
+                    verticalCentreOfGravity = options.VerticalCentreOfGravity;
+                end
+            end
+            
+            if isempty (height)
+                zcyl = -draft;
+            elseif height > draft
+                zcyl = -draft;
+            else
+                zcyl = height;
+            end
+            
+            r = [radius,  radius,  0]; 
+            z = [0,       zcyl,    zcyl];
+
+            % define the body shape using a 2D profile rotated around the z axis
+            self.makeAxiSymmetricMesh ( r, z, options.NTheta, verticalCentreOfGravity, ...
+                            'NPanelsTarget', options.NPanelsTarget, ...
+                            'Verbose', options.Verbose );
+            
+        end
+
+        function makeSphereMesh (self, radius, draft, varargin)
+            % create a course mesh of a sphere
+            %
+            % Syntax
+            %
+            %
+            %
+            % Description
+            %
+            % makeSphereMesh creates a course sphere mesh for the body
+            % of a given radius. Being axisymmetric, only half the sphere
+            % is meshed, and only those portions piercing or under the mean
+            % water surface.
+            %
+            % Input
+            %
+            %  radius - sphere radius. If the optional
+            %    VerticalCentreOfGravity argument is not used (see below),
+            %    the sphere is assumed to be of uniform density, and the
+            %    vertical centre of mass is set to the position
+            %    corresponding to half the height of the sphere from its
+            %    base at the given draft.
+            %
+            %  draft - depth of base below mean water level (this is a
+            %    positive number, the absolute displacement of the mesh's
+            %    lowest point from the mean water level)
+            %
+            % Additional optional arguments may be supplied using
+            % parameter-value pairs. The available options are:
+            %
+            % 'NTheta' - The sphere is created by rotating a shape 
+            %   around the z axis. This option allows you to choose the
+            %   number of rotational increments around z axis to create the
+            %   (half) sphere mesh. Default is 30 if not supplied.
+            %
+            % 'VerticalCentreOfGravity' - Vertical location of the
+            %   cylinder's centre of mass relative to the mean water
+            %   surface. If not supplied it is set to the centre of the
+            %   sphere.
+            %
+            % 'NProfilePoints' - number of points with which to make the 2D
+            %   profile which is rotated to create the mesh. The more
+            %   points the closer to a circle. Default is 20.
+            %
+            % 'Verbose' - logical flag (true/false), if true some text
+            %   information about the mesh will be output to the command
+            %   line. Default is false.
+            %
+            % 'NPanelsTarget' - scalar target number of panels for the
+            %   refined mesh Default is 250.
+            %
+            % Output
+            %
+            %  none
+            %
+            %
+            % See Also: nemoh.body.makeAxiSymmetricMesh
+            %
+
+            options.NTheta = 30;
+            options.VerticalCentreOfGravity = [];
+            options.NProfilePoints = 20;
+            options.NPanelsTarget = 250;
+            options.Verbose = false;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.checkNumericScalar (draft, true, 'draft');
+            self.checkNumericScalar (radius, true, 'radius');
+            assert (draft > 0, 'draft must be greater than zero');
+            assert (radius > 0, 'radius must be greater than zero');
+            
+            if 2*radius > draft
+                % find angle where mean water height is on sphere
+                z = (draft - radius);
+
+                x = sqrt ( radius.^2  - z.^2 );
+
+                [ ~, theta, ~ ] = cart2sph (0, x, z);
+
+                theta = linspace ( -tau () ./ 4,  ...
+                                   theta, ...
+                                   options.NProfilePoints );
+            else
+                theta = linspace ( -tau () ./ 4,  ...
+                                   tau () / 4, ...
+                                   options.NProfilePoints );
+            end
+            
+            [ x, y, z ] = sph2cart (0, theta, radius);
+            
+            [ ~, r, z] = cart2pol (x, y, z);
+            
+            % need to change order to get normals pointing the right
+            % direction
+            r = fliplr (r);
+            z = fliplr (z);
+            
+            % shift the whole thing so top of mesh is at the mean water
+            % surface
+            z = z + radius - draft;
+            
+            if isempty (options.VerticalCentreOfGravity)
+                verticalCentreOfGravity = radius - draft;
+            else
+                self.checkNumericScalar (options.VerticalCentreOfGravity, true, 'VerticalCentreOfGravity');
+                verticalCentreOfGravity = options.VerticalCentreOfGravity;
+            end
+
+            % define the body shape using a 2D profile rotated around the z axis
+            self.makeAxiSymmetricMesh (r, z, options.NTheta, verticalCentreOfGravity, ...
+                            'NPanelsTarget', options.NPanelsTarget, ...
+                            'Verbose', options.Verbose );
+            
+        end
+
         function drawMesh (self, varargin)
             % plot the mesh for this body
             %
@@ -426,7 +653,7 @@ classdef body < nemoh.base
                     hold off
                 end
 
-                title('Mesh for Nemoh Body');
+                title('Mesh for NEMOH Body');
             
             else
                 error ('body %s mesh is not available for plotting', self.name);
@@ -456,14 +683,14 @@ classdef body < nemoh.base
         function meshInfo (self)
             % print some information about the nemoh mesh
             
-            fprintf('\n Characteristics of the mesh for Nemoh \n');
+            fprintf('\n Characteristics of the mesh for NEMOH \n');
             fprintf('\n --> Number of nodes : %g', self.nMeshNodes);
             fprintf('\n --> Number of panels : %g\n \n', self.nQuads);
             
         end
         
         function processMesh (self)
-            % runs the Nemoh 'mesh' program on the mesh and loads results
+            % runs the NEMOH 'mesh' program on the mesh and loads results
             %
             % Syntax
             %
@@ -604,7 +831,7 @@ classdef body < nemoh.base
             self.inertia(2,2) = self.mass;
             self.inertia(3,3) = self.mass;
             
-            % move the mesh file to the top level input directory for Nemoh
+            % move the mesh file to the top level input directory for NEMOH
             movefile (self.meshFilePath, self.inputDataDirectory);
             
             self.meshProcessed = true;
@@ -613,17 +840,17 @@ classdef body < nemoh.base
         end
         
         function str = generateBodyStr (self)
-            % generates str describing body for Nemoh.cal input file
+            % generates str describing body for NEMOH.cal input file
             %
             % Description
             %
             % generateBodyStr generates a string for this body which
-            % represetents a section of a Nemoh input file. The Nemoh.cal
+            % represetents a section of a NEMOH input file. The NEMOH.cal
             % input file has a section describing the bodies to be
             % analysed, this string is the description of this body for
             % that section. generateBodyStr is intended to be used by the
-            % writeNemoh method of the nemoh.simulation class which
-            % generates the full Nemoh input file.
+            % writeNEMOH method of the nemoh.simulation class which
+            % generates the full NEMOH input file.
             %
             % Syntax
             %
@@ -632,7 +859,7 @@ classdef body < nemoh.base
             % Output
             %
             %  str - string representing this body as it would be described
-            %    in the bodies section of a Nemoh.cal input file
+            %    in the bodies section of a NEMOH.cal input file
             %
             %
             
@@ -681,7 +908,7 @@ classdef body < nemoh.base
             % parameter-value pairs. The avaialable options are:
             %
             % 'MeshFileName' - string containing the name of the input mesh
-            %   file for Nemoh. If not supplied a file name is generated
+            %   file for NEMOH. If not supplied a file name is generated
             %   from the body's id property, i.e. body_<id>.dat
             %
             %
@@ -745,7 +972,7 @@ classdef body < nemoh.base
             fprintf (fid, '%d\n%s\n', 1, '.');
             
             % mesh course input file, not the same as .dat mesh file for
-            % Nemoh
+            % NEMOH
             fid = fopen(self.meshFilePath(1:end-4), 'w');
             % ensure file is closed when done or on failure
             CC = onCleanup (@() fclose (fid)); 
