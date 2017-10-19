@@ -109,11 +109,14 @@ str = mbsys.generateMBDynInputStr ()
 
 mbsys.setStructuralNodeSize (L/10, L/10, L/10);
 
-mbsys.draw ('Mode','wireghost', 'References', true, 'ReferenceScale', 0.5)
+mbsys.draw ( 'Mode', 'wireghost', ...
+             'References', true, ...
+             'ReferenceScale', 0.5, ...
+             'AxLims', [-2, 2; -2, 2; -2, 2;] );
 
-mbsys.draw ('Mode','wireghost', 'AxLims', [-2, 2; -2, 2; -2, 2;])
+%% Generate input file and run MBDyn
 
-%%
+% generate the input file for MBDyn
 inputfile = mbsys.generateMBDynInputFile ('Test_mbdyn_pre.mbd');
 
 % create the mbdyn input file
@@ -134,7 +137,7 @@ mbdynpost.plotNodeTrajectories ();
 %% Plot a particular time step of interest
 
 mbdynpost.drawStep (500, ...
-    'AxLims', [-1.1, 1.1; -0.5, 0.5;  -2, 1]);
+    'AxLims', [-2, 2; -0.5, 0.5;  -2, 1]);
 
 %% Animate
 
@@ -143,5 +146,7 @@ mbdynpost.animate ( 'PlotTrajectories', true, ...
                     'Skip', 20, ...
                     'DrawMode', 'solid', ...
                     'Light', true, ...
-                    'AxLims', [-3.1, 3.1; -1.5, 1.5;  -3, 3], ...
+                    'AxLims', [-2, 2; -0.5, 0.5;  -2, 1], ...
                     'VideoFile', 'double_pendulum.avi');
+                
+                
