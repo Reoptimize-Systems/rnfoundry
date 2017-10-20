@@ -83,6 +83,7 @@ is Dr. Richard Crozier.
    self
    installation
    getting_started
+   required_knowledge
    nemoh
 
 

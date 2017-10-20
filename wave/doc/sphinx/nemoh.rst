@@ -39,17 +39,10 @@ simulate a simple cylinder using the NEMOH preprocessor.
 This script can be broken down as follows. The fist section simply does
 some Matlab magic to locate the directory containing the example file,
 and create a subdirectory in that directory in which we will generate
-the NEMOH input files from the Matlab description of the problem::
+the NEMOH input files from the Matlab description of the problem
 
-    % example_nemoh_cylinder.m
-    %
-    % Example file for nemoh package generating a basic cylinder
-    %
-    %
-
-    dir = fileparts ( which ('example_nemoh_cylinder') );
-
-    inputdir = fullfile (dir, 'Cylinder');
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :end-before: %% create the Nemoh body
 
 The next part creates the body for for which the hydrodynamics will be
 solved. A simulation can be made up of multiple bodies, but here we will
@@ -59,32 +52,19 @@ The method ``makeAxiSymmetricMesh`` is provided to accomplish this. See
 the help for ``makeAxiSymmetricMesh`` for more details on how to specify
 a mesh in this way.
 
-Note also the use ``nemoh`` package namespace in the body creation command::
+Note also the use ``nemoh`` package namespace in the body creation command.
 
-    %% create the Nemoh body
-
-    % create a body object which will be the cylinder
-    cylinder = nemoh.body (inputdir);
-
-    n = 3; % 3 points are required for describing the shape
-    raidus = 5; % Radius of the cylinder
-    draft = -10; % Height of the submerged part
-    r = [raidus  raidus  0];
-    z = [0       draft   draft];
-    ntheta = 30;
-    verticalCentreOfGravity = -2;
-
-    % define the body shape using a 3D profile rotated around the z axis
-    cylinder.makeAxiSymmetricMesh (r, z, ntheta, verticalCentreOfGravity);
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% create the Nemoh body
+   :end-before: %% draw the course body mesh (will be refined later)
 
 ``makeAxiSymmetricMesh`` creates only a course representation of the mesh,
 which must be refined by the Nemoh meshing program. However, at this point
-we can draw the course mesh by calling the ``drawMesh`` method.::
+we can draw the course mesh by calling the ``drawMesh`` method.
 
-    %% draw the course body mesh (will be refined later)
-
-    cylinder.drawMesh ();
-    axis equal;
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% draw the course body mesh (will be refined later)
+   :end-before: %% Create the nemoh simulation
 
 The mesh is shown in :numref:`ex_cylinder_course_mesh`:
 
@@ -96,14 +76,11 @@ to reduce the computation time by calculating for only half the axisymmetric
 mesh.
 
 The next section creates a NEMOH simulation preprocessor object and puts
-the body into it at the same time.::
+the body into it at the same time.
 
-    %% Create the nemoh simulation
-
-    % here we insert the cylinder body at creation of the simulation, but could
-    % also have done this later by calling addBody
-    sim = nemoh.simulation ( inputdir, ...
-                             'Bodies', cylinder );
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% Create the nemoh simulation
+   :end-before: %% write mesh files
 
 Bodies don't have to added at this point, they can be also be added by calling
 the ``nemoh.simulation.addBody`` method later, the 'Bodies' argument is optional.
@@ -112,91 +89,78 @@ all NEMOH files will be generated.
 
 The nest step writes mesh files for each of the bodies in the simulation (just
 the cylinder in this case). This method calls the ``writeMesh`` method for each
-body in the simulation.::
+body in the simulation.
 
-    %% write mesh files
-
-    % write mesh file for all bodies (just one in this case)
-    sim.writeMeshes ();
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% write mesh files
+   :end-before: %% process mesh files
 
 What is actually done by writeMesh depends on the type of mesh the body has.
 For the axisymmetric mesh type it writes the course mesh description in a file
 format understood by the NEMOH meshing program. The mesh program must be run
 on the course mesh input file to generate the mesh file suitable for input to
-the other NEMOH programs. To do this step, the ``processMeshes`` method is called.::
+the other NEMOH programs. To do this step, the ``processMeshes`` method is called.
 
-    %% process mesh files
-
-    % process mesh files for all bodies to make ready for Nemoh
-    sim.processMeshes ();
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% process mesh files
+   :end-before: %% Draw all meshes in one figure
 
 ``processMeshes`` calls the ``processMesh`` method for every body in the
 simulation. ``processMesh`` does any processing required for the body mesh to
 create the appropriate input files for the other NEMOH programs. What this
 processing actually is (if any) depends on the mesh type.
 
-With the mesh files generated, we can draw the meshes again:::
+With the mesh files generated, we can draw the meshes again:
 
-    %% Draw all meshes in one figure
-
-    sim.drawMesh ();
-    axis equal;
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% Draw all meshes in one figure
+   :end-before: %% Generate the Nemoh input file
 
 The simulation ``drawMesh`` object draws the meshes for all bodies in the
 simulation in one figure. The now refined cylinder mesh is shown in
-:numref:`ex_cylinder_refined_mesh`:
+:numref:`ex_cylinder_refined_mesh`. The blue arrows in the figure denote
+the direction of the mesh face normals. NEMOH requires that these point
+outward into the fluid.
 
 .. _ex_cylinder_refined_mesh:
 .. figure:: example_nemoh_cylinder_fig_2_refined_mesh.png
 
 We can now proceed to generate the Nemoh input files. It is at this point that
-the simulation parameters are provided.::
+the simulation parameters are provided.
 
-    %% Generate the Nemoh input file
-
-    % generate the file for 10 frequencies in the range defined by waves with
-    % periods from 10s to 3s.
-    T = [10, 3];
-
-    sim.writeNemoh ( 'NWaveFreqs', 10, ...
-                     'MinMaxWaveFreqs', 2 * pi() *  (1./T) );
-
-    % The above code demonstrates the use of optional arguments to writeNemoh
-    % to set the desired wave frequencies. If the wave frencies were not
-    % specified a default value would be used. These are not the only possible
-    % options for writeNemoh. The following optional arguments are available,
-    % and the defaults used if they are not supplied are also shown:
-    %
-    % DoIRFCalculation = true;
-    % IRFTimeStep = 0.1;
-    % IRFDuration = 10;
-    % NWaveFreqs = 1;
-    % MinMaxWaveFreqs = 0.8;
-    % NDirectionAngles = 0;
-    % MinMaxDirectionAngles = [0, 180];
-    % FreeSurfacePoints = [0, 50];
-    % DomainSize = [400, 400];
-    % WaterDepth = 0;
-    % WaveMeasurementPoint = [0, 0];
-    %
-    % For more information on these arguments, see the help for the writeNemoh
-    % method.
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% Generate the Nemoh input file
+   :end-before: %% Run Nemoh on the input files
 
 As stated in the comments in the code section above, there are several optional
-arguments which can be provided to control the calculation and details about
-can be their use can be found in the help test for the
-``nemoh.simulation/writeNemoh`` method.
+arguments which can be provided to control the calculation, and details about
+their use can be found in the help text for the ``nemoh.simulation/writeNemoh``
+method. This help is shown below:
 
-The final step is to run the NEMOH on the input files::
+Output of ``help nemoh.simulation/writeNemoh``
 
-    %% Run Nemoh on the input files
+.. literalinclude:: /generated/help.nemoh.simulation.writeNemoh
+   :language: none
 
-    sim.run ()
+The final step is to run the NEMOH on the input files
 
-The ``run`` method first writes the small input.txt and ID.dat files required
+.. literalinclude:: /examples/example_nemoh_cylinder.m
+   :start-at: %% Run Nemoh on the input files
+
+The ``run`` method first writes the small `input.txt` and `ID.dat` files required
 by NEMOH, then runs the preProcessor, solver and postProcessor on the
 generated input files. The hydrodynamic data will have been output to the usual
-files produced by NEMOH.
+files produced by NEMOH. Note that the ``run`` method is capable of accepting
+additional optional arguments not used here in order to control the solver type
+(achieved by setting variables in the `input.txt` file). Again, details of the
+available options may be found in the help for the ``nemoh.simulation/run``
+method which is shown below.
+
+Output of ``help nemoh.simulation/run``
+
+.. literalinclude:: /generated/help.nemoh.simulation.writeNemoh
+   :language: none
+
 
 The NEMOH Executables Location
 ==============================
