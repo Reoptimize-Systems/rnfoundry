@@ -41,6 +41,8 @@ rst_prolog ="""
 .. highlight:: matlab
 .. |TNShort| replace:: EWST
 .. |TNFull| replace:: Edinburgh Wave Simulation Toolbox
+.. role:: mcode(code)
+   :language: matlab
 """
 
 # Add any paths that contain templates here, relative to this directory.
