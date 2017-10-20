@@ -3,7 +3,8 @@ Getting Started
 
 As sated previously, |TNshort| is is based in Matlab code [#f1]_, which can also run in Octave.
 |TNshort| requires the free MBDyn multibody modelling package to describe and simulate the
-motion of the system.
+motion of the system. To understand what background knowledge is required to use the toolbox
+see the Section :ref:`required-knowledge`.
 
 
 
