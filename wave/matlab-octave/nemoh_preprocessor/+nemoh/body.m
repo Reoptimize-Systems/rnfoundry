@@ -83,17 +83,20 @@ classdef body < nemoh.base
         meshProcessed; % flag showing whether the current body mesh is ready for writing or needs processing
         
         meshFileName; % mesh filename (without full path)
+        meshInputDirectory % directory mesh input files will be written to
         meshDirectory; % directory mesh will be written to 
         meshFilePath; % full path to mesh ('.dat') file
         
         id; % integer body id 
         name; % string body name, usually generated from id
+        uniqueName; % unique name derived from name and id
         meshType; % string indicating the type of mesh specification used for the body (e.g. 'axi')
         
     end
     
     properties (GetAccess = private, SetAccess = private)
        meshPlottable; 
+       sanitizedName; % name, but altered if necessary to be valid file name
     end
     
     methods
@@ -123,9 +126,17 @@ classdef body < nemoh.base
             %   added to a nemoh.simulation object, the system object calls
             %   setMeshProgPath to match the path set in the system object.
             %
+            % 'Name' - string containing a user-defined name for the body.
+            %   Mesh files etc. will be given names generated from this
+            %   string. The name is stored in the "name" property, and the
+            %   name generated from this is stored in the "uniqueName"
+            %   property. The unique name is generated using the id for the
+            %   body, and is changed when the id is changed.
+            %
             %
             
             options.MeshProgPath = '';
+            options.Name = 'body';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -137,6 +148,10 @@ classdef body < nemoh.base
                 end
             end
             
+            if isempty (options.Name) || ~ischar (options.Name)
+                error ('Name must be a string of length greater than 1')
+            end
+
             if ~exist (inputdir, 'file')
                 [status, msg] = mkdir (options.MeshProgPath);
                 if status == false
@@ -151,8 +166,30 @@ classdef body < nemoh.base
             
             self.clearMeshAndForceData ();
 
-            self.id = 1;
-            self.name = sprintf('body_id_%d', self.id);
+            self.id = 0;
+            self.name = options.Name;
+            
+            % sanitize the name
+            
+            % replace any whitespace with _
+            self.sanitizedName = regexprep (self.name, '\s+', '_');
+            
+            % replace filesep char with _
+            self.sanitizedName = strrep (self.sanitizedName, filesep (), '_');
+            
+            % Replace non-word character with its HEXADECIMAL equivalent
+            badchars = unique ( self.sanitizedName( regexp (self.sanitizedName,'[^A-Za-z_0-9]') ) );
+            for ind = 1:numel (badchars)
+                if badchars(ind) <= intmax('uint8')
+                    width = 2;
+                else
+                    width = 4;
+                end
+                replace = ['0x', dec2hex(badchars(ind), width)];
+                self.sanitizedName = strrep (self.sanitizedName, badchars(ind), replace);
+            end
+            
+            self.uniqueName = sprintf('%s_id_%d', self.sanitizedName, self.id);
             
         end
         
@@ -233,11 +270,15 @@ classdef body < nemoh.base
             %
             %
             
-            self.checkNumericScalar (id, true, 'id');
+            self.checkScalarInteger (id, true, 'id');
+            
+            if id < 0
+                error ('id must be zero, or a positive integer, not negative');
+            end
             
             self.id = id;
             
-            self.name = sprintf('body_id_%d', self.id);
+            self.uniqueName = sprintf('%s_id_%d', self.sanitizedName, self.id);
             
         end
         
@@ -590,7 +631,7 @@ classdef body < nemoh.base
             
         end
 
-        function drawMesh (self, varargin)
+        function [hax, hfig] = drawMesh (self, varargin)
             % plot the mesh for this body
             %
             % Syntax
@@ -624,17 +665,27 @@ classdef body < nemoh.base
             
             options = parse_pv_pairs (options, varargin);
             
+            setequal = true;
+            
             if self.meshPlottable == true
                 
                 if isempty (options.Axes)
-                    figure;
-                    axes;
+                    hfig = figure;
+                    hax = axes ();
+                    view (3);
                 else
                     % make desired axes current (no way to set axes for plot
-                    % using trimes directly)
+                    % using trimesh directly)
                     axes (options.Axes);
+                    hax = options.Axes;
+                    hfig = get (hax, 'Parent');
+                    % leave the axis as it is, don't mess with user's
+                    % settings
+                    setequal = false;
                 end
-
+                
+                hold on;
+                
                 trimesh ( self.triMesh, ...
                           self.meshX, ...
                           self.meshY, ...
@@ -643,20 +694,27 @@ classdef body < nemoh.base
 
                 % plot forces if requested, and available
                 if options.PlotForces && ~isempty (self.hydrostaticForceX)
-                    hold on;
+                    
                     quiver3 ( self.hydrostaticX, ...
                               self.hydrostaticY, ...
                               self.hydrostaticZ, ...
                               self.hydrostaticForceX, ...
                               self.hydrostaticForceY, ...
-                              self.hydrostaticForceZ );
-                    hold off
+                              self.hydrostaticForceZ, ...
+                              'Color', [0,0.447,0.741] );
+                    
                 end
-
+                
+                hold off
+                
                 title('Mesh for NEMOH Body');
+                
+                if setequal
+                    axis equal;
+                end
             
             else
-                error ('body %s mesh is not available for plotting', self.name);
+                error ('body %s mesh is not available for plotting', self.uniqueName);
             end
             
         end
@@ -664,7 +722,7 @@ classdef body < nemoh.base
         function writeMesh (self, varargin)
             % write the mesh description to disk (if necessary)
             
-            options.MeshFileName = sprintf ('%s.dat', self.name);
+            options.MeshFileName = sprintf ('%s.dat', self.uniqueName);
             
             options = parse_pv_pairs (options, varargin);
             
@@ -689,7 +747,7 @@ classdef body < nemoh.base
             
         end
         
-        function processMesh (self)
+        function processMesh (self, varargin)
             % runs the NEMOH 'mesh' program on the mesh and loads results
             %
             % Syntax
@@ -700,24 +758,74 @@ classdef body < nemoh.base
             %
             %  nb - nemoh.body object
             %
+            % Additional optional arguments are provided as parameter-value
+            % pairs. The avaialable options are:
             %
+            % 'LoadMesh' - logical (true/false) value. If true, the
+            %   existing mesh data is cleared and the processed mesh is
+            %   loaded from disk after processing the mesh. Default is
+            %   false.
+            %
+            % 'LoadMeshData' - logical (true/false) value. If true, the
+            %   calulated body proerties are loaded from disk after
+            %   processing the mesh. The data loaded is the displacement,
+            %   buoyancy center, hydrostatic stiffness, an estimate of the
+            %   masses and the inertia matrix. These results are then
+            %   accessible via the body properties kH, hydrostaticForceX,
+            %   hydrostaticForceY, hydrostaticForceZ, xB, yB, zB, mass, WPA
+            %   and inertia. Default is false.
+            %
+            % See also: nemoh.body.loadProcessedMesh,
+            %           nemoh.body.loadProcessedMeshData
+            %
+            
+            options.LoadMesh = true;
+            options.LoadMeshData = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.checkLogicalScalar (options.LoadMesh, true, 'LoadMesh');
+            self.checkLogicalScalar (options.LoadMeshData, true, 'LoadMeshData');
             
             if self.meshProcessed
                 warning ('Processing mesh for body with meshProcessed == true');
             end
             
-            logfile = fullfile (self.meshDirectory, sprintf ('mesh_%s.log', self.name));
+            logfile = fullfile (self.meshDirectory, sprintf ('mesh_%s.log', self.uniqueName));
             
             % change directory to directory above mesh directory and Nemo
             % mesh programs can't take a file input and just looks for
             % field in current directory (FFS!). onCleanup is used to
             % restore the current directory when we're done
             CC = onCleanup (@() cd (pwd ()));
-            cd (self.inputDataDirectory);
+            cd (self.meshInputDirectory);
             
-            system(sprintf ('"%s" > "%s"', self.meshProgPath, logfile));
+            status = system (sprintf ('"%s" > "%s"', self.meshProgPath, logfile));   
+            
+            if status ~= 0
+                error ('solving failed with error code %d', status);
+            end
 
-            % clear the mesh and load from file
+            % move the mesh file to the top level input directory for NEMOH
+            movefile (self.meshFilePath, self.inputDataDirectory);
+            
+            self.meshProcessed = true;
+            
+            if options.LoadMesh
+                self.loadProcessedMesh ();
+            end
+            
+            if options.LoadMeshData
+                self.loadProcessedMeshData ();
+            end
+
+        end
+        
+        function loadProcessedMesh (self)
+            % clear existing mesh and load mesh from generated .tec file
+            %
+            % 
+            
             self.meshX = [];
             self.meshY = [];
             self.meshZ = [];
@@ -734,7 +842,7 @@ classdef body < nemoh.base
             self.hydrostaticZ = [];
             
             % Mesh visualisation file
-            fid = fopen (fullfile (self.meshDirectory, sprintf ('%s.tec', self.name)), 'r');
+            fid = fopen (fullfile (self.meshDirectory, sprintf ('%s.tec', self.uniqueName)), 'r');
             
             line = fscanf (fid, '%s', 2); % what does this line do?
             
@@ -786,56 +894,65 @@ classdef body < nemoh.base
                 self.hydrostaticForceX(i) = line(4);
                 self.hydrostaticForceY(i) = line(5);
                 self.hydrostaticForceZ(i) = line(6);
-            end   
-            
-            status = fclose(fid);
-            
-            self.kH = zeros(6,6);
-            fid = fopen (fullfile (self.meshDirectory, 'KH.dat'), 'r');
-            for i = 1:6
-                line = fscanf (fid,'%g %g',6);
-                self.kH(i,:) = line;
-            end             
-            status = fclose (fid);
-            
-            self.inertia = zeros (6,6);
-            fid = fopen (fullfile (self.meshDirectory, 'Hydrostatics.dat'),'r');
-            line = fscanf (fid, '%s', 2);
-            self.xB = fscanf (fid, '%f', 1);
-            
-            line = fgetl (fid);
-            line = fscanf (fid,'%s',2);
-            self.yB = fscanf (fid,'%f',1);
-            
-            line = fgetl (fid);
-            line = fscanf (fid,'%s',2);
-            self.zB = fscanf (fid,'%f',1);
-            
-            line = fgetl (fid);
-            line = fscanf (fid,'%s',2);
-            self.mass = fscanf (fid,'%f',1)*self.rho;
-            
-            line = fgetl (fid);
-            line = fscanf (fid,'%s',2);
-            self.WPA = fscanf (fid,'%f',1);
-            
-            status = fclose (fid);
-            
-            fid = fopen (fullfile (self.meshDirectory, 'Inertia_hull.dat'),'r');
-            for i = 1:3
-                line = fscanf (fid,'%g %g',3);
-                self.inertia(i+3,4:6) = line;
             end
             
-            self.inertia(1,1) = self.mass;
-            self.inertia(2,2) = self.mass;
-            self.inertia(3,3) = self.mass;
-            
-            % move the mesh file to the top level input directory for NEMOH
-            movefile (self.meshFilePath, self.inputDataDirectory);
-            
-            self.meshProcessed = true;
             self.meshPlottable = true;
+            
+        end
+        
+        function loadProcessedMeshData (self)
+            
+            if self.meshProcessed
+                
+                self.kH = zeros(6,6);
+                fid = fopen (fullfile (self.meshDirectory, 'KH.dat'), 'r');
+                CC = onCleanup (@() fclose (fid));
+                
+                for i = 1:6
+                    line = fscanf (fid,'%g %g',6);
+                    self.kH(i,:) = line;
+                end
+
+                % load hydrostatics data
+                fid = fopen (fullfile (self.meshDirectory, 'Hydrostatics.dat'),'r');
+                CC = onCleanup (@() fclose (fid));
+                
+                line = fscanf (fid, '%s', 2);
+                self.xB = fscanf (fid, '%f', 1);
+
+                line = fgetl (fid);
+                line = fscanf (fid,'%s',2);
+                self.yB = fscanf (fid,'%f',1);
+
+                line = fgetl (fid);
+                line = fscanf (fid,'%s',2);
+                self.zB = fscanf (fid,'%f',1);
+
+                line = fgetl (fid);
+                line = fscanf (fid,'%s',2);
+                self.mass = fscanf (fid,'%f',1)*self.rho;
+
+                line = fgetl (fid);
+                line = fscanf (fid,'%s',2);
+                self.WPA = fscanf (fid,'%f',1);
+
+                % laod Inertia data
+                self.inertia = zeros (6,6);
+                fid = fopen (fullfile (self.meshDirectory, 'Inertia_hull.dat'),'r');
+                CC = onCleanup (@() fclose (fid));
+                
+                for i = 1:3
+                    line = fscanf (fid,'%g %g',3);
+                    self.inertia(i+3,4:6) = line;
+                end
+
+                self.inertia(1,1) = self.mass;
+                self.inertia(2,2) = self.mass;
+                self.inertia(3,3) = self.mass;
+            
+            else
+                error ('Mesh has not yet been processed, results not avaialable')
+            end
             
         end
         
@@ -887,6 +1004,25 @@ classdef body < nemoh.base
     
     methods (Access = private)
         
+        function setupMeshDirectories (self, varargin)
+            % initialise the mesh directories
+            
+            options.MeshFileName = sprintf ('%s.dat', self.uniqueName);
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.meshFileName = options.MeshFileName;
+            self.meshInputDirectory = fullfile (self.inputDataDirectory, sprintf ('mesh_input_for_%s', self.uniqueName));
+            self.meshDirectory = fullfile (self.meshInputDirectory, 'mesh');
+            self.meshFilePath = fullfile (self.meshDirectory, self.meshFileName );
+            
+            mkdir (self.inputDataDirectory);
+            mkdir (self.meshInputDirectory);
+            mkdir (self.meshDirectory);
+%             mkdir (fullfile (self.inputDataDirectory, 'results'));
+            
+        end
+        
         function writeAxiMesh (self, varargin)
             % writes nemoh mesh input files for an axisymmetric body
             %
@@ -913,20 +1049,14 @@ classdef body < nemoh.base
             %
             %
             
-            options.MeshFileName = sprintf ('%s.dat', self.name);
+            options.MeshFileName = sprintf ('%s.dat', self.uniqueName);
             
             options = parse_pv_pairs (options, varargin);
             
-            self.meshFileName = options.MeshFileName;
-            self.meshDirectory = fullfile (self.inputDataDirectory, 'mesh');
-            self.meshFilePath = fullfile (self.meshDirectory, self.meshFileName );
-            
-            mkdir (self.inputDataDirectory);
-            mkdir (self.meshDirectory);
-            mkdir (fullfile (self.inputDataDirectory, 'results'));
+            self.setupMeshDirectories ('MeshFileName', options.MeshFileName);
             
             % Create mesh calculation files (input to mesh program)
-            fid = fopen(fullfile (self.inputDataDirectory, 'Mesh.cal'), 'w');
+            fid = fopen(fullfile (self.meshInputDirectory, 'Mesh.cal'), 'w');
             % ensure file is closed when done or on failure
             CC = onCleanup (@() fclose (fid));
             
@@ -965,14 +1095,14 @@ classdef body < nemoh.base
             % the codes are run. Second line is a string of characters. It
             % is the name of the working folder. First line is the length
             % of this string.
-            fid = fopen (fullfile (self.inputDataDirectory, 'ID.dat'), 'w');
+            fid = fopen (fullfile (self.meshInputDirectory, 'ID.dat'), 'w');
             % ensure file is closed when done or on failure
             CC = onCleanup (@() fclose (fid));
             
             fprintf (fid, '%d\n%s\n', 1, '.');
             
-            % mesh course input file, not the same as .dat mesh file for
-            % NEMOH
+            % mesh course input file, for meshing program, not the same as
+            % .dat actual mesh file for NEMOH
             fid = fopen(self.meshFilePath(1:end-4), 'w');
             % ensure file is closed when done or on failure
             CC = onCleanup (@() fclose (fid)); 
