@@ -33,6 +33,7 @@ classdef simulation < nemoh.base
         postProcProgPath; % nemoh postProc program file path
         
         inputDataDirectory; % directory where Nemoh input files will be created
+        meshDirectory; % directory where some mesh related files for NEMO are found
 
         rho; % density of fluid (kg/m^3)
         g; % accleration due to gravity (m/s^2)
@@ -89,8 +90,10 @@ classdef simulation < nemoh.base
             
             if ispc
                 prognames = {'Mesh.exe', 'preProc.exe', 'solver.exe', 'postProc.exe'};
+                meshdir = 'Mesh';
             else
                 prognames = {'mesh', 'preProc', 'solver', 'postProc'};
+                meshdir = 'mesh';
             end
             
             if ~isempty (options.InstallDir)
@@ -103,11 +106,26 @@ classdef simulation < nemoh.base
                 end
             end
             
+            self.checkNumericScalar (options.rho, true, 'rho');
+            self.checkNumericScalar (options.g, true, 'g');
+            
+            if ~exist (inputdir, 'dir')
+                
+                [status, msg] = mkdir (inputdir);
+                
+                if status == false
+                    error ('inputdir:\n%s\ndoes not exist, and an attempt to create the directory failed with the following error:\n%s', ...
+                        msg);
+                end
+                
+            end
+            
             self.meshProgPath = fullfile (options.InstallDir, prognames{1});
             self.preProcProgPath = fullfile (options.InstallDir, prognames{2});
             self.solverProgPath = fullfile (options.InstallDir, prognames{3});
             self.postProcProgPath = fullfile (options.InstallDir, prognames{4});
             self.inputDataDirectory = inputdir;
+            self.meshDirectory = fullfile (self.inputDataDirectory, meshdir);
             self.rho = options.rho;
             self.g = options.g;
             
@@ -146,16 +164,54 @@ classdef simulation < nemoh.base
             % Additional optional arguments may be supplied as
             % parameter-value pairs. The available options are:
             %
+            % 'Solver' - integer or string. Used to select the solver for
+            %   the problem, the following values are possible:
+            %
+            %   0 or 'direct gauss' or 'directgauss'
+            %   1 or 'GMRES'
+            %   2 or 'GMRES-FHM' or 'GMRES with FHM'
+            %
+            %   The string forms are case-insensitive (e.g. 'gmres' works
+            %   just as well as 'GMRES'.
+            %
+            % 'SavePotential' - logical (true/false) flag indicating whther
+            %   the potential should be saved for visualisation.
+            %
+            % 'GMRESRestart' - scalar integer. Restart criteria for the
+            %   gmres solver types. Ignored for other solvers. Default is
+            %   20.
+            %
+            % 'GMRESTol' - scalar value. Tolerance for the gmres solver
+            %   types. Ignored for other solvers. Default is 5e-7.
+            %
+            % 'GMRESMaxIterations' - scalar integer. Maximum number of
+            %   iterations allowed for the gmres solver types. Ignored for
+            %   other solvers. Default is 100.
+            %
             % 'Verbose' - logical (true/false) flag determning whether to
             %   display some text on the command line informing on the
             %   progress of the simulation.
             %
+            %
+            % See also: nemoh.simulation.writeNemoh
+            %
             
             options.Verbose = false;
+            options.Solver = 0;
+            options.GMRESRestart = 20;
+            options.GMRESTol = 5e-7;
+            options.GMRESMaxIterations = 100;
+            options.SavePotential = true;
             
             options = parse_pv_pairs (options, varargin);
+
+            self.checkLogicalScalar (options.Verbose, true, 'Verbose');
+            self.checkLogicalScalar (options.SavePotential, true, 'SavePotential');
             
             if self.simReady
+                
+                % make the results directory if it does not exist
+%                 mkdir ( fullfile (self.inputDataDirectory, 'Results'));
                 
                 CC = onCleanup (@() cd (pwd));
                 cd (self.inputDataDirectory);
@@ -172,21 +228,78 @@ classdef simulation < nemoh.base
                 fid = fopen ('input.txt', 'w');
                 CC = onCleanup (@() fclose (fid));
                 
-                fprintf (fid, ' \n 0 ');
+                fprintf (fid, '--- Calculation parameters ------------------------------------------------------------------------------------\n');
+                
+                if ischar (options.Solver)
+                    % change to lower case
+                    options.Solver = lower (options.Solver);
+                elseif self.checkScalarInteger (options.Solver, false) ~= true
+                    error ('Solver must be a string or scalar integer');
+                end
+                
+                switch options.Solver
+                    
+                    case {0, 'direct gauss', 'directgauss'}
+                        
+                        fprintf (fid, '0\t! direct gauss solver\n');
+                        
+                    case {1, 'GMRES', 'gmres'}
+                        
+                        fprintf (fid, '1\t! GMRES solver\n');
+                        
+                        self.checkNumericScalar (options.GMRESRestart, true, 'GMRESRestart');
+                        self.checkNumericScalar (options.GMRESTol, true, 'GMRESTol');
+                        self.checkNumericScalar (options.GMRESMaxIterations, true, 'GMRESMaxIterations');
+                        
+                        fprintf (fid, '%d\t! IRES, Restart parameter for GMRES\n', options.GMRESRestart);
+                        fprintf (fid, '%s\t! TOL_GMRES, Stopping criterion for GMRES\n', self.formatNumber (options.GMRESTol));
+                        fprintf (fid, '%d\t! MAXIT, Maximum iterations for GMRES\n', options.GMRESMaxIterations);
+                    
+                    case {2, 'gmres-fhm', 'gmres with fhm'}
+                        
+                        fprintf (fid, '2    ! GMRES with FMM acceleration\n');
+                        
+                        self.checkNumericScalar (options.GMRESRestart, true, 'GMRESRestart');
+                        self.checkNumericScalar (options.GMRESTol, true, 'GMRESTol');
+                        self.checkNumericScalar (options.GMRESMaxIterations, true, 'GMRESMaxIterations');
+                        
+                        fprintf (fid, '%d\t! IRES, Restart parameter for GMRES\n', options.GMRESRestart);
+                        fprintf (fid, '%s\t! TOL_GMRES, Stopping criterion for GMRES\n', self.formatNumber (options.GMRESTol));
+                        fprintf (fid, '%d\t! MAXIT, Maximum iterations for GMRES\n', options.GMRESMaxIterations);
+                        
+                    otherwise
+                        error ('Unrecognised Solver option');
+                        
+                end
+                
+                fprintf (fid, '%s\t! Sav_potential, Save potential for visualization \n', ...
+                    self.formatInteger ( double (options.SavePotential)));
                 
                 clear CC;
                 
                 if options.Verbose, fprintf('------ Starting NEMOH pre-processor----------- \n'); end
                 
-                system(sprintf ('"%s"', self.preProcProgPath));
+                status = system (sprintf ('"%s"', self.preProcProgPath));
+                
+                if status ~= 0
+                    error ('pre-processing failed with error code %d', status);
+                end
                 
                 if options.Verbose, fprintf('------ Solving BVPs ------------- \n'); end
                 
-                system(sprintf ('"%s"', self.solverProgPath));
+                status = system (sprintf ('"%s"', self.solverProgPath));
+                
+                if status ~= 0
+                    error ('solving failed with error code %d', status);
+                end
                 
                 if options.Verbose, fprintf('------ Postprocessing results --- \n'); end
                 
-                system(sprintf ('"%s"', self.postProcProgPath));
+                status = system (sprintf ('"%s"', self.postProcProgPath));
+                
+                if status ~= 0
+                    error ('post-processing failed with error code %d', status);
+                end
                 
                 if options.Verbose, fprintf('------ Analysis complete --- \n'); end
                 
@@ -230,7 +343,8 @@ classdef simulation < nemoh.base
             
             self.bodies = [self.bodies, body];
             
-            self.bodies(end).setID (numel (self.bodies));
+            % set ids starting from zero
+            self.bodies(end).setID (numel (self.bodies)-1);
             
             self.bodies(end).setMeshProgPath (self.meshProgPath);
             
@@ -253,6 +367,7 @@ classdef simulation < nemoh.base
                 hfig = figure ();
                 hax = axes ();
                 view (3);
+                axis equal;
             else
                 hax = options.Axes;
                 hfig = get (hax, 'parent');
@@ -304,6 +419,9 @@ classdef simulation < nemoh.base
             % See Also: 
             %
             
+            % make the Mesh directory if it does not exist
+            mkdir ( self.meshDirectory );
+            
             for ind = 1:numel (self.bodies)
                 self.bodies(ind).writeMesh ();
             end
@@ -335,7 +453,87 @@ classdef simulation < nemoh.base
             for ind = 1:numel (self.bodies)
                 if self.bodies(ind).meshProcessed == false
                     self.bodies(ind).processMesh ();
+                    
+                    % copy the hydrostatics and KH file to top level mesh
+                    % directory with new name
+                    hydrostaticsfile = fullfile (self.bodies(ind).meshDirectory, 'Hydrostatics.dat');
+                    if exist (hydrostaticsfile, 'file')
+                        copyfile ( hydrostaticsfile, ...
+                                   fullfile (self.meshDirectory, sprintf('Hydrostatics_%d.dat', ind-1)) );
+                    end
+                    
+                    khfile = fullfile (self.bodies(ind).meshDirectory, 'KH.dat');
+                    if exist (hydrostaticsfile, 'file')
+                        copyfile ( khfile, ...
+                                   fullfile (self.meshDirectory, sprintf('KH_%d.dat', ind-1)) );
+                    end
+            
                 end
+            end
+            
+        end
+        
+        function loadProcessedMeshes (self)
+            % loads processed nemoh mesh files
+            %
+            % Syntax
+            %
+            % loadProcessedMeshes (ns)
+            %
+            % Description
+            %
+            % After running processMeshes, loadProcessedMeshes can be
+            % called to load the processed mesh files into each body. This
+            % allows the processed mesh files to be viewed using drawMesh.
+            %
+            % Input
+            %
+            %  ns - nemoh.simulation object
+            %
+            % Output
+            %
+            %  none
+            %
+            % See Also: 
+            %
+            
+            for ind = 1:numel (self.bodies)
+                self.bodies(ind).loadProcessedMesh ();
+            end
+            
+        end
+        
+        function loadProcessedMeshData (self)
+            % loads processed nemoh mesh data such as displacement,
+            % buoyancy center, hydrostatic stiffness etc.
+            %
+            % Syntax
+            %
+            % loadMeshData (ns)
+            %
+            % Description
+            %
+            % After running processMeshes, loadProcessedMeshData can be
+            % called to load the processed mesh data into each body. The
+            % data loaded is the displacement, buoyancy center, hydrostatic
+            % stiffness, an estimate of the masses and the inertia matrix.
+            % The results are then accessible via the body properties kH,
+            % hydrostaticForceX, hydrostaticForceY, hydrostaticForceZ, xB,
+            % yB, zB, mass, WPA and inertia.
+            %
+            % Input
+            %
+            %  ns - nemoh.simulation object
+            %
+            % Output
+            %
+            %  none
+            %
+            % See Also: 
+            %
+            
+            for ind = 1:numel (self.bodies)
+                self.bodies(ind).loadProcessedMeshData ();
             end
             
         end
@@ -548,7 +746,7 @@ classdef simulation < nemoh.base
             
         end
 
-        function str = generateBodiesStr (self, str)
+        function str = generateBodiesStr (self)
             
             str = '';
             
