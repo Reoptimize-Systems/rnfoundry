@@ -58,6 +58,87 @@ classdef base < handle
             
         end
         
+        function ok = checkLogicalScalar (tfvalue, throw, name)
+            % checks if input is a scalar logical value
+            %
+            % Syntax
+            %
+            %  ok = checkLogicalScalar (tfvalue, throw)
+            %  ok = checkLogicalScalar (..., name)
+            %
+            % Input
+            %
+            %  tfvalue - value to be tested if it is a scalar logical value
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkLogicalScalar if tfvalue fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be "<name> must be a scalar logical
+            %   (true/false) value". Default is 'value' if not supplied.
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'value';
+            end
+            
+            ok = true;
+            if ~( islogical (tfvalue) && isscalar (tfvalue) )
+                
+                ok = false;
+                
+                if throw
+                    error ('%s must be a scalar logical value', name);
+                end
+            end
+            
+        end
+        
+        function ok = checkScalarInteger (num, throw, name)
+            % checks if input is a scalar integer value to machine precision
+            %
+            % Syntax
+            %
+            %  ok = checkScalarInteger (num, throw)
+            %  ok = checkScalarInteger (..., name)
+            %
+            % Input
+            %
+            %  num - value to be tested if it is a scalar integer
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkScalarInteger if num fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be <name> must be a scalar integer (to
+            %   machine precision). Default is 'value' if not supplied.
+            %
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'value';
+            end
+            
+            ok = true;
+            if ~( isnumeric (num) && isscalar (num) && isreal (num) && isint2eps (num) )
+                
+                ok = false;
+                
+                if throw
+                    error ('%s must be a scalar integer (to machine precision)', name);
+                end
+            end
+            
+        end
+        
         function numstr = formatNumber (num)
             % fomats a decimal number for pretty output to nemoh file
             %
@@ -98,4 +179,16 @@ classdef base < handle
         
     end
     
+end
+
+
+
+function result = isint2eps(X)
+% isint2eps determines if the numbers in a matrix are integers to the limit
+% of the machine floating-point relative accuracy for those values
+
+    theMod = mod(X,1);
+    
+    result = theMod <= eps(theMod);
+
 end
