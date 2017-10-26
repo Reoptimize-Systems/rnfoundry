@@ -1,5 +1,14 @@
-function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements)
+function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements, problem_options)
 
+    if nargin < 6
+        problem_options.ResidualTol = 1e-6;
+        problem_options.MaxIterations = 20;
+        problem_options.Output = {'iterations', 'bailout'}; % , 'solution', 'jacobian matrix', 'matrix condition number', 'solver condition number'
+        problem_options.NonLinearSolver = mbdyn.pre.newtonRaphsonSolver ();
+        problem_options.LinearSolver = mbdyn.pre.linearSolver ('umfpack');
+        problem_options.SteppingMethod = {};
+    end
+    
     gref = mbdyn.pre.globalref;
 
     ref_seabed = mbdyn.pre.reference ( [0;0;-waves.waterDepth], [], [], [], 'Parent', gref); 
@@ -79,15 +88,19 @@ function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnode
                                                       );
 
     prob = mbdyn.pre.initialValueProblem (simu.startTime, simu.endTime, simu.dt, ...
-                                    'ResidualTol', 1e-6, ...
-                                    'MaxIterations', 200, ...
-                                    'Output', {'iterations', 'residual', 'solution', 'jacobian matrix'}, ... %, 'bailout', 'jacobian matrix'});
-                                    'NonlinearSolver', mbdyn.pre.lineSearchSolver()); 
+                                    'ResidualTol', problem_options.ResidualTol, ...
+                                    'MaxIterations', problem_options.MaxIterations, ...
+                                    'Output', problem_options.Output, ...
+                                    'NonlinearSolver', problem_options.NonLinearSolver, ...
+                                    'LinearSolver', problem_options.LinearSolver, ...
+                                    'Method', problem_options.SteppingMethod ); 
 
     % assemble the system
     mbsys = mbdyn.pre.system ( prob, ...
                                'Nodes', [hydro_mbnodes, {clamped_node}], ...
-                               'Elements', [{float_mb_body, spar_mb_body, jclamp, j1, j2, j3, j4 socket_force}, hydro_mbelements] );
+                               'Elements', [{float_mb_body, spar_mb_body, jclamp, j1, j2, j3, j4 socket_force}, hydro_mbelements], ...
+                               'DefaultOrientation', 'orientation matrix', ...
+                               'DefaultOutput', {'none'} );
                            
 	initptodpos = float_node.absolutePosition - spar_node.absolutePosition; 
 

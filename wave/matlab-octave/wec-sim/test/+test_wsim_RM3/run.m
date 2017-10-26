@@ -21,9 +21,9 @@ simu.b2b = true;
 %%%%%%%%%%%%%%%%%%%
 
 % Regular Waves
-waves = wsim.wavesettings ('regularCIC');        %Create the Wave Variable and Specify Type                               
-waves.H = 2.5;                          %Wave Height [m]
-waves.T = 8;                            %Wave Period [s]
+% waves = wsim.wavesettings ('regularCIC');        %Create the Wave Variable and Specify Type                               
+% waves.H = 2.5;                          %Wave Height [m]
+% waves.T = 8;                            %Wave Period [s]
 %%%%%%%%%%%%%%%%%%%
 
 % Regular Waves
@@ -38,6 +38,13 @@ waves.T = 8;                            %Wave Period [s]
 % waves.H = 2.5;                        %Significant Wave Height [m]
 % waves.T = 8;                          %Peak Period [s]
 % waves.spectrumType = 'PM';
+%%%%%%%%%%%%%%%%%%%
+
+% Irregular Waves using BS Spectrum with Convolution Integral Calculation
+waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
+waves.H = 2.5;                        %Significant Wave Height [m]
+waves.T = 8;                          %Peak Period [s]
+waves.spectrumType = 'BS';
 %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using BS Spectrum with State Space Calculation
@@ -87,7 +94,15 @@ hsys.odeSimSetup ();
 
 %% Multibody dynamics system specification (mbdyn)
 
-[mbsys, initptodpos] = test_wsim_RM3.make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements);
+problem_options.ResidualTol = 1e-5;
+problem_options.MaxIterations = 200;
+problem_options.Output = {}; % 'iterations', 'solution', 'jacobian matrix', 'matrix condition number', 'solver condition number'
+% problem_options.NonLinearSolver = mbdyn.pre.newtonRaphsonSolver ();
+problem_options.NonLinearSolver = [];
+% problem_options.LinearSolver = mbdyn.pre.linearSolver ('naive');
+problem_options.LinearSolver = [];
+
+[mbsys, initptodpos] = test_wsim_RM3.make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements, problem_options);
                      
 % draw it
 % mbsys.draw ('Mode', 'wireghost', 'Light', false);
@@ -127,11 +142,11 @@ nnodes = mb.GetNodes ();
 
 time = mbsys.problems{1}.initialTime;
 
-% set the forces
-mb.F (zeros(3,nnodes));
-mb.M (zeros(3,nnodes));
-
-mbconv = mb.applyForcesAndMoments (true);
+% % set the forces
+% mb.F (zeros(3,nnodes));
+% mb.M (zeros(3,nnodes));
+% 
+% mbconv = mb.applyForcesAndMoments (true);
 
 status = mb.GetMotion ();
 
@@ -193,17 +208,17 @@ mbconv = mb.applyForcesAndMoments (false);
 
 F_ExcitLin = out.F_ExcitLin;
 F_ViscousDamping = out.F_ViscousDamping;
-F_addedmass = out.F_addedmass;
+F_AddedMass = out.F_AddedMass;
 F_Restoring = out.F_Restoring;
 F_RadiationDamping = out.F_RadiationDamping;
-F_ExcitLinNonLin = out.F_ExcitLinNonLin;
+F_ExcitNonLin = out.F_ExcitNonLin;
 F_MorrisonElement = out.F_MorrisonElement;
 F_Excit = out.F_Excit;
 F_ExcitRamp = out.F_ExcitRamp;
 FptoVec = [0;0;0];
 
 % accept the last data into the time history of solutions
-hsys.advanceStep (time(end), accel);
+hsys.advanceStep (time(end), vel, accel);
     
 ind = 2;
 
@@ -330,6 +345,19 @@ while status == 0
     status = mb.GetMotion ();
     
     if status ~= 0
+                
+        F_ExcitLin(:,:,ind) = out.F_ExcitLin;
+        F_ViscousDamping(:,:,ind) = out.F_ViscousDamping;
+        F_AddedMass(:,:,ind) = out.F_AddedMass;
+        F_Restoring(:,:,ind) = out.F_Restoring;
+        F_RadiationDamping(:,:,ind) = out.F_RadiationDamping;
+        F_ExcitNonLin(:,:,ind) = out.F_ExcitNonLin;
+        F_MorrisonElement(:,:,ind) = out.F_MorrisonElement;
+        F_Excit(:,:,ind) = out.F_Excit;
+        F_ExcitRamp(:,:,ind) = out.F_ExcitRamp;
+        
+        ind = ind + 1;
+        
         continue;
     end
     
@@ -451,6 +479,19 @@ while status == 0
     status = mb.GetMotion ();
         
     if status ~= 0
+        
+        F_ExcitLin(:,:,ind) = out.F_ExcitLin;
+        F_ViscousDamping(:,:,ind) = out.F_ViscousDamping;
+        F_AddedMass(:,:,ind) = out.F_AddedMass;
+        F_Restoring(:,:,ind) = out.F_Restoring;
+        F_RadiationDamping(:,:,ind) = out.F_RadiationDamping;
+        F_ExcitNonLin(:,:,ind) = out.F_ExcitNonLin;
+        F_MorrisonElement(:,:,ind) = out.F_MorrisonElement;
+        F_Excit(:,:,ind) = out.F_Excit;
+        F_ExcitRamp(:,:,ind) = out.F_ExcitRamp;
+        
+        ind = ind + 1;
+    
         break;
     end
 
@@ -516,26 +557,26 @@ while status == 0
     
     F_ExcitLin(:,:,ind) = out.F_ExcitLin;
     F_ViscousDamping(:,:,ind) = out.F_ViscousDamping;
-    F_addedmass(:,:,ind) = out.F_addedmass;
+    F_AddedMass(:,:,ind) = out.F_AddedMass;
     F_Restoring(:,:,ind) = out.F_Restoring;
     F_RadiationDamping(:,:,ind) = out.F_RadiationDamping;
-    F_ExcitLinNonLin(:,:,ind) = out.F_ExcitLinNonLin;
+    F_ExcitNonLin(:,:,ind) = out.F_ExcitNonLin;
     F_MorrisonElement(:,:,ind) = out.F_MorrisonElement;
     F_Excit(:,:,ind) = out.F_Excit;
     F_ExcitRamp(:,:,ind) = out.F_ExcitRamp;
     
     % accept the last data into the time history of solutions
-    hsys.advanceStep (time(end), accel(:,:,ind));
+    hsys.advanceStep (time(end), vel(:,:,ind), accel(:,:,ind));
     
     ind = ind + 1;
     
 end
 
-
-
-[F_Total, F_AddedMassCorrected] = correctAddedMassForce (hsys, forces, F_addedmass, accel);
+[F_Total, F_AddedMassCorrected] = correctAddedMassForce (hsys, forces, F_AddedMass, accel);
 toc;
 clear mb;
+
+fprintf (1, 'Reached time %f, in %d steps\n', time(end), ind-1);
 
 return
 
@@ -568,7 +609,7 @@ else
             squeeze(F_AddedMassCorrected(:,bodyind,plotinds))', ...
             squeeze(F_Restoring(:,bodyind,plotinds))', ...
             squeeze(F_RadiationDamping(:,bodyind,plotinds))', ...
-            ...squeeze(F_ExcitLinNonLin(3,bodyind,plotinds)), ...
+            ...squeeze(F_ExcitNonLin(3,bodyind,plotinds)), ...
             ... squeeze(F_MorrisonElement(3,bodyind,plotinds)), ...
             ...squeeze(F_Excit(3,bodyind,plotinds)), ...
             ...squeeze(F_ExcitRamp(3,bodyind,plotinds)), ...
@@ -676,7 +717,7 @@ else
     %         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceExcitation,  output.bodies(bodyind).time, squeeze(F_ExcitRamp(:,bodyind,:))); 
             figure;
             plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
-                  output.bodies(bodyind).time, squeeze(F_addedmass(:,bodyind,:)));
+                  output.bodies(bodyind).time, squeeze(F_AddedMass(:,bodyind,:)));
             title (sprintf ('forceAddedMass vs F\\_addedmass for body %d', bodyind));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
             figure;
@@ -736,12 +777,12 @@ else
 
     % % figure;
     % % fcomp = 3;
-    % % plot (output.bodies(1).time, [body1_F_AddedMass_Simulink.signals.values(:,fcomp), body2_F_AddedMass_Simulink.signals.values(:,fcomp), squeeze(F_addedmass(:,fcomp,1:2))]);
+    % % plot (output.bodies(1).time, [body1_F_AddedMass_Simulink.signals.values(:,fcomp), body2_F_AddedMass_Simulink.signals.values(:,fcomp), squeeze(F_AddedMass(:,fcomp,1:2))]);
     % % title (sprintf ('comp %d of body2\\_F\\_AddedMass\\_Simulink vs hydrobody F\\_addedmass for body 2', fcomp));
     % % legend (sprintf ('body 1 simulink comp %d', fcomp), ...
     % %     sprintf ('body 2 simulink comp %d', fcomp),...
-    % %     sprintf ('body 1 hydrobody F_addedmass comp %d', fcomp), ...
-    % %     sprintf ('body 2 hydrobody F_addedmass comp %d', fcomp))
+    % %     sprintf ('body 1 hydrobody F_AddedMass comp %d', fcomp), ...
+    % %     sprintf ('body 2 hydrobody F_AddedMass comp %d', fcomp))
     % % 
     % % figure;
     % % fcomp = 3;
@@ -776,7 +817,7 @@ else
     %     
     %     gf_forceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation, squeeze(F_ExcitRamp(:,bodyind,:))', stats);
     %     
-    % %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_addedmass(:,:,bodyind));
+    % %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_AddedMass(:,:,bodyind));
     %     
     %     gf_F_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, squeeze(F_AddedMassCorrected(:,bodyind,:))', stats);
     %     
@@ -866,7 +907,7 @@ else
         gf_forceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,1:3), squeeze(F_ExcitRamp(1:3,bodyind,:))', stats);
         gf_momentExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,4:6), squeeze(F_ExcitRamp(4:6,bodyind,:))', stats);
 
-    %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_addedmass(:,:,bodyind));
+    %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_AddedMass(:,:,bodyind));
 
         gf_F_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,1:3), squeeze(F_AddedMassCorrected(1:3,bodyind,:))', stats);
         gf_M_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,4:6), squeeze(F_AddedMassCorrected(4:6,bodyind,:))', stats);

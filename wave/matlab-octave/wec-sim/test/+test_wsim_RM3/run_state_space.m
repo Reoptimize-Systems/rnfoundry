@@ -200,10 +200,10 @@ mbconv = mb.applyForcesAndMoments (false);
 
 F_ExcitLin = out.F_ExcitLin;
 F_ViscousDamping = out.F_ViscousDamping;
-F_addedmass = out.F_addedmass;
+F_AddedMass = out.F_AddedMass;
 F_Restoring = out.F_Restoring;
 F_RadiationDamping = out.F_RadiationDamping;
-F_ExcitLinNonLin = out.F_ExcitLinNonLin;
+F_ExcitNonLin = out.F_ExcitNonLin;
 F_MorrisonElement = out.F_MorrisonElement;
 F_Excit = out.F_Excit;
 F_ExcitRamp = out.F_ExcitRamp;
@@ -340,10 +340,10 @@ while status == 0
                 
         F_ExcitLin(:,:,ind) = out.F_ExcitLin;
         F_ViscousDamping(:,:,ind) = out.F_ViscousDamping;
-        F_addedmass(:,:,ind) = out.F_addedmass;
+        F_AddedMass(:,:,ind) = out.F_AddedMass;
         F_Restoring(:,:,ind) = out.F_Restoring;
         F_RadiationDamping(:,:,ind) = out.F_RadiationDamping;
-        F_ExcitLinNonLin(:,:,ind) = out.F_ExcitLinNonLin;
+        F_ExcitNonLin(:,:,ind) = out.F_ExcitNonLin;
         F_MorrisonElement(:,:,ind) = out.F_MorrisonElement;
         F_Excit(:,:,ind) = out.F_Excit;
         F_ExcitRamp(:,:,ind) = out.F_ExcitRamp;
@@ -474,10 +474,10 @@ while status == 0
         
         F_ExcitLin(:,:,ind) = out.F_ExcitLin;
         F_ViscousDamping(:,:,ind) = out.F_ViscousDamping;
-        F_addedmass(:,:,ind) = out.F_addedmass;
+        F_AddedMass(:,:,ind) = out.F_AddedMass;
         F_Restoring(:,:,ind) = out.F_Restoring;
         F_RadiationDamping(:,:,ind) = out.F_RadiationDamping;
-        F_ExcitLinNonLin(:,:,ind) = out.F_ExcitLinNonLin;
+        F_ExcitNonLin(:,:,ind) = out.F_ExcitNonLin;
         F_MorrisonElement(:,:,ind) = out.F_MorrisonElement;
         F_Excit(:,:,ind) = out.F_Excit;
         F_ExcitRamp(:,:,ind) = out.F_ExcitRamp;
@@ -549,10 +549,10 @@ while status == 0
     
     F_ExcitLin(:,:,ind) = out.F_ExcitLin;
     F_ViscousDamping(:,:,ind) = out.F_ViscousDamping;
-    F_addedmass(:,:,ind) = out.F_addedmass;
+    F_AddedMass(:,:,ind) = out.F_AddedMass;
     F_Restoring(:,:,ind) = out.F_Restoring;
     F_RadiationDamping(:,:,ind) = out.F_RadiationDamping;
-    F_ExcitLinNonLin(:,:,ind) = out.F_ExcitLinNonLin;
+    F_ExcitNonLin(:,:,ind) = out.F_ExcitNonLin;
     F_MorrisonElement(:,:,ind) = out.F_MorrisonElement;
     F_Excit(:,:,ind) = out.F_Excit;
     F_ExcitRamp(:,:,ind) = out.F_ExcitRamp;
@@ -564,7 +564,7 @@ while status == 0
     
 end
 
-[F_Total, F_AddedMassCorrected] = correctAddedMassForce (hsys, forces, F_addedmass, accel);
+[F_Total, F_AddedMassCorrected] = correctAddedMassForce (hsys, forces, F_AddedMass, accel);
 toc;
 clear mb;
 
@@ -601,7 +601,7 @@ else
             squeeze(F_AddedMassCorrected(:,bodyind,plotinds))', ...
             squeeze(F_Restoring(:,bodyind,plotinds))', ...
             squeeze(F_RadiationDamping(:,bodyind,plotinds))', ...
-            ...squeeze(F_ExcitLinNonLin(3,bodyind,plotinds)), ...
+            ...squeeze(F_ExcitNonLin(3,bodyind,plotinds)), ...
             ... squeeze(F_MorrisonElement(3,bodyind,plotinds)), ...
             ...squeeze(F_Excit(3,bodyind,plotinds)), ...
             ...squeeze(F_ExcitRamp(3,bodyind,plotinds)), ...
@@ -709,7 +709,7 @@ else
     %         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceExcitation,  output.bodies(bodyind).time, squeeze(F_ExcitRamp(:,bodyind,:))); 
             figure;
             plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
-                  output.bodies(bodyind).time, squeeze(F_addedmass(:,bodyind,:)));
+                  output.bodies(bodyind).time, squeeze(F_AddedMass(:,bodyind,:)));
             title (sprintf ('forceAddedMass vs F\\_addedmass for body %d', bodyind));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
             figure;
@@ -769,12 +769,12 @@ else
 
     % % figure;
     % % fcomp = 3;
-    % % plot (output.bodies(1).time, [body1_F_AddedMass_Simulink.signals.values(:,fcomp), body2_F_AddedMass_Simulink.signals.values(:,fcomp), squeeze(F_addedmass(:,fcomp,1:2))]);
+    % % plot (output.bodies(1).time, [body1_F_AddedMass_Simulink.signals.values(:,fcomp), body2_F_AddedMass_Simulink.signals.values(:,fcomp), squeeze(F_AddedMass(:,fcomp,1:2))]);
     % % title (sprintf ('comp %d of body2\\_F\\_AddedMass\\_Simulink vs hydrobody F\\_addedmass for body 2', fcomp));
     % % legend (sprintf ('body 1 simulink comp %d', fcomp), ...
     % %     sprintf ('body 2 simulink comp %d', fcomp),...
-    % %     sprintf ('body 1 hydrobody F_addedmass comp %d', fcomp), ...
-    % %     sprintf ('body 2 hydrobody F_addedmass comp %d', fcomp))
+    % %     sprintf ('body 1 hydrobody F_AddedMass comp %d', fcomp), ...
+    % %     sprintf ('body 2 hydrobody F_AddedMass comp %d', fcomp))
     % % 
     % % figure;
     % % fcomp = 3;
@@ -809,7 +809,7 @@ else
     %     
     %     gf_forceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation, squeeze(F_ExcitRamp(:,bodyind,:))', stats);
     %     
-    % %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_addedmass(:,:,bodyind));
+    % %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_AddedMass(:,:,bodyind));
     %     
     %     gf_F_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, squeeze(F_AddedMassCorrected(:,bodyind,:))', stats);
     %     
@@ -899,7 +899,7 @@ else
         gf_forceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,1:3), squeeze(F_ExcitRamp(1:3,bodyind,:))', stats);
         gf_momentExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,4:6), squeeze(F_ExcitRamp(4:6,bodyind,:))', stats);
 
-    %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_addedmass(:,:,bodyind));
+    %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_AddedMass(:,:,bodyind));
 
         gf_F_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,1:3), squeeze(F_AddedMassCorrected(1:3,bodyind,:))', stats);
         gf_M_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,4:6), squeeze(F_AddedMassCorrected(4:6,bodyind,:))', stats);
