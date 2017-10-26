@@ -15,9 +15,10 @@ classdef simulation < nemoh.base
     %
     %   simulation - constructor
     %   addBody - add a nemoh body to the simulation
-    %   writeMeshes - writes the mesh data for all bodies to disk
+    %   writeMesherInputFiles - writes the input files for the NEMOH mesh
+    %     program (.dat files)
     %   processMeshes - performs pre-simulation mesh processing for all
-    %     bodies
+    %     bodies (generates KH.dat, Hydrostatics.dat etc.)
     %   writeNemoh - writes the NEMOH input file (Nemoh.cal)
     %   run - runs the NEMOH programs on the generated input files
     %
@@ -360,8 +361,12 @@ classdef simulation < nemoh.base
             
             options.PlotForces = true;
             options.Axes = [];
+            options.AddTitle = true;
             
             options = parse_pv_pairs (options, varargin);
+            
+            self.checkLogicalScalar (options.PlotForces, true, 'PlotForces');
+            self.checkLogicalScalar (options.AddTitle, true, 'AddTitle');
             
             if isempty (options.Axes)
                 hfig = figure ();
@@ -378,14 +383,19 @@ classdef simulation < nemoh.base
             
             for ind = 1:numel (self.bodies)
                 self.bodies(ind).drawMesh ( 'Axes', hax, ...
-                                            'PlotForces', options.PlotForces);
+                                            'PlotForces', options.PlotForces, ...
+                                            'AddTitle', false );
             end
             
             clear CC
             
+            if options.AddTitle
+                title ('NEMOH Simulation, All Bodies Mesh');
+            end
+            
         end
         
-        function writeMeshes (self)
+        function writeMesherInputFiles (self)
             % writes nemoh mesh input files
             %
             % Syntax
@@ -414,9 +424,9 @@ classdef simulation < nemoh.base
             %
             % Output
             %
+            %  none
             %
-            %
-            % See Also: 
+            % See Also: nemoh.simulation.processMeshes
             %
             
             % make the Mesh directory if it does not exist
@@ -452,20 +462,39 @@ classdef simulation < nemoh.base
             
             for ind = 1:numel (self.bodies)
                 if self.bodies(ind).meshProcessed == false
+                    
+                    % process the mesh file for the body
                     self.bodies(ind).processMesh ();
                     
-                    % copy the hydrostatics and KH file to top level mesh
-                    % directory with new name
                     hydrostaticsfile = fullfile (self.bodies(ind).meshDirectory, 'Hydrostatics.dat');
-                    if exist (hydrostaticsfile, 'file')
-                        copyfile ( hydrostaticsfile, ...
-                                   fullfile (self.meshDirectory, sprintf('Hydrostatics_%d.dat', ind-1)) );
-                    end
-                    
                     khfile = fullfile (self.bodies(ind).meshDirectory, 'KH.dat');
-                    if exist (hydrostaticsfile, 'file')
-                        copyfile ( khfile, ...
-                                   fullfile (self.meshDirectory, sprintf('KH_%d.dat', ind-1)) );
+                    
+                    if numel (self.bodies) == 1
+                        % copy the hydrostatics and KH file to top level mesh
+                        % directory with same name
+                        if exist (hydrostaticsfile, 'file')
+                            copyfile ( hydrostaticsfile, ...
+                                       fullfile (self.meshDirectory, 'Hydrostatics.dat') );
+                        end
+                        
+                        if exist (hydrostaticsfile, 'file')
+                            copyfile ( khfile, ...
+                                       fullfile (self.meshDirectory, 'KH.dat') );
+                        end
+                        
+                    else
+                        % copy the hydrostatics and KH file to top level mesh
+                        % directory with new name
+                        if exist (hydrostaticsfile, 'file')
+                            copyfile ( hydrostaticsfile, ...
+                                       fullfile (self.meshDirectory, sprintf('Hydrostatics_%d.dat', ind-1)) );
+                        end
+                        
+                        if exist (hydrostaticsfile, 'file')
+                            copyfile ( khfile, ...
+                                       fullfile (self.meshDirectory, sprintf('KH_%d.dat', ind-1)) );
+                        end
+                        
                     end
             
                 end
