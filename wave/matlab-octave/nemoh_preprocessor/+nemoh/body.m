@@ -20,6 +20,12 @@ classdef body < nemoh.base
     %  body - constructor for the body object
     %  makeAxiSymmetricMesh - initialises a mesh of an axisymmetric body
     %    defined by a 2D profile rotated around z axis.
+    %  makeCylinderMesh - create axisymmetric cylinder mesh
+    %  makeSphereMesh - create axisymmetric sphere mesh
+    %  loadNemohMesherInputFile - load mesh from an input file for the
+    %    Nemoh meshing program 
+    %  loadNemohMeshFile - load mesh from an mesh file for the
+    %    Nemoh preprocesor and solver
     %  drawMesh - plots the body mesh in a figure
     %  meshInfo - prints some information about the body mesh to the
     %    command line
@@ -50,9 +56,7 @@ classdef body < nemoh.base
         axiMeshR; % radial coordinates of axisymmetric body profile data
         axiMeshZ; % axial coordinates of axisymmetric body profile data
         
-        meshX; % body mesh vertices x coordinates
-        meshY; % body mesh vertices y coordinates
-        meshZ; % body mesh vertices z coordinates
+        meshVertices; % X,Y,Z coordinates of mesh
         
         nQuads;
         quadMesh;
@@ -62,19 +66,13 @@ classdef body < nemoh.base
         nPanelsTarget; % Target for number of panels in mesh refinement
         centreOfGravity;
         
-        hydrostaticForceX;
-        hydrostaticForceY;
-        hydrostaticForceZ;
-        hydrostaticX;
-        hydrostaticY;
-        hydrostaticZ;
+        hydrostaticForces; % hydrostatic forces
+        hydrostaticForcePoints; % X,Y,Z coordinates where hydrostatic forces were calculated
         
         rho; % fluid density for problem
         g; % acceleration due to gravity for problem
         
-        xB; % x cordinate of centre of buoyancy
-        yB; % y cordinate of centre of buoyancy
-        zB; % z cordinate of centre of buoyancy
+        centreOfBuoyancy; % X,Y,Z cordinates of centre of buoyancy
         kH  % hydrostatic stiffness matrix
         mass; % mass of buoy
         WPA;
@@ -97,6 +95,8 @@ classdef body < nemoh.base
     properties (GetAccess = private, SetAccess = private)
        meshPlottable; 
        sanitizedName; % name, but altered if necessary to be valid file name
+       stlLoaded;
+       defaultTargetPanels;
     end
     
     methods
@@ -167,7 +167,19 @@ classdef body < nemoh.base
             self.clearMeshAndForceData ();
 
             self.id = 0;
-            self.name = options.Name;
+            self.setName (options.Name);
+            
+            % internal flags
+            self.stlLoaded = false;
+            self.meshPlottable = false;
+            
+        end
+        
+        function setName (self, newname)
+            % sets the body name
+            
+            
+            self.name = newname;
             
             % sanitize the name
             
@@ -282,6 +294,110 @@ classdef body < nemoh.base
             
         end
         
+        function loadSTLMesh (self, filename, varargin)
+            % load mesh from STL file
+            %
+            % Syntax
+            %
+            % loadSTLMesh (nb, filename, draft, varargin)
+            %
+            % Description
+            %
+            % loadSTLMesh imports a mesh from an STL file.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  filename - stl file name
+            %
+            % Additional optional arguments may be supplied using
+            % parameter-value pairs. The available options are:
+            %
+            % 'Draft' - distance from the lowest point on the mesh to the
+            %   water free surface. The mesh will be translated such that
+            %   the specified draft is achieved. If Draft is empty the
+            %   displacement is kept as it is in the STL file. This is
+            %   also the default if not supplied. Draft is always a
+            %   positive number.
+            %
+            % 'Verbose' - logical flag (true/false), if true some text
+            %   information about the mesh will be output to the command
+            %   line. Default is false.
+            % 
+            % 'UseSTLName' - logical flag (true/false), if true the name
+            %   stored in the stl file will be used as the body name. The
+            %   old body name will be replaced with this name.
+            %
+            % 'CentreOfGravity' - 3 element vector with the x,y,z
+            %   coordinates of the centre of gravity of the body in the stl
+            %   file. If not supplied it is assumed that the mesh is drawn
+            %   such that the centre of gravity is at the point (0,0,0) in
+            %   the coordinate system of the stl file. The centre of
+            %   gravity will be translated along with the mesh if it is
+            %   translated to achieve a specified draft.
+            %
+            %
+            % Output
+            %
+            %
+            %
+            % See Also: 
+            %
+            
+            
+            % 'PutCoGOnOrigin' - logical flag (true/false), if true the
+            %   mesh will be translated (before applying the specified
+            %   draft) such that the centre of gravity lies on the origin.
+            %   This option is only really relevant if the
+            %   'CentreOfGravity' option is used (see above). The purpose
+            %   of this option is to deal with the case where an object has
+            %   been created in some CAD program and it is more convenient
+            %   to output the STL and centre of gravity of the shape in the
+            %   CAD program's coordinate system than to move the shape in
+            %   the CAD program before processing with NEMOH.
+            
+            options.Draft = [];
+            options.Verbose = false;
+            options.UseSTLName = false;
+            options.CentreOfGravity = [];
+%             options.PutCoGOnOrigin = false;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            % Input checking
+            %
+            % CentreOfGravity and Draft options are checked later by
+            % the processMeshDraftAndCoG method
+            self.checkLogicalScalar (options.UseSTLName, true, 'UseSTLName');
+            self.checkLogicalScalar (options.Verbose, true, 'Verbose');
+%             self.checkLogicalScalar (options.PutCoGOnOrigin, true, 'PutCoGOnOrigin');
+            
+            self.clearMeshAndForceData ();
+            
+            [self.meshVertices, self.triMesh, ~, stlname] = stl.read (filename);
+            
+            self.meshVertices = self.meshVertices.';
+            self.triMesh = self.triMesh.';
+            
+            self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
+            
+            if options.UseSTLName
+                self.setName (stlname);
+            end
+            
+            self.nMeshNodes = size (self.meshVertices, 2);
+            self.stlLoaded = true;
+            self.meshType = 'stl';
+            self.meshPlottable = true;
+            self.meshProcessed = false;
+            
+            if options.Verbose
+                self.meshInfo ();
+            end
+            
+        end
+        
         function makeAxiSymmetricMesh (self, r, z, ntheta, zCoG, varargin)
             % initialise a mesh based on a 2D profile rotated around z axis
             %
@@ -323,7 +439,7 @@ classdef body < nemoh.base
             %    body relative to the mean water level.
             %
             % Additional optional arguments may be supplied using
-            % parameter-value pairs. The avaialable options are:
+            % parameter-value pairs. The available options are:
             %
             % 'Verbose' - logical flag (true/false), if true some text
             %   information about the mesh will be output to the command
@@ -334,9 +450,8 @@ classdef body < nemoh.base
             %
             %
             
-            
             options.Verbose = true;
-            options.NPanelsTarget = 250;
+            options.NPanelsTarget = self.defaultTargetPanels;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -370,9 +485,9 @@ classdef body < nemoh.base
             for j = 1:ntheta
                 for i = 1:n
                     self.nMeshNodes = self.nMeshNodes + 1;
-                    self.meshX(self.nMeshNodes) = r(i)*cos(theta(j));
-                    self.meshY(self.nMeshNodes) = r(i)*sin(theta(j));
-                    self.meshZ(self.nMeshNodes) = z(i);
+                    self.meshVertices(1, self.nMeshNodes) = r(i)*cos(theta(j));
+                    self.meshVertices(2, self.nMeshNodes) = r(i)*sin(theta(j));
+                    self.meshVertices(3, self.nMeshNodes) = z(i);
                 end
             end
             
@@ -388,26 +503,14 @@ classdef body < nemoh.base
                 end
             end
             
-            % Convert to triangle mesh by splitting each quad
-            nftri = 0;
-            for i = 1:self.nQuads
-                nftri = nftri+1;
-                self.triMesh(nftri,:) = [self.quadMesh(1,i) self.quadMesh(2,i) self.quadMesh(3,i)];
-                nftri = nftri+1;
-                self.triMesh(nftri,:) = [self.quadMesh(1,i) self.quadMesh(3,i) self.quadMesh(4,i)];
-            end
-            
             if options.Verbose
-                fprintf (1, 'Characteristics of the discretisation');
-                fprintf (1, '\n --> Number of nodes             : %g', self.nMeshNodes);
-                fprintf (1, '\n --> Number of panels (max 2000) : %g \n', self.nQuads);
+                self.meshInfo ();
             end
             
             self.meshType = 'axi';
             self.meshPlottable = true;
             
         end
-        
         
         function makeCylinderMesh (self, radius, draft, height, varargin)
             % create a course mesh of a cylinder
@@ -631,7 +734,7 @@ classdef body < nemoh.base
             
         end
 
-        function [hax, hfig] = drawMesh (self, varargin)
+        function [hmesh, hax, hfig] = drawMesh (self, varargin)
             % plot the mesh for this body
             %
             % Syntax
@@ -644,7 +747,7 @@ classdef body < nemoh.base
             %  nb - nemoh.body object
             %
             % Additional optional arguments are provided as parameter-value
-            % pairs. The avaialable options are:
+            % pairs. The available options are:
             %
             % 'Axes' - handle for existing figure axes in which to do the
             %   mesh plot. f not supplied, a new figure and axes are
@@ -662,8 +765,12 @@ classdef body < nemoh.base
             
             options.Axes = [];
             options.PlotForces = true;
+            options.AddTitle = true;
             
             options = parse_pv_pairs (options, varargin);
+            
+            self.checkLogicalScalar (options.PlotForces, true, 'PlotForces');
+            self.checkLogicalScalar (options.AddTitle, true, 'AddTitle');
             
             setequal = true;
             
@@ -685,29 +792,29 @@ classdef body < nemoh.base
                 end
                 
                 hold on;
-                
-                trimesh ( self.triMesh, ...
-                          self.meshX, ...
-                          self.meshY, ...
-                          self.meshZ, ...
-                          zeros (self.nMeshNodes,1) );
+
+                [hmesh, hax, hfig] = self.polyMeshPlot ( self.meshVertices', ...
+                                                         self.quadMesh', ...
+                                                         'Axes', hax );
 
                 % plot forces if requested, and available
-                if options.PlotForces && ~isempty (self.hydrostaticForceX)
+                if options.PlotForces && ~isempty (self.hydrostaticForces)
                     
-                    quiver3 ( self.hydrostaticX, ...
-                              self.hydrostaticY, ...
-                              self.hydrostaticZ, ...
-                              self.hydrostaticForceX, ...
-                              self.hydrostaticForceY, ...
-                              self.hydrostaticForceZ, ...
+                    quiver3 ( self.hydrostaticForcePoints(1,:), ...
+                              self.hydrostaticForcePoints(2,:), ...
+                              self.hydrostaticForcePoints(3,:), ...
+                              self.hydrostaticForces(1,:), ...
+                              self.hydrostaticForces(2,:), ...
+                              self.hydrostaticForces(3,:), ...
                               'Color', [0,0.447,0.741] );
                     
                 end
                 
                 hold off
                 
-                title('Mesh for NEMOH Body');
+                if options.AddTitle
+                    title ('Mesh for NEMOH Body');
+                end
                 
                 if setequal
                     axis equal;
@@ -728,9 +835,12 @@ classdef body < nemoh.base
             
             switch self.meshType
                 
-                case 'axi'
+                case {'axi', 'nonaxi'}
                     
-                    self.writeAxiMesh ('MeshFileName', options.MeshFileName);
+                    self.writeMesherInputFile ('MeshFileName', options.MeshFileName);
+                    
+                case 'stl'
+                    
                     
                 otherwise
                     error ('mesh type %s not currently supported', self.meshType)
@@ -759,7 +869,7 @@ classdef body < nemoh.base
             %  nb - nemoh.body object
             %
             % Additional optional arguments are provided as parameter-value
-            % pairs. The avaialable options are:
+            % pairs. The available options are:
             %
             % 'LoadMesh' - logical (true/false) value. If true, the
             %   existing mesh data is cleared and the processed mesh is
@@ -771,9 +881,9 @@ classdef body < nemoh.base
             %   processing the mesh. The data loaded is the displacement,
             %   buoyancy center, hydrostatic stiffness, an estimate of the
             %   masses and the inertia matrix. These results are then
-            %   accessible via the body properties kH, hydrostaticForceX,
-            %   hydrostaticForceY, hydrostaticForceZ, xB, yB, zB, mass, WPA
-            %   and inertia. Default is false.
+            %   accessible via the body properties kH,
+            %   hydrostaticForcePoints, hydrostaticForces,
+            %   centreOfBuoyancy, mass, WPA and inertia. Default is false.
             %
             % See also: nemoh.body.loadProcessedMesh,
             %           nemoh.body.loadProcessedMeshData
@@ -803,7 +913,7 @@ classdef body < nemoh.base
             status = system (sprintf ('"%s" > "%s"', self.meshProgPath, logfile));   
             
             if status ~= 0
-                error ('solving failed with error code %d', status);
+                error ('mesh processing failed with error code %d', status);
             end
 
             % move the mesh file to the top level input directory for NEMOH
@@ -812,7 +922,7 @@ classdef body < nemoh.base
             self.meshProcessed = true;
             
             if options.LoadMesh
-                self.loadProcessedMesh ();
+                self.loadProcessedMeshAndForces ();
             end
             
             if options.LoadMeshData
@@ -821,86 +931,311 @@ classdef body < nemoh.base
 
         end
         
-        function loadProcessedMesh (self)
-            % clear existing mesh and load mesh from generated .tec file
+        function loadProcessedMeshAndForces (self)
+            % loads the results of running the NEMOH mesh program
             %
-            % 
+            % Syntax
+            %
+            % loadProcessedMeshAndForces (nb)
+            %
+            % Description
+            %
+            % Loads the output of the NEMOH mesh (or Mesh.exe) program from
+            % the produced .tec file. The existing mesh and results are
+            % cleared. The mesh and hydrostatic force results are then
+            % repopulated with the data from the file.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            % Output
+            %
+            %  none
+            %
+            % See Also: nemoh.body.processMesh
+            %
             
-            self.meshX = [];
-            self.meshY = [];
-            self.meshZ = [];
-            self.quadMesh = [];
-            self.triMesh = [];
-            self.nMeshNodes = [];
-            self.nQuads = [];
-            self.nTriangles = [];
-            self.hydrostaticForceX = [];
-            self.hydrostaticForceY = [];
-            self.hydrostaticForceZ = [];
-            self.hydrostaticX = [];
-            self.hydrostaticY = [];
-            self.hydrostaticZ = [];
+            if self.meshProcessed
+                
+                % clear mesh and force data (don't use
+                % clearMeshAndForceData as it also resets other things)
+                % mesh data
+                self.axiMeshR = [];
+                self.axiMeshZ = [];
+                self.meshVertices = [];
+                self.quadMesh = [];
+                self.triMesh = [];
+                self.nMeshNodes = [];
+                self.nQuads = [];
+                self.nTriangles = [];
+
+                % mesh results
+                self.hydrostaticForces = [];
+                self.hydrostaticForcePoints = [];
+                self.centreOfBuoyancy = [];
+                self.WPA = [];
+                self.mass = [];
+                self.inertia = [];
+                self.kH = [];
+
+                % Load from mesh visualisation .tec file
+                fid = fopen (fullfile (self.meshDirectory, sprintf ('%s.tec', self.uniqueName)), 'r');
+                CC = onCleanup (@() fclose (fid));
+
+                line = fscanf (fid, '%s', 2); % what does this line do?
+
+                self.nMeshNodes = fscanf (fid, '%g', 1);
+
+                line = fscanf(fid, '%s', 2); % what does this line do?
+
+                self.nQuads = fscanf(fid, '%g', 1);
+
+                line = fgetl (fid); % what does this line do?
+
+                self.meshVertices = ones (3, self.nMeshNodes) * nan;
+                for i = 1:self.nMeshNodes
+                    line = fscanf (fid, '%f', 6);
+                    self.meshVertices(1,i) = line(1);
+                    self.meshVertices(2,i) = line(2);
+                    self.meshVertices(3,i) = line(3);
+                end
+
+                self.quadMesh = ones (4, self.nQuads) * nan;
+                for i = 1:self.nQuads
+                    line = fscanf(fid, '%g', 4);
+                    self.quadMesh(1,i) = line(1);
+                    self.quadMesh(2,i) = line(2);
+                    self.quadMesh(3,i) = line(3);
+                    self.quadMesh(4,i) = line(4);
+                end 
+
+                line = fgetl (fid);
+                line = fgetl (fid);
+
+                for i = 1:self.nQuads
+                    line = fscanf (fid,'%g %g',6);
+                    self.hydrostaticForcePoints(1,i) = line(1);
+                    self.hydrostaticForcePoints(2,i) = line(2);
+                    self.hydrostaticForcePoints(3,i) = line(3);
+                    self.hydrostaticForces(1,i) = line(4);
+                    self.hydrostaticForces(2,i) = line(5);
+                    self.hydrostaticForces(3,i) = line(6);
+                end   
             
-            % Mesh visualisation file
-            fid = fopen (fullfile (self.meshDirectory, sprintf ('%s.tec', self.uniqueName)), 'r');
+            else
+                error ('Mesh is not marked as ''processed''');
+            end
             
-            line = fscanf (fid, '%s', 2); % what does this line do?
+        end
+        
+        function loadNemohMeshFile (self, filename, varargin)
+            % clear existing mesh and load mesh from generated .dat file
+            %
+            % Syntax
+            %
+            % loadNemohMeshFile (nb, filename)
+            % loadNemohMeshFile (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % loadNemohMeshFile imports a mesh from a nemoh mesh input
+            % file, i.e. with the format expected by the Nemoh preprocessor
+            % and solver, as produced by the Nemoh mesh (or Mesh.exe)
+            % program.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  filename - nemoh mesher input file name
+            %
+            % Additional optional arguments may be supplied using
+            % parameter-value pairs. The available options are:
+            %
+            % 'Draft' - distance from the lowest point on the mesh to the
+            %   water free surface. The mesh will be translated such that
+            %   the specified draft is achieved. If Draft is empty the
+            %   displacement is kept as it is in the mesh file. This is
+            %   also the default if not supplied. Draft is always a
+            %   positive number.
+            %
+            % 'CentreOfGravity' - 3 element vector with the x,y,z
+            %   coordinates of the centre of gravity of the body in the stl
+            %   file. If not supplied it is assumed that the mesh is drawn
+            %   such that the centre of gravity is at the point (0,0,0) in
+            %   the coordinate system of the stl file. The centre of
+            %   gravity will be translated along with the mesh if it is
+            %   translated to achieve a specified draft.
+            %
+            % 'Verbose' - logical flag (true/false), if true some text
+            %   information about the mesh will be output to the command
+            %   line. Default is false.
+            %
             
-            self.nMeshNodes = fscanf (fid, '%g', 1);
+            options.Draft = [];
+            options.Verbose = false;
+            options.CentreOfGravity = [];
             
-            line = fscanf(fid, '%s', 2); % what does this line do?
+            options = parse_pv_pairs (options, varargin);
             
-            self.nQuads = fscanf(fid, '%g', 1);
+            self.checkLogicalScalar (options.Verbose, true, 'Verbose');
             
-            line = fgetl (fid); % what does this line do?
             
-            self.meshX = ones (1, self.nMeshNodes) * nan;
-            self.meshY = self.meshX;
-            self.meshZ = self.meshX;
+            self.clearMeshAndForceData ();
+            
+            % Mesh file
+            fid = fopen (filename, 'r');
+            % ensure file is closed when done or on failure
+            CC = onCleanup (@() fclose (fid));
+
+            % first line is the number 2, then 1 or 0 indicating whether
+            % this is an axisymmetric mesh
+            headerdata = fscanf (fid, '%d', 2);
+            
+            if headerdata(2) == 0
+                self.meshType = 'nonaxi';
+            elseif headerdata(2) == 1
+                self.meshType = 'axi';
+            else
+                error ('Could not load mesh type from NEMOH input mesh file, was not 0 or 1.');
+            end
+            
+            % TODO: better to do a first pass to count nodes and faces then preallocate
+            vertexind = 1;
+            vertexdata = fscanf (fid, '%f', 4);
+            while vertexdata(1) ~= 0
+                self.meshVertices(1,vertexind) = vertexdata(2);
+                self.meshVertices(2,vertexind) = vertexdata(3);
+                self.meshVertices(3,vertexind) = vertexdata(4);
+                vertexdata = fscanf (fid, '%f', 4);
+                vertexind = vertexind + 1;
+            end
+            
+            faceind = 1;
+            facedata = fscanf (fid, '%f', 4);
+            while facedata(1) ~= 0
+                self.quadMesh(1,faceind) = facedata(1);
+                self.quadMesh(2,faceind) = facedata(2);
+                self.quadMesh(3,faceind) = facedata(3);
+                self.quadMesh(4,faceind) = facedata(4);
+                facedata = fscanf (fid, '%f', 4);
+                faceind = faceind + 1;
+            end
+            
+            self.nMeshNodes = size (self.meshVertices, 2);
+            self.nQuads = size (self.quadMesh, 2);
+            
+            self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
+            
+            self.meshPlottable = true;
+            
+        end
+        
+        function loadNemohMesherInputFile (self, filename, varargin)
+            % load NEMOH mesher input file
+            %
+            % Syntax
+            %
+            % loadNemohMesherInputFile (nb, filename)
+            % loadNemohMesherInputFile (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % loadNemohMesherInputFile imports a mesh from an a nemoh
+            % mesher input file, i.e. with the format expected by the Nemoh
+            % mesh (or Mesh.exe) program.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  filename - nemoh mesher input file name
+            %
+            % Additional optional arguments may be supplied using
+            % parameter-value pairs. The available options are:
+            %
+            % 'Draft' - distance from the lowest point on the mesh to the
+            %   water free surface. The mesh will be translated such that
+            %   the specified draft is achieved. If Draft is empty the
+            %   displacement is kept as it is in the mesh file. This is
+            %   also the default if not supplied. Draft is always a
+            %   positive number.
+            %
+            % 'CentreOfGravity' - 3 element vector with the x,y,z
+            %   coordinates of the centre of gravity of the body in the stl
+            %   file. If not supplied it is assumed that the mesh is drawn
+            %   such that the centre of gravity is at the point (0,0,0) in
+            %   the coordinate system of the stl file. The centre of
+            %   gravity will be translated along with the mesh if it is
+            %   translated to achieve a specified draft.
+            %
+            % 'Verbose' - logical flag (true/false), if true some text
+            %   information about the mesh will be output to the command
+            %   line. Default is false.
+            %
+            
+            options.Draft = [];
+            options.Verbose = false;
+            options.CentreOfGravity = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.checkLogicalScalar (options.Verbose, true, 'Verbose');
+            
+            self.clearMeshAndForceData ();
+            
+            % Mesh file
+            fid = fopen (filename, 'r');
+            % ensure file is closed when done or on failure
+            CC = onCleanup (@() fclose (fid));
+            
+            self.nMeshNodes = fscanf (fid, '%d', 1);
+            
+            self.nQuads = fscanf(fid, '%d', 1);
+            
+            self.meshVertices = ones (3,self.nMeshNodes) * nan;
             for i = 1:self.nMeshNodes
-                line = fscanf (fid, '%f', 6);
-                self.meshX(i) = line(1);
-                self.meshY(i) = line(2);
-                self.meshZ(i) = line(3);
+                line = fscanf (fid, '%f', 3);
+                self.meshVertices(1,i) = line(1);
+                self.meshVertices(2,i) = line(2);
+                self.meshVertices(3,i) = line(3);
             end
             
             self.quadMesh = ones (4, self.nQuads) * nan;
             for i = 1:self.nQuads
-                line = fscanf(fid, '%g', 4);
+                line = fscanf (fid, '%g', 4);
                 self.quadMesh(1,i) = line(1);
                 self.quadMesh(2,i) = line(2);
                 self.quadMesh(3,i) = line(3);
                 self.quadMesh(4,i) = line(4);
             end
             
-            % recompute triangle mesh
-            nftri = 0;
-            self.triMesh = ones (self.nQuads*2, 3) * nan;
-            for i = 1:self.nQuads
-                nftri = nftri+1;
-                self.triMesh(nftri,:) = [self.quadMesh(1,i), self.quadMesh(2,i), self.quadMesh(3,i)];
-                nftri = nftri+1;
-                self.triMesh(nftri,:) = [self.quadMesh(1,i), self.quadMesh(3,i), self.quadMesh(4,i)];
-            end    
-            
-            line = fgetl (fid);
-            line = fgetl (fid);
-            
-            for i = 1:self.nQuads
-                line = fscanf (fid,'%g %g',6);
-                self.hydrostaticX(i) = line(1);
-                self.hydrostaticY(i) = line(2);
-                self.hydrostaticZ(i) = line(3);
-                self.hydrostaticForceX(i) = line(4);
-                self.hydrostaticForceY(i) = line(5);
-                self.hydrostaticForceZ(i) = line(6);
-            end
+            self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
             
             self.meshPlottable = true;
             
         end
         
         function loadProcessedMeshData (self)
+            % load the non-mesh data calculated by mesher
+            %
+            % Syntax
+            %
+            % loadProcessedMeshData (nb)
+            %
+            % Description
+            %
+            % Loads the data created by the NEMOH mesh program in the
+            % KH.dat, Hydrostatics.dat and Inertia_hull.dat files. From
+            % these files, the following properties of the body object are
+            % populated: kH, centreOfBuoyancy, mass, WPA, and inertia
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %
             
             if self.meshProcessed
                 
@@ -918,15 +1253,15 @@ classdef body < nemoh.base
                 CC = onCleanup (@() fclose (fid));
                 
                 line = fscanf (fid, '%s', 2);
-                self.xB = fscanf (fid, '%f', 1);
+                self.centreOfBuoyancy(1,1) = fscanf (fid, '%f', 1);
 
                 line = fgetl (fid);
                 line = fscanf (fid,'%s',2);
-                self.yB = fscanf (fid,'%f',1);
+                self.centreOfBuoyancy(2,1) = fscanf (fid,'%f',1);
 
                 line = fgetl (fid);
                 line = fscanf (fid,'%s',2);
-                self.zB = fscanf (fid,'%f',1);
+                self.centreOfBuoyancy(3,1) = fscanf (fid,'%f',1);
 
                 line = fgetl (fid);
                 line = fscanf (fid,'%s',2);
@@ -936,7 +1271,7 @@ classdef body < nemoh.base
                 line = fscanf (fid,'%s',2);
                 self.WPA = fscanf (fid,'%f',1);
 
-                % laod Inertia data
+                % load Inertia data
                 self.inertia = zeros (6,6);
                 fid = fopen (fullfile (self.meshDirectory, 'Inertia_hull.dat'),'r');
                 CC = onCleanup (@() fclose (fid));
@@ -951,7 +1286,7 @@ classdef body < nemoh.base
                 self.inertia(3,3) = self.mass;
             
             else
-                error ('Mesh has not yet been processed, results not avaialable')
+                error ('Mesh has not yet been processed, results not available')
             end
             
         end
@@ -980,23 +1315,39 @@ classdef body < nemoh.base
             %
             %
             
-            str = sprintf ('%s\t\t! Name of mesh file\n', self.meshFileName);            
-            str = sprintf ('%s%g %g\t\t\t! Number of points and number of panels \t\n', str, self.nMeshNodes, self.nQuads);
-            str = sprintf ('%s6\t\t\t\t! Number of degrees of freedom\n', str);
-            str = sprintf ('%s1 1. 0. 0. 0. 0. 0.\t\t! Surge\n', str);
-            str = sprintf ('%s1 0. 1. 0. 0. 0. 0.\t\t! Sway\n', str);
-            str = sprintf ('%s1 0. 0. 1. 0. 0. 0.\t\t! Heave\n', str);
-            str = sprintf ('%s2 1. 0. 0. 0. 0. %s\t\t! Roll about a point\n', str, self.formatNumber (self.centreOfGravity(3)));
-            str = sprintf ('%s2 0. 1. 0. 0. 0. %s\t\t! Pitch about a point\n', str, self.formatNumber (self.centreOfGravity(3)));
-            str = sprintf ('%s2 0. 0. 1. 0. 0. %s\t\t! Yaw about a point\n', str, self.formatNumber (self.centreOfGravity(3)));
-            str = sprintf ('%s6\t\t\t\t! Number of resulting generalised forces\n', str);
-            str = sprintf ('%s1 1. 0. 0. 0. 0. 0.\t\t! Force in x direction\n', str);
-            str = sprintf ('%s1 0. 1. 0. 0. 0. 0.\t\t! Force in y direction\n', str);
-            str = sprintf ('%s1 0. 0. 1. 0. 0. 0.\t\t! Force in z direction\n', str);
-            str = sprintf ('%s2 1. 0. 0. 0. 0. %s\t\t! Moment force in x direction about a point\n', str, self.formatNumber (self.centreOfGravity(3)));
-            str = sprintf ('%s2 0. 1. 0. 0. 0. %s\t\t! Moment force in y direction about a point\n', str, self.formatNumber (self.centreOfGravity(3)));
-            str = sprintf ('%s2 0. 0. 1. 0. 0. %s\t\t! Moment force in z direction about a point\n', str, self.formatNumber (self.centreOfGravity(3)));
-            str = sprintf ('%s0\t\t\t\t! Number of lines of additional information \n', str);
+            if self.meshProcessed
+            
+                str = sprintf ('%s\t\t! Name of mesh file\n', self.meshFileName);            
+                str = sprintf ('%s%g %g\t\t\t! Number of points and number of panels \t\n', str, self.nMeshNodes, self.nQuads);
+
+                % Degrees of freedom
+                str = sprintf ('%s6\t\t\t\t! Number of degrees of freedom\n', str);     
+                str = sprintf ('%s1 1. 0. 0. 0. 0. 0.\t\t! Surge\n', str);
+                str = sprintf ('%s1 0. 1. 0. 0. 0. 0.\t\t! Sway\n', str);
+                str = sprintf ('%s1 0. 0. 1. 0. 0. 0.\t\t! Heave\n', str);
+                str = sprintf ('%s2 1. 0. 0. %s %s %s\t\t! Roll about a point\n', str, ...
+                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
+                str = sprintf ('%s2 0. 1. 0.  %s %s %s\t\t! Pitch about a point\n', str, ...
+                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
+                str = sprintf ('%s2 0. 0. 1.  %s %s %s\t\t! Yaw about a point\n', str, ...
+                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
+
+                % Resulting forces
+                str = sprintf ('%s6\t\t\t\t! Number of resulting generalised forces\n', str);
+                str = sprintf ('%s1 1. 0. 0. 0. 0. 0.\t\t! Force in x direction\n', str);
+                str = sprintf ('%s1 0. 1. 0. 0. 0. 0.\t\t! Force in y direction\n', str);
+                str = sprintf ('%s1 0. 0. 1. 0. 0. 0.\t\t! Force in z direction\n', str);
+                str = sprintf ('%s2 1. 0. 0. %s %s %s\t\t! Moment force in x direction about a point\n', str, ...
+                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
+                str = sprintf ('%s2 0. 1. 0. %s %s %s\t\t! Moment force in y direction about a point\n', str, ...
+                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
+                str = sprintf ('%s2 0. 0. 1. %s %s %s\t\t! Moment force in z direction about a point\n', str, ...
+                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
+                str = sprintf ('%s0\t\t\t\t! Number of lines of additional information \n', str);
+            
+            else
+                error ('Body cannot generate NEMOH file contents as mesh has not been processed yet (need to call processMesh).');
+            end
             
         end
         
@@ -1023,25 +1374,24 @@ classdef body < nemoh.base
             
         end
         
-        function writeAxiMesh (self, varargin)
-            % writes nemoh mesh input files for an axisymmetric body
+        function writeMesherInputFile (self, varargin)
+            % writes nemoh mesher input files for a body
             %
             % Description
             %
-            % writeAxiMesh is used to generate the mesh file when the mesh
-            % was generated using makeAxiSymmetricMesh for a body described
-            % as a 2D profile which will be swept around the z axis.
+            % writeMeshInputCommon is a common function for generating the
+            % mesh input file.
             %
             % Syntax
             %
-            % writeAxiMesh (nb, 'Parameter', Value)
+            % writeMeshInputCommon (nb, 'Parameter', Value)
             %
             % Input
             %
             %  nb - nemoh.body object
             %
             % Additional optional inputs may be provided through
-            % parameter-value pairs. The avaialable options are:
+            % parameter-value pairs. The available options are:
             %
             % 'MeshFileName' - string containing the name of the input mesh
             %   file for NEMOH. If not supplied a file name is generated
@@ -1062,8 +1412,19 @@ classdef body < nemoh.base
             
             fprintf (fid, '%s\n', self.meshFileName(1:end-4));
             
+            switch self.meshType
+                
+                case 'axi'
+                    isaxi = true;
+                case 'nonaxi'
+                    isaxi = false;
+                otherwise
+                    error ('Body has mesh type %s, which is not currently able to be used to generate a Nemoh mesher input file.', ...
+                        self.meshType );
+            end
+            
             % 1 if a symmetry about (xOz) is used. 0 otherwise
-            fprintf (fid, '1 \n');
+            fprintf (fid, '%d \n', double (isaxi));
             
             % Possible translation about x axis (first number) and y axis (second number)
             fprintf (fid, '0. 0. \n');
@@ -1112,7 +1473,7 @@ classdef body < nemoh.base
             fprintf (fid, '%g \n', self.nQuads);
             
             for i = 1:self.nMeshNodes
-                fprintf (fid, '%E %E %E \n', self.meshX(i), self.meshY(i), self.meshZ(i));
+                fprintf (fid, '%E %E %E \n', self.meshVertices(1,i), self.meshVertices(2,i), self.meshVertices(3,i));
             end
             
             for i = 1:self.nQuads
@@ -1125,28 +1486,122 @@ classdef body < nemoh.base
             
         end
         
+        function processMeshDraftAndCoG (self, draft, cog)
+            % process a mesh according to draft and CoG options
+            %
+            %
+            
+            if ~isempty (draft)
+                self.checkNumericScalar (draft, true, 'Draft');
+                assert (draft >= 0, ...
+                    'Draft must be greater than or equal to zero (it is magnitude of vertical displacement from mean water level).');
+            end
+            
+            if isempty (cog)
+                cog = [0; 0; 0];
+            else
+                assert ( isnumeric (cog) ...
+                         && isvector (cog) ...
+                         && isreal (cog) ...
+                         && numel (cog) == 3 ...
+                         , 'CentreOfGravity must be a 3 element real-valued vector' );
+                     
+                cog = cog(:);
+            end
+            
+            if isempty (draft)
+                % leave mesh and CoG as they are
+                zdisp = 0;
+            else
+                % calcualte the shift required to get the desired draft.
+                % The draft is the distance from the lowest point on the
+                % mesh to the mean water level
+                meshminz = min (self.meshVertices(3,:));
+            
+                zdisp = -meshminz - draft;
+            end
+            
+            self.meshVertices(3,:) = self.meshVertices(3,:) + zdisp;
+            
+            self.centreOfGravity = cog;
+            self.centreOfGravity(3) = self.centreOfGravity(3) + zdisp;
+            
+        end
+        
         function clearMeshAndForceData (self)
             
+            % mesh data
             self.axiMeshR = [];
             self.axiMeshZ = [];
-            self.meshX = [];
-            self.meshY = [];
-            self.meshZ = [];
+            self.meshVertices = [];
             self.quadMesh = [];
             self.triMesh = [];
             self.nMeshNodes = [];
             self.nQuads = [];
             self.nTriangles = [];
-            self.hydrostaticForceX = [];
-            self.hydrostaticForceY = [];
-            self.hydrostaticForceZ = [];
-            self.hydrostaticX = [];
-            self.hydrostaticY = [];
-            self.hydrostaticZ = [];
+            
+            % mesh results
+            self.hydrostaticForces = [];
+            self.hydrostaticForcePoints = [];
+            self.centreOfBuoyancy = [];
+            self.WPA = [];
+            self.mass = [];
+            self.inertia = [];
+            self.kH = [];
+            
+            self.defaultTargetPanels = 250;
             
             self.meshProcessed = false;
             self.meshPlottable = false;
             self.meshType = 'none';
+            self.stlLoaded = false;
+            
+        end
+        
+        function [hmesh, hax, hfig] = polyMeshPlot (self, v, f, varargin)
+            % plot a polygonal mesh
+            %   QUADMESH(QUAD,X,Y,Z,C) displays the quadrilaterals defined in the M-by-4
+            %   face matrix QUAD as a mesh.  A row of QUAD contains indexes into
+            %   the X,Y, and Z vertex vectors to define a single quadrilateral face.
+            %   The edge color is defined by the vector C.
+            %
+            %   QUADMESH(QUAD,X,Y,Z) uses C = Z, so color is proportional to surface
+            %   height.
+            %
+            %   QUADMESH(TRI,X,Y) displays the quadrilaterals in a 2-d plot.
+            %
+            %   H = QUADMESH(...) returns a handle to the displayed quadrilaterals.
+            %
+            %   QUADMESH(...,'param','value','param','value'...) allows additional
+            %   patch param/value pairs to be used when creating the patch object. 
+            %
+            %   See also patch
+            %
+            
+            options.Axes = [];
+            options.PatchParameters = {};
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isa (options.Axes, 'matlab.graphics.axis.Axes')
+                hax = options.Axes;
+                hfig = get (hax, 'Parent');
+            elseif isempty (options.Axes)
+                hfig = figure;
+                hax = axes;
+            else
+                error ('Axes must be a matlab axes object, or empty.')
+            end
+
+            hmesh = patch( 'faces', f, ...
+                           'vertices', v, ...
+                           ... 'facevertexcdata', c(:),...
+                           'facecolor', 'none', ...
+                           'edgecolor', [0, 0.7500, 0.7500], ...
+                           'facelighting', 'none', ...
+                           'edgelighting', 'flat',...
+                           'parent', hax, ...
+                           options.PatchParameters{:} );
             
         end
         
