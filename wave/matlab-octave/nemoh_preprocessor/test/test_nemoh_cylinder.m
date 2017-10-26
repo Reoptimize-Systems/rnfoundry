@@ -50,7 +50,7 @@ sim = nemoh.simulation ( inputdir, ...
 %% write mesh files
 
 % write mesh file for all bodies (just one in this case)
-sim.writeMeshes ();
+sim.writeMesherInputFiles ();
 
 %% process mesh files
 
