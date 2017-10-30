@@ -16,9 +16,9 @@ function hydro = generate_hydrodata (varargin)
     float = nemoh.body (inputdir);
 
     % define the body shape using a 2D profile rotated around the z axis
-    float.loadSTLMesh ( fullfile (dir, 'geometry', 'float.stl'), ...
-                        'CentreOfGravity', [0,0,-0.72], ...
-                        'UseSTLName', true );
+    float.loadNemohMesherInputFile ( fullfile (dir, 'geometry', 'float.nmi'), ...
+                                     'CentreOfGravity', [0,0,-0.72], ...
+                                     'UseSTLName', true );
 
     %% draw body mesh 
 
@@ -30,7 +30,7 @@ function hydro = generate_hydrodata (varargin)
     spar = nemoh.body (inputdir);
 
     % define the body shape using a 2D profile rotated around the z axis
-    spar.loadSTLMesh ( fullfile (dir, 'geometry', 'plate.stl'), ...
+    spar.loadSTLMesh ( fullfile (dir, 'geometry', 'spar.nmi'), ...
                        'Draft', 28.8999996, ... % got from reading example mesh file in WEC-Sim 
                        'CentreOfGravity', [ 0, 0, -21.29 + 28.8999996 - 8.71 ], ...
                        'UseSTLName', true );
@@ -69,14 +69,11 @@ function hydro = generate_hydrodata (varargin)
 
     %% Generate the Nemoh input file
 
-    % generate the file for 10 frequencies in the range defined by waves with
-    % periods from 10s to 3s.
-    T = [10, 1];
-
-    sim.writeNemoh ( 'NWaveFreqs', 50, ...
-                     'MinMaxWaveFreqs', 2 * pi() *  (1./T), ...
-                     'IRFTimeStep', 0.1, ...
-                     'IRFDuration', 60, ...
+    % generate the file 
+    omega = [0.02, 5.20];
+    sim.writeNemoh ( 'NWaveFreqs', 260, ...
+                     'MinMaxWaveFreqs', omega, ...
+                     'DoIRFCalculation', false, ...
                      'NDirectionAngles', 1 );
 
     % The above code demonstrates the use of optional arguments to writeNemoh
@@ -108,14 +105,15 @@ function hydro = generate_hydrodata (varargin)
     
     hydro = struct();
 
-    hydro = Read_NEMOH (inputdir);
+    hydro = wsim.processnemoh (inputdir);
+    
     % hydro = Read_WAMIT(hydro,'..\..\WAMIT\RM3\rm3.out',[]);
     % hydro = Combine_BEM(hydro); % Compare WAMIT
-    hydro = Radiation_IRF (hydro, 60, [], [], [], []);
+    hydro = Radiation_IRF (hydro, 60, [], [], [], 1.9);
     
     hydro = Radiation_IRF_SS (hydro, [], []);
-    
-    hydro = Excitation_IRF (hydro, 157, [], [], [], []);
+
+    hydro = Excitation_IRF (hydro,157, [], [], [], 1.9);
     
     if options.WriteH5
         Write_H5 (hydro)
