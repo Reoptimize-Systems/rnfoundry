@@ -43,7 +43,7 @@ function position = planarrotorpos(ypole, position, fracpolepos, rotoranglepos)
         
         if isvector(rotoranglepos) && numel(rotoranglepos) == 2
             
-            if ~isint2eps(rotoranglepos(1))
+            if ~check.isint2eps(rotoranglepos(1))
                 
                 error('ROTARY:axfluxrotor:integerpoles', ...
                       ['The first value in rotoranglepos should be', ...

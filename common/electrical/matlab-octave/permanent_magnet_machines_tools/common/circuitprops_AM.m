@@ -196,17 +196,17 @@ end
 function check_coil_numbers (design)
 
     % chekck all coils, branches are integers
-    if ~isint2eps (design.Branches)
+    if ~check.isint2eps (design.Branches)
         error ('RENEWNET:circuitprops_AM', ...
              'Number of parallel branches is not an integer, check winding specification.');
     end
 
-    if ~isint2eps (design.CoilsPerBranch)
+    if ~check.isint2eps (design.CoilsPerBranch)
         error ('RENEWNET:circuitprops_AM', ...
              'Number of coils per parallel branch is not an integer, check winding specification.');
     end
     
-    if ~isint2eps (design.NCoilsPerPhase)
+    if ~check.isint2eps (design.NCoilsPerPhase)
         error ('RENEWNET:circuitprops_AM', ...
              'Number of coils per phase is not an integer, check winding specification.');
     end

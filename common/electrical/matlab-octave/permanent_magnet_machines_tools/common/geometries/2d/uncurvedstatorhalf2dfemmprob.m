@@ -36,7 +36,7 @@ function [FemmProblem, outernodes, coillabellocs, slotinfo] = ...
     
     % check an integer number of machine slots (can't have half a slot or a
     % pole in a machine
-    if ~isint2eps (nslots)
+    if ~check.isint2eps (nslots)
         error ('Number of slots must be an integer.')
     end
     
