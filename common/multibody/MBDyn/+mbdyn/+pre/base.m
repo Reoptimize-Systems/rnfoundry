@@ -181,7 +181,7 @@ classdef base < handle
         end
         
         function ok = checkScalarInteger (num, throw, name)
-            % checks if input is an integer value to machine precision
+            % checks if input is a scalar integer value to machine precision
             %
             % Syntax
             %
@@ -226,8 +226,8 @@ classdef base < handle
             %
             % Syntax
             %
-            %  ok = checkNumericScalar (vec, throw)
-            %  ok = checkNumericScalar (..., name)
+            %  ok = checkLogicalScalar (tfvalue, throw)
+            %  ok = checkLogicalScalar (..., name)
             %
             % Input
             %
@@ -929,3 +929,15 @@ classdef base < handle
     end
     
 end
+
+
+function result = isint2eps(X)
+% isint2eps determines if the numbers in a matrix are integers to the limit
+% of the machine floating-point relative accuracy for those values
+
+    theMod = mod(X,1);
+    
+    result = theMod <= eps(theMod);
+
+end
+
