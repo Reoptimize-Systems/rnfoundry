@@ -26,7 +26,7 @@ classdef externalFileCommunicator < mbdyn.pre.base
                         {'staggared', 'loose', 'tight'}, ...
                         true, 'Coupling' );
                     
-                elseif ~(isnumeric (options.Coupling) && isscalar (options.Coupling) && isint2eps (options.Coupling))
+                elseif ~self.checkScalarInteger (options.Coupling, false)
                     
                     error ('Coupling must be a string or integer number of steps');
                     
@@ -42,8 +42,8 @@ classdef externalFileCommunicator < mbdyn.pre.base
                 
             end
             
-            if ~( ( isnumeric (options.Precision) && isscalar (options.Precision) && isint2eps (options.Precision) ) ...
-                    || isempty (options.Precision) )
+            if ~( ( self.checkScalarInteger (options.Precision, false) ) ...
+                  || isempty (options.Precision) )
                 
                 error ('Precision must be an integer');
                 
