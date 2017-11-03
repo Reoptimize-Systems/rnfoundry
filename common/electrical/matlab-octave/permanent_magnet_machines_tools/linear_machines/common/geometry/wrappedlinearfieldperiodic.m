@@ -1,24 +1,40 @@
-function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (FemmProblem, tmag, zmag, zs, toffset, tsvc, tsve, zsvi, zsvo, wrapperthickness, varargin)
+function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (FemmProblem, fieldtype, vars, wrapperthickness, varargin)
 % creates a FemmProblem geometry of a radial section containing two magnets
 % optionally wrapped with additional layers and with periodic edges
 %
 %
 % Syntax
 %
-% [FemmProblem, wrapperthickness, innercentres, outercentres, nodeids] = ...
-%   wrappedannularsecmagaperiodic(FemmProblem, thetapole, thetamag, rmag, ...
-%                                 roffset, pos, wrapperthickness)
-%
-% [...] = wrappedannularsecmagaperiodic(..., 'param', value, ...)
+% [FemmProblem, wrapperthickness, info] = ...
+%   wrappedlinearfieldperiodic(FemmProblem, fieldtype, vars, wrapperthickness)
+% [...] = wrappedlinearfieldperiodic(..., 'param', value, ...)
 %
 % Description
 %
-% wrappedannularsecmagaperiodic creates a periodic geometry of two magnets
-% with spaces in between, with a base position shown in the figure below.
-% In addition, any number of annular sectors can be added either to inside
-% or outside of the main region (like wrappers for the main region).
-%       
+% wrappedlinearfieldperiodic creates a periodic linear machine field
+% geometry. In addition, any number of rectangular regions can be added
+% either to inside or outside of the main region (like wrappers for the
+% main region).
 %
+% Inputs
+%
+%  FemmProblem - FemmProblem structure to which the geometry will be added.
+% 
+%  fieldtype - string containing the geometry type to be drawn. See vars
+%    below.
+%
+%  vars - structure containing the variables describing the linear field
+%    design. This must contain appropriate fields depending on the they
+%    type of geometry to be created (specified in the fieldtype input
+%    described above). The appropriate fields are shown for each avaialble
+%    geometry type below:
+%
+%    Geom Type: 'simple' 
+%
+%    A geometry type consisting of a series of rectangular regions with
+%    alternating materials. Optionally a 'cavity' region may be added as
+%    shown with a different material in this space. See also the
+%    'CavityMaterial' and 'CavityGroup' options below.
 %
 %                  :
 %   toffset        :
@@ -42,21 +58,27 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
 %         |                | :
 %         |________________| v
 %         |                |
-%         |                |         
+%         |                |  
 %
+%      tmag - thickness of the magnets
 %
-% Inputs
+%      zmag - height of the magnets
 %
-%  FemmProblem - FemmProblem structure to which the geometry will be added
-%, ts, zmag, zs, toffset, tsvc, tsve, zsvi, zsvo, wrapperthickness
+%      zs - height of magnet spacer
 %
-%  tmag - magnet width in radians
+%      toffset - displacement of the magnet centers from the origin
 %
-%  rmag - radial thickness of the magnets
+%      tsvc - (optional) thickness of cavity at spacer center. If not
+%        present will be set to tmag/2.
 %
-%  toffset - radial displacement of the magnet centers from the center
+%      tsve -(optional) thickness of cavity at spacer edge. If not
+%        present will be set to tmag/2.
 %
-%  pos - the angular position of the magnets
+%      zsvi - (optional) height of cavity at spacer center end. If not
+%        present will be set to zs/2.
+%
+%      zsvo - (optional) height of cavity at spacer inner end. If not
+%        present will be set to zs/2.
 %
 %  wrapperthickness - either an (n x 2) matrix or column vector of wrapper
 %    thicknesses. If an (n x 2) matrix. the first column specifies the
@@ -73,8 +95,9 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
 %  In addition, a number of optional parameters can be specified as
 %  parameter-value pairs. Possible parameter-value pairs are:
 %
-%  'NPolePairs' - 
-%
+%  'NPolePairs' - number of pairs of magnets and spacers to be drawn.
+%    Default is 1.
+%  
 %  'MagDirections' - either a 2 element numeric vector, or a 2 element cell
 %    array of strings. If numeric, these are the directions in degrees of
 %    the magnet magnetisation. If a cell array of strings, these are
@@ -92,46 +115,113 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
 %
 %    'y'    : y position of each elements
 % 
-%    The default is {'theta', 'theta+180'}, resulting in radially
-%    magnetized magnets of opposite polarity.
+%    The default is {0, 180}, resulting in magnets pointing parallel to the
+%    x axis
 %
-%  'MagnetMaterial' - 
+%  'MagnetMaterial' - Index of the material in the FemmProblem.Materials
+%    structure to use as magnet material. If empty, no magnet region block
+%    labels are drawn. Default is 1 if not supplied.
 %
-%  'MagnetGroup' - 
+%  'MagnetGroup' - number to be assigned as the group number of the maget
+%    regions. Default is 0 if not supplied. 
 %
-%  'SpaceMaterial' - 
+%  'SpacerMaterial' - Index of the material in the FemmProblem.Materials
+%    structure to use as spacer material. If empty, no spacer region block
+%    labels are drawn. Default is 1 if not supplied.
 %
-%  'SpacerGroup' - 
+%  'SpacerGroup' - number to be assigned as the group number of the spacer
+%    regions. Default is 0 if not supplied. Default is 1 if not supplied.
 %
-%  'Tol' - 
+%  'CavityMaterial' - Relevant only of 'simple' geometry. Index of the
+%    material in the FemmProblem.Materials structure to use as cavity
+%    material. If empty, no magnet region block labels are drawn. Default
+%    is 1 if not supplied.
 %
-%  'MeshSize' - 
+%  'CavityGroup' - Relevant only of 'simple' geometry. Number to be
+%    assigned as the group number of the cavity regions. Default is 0 if
+%    not supplied. Default is 1 if not supplied.
 %
-%  'Flip' - 
+%  'MeshSize' - Mesh size to use in the entire region.
+%
+%  'AddPeriodicBoundaries' - logical (true/false) flag indicating whether
+%    to add periodic boundaries to the top and bottom of the drawing.
+%    Default is true.
 %
 % Output
 %
-%  FemmProblem - 
+%  FemmProblem - input femmproblem structure with new elements added.
 %
-%  wrapperthickness - 
+%  wrapperthickness - either an (n x 2) matrix or column vector of wrapper
+%    thicknesses. If an (n x 2) matrix. the first column specifies the
+%    thickness of any wrappers on the left of the magnets, and the
+%    second column the thickness of wrappers on the right hand side. The
+%    wrappers are added moving progressively further from the magnet
+%    position (either to the left or right) down the rows of the matrix.
 %
-%  info - structure containing information about the problem drawing
+%  info - structure containing other information about the drawing. It can
+%    contain the following fields:
+%   
+%    'OuterNodeIDs' - array of four integers containing the ids of nodes at
+%      the four corners of the field drawing. Nodes areindexed from the
+%      ottom left corner, and then anti-clockwise around the drawing.
 %
+%    'NodeIDs' - array of integers containing the ids of all new nodes
+%      added.
+%
+%    'BoundaryInds' - array of integers containing the indices in the
+%      FemmProblem.Boundaries structure of the newly added boundaries. Not
+%      present if AddPeriodicBoundaries is false.
+%
+%    'TopSegInd' - index in the FemmProblem structure of the top horizontal
+%      segment in the drawing
+%
+%    'BottomSegInd' - index in the FemmProblem structure of the bottom
+%      horizontal segment in the drawing
+%
+%    'MagnetBlockInds' - indices in the FemmProblem structure of the magnet
+%      region block labels. Empty if the 'MagnetMaterial' optional argument
+%      is empty (so no labels are draw).
+%
+%    'SpacerBlockInds' - indices in the FemmProblem structure of the spacer
+%      region block labels. Empty if the 'MagnetMaterial' optional argument
+%      is empty (so no labels are draw).
+%
+%    'CavityBlockInds' - indices in the FemmProblem structure of the cavity
+%      region block labels. Empty if there are no cavities.
+%
+%    'InnerCentres' - 
+%
+%    'OuterCentres' - 
+%
+%
+% See also: linearfieldperiodic
 %
 
     Inputs.MagDirections = {'theta', 'theta+180'};
     Inputs.MagnetMaterial = 1;
     Inputs.MagnetGroup = 0;
     Inputs.SpacerMaterial = 1;
-    Inputs.SpacerGroup = 0; 
+    Inputs.SpacerGroup = 0;
+    Inputs.CavityMaterial = [];
+    Inputs.CavityGroup = 0;
     Inputs.WrapperGroup = 0;
     Inputs.Tol = 1e-5;
     Inputs.MeshSize = -1;
     Inputs.NPolePairs = 1;
     Inputs.Flip = false;
+    Inputs.AddPeriodicBoundaries = true;
     
     % parse the input arguments
     Inputs = parse_pv_pairs(Inputs, varargin);
+    
+    check.isScalarInteger (Inputs.MagnetMaterial, true, 'MagnetMaterial');
+    check.isScalarInteger (Inputs.MagnetGroup, true, 'MagnetGroup');
+    check.isScalarInteger (Inputs.SpacerMaterial, true, 'SpacerMaterial');
+    check.isScalarInteger (Inputs.SpacerGroup, true, 'SpacerGroup');
+    check.isNumericScalar (Inputs.MeshSize, true, 'MeshSize');
+    check.isScalarInteger (Inputs.NPolePairs, true, 'NPolePairs');
+    check.isLogicalScalar (Inputs.Flip, true, 'Flip');
+    check.isLogicalScalar (Inputs.AddPeriodicBoundaries, true, 'AddPeriodicBoundaries');
     
     if isscalar(Inputs.WrapperGroup)
         Inputs.WrapperGroup = repmat (Inputs.WrapperGroup, size(wrapperthickness));
@@ -144,16 +234,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
         Inputs.MagDirections = {Inputs.MagDirections(1), Inputs.MagDirections(2)};
     end
     
-    vars = struct ('tmag', tmag, ...
-                    'zmag', zmag,  ...
-                    'zs', zs,  ...
-                    'toffset', toffset,  ...
-                    'tsvc', tsvc,  ...
-                    'tsve', tsve,  ...
-                    'zsvi', zsvi,  ...
-                    'zsvo', zsvo );
-    
-    [FemmProblem, ~, ~, info] = linearfieldperiodic (FemmProblem, 'simple', vars, ...
+    [FemmProblem, ~, ~, info] = linearfieldperiodic (FemmProblem, fieldtype, vars, ...
                 'MagDirections', Inputs.MagDirections, ...
                 'MagnetMaterial', Inputs.MagnetMaterial, ...
                 'MagnetGroup', Inputs.MagnetGroup, ...
@@ -162,7 +243,10 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                 'Tol', Inputs.Tol, ...
                 'MeshSize', Inputs.MeshSize, ...
                 'NPolePairs', Inputs.NPolePairs, ...
-                'Flip', Inputs.Flip);
+                'Flip', Inputs.Flip, ...
+                'AddPeriodicBoundaries', Inputs.AddPeriodicBoundaries, ...
+                'CavityMaterial', Inputs.CavityMaterial, ...
+                'CavityGroup', Inputs.CavityGroup );
     
     zpole = zmag + zs;
     
@@ -205,16 +289,21 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                              Inputs.NPolePairs*2*zpole, ...
                             'InGroup', Inputs.WrapperGroup(1,1));
 
-        % add a new periodic boundary for the top and bottom of the region
-        [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm (FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
-
-        botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
+        if Inputs.AddPeriodicBoundaries
+            % add a new periodic boundary for the top and bottom of the region
+            [FemmProblem, info.BoundaryInds(end+1)] = ...
+                addboundaryprop_mfemm (FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
+            
+            tbboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
+        else
+            tbboundarymarker = '';
+        end
 
         % Seg with Periodic boundary at top
         [FemmProblem, segind] = addsegments_mfemm (FemmProblem, ...
                                         info.OuterNodeIDs(1), ...
                                         topnodeid, ...
-                                        'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
+                                        'BoundaryMarker', tbboundarymarker, ...
                                         'InGroup', Inputs.WrapperGroup(1,1));
 
         info.TopSegInd = [info.TopSegInd, segind];
@@ -225,7 +314,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
         [FemmProblem, segind] = addsegments_mfemm (FemmProblem, ...
                                         lastbotnodeid, ...
                                         botnodeid, ...
-                                        'BoundaryMarker', botboundarymarker, ...
+                                        'BoundaryMarker', tbboundarymarker, ...
                                         'InGroup', Inputs.WrapperGroup(1,1));
 
         info.BottomSegInd = [info.BottomSegInd, segind];
@@ -286,16 +375,20 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                                  Inputs.NPolePairs*2*zpole, ...
                                 'InGroup', Inputs.WrapperGroup(i,1));
 
-            % add a new periodic boundary for the top and bottom of the region
-            [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
+            if options.AddPeriodicBoundaries
+                % add a new periodic boundary for the top and bottom of the region
+                [FemmProblem, info.BoundaryInds(end+1)] = ...
+                    addboundaryprop_mfemm(FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
 
-            botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
-
+                tbboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
+            else
+                tbboundarymarker = '';
+            end
             % Seg with Periodic boundary at top
             [FemmProblem, segind] = addsegments_mfemm (FemmProblem, ...
                                             lasttopnodeid, ...
                                             topnodeid, ...
-                                            'BoundaryMarker', botboundarymarker, ...
+                                            'BoundaryMarker', tbboundarymarker, ...
                                             'InGroup', Inputs.WrapperGroup(i,1));
 
             info.TopSegInd = [info.TopSegInd, segind];
@@ -304,7 +397,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
             [FemmProblem, segind] = addsegments_mfemm (FemmProblem, ...
                                             lastbotnodeid, ...
                                             botnodeid, ...
-                                            'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
+                                            'BoundaryMarker', tbboundarymarker, ...
                                             'InGroup', Inputs.WrapperGroup(i,1));
 
             info.BottomSegInd = [info.BottomSegInd, segind];
@@ -359,17 +452,22 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                                      Inputs.NPolePairs*2*zpole, ...
                                     'InGroup', Inputs.WrapperGroup(1,2));
 
-        % add a new periodic boundary for the top and bottom of the
-        % region
-        [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
+        if options.AddPeriodicBoundaries
+            % add a new periodic boundary for the top and bottom of the
+            % region
+            [FemmProblem, info.BoundaryInds(end+1)] = ...
+                addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
 
-        botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
+            tbboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
+        else
+            tbboundarymarker = '';
+        end
 
         % Seg with Periodic boundary at top
         [FemmProblem, segind] = addsegments_mfemm ( FemmProblem, ...
                                          info.OuterNodeIDs(2), ...
                                          topnodeid, ...
-                                         'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
+                                         'BoundaryMarker', tbboundarymarker, ...
                                          'InGroup', Inputs.WrapperGroup(1,2) );
 
         info.TopSegInd = [info.TopSegInd, segind];
@@ -380,7 +478,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
         [FemmProblem, segind] = addsegments_mfemm ( FemmProblem, ...
                                          lastbotnodeid, ...
                                          botnodeid, ...
-                                         'BoundaryMarker', botboundarymarker, ...
+                                         'BoundaryMarker', tbboundarymarker, ...
                                          'InGroup', Inputs.WrapperGroup(1,2));
 
         info.BottomSegInd = [info.BottomSegInd, segind];
@@ -437,17 +535,21 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                                          Inputs.NPolePairs*2*zpole, ...
                                         'InGroup', Inputs.WrapperGroup(i,2));
 
-            % add a new periodic boundary for the top and bottom of the
-            % region
-            [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
+            if options.AddPeriodicBoundaries
+                % add a new periodic boundary for the top and bottom of the
+                % region
+                [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
 
-            botboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
+                tbboundarymarker = FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name;
+            else
+                tbboundarymarker = '';
+            end
 
             % Seg with Periodic boundary at top
             [FemmProblem, segind] = addsegments_mfemm ( FemmProblem, ...
                                              lasttopnodeid, ...
                                              topnodeid, ...
-                                             'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds(end)).Name, ...
+                                             'BoundaryMarker', tbboundarymarker, ...
                                              'InGroup', Inputs.WrapperGroup(i,2) );
 
             info.TopSegInd = [info.TopSegInd, segind];
@@ -456,7 +558,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
             [FemmProblem, segind] = addsegments_mfemm ( FemmProblem, ...
                                              lastbotnodeid, ...
                                              botnodeid, ...
-                                             'BoundaryMarker', botboundarymarker, ...
+                                             'BoundaryMarker', tbboundarymarker, ...
                                              'InGroup', Inputs.WrapperGroup(i,2) );
 
             info.BottomSegInd = [info.BottomSegInd, segind];

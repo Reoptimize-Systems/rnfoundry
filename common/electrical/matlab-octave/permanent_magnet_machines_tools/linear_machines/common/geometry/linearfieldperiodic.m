@@ -1,11 +1,11 @@
 function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, type, vars, varargin)
-% generates a linear magnets containing region with periodic boundaries at
+% generates region containing linear magnets with periodic boundaries at
 % top and bottom
 %
 % Syntax
 %
 % [FemmProblem, nodes, links, info] = ...
-%       linearfieldperiodic (FemmProblem, tmag, zmag, zs, toffset, tsvc, tsve, zsvi, zsvo)
+%       linearfieldperiodic (FemmProblem, type, vars)
 % [...] = linearfieldperiodic(..., 'Parameter', Value)
 %
 %
@@ -15,8 +15,8 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
 %
 %  vars - structure containing the variables describing the linear field
 %    design. This must contain appropriate fields depending on the they
-%    type of geometry to be created. The appropriate fields are shown fo
-%    each geometrytype below:
+%    type of geometry to be created. The appropriate fields are shown for
+%    each geometry type below:
 %
 %    Geom Type: 'simple' 
 %
@@ -52,19 +52,25 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
 %
 %      toffset - displacement of the magnet centers from the origin
 %
-%      tsvc - thickness of cavity at spacer center
+%      tsvc - (optional) thickness of cavity at spacer center. If not
+%        present will be set to tmag/2.
 %
-%      tsve - thickness of cavity at spacer edge
+%      tsve -(optional) thickness of cavity at spacer edge. If not
+%        present will be set to tmag/2.
 %
-%      zsvi - height of cavity at spacer center end
+%      zsvi - (optional) height of cavity at spacer center end. If not
+%        present will be set to zs/2.
 %
-%      zsvo - height of cavity at spacer inner end
+%      zsvo - (optional) height of cavity at spacer inner end. If not
+%        present will be set to zs/2.
 %
-%  
 %
 %  In addition, a number of optional parameters can be specified as
 %  parameter-value pairs. Possible parameter-value pairs are:
 %
+%  'NPolePairs' - number of pairs of magnets and spacers to be drawn.
+%    Default is 1.
+%  
 %  'MagDirections' - either a 2 element numeric vector, or a 2 element cell
 %    array of strings. If numeric, these are the directions in degrees of
 %    the magnet magnetisation. If a cell array of strings, these are
@@ -85,28 +91,64 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
 %    The default is {0, 180}, resulting in magnets pointing parallel to the
 %    x axis
 %
-%  'MagnetMaterial' - 
+%  'MagnetMaterial' - Index of the material in the FemmProblem.Materials
+%    structure to use as magnet material. If empty, no magnet region block
+%    labels are drawn. Default is 1 if not supplied.
 %
-%  'MagnetGroup' - 
+%  'MagnetGroup' - number to be assigned as the group number of the maget
+%    regions. Default is 0 if not supplied. 
 %
-%  'SpacerMaterial' - 
+%  'SpacerMaterial' - Index of the material in the FemmProblem.Materials
+%    structure to use as spacer material. If empty, no spacer region block
+%    labels are drawn. Default is 1 if not supplied.
 %
-%  'SpacerGroup' - 
+%  'SpacerGroup' - number to be assigned as the group number of the spacer
+%    regions. Default is 0 if not supplied. Default is 1 if not supplied.
 %
-%  'Tol' - 
+%  'MeshSize' - Mesh size to use in the entire region.
 %
-%  'MeshSize' - 
+%  'AddPeriodicBoundaries' - logical (true/false) flag indicating whether
+%    to add periodic boundaries to the top and bottom of the drawing.
+%    Default is true.
 %
 % Output
 %
-%  FemmProblem - 
+%  FemmProblem - input femmproblem structure with new elements added.
 %
-%  nodes - 
+%  nodes - (n x 2) matrix of coordinates of the new nodes added.
 %
-%  links - 
+%  links - (k x 2) matrix of node links, indexed into the nodes output
 %
-%  info - 
+%  info - structure containing other information about the drawing. It can
+%    contain the following fields:
+%   
+%    'OuterNodeIDs' - array of four integers containing the ids of nodes at
+%      the four corners of the field drawing. Nodes areindexed from the
+%      ottom left corner, and then anti-clockwise around the drawing.
 %
+%    'NodeIDs' - array of integers containing the ids of all new nodes
+%      added.
+%
+%    'BoundaryInds' - array of integers containing the indices in the
+%      FemmProblem.Boundaries structure of the newly added boundaries. Not
+%      present if AddPeriodicBoundaries is false.
+%
+%    'TopSegInd' - index in the FemmProblem structure of the top horizontal
+%      segment in the drawing
+%
+%    'BottomSegInd' - index in the FemmProblem structure of the bottom
+%      horizontal segment in the drawing
+%
+%    'MagnetBlockInds' - indices in the FemmProblem structure of the magnet
+%      region block labels. Empty if the 'MagnetMaterial' optional argument
+%      is empty (so no labels are draw).
+%
+%    'SpacerBlockInds' - indices in the FemmProblem structure of the spacer
+%      region block labels. Empty if the 'MagnetMaterial' optional argument
+%      is empty (so no labels are draw).
+%
+%    'CavityBlockInds' - indices in the FemmProblem structure of the cavity
+%      region block labels. Empty if there are no cavities.
 %
 
     Inputs.MagDirections = {0, 180};
@@ -115,15 +157,24 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
     Inputs.SpacerMaterial = 1;
     Inputs.SpacerGroup = 0;
     Inputs.CavityMaterial = [];
-    Inputs.Tol = 1e-5;
+    Inputs.CavityGroup = 0;
+%     Inputs.Tol = 1e-5;
     Inputs.MeshSize = -1;
     Inputs.BoundName = '';
     Inputs.NPolePairs = 1;
     Inputs.Flip = false;
+    Inputs.AddPeriodicBoundaries = true;
 
     Inputs = parse_pv_pairs (Inputs, varargin);
     
-
+    check.isScalarInteger (Inputs.MagnetMaterial, true, 'MagnetMaterial');
+    check.isScalarInteger (Inputs.MagnetGroup, true, 'MagnetGroup');
+    check.isScalarInteger (Inputs.SpacerMaterial, true, 'SpacerMaterial');
+    check.isScalarInteger (Inputs.SpacerGroup, true, 'SpacerGroup');
+    check.isNumericScalar (Inputs.MeshSize, true, 'MeshSize');
+    check.isScalarInteger (Inputs.NPolePairs, true, 'NPolePairs');
+    check.isLogicalScalar (Inputs.Flip, true, 'Flip');
+    check.isLogicalScalar (Inputs.AddPeriodicBoundaries, true, 'AddPeriodicBoundaries');
     
     % get the number of existing nodes, segments, boundaries etc. if any
     elcount = elementcount_mfemm (FemmProblem);
@@ -148,14 +199,38 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
                 Inputs.CavityMaterial = Inputs.SpacerMaterial;
             end
             
+            assert (isfield (vars, 'tmag'), 'tmag field is not present in vars');
+            assert (isfield (vars, 'zmag'), 'zmag field is not present in vars');
+            assert (isfield (vars, 'zs'), 'zs field is not present in vars');
+            assert (isfield (vars, 'toffset'), 'toffset field is not present in vars');
+            check.isNumericScalar (vars.tmag, true, 'vars.tmag');
+            check.isNumericScalar (vars.zmag, true, 'vars.zmag');
+            check.isNumericScalar (vars.zs, true, 'vars.zs');
+            check.isNumericScalar (vars.toffset, true, 'vars.toffset');
+            vars = setfieldifabsent (vars, 'tsvc', vars.tmag/2);
+            vars = setfieldifabsent (vars, 'tsve', vars.tmag/2);
+            vars = setfieldifabsent (vars, 'zsvi', vars.zs/2);
+            vars = setfieldifabsent (vars, 'zsvo', vars.zs/2);
+            check.isNumericScalar (vars.tsvc, true, 'vars.tsvc');
+            check.isNumericScalar (vars.tsve, true, 'vars.tsve');
+            check.isNumericScalar (vars.zsvi, true, 'vars.zsvi');
+            check.isNumericScalar (vars.zsvo, true, 'vars.zsvo');
+            
             % add a periodic boundary for the edges of the magnets region
-            if isempty (Inputs.BoundName)
-                [FemmProblem, info.BoundaryInds] = addboundaryprop_mfemm (FemmProblem, ...
-                                                        'Rect Mags Periodic', 4);
+            if Inputs.AddPeriodicBoundaries
+                if isempty (Inputs.BoundName)
+                    [FemmProblem, info.BoundaryInds] = addboundaryprop_mfemm (FemmProblem, ...
+                                                            'Rect Mags Periodic', 4);
+                else
+                    BoundaryProp = newboundaryprop_mfemm (Inputs.BoundName, 4, false);
+                    info.BoundaryInds = elcount.NBoundaryProps + 1;
+                    FemmProblem.BoundaryProps(info.BoundaryInds) = BoundaryProp;
+                end
+                
+                boundname = FemmProblem.BoundaryProps(info.BoundaryInds).Name;
             else
-                BoundaryProp = newboundaryprop_mfemm (Inputs.BoundName, 4, false);
-                info.BoundaryInds = elcount.NBoundaryProps + 1;
-                FemmProblem.BoundaryProps(info.BoundaryInds) = BoundaryProp;
+                boundname = '';
+                info.BoundaryInds = [];
             end
 
             % construct the segments and nodes for the chosen geometry
@@ -173,14 +248,14 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
 
             % Periodic boundary at bottom
             [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, info.OuterNodeIDs(4), info.OuterNodeIDs(3), ...
-                'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds).Name, ...
+                'BoundaryMarker', boundname, ...
                 'InGroup', Inputs.MagnetGroup);
 
             info.BottomSegInd = seginds;
-
+            
             % Periodic boundary at top
             [FemmProblem, seginds] = addsegments_mfemm (FemmProblem, info.OuterNodeIDs(1), info.OuterNodeIDs(2), ...
-                'BoundaryMarker', FemmProblem.BoundaryProps(info.BoundaryInds).Name, ...
+                'BoundaryMarker', boundname, ...
                 'InGroup', Inputs.MagnetGroup);
 
             info.TopSegInd = seginds;
@@ -262,7 +337,7 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
             [FemmProblem, info.CavityBlockInds(end+1,1)] = addblocklabel_mfemm (FemmProblem, cavitycentres(i,1), cavitycentres(i,2), ...
                                             'BlockType', FemmProblem.Materials(Inputs.CavityMaterial).Name, ...
                                             'MaxArea', Inputs.MeshSize, ...
-                                            'InGroup', Inputs.SpacerGroup);
+                                            'InGroup', Inputs.CavityGroup);
 
         end
     
