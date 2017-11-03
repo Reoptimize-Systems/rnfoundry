@@ -28,7 +28,7 @@ def is_url(s):
 
 def get_video_id(url):
 
-    print ('embeding youtube video from: ' + url)
+    print ('embedding youtube video from: ' + url)
 
     return urlparse.parse_qs(urlparse.urlparse(url).query)['v'][0]
 
