@@ -12,12 +12,12 @@ classdef twoNodeForce < mbdyn.mint.mintbase
         function self = twoNodeForce (reference_node, other_node)
         
             if ~ ( isa (reference_node, 'mbdyn.pre.structuralNode') ...
-                    || isint2eps (reference_node) )
+                    || mbdyn.pre.base.checkScalarInteger (reference_node, false) )
                 error ('reference_node must be an mbdyn.pre.structuralNode or an integer indicating the node label')
             end
             
             if ~ ( isa (reference_node, 'mbdyn.pre.structuralNode') ...
-                    || isint2eps (other_node) )
+                    || mbdyn.pre.base.checkScalarInteger (other_node, false) )
                 error ('other_node must be an mbdyn.pre.structuralNode or an integer indicating the node label')
             end
             
