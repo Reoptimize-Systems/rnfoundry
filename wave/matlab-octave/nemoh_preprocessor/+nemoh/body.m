@@ -29,7 +29,9 @@ classdef body < nemoh.base
     %  drawMesh - plots the body mesh in a figure
     %  meshInfo - prints some information about the body mesh to the
     %    command line
-    %  
+    %  setTargetPanels - sets the target number of panels in refined
+    %    mesh
+    %
     % The folowing methods are mainly for use by a nemoh.simulation object
     % to which the body has been added:
     %
@@ -291,6 +293,36 @@ classdef body < nemoh.base
             self.id = id;
             
             self.uniqueName = sprintf('%s_id_%d', self.sanitizedName, self.id);
+            
+        end
+        
+        function setTargetPanels (self, newtargetpanels)
+            % set the defaultTargetPanels property
+            %
+            % Syntax
+            %
+            % setTargetPanels (nb, newtargetpanels)
+            %
+            % Description
+            %
+            % setTargetPanels sets the value of the defaultTargetPanels
+            % property. This property is used when generating mesh input
+            % files for the NEMOH meshing program to set the taget number
+            % of panels in the refined mesh. It can be overriden by an
+            % optional argument to the processMesh method. The initial
+            % value is 250.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  newtargetpanels - new value for the defaultTargetPanels
+            %    property
+            %
+            
+            self.checkScalarInteger (newtargetpanels, true, 'newtargetpanels');
+            
+            self.defaultTargetPanels = newtargetpanels;
             
         end
         
@@ -1132,7 +1164,7 @@ classdef body < nemoh.base
             
         end
         
-        function loadNemohMesherInputFile (self, filename, varargin)
+        function loadNemohMesherInputFile (self, filename, meshcalfile, varargin)
             % load NEMOH mesher input file
             %
             % Syntax
@@ -1155,6 +1187,12 @@ classdef body < nemoh.base
             % Additional optional arguments may be supplied using
             % parameter-value pairs. The available options are:
             %
+            % 'Verbose' - logical flag (true/false), if true some text
+            %   information about the mesh will be output to the command
+            %   line. Default is false.
+            %
+            %
+            
             % 'Draft' - distance from the lowest point on the mesh to the
             %   water free surface. The mesh will be translated such that
             %   the specified draft is achieved. If Draft is empty the
@@ -1170,20 +1208,53 @@ classdef body < nemoh.base
             %   gravity will be translated along with the mesh if it is
             %   translated to achieve a specified draft.
             %
-            % 'Verbose' - logical flag (true/false), if true some text
-            %   information about the mesh will be output to the command
-            %   line. Default is false.
-            %
             
             options.Draft = [];
             options.Verbose = false;
             options.CentreOfGravity = [];
+            options.TargetNumberOfPanels = [];
             
             options = parse_pv_pairs (options, varargin);
             
             self.checkLogicalScalar (options.Verbose, true, 'Verbose');
             
             self.clearMeshAndForceData ();
+            
+            % Mesh.cal file
+            fid = fopen (meshcalfile, 'r');
+            % ensure file is closed when done or on failure
+            CC = onCleanup (@() fclose (fid));
+            
+            line = fgetl (fid);
+            
+            bodyname = strtrim (line);
+            
+            data = fscanf (fid, '%d', 1);
+            
+            if data == 0
+                self.meshType = 'nonaxi';
+            elseif data == 1
+                self.meshType = 'axi';
+            else
+                error ('Unexpected value when reading axi/nonaxi value from Mesh.cal');
+            end
+            
+            % Possible translation about x axis (first number) and y axis (second number)
+            data = fscanf (fid, '%f', 2);
+            
+            self.centreOfGravity =  fscanf (fid, '%f', 3);
+            
+            self.defaultTargetPanels =  fscanf (fid, '%d', 1);
+            
+            clear CC
+            
+            if ~isempty (options.TargetNumberOfPanels)
+                % replace loaded panels target with user specified
+                self.checkScalarInteger (options.TargetNumberOfPanels, true, 'TargetNumberOfPanels');
+                
+                self.defaultTargetPanels = options.TargetNumberOfPanels;
+                
+            end
             
             % Mesh file
             fid = fopen (filename, 'r');
@@ -1211,7 +1282,7 @@ classdef body < nemoh.base
                 self.quadMesh(4,i) = line(4);
             end
             
-            self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
+%             self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
             
             self.meshPlottable = true;
             
