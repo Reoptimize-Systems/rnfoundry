@@ -15,13 +15,7 @@ function buoydat = buoynum2buoydata(libdir, buoynum, buoydat)
         buoydat = numel(temp);
     else
         
-        if  ~isscalar(buoynum)
-            error('BUOYSIM:buoynumnotscalar', 'buoynum must be a scalar value')
-        end
-        
-        if ~check.isint2eps(buoynum)
-            error('BUOYSIM:buoynumnotint', 'buoynum must be an integer')
-        end
+        check.isScalarInteger(buoynum, true, 'buoynum');
         
         buoynum = round(buoynum);
         
