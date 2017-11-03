@@ -12,8 +12,11 @@ classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
             
             self = self@mbdyn.mint.twoNodeForce (reference_node, other_node);
             
-            if isint2eps (axisNum) && any (axisNum == [1,2,3])
+            if mbdyn.pre.base.checkScalarInteger (axisNum, false) ...
+                    && any (axisNum == [1,2,3])
+                
                 self.forceAxis = axisNum;
+                
             else
                 error ('Invalid axis number');
             end
