@@ -19,7 +19,7 @@ function buoydat = buoynum2buoydata(libdir, buoynum, buoydat)
             error('BUOYSIM:buoynumnotscalar', 'buoynum must be a scalar value')
         end
         
-        if ~isint2eps(buoynum)
+        if ~check.isint2eps(buoynum)
             error('BUOYSIM:buoynumnotint', 'buoynum must be an integer')
         end
         
