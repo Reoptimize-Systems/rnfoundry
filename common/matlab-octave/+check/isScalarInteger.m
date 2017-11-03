@@ -28,7 +28,7 @@ function ok = isScalarInteger (num, throw, name)
     end
 
     ok = true;
-    if ~( isnumeric (num) && isscalar (num) && isreal (num) && isint2eps (num) )
+    if ~( isnumeric (num) && isscalar (num) && isreal (num) && check.isint2eps (num) )
 
         ok = false;
 
