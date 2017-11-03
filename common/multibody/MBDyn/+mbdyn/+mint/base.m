@@ -1,4 +1,4 @@
-classdef mintbase < handle
+classdef base < handle
     
     properties
         
