@@ -34,7 +34,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
 %    A geometry type consisting of a series of rectangular regions with
 %    alternating materials. Optionally a 'cavity' region may be added as
 %    shown with a different material in this space. See also the
-%    'CavityMaterial' and 'CavityGroup' options below.
+%    'CavityMaterial' and 'CavityGroup' Inputs below.
 %
 %                  :
 %   toffset        :
@@ -197,7 +197,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
 % See also: linearfieldperiodic
 %
 
-    Inputs.MagDirections = {'theta', 'theta+180'};
+    Inputs.MagDirections = {0, 180};
     Inputs.MagnetMaterial = 1;
     Inputs.MagnetGroup = 0;
     Inputs.SpacerMaterial = 1;
@@ -213,6 +213,12 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
     
     % parse the input arguments
     Inputs = parse_pv_pairs(Inputs, varargin);
+    
+    if isempty (FemmProblem)
+        FemmProblem = newproblem_mfemm ('axi');
+    end
+    
+    check.allowedStringInputs (fieldtype, {'simple'}, true, 'fieldtype');
     
     check.isScalarInteger (Inputs.MagnetMaterial, true, 'MagnetMaterial');
     check.isScalarInteger (Inputs.MagnetGroup, true, 'MagnetGroup');
@@ -240,7 +246,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                 'MagnetGroup', Inputs.MagnetGroup, ...
                 'SpacerMaterial', Inputs.SpacerMaterial, ...
                 'SpacerGroup', Inputs.SpacerGroup, ...
-                'Tol', Inputs.Tol, ...
+                ... 'Tol', Inputs.Tol, ...
                 'MeshSize', Inputs.MeshSize, ...
                 'NPolePairs', Inputs.NPolePairs, ...
                 'Flip', Inputs.Flip, ...
@@ -248,7 +254,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                 'CavityMaterial', Inputs.CavityMaterial, ...
                 'CavityGroup', Inputs.CavityGroup );
     
-    zpole = zmag + zs;
+    zpole = vars.zmag + vars.zs;
     
     % now add the back iron nodes and links, depending on their thicknesses
     if size(wrapperthickness,2) < 2
@@ -262,14 +268,14 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
     
     info.InnerCentres = zeros(size(wrapperthickness)) * NaN;
     
-    innert = toffset - tmag/2;
+    innert = vars.toffset - vars.tmag/2;
     
     % wrapperthickness(1,1) is the first inner region thickness
     if wrapperthickness(1,1) > Inputs.Tol
         % add the nodes and segments for the inner side
         %
         
-        if wrapperthickness(1,1) > toffset
+        if wrapperthickness(1,1) > vars.toffset
             error('RENEWNET:wrappedlinearfield:badwrapper', ...
                 'wrapper thickness cannot be greater than magnet leftmost position.');
         end
@@ -375,7 +381,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                                  Inputs.NPolePairs*2*zpole, ...
                                 'InGroup', Inputs.WrapperGroup(i,1));
 
-            if options.AddPeriodicBoundaries
+            if Inputs.AddPeriodicBoundaries
                 % add a new periodic boundary for the top and bottom of the region
                 [FemmProblem, info.BoundaryInds(end+1)] = ...
                     addboundaryprop_mfemm(FemmProblem, 'Left Wrap Annular Sec Mags Periodic', 4);
@@ -431,7 +437,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
     % Now we dow the wrappers on the other side
     info.OuterCentres = zeros(size(wrapperthickness)) * NaN;
     
-    outert = toffset + tmag/2;
+    outert = vars.toffset + vars.tmag/2;
     
     % wrapperthickness(1,2) is the first outer region thickness
     if wrapperthickness(1,2) > Inputs.Tol
@@ -452,7 +458,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                                      Inputs.NPolePairs*2*zpole, ...
                                     'InGroup', Inputs.WrapperGroup(1,2));
 
-        if options.AddPeriodicBoundaries
+        if Inputs.AddPeriodicBoundaries
             % add a new periodic boundary for the top and bottom of the
             % region
             [FemmProblem, info.BoundaryInds(end+1)] = ...
@@ -535,7 +541,7 @@ function [FemmProblem, wrapperthickness, info] = wrappedlinearfieldperiodic (Fem
                                          Inputs.NPolePairs*2*zpole, ...
                                         'InGroup', Inputs.WrapperGroup(i,2));
 
-            if options.AddPeriodicBoundaries
+            if Inputs.AddPeriodicBoundaries
                 % add a new periodic boundary for the top and bottom of the
                 % region
                 [FemmProblem, info.BoundaryInds(end+1)] = addboundaryprop_mfemm(FemmProblem, 'Right Wrap Annular Sec Mags Periodic', 4);
