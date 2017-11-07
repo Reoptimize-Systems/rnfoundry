@@ -241,6 +241,7 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
             elcount = elementcount_mfemm (FemmProblem);
             
             links = links + elcount.NNodes;
+            info.OuterNodeIDs = info.OuterNodeIDs + elcount.NNodes;
 
             % add all the nodes to the problem
             [FemmProblem, ~, info.NodeIDs] = addnodes_mfemm (FemmProblem, ...
