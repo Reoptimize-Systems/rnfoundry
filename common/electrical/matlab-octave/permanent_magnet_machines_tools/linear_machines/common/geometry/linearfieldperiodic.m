@@ -237,6 +237,10 @@ function [FemmProblem, nodes, links, info] = linearfieldperiodic (FemmProblem, t
             npoles = Inputs.NPolePairs * 2;
             [nodes, links, info.OuterNodeIDs] = simple_field_body (npoles, vars.zmag, vars.tmag, vars.toffset, vars.zs, vars.tsvc, vars.tsve, vars.zsvi, vars.zsvo, Inputs.Flip);
             zpole = vars.zmag + vars.zs;
+            
+            elcount = elementcount_mfemm (FemmProblem);
+            
+            links = links + elcount.NNodes;
 
             % add all the nodes to the problem
             [FemmProblem, ~, info.NodeIDs] = addnodes_mfemm (FemmProblem, ...
