@@ -850,7 +850,7 @@ classdef hydrobody < handle
             
             assert (isa (simu, 'wsim.simsettings'), 'waves must be a wsim.simsettings object')
             assert (isa (waves, 'wsim.wavesettings'), 'waves must be a wsim.wavesettings object');
-            assert (isscalar (bodynum) &&  isint2eps (bodynum) , 'bodynum must be a scalar integer')
+            assert (check.isScalarInteger (bodynum, false) , 'bodynum must be a scalar integer')
 
             % store waves and simu for later access
             obj.waves = waves;
