@@ -139,6 +139,52 @@ classdef base < handle
             
         end
         
+        function ok = checkIsAxes (obj, throw, name)
+            % checks if input is an axes object (or axes handle)
+            %
+            % Syntax
+            %
+            %  ok = checkIsAxes (obj, throw)
+            %  ok = checkIsAxes (..., name)
+            %
+            % Input
+            %
+            %  obj - value to be tested if it is an axes object or handle
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkIsAxes if obj fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be <name> must be a scalar integer (to
+            %   machine precision). Default is 'value' if not supplied.
+            %
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'value';
+            end
+            
+            ok = true;
+            if isoctave ()
+                if ~isaxes (obj)
+                    ok = false;
+                end
+            else
+                if ~isa (obj, 'matlab.graphics.axis.Axes')
+                    ok = false;
+                end
+            end
+            
+            if throw && ~ok
+                error ('%s must be a scalar integer (to machine precision)', name);
+            end
+            
+        end
+        
         function numstr = formatNumber (num)
             % fomats a decimal number for pretty output to nemoh file
             %
@@ -190,5 +236,31 @@ function result = isint2eps(X)
     theMod = mod(X,1);
     
     result = theMod <= eps(theMod);
+
+end
+
+
+function t = isoctave()
+% ISOCTAVE.M
+% ISOCTAVE  True if the operating environment is octave.
+%    Usage: t=isoctave();
+% 
+%    Returns 1 if the operating environment is octave, otherwise
+%    0 (Matlab)
+% 
+% ---------------------------------------------------------------
+%
+% COPYRIGHT : (c) NUHAG, Dept.Math., University of Vienna, AUSTRIA
+%             http://nuhag.eu/
+%             Permission is granted to modify and re-distribute this
+%             code in any manner as long as this notice is preserved.
+%             All standard disclaimers apply.
+
+    if exist('OCTAVE_VERSION')
+        % Only Octave has this variable.
+        t=1;
+    else
+        t=0;
+    end
 
 end
