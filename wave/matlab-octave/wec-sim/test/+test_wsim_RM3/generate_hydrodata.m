@@ -2,23 +2,25 @@ function hydro = generate_hydrodata (varargin)
 
     options.PlotBEM = true;
     options.WriteH5 = true;
+    options.SkipIfExisting = false;
     
     options = parse_pv_pairs (options, varargin);
     
 
     dir = getmfilepath ('test_wsim_RM3.generate_hydrodata');
 
-    inputdir = fullfile (dir, 'NEMOH_output');
+    inputdir = fullfile (dir, 'RM3_NEMOH_output');
 
     %% create the float
 
     % create a body object which will be the cylinder
-    float = nemoh.body (inputdir);
+    float = nemoh.body (inputdir, 'Name', 'float');
 
     % define the body shape using a 2D profile rotated around the z axis
     float.loadNemohMesherInputFile ( fullfile (dir, 'geometry', 'float.nmi'), ...
-                                     'CentreOfGravity', [0,0,-0.72], ...
-                                     'UseSTLName', true );
+                                     fullfile (dir, 'geometry', 'float_Mesh.cal') ...
+                                     ... 'CentreOfGravity', [0,0,-0.72] 
+                                    );
 
     %% draw body mesh 
 
@@ -27,13 +29,14 @@ function hydro = generate_hydrodata (varargin)
 
     %% create the Nemoh sphere
 
-    spar = nemoh.body (inputdir);
+    spar = nemoh.body (inputdir, 'Name', 'spar');
 
     % define the body shape using a 2D profile rotated around the z axis
-    spar.loadSTLMesh ( fullfile (dir, 'geometry', 'spar.nmi'), ...
-                       'Draft', 28.8999996, ... % got from reading example mesh file in WEC-Sim 
-                       'CentreOfGravity', [ 0, 0, -21.29 + 28.8999996 - 8.71 ], ...
-                       'UseSTLName', true );
+    spar.loadNemohMesherInputFile ( fullfile (dir, 'geometry', 'spar.nmi'), ...
+                                    fullfile (dir, 'geometry', 'spar_Mesh.cal') ...
+                                    ... 'Draft', 28.8999996, ... % got from reading example mesh file in WEC-Sim 
+                                    ... 'CentreOfGravity', [ 0, 0, -21.29 + 28.8999996 - 8.71 ] 
+                                    );
 
 
     %% draw the course body mesh (will be refined later)
@@ -116,7 +119,7 @@ function hydro = generate_hydrodata (varargin)
     hydro = Excitation_IRF (hydro,157, [], [], [], 1.9);
     
     if options.WriteH5
-        Write_H5 (hydro)
+        Write_H5 (hydro, fullfile (inputdir, 'hydroData'))
     end
     
     if options.PlotBEM
