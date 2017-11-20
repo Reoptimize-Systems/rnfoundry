@@ -1,13 +1,18 @@
 function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements, problem_options)
 
+    default_problem_options.ResidualTol = 1e-6;
+    default_problem_options.MaxIterations = 20;
+    default_problem_options.Output = {'iterations', 'bailout'}; % , 'solution', 'jacobian matrix', 'matrix condition number', 'solver condition number'
+    default_problem_options.NonLinearSolver = mbdyn.pre.newtonRaphsonSolver ();
+    default_problem_options.LinearSolver = mbdyn.pre.linearSolver ('umfpack');
+    default_problem_options.SteppingMethod = {};
+        
     if nargin < 6
-        problem_options.ResidualTol = 1e-6;
-        problem_options.MaxIterations = 20;
-        problem_options.Output = {'iterations', 'bailout'}; % , 'solution', 'jacobian matrix', 'matrix condition number', 'solver condition number'
-        problem_options.NonLinearSolver = mbdyn.pre.newtonRaphsonSolver ();
-        problem_options.LinearSolver = mbdyn.pre.linearSolver ('umfpack');
-        problem_options.SteppingMethod = {};
+        problem_options = struct ();
     end
+        
+    problem_options = parseoptions (default_problem_options, problem_options);
+    
     
     gref = mbdyn.pre.globalref;
 
