@@ -395,7 +395,7 @@ classdef simulation < nemoh.base
             
         end
         
-        function writeMesherInputFiles (self)
+        function writeMesherInputFiles (self, varargin)
             % writes nemoh mesh input files
             %
             % Syntax
@@ -429,16 +429,37 @@ classdef simulation < nemoh.base
             % See Also: nemoh.simulation.processMeshes
             %
             
+%             options.TargetNumberOfPanels = [];
+%             
+%             options = parse_pv_pairs (options, varargin);
+%             
+%             if ~isempty (options.TargetNumberOfPanels)
+%                 assert ( isnumeric (options.TargetNumberOfPanels) ...
+%                            && numel(options.TargetNumberOfPanels) == numel (self.bodies), ...
+%                          'TargetNumberOfPanels must be a vector of integers the same length as the number of bodies in the simulation' ) ;              
+%             end
+            
             % make the Mesh directory if it does not exist
             mkdir ( self.meshDirectory );
             
             for ind = 1:numel (self.bodies)
+                
+%                 if ~isempty (options.TargetNumberOfPanels)
+%                     self.checkScalarInteger ( options.TargetNumberOfPanels(ind), ...
+%                         true, ...
+%                         sprintf('TargetNumberOfPanels (for body %d)', ind) );
+%                     
+%                     targetpanels = options.TargetNumberOfPanels(ind);
+%                 else
+%                     targetpanels = [];
+%                 end
+                    
                 self.bodies(ind).writeMesh ();
             end
             
         end
         
-        function processMeshes (self)
+        function processMeshes (self, varargin)
             % performs post-processing on mesh files in prep for simulation
             %
             % Syntax
@@ -662,7 +683,7 @@ classdef simulation < nemoh.base
             assert (islogical (options.DoIRFCalculation), ...
                 'DoIRFCalculation must be a logical value (true or false)');
             
-            assert (numel (options.NWaveFreqs) == 1 && isint2eps (options.NWaveFreqs), ...
+            assert (numel (options.NWaveFreqs) == 1 && self.checkScalarInteger (options.NWaveFreqs, false), ...
                 'NWaveFreqs must be a scalar integer');
             
             assert (isscalar (options.IRFTimeStep), ...
@@ -689,7 +710,8 @@ classdef simulation < nemoh.base
                 end
             end
             
-            assert (numel (options.NDirectionAngles) == 1 && isint2eps (options.NDirectionAngles), ...
+            assert ( numel (options.NDirectionAngles) == 1 ...
+                     && self.checkScalarInteger (options.NDirectionAngles, false), ...
                 'NDirectionAngles must be a scalar integer');
             
             if options.NDirectionAngles == 1
@@ -713,7 +735,8 @@ classdef simulation < nemoh.base
             assert (numel (options.FreeSurfacePoints) == 2, ...
                 'FreeSurfacePoints must be a two element vector.');
             
-            assert (all (isint2eps (options.FreeSurfacePoints)), ...
+            assert (self.checkScalarInteger (options.FreeSurfacePoints(1), false) ...
+                    && self.checkScalarInteger (options.FreeSurfacePoints(2), false), ...
                 'FreeSurfacePoints elements must be integers');
                 
             assert (numel (options.DomainSize) == 2, ...
