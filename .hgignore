@@ -6,6 +6,17 @@ syntax: glob
 # generated files
 dlsei.c
 
+# wave docs files
+example_nemoh_cylinder_output/**
+sphinx/generated/**
+
+# mbdyn related generated files
++test_wsim_RM3/*.mbd
+
+# NEMOH generated files
+RM3_NEMOH_output/**
+
+
 # common patterns #
 -------------------
 
