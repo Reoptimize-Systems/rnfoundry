@@ -6,7 +6,7 @@
 
 dir = getmfilepath ('test_nemoh_mesh_load');
 
-inputdir = fullfile (dir, 'Sphere');
+inputdir = fullfile (dir, 'NEMOH_Load');
 
 %% create the Nemoh body
 thebody = nemoh.body (inputdir);
