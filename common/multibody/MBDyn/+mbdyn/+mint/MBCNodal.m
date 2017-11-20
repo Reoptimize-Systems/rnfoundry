@@ -367,7 +367,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             end
             
             if isempty (options.MBDynExecutable)
-                self.MBDynExecutable = mbdyn.mint.findmbdyn ();
+                self.MBDynExecutable = mbdyn.mint.find_mbdyn ();
             else
                 if exist (options.MBDynExecutable, 'file') == 2
                     self.MBDynExecutable = options.MBDynExecutable;
