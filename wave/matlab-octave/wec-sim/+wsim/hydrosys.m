@@ -291,12 +291,12 @@ classdef hydrosys < handle
                             % next create a moment which uses the output of
                             % these nodes to apply a couple to the
                             % structural node
-                            drivecallers = { mbdyn.pre.nodeDrive(newabsnodes{1}, mbdyn.pre.directDrive()), ...
-                                        	 mbdyn.pre.nodeDrive(newabsnodes{2}, mbdyn.pre.directDrive()), ...
-                                             mbdyn.pre.nodeDrive(newabsnodes{3}, mbdyn.pre.directDrive()), ...
-                                             mbdyn.pre.nodeDrive(newabsnodes{4}, mbdyn.pre.directDrive()), ...
-                                        	 mbdyn.pre.nodeDrive(newabsnodes{5}, mbdyn.pre.directDrive()), ...
-                                             mbdyn.pre.nodeDrive(newabsnodes{6}, mbdyn.pre.directDrive()) };
+                            drivecallers = { mbdyn.pre.nodeDrive(newabsnodes{1}, mbdyn.pre.linearDrive (0, -1)), ...
+                                        	 mbdyn.pre.nodeDrive(newabsnodes{2}, mbdyn.pre.linearDrive (0, -1)), ...
+                                             mbdyn.pre.nodeDrive(newabsnodes{3}, mbdyn.pre.linearDrive (0, -1)), ...
+                                             mbdyn.pre.nodeDrive(newabsnodes{4}, mbdyn.pre.linearDrive (0, -1)), ...
+                                        	 mbdyn.pre.nodeDrive(newabsnodes{5}, mbdyn.pre.linearDrive (0, -1)), ...
+                                             mbdyn.pre.nodeDrive(newabsnodes{6}, mbdyn.pre.linearDrive (0, -1)) };
                             
                             fdc = mbdyn.pre.componentTplDriveCaller (drivecallers(1:3));
                             mdc = mbdyn.pre.componentTplDriveCaller (drivecallers(4:6));
@@ -345,15 +345,60 @@ classdef hydrosys < handle
                         output_node_list(5) = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+5}, 'AlgebraicOrDifferential', 'algebraic');
                         output_node_list(6) = mbdyn.pre.nodeDOF (absnodes{(bodyind-1)*6+6}, 'AlgebraicOrDifferential', 'algebraic');
 
-                        mbelements = [ mbelements, ...
-                                       { mbdyn.pre.stateSpaceMIMO( size (self.hydroBodies(bodyind).hydroForce.ssRadf.A, 1), ...
-                                                            self.hydroBodies(bodyind).hydroForce.ssRadf.A, ...
-                                                            self.hydroBodies(bodyind).hydroForce.ssRadf.B, ...
-                                                            self.hydroBodies(bodyind).hydroForce.ssRadf.C, ...
-                                                            output_node_list, ...
-                                                            input_list, ...
-                                                            'D', self.hydroBodies(bodyind).hydroForce.ssRadf.D ) }, ...
-                                        ];
+%                         sys = ss( self.hydroBodies(bodyind).hydroForce.ssRadf.A, ...
+%                                   self.hydroBodies(bodyind).hydroForce.ssRadf.B, ...
+%                                   self.hydroBodies(bodyind).hydroForce.ssRadf.C, ...
+%                                   self.hydroBodies(bodyind).hydroForce.ssRadf.D );
+%                               
+%                         sys = prescale (sys, { self.hydroBodies(bodyind).hydroData.simulation_parameters.w(1), ...
+%                                                self.hydroBodies(bodyind).hydroData.simulation_parameters.w(end) });
+%               
+%                         if all (all (sys.D == 0))
+%                             mbelements = [ mbelements, ...
+%                                            { mbdyn.pre.stateSpaceMIMO( size (self.hydroBodies(bodyind).hydroForce.ssRadf.A, 1), ...
+%                                                                 sys.A, ...
+%                                                                 sys.B, ...
+%                                                                 sys.C, ...
+%                                                                 output_node_list, ...
+%                                                                 input_list, ...
+%                                                                 'Balance', 'yes') }, ...
+%                                             ];
+%                         else
+%                             mbelements = [ mbelements, ...
+%                                            { mbdyn.pre.stateSpaceMIMO( size (self.hydroBodies(bodyind).hydroForce.ssRadf.A, 1), ...
+%                                                                 sys.A, ...
+%                                                                 sys.B, ...
+%                                                                 sys.C, ...
+%                                                                 output_node_list, ...
+%                                                                 input_list, ...
+%                                                                 'Balance', 'yes', ...
+%                                                                 'D', sys.D ) }, ...
+%                                             ];
+%                         end
+
+                        if all (all (sys.D == 0))
+                            mbelements = [ mbelements, ...
+                                           { mbdyn.pre.stateSpaceMIMO( size (self.hydroBodies(bodyind).hydroForce.ssRadf.A, 1), ...
+                                                                self.hydroBodies(bodyind).hydroForce.ssRadf.A, ...
+                                                                self.hydroBodies(bodyind).hydroForce.ssRadf.B, ...
+                                                                self.hydroBodies(bodyind).hydroForce.ssRadf.C, ...
+                                                                output_node_list, ...
+                                                                input_list, ...
+                                                                'Balance', 'yes') }, ...
+                                            ];
+                        else
+                            mbelements = [ mbelements, ...
+                                           { mbdyn.pre.stateSpaceMIMO( size (self.hydroBodies(bodyind).hydroForce.ssRadf.A, 1), ...
+                                                                self.hydroBodies(bodyind).hydroForce.ssRadf.A, ...
+                                                                self.hydroBodies(bodyind).hydroForce.ssRadf.B, ...
+                                                                self.hydroBodies(bodyind).hydroForce.ssRadf.C, ...
+                                                                output_node_list, ...
+                                                                input_list, ...
+                                                                'Balance', 'yes', ...
+                                                                'D', self.hydroBodies(bodyind).hydroForce.ssRadf.D ) }, ...
+                                            ];
+                        end
+                                    
                     end
                 end
                 
@@ -404,30 +449,47 @@ classdef hydrosys < handle
             %    will be present depend on the details of the simulation
             %    chosen, but can include the following:
             %
-            %    F_ExcitLin : 
+            %    F_ExcitLin : (6 x nBodies) matrix of linear wave
+            %      excitation forces. See also F_Excit and F_ExcitRamp
+            %      below.
             %
-            %    F_Excit : 
+            %    F_ExcitNonLin : (6 x nBodies) matrix of non-linear wave
+            %      excitation forces (if calculated). Will be all zeros if
+            %      non-linear excitation forces have not been activated for
+            %      the simulation. See also F_Excit and F_ExcitRamp below.
             %
-            %    F_ExcitRamp : 
+            %    F_Excit : (6 x nBodies) matrix of total wave
+            %      excitation forces. This is the sum of F_ExcitLin and
+            %      F_ExcitNonLin. If a ramp function is applied, the actual
+            %      forces applied to the bodies are in F_ExcitRamp
             %
-            %    F_ViscousDamping : 
+            %    F_ExcitRamp : (6 x nBodies) matrix of wave excitation
+            %      forces (i.e. as in F_Excit), but with a ramp function
+            %      applied. These are the actual excitation forces applied
+            %      to the bodies during the simulation.
+            %  
+            %    F_ViscousDamping : (6 x nBodies) matrix of viscous damping
+            %      forces.
             %
-            %    F_addedmass : 
+            %    F_AddedMass : (6 x nBodies) matrix of added mass forces.
+            %      Note that after simulation these should be modified
+            %      using the correctAddedMassForce method, to get the
+            %      'real' added mass forces.
             %
-            %    F_RadiationDamping : 
+            %    F_RadiationDamping : (6 x nBodies) matrix of wave
+            %      radiation damping forces.
             %
-            %    F_Restoring : 
+            %    F_Restoring : (6 x nBodies) matrix of restoring (buoyancy)
+            %      forces.
+            %
+            %    F_MorrisonElement : (6 x nBodies) matrix of morrison
+            %      element forces.
             %
             %    BodyHSPressure : 
             %
-            %    F_ExcitLinNonLin : 
-            %
-            %    WaveNonLinearPressure :
+            %    WaveNonLinearPressure : The Froude–Krylov
             %
             %    WaveLinearPressure : 
-            %
-            %    F_MorrisonElement : 
-            %
             %
             
             forces = nan * ones (6, self.simu.numWecBodies );
@@ -457,18 +519,45 @@ classdef hydrosys < handle
             
         end
         
-        function advanceStep (self, t, accel)
-            % advance to the next time step, accepting the current time
-            % step and data into stored solution histories
-            
+        function advanceStep (self, t, vel, accel)
+            % advance to the next time step, store data as required
+            %
+            % Syntax
+            %
+            %
+            %
+            % Description
+            %
+            % advanceStep advances the solution to the next time step,
+            % accepting the current time step solution and data into stored
+            % solution histories. 
+            %
+            % Input
+            %
+            %  hs - wsim.hydrosys object
+            %
+            %  t - the current simulation time
+            %
+            %  vel - (6 x nbodies) matrix of body velocities and angular
+            %    velocities at time t.
+            %
+            %  accel - (6 x nbodies) matrix of body accelerations and
+            %    angular accelerations at time t.
+            %
+            % Output
+            %
+            %  none
+            %
+            %
+
             for bodyind = 1:numel(self.hydroBodies)
                 if self.simu.b2b
-                    self.hydroBodies(bodyind).advanceStep (t, accel(:));
+                    self.hydroBodies(bodyind).advanceStep (t, vel(:), accel(:));
                 else
-                    self.hydroBodies(bodyind).advanceStep (t, accel(:,bodyind));
+                    self.hydroBodies(bodyind).advanceStep (t, vel(:,bodyind), accel(:,bodyind));
                 end
             end
-            
+
         end
         
         function [F_Total, F_AddedMass] = correctAddedMassForce (self, forceTotal, forceAddedMass, accel)
