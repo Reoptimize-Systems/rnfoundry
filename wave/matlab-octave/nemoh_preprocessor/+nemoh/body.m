@@ -62,8 +62,6 @@ classdef body < nemoh.base
         
         nQuads;
         quadMesh;
-        nTriangles;
-        triMesh;
         nMeshNodes;
         nPanelsTarget; % Target for number of panels in mesh refinement
         centreOfGravity;
@@ -323,6 +321,7 @@ classdef body < nemoh.base
             self.checkScalarInteger (newtargetpanels, true, 'newtargetpanels');
             
             self.defaultTargetPanels = newtargetpanels;
+            self.nPanelsTarget = self.defaultTargetPanels;
             
         end
         
@@ -407,10 +406,27 @@ classdef body < nemoh.base
             
             self.clearMeshAndForceData ();
             
-            [self.meshVertices, self.triMesh, ~, stlname] = stl.read (filename);
+            % only triangular stl meshes can imported currently
+            [self.meshVertices, self.quadMesh, ~, stlname] = stl.read (filename);
+            
+            switch size (self.quadMesh, 2)
+                
+                case 3
+                    % convert tri mesh to degenerate quad mesh by duplicating the
+                    % final vertex
+                    self.quadMesh = [self.quadMesh, self.quadMesh(:,end)];
+                    
+                case 4
+                    % don't need to do anything
+                    
+                otherwise
+                    
+                    error ('STL import cannot handle the number of vertices in the faces of the mesh.');
+                    
+            end
             
             self.meshVertices = self.meshVertices.';
-            self.triMesh = self.triMesh.';
+            self.quadMesh = self.quadMesh.';
             
             self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
             
@@ -420,7 +436,7 @@ classdef body < nemoh.base
             
             self.nMeshNodes = size (self.meshVertices, 2);
             self.stlLoaded = true;
-            self.meshType = 'stl';
+            self.meshType = 'nonaxi';
             self.meshPlottable = true;
             self.meshProcessed = false;
             
@@ -813,9 +829,7 @@ classdef body < nemoh.base
                     hax = axes ();
                     view (3);
                 else
-                    % make desired axes current (no way to set axes for plot
-                    % using trimesh directly)
-                    axes (options.Axes);
+                    self.checkIsAxes (options.Axes);
                     hax = options.Axes;
                     hfig = get (hax, 'Parent');
                     % leave the axis as it is, don't mess with user's
@@ -832,7 +846,8 @@ classdef body < nemoh.base
                 % plot forces if requested, and available
                 if options.PlotForces && ~isempty (self.hydrostaticForces)
                     
-                    quiver3 ( self.hydrostaticForcePoints(1,:), ...
+                    quiver3 ( hax, ...
+                              self.hydrostaticForcePoints(1,:), ...
                               self.hydrostaticForcePoints(2,:), ...
                               self.hydrostaticForcePoints(3,:), ...
                               self.hydrostaticForces(1,:), ...
@@ -861,18 +876,23 @@ classdef body < nemoh.base
         function writeMesh (self, varargin)
             % write the mesh description to disk (if necessary)
             
+            % TODO: help for writeMesh
+            
             options.MeshFileName = sprintf ('%s.dat', self.uniqueName);
+            options.TargetPanels = [];
             
             options = parse_pv_pairs (options, varargin);
+            
+            if ~isempty (options.TargetPanels)
+                self.checkScalarInteger (options.TargetPanels, true, 'TargetPanels');
+            end
             
             switch self.meshType
                 
                 case {'axi', 'nonaxi'}
                     
-                    self.writeMesherInputFile ('MeshFileName', options.MeshFileName);
-                    
-                case 'stl'
-                    
+                    self.writeMesherInputFile ( 'MeshFileName', options.MeshFileName, ...
+                                                'TargetPanels', options.TargetPanels );
                     
                 otherwise
                     error ('mesh type %s not currently supported', self.meshType)
@@ -997,10 +1017,8 @@ classdef body < nemoh.base
                 self.axiMeshZ = [];
                 self.meshVertices = [];
                 self.quadMesh = [];
-                self.triMesh = [];
                 self.nMeshNodes = [];
                 self.nQuads = [];
-                self.nTriangles = [];
 
                 % mesh results
                 self.hydrostaticForces = [];
@@ -1256,6 +1274,8 @@ classdef body < nemoh.base
                 
             end
             
+            self.nPanelsTarget = self.defaultTargetPanels;
+            
             % Mesh file
             fid = fopen (filename, 'r');
             % ensure file is closed when done or on failure
@@ -1471,8 +1491,17 @@ classdef body < nemoh.base
             %
             
             options.MeshFileName = sprintf ('%s.dat', self.uniqueName);
+            options.TargetPanels = [];
             
             options = parse_pv_pairs (options, varargin);
+            
+            if ~isempty (options.TargetPanels)
+                
+                self.checkScalarInteger (options.TargetPanels, true, 'TargetPanels');
+                
+                self.nPanelsTarget = options.TargetPanels;
+                
+            end
             
             self.setupMeshDirectories ('MeshFileName', options.MeshFileName);
             
@@ -1606,10 +1635,8 @@ classdef body < nemoh.base
             self.axiMeshZ = [];
             self.meshVertices = [];
             self.quadMesh = [];
-            self.triMesh = [];
             self.nMeshNodes = [];
             self.nQuads = [];
-            self.nTriangles = [];
             
             % mesh results
             self.hydrostaticForces = [];
