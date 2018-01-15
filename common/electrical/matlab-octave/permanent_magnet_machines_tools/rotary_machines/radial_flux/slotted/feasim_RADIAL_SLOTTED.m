@@ -94,16 +94,17 @@ function [ RawTorque, ...
         % get the forces
         solution.clearblock();
         solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
-                                     design.FemmProblem.Groups.BackIron ]);
+                                     design.FemmProblem.Groups.RotorBackIron ]);
 
         % determine a unit vector pointing in the direction normal to the air
         % gap half way between the Poles for the purpose of extracting the
         % air-gap closing forces
-        [gvector(1), gvector(2)] = pol2cart (design.thetap,1);
+        [gvector(1), gvector(2)] = pol2cart (design.RotorDrawingInfo.NDrawnPoles * design.thetap / 2,1);
         gvector = unit (gvector);
 
-        design.PerPoleAirGapClosingForce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
-                                                gvector);
+        design.PerPoleAirGapClosingForce = dot ( [ solution.blockintegral(18)/design.RotorDrawingInfo.NDrawnPoles, ...
+                                                   solution.blockintegral(19)/design.RotorDrawingInfo.NDrawnPoles ], ...
+                                                 gvector );
 
         % get the cross-sectional area of the armature iron for
         % calcuation of material masses later
@@ -160,7 +161,7 @@ function [ RawTorque, ...
     % get the cogging forces
     solution.clearblock ();
     solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
-                                 design.FemmProblem.Groups.BackIron ]);
+                                 design.FemmProblem.Groups.RotorBackIron ]);
 
 %                 design.coggingforce(i) = dot([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
 %                                              coggingvector);
