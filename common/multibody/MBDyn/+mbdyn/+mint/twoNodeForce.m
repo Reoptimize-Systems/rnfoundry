@@ -1,4 +1,4 @@
-classdef twoNodeForce < mbdyn.mint.mintbase
+classdef twoNodeForce < mbdyn.mint.base
     
     properties
         
@@ -26,10 +26,10 @@ classdef twoNodeForce < mbdyn.mint.mintbase
         
         end
         
-        function omat = referenceOrientation (self)
-            
-            
-        end
+%         function omat = referenceOrientation (self)
+%             
+%             
+%         end
         
     end
     
