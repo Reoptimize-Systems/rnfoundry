@@ -420,22 +420,43 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
     
 
     if simoptions.GetVariableGapForce
-        % get more force points if requested
-        pos = linspace (0, 0.9*design.g, simoptions.NForcePoints-1);
-        pos(end+1) = 0.95*design.g;
-    
-        design.gforce = [0, closingforce_RADIAL_SLOTTED(design, pos)];
-%     else
-%         design.gforce = [0, zeros(1, numel (pos))];
-        design.gvar = [0, pos];
+        
+        if ~isfield (simoptions, 'VariableGapForcePositions')
+            
+            % get more force points if requested
+            pos = linspace (0, 0.9*design.g, simoptions.NForcePoints-1);
+            pos(end+1) = 0.95*design.g;
+
+            simoptions.VariableGapForcePositions = pos;
+
+        end
+        
+        assert ( isnumeric (simoptions.VariableGapForcePositions) ...
+                 && isvector (simoptions.VariableGapForcePositions), ...
+                 'VariableGapForcePositions must be a numeric vector' );
+        
+        simoptions = setfieldifabsent (simoptions, 'VariableGapForceDeleteFEMFiles', true);
+        simoptions = setfieldifabsent (simoptions, 'VariableGapForceDeleteANSFiles', true);
+        
+        tmpforce = closingforce_RADIAL_SLOTTED( design, ...
+                                                simoptions.VariableGapForcePositions, ...
+                                                'UseFemm', simoptions.usefemm, ...
+                                                'Verbose', ~simoptions.quietfemm, ...
+                                                'DeleteFEMFiles', simoptions.VariableGapForceDeleteFEMFiles, ...
+                                                'DeleteANSFiles', simoptions.VariableGapForceDeleteANSFiles );
+
+        design.gforce = [0, tmpforce];
+
+        design.gvar = [0, simoptions.VariableGapForcePositions];
+        
     end
-%     design.gvar = [0, pos];
+
     
     % make sure the winding properties (number of turns etc.) are up to date
     if rmcoilturns
         design = rmfield (design, 'CoilTurns');
     end
-    design = checkcoilprops_AM(design);
+    design = checkcoilprops_AM (design);
     design.FemmDirectFluxLinkage = design.FemmDirectFluxLinkage * design.CoilTurns;
     
     if ~simoptions.SkipInductanceFEA
@@ -540,3 +561,8 @@ function design = assimilate_fea_data (design, simoptions, parameterCell)
 
 end
 
+function [design, simoptions] = airgapstress_RADIAL_SLOTTED (design, simoptions)
+
+
+
+end
