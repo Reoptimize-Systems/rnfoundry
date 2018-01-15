@@ -55,7 +55,7 @@ classdef base < handle
             
         end
         
-        function ok = checkCartesianVector (vec, throw)
+        function ok = checkCartesianVector (vec, throw, name)
             % checks if input is a 3 element numeric column vector,
             % suitible for position, angular position, velocity, angular
             % velocity etc. It can also be a string: 'null' which
@@ -78,13 +78,17 @@ classdef base < handle
             %  ok - logical flag indicating if check was passed
             %
             
+            if nargin < 3
+                name = 'position, velocity or angular velocity';
+            end
+            
             ok = true;
             if ischar (vec)
                 if ~strcmp (vec, 'null')
                     ok = false;
                 
                     if throw
-                        error ('position, velocity or angular velocity must be a 3 element numeric column vector, or ''null''')
+                        error ([name ' must be a 3 element numeric column vector, or ''null''']);
                     end
                 end
             elseif ~((isnumeric (vec) && iscolumn (vec) && size (vec,1) == 3) || isempty (vec))
@@ -92,7 +96,7 @@ classdef base < handle
                 ok = false;
                 
                 if throw
-                    error ('position, velocity or angular velocity must be a 3 element numeric column vector, or ''null''')
+                    error ([name ' must be a 3 element numeric column vector, or ''null''']);
                 end
             end
             
