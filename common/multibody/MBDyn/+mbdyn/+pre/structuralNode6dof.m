@@ -4,14 +4,12 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
     properties (GetAccess = public, SetAccess = public)
         
         absoluteOrientation;
-        
+        absoluteAngularVelocity;
     end
     
     properties (GetAccess = public, SetAccess = protected)
         
         orientationDescription;
-        
-        absoluteAngularVelocity;
         
         omegaRotates;
         
@@ -133,6 +131,15 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             end
             
             self.absoluteOrientation = neworientation;
+            
+        end
+        
+        function set.absoluteAngularVelocity (self, newomega)
+            % set the absolute orientation of the structural node
+            
+            self.check3ElementNumericVector (newomega, true, 'absoluteAngularVelocity');
+            
+            self.absoluteAngularVelocity = newomega;
             
         end
     end
