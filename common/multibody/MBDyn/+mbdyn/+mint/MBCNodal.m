@@ -8,6 +8,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
     properties (SetAccess = private, GetAccess = public)
         
         NNodes; % Number of structural external force nodes
+        structuralNodes; % cell array of structural nodes from the structural external force object (if supplied)
         
         useLabels; % Flag indicating whether to make node label numbers available
         useAccelerations; % Flag indicating whether accelerations are to be made available
@@ -42,6 +43,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         mbsys;
         outputPrefix;
         nodeOrientiationType;
+        setNodePositions;
         
     end
     
@@ -180,6 +182,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             % mbdyn.pre.system is supplied via this
             options.MBDynPreProc = [];
+            options.SetStructuralNodePositions = true;
             
             % the following only used if no mbdyn.pre.system is supplied
             options.CommMethod = '';
@@ -197,12 +200,12 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             options = parse_pv_pairs (options, varargin);
             
             assert (ischar (options.MBDynInputFile), 'MBDynInputFile must be a char array');
-            assert (islogical (options.CreateInputFile), 'CreateInputFile must be a logical type (true/false)');
-            assert (islogical (options.OverwriteInputFile), 'OverwriteInputFile must be a logical type (true/false)');
+            mbdyn.pre.base.checkLogicalScalar (options.CreateInputFile, true, 'CreateInputFile');
+            mbdyn.pre.base.checkLogicalScalar (options.OverwriteInputFile, true, 'OverwriteInputFile');
             assert (ischar (options.OutputPrefix), 'OutputPrefix must be a char array');
             assert (ischar (options.MBDynExecutable), 'MBDynExecutable must be a char array');
-            assert (islogical (options.UseMoments), 'UseMoments must be a logical type (true/false)');
-            assert (islogical (options.DataAndNext), 'DataAndNext must be a logical type (true/false)');
+            mbdyn.pre.base.checkLogicalScalar (options.UseMoments, true, 'UseMoments');
+            mbdyn.pre.base.checkLogicalScalar (options.DataAndNext, true, 'DataAndNext');
             
             if isa (options.MBDynPreProc, 'mbdyn.pre.system')
                 
@@ -218,7 +221,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 else
                     error ('unrecognised communication method');
                 end
-                
+
             else
                 
                 switch options.CommMethod
@@ -242,8 +245,6 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             end
             
             self = self@mbdyn.mint.cppinterface(mexfcn);
-                
-            
             
             if ~isempty (options.MBDynPreProc)
                 
@@ -269,6 +270,9 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 else
                     error ('MBDynPreProc is not empty or an mbdyn.pre.system object');
                 end
+                
+                mbdyn.pre.base.checkLogicalScalar ( options.SetStructuralNodePositions, ...
+                                                    true, 'SetStructuralNodePositions' );
                 
                 if ~isempty (options.MBDynInputFile)
                     self.MBDynInputFile = options.MBDynInputFile;
@@ -299,9 +303,16 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 self.nodeOrientiationType = extfinfo.NodeOrientationType;
                 
                 self.NNodes = extfinfo.NNodes;
+                self.structuralNodes = extfinfo.Nodes;
+                self.setNodePositions = options.SetStructuralNodePositions;
                 
             else
                 % No mbsys object supplied
+                mbdyn.pre.base.checkLogicalScalar (options.UseAccelerations, true, 'UseAccelerations');
+                mbdyn.pre.base.checkLogicalScalar (options.UseLabels, true, 'UseLabels');
+                mbdyn.pre.base.checkLogicalScalar (options.UseRefNode, true, 'UseRefNode');
+                
+                
                 if ~isempty (options.MBDynInputFile)
                     if exist (options.MBDynInputFile, 'file') == 2
                         self.MBDynInputFile = options.MBDynInputFile;
@@ -494,7 +505,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             end
         end
         
-        function status = GetStatus ()
+        function status = GetStatus (self)
             
             status = self.cppcall ( 'GetStatus');
             
@@ -553,6 +564,28 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         function rot = GetRot (self)
             % get the rotation matrices for all nodes in the chosen format
             rot = self.cppcall ('GetRot');
+            
+            for ind = 1:self.NNodes
+                
+                if self.setNodePositions
+                    
+                    switch self.nodeOrientiationType
+                        
+                        case 'orientation matrix'
+                            
+                            om = mbdyn.pre.orientmat (self.nodeOrientiationType, rot(1:3,1:3,ind));
+                    
+                        otherwise
+                            
+                            om = mbdyn.pre.orientmat (self.nodeOrientiationType, rot(1:3,ind));
+                        
+                    end
+
+                    self.structuralNodes{ind}.absoluteOrientation = om.orientationMatrix;
+
+                end
+            
+            end
         end
         
         function rot = GetRefNodeRot (self)
@@ -591,7 +624,11 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               pos (1:3,ind) = X (self, n(ind));
+               pos(1:3,ind) = X (self, n(ind));
+               
+               if self.setNodePositions
+                    self.structuralNodes{n(ind)}.absolutePosition = pos(1:3,ind);
+               end
                
             end
             
@@ -628,7 +665,11 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               vel (1:3,ind) = XP (self, n(ind));
+               vel(1:3,ind) = XP (self, n(ind));
+               
+               if self.setNodePositions
+                    self.structuralNodes{n(ind)}.absoluteVelocity = vel (1:3,ind);
+               end
                
             end
             
@@ -665,13 +706,13 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               accel (1:3,ind) = XPP (self, n(ind));
+               accel(1:3,ind) = XPP (self, n(ind));
                
             end
             
         end
         
-        function pos = NodeThetas (self, n)
+        function theta = NodeThetas (self, n)
             % gets the angular positions of one or more nodes
             %
             % Syntax
@@ -698,11 +739,18 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            pos = nan * ones (3, numel(n));
+            theta = nan * ones (3, numel(n));
             
             for ind = 1:numel (n)
                 
-               pos (1:3,ind) = Theta (self, n(ind));
+               theta(1:3,ind) = Theta (self, n(ind));
+               
+               if self.setNodePositions
+                   
+                    om = mbdyn.pre.orientmat (self.nodeOrientiationType, theta(1:3,ind));
+                   
+                    self.structuralNodes{n(ind)}.absoluteOrientation = om.orientationMatrix;
+               end
                
             end
             
@@ -740,6 +788,10 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             for ind = 1:numel (n)
                 
                vel (1:3,ind) = Omega (self, n(ind));
+               
+               if self.setNodePositions
+                    self.structuralNodes{n(ind)}.absoluteAngularVelocity = vel (1:3,ind);
+               end
                
             end
             
