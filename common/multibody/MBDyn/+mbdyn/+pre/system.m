@@ -232,33 +232,35 @@ classdef system < mbdyn.pre.base
             for ind = 1:numel (self.elements)
                 if isa (self.elements{ind}, 'mbdyn.pre.externalStructuralForce')
                     
-                    el = self.elements{ind};
+                    extf = self.elements{ind};
                     
-                    if isempty (el.labels) 
+                    if isempty (extf.labels) 
                         extforceinfo.UseLabels = false;
                     else
-                        extforceinfo.UseLabels = testyesno (el.labels);
+                        extforceinfo.UseLabels = testyesno (extf.labels);
                     end
                     
-                    if isempty (el.accelerations) 
+                    if isempty (extf.accelerations) 
                         extforceinfo.UseAccelerations = false;
                     else
-                        extforceinfo.UseAccelerations = testyesno (el.accelerations);
+                        extforceinfo.UseAccelerations = testyesno (extf.accelerations);
                     end
                     
-                    if isempty (el.useReferenceNodeForces) 
+                    if isempty (extf.useReferenceNodeForces) 
                         extforceinfo.UseRefNode = false;
                     else
-                        extforceinfo.UseRefNode = testyesno (el.useReferenceNodeForces);
+                        extforceinfo.UseRefNode = testyesno (extf.useReferenceNodeForces);
                     end
                     
-                    if isempty (el.orientation) 
+                    if isempty (extf.orientation) 
                         extforceinfo.NodeOrientationType = false;
                     else
-                        extforceinfo.NodeOrientationType = el.orientation;
+                        extforceinfo.NodeOrientationType = extf.orientation;
                     end
                     
-                    extforceinfo.NNodes = numel (el.nodes);
+                    extforceinfo.NNodes = numel (extf.nodes);
+                    
+                    extforceinfo.Nodes = extf.nodes;
                     
                     return;
                 end
