@@ -10,18 +10,19 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 % 
 % Inputs
 %
-%  design - Structure containing the design specification.
+%  design - Structure containing the design specification. See the help for
+%  completedesign_RADIAL_SLOTTED.m for a detailed discussion of how a
+%  design can be specified.
 %
 %  Finer control over the drawing can be made using a number of optional
 %  arguments supplied as parameter-value pairs, i.e. a string followed by
 %  the desired value. The optional parameters are described below:
 %
-%
 %   'DrawingType' - string describing the desired type of simulation
-%       drawing. Currently there is only one option '2PoleMagnetRotation', also
-%       the default. With this option the magnets are drwan rotated to the
-%       desired position. See the 'Position' parameter below for more
-%       details.
+%     drawing. Currently there is only one option 'MagnetRotation', also
+%     the default. With this option the magnets are drawn rotated to the
+%     desired position. See the 'Position' parameter below for more
+%     details.
 %
 %   'Position' = 0;
 %
@@ -37,23 +38,31 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %
 %   'PolarisationType' = 'constant'
 %
-%   'PolarisationType' = design.MagnetPolarisation
-%
-%   'FemmProblem' = newproblem_mfemm('planar', 'Depth', design.ls, 'MinAngle', 15)
+%   'FemmProblem' - existing mfemm FemmProblem structure to which the
+%     drawing will be added. If not supplied, a new FemmProblem is created.
 %
 %   'FractionalPolePosition' = [];
 %
 %   'RotorAnglePosition' = [];
 %
-%   'MagnetGroup' = [];
+%   'MagnetGroup' - Scalar integer representing the group number to be
+%     assigned to the magnet regions
 %
-%   'MagnetSpaceGroup' = [];
+%   'MagnetSpaceGroup' - Scalar integer representing the group number to be
+%     assigned to the regions between magnets
 %
-%   'RotorBackIronGroup' = [];
+%   'RotorBackIronGroup' - Scalar integer representing the group number to
+%     be assigned to the rotor back iron
 %
-%   'RotorOuterRegionGroup' = [];
+%   'RotorOuterRegionGroup' - The group number(s) to be assigned to the
+%     external regions beyond the rotor back iron outer bounday. If scalar,
+%     the same group number is applied to all outer regions. If a vector,
+%     it must be the same length as the number of outer regions, and is the
+%     group number for each region working from the region closest to the
+%     back iron outwards.
 %
-%   'CoilGroup' = 0;
+%   'CoilGroup' - Scalar integer representing the group number to
+%     be assigned to all coil regions
 %
 %   'ArmatureBackIronGroup' = [];
 %
@@ -79,13 +88,14 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %
 %   'Tol' = 1e-5;
 %
-%   'SimType' = 'Magnetics';
+%   'SimType' - char array describing which type of simulation is to be
+%     performed. Valid input are : 'Magnetics', and 'HeatFlow'.
 %
-%   'MaterialsLibrary' = '';
+%   'MaterialsLibrary' - string containint a path to an alternative
+%     materials library to use for the simulation.
 %
 %   'NPolePairs' = 1;
 %
-%   'NSlots' = NPolePairs*2*design.Qs/design.Poles;
 %
 
     % First set up some default inputs
@@ -146,7 +156,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     
     Inputs = parseoptions (Inputs, varargin);
     
-    Inputs.NSlots = Inputs.NPolePairs*2*design.Qs/design.Poles;
+	NSlots = Inputs.NPolePairs*2*design.Qs/design.Poles;
     
     if isnan(Inputs.NWindingLayers)
         if isfield (design, 'CoilLayers')
@@ -203,7 +213,6 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
               design.HeatFEASimMaterials.ArmatureYoke, ...
               design.HeatFEASimMaterials.ArmatureCoil }, ...
              'MaterialsLibrary', Inputs.MaterialsLibrary );
-    
     end
                  
     GapMatInd = matinds(1);
@@ -306,7 +315,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
                 'CoilInsulationThickness', design.CoilInsulationThickness, ...
                 'CoilBaseFraction', coilbasefrac, ...
                 'ShoeCurveControlFrac', shoecurvefrac, ...
-                'NSlots', Inputs.NSlots, ...
+                'NSlots', NSlots, ...
                 'YShift', YShift );
 
 %             coillabellocs = [coillabellocs; statorinfo.CoilLabelLocations];
@@ -589,8 +598,9 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
         case 'Full'
             
             % we're drawing everything and theefore ignoring some inputs
-            Inputs.NSlots = design.Qs;
+%             Inputs.NSlots = design.Qs;
             Inputs.NPolePairs = design.Poles / 2;
+            Inputs.DrawingType = 'MagnetRotation';
             
             tempargs = struct2pvpairs (Inputs);
             
@@ -611,7 +621,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     
     % copy over some drawing info
     rotorinfo.NDrawnPoles = 2 * Inputs.NPolePairs;
-    statorinfo.NDrawnSlots = Inputs.NSlots;
+    statorinfo.NDrawnSlots = NSlots;
     
 end
 
@@ -1173,6 +1183,8 @@ end
 
 function FemmProblem = addcircuitsandcoillabels (FemmProblem, design, Inputs, coilmatind, coillabellocs)
 
+    NSlots = Inputs.NPolePairs*2*design.Qs/design.Poles;
+    
     % add circuits for each winding phase
     for i = 1:design.Phases
         cname = num2str(i);
@@ -1192,7 +1204,7 @@ function FemmProblem = addcircuitsandcoillabels (FemmProblem, design, Inputs, co
     
     % add block labels for the coils
     row = 1;
-    for slotn = 1:Inputs.NSlots
+    for slotn = 1:NSlots
 
         for layern = 1:Inputs.NWindingLayers
 
