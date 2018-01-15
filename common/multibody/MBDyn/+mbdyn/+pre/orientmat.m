@@ -15,11 +15,17 @@ classdef orientmat
     % Input
     %
     %  spectype - string stating how the orientation matrix is to be
-    %    specified, possible options are: 'orientation', 'euler',
-    %    'euler123', 'euler321', 'euler313', 'vector' and '2vectors'
+    %    specified, possible options are: 'eye', 'orientation matrix',
+    %    'orientation', 'matrix', 'euler', 'euler123', 'euler321',
+    %    'euler313', 'orientation vector, 'vector' and '2vectors'.
     %
     %  spec - orientation, the value of spec is dementdent on the value
     %    of spectype with the following possibilities:
+    %
+    %    'eye' - spec is ignores, an object representing the (3 x 3)
+    %      identity matrix is returned. Equivalent to:
+    %
+    %      om = mbdyn.pre.orientmat ('orientation matrix', eye(3))
     %
     %    'orientation matrix' - spec should be a (3 x 3) full
     %      orientation matrix aka direction-cosine aka rotation matrix
@@ -150,9 +156,10 @@ classdef orientmat
             % Input
             %
             %  spectype - string stating how the orientation matrix is to be
-            %    specified, possible options are: 'eye', 'orientation',
-            %    'euler', 'euler123', 'euler321', 'euler313', 'vector' and
-            %    '2vectors'
+            %    specified, possible options are: 'eye', 'orientation
+            %    matrix', 'orientation', 'matrix', 'euler', 'euler123',
+            %    'euler321', 'euler313', 'orientation vector, 'vector' and
+            %    '2vectors'.
             %
             %  spec - orientation, the value of spec is dependent on the 
             %    value of spectype with the following possibilities:
