@@ -16,7 +16,8 @@ collection of input data, conceptually this is shown in
 :numref:`mbdyn_basic_object_diagram`.
 
 .. _mbdyn_basic_object_diagram:
-.. figure:: /images/mbdyn_basic_object_diagram.svg
+.. figure:: /images/mbdyn_basic_object_diagram.png
+	:align: center
 
 
 
