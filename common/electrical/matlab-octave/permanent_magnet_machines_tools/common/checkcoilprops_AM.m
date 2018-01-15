@@ -48,7 +48,10 @@ function design = checkcoilprops_AM (design)
         end
     end
     
-    if ~isfield (design, 'CoilFillFactor') && ~all (isfield (design, {'Dc', 'CoilTurns'}))
+    if ~isfield (design, 'CoilFillFactor') ...
+            && ~ ( all (isfield (design, {'Dc', 'CoilTurns'})) ...
+                   || all (isfield (design, {'WireStrandDiameter', 'NStrands', 'CoilTurns'})) )
+               
         error ('RENEWNET:checkcoilprops_AM:nofillfactor', ...
             'You must supply a CoilFillFactor field in the design structure')
     end
@@ -78,6 +81,10 @@ function design = checkcoilprops_AM (design)
                                                         design.CoilFillFactor, ...
                                                         design.CoilTurns * design.NStrands);
                                                    
+        design.Dc = equivDcfromstranded (design.WireStrandDiameter, design.NStrands);
+        
+    elseif ~isfield (design, 'Dc') && all (isfield (design, {'WireStrandDiameter', 'NStrands', 'CoilTurns'}))
+        
         design.Dc = equivDcfromstranded (design.WireStrandDiameter, design.NStrands);
         
     elseif all (isfield (design, {'Dc', 'CoilTurns'})) && ~isfield (design, 'CoilFillFactor')
