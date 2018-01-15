@@ -6,12 +6,11 @@ classdef structuralNode < mbdyn.pre.node
         
         % we can set this later
         absolutePosition;
+        absoluteVelocity;
         
     end
     
     properties (GetAccess = public, SetAccess = protected)
-        
-        absoluteVelocity;
         
         % assembly
         positionInitialStiffness;
@@ -190,6 +189,15 @@ classdef structuralNode < mbdyn.pre.node
             self.checkCartesianVector (newpos, true);
             
             self.absolutePosition = newpos;
+            
+        end
+        
+        function set.absoluteVelocity (self, newvel)
+            % set the absolute position of the structural node
+            
+            self.checkCartesianVector (newvel, true, 'absoluteVelocity');
+            
+            self.absoluteVelocity = newvel;
             
         end
     end
