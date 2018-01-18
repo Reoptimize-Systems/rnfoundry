@@ -11,6 +11,17 @@ classdef clamp < mbdyn.pre.singleNodeJoint
         
     end
     
+    properties (Dependent)
+        
+        absolutePosition;
+        absoluteOrientation;
+        
+    end
+    
+    properties (GetAccess = protected, SetAccess = protected)
+        posIsNode;
+        orientIsNode;
+    end
     
     methods
         
@@ -25,11 +36,14 @@ classdef clamp < mbdyn.pre.singleNodeJoint
             self = self@mbdyn.pre.singleNodeJoint (node);
             
             self.type = 'clamp';
+            self.posIsNode = false;
+            self.orientIsNode = false;
             
             if ~isempty (position)
                 if ischar (position)
                     if strcmp (position, 'node')
                         self.position = position;
+                        self.posIsNode = true;
                     else
                         error ('Clamp position must be the keyword ''node'' or a position vector');
                     end
@@ -46,6 +60,7 @@ classdef clamp < mbdyn.pre.singleNodeJoint
                 if ischar (orientation)
                     if strcmp (orientation, 'node')
                         self.orientation = orientation;
+                        self.orientIsNode = true;
                     else
                         error ('Clamp orientation must be the keyword ''node'' or an orientation matrix or mbdyn.pre.orientm object');
                     end
@@ -99,28 +114,64 @@ classdef clamp < mbdyn.pre.singleNodeJoint
             
         end
         
+        function abspos = get.absolutePosition (self)
+            % gets the position of the clamp in the global frame
+            
+            if self.posIsNode
+                    
+                abspos = self.node.absolutePosition;
+                
+            else
+                
+                switch self.positionReference
+
+                    case 'global'
+
+                        abspos = self.position;
+
+                    case {'node', 'local'}
+
+                        abspos = self.node.relativeToAbsolutePosition (self.position);
+
+                end
+            
+            end
+            
+        end
+        
+        function absorientm = get.absoluteOrientation (self)
+            % gets the orientation of the clamp in the global frame
+            
+            if self.orientIsNode
+                
+                absorientm = self.node.absoluteOrientation;
+                
+            else
+                switch self.orientationReference
+
+                    case 'global'
+
+                        absorientm = self.orientation;
+
+                    case {'node', 'local'}
+
+                        absorientm = self.node.relativeToAbsoluteOrientation (self.orientation);
+
+                end
+            end
+            
+        end
+        
     end
     
     methods (Access = protected)
         
         function setTransform (self)
             
-%             ref_pin = mbdyn.pre.reference ( self.pinPosition, ...
-%                                             mbdyn.pre.orientmat ('orientation', self.absolutePinOrientation), ...
-%                                             [], []);
-%                                         
-% %             ref_joint = mbdyn.pre.reference (self.relativeOffset, ...
-% %                 mbdyn.pre.orientmat ('orientation', self.nodeRelativeOrientation), ...
-% %                 [], [], 'Parent', ref_pin);
-%             
-%             M = [ ref_pin.orientm.orientationMatrix , ref_pin.pos; ...
-%                   0, 0, 0, 1 ];
-%             
-%             % matlab uses different convention to mbdyn for rotation
-%             % matrix
-%             M = self.mbdynOrient2Matlab (M);
-%                   
-%             set ( self.transformObject, 'Matrix', M );
+            M = [ self.absoluteOrientation.orientationMatrix, self.absolutePosition; ...
+                  0, 0, 0, 1 ];
+                  
+            set ( self.transformObject, 'Matrix', M );
             
         end
         
