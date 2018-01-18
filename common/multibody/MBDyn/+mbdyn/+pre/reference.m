@@ -2,25 +2,25 @@ classdef reference < handle
     
     properties (GetAccess = public, SetAccess = private)
         
-        name;
-        positionParent;
-        orientParent;
-        velocityParent;
-        omegaParent;
+        name;            % Name associated with this reference (used in plots)
+        positionParent;  % Reference frame in which relative positions are defined
+        orientParent;    % Reference frame in which relative orientations are defined
+        velocityParent;  % Reference frame in which relative velocities are defined
+        omegaParent;     % Reference frame in which relative angular velocities are defined
         
-        dpos;
-        dorientm;
-        dv;
-        domega;
+        dpos;     % Cartesian position in frame of postion parent reference
+        dorientm; % Orientation in frame of postion orientation reference
+        dv;       % Velocity in frame of velocity parent reference
+        domega;   % Angular velocity in frame of angular velocity parent reference
         
     end
     
     properties (Dependent)
         
-        pos;
-        orientm;
-        v;
-        omega;
+        pos;       % Absolute cartesian position in the global frame
+        orientm;   % Absolute orientation in the global frame
+        v;         % Absolute velocity in the global frame
+        omega;     % Absolute angular velocity in the global frame
         
     end
     
@@ -165,20 +165,107 @@ classdef reference < handle
             
         end
         
-        function value = get.pos (this)
-            value =  this.get_pos ();
-        end
-        
-        function value = get.orientm (this)
-            value = this.get_orientm ();
-        end
-        
-        function value = get.v (this)
-            value = this.get_v ();
-        end
-        
-        function value = get.omega (this)
-            value = this.get_omega ();
+        function [dpos, dorientm, dvel, domega] = convertGlobal (self, pos, orientm, vel, omega)
+            % converts quantities in the global frame to this reference frame
+            %
+            % Syntax
+            %
+            % [dpos, dorientm, vel, omega] = convertGlobal (refobj, pos, orientm, vel, omega)
+            %
+            % Description 
+            %
+            % convertGlobal converts a position, orientation, velocity and
+            % angular velocity defined in the global coordinate frame to
+            % this reference frame.
+            %
+            % Input
+            %
+            %  refobj - mbdyn.pre.reference object
+            %
+            %  pos - (3 x 1) position vector in the global frame. Can also
+            %    be empty, in which case the returned position will also be
+            %    [0;0;0].
+            %
+            %  orientm - mbdyn.pre.orientm object or (3 x 3) matrix
+            %    representing an orientation in the global frame. Can also
+            %    be empty in which case the identity matrix is used.
+            %
+            %  vel - (3 x 1) velocity vector in the global frame. Can also
+            %    be empty, in which case the returned velocity will also be
+            %    an empty matrix.
+            %
+            %  omega - (3 x 1) angular velocity vector in the global frame.
+            %    Can also be empty, in which case the returned angular
+            %    velocity will also be an empty matrix.
+            %
+            % Output
+            %
+            %  dpos - (3 x 1) position vector of the global input pos relative to
+            %    the reference frame
+            %
+            %  dorientm - mbdyn.pre.orientmat object representing the
+            %    orientation of the global input orientm relative to the
+            %    reference frame
+            %
+            %  dvel - (3 x 1) velocity vector of the global input vel
+            %    relative to the reference frame
+            %
+            %  domega - (3 x 1) angular velocity vector of the global input
+            %    omega relative to the reference frame
+            %
+            %
+            
+            if isempty (orientm)
+                orientm = mbdyn.pre.orientmat ('eye');
+            else
+                
+                mbdyn.pre.base.checkOrientationMatrix (orientm, true, 'orientm');
+                
+                if isnumeric (orientm)
+                    orientm = mbdyn.pre.orientmat ('orientation matrix', orientm);
+                end
+            
+            end
+            
+            RT = self.orientm.';
+            RTmat = RT.orientationMatrix;
+            
+            dorientm = RT * orientm;
+            
+            if isempty (pos)
+                dpos = [0;0;0];
+            else
+                
+                mbdyn.pre.base.checkCartesianVector (pos, true, 'pos');
+                
+                dpos = RTmat * (pos - self.pos);
+                
+            end
+            
+            if isempty (vel)
+                dvel = [];
+            else
+                
+                mbdyn.pre.base.checkCartesianVector (vel, true, 'vel');
+                
+                dvel = RTmat * ( vel ...
+                                 - self.v ...
+                                 - cross ( self.omega, ...
+                                           self.orientm.orientationMatrix * dpos) ...
+                               );
+                
+            end
+            
+            if isempty (omega)
+                domega = [];
+            else
+                
+                mbdyn.pre.base.checkCartesianVector (omega, true, 'omega');
+                
+                domega = RTmat * (omega - self.omega);
+                
+            end
+            
         end
         
         function [hax, hquiv, hhiddenquiv] = draw (this, varargin)
@@ -315,6 +402,35 @@ classdef reference < handle
         
     end
     
+    methods
+        % getters/setters
+        
+        function value = get.pos (this)
+            % Absolute cartesian position in global frame
+
+            value =  this.get_pos ();
+        end
+        
+        function value = get.orientm (this)
+            % Absolute orientation of this reference in the global frame
+            
+            value = this.get_orientm ();
+        end
+        
+        function value = get.v (this)
+            % Absolute velocity of this reference in the global frame
+            
+            value = this.get_v ();
+        end
+        
+        function value = get.omega (this)
+            % Absolute angular velocity of this reference in the global frame
+            
+            value = this.get_omega ();
+        end
+        
+    end
+    
     methods (Access = private)
         % need this complication as you cannot access dependent properties
         % of a class property in Matlab, i.e. the x, orientm, v and omega
@@ -339,18 +455,19 @@ classdef reference < handle
         end
         
         function value = get_v (this)
-            
-%           rfOut.GetR()*GetVec3()
-%            +rfOut.GetV()
-% 			+rfOut.GetW().Cross(x-rfOut.GetX());
-            
+            % get the absolute velocity of this reference in the global
+            % frame
+            %
+
             value = this.velocityParent.orientm.orientationMatrix * this.dv ...
                 + this.velocityParent.v ...
                 + cross (this.velocityParent.omega, this.dpos);
         end
         
         function value = get_omega (this)
-            % 
+            % get the absolute angular velocity of this reference in the
+            % global frame
+            %
             
             value = this.orientParent.orientm.orientationMatrix * this.domega + this.omegaParent.omega;
         end
