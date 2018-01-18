@@ -100,6 +100,29 @@ mbdyn.pre.base.drawReferences ({Ref_Link1, Ref_Link2}, 'Scale', 0.5)
 
 % om = mbdyn.pre.orientmat ('euler', [0, pi-(theta1+theta2), 0])
 
+%% references convertGlobal
+
+ref1 = mbdyn.pre.reference ([0;1;0], mbdyn.pre.orientmat ('euler123', [0,pi/4,pi/4]), [1;0;0], []);
+
+pos = [1;1;0];
+orientm = mbdyn.pre.orientmat ('euler123', [0,0,pi/2]);
+vel = [1;0;0];
+omega = [0;0.5;0];
+
+ref2 = mbdyn.pre.reference (pos, orientm, [], []);
+
+[dpos, dorientm, dvel, domega] = ref1.convertGlobal (pos, orientm, vel, omega)
+
+ref3 = mbdyn.pre.reference (dpos, dorientm, dvel, domega, ...
+                            'Parent', ref1);
+
+mbdyn.pre.base.drawReferences ( {ref1, ref2, ref3} );
+
+[ pos, ref3.pos ]
+[ vel, ref3.v ]
+orientm.orientationMatrix
+ref3.orientm.orientationMatrix
+[ omega, ref3.omega ]
 
 %% base node
 
