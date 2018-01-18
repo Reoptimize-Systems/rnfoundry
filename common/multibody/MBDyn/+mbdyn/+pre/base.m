@@ -307,7 +307,11 @@ classdef base < handle
                 name = 'orientation matrix';
             end
             
-            mat = mbdyn.pre.base.getOrientationMatrix (mat);
+            if isa (mat, 'mbdyn.pre.orientmat')
+            
+                mat = mbdyn.pre.base.getOrientationMatrix (mat);
+                
+            end
             
             ok = mbdyn.pre.base.check3X3Matrix (mat, false);
             
@@ -441,6 +445,8 @@ classdef base < handle
             if ~iscellstr (allowedstrs)
                 error ('allowedstrs must be a cell array of strings containing a list of allowed values for the input');
             end
+            
+            assert (ischar (input), '%s must be a char array', inputname);
             
             ok = true;
             if ~any(strcmp (input, allowedstrs))
