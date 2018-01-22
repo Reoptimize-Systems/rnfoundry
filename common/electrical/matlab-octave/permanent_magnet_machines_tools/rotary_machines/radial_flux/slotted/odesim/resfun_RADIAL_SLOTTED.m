@@ -16,7 +16,7 @@ function [results, design] = resfun_RADIAL_SLOTTED(T, Y, design, simoptions)
 
     [results, design] = resfun_RADIAL(T, Y, design, simoptions);
     
-    if isfield(results, 'TqaddEBD')
+    if isfield(results, 'TqaddEBD') && (size (results.TqaddEBD, 2) > 4)
         
         % get iron losses forces
         results.TqCogging = results.TqaddEBD(:,5);
