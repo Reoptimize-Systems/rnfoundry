@@ -51,14 +51,12 @@ classdef structuralNode < mbdyn.pre.node
                        'Output', options.Output );
             
             if ~isempty (options.Accelerations)
-                if islogical (options.Accelerations) && isscalar (options.Accelerations)
-                    self.accelerations = options.Accelerations;
-                else
-                    error ('Accelerations should be a scalar boolean true/false');
-                end
+                self.checkLogicalScalar (options.Accelerations, true, 'Accelerations');
             end
-%             self.checkCartesianVector (options.AbsolutePosition, true);
-            self.checkCartesianVector (options.AbsoluteVelocity, true);
+            
+            self.checkCartesianVector (options.AbsolutePosition, true, 'AbsolutePosition');
+            self.checkCartesianVector (options.AbsoluteVelocity, true, 'AbsoluteVelocity');
+            
             self.absolutePosition = options.AbsolutePosition;
             self.absoluteVelocity = options.AbsoluteVelocity;
             
@@ -186,7 +184,8 @@ classdef structuralNode < mbdyn.pre.node
         function set.absolutePosition (self, newpos)
             % set the absolute position of the structural node
             
-            self.checkCartesianVector (newpos, true);
+            % report name as absolutePosition as this is what user will see
+            self.checkCartesianVector (newpos, true, 'absolutePosition');
             
             self.absolutePosition = newpos;
             
@@ -195,6 +194,7 @@ classdef structuralNode < mbdyn.pre.node
         function set.absoluteVelocity (self, newvel)
             % set the absolute position of the structural node
             
+            % report name as absoluteVelocity as this is what user will see
             self.checkCartesianVector (newvel, true, 'absoluteVelocity');
             
             self.absoluteVelocity = newvel;
