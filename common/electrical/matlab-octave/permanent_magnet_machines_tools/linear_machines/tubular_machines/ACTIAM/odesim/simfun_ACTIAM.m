@@ -45,8 +45,8 @@ function [design, simoptions] = simfun_ACTIAM(design, simoptions)
         writefemmfile (femmfilename, design.FemmProblem);
         % analyse
         ansfilename = analyse_mfemm (femmfilename, ...
-                                     simoptions.usefemm, ...
-                                     simoptions.quietfemm);
+                                     simoptions.MagFEASim.UseFemm, ...
+                                     simoptions.MagFEASim.QuietFemm);
         % load solution
         solution = fpproc (ansfilename);
         
@@ -136,8 +136,8 @@ function [design, simoptions] = simfun_ACTIAM(design, simoptions)
         writefemmfile (femmfilename, Ldesign.FemmProblem);
         % analyse
         ansfilename = analyse_mfemm (femmfilename, ...
-                                     simoptions.usefemm, ...
-                                     simoptions.quietfemm);
+                                     simoptions.MagFEASim.UseFemm, ...
+                                     simoptions.MagFEASim.QuietFemm);
         % load solution
         solution = fpproc (ansfilename);
 
