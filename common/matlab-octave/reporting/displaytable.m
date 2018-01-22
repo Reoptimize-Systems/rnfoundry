@@ -48,6 +48,8 @@ function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, row
 % rowending: (optional) An optional string or character to be appended at
 % the end of every row. Default is an empty string.
 % 
+% Examples
+%
 % Example 1 - Basic useage
 % 
 % colheadings = {'number of projects','sales','profit'};
