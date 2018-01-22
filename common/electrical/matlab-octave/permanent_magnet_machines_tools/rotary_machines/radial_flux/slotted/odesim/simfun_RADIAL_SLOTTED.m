@@ -166,14 +166,6 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 % Also expected to be provided is a structure containing various simulation
 % options.
 %
-%
-%  usefemm - optional flag to allow forcing the use of FEMM for FEA simulation 
-%   rather than mfemm. If true FEMM will be used, otherwise, mfemm will be used
-%   if it is available. Defaults to false if not supplied.
-%
-%  quietfemm - optional flag determining if output to the command line from
-%   mfemm should be suppressed. Defaults to true if not supplied.
-%
 %  GetVariableGapForce - optional flag determining if a series of force 
 %   simulations with various air gap sizes will be performed. Must be supplied.
 %
@@ -186,27 +178,36 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %    finitie element analysis. The possible fields of this structure are
 %    shown below:
 %
-%    MagnetRegionMeshSize - optional mesh size in the magnet regions
+%    MagnetRegionMeshSize : optional mesh size in the magnet regions
 %
-%    BackIronRegionMeshSize - optional mesh size in the rotor back iron
+%    BackIronRegionMeshSize : optional mesh size in the rotor back iron
 %
-%    AirGapMeshSize - optional mesh size in the air gap
+%    AirGapMeshSize : optional mesh size in the air gap
 %
-%    StatorOuterRegionsMeshSize - 
+%    StatorOuterRegionsMeshSize :
 %
-%    RotorOuterRegionsMeshSize - 
+%    RotorOuterRegionsMeshSize :
 %
-%    YokeRegionMeshSize - optional mesh size in the armature back iron (the
+%    YokeRegionMeshSize : optional mesh size in the armature back iron (the
 %      yoke)
 %
-%    CoilRegionMeshSize - optional mesh size in the coil regions
+%    CoilRegionMeshSize : optional mesh size in the coil regions
 %
-%    ShoeGapRegionMeshSize - optional mesh size ing the gap between tooth
+%    ShoeGapRegionMeshSize : optional mesh size ing the gap between tooth
 %      shoes
 %
-%    UseParFor - determines whether parfor will be used to split
+%    UseParFor : determines whether parfor will be used to split
 %      computation of the fea over multiple processors. Default is false if
 %      not supplied.
+%
+%    UseFemm : optional flag to allow forcing the use of FEMM for Magnetics
+%      FEA simulation rather than mfemm. If true FEMM will be used,
+%      otherwise, mfemm will be used if it is available. Defaults to false
+%      if not supplied.
+%
+%    QuietFemm : optional flag determining if output to the command line 
+%      from mfemm should be suppressed. Defaults to true if not supplied.
+%
 %
 %  SkipMainFEA - optional flag which allows skipping the main fea simulations.
 %   This can be desirable when only coil winding configurations change etc.
@@ -440,8 +441,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         
         tmpforce = closingforce_RADIAL_SLOTTED( design, ...
                                                 simoptions.VariableGapForcePositions, ...
-                                                'UseFemm', simoptions.usefemm, ...
-                                                'Verbose', ~simoptions.quietfemm, ...
+                                                'UseFemm', simoptions.MagFEASim.UseFemm, ...
+                                                'Verbose', ~simoptions.MagFEASim.QuietFemm, ...
                                                 'DeleteFEMFiles', simoptions.VariableGapForceDeleteFEMFiles, ...
                                                 'DeleteANSFiles', simoptions.VariableGapForceDeleteANSFiles );
 
@@ -479,8 +480,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
         
         % analyse the problem
         [ansfilename, femfilename] = analyse_mfemm ( design.InductanceFemmProblem, ...
-                                                     simoptions.usefemm, ...
-                                                     simoptions.quietfemm );
+                                                     simoptions.MagFEASim.UseFemm, ...
+                                                     simoptions.MagFEASim.QuietFemm );
         
         solution = fpproc (ansfilename);
         [design.CoilResistance, design.CoilInductance] = solution.circuitRL ('1');
@@ -558,11 +559,5 @@ function design = assimilate_fea_data (design, simoptions, parameterCell)
     
     [design.intAdata.slotPos, idx] = sort (design.intAdata.slotPos);
     design.intAdata.slotIntA = design.intAdata.slotIntA(idx,:,:);
-
-end
-
-function [design, simoptions] = airgapstress_RADIAL_SLOTTED (design, simoptions)
-
-
 
 end

@@ -82,8 +82,8 @@ function data = loadsimulation_ROTARY (design, simoptions, T, Y, results, drawfc
             FemmProblem = drawfcn (design, simoptions, results.thetaT(ind), coilcurrent);
 
             [ansfilename, femfilename] = analyse_mfemm ( FemmProblem, ...
-                                                         simoptions.usefemm, ...
-                                                         simoptions.quietfemm );
+                                                         simoptions.MagFEASim.UseFemm, ...
+                                                         simoptions.MagFEASim.QuietFemm );
 
             data(ind,:) = datafcn (design, simoptions, ansfilename, data);
 
