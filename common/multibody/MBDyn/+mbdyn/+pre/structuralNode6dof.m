@@ -5,6 +5,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
         
         absoluteOrientation;
         absoluteAngularVelocity;
+        
     end
     
     properties (GetAccess = public, SetAccess = protected)
@@ -21,7 +22,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
             options.OrientationDescription = '';
             options.AbsolutePosition = [0;0;0];
-            options.AbsoluteOrientation = eye (3);
+            options.AbsoluteOrientation = mbdyn.pre.orientmat ('orientation', eye (3));
             options.AbsoluteVelocity = [0;0;0];
             options.AbsoluteAngularVelocity = [0;0;0];
             options.Accelerations = [];
@@ -53,7 +54,12 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                    
             self.type = type;
             
-            self.checkCartesianVector (options.AbsoluteAngularVelocity);
+            self.checkCartesianVector (options.AbsoluteAngularVelocity, true, 'AbsoluteAngularVelocity');
+            self.checkOrientationMatrix (options.AbsoluteOrientation, true, 'AbsoluteOrientation');
+            
+            if ~isa (options.AbsoluteOrientation, 'mbdyn.pre.orientmat')
+                options.AbsoluteOrientation = mbdyn.pre.orientmat ('orientation matrix', options.AbsoluteOrientation);
+            end
             
             self.absoluteOrientation = options.AbsoluteOrientation;
             
@@ -69,9 +75,6 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
         end
         
-    end
-    
-    methods (Access = public)
         
         function str = generateOutputString (self)
             
@@ -116,11 +119,8 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             str = self.addOutputLine (str, ';', 1, false, 'end structural node');
             
         end
-        
-    end
     
-    % getters/setters
-    methods
+
         function set.absoluteOrientation (self, neworientation)
             % set the absolute orientation of the structural node
             
@@ -142,6 +142,52 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             self.absoluteAngularVelocity = newomega;
             
         end
+        
+        function ref = reference (self)
+            % returns an mbdyn.pre.reference for the node in the global
+            % frame
+            
+            ref = mbdyn.pre.reference ( self.absolutePosition, ...
+                                        self.absoluteOrientation, ...
+                                        self.absoluteVelocity, ...
+                                        self.absoluteAngularVelocity );
+
+        end
+        
+        function abspos = relativeToAbsolutePosition (self, pos)
+            % convert a position in the reference frame of the node to global
+            
+            self.checkCartesianVector (pos);
+            
+            ref_node = reference (self);
+                                         
+            ref_out = mbdyn.pre.reference ( pos, ...
+                                            [], ...
+                                            [], ...
+                                            [], ...
+                                            ref_node );
+                                        
+            abspos = ref_out.position;
+            
+        end
+        
+        function absorienm = relativeToAbsoluteOrientation (self, orientation)
+            % convert an orientation in the reference frame of the node to global
+            
+            self.checkOrientationMatrix (orientation);
+            
+            ref_node = reference (self);
+                                         
+            ref_out = mbdyn.pre.reference ( [], ...
+                                            orientation, ...
+                                            [], ...
+                                            [], ...
+                                            ref_node );
+                                        
+            absorienm = ref_out.orientm;
+            
+        end
+        
     end
     
     methods (Access = protected)

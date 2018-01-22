@@ -79,6 +79,50 @@ classdef structuralNode3dof < mbdyn.pre.structuralNode
             
         end
         
+        function ref = reference (self)
+            % returns an mbdyn.pre.reference for the node
+            
+            ref = mbdyn.pre.reference ( self.absolutePosition, ...
+                                        [], ...
+                                        self.absoluteVelocity, ...
+                                        [] );
+
+        end
+        
+        function abspos = relativeToAbsolutePosition (self, pos)
+            % convert a position in the reference frame of the node to global
+            
+            self.checkCartesianVector (pos);
+            
+            ref_node = reference (self);
+                                         
+            ref_out = mbdyn.pre.reference ( pos, ...
+                                            [], ...
+                                            [], ...
+                                            [], ...
+                                            ref_node );
+                                        
+            abspos = ref_out.position;
+            
+        end
+        
+        function absorientm = relativeToAbsoluteOrientation (self, orientation)
+            % convert an orientation in the reference frame of the node to global
+            
+            self.checkOrientationMatrix (orientation);
+            
+            ref_node = reference (self);
+                                         
+            ref_out = mbdyn.pre.reference ( [], ...
+                                            orientation, ...
+                                            [], ...
+                                            [], ...
+                                            ref_node );
+                                        
+            absorientm = ref_out.orientm;
+            
+        end
+        
     end
     
     methods (Access = protected)
