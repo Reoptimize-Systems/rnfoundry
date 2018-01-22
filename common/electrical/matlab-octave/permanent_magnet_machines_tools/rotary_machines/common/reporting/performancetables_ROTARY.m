@@ -54,6 +54,7 @@ function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, Lo
     options.UseParFor = false;
     options.LoadSpecType = 'ratio';
     options.DoSimFun = true;
+    options.Verbose = false;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -70,7 +71,8 @@ function [ptables, pdata] = performancetables_ROTARY(design, simoptions, rpm, Lo
                     'UseParFor', options.UseParFor, ...
                     'LoadSpecType', options.LoadSpecType, ...
                     'SpeedSetupFcn', @setrpm, ...
-                    'DoSimFun', options.DoSimFun);
+                    'DoSimFun', options.DoSimFun, ...
+                    'Verbose', options.Verbose);
 
 end
 
