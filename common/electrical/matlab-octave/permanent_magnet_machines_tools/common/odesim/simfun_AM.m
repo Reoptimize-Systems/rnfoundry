@@ -1,6 +1,6 @@
 function [design, simoptions] = simfun_AM(design, simoptions)
-% performs common preprocessing tasks common to all machines prior to a
-% dynamic simulation
+% performs preprocessing tasks common to all machines prior to a dynamic
+% simulation
 %
 % Syntax
 %
@@ -8,7 +8,7 @@ function [design, simoptions] = simfun_AM(design, simoptions)
 %
 % Input
 %
-% design - a structure intended to hold the machine design parameters.
+%  design - a structure intended to hold the machine design parameters.
 %   simfun_AM looks for the following fields in the sturcture, and if not
 %   present adds them with the specified default.
 %
