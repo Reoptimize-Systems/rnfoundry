@@ -16,9 +16,78 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
     methods
         
         function self = revolutePin (node, relative_offset, absolute_pin_position, varargin)
+            % joint which only allows the absolute rotation of a node about
+            % a given axis, which is axis 3 in the reference systems
+            % defined by the two orientation statements
+            %
+            % Syntax
+            %
+            % obj = mbdyn.pre.revolutePin (node, relative_offset, absolute_pin_position)
+            % obj = mbdyn.pre.revolutePin (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % revolutePin is a joint which only allows the absolute
+            % rotation of a node about a given axis, which is axis 3 in the
+            % reference systems defined by the two orientation statements,
+            % i.e. rotation occurs about the local axis 3 of the
+            % constraint.
+            %
+            % Input
+            %
+            %  node - mbdyn.pre.structuralNode object (or child class).
+            %    This is the node which will be constrained by the pin
+            %    joint.
+            %
+            %  relative_offset - the position of the node relative to the
+            %    hinge point. Note that by default this is a position
+            %    relative to the global coordinate system, i.e. it is
+            %    actually just the absolute position of the hinge point.
+            %    You can specify positions relative to other coordinate
+            %    systems using the 'NodeOffsetReference' option described
+            %    below. 
+            %
+            %  absolute_pin_position - the position of the hinge point in
+            %    the global reference frame.
+            %
+            % Additional optional arguments can be supplied using
+            % parameter-value pairs. The available options are:
+            %
+            %  'PinOrientation' - orientation of the pin joint. Rotation
+            %    occurs about the local axis 3 of this orientation. Can be
+            %    supplied as an mbdyn.pre.orientmat object or a 3x3
+            %    orientation matrix.
+            %
+            %  'NodeRelativeOrientation' - 
+            %
+            %  'NodeOffsetReference' - string defining the reference frame
+            %    in which the relative_offset (see above) is defined. By
+            %    default this is 'global'. Other possibilities are 'node',
+            %    to define a point in the reference frame of the node,
+            %    and 'local', which is the same as 'node'.
+            %
+            %  'NodeOrientationReference' - string defining the reference frame
+            %    in which the orientation of the joint relative to the node
+            %    (see NodeRelativeOrientation above) is defined. By default
+            %    this is 'global'. Other possibilities are 'node', to
+            %    define a point in the reference frame of the node, and
+            %    'local', which is the same as 'node'.
+            %
+            %  'InitialTheta' - The initial angular displacement of the
+            %    joint.
+            %
+            % Output
+            %
+            %  obj - mbdyn.pre.revolutePin object
+            %
+            % See Also: 
+            %
+            % mbdyn.pre.revoluteHinge
+            %
+            %
             
-            options.NodeRelativeOrientation = [];
             options.PinOrientation =  [];
+            options.NodeRelativeOrientation = [];
             options.InitialTheta = [];
             options.NodeOffsetReference = 'global';
             options.NodeOrientationReference = 'global';
