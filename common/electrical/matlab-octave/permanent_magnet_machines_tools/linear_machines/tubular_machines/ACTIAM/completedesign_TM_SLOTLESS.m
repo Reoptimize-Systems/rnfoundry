@@ -466,7 +466,7 @@ function design = completeexternalarmature (design, setchoice)
         design.tsgVtsb = design.rsg / design.rsb;
         
         % calculate the axial slot space
-        design.zs = design.zp / double (design.Phases * design.qc);
+        design.zs = design.zp / double (design.Phases * design.qc) / 2; %TODO: fix tubular winding spec
         
         design.zmVzp = design.zm / design.zp;
         design.zcgVzs = design.zcg / design.zs;
@@ -503,7 +503,7 @@ function design = completeexternalarmature (design, setchoice)
         design.tsgVtsb = design.rsg / design.rsb;
         
         % calculate the axial slot space
-        design.zs = design.zp / double (design.Phases * design.qc);
+        design.zs = design.zp / double (design.Phases * design.qc) / 2; %TODO: fix tubular winding spec
         
         design.zmVzp = design.zm / design.zp;
         design.zcgVzs = design.zcg / design.zs;
