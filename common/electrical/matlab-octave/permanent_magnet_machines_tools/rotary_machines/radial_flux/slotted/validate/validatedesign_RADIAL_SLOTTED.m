@@ -53,12 +53,12 @@ function design = validatedesign_RADIAL_SLOTTED(design, simoptions)
     writefemmfile (femfilename, design.Validation.FemmSingleFLAltInductance.FemmProblem);
     % analyse the problem
     ansfilename = analyse_mfemm (femfilename, ...
-                                 simoptions.usefemm, ...
-                                 simoptions.quietfemm);
+                                 simoptions.MagFEASim.UseFemm, ...
+                                 simoptions.MagFEASim.QuietFemm);
 	
 	fprintf (1, '\n');
 
-    if (exist ('fpproc_interface_mex', 'file')==3) && ~simoptions.usefemm
+    if (exist ('fpproc_interface_mex', 'file')==3) && ~simoptions.MagFEASim.UseFemm
 
         solution = fpproc (ansfilename);
         solution.smoothon ();
