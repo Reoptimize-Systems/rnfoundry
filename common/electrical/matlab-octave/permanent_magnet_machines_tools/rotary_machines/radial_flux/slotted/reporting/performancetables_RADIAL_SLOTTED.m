@@ -50,6 +50,7 @@ function [ptables, pdata] = performancetables_RADIAL_SLOTTED(design, simoptions,
     options.UseParFor = false;
     options.LoadSpecType = 'ratio';
     options.DoSimFun = true;
+    options.Verbose = false;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -70,6 +71,7 @@ function [ptables, pdata] = performancetables_RADIAL_SLOTTED(design, simoptions,
     [ptables, pdata] = performancetables_RADIAL(design, simoptions, rpm, LoadVals, outfields, ...
                     'UseParFor', options.UseParFor, ...
                     'LoadSpecType', options.LoadSpecType, ...
-                    'DoSimFun', options.DoSimFun);
+                    'DoSimFun', options.DoSimFun, ...
+                    'Verbose', options.Verbose);
     
 end
