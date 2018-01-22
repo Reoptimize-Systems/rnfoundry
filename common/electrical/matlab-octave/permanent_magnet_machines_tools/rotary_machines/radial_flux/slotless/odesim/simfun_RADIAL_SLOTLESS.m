@@ -353,8 +353,8 @@ function [design, simoptions] = simfun_RADIAL_SLOTLESS(design, simoptions)
         
         % analyse the problem
         [ansfilename, femfilename] = analyse_mfemm ( design.InductanceFemmProblem, ...
-                                                     simoptions.usefemm, ...
-                                                     simoptions.quietfemm );
+                                                     simoptions.MagFEASim.UseFemm, ...
+                                                     simoptions.MagFEASim.QuietFemm );
         
         solution = fpproc (ansfilename);
         [design.CoilResistance, design.CoilInductance] = solution.circuitRL ('1');
@@ -407,8 +407,8 @@ function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDen
     writefemmfile (femfilename, design.FemmProblem);
     % analyse the problem
     ansfilename = analyse_mfemm (femfilename, ...
-                                 simoptions.usefemm, ...
-                                 simoptions.quietfemm);
+                                 simoptions.MagFEASim.UseFemm, ...
+                                 simoptions.MagFEASim.QuietFemm);
 
     solution = fpproc (ansfilename);
     % activate field smoothing so values are interpolated across
@@ -433,17 +433,17 @@ function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDen
         % determine a unit vector pointing in the direction normal to the air
         % gap half way between the Poles for the purpose of extracting the
         % air-gap closing forces
-        [gvector(1), gvector(2)] = pol2cart (design.thetap,1);
+        [gvector(1), gvector(2)] = pol2cart (design.RotorDrawingInfo.NDrawnPoles*design.thetap/2,1);
         gvector = unit (gvector);
 
-        design.PerPoleAirGapClosingForce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+        design.PerPoleAirGapClosingForce = dot ([solution.blockintegral(18)/design.RotorDrawingInfo.NDrawnPoles, solution.blockintegral(19)/design.RotorDrawingInfo.NDrawnPoles], ...
                                                 gvector);
 
         % get the cross-sectional area of the armature iron for
         % calcuation of material masses later
         solution.clearblock();
         solution.groupselectblock (design.FemmProblem.Groups.ArmatureBackIron);
-        design.ArmatureIronAreaPerPole = solution.blockintegral(5)/2;
+        design.ArmatureIronAreaPerPole = solution.blockintegral(5)/design.RotorDrawingInfo.NDrawnPoles;
 
         % get the cross-sectional area of the coil winding bundle
         design.CoilArea = solution.blockintegral ( 5, design.StatorDrawingInfo.CoilLabelLocations(1,1), design.StatorDrawingInfo.CoilLabelLocations(1,2) );
@@ -493,7 +493,7 @@ function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDen
 %                    design.InterMagFlux = getintermagflux (design, solution);
 %                end
 
-    RawCoggingTorque = design.Poles(1) * (solution.blockintegral (22) / 2);
+    RawCoggingTorque = design.Poles(1) * (solution.blockintegral (22) / design.RotorDrawingInfo.NDrawnPoles);
     
     % get the integral of the vector potential in a slot, if two
     % layers get both layers
