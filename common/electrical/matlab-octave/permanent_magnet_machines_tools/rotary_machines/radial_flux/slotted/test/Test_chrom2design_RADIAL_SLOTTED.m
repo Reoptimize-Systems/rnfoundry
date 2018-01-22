@@ -103,8 +103,8 @@ simoptions.ODESim.PostPreProcFcn = 'prescribedmotfinfun_RADIAL_SLOTTED';
 simoptions.ODESim.EvalFcn = 'prescribedmotodetorquefcn_ROTARY'; 
 simoptions.ODESim.TorqueFcn = 'torquefcn_ROTARY'; 
 simoptions.ODESim.PostSimFcn = 'prescribedmotresfun_ROTARY';
-simoptions.usefemm = false;
-simoptions.quietfemm = true;
+simoptions.MagFEASim.UseFemm = false;
+simoptions.MagFEASim.QuietFemm = true;
 
 % set some default spawning settings if not supplied
 evaloptions.starttime = [];

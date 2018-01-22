@@ -151,8 +151,8 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     % analyse the problem
     try
         ansfilename = analyse_mfemm ( femfilename, ...
-                                      simoptions.usefemm, ...
-                                      simoptions.quietfemm );
+                                      simoptions.MagFEASim.UseFemm, ...
+                                      simoptions.MagFEASim.QuietFemm );
     catch err
         if strncmp (err.message, 'Material properties have not been defined', 41)
             warning (err.message);
