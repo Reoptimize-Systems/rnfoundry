@@ -10,6 +10,7 @@ classdef twoNodeJoint < mbdyn.pre.joint
     
     methods
         function self = twoNodeJoint (node1, node2)
+            % generic base class for joints which constrains two nodes
         
             self.checkIsStructuralNode (node1, true);
             self.checkIsStructuralNode (node2, true);
@@ -29,6 +30,35 @@ classdef twoNodeJoint < mbdyn.pre.joint
     methods (Access = protected)
         
         function processed = checkJointPositionOffset (self, offset)
+            % checks and processes the joint position reference frame
+            % string
+            %
+            % Syntax
+            %
+            % ok = checkJointPositionOffset (jntobj, offset)
+            %
+            % Description
+            %
+            %
+            %
+            % Input
+            %
+            %  jntobj - mbdyn.pre.twoNodeJoint object
+            %
+            %  ref - char array specifying the reference frame
+            %    in which a position is defined realtive to a node in a
+            %    single node joint. Valid strings are: 'node', 'local' and
+            %    'global'.
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkNodeReferenceType if ref fails check
+            %
+            % Output
+            %
+            %  processed - 
+            %
+            % See Also: 
+            %
             
             if~isempty (offset)
                 if iscell (offset)
@@ -36,7 +66,7 @@ classdef twoNodeJoint < mbdyn.pre.joint
 
                         if ischar (offset{1})
                             
-                            self.checkAllowedStringInputs (offset{1}, {'global', 'node', 'other position', 'other node'}, true, 'Position Offset');
+                            self.checkAllowedStringInputs (offset{1}, {'global', 'node', 'local', 'other position', 'other node'}, true, 'Position Offset');
                             
                             if ischar (offset{2})
                                 if ~strcmp (offset{2}, 'null')
@@ -70,7 +100,7 @@ classdef twoNodeJoint < mbdyn.pre.joint
 
                         if ischar (offset{1})
                             
-                            self.checkAllowedStringInputs (offset{1}, {'global', 'node', 'other orientation', 'other node'}, true, 'Orientation Offset');
+                            self.checkAllowedStringInputs (offset{1}, {'global', 'node', 'local', 'other orientation', 'other node'}, true, 'Orientation Offset');
                             
                             if ischar (offset{2})
                                 if ~strcmp (offset{2}, 'null')
