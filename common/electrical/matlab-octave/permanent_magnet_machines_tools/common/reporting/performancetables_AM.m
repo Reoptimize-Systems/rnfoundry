@@ -50,12 +50,13 @@ function [ptables, pdata] = performancetables_AM (design, simoptions, speeds, Lo
 
 % Created by Richard Crozier 2013-2015
 
-    options.UseParFor = false;
-    options.LoadSpecType = 'ratio';
-    options.SpeedSetupFcn = @setrpm;
-    options.DoSimFun = true;
+    opts.UseParFor = false;
+    opts.LoadSpecType = 'ratio';
+    opts.SpeedSetupFcn = @setrpm;
+    opts.DoSimFun = true;
+    opts.Verbose = false;
     
-    options = parse_pv_pairs (options, varargin);
+    opts = parse_pv_pairs (opts, varargin);
     
     if nargin < 5
         outfields = {};
@@ -85,7 +86,7 @@ function [ptables, pdata] = performancetables_AM (design, simoptions, speeds, Lo
     outfields = [ outfields, commonfields ];
 
     % do design data gathering function if necessary
-    if options.DoSimFun && ~isempty(simoptions.ODESim.PreProcFcn)
+    if opts.DoSimFun && ~isempty(simoptions.ODESim.PreProcFcn)
         % Analyse the machine and gather desired data
         [design, simoptions] = feval (simoptions.ODESim.PreProcFcn, design, simoptions);
     end
@@ -112,17 +113,38 @@ function [ptables, pdata] = performancetables_AM (design, simoptions, speeds, Lo
         end
         
     end
+    nsims = rpmLoadValsind - 1;
+    
+    % report a bit of information about what was done
+    ptables.SimulationInfo.Speeds = speeds;
+    ptables.SimulationInfo.LoadVals = LoadVals;
+    ptables.SimulationInfo.LoadSpecType = opts.LoadSpecType;
+    if isa (opts.SpeedSetupFcn, 'function_handle')
+        ptables.SimulationInfo.SpeedSetupFcn = func2str (opts.SpeedSetupFcn);
+    else
+        ptables.SimulationInfo.SpeedSetupFcn = opts.SpeedSetupFcn;
+    end
+    ptables.SimulationInfo.Design = design;
+    ptables.SimulationInfo.Simoptions = simoptions;
     
     % perform the simulations and gather the data
-    if options.UseParFor
-        parfor rpmLoadValsind = 1:rpmLoadValsind-1
-            pdata(rpmLoadValsind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmLoadValsind), LoadValsslice(rpmLoadValsind), options);
+    if opts.UseParFor
+        parfor rpmLoadValsind = 1:nsims-1
+            if opts.Verbose, fprintf (1, 'Performing sim %d of %d', rpmLoadValsind, nsims); end
+            pdata(rpmLoadValsind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmLoadValsind), LoadValsslice(rpmLoadValsind), opts);
         end
     else
-        for rpmLoadValsind = 1:rpmLoadValsind-1
-            pdata(rpmLoadValsind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmLoadValsind), LoadValsslice(rpmLoadValsind), options);
+        % do all but last sim, which is done later (getting desing
+        % stucture)
+        for rpmLoadValsind = 1:nsims-1
+            if opts.Verbose, fprintf (1, 'Performing sim %d of %d', rpmLoadValsind, nsims); end
+            pdata(rpmLoadValsind,:) = simfcn (design, simoptions, outfields, rpmslice(rpmLoadValsind), LoadValsslice(rpmLoadValsind), opts);
         end
     end
+    
+    % get last data, and get design containing output fields
+    if opts.Verbose, fprintf (1, 'Performing sim %d of %d', nsims, nsims); end
+    [pdata(nsims,:), design] = simfcn (design, simoptions, outfields, rpmslice(nsims), LoadValsslice(nsims), opts);
     
     % construct the output tables from the matrix of data
     for rpmind = 1:numel(speeds)
@@ -139,16 +161,6 @@ function [ptables, pdata] = performancetables_AM (design, simoptions, speeds, Lo
         end
         
     end
-    
-    % report a bit of information about what was done
-    ptables.SimulationInfo.Speeds = speeds;
-    ptables.SimulationInfo.LoadVals = LoadVals;
-    ptables.SimulationInfo.LoadSpecType = options.LoadSpecType;
-    if isa (options.SpeedSetupFcn, 'function_handle')
-        ptables.SimulationInfo.SpeedSetupFcn = func2str (options.SpeedSetupFcn);
-    else
-        ptables.SimulationInfo.SpeedSetupFcn = options.SpeedSetupFcn;
-    end
 
 end
 
@@ -156,7 +168,7 @@ function [design, simoptions] = setrpm (design, simoptions, rpm, options)
     simoptions.RPM = rpm;
 end
 
-function pdata = simfcn (design, simoptions, outfields, rpm, LoadVal, options)
+function [pdata, design] = simfcn (design, simoptions, outfields, rpm, LoadVal, options)
 
     [design, simoptions] = feval (options.SpeedSetupFcn, design, simoptions, rpm, options);
 
