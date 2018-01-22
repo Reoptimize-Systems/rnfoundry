@@ -520,8 +520,8 @@ function [design, simoptions] = simfun_TM_SLOTLESS (design, simoptions)
         
         % analyse the problem
         [ansfilename, femfilename] = analyse_mfemm ( design.InductanceFemmProblem, ...
-                                                     simoptions.usefemm, ...
-                                                     simoptions.quietfemm );
+                                                     simoptions.MagFEASim.UseFemm, ...
+                                                     simoptions.MagFEASim.QuietFemm );
         
         solution = fpproc (ansfilename);
         [design.CoilResistance, design.CoilInductance] = solution.circuitRL ('1');
