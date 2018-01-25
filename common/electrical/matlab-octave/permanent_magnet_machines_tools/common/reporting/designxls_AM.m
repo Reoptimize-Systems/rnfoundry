@@ -1,15 +1,87 @@
-function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow)
-% create a latex design report on a machine design
+function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow, varargin)
+% adds machine design data common to all machines to a spreadsheet 
 %
 % Syntax
 %
-% [reportstrs] = designreport_AM(design, simoptions, type, reportstrs)
+% [startrow] = designxls_AM (design, simoptions, filename, sheet, startrow)
 %
+%
+% Input
+%
+%  design - a structure containing the machine design parameters.
+%   designxls_AM expects the following fields to be present:
+%
+%   CoilTurns : Number of turns per coil
+%   NStrands : Number of strands per wire turn
+%   Phases : Number of phases 
+%   NCoilsPerPhase : total number of coils per phase
+%   Dc : coil wire diameter
+%   Branches : number of series branches of coils
+%   CoilsPerBranch : number of series coils per branch
+%   IPhasePeak : Peak Phase Current
+%   IPhaseRms : RMS Coil Current
+%   ICoilPeak : Peak Coil Current
+%   ICoilRms : RMS Coil Current
+%   JCoilPeak : Peak Current Density
+%   JCoilRms : RMS Current Density
+%   EMFPhasePeak : Peak Phase EMF
+%   EMFPhaseRms : RMS Phase EMF
+%   PowerLoadMean : Mean Exported Power
+%   PowerLoadPeak : Peak Exported Power
+%   PhaseInductance : Phase Inductance
+%   PhaseResistance : Phase Resistance
+%   LoadResistance : Load Resistance
+%   LoadInductance : Load Inductance
+%   slm_fluxlinkage : SLM object fitted to the flux linkage waveform
+%   Efficiency : Efficiency
+%   PowerPhaseRMeanMean : Winding Losses
+%   PowerInputMean : Mean Input Power
+%   The following fields may optionally also be supplied:
+%   PowerLossIronMeanMean : Iron Losses
+%   PowerLossEddyMean : Mean Winding Eddy Losses
+%   VoltagePercentTHD : Voltage THD
+%
+%  simoptions - 
+%
+%  filename - 
+%
+%  sheet - 
+%
+%  startrow - 
+%
+% Output
+%
+%  startrow - 
+%
+% See Also: 
 %
 
 % Created by Richard Crozier 2013
 %
 
+    options.UseExcel = false;
+    
+    options = parse_pv_pairs (options, varargin);
+    
+    if options.UseExcel
+        writefcn = @xlswrite;
+    else
+        if exist ('xlwrite', 'file')
+            writefcn = @xlwrite;
+        else
+            if ispc
+                if exist ('xlswrite', 'file') ~= 0
+                    warning ('RENEWNET:designxls_AM:noxlwrite', ...
+                         sprintf('the ''xlwrite'' function was not found, trying built-in ''xlswrite'' instead,\nto choose this explicitly, use the ''UseExcel'' option'));
+                    writefcn = @xlswrite;
+                else
+                    error ('Neither the ''xlwrite'' nor ''xlswrite'' function is avaialable');
+                end
+            else
+                error ('The ''xlwrite'' function was not found');
+            end
+        end
+    end
     
 %% Winding Design
 
@@ -25,9 +97,9 @@ function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow
     };
 
     % write table to the excel file
-    range = xlsrange(startrow, 1);
-    status = xlswrite(filename,windingtabledata,sheet,range);
-    startrow = startrow + size(windingtabledata, 1) + 2;
+    range = xlsrange (startrow, 1);
+    status = writefcn (filename,windingtabledata,sheet,range);
+    startrow = startrow + size (windingtabledata, 1) + 2;
     
 %% Simulation Outputs
 
@@ -56,7 +128,7 @@ function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow
         'Peak Phase EMF (V)', design.EMFPhasePeak(1), 'RMS Phase EMF (V)', design.EMFPhaseRms(1);         
         'Mean Exported Power (kW)', design.PowerLoadMean/1000, 'Peak Exported Power (kW)', design.PowerLoadPeak/1000;
         'Phase Inductance (mH)', design.PhaseInductance(1)*1000, 'Phase Resistance (Ohm)', design.PhaseResistance(1);
-        'Load Resistance ()hm)',  design.LoadResistance, 'Load Inductance (H)', design.LoadInductance;
+        'Load Resistance (Ohm)',  design.LoadResistance, 'Load Inductance (H)', design.LoadInductance;
         'Peak Flux Linkage (Wb)', slmpar(design.slm_fluxlinkage, 'maxfun'), 'Efficiency', design.Efficiency;
         'Mean Winding Losses (kW)', design.PowerPhaseRMean/1000, 'Mean Iron Losses (kW)', PowerLossIronMean;
         'Mean Winding Eddy Losses (kW)', PowerLossEddyMean, 'Mean Input Power (kW)', design.PowerInputMean/1e3;
@@ -64,8 +136,8 @@ function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow
     };
 
     % write table to the excel file
-    range = xlsrange(startrow, 1);
-    status = xlswrite(filename,simoutputstabledata,sheet,range);
+    range = xlsrange (startrow, 1);
+    status = writefcn (filename,simoutputstabledata,sheet,range);
     startrow = startrow + size(simoutputstabledata, 1) + 2;
     
 %% Material Costs
@@ -82,8 +154,8 @@ function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow
     };
 
     % write table to the excel file
-    range = xlsrange(startrow, 1);
-    status = xlswrite(filename,costperkgtabledata,sheet,range);
+    range = xlsrange (startrow, 1);
+    status = writefcn (filename,costperkgtabledata,sheet,range);
     startrow = startrow + size(costperkgtabledata, 1) + 2;
     
 %% Mass and Costs
@@ -128,15 +200,17 @@ function [startrow] = designxls_AM(design, simoptions, filename, sheet, startrow
 
     % write table to the excel file
     range = xlsrange(startrow, 1);
-    [status, msg] = xlswrite(filename,massandcosttabledata,sheet,range);
+    [status, msg] = writefcn (filename,massandcosttabledata,sheet,range);
     
     if status == 0
         error(msg.message);
     end
     
-    startrow = startrow + size(massandcosttabledata, 1) + 2;
+    startrow = startrow + size (massandcosttabledata, 1) + 2;
     
     % remove any empty sheets
-    xlsdelemptysheets(filename)
+    if ispc
+        xlsdelemptysheets (filename)
+    end
     
 end
