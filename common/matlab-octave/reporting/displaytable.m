@@ -147,7 +147,9 @@ function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, row
         colheadings = {};
     end
 
-    if nargin >= 6 && (~iscellstr(rowheadings) || ~isvector(rowheadings))
+    if nargin >= 6 ...
+            && ~isempty (rowheadings) ...
+            && (~iscellstr(rowheadings) || ~isvector(rowheadings))
         error ('row headings must be vector cell array of strings');
     end
     
