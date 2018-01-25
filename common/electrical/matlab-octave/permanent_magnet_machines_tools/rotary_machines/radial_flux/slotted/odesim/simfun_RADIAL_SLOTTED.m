@@ -8,22 +8,24 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %
 % Description
 %
-% simfun_RADIAL_SLOTTED takes a slotted radial flux machine design, specified in 
-% the fields of a structure and performs a series of electromagnetic simulation
-% to obtain  data on the machine performance. In addition, various other 
-% calculations are  performed such as estimating the resistance and inductance 
-% etc. The results of the calcualtions are added as fields to the design 
-% structure, which is returned with the appended fields. Also expected to be
-% provided is a simoptions structure containing fields which specify various
-% options and settings determining what simulation data will be gathered. More
-% information on the simoptions fields is given later in this help.
+% simfun_RADIAL_SLOTTED takes a slotted radial flux machine design,
+% specified in the fields of a structure and performs a series of
+% electromagnetic simulation to obtain  data on the machine performance. In
+% addition, various other calculations are  performed such as estimating
+% the resistance and inductance etc. The results of the calcualtions are
+% added as fields to the design structure, which is returned with the
+% appended fields. Also expected to be provided is a simoptions structure
+% containing fields which specify various options and settings determining
+% what simulation data will be gathered. More information on the simoptions
+% fields is given later in this help.
 %
 % The design can be for either an internal or external armature. This is
 % specified in the field 'ArmatureType' which must contain a string, either
 % 'internal' or 'external'. Any unambiguous substring is also acceptable,
 % e.g 'e' or'i', or 'ext', or 'in'.
 %
-% Both internal and external armature designs must have the following fields:
+% Both internal and external armature designs must have the following
+% fields:
 %
 %    tsg - thickness of shoe in radial direction at shoe gap
 %
