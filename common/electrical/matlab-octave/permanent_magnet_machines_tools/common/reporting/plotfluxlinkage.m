@@ -27,7 +27,7 @@ function plotfluxlinkage (design, varargin)
     options = parse_pv_pairs (options, varargin);
     
     if ~isfield (design, 'slm_fluxlinkage')
-        error ('This design does not appear to have the flux linkage information present, you may need to run its associated simulation funcitons')
+        error ('This design does not appear to have the flux linkage information present, you may need to run its associated simulation functions')
     end
     
     if options.ShowEMF
@@ -41,6 +41,7 @@ function plotfluxlinkage (design, varargin)
          'ShowData', options.ShowRawData, ...
          'Title', 'Flux Linkage With Position', ...
          'XLabel', 'Relative Position [Poles]', ...
-         'YLabel', 'Flux Linkage [WbT]')
+         'YLabel', 'Flux Linkage [WbT]', ...
+         'DYLabel', '1st Derivative (EMF Waveform)')
 
 end

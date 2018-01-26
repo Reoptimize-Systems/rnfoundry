@@ -77,6 +77,9 @@ options.XLabel = 'X';
 options.YLabel = 'f(X)';
 options.ShowKnots = true;
 options.ShowData = true;
+options.DYLabel = 'dy';
+options.DY2Label = 'dy2';
+options.DY3Label = 'dy3';
 
 options = parse_pv_pairs (options, varargin);
 
@@ -470,13 +473,13 @@ for i = 2:numel(plotstyle)
             
             switch plotstyle{i}
                 case 'dy'
-                    addaxislabel(i,'dy');
+                    addaxislabel(i,options.DYLabel);
                     derivLineStyle = '--';
                 case 'dy2'
-                    addaxislabel(i,'dy2')
+                    addaxislabel(i,options.DY2Label)
                     derivLineStyle = ':';
                 case 'dy3'
-                    addaxislabel(i,'dy3')
+                    addaxislabel(i,options.DY3Label)
                     derivLineStyle = '-.';
             end
 
