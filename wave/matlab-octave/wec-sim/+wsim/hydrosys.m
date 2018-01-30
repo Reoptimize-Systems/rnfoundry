@@ -8,14 +8,21 @@ classdef hydrosys < handle
     %  addHydroBodies
     %  initialiseHydrobodies
     
-    properties (GetAccess = private, SetAccess = private)
+    properties (GetAccess = public, SetAccess = private)
         
+        nHydroBodies;
+        odeSimInitialised = false;
         simu;        % simulation setings (wsim.simsettings object)
         waves;       % wave settings (wsim.wavesettings object)
+        bodyMBDynNodes;
+        
+    end
+    
+    properties (GetAccess = private, SetAccess = private)
+        
+        
         hydroBodies; % array of wsim.hydrobody objects
         hydroBodyInds = []; % array of indices of the hydrobodies
-        
-        odeSimInitialised = false;
         
     end
     
@@ -266,6 +273,8 @@ classdef hydrosys < handle
                     mbbodies = [mbbodies, {body}];
                     
                 end
+                
+                self.bodyMBDynNodes = mbnodes;
                 
                 absnodes = {};
                 forces = {};
@@ -631,6 +640,12 @@ classdef hydrosys < handle
 %             self.odeSimInitialised = false;
 %             
 %         end
+
+        function n = get.nHydroBodies (self)
+            
+            n = numel (self.hydroBodies);
+
+        end
         
         
     end
