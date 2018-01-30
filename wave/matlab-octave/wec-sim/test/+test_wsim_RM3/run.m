@@ -21,10 +21,10 @@ simu.b2b = true;
 %%%%%%%%%%%%%%%%%%%
 
 % Regular Waves
-% waves = wsim.wavesettings ('regularCIC');        %Create the Wave Variable and Specify Type                               
-% waves.H = 2.5;                          %Wave Height [m]
-% waves.T = 8;                            %Wave Period [s]
-%%%%%%%%%%%%%%%%%%%
+waves = wsim.wavesettings ('regularCIC');        %Create the Wave Variable and Specify Type                               
+waves.H = 2.5;                          %Wave Height [m]
+waves.T = 8;                            %Wave Period [s]
+%%%%%%%%%%%%%%%%%%
 
 % Regular Waves
 % waves = wsim.wavesettings ('regular');        %Create the Wave Variable and Specify Type                               
@@ -40,12 +40,12 @@ simu.b2b = true;
 % waves.spectrumType = 'PM';
 %%%%%%%%%%%%%%%%%%%
 
-% Irregular Waves using BS Spectrum with Convolution Integral Calculation
-waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
-waves.H = 2.5;                        %Significant Wave Height [m]
-waves.T = 8;                          %Peak Period [s]
-waves.spectrumType = 'BS';
-%%%%%%%%%%%%%%%%%%%
+% % Irregular Waves using BS Spectrum with Convolution Integral Calculation
+% waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
+% waves.H = 2.5;                        %Significant Wave Height [m]
+% waves.T = 8;                          %Peak Period [s]
+% waves.spectrumType = 'BS';
+% %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using BS Spectrum with State Space Calculation
 % waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
@@ -119,6 +119,10 @@ mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
 
 k = 0;
 c = 1200000;
+
+forcefcn = @(xRpto, vRpto) -k*xRpto -c*vRpto;
+
+pto = mbdyn.mint.twoNodeTranslationalForce ( hydro_mbnodes{2}, hydro_mbnodes{1}, 3, 'forcefcn', forcefcn);
 
 %% Run the simulation
 
@@ -304,25 +308,32 @@ while status == 0
 
     forces (:,:,ind) = hydroforces;
     
-	% calculate spring damping PTO force here
-    xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-    vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-
-    xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-    vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
-    
-    % velocities and displacements are the z components of the vectors in
-    % the pto coordinate system
-    xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-    vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
-    
-    ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
-    
+% 	% calculate spring damping PTO force here
+%     xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
+%     vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
+% 
+%     xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
+%     vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+%     
+%     % velocities and displacements are the z components of the vectors in
+%     % the pto coordinate system
+%     xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
+%     vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+%     
+%     ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
+%     
 %     FptoVec = om.orientationMatrix * [0; 0; -ptoforce(ind)];
-    FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * om.orientationMatrix)' ;
+%     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * om.orientationMatrix)' ;
+%     
+%     forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
+%     forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
     
-    forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-    forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
+    [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.force ();
+    
+    forces (1:3,1,ind) = forces (1:3,1,ind) + Fpto(:,1);
+    forces (1:3,2,ind) = forces (1:3,2,ind) + Fpto(:,2);
+    
+    FptoVec(1:3,1,ind) = Fpto(:,1); % store for comparison later
     
 	mb.F (forces(1:3,:,ind));
     mb.M (forces(4:6,:,ind));
@@ -376,24 +387,31 @@ while status == 0
 
     forces (:,:,ind) = newhydroforces;
     
-	% calculate spring damping PTO force here
-    xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-    vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
+% 	% calculate spring damping PTO force here
+%     xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
+%     vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
+% 
+%     xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
+%     vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+%     
+%     % velocities and displacements are the z components of the vectors in
+%     % the pto coordinate system
+%     xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
+%     vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+%     
+%     ptoforce(ind) = -k*xRpto(ind) - c*vRpto(ind);
+%     
+%     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))';
+%     
+%     forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
+%     forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
 
-    xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-    vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+    [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.force ();
     
-    % velocities and displacements are the z components of the vectors in
-    % the pto coordinate system
-    xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-    vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+    forces (1:3,1,ind) = forces (1:3,1,ind) + Fpto(:,1);
+    forces (1:3,2,ind) = forces (1:3,2,ind) + Fpto(:,2);
     
-    ptoforce(ind) = -k*xRpto(ind) - c*vRpto(ind);
-    
-    FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))';
-    
-    forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-    forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
+    FptoVec(1:3,1,ind) = Fpto(:,1); % store for comparison later
     
 	mb.F (forces(1:3,:,ind));
     mb.M (forces(4:6,:,ind));
@@ -439,24 +457,31 @@ while status == 0
 
         forces (:,:,ind) = newhydroforces;
 
-        % calculate spring damping PTO force here
-        xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-        vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-        
-        xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-        vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+%         % calculate spring damping PTO force here
+%         xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
+%         vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
+%         
+%         xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
+%         vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+% 
+%         % velocities and displacements are the z components of the vectors in
+%         % the pto coordinate system
+%         xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
+%         vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+% 
+%         ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
+% 
+%         FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))' ;
+% 
+%         forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
+%         forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
 
-        % velocities and displacements are the z components of the vectors in
-        % the pto coordinate system
-        xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-        vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+        [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] = pto.force ();
 
-        ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
+        forces (1:3,1,ind) = forces (1:3,1,ind) + Fpto(:,1);
+        forces (1:3,2,ind) = forces (1:3,2,ind) + Fpto(:,2);
 
-        FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))' ;
-
-        forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-        forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
+        FptoVec(1:3,1,ind) = Fpto(:,1); % store for comparison later
 
         mb.F (forces(1:3,:,ind));
         mb.M (forces(4:6,:,ind));
@@ -578,7 +603,7 @@ clear mb;
 
 fprintf (1, 'Reached time %f, in %d steps\n', time(end), ind-1);
 
-return
+% return
 
 %%
 figure;
@@ -590,7 +615,7 @@ legend ('fx', 'fy', 'fz', 'ptoforce', 'vRpto');
 
 %%
 
-if ~exist (output, 'var')
+if ~exist ('output', 'var')
     warning ('Not comparing output to original WEC-Sim as ''output'' variable is not in the workspace.')
 else
 
@@ -681,10 +706,10 @@ else
 
 
     %%
-
-    mbout = mbdyn.postproc ( outputfile_prefix, mbsys ); 
-
-    mbout.plotNodeTrajectories ('AxLims', [-1.5, 1.5; -1.5, 1.5; -25, 5]);
+% 
+%     mbout = mbdyn.postproc ( outputfile_prefix, mbsys ); 
+% 
+%     mbout.plotNodeTrajectories ('AxLims', [-1.5, 1.5; -1.5, 1.5; -25, 5]);
 
 
     %%
@@ -749,29 +774,29 @@ else
     tmax = min ( [tmax, time(end), output.bodies(bodyind).time(end)]);
     plotinds =  time>=tmin & time<=tmax;
 
-    figure;
-    plotyy ( output.bodies(bodyind).time(plotinds), ...
-             [output.ptos(1).forceTotal(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
-             time(plotinds), ...
-             [vRptoVec(plotinds)', [ output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3)] ] );
-    title (sprintf ('output.ptos(%d).forceTotal vs FptoVec for body %d', bodyind, bodyind));
-    legend ('1', '2', '3', '4', '5', '6', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
-
-    figure;
-    plotyy ( output.bodies(bodyind).time(plotinds), ...
-            [output.ptos(1).forceTotalWorld(plotinds,:) - output.ptos(1).forceConstraintWorld(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
-            time(plotinds), ...
-            [vRptoVec(:,plotinds)', output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3) ] );
-    title (sprintf ('output.ptos(1).forceTotalWorld - output.ptos(1).forceConstraintWorld vs FptoVec for body %d', bodyind, bodyind));
-    legend ('1', '2', '3', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
-
-    figure;
-    plot ( output.bodies(bodyind).time(plotinds), ...
-           output.ptos(1).forceInternalMechanics(plotinds,3),  ...
-           time(plotinds), ...
-           squeeze(ptoforce(plotinds)));
-    title (sprintf ('output.ptos(%d).forceInternalMechanics(:,3) vs ptoforce for body %d', bodyind, bodyind));
-    legend ('forceInternalMechanics(:,3)', 'ptoforce');
+%     figure;
+%     plotyy ( output.bodies(bodyind).time(plotinds), ...
+%              [output.ptos(1).forceTotal(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
+%              time(plotinds), ...
+%              [vRptoVec(plotinds)', [ output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3)] ] );
+%     title (sprintf ('output.ptos(%d).forceTotal vs FptoVec for body %d', bodyind, bodyind));
+%     legend ('1', '2', '3', '4', '5', '6', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
+% 
+%     figure;
+%     plotyy ( output.bodies(bodyind).time(plotinds), ...
+%             [output.ptos(1).forceTotalWorld(plotinds,:) - output.ptos(1).forceConstraintWorld(plotinds,:), squeeze(FptoVec(:,bodyind,plotinds))'],  ...
+%             time(plotinds), ...
+%             [vRptoVec(:,plotinds)', output.bodies(1).velocity(plotinds,1:3) - output.bodies(2).velocity(plotinds,1:3) ] );
+%     title (sprintf ('output.ptos(1).forceTotalWorld - output.ptos(1).forceConstraintWorld vs FptoVec for body %d', bodyind, bodyind));
+%     legend ('1', '2', '3', 'FptoVec 1', 'FptoVec 2', 'FptoVec 3', 'myvR1', 'myvR2', 'myvR3', 'wsimvR1', 'wsimvR2', 'wsimvR3');
+% 
+%     figure;
+%     plot ( output.bodies(bodyind).time(plotinds), ...
+%            output.ptos(1).forceInternalMechanics(plotinds,3),  ...
+%            time(plotinds), ...
+%            squeeze(ptoforce(plotinds)));
+%     title (sprintf ('output.ptos(%d).forceInternalMechanics(:,3) vs ptoforce for body %d', bodyind, bodyind));
+%     legend ('forceInternalMechanics(:,3)', 'ptoforce');
 
     %% Statistical comparison
 
