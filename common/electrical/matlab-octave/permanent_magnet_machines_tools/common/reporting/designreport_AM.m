@@ -99,8 +99,8 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         tbfcn('Peak Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilPeak', 1e-6), tbfcn('RMS Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilRms', 1e-6);
         tbfcn('Peak Phase EMF', 'V', design, 'EMFPhasePeak'),         tbfcn('RMS Phase EMF', 'V', design, 'EMFPhaseRms');         
         tbfcn('Mean Exported Power', 'W', design, 'PowerLoadMean'),   tbfcn('Peak Exported Power', 'W', design, 'PowerLoadPeak');
-        tbfcn('Phase Inductance', 'H', design, 'PhaseInductance'),    tbfcn('Phase Resistance', '\ohm', design, 'PhaseResistance');
-        tbfcn('Load Resistance', '\ohm',  design, 'LoadResistance'),  tbfcn('Load Inductance', 'H', design, 'LoadInductance');
+        tbfcn('Phase Inductance', 'H', design, 'PhaseInductance'),    tbfcn('Phase Resistance', '\si{\ohm}', design, 'PhaseResistance');
+        tbfcn('Load Resistance', '\si{\ohm}',  design, 'LoadResistance'),  tbfcn('Load Inductance', 'H', design, 'LoadInductance');
         tbfcn('Peak Flux Linkage', 'Wb', design, 'FluxLinkagePeak'), {'Efficiency', design.Efficiency};
         tbfcn('Mean Winding Losses', 'W', design, 'PowerPhaseRMean'), tbfcn('Mean Iron Losses', 'W', design, 'PowerLossIronMean');
         tbfcn('Mean Winding Eddy Losses', 'W', design, 'PowerLossEddyMean'),    tbfcn('Mean Input Power', 'W', design, 'PowerInputMean');
