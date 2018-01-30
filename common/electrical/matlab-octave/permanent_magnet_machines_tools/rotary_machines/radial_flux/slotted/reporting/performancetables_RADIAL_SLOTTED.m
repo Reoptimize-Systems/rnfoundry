@@ -60,12 +60,13 @@ function [ptables, pdata] = performancetables_RADIAL_SLOTTED(design, simoptions,
     outfields = {'PowerLossIronMean'};
     
     % set up the simulation functions
-    simoptions = setfieldifabsent (simoptions, 'simfun', 'simfun_RADIAL_SLOTTED');
-    simoptions = setfieldifabsent (simoptions, 'finfun', 'prescribedmotfinfun_RADIAL_SLOTTED');
-    simoptions = setfieldifabsent (simoptions, 'odeevfun', 'prescribedmotodetorquefcn_ROTARY');
-    simoptions = setfieldifabsent (simoptions, 'torquefcn', 'torquefcn_ROTARY');
-    simoptions = setfieldifabsent (simoptions, 'resfun', 'prescribedmotresfun_ROTARY');
-    simoptions = setfieldifabsent (simoptions, 'PoleCount', 1000);
+    simoptions = setfieldifabsent (simoptions, 'ODESim', struct());
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'PreProcFcn', 'simfun_RADIAL_SLOTTED');
+    simoption.ODESims = setfieldifabsent (simoptions.ODESim, 'PostPreProcFcn', 'prescribedmotfinfun_RADIAL_SLOTTED');
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'EvalFcn', 'prescribedmotodetorquefcn_ROTARY');
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'TorqueFcn', 'torquefcn_ROTARY');
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'PostSimFcn', 'prescribedmotresfun_ROTARY');
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'PoleCount', 1000);
      
     % call the common radial performance tables function
     [ptables, pdata] = performancetables_RADIAL(design, simoptions, rpm, LoadVals, outfields, ...
