@@ -1,6 +1,39 @@
 function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoptions)
-% odeelectricalresults: calculates the electrical outputs, and exported
-% power from an ode simulation of a generator
+% calculates the electrical outputs from an ode simulation of a generator
+%
+% Syntax
+%
+% design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoptions)
+%
+% Description
+%
+% calculates the electrical outputs, and exported power from an ode
+% simulation of a generator. The results are added as fields to the input
+% design structure.
+%
+% Input
+%
+%  T - (n x 1) vector of time points at which the simulation was evaluated
+%
+%  Iphase - (n x p) Time series of values of the phase currents produced by
+%   the generator, each column is a generator phase.
+%
+%  EMF - (n x p) Time series of values of the phase emfs produced by the
+%   generator, each column is a generator phase.
+%
+%  RPhase - 
+%
+%  design - 
+%
+%  simoptions - 
+%
+% Output
+%
+%  design - 
+%
+%
+% See Also: 
+%
 
     % Determine some interesting electrical design outputs
     
@@ -24,7 +57,7 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
     design.JCoilPeak = design.ICoilPeak / design.ConductorArea;
     
     % peak phase EMF (coil EMF time the number of coils per branch)
-    design.EMFPhasePeak = max(abs(EMF(:))) * design.CoilsPerBranch;
+    design.EMFPhasePeak = max(abs(EMF(:)));
 
     if numel(T) > 1
         
