@@ -131,20 +131,21 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %     if not supplied, for Matlab the default is 'ode15s', and for Octave
 %     'ode2r'.
 %
-%   splitode : (scalar integer) if this field is present in the structure
+%   Split : (scalar integer) if this field is present in the structure
 %     it indicates that the evaluation of the system of differential
 %     equations should be split into manageable chunks, useful for
 %     long-running simulations which use substantial memory. The value of
-%     splitode is the desired initial number of chunks into which
+%     ODESim.Split is the desired initial number of chunks into which
 %     evaluation will be split. If the system runs out of memory during
 %     simulation, the number of blocks will be increased and simulation
-%     reattempted this will be attempted at most 4 times. If splitode is
-%     present, the field spfcn must also be supplied, documented below.
+%     reattempted this will be attempted at most 4 times. If ODESim.Split
+%     is present, the field SplitPointFcn must also be supplied, documented
+%     below.
 %
-%   SplitPointFcn : (string|function handle) if splitode is provided this
-%     field must also be present which should contain a string or function
-%     handle. This function will be called at each break in the integration
-%     and must have the following syntax:
+%   SplitPointFcn : (string|function handle) if ODESim.Split is provided
+%     this field must also be present which should contain a string or
+%     function handle. This function will be called at each break in the
+%     integration and must have the following syntax:
 %
 %     results = spfcn (flag, results, sol, design, simoptions)
 %   
@@ -157,7 +158,9 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %     simoptions.ODESim and runs the output function (if present) for each
 %     solution component with the appropriate inputs.
 %
-%   Events : 
+%   Events : Event function to run after every time step to determine if a
+%     termination event has occured. See the help for the ode solvers (e.g.
+%     ode45) to learn more about the event function.
 %
 %   Vectorized : true/false flag indicating if the ODE solution function is
 %     vectorized
@@ -195,7 +198,9 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 % Y - output solution vector as produced by ode solver functions, e.g.
 %   ode45
 %
-% results - the results as produced by the supplied function in resfun
+% results - the results as produced by the supplied function in
+%   ODESim.PostSimFcn. Typically a structure containig fields which are the
+%   outputs of various quantities at each time step in the simulation.
 %
 % design - the design structure which may have been modified by the
 %   supplied functions
