@@ -24,13 +24,9 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %     desired position. See the 'Position' parameter below for more
 %     details.
 %
-%   'Position' = 0;
+%   'Position' - angular displacement of the rotor expressed. 
 %
-%   'NBoundaryPositions' = 10;
-%
-%   'ArmatureType' = 'external'
-%
-%   'NWindingLayers' = 1;
+%   'NBoundaryPositions' - 
 %
 %   'CoilCurrent' = zeros (1,design.Phases)
 %
@@ -41,7 +37,8 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %   'FemmProblem' - existing mfemm FemmProblem structure to which the
 %     drawing will be added. If not supplied, a new FemmProblem is created.
 %
-%   'FractionalPolePosition' = [];
+%   'FractionalPolePosition' = angular displacement of the rotor expressed
+%     as a fraction of one pole.
 %
 %   'RotorAnglePosition' = [];
 %
@@ -82,19 +79,24 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %
 %   'ShoeGapRegionMeshSize' = choosemesharea_mfemm(max(design.tsg, design.tsb), (design.Rmo*design.thetasg), 1/20);
 %
-%   'YokeRegionMeshSize'
+%   'YokeRegionMeshSize' - 
 %
-%   'CoilRegionMeshSize'
+%   'CoilRegionMeshSize' - 
 %
-%   'Tol' = 1e-5;
+%   'Tol' - drawing tolerance for gaps etc.
 %
 %   'SimType' - char array describing which type of simulation is to be
 %     performed. Valid input are : 'Magnetics', and 'HeatFlow'.
 %
-%   'MaterialsLibrary' - string containint a path to an alternative
+%   'MaterialsLibrary' - string containing a path to an alternative
 %     materials library to use for the simulation.
 %
-%   'NPolePairs' = 1;
+%   'NPolePairs' - number of pole pairs to be drawn in the simulation. The
+%     number of slots will be calculated from this
+%
+%   'NWindingLayers' - legacy option to specify number of layers in the
+%     coils, should be specified in design structure (which will also
+%     override this option, even if it is specified).
 %
 %
 
