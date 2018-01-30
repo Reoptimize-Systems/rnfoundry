@@ -1,4 +1,4 @@
-function [newx, newy] = surfplot2dtable (x, y, data, varargin)
+function [newx, newy, hax, hfig] = surfplot2dtable (x, y, data, varargin)
 % makes a surf plot of data in the form of a table
 %
 % Syntax
@@ -51,8 +51,8 @@ function [newx, newy] = surfplot2dtable (x, y, data, varargin)
     tri = delaunay(newx,newy);
 
     if isempty (options.Axes)
-        figure;
-        axes;
+        hfig = figure;
+        hax = axes;
     end
     
     % Plot it with TRISURF

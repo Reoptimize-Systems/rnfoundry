@@ -1,4 +1,4 @@
-function [xq,yq,zq] = contour2dtable(x, y, data, varargin)
+function [xq,yq,zq,C,hc,hax,hfig] = contour2dtable(x, y, data, varargin)
 % creates a contour plot of the data in a 2D table
 %
 % Syntax
@@ -46,12 +46,15 @@ function [xq,yq,zq] = contour2dtable(x, y, data, varargin)
     zq = griddata (newx, newy, newz, xq, yq);
     
     if isempty (options.Axes)
-        figure;
-        axes;
+        hfig = figure;
+        hax = axes;
+    else
+        hax = options.Axes;
+        hfig = get (hax, 'Parent');
     end
     
     % and create the mesh plot
-    contour (xq,yq,zq, options.ContourArgs{:});
+    [C,hc] = contour (hax, xq, yq, zq, options.ContourArgs{:});
 
     if ~isempty (options.XLabel)
         xlabel (options.XLabel);
