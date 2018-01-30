@@ -1,6 +1,6 @@
 function tcells = quantity_to_table_cell_pair (name, unit, S, fieldname, scalefac)
 % created a two element cell array with a name and value with an
-% appropriate prefix
+% appropriate SI prefix
 
 
     if nargin < 5
