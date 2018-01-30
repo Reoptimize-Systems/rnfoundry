@@ -1,23 +1,58 @@
 function [str, pfs] = sipre(val,sgf,pfx,trz)
 % Convert a scalar numeric into an SI prefixed string. (metric/engineering)
 %
-% (c) 2014 Stephen Cobeldick
-%
-% ### Function ###
-%
-% Convert a scalar numeric value into a string. The value is shown in the string
-% as a coefficient and an SI unit prefix, optimally chosen for readability. If the
-% rounded |val|<10^-24 or |val|>=10^27 then E-notation is used, without a prefix.
-%
 % Syntax:
 %  str = sipre(val)             % Four significant figures and prefix symbol.
 %  str = sipre(val,sgf)         % Select significant figures, prefix symbol.
 %  str = sipre(val,sgf,pfx)     % Select sig-figs, choose prefix symbol or name.
 %  str = sipre(val,sgf,pfx,trz) % Select if decimal trailing zeros are required.
 %
-% See also SINUM BIPRE BINUM NUM2STR STR2NUM MAT2STR SSCANF SPRINTF ROUND60063 ROUND2SF ROUND2DP NUM2WORDS
+% Description
 %
-% ### Examples ###
+% Convert a scalar numeric value into a string. The value is shown in the
+% string as a coefficient and an SI unit prefix, optimally chosen for
+% readability. If the rounded |val|<10^-24 or |val|>=10^27 then E-notation
+% is used, without a prefix.
+%
+% The following SI prefix string and symbols are used:
+%
+% Order  |1000^1 |1000^2 |1000^3 |1000^4 |1000^5 |1000^6 |1000^7 |1000^8 |
+% -------|-------|-------|-------|-------|-------|-------|-------|-------|
+% Name   | kilo  | mega  | giga  | tera  | peta  | exa   | zetta | yotta |
+% -------|-------|-------|-------|-------|-------|-------|-------|-------|
+% Symbol*|   k   |   M   |   G   |   T   |   P   |   E   |   Z   |   Y   |
+%
+% Order  |1000^-1|1000^-2|1000^-3|1000^-4|1000^-5|1000^-6|1000^-7|1000^-8|
+% -------|-------|-------|-------|-------|-------|-------|-------|-------|
+% Name   | milli | micro | nano  | pico  | femto | atto  | zepto | yocto |
+% -------|-------|-------|-------|-------|-------|-------|-------|-------|
+% Symbol*|   m   |   u   |   n   |   p   |   f   |   a   |   z   |   y   |
+%
+%
+% Input
+%
+%  val - NumericScalar, the value to be converted to string <str>.
+%
+%  sgf - (optional) NumericScalar, the significant figures in the
+%    coefficient, default is 4.
+%
+%  pfx - (optional) LogicalScalar, true/false flag selecting if SI prefix
+%    is a full name or symbol (e.g. 'mega' or 'M'). If true, the full name
+%    is used, otherwise the symbol. Default is false.
+%
+%  trz -(optional)  LogicalScalar, true/false selecting if decimal trailing
+%    zeros are required.
+%
+% Output
+%
+%  str - Input <val> as a string: coefficient + space character + SI prefix.
+%
+% str = sipre(val,*sgf,*pfx,*trz)
+%
+% See also SINUM BIPRE BINUM NUM2STR STR2NUM MAT2STR SSCANF SPRINTF 
+%          ROUND60063 ROUND2SF ROUND2DP NUM2WORDS
+%
+% Examples
 %
 % sipre(10000)  OR  sipre(1e4)
 %   ans = '10 k'
@@ -38,32 +73,8 @@ function [str, pfs] = sipre(val,sgf,pfx,trz)
 % sipre(sinum('9 T'))
 %   ans = '9 T'
 %
-% ### SI Prefix Strings ###
-%
-% Order  |1000^1 |1000^2 |1000^3 |1000^4 |1000^5 |1000^6 |1000^7 |1000^8 |
-% -------|-------|-------|-------|-------|-------|-------|-------|-------|
-% Name   | kilo  | mega  | giga  | tera  | peta  | exa   | zetta | yotta |
-% -------|-------|-------|-------|-------|-------|-------|-------|-------|
-% Symbol*|   k   |   M   |   G   |   T   |   P   |   E   |   Z   |   Y   |
-%
-% Order  |1000^-1|1000^-2|1000^-3|1000^-4|1000^-5|1000^-6|1000^-7|1000^-8|
-% -------|-------|-------|-------|-------|-------|-------|-------|-------|
-% Name   | milli | micro | nano  | pico  | femto | atto  | zepto | yocto |
-% -------|-------|-------|-------|-------|-------|-------|-------|-------|
-% Symbol*|   m   |   u   |   n   |   p   |   f   |   a   |   z   |   y   |
-%
-% ### Input & Output Arguments ###
-%
-% Inputs (*=default):
-%  val = NumericScalar, the value to be converted to string <str>.
-%  sgf = NumericScalar, the significant figures in the coefficient, *4.
-%  pfx = LogicalScalar, true/false* -> select SI prefix as name/symbol.
-%  trz = LogicalScalar, true/false* -> select if decimal trailing zeros are required.
-%
-% Output:
-%  str = Input <val> as a string: coefficient + space character + SI prefix.
-%
-% str = sipre(val,*sgf,*pfx,*trz)
+
+
 
 % Copyright (c) 2014, Stephen Cobeldick
 % All rights reserved.
