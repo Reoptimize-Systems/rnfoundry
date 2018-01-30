@@ -6,6 +6,7 @@ function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnode
     default_problem_options.NonLinearSolver = mbdyn.pre.newtonRaphsonSolver ();
     default_problem_options.LinearSolver = mbdyn.pre.linearSolver ('umfpack');
     default_problem_options.SteppingMethod = {};
+    default_problem_options.DefaultElementOutput = {'none'};
         
     if nargin < 6
         problem_options = struct ();
@@ -105,7 +106,7 @@ function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnode
                                'Nodes', [hydro_mbnodes, {clamped_node}], ...
                                'Elements', [{float_mb_body, spar_mb_body, jclamp, j1, j2, j3, j4 socket_force}, hydro_mbelements], ...
                                'DefaultOrientation', 'orientation matrix', ...
-                               'DefaultOutput', {'none'} );
+                               'DefaultOutput', problem_options.DefaultElementOutput );
                            
 	initptodpos = float_node.absolutePosition - spar_node.absolutePosition; 
 
