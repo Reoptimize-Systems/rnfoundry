@@ -84,15 +84,15 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, vararg
     end
     
     % rotary machine properties
-    tabledata = { ...
-        'Max PTO Torque (Nm)', TorquePtoPeak;
-        'Mean PTO Torque (Nm)', TorquePtoMean;
-        'Torque Ripple Factor (\% of Mean)', TorqueRippleFactor;
-        'Max Cogging Torque (Nm)', maxcoggingtq;
-        'Max Cogging Force at air gap (N)', maxcoggingf;
-        'Max Estimated Electrical Frequency (Hz)', FrequencyPeak;
-        'Air Gap Closing Force Per Pole (N)', design.PerPoleAirGapClosingForce;
-    };
+    tabledata = [ 
+        convertval('Max PTO Torque', 'Nm', TorquePtoPeak);
+        convertval('Mean PTO Torque', 'Nm', TorquePtoMean);
+        {'Torque Ripple Factor (Percent of Mean)', TorqueRippleFactor};
+        convertval('Max Cogging Torque', 'Nm', maxcoggingtq);
+        convertval('Max Cogging Force at air gap', 'N', maxcoggingf);
+        convertval('Max Estimated Electrical Frequency', 'Hz', FrequencyPeak);
+        quantity_to_table_cell_pair('Air Gap Closing Force Per Pole', 'N', design, 'PerPoleAirGapClosingForce');
+    ];
 
     % generate the LaTex table of the outputs
     colheadings = {};
@@ -147,4 +147,29 @@ rotarydimstablestrs;
     reportstrs = [ reportstrs;
                    radialreportstrs ];
 
+end
+
+function out = convertval (name, unit, val, scalefac)
+
+    if nargin < 4
+        scalefac = 1;
+    end
+
+    if isnumeric (val)
+        % stuff val in a dummy structure so we can use
+        % quantity_to_table_cell_pair to make it pretty
+        S = struct ('x', val);
+
+        out = quantity_to_table_cell_pair (name, unit, S, 'x', scalefac);
+    
+    elseif ischar (val)
+        % the value is a string (probably 'N\A') just return it as it is.
+        out = {name, val};
+       
+    else
+        
+        error ('Invalid input to convertval')
+       
+    end
+    
 end
