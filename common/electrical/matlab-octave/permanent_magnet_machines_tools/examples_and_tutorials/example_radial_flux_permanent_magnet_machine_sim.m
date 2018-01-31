@@ -226,17 +226,17 @@ ylabel(AX(2),'Flux Density Integral', 'fontsize', 14)
 %
 % Before calling finfun_ however, we need to add some more information to
 % the simoptions structure. This information includes things such as the
-% density of materials and is provided in the 'evaloptions' field of the
+% density of materials and is provided in the 'Evaluation' field of the
 % simoptions stucture, which itself is also a structure. To save time, we
 % will use a function which provides some common defaults for this:
 
-simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED();
+simoptions.Evaluation = designandevaloptions_RADIAL_SLOTTED();
 
 % we could have added these at any time, and and you would normally want to
 % add them at the very start of a simulation.
 % designandevaloptions_RADIAL_SLOTTED can also take in an existing
-% evaloptions structure and fill in the missing values with defaults,
-% keeping your choices
+% simoptions.Evaluation structure and fill in the missing values with
+% defaults, keeping your choices
 
 % The post processing functions also set up certain parameters for later
 % dynamic machine simulation. One of the parameters it sets up is a load

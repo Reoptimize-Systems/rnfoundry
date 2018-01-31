@@ -14,7 +14,7 @@ function [design, simoptions] = finfun_TM (design, simoptions)
     
     if simoptions.DoPreLinSim
         
-        evaloptions = designandevaloptions_TM(simoptions.evaloptions);
+        evaloptions = designandevaloptions_TM(simoptions.Evaluation);
         
         simoptions.FieldIronDensity = evaloptions.FieldIronDensity;
         simoptions.MagnetDensity = evaloptions.MagnetDensity;

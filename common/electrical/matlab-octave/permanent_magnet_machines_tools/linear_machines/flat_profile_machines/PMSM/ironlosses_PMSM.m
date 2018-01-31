@@ -14,17 +14,17 @@ function Pfe = ironlosses_PMSM(design, simoptions, vT)
 % 
 % H. Polinder, M. E. C. Damen and F. Gardner, 'Design, modelling and test
 % results of the AWS PM linear generator',  European Transactions on
-% Electrical Power, 2005, vol 15, pp 245–256, Published online in Wiley
+% Electrical Power, 2005, vol 15, pp 245ï¿½256, Published online in Wiley
 % InterScience (www.interscience.wiley.com). DOI: 10.1002/etep.56
 %
 
     fe = velocity2electricalfreq(vT, design.PoleWidth);
     
     mt = design.Wt * design.ht * design.ls * design.Phases ...
-         * design.PowerPoles * design.sides * simoptions.evaloptions.ArmatureIronDensity;
+         * design.PowerPoles * design.sides * simoptions.Evaluation.ArmatureIronDensity;
     
     my = design.hba * design.Wp * design.ls * design.PowerPoles ...
-         * design.sides * simoptions.evaloptions.ArmatureIronDensity;
+         * design.sides * simoptions.Evaluation.ArmatureIronDensity;
     
     Pfe = 2 .* design.Pfe0 ...
           .* (mt .* ((design.Ws + design.Wt)/design.Wt).^2 ...

@@ -42,7 +42,7 @@ function [design, simoptions] = finfun_PMSM(design, simoptions)
     
     if simoptions.DoPreLinSim
         
-        evaloptions = designandevaloptions_linear(simoptions.evaloptions);
+        evaloptions = designandevaloptions_linear(simoptions.Evaluation);
         
         simoptions.FieldIronDensity = evaloptions.FieldIronDensity;
         simoptions.MagnetDensity = evaloptions.MagnetDensity;

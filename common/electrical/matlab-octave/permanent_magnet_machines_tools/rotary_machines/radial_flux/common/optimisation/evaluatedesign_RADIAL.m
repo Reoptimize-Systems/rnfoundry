@@ -201,7 +201,7 @@ function [design, simoptions, T, Y, results] = evaluatedesign_RADIAL(design, sim
     [T, Y, results, design, simoptions] = simulatemachine_AM (design, simoptions);
     
 %     % evaluate the structure, unless we are told to skip it
-%     if ~simoptions.evaloptions.SkipStructural
+%     if ~simoptions.Evaluation.SkipStructural
 %         [maxzdef, maxstress, design] = evaluatestructure_RADIAL(design, simoptions);
 %     else
 %         maxzdef = 0; 

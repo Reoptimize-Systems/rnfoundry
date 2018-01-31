@@ -32,8 +32,8 @@ design.Poles = [1 1];
 design = ratios2dimensions_ACTM(design);
 
 options.E = [207e9 100e5 207e9];
-simoptions.evaloptions.targetPower = 10e3; % 10kW machine
-simoptions.evaloptions.mlength = 4; % Overlap between stator and translator, i.e. stator is mleng metres longer than the translator
+simoptions.Evaluation.targetPower = 10e3; % 10kW machine
+simoptions.Evaluation.mlength = 4; % Overlap between stator and translator, i.e. stator is mleng metres longer than the translator
 % options.pointsPerPole = 40;
 options.coilYieldStrength = 70e6;
 

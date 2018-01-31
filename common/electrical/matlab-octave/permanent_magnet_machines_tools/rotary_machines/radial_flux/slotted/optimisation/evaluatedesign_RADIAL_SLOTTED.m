@@ -20,7 +20,7 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
 %  simoptions - structure used to control how the system is evaluated. It
 %  can contain the following fields:
 %   
-%   evaloptions - 
+%   Evaluation - 
 %
 %   ForceFullSim : true/false flag indicating whether to perform design
 %    screening or not. If true, no screening function is run on the
@@ -32,7 +32,7 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
 %
 %   DStructEval : true/false flag indicating whether to run the evaluation
 %    function which (if present) is found in
-%    simoptions.evaloptions.structevalfcn
+%    simoptions.Evaluation.structevalfcn
 %
 %   ODESim : a substructure controlling the time series ODE simulation of
 %    the design which can contain the following fields:
@@ -212,9 +212,9 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
 % See also: simulatemachine_AM
 %
 
-    simoptions = setfieldifabsent(simoptions, 'evaloptions', []);
+    simoptions = setfieldifabsent (simoptions, 'Evaluation', []);
 
-    simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED(simoptions.evaloptions);
+    simoptions.Evaluation = designandevaloptions_RADIAL_SLOTTED(simoptions.Evaluation);
     
     % pre-screen the design to see if a full simulation is worth it
     [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions);
@@ -255,7 +255,7 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
         
         if simoptions.DoStructEval
             % evaluate the design structurally
-            [design, simoptions] = feval(simoptions.evaloptions.structevalfcn, design, simoptions);
+            [design, simoptions] = feval(simoptions.Evaluation.structevalfcn, design, simoptions);
         end
         
         % estimate the masses of the components

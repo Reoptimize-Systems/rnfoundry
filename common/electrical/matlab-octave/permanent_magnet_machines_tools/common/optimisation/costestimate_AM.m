@@ -9,7 +9,7 @@ function design = costestimate_AM(design, simoptions)
 % Description
 %
 %  simoptions - structure containng unit cost information for material in a
-%    in the field 'evaloptions'. 'evaloptions' is itself a structure
+%    in the field 'Evaluation'. 'Evaluation' is itself a structure
 %    containing fields with cost information on materials used. What fields
 %    must be supplied in the evaloptions structure depends on the contents
 %    of the design structure.
@@ -65,32 +65,32 @@ function design = costestimate_AM(design, simoptions)
     end
     
     if isfield(design, 'CopperMass')
-        design.CopperCost = design.CopperMass * simoptions.evaloptions.CopperCost;
+        design.CopperCost = design.CopperMass * simoptions.Evaluation.CopperCost;
         design.CostEstimate = design.CostEstimate + design.CopperCost;
     end
     
     if isfield(design, 'MagnetMass')
-        design.MagnetCost = design.MagnetMass * simoptions.evaloptions.MagnetCost;
+        design.MagnetCost = design.MagnetMass * simoptions.Evaluation.MagnetCost;
         design.CostEstimate = design.CostEstimate + design.MagnetCost;
     end
     
     if isfield(design, 'StructMaterialMass')
-        design.StructuralCost = design.StructMaterialMass * simoptions.evaloptions.StructMaterialCost;
+        design.StructuralCost = design.StructMaterialMass * simoptions.Evaluation.StructMaterialCost;
         design.CostEstimate = design.CostEstimate + design.StructuralCost;
     end
 
     if isfield(design, 'FieldIronMass')
-        design.FieldIronCost = design.FieldIronMass * simoptions.evaloptions.FieldIronCost;
+        design.FieldIronCost = design.FieldIronMass * simoptions.Evaluation.FieldIronCost;
         design.CostEstimate = design.CostEstimate + design.FieldIronCost;
     end
     
     if isfield(design, 'ArmatureIronMass')
-        design.ArmatureIronCost = design.ArmatureIronMass * simoptions.evaloptions.ArmatureIronCost;
+        design.ArmatureIronCost = design.ArmatureIronMass * simoptions.Evaluation.ArmatureIronCost;
         design.CostEstimate = design.CostEstimate + design.ArmatureIronCost;
     end
     
     if isfield(design, 'EpoxyMass')
-       design.EpoxyCost = design.EpoxyMass * simoptions.evaloptions.EpoxyCost;
+       design.EpoxyCost = design.EpoxyMass * simoptions.Evaluation.EpoxyCost;
        design.CostEstimate = design.CostEstimate + design.EpoxyCost;
     end
     

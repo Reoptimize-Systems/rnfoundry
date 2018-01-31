@@ -7,7 +7,7 @@ function design = materialmasses_TORUS_CORELESS(design, simoptions)
     % calculate the copper mass
     design.CopperVol = design.NStages * design.NCoilsPerPhase * design.Phases * design.MTL * design.CoilTurns * (pi * (design.Dc/2)^2);
     
-    design.CopperMass = design.CopperVol * simoptions.evaloptions.CopperDensity;
+    design.CopperMass = design.CopperVol * simoptions.Evaluation.CopperDensity;
 
     % calculate the epoxy mass
     coilthickness = (design.tauco - design.tauci); %/2;
@@ -16,7 +16,7 @@ function design = materialmasses_TORUS_CORELESS(design, simoptions)
     if design.EpoxyVol < 0
         design.EpoxyVol = 0;
     end
-    design.EpoxyMass = design.EpoxyVol * simoptions.evaloptions.EpoxyDensity;
+    design.EpoxyMass = design.EpoxyVol * simoptions.Evaluation.EpoxyDensity;
     
     % TODO calculate the aluminium support mass
     design.ArmatureSupportMass = 0;

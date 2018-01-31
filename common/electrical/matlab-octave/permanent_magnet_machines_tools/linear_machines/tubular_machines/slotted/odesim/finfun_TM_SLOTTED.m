@@ -8,7 +8,7 @@ function [design, simoptions] = finfun_TM_SLOTTED (design, simoptions)
 %
 % 
 
-    simoptions = setfieldifabsent (simoptions, 'evaloptions', ...
+    simoptions = setfieldifabsent (simoptions, 'Evaluation', ...
                                     designandevaloptions_TM_SLOTTED () );
                                 
 	% sort the intA data in ascending position order

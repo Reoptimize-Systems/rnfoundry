@@ -72,7 +72,7 @@ function [design, simoptions, T, Y, results] = evaluatedesign_AF(design, simopti
                                                              simoptions );
     
     % evaluate the structure, unless we are told to skip it
-    if ~simoptions.evaloptions.SkipStructural
+    if ~simoptions.Evaluation.SkipStructural
         [maxzdef, maxstress, design] = evaluatestructure_AF(design, simoptions);
     else
         maxzdef = 0; 

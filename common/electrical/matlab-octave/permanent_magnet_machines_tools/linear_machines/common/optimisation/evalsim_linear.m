@@ -59,14 +59,14 @@ function [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions
         presimoptions.vT = [velocity, velocity];
         presimoptions.drivetimes = [0, presimoptions.xT(end) / velocity];
         presimoptions.ODESim.TimeSpan = presimoptions.drivetimes;
-        presimoptions.ODESim.EvalFcn = simoptions.evaloptions.presimodeevfun;
-        presimoptions.ODESim.PostSimFcn = simoptions.evaloptions.presimresfun;
-        presimoptions.ODESim.ForceFcn = simoptions.evaloptions.presimforcefun; 
+        presimoptions.ODESim.EvalFcn = simoptions.Evaluation.presimodeevfun;
+        presimoptions.ODESim.PostSimFcn = simoptions.Evaluation.presimresfun;
+        presimoptions.ODESim.ForceFcn = simoptions.Evaluation.presimforcefun; 
         presimoptions.ODESim.ForceFcnArgs = {};
-        presimoptions.ODESim.PostPreProcFcn = simoptions.evaloptions.presimfinfun;
+        presimoptions.ODESim.PostPreProcFcn = simoptions.Evaluation.presimfinfun;
         
-        simoptions.evaloptions = setfieldifabsent(simoptions.evaloptions, 'presimIC', zeros(1, design.Phases));
-        presimoptions.ODESim.InitialConditions = simoptions.evaloptions.presimIC;
+        simoptions.Evaluation = setfieldifabsent(simoptions.Evaluation, 'presimIC', zeros(1, design.Phases));
+        presimoptions.ODESim.InitialConditions = simoptions.Evaluation.presimIC;
         
         presimoptions = rmiffield(presimoptions, {'events', 'abstol', 'maxstep', 'splitode'});
         

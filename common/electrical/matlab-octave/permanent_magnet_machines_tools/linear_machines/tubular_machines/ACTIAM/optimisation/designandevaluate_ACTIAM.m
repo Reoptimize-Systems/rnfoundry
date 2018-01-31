@@ -39,7 +39,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACTIAM(d
 %
 %   lm - magnet depth
 %
-%   simoptions.evaloptions - optional structure containing various optional parameters for
+%   simoptions.Evaluation - optional structure containing various optional parameters for
 %             the simultaion and evaluation. The following fields can be
 %             specified:
 %
@@ -113,16 +113,16 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACTIAM(d
 %            machine design
 %
     if nargin < 2
-        simoptions.evaloptions = [];
+        simoptions.Evaluation = [];
     end
     
-    simoptions.evaloptions = designandevaloptions_ACTIAM(simoptions.evaloptions);
+    simoptions.Evaluation = designandevaloptions_ACTIAM(simoptions.Evaluation);
 
-    simoptions.FieldIronDensity = simoptions.evaloptions.FieldIronDensity;
-    simoptions.MagnetDensity = simoptions.evaloptions.MagnetDensity;
-    simoptions.ShaftDensity = simoptions.evaloptions.StructMaterialDensity;
-    simoptions.CopperDensity = simoptions.evaloptions.CopperDensity;
-    simoptions.ArmatureIronDensity = simoptions.evaloptions.ArmatureIronDensity;
+    simoptions.FieldIronDensity = simoptions.Evaluation.FieldIronDensity;
+    simoptions.MagnetDensity = simoptions.Evaluation.MagnetDensity;
+    simoptions.ShaftDensity = simoptions.Evaluation.StructMaterialDensity;
+    simoptions.CopperDensity = simoptions.Evaluation.CopperDensity;
+    simoptions.ArmatureIronDensity = simoptions.Evaluation.ArmatureIronDensity;
     
     [T, Y, results, design, simoptions] = designandevaluate_TM(design, simoptions);
     
@@ -132,7 +132,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACTIAM(d
     Sz = 5;
     
     % determine the structure required for the machine
-    design = designstructure_ACTIAM(design, simoptions.evaloptions, Sr, Sz);                                                 
+    design = designstructure_ACTIAM(design, simoptions.Evaluation, Sr, Sz);                                                 
         
     % score the machine design
     [score, design] = machinescore_ACTIAM(design, simoptions);

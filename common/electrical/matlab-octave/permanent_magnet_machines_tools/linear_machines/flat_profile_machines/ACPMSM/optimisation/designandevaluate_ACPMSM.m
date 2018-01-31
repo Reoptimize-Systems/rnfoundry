@@ -39,7 +39,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
 %
 %   lm - magnet depth
 %
-%   simoptions.evaloptions - optional structure containing various optional parameters for
+%   simoptions.Evaluation - optional structure containing various optional parameters for
 %             the simultaion and evaluation. The following fields can be
 %             specified:
 %
@@ -120,23 +120,23 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
 %
 %
 
-    simoptions = setfieldifabsent(simoptions, 'evaloptions', []);
+    simoptions = setfieldifabsent (simoptions, 'Evaluation', []);
     
     % parse the options structure filling in any missing items
-    simoptions.evaloptions = designandevaloptions_ACPMSM(simoptions.evaloptions);
+    simoptions.Evaluation = designandevaloptions_ACPMSM(simoptions.Evaluation);
     
-    simoptions.FieldIronDensity = simoptions.evaloptions.FieldIronDensity;
-    simoptions.MagnetDensity = simoptions.evaloptions.MagnetDensity;
-    simoptions.ShaftDensity = simoptions.evaloptions.StructMaterialDensity;
-    simoptions.CopperDensity = simoptions.evaloptions.CopperDensity;
-    simoptions.ArmatureIronDensity = simoptions.evaloptions.ArmatureIronDensity;
+    simoptions.FieldIronDensity = simoptions.Evaluation.FieldIronDensity;
+    simoptions.MagnetDensity = simoptions.Evaluation.MagnetDensity;
+    simoptions.ShaftDensity = simoptions.Evaluation.StructMaterialDensity;
+    simoptions.CopperDensity = simoptions.Evaluation.CopperDensity;
+    simoptions.ArmatureIronDensity = simoptions.Evaluation.ArmatureIronDensity;
     
     [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions);
     
-    % if simoptions.evaloptions.mlength is not supplied we simulate a single pole of the
+    % if simoptions.Evaluation.mlength is not supplied we simulate a single pole of the
     % machine
-    if isempty(simoptions.evaloptions.mlength)
-        simoptions.evaloptions.mlength = [design.PoleWidth design.PoleWidth];
+    if isempty(simoptions.Evaluation.mlength)
+        simoptions.Evaluation.mlength = [design.PoleWidth design.PoleWidth];
     end
 
     if isfield(design, 'minLongMemberPoles')
@@ -151,21 +151,21 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
     
     if design.Poles(1) == 1 && design.Poles(2) == 1
         
-        if simoptions.evaloptions.targetPower == 0;
+        if simoptions.Evaluation.targetPower == 0;
             
-            design.Poles(2) = ceil(simoptions.evaloptions.mlength(2)/design.PoleWidth);
+            design.Poles(2) = ceil(simoptions.Evaluation.mlength(2)/design.PoleWidth);
             
-            design.Poles(1) = ceil(simoptions.evaloptions.mlength(1)/design.PoleWidth);
+            design.Poles(1) = ceil(simoptions.Evaluation.mlength(1)/design.PoleWidth);
             
             design.PowerLoadMean = design.PowerLoadMean * design.Poles(1);
             
         else
-            design.Poles(1) = ceil(simoptions.evaloptions.targetPower / design.PowerLoadMean);
+            design.Poles(1) = ceil(simoptions.Evaluation.targetPower / design.PowerLoadMean);
             design.PowerLoadMean = design.PowerLoadMean * design.Poles(1);
-            % if target power specified, simoptions.evaloptions.mlength is a scalar containing the
+            % if target power specified, simoptions.Evaluation.mlength is a scalar containing the
             % overlap required (in m) between the field and armature, i.e.
             % how much longer the armature is than the field
-            design.Poles(2) = ceil(((design.Poles(1)*design.PoleWidth)+simoptions.evaloptions.mlength)/design.PoleWidth);
+            design.Poles(2) = ceil(((design.Poles(1)*design.PoleWidth)+simoptions.Evaluation.mlength)/design.PoleWidth);
         end
         
     end
@@ -179,7 +179,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_ACPMSM(d
     airgapclosurefcn = @feairgapclosure_ACPMSM;
     structvolfcn = @structvol_ACPMSM;
 
-    design = designstructure_FM_new(design, simoptions.evaloptions, structvolfcn, airgapclosurefcn);
+    design = designstructure_FM_new(design, simoptions.Evaluation, structvolfcn, airgapclosurefcn);
     
     % Finally we determine the machine score and costs etc.
     [score, design] = machinescore_ACPMSM(design, simoptions);

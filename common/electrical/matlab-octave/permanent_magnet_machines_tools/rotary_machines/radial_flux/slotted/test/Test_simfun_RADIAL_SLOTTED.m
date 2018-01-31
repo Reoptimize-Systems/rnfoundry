@@ -19,7 +19,7 @@ fprintf(1, 'done simfun\n');
 
 %%
 
-simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED ();
+simoptions.Evaluation = designandevaloptions_RADIAL_SLOTTED ();
 
 [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions);
 
@@ -46,7 +46,7 @@ fprintf(1, 'done simfun\n');
 
 %%
 
-simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED ();
+simoptions.Evaluation = designandevaloptions_RADIAL_SLOTTED ();
 
 [design, simoptions] = finfun_RADIAL_SLOTTED(design, simoptions);
 

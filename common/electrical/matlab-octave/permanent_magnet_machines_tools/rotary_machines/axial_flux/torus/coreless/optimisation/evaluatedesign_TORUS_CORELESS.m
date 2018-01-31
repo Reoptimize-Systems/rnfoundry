@@ -1,8 +1,8 @@
 function [score, design, simoptions, T, Y, results] = evaluatedesign_TORUS_CORELESS(design, simoptions)
 
-    simoptions = setfieldifabsent(simoptions, 'evaloptions', []);
+    simoptions = setfieldifabsent (simoptions, 'Evaluation', []);
 
-    simoptions.evaloptions = designandevaloptions_TORUS_CORELESS(simoptions.evaloptions);
+    simoptions.Evaluation = designandevaloptions_TORUS_CORELESS(simoptions.Evaluation);
     
     % run the simulations and return the results using the generic axial
     % flux evaluation function

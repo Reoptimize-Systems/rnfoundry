@@ -1,8 +1,8 @@
 function [score, design, simoptions, T, Y, results] = evaluatedesign_TORUS_SLOTLESS(design, simoptions)
 
-    simoptions = setfieldifabsent(simoptions, 'evaloptions', []);
+    simoptions = setfieldifabsent (simoptions, 'Evaluation', []);
 
-    simoptions.evaloptions = designandevaloptions_TORUS_SLOTLESS(simoptions.evaloptions);
+    simoptions.Evaluation = designandevaloptions_TORUS_SLOTLESS(simoptions.Evaluation);
     
     % run the simulations and return the results using the generic axial
     % flux evaluation function

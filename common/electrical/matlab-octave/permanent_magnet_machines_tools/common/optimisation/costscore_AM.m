@@ -2,7 +2,7 @@ function [score, design] = costscore_AM(design, simoptions)
 
     if ~isinf(design.PowerLoadMean)
         
-        if all(isfield(simoptions.evaloptions, {'DiscountRate', 'ProjectYears', 'CapacityFactor'}))
+        if all(isfield(simoptions.Evaluation, {'DiscountRate', 'ProjectYears', 'CapacityFactor'}))
             
             % if a specified wave farm size has been given, determine the score
             % based on this
@@ -16,18 +16,18 @@ function [score, design] = costscore_AM(design, simoptions)
                 % calculate the amortized cost in euros per kWhr
                 design.CostPerkWhr = amortizedenergycostperkwhr(design.FarmCostEstimate, ...
                                                          design.RequiredDevices * design.PowerLoadMean, ...
-                                                         simoptions.evaloptions.DiscountRate, ...
-                                                         simoptions.evaloptions.ProjectYears, ...
-                                                         simoptions.evaloptions.CapacityFactor);
+                                                         simoptions.Evaluation.DiscountRate, ...
+                                                         simoptions.Evaluation.ProjectYears, ...
+                                                         simoptions.Evaluation.CapacityFactor);
 
             else
 
                 % calculate the amortized cost in euros per kWhr
                 design.CostPerkWhr = amortizedenergycostperkwhr(design.CostEstimate, ...
                                                          design.PowerLoadMean, ...
-                                                         simoptions.evaloptions.DiscountRate, ...
-                                                         simoptions.evaloptions.ProjectYears, ...
-                                                         simoptions.evaloptions.CapacityFactor);
+                                                         simoptions.Evaluation.DiscountRate, ...
+                                                         simoptions.Evaluation.ProjectYears, ...
+                                                         simoptions.Evaluation.CapacityFactor);
             end
         
         else
@@ -43,6 +43,6 @@ function [score, design] = costscore_AM(design, simoptions)
     % multiply the amortized cost by a scale factor (this is used
     % to change to pence per kWhr from pounds per kWHr for example)
     % the default scale factor is 100
-    score = design.CostPerkWhr .* simoptions.evaloptions.CostScaleFactor;
+    score = design.CostPerkWhr .* simoptions.Evaluation.CostScaleFactor;
     
 end
