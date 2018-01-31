@@ -135,13 +135,13 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
 %% Material Costs
            
     tabledata = { ...
-        'Magnet Cost (Euro/kg)', simoptions.evaloptions.MagnetCost;
-        'CopperCost (Euro/kg)', simoptions.evaloptions.CopperCost;
-        'Field Iron Cost (Euro/kg)', simoptions.evaloptions.FieldIronCost;
-        'Armature Iron Cost (Euro/kg)', simoptions.evaloptions.ArmatureIronCost;
-        'Structural Material Cost (Euro/kg)', simoptions.evaloptions.StructMaterialCost;
-        'Epoxy Cost (Euro/kg)', simoptions.evaloptions.EpoxyCost;
-        'Capacity/Load Factor', simoptions.evaloptions.CapacityFactor;
+        'Magnet Cost (Euro/kg)', simoptions.Evaluation.MagnetCost;
+        'CopperCost (Euro/kg)', simoptions.Evaluation.CopperCost;
+        'Field Iron Cost (Euro/kg)', simoptions.Evaluation.FieldIronCost;
+        'Armature Iron Cost (Euro/kg)', simoptions.Evaluation.ArmatureIronCost;
+        'Structural Material Cost (Euro/kg)', simoptions.Evaluation.StructMaterialCost;
+        'Epoxy Cost (Euro/kg)', simoptions.Evaluation.EpoxyCost;
+        'Capacity/Load Factor', simoptions.Evaluation.CapacityFactor;
     };
 
     % generate the LaTex table of the outputs

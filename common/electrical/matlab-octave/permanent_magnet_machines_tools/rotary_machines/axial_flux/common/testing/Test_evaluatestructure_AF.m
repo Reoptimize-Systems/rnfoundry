@@ -115,9 +115,9 @@ simoptions.maxstep = (simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan
 [T, Y, results, design, simoptions] = simulatemachine_AM(design, ...
                                                          simoptions);
 
-simoptions = setfieldifabsent(simoptions, 'evaloptions', []);
+simoptions = setfieldifabsent (simoptions, 'Evaluation', []);
 
-simoptions.evaloptions = designandevaloptions_TORUS_CORELESS(simoptions.evaloptions);
+simoptions.Evaluation = designandevaloptions_TORUS_CORELESS(simoptions.Evaluation);
     
 [maxzdef, design] = evaluatestructure_AF(design, simoptions);
 

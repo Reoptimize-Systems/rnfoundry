@@ -48,7 +48,7 @@ function [design, simoptions] = preprocsystemdesign_PMSM(simoptions, Chrom)
         
         guideBeamNo = round(Chrom(1,17));
         
-        design.GuideRailIMethod  = simoptions.evaloptions.GuideRailIMethod;
+        design.GuideRailIMethod  = simoptions.Evaluation.GuideRailIMethod;
         
         design.GuideRailIVars = beamvars(design.GuideRailIMethod, guideBeamNo);
         

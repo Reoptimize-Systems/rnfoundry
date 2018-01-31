@@ -1,37 +1,47 @@
 function evaloptions = designandevaloptions_AF(evaloptions)
 % parses the evaloptions structure for the function for axial flux machines
 %
-% Input:
+% Syntax
 %
-%   evaloptions - optional structure containing various optional parameters for
-%             the simultaion and evaluation. The following fields can be
-%             specified:
+% evaloptions = designandevaloptions_AF(evaloptions)
 %
-%             E - (1 x 2) youngs modulus value for the structural material
+% Input
 %
-%             MagnetCost - the cost per kg of magnet material (default: 80)
+%  evaloptions - optional structure containing various optional parameters
+%   for the simultaion and evaluation. The following fields can be
+%   specified:
 %
-%             CopperCost - the cost per kg of copper wire (default: 10)
+%   E : (1 x 2) youngs modulus value for the structural material
 %
-%             FieldIronCost - the cost per kg of the back iron (default: 0)
+%   MagnetCost : the cost per kg of magnet material (default: 80)
 %
-%             ArmatureIronCost - the cost per kg of laminated iron core
-%             material (default: 3)
+%   CopperCost : the cost per kg of copper wire (default: 10)
 %
-%             MagnetDensity - density of magnet material (default: 7500
-%             kg/m^3)
+%   FieldIronCost : the cost per kg of the back iron (default: 0)
 %
-%             CopperDensity - density of copper wire (default: 8960 kg/m^3)
+%   ArmatureIronCost : the cost per kg of laminated iron core material
+%    (default: 3)
 %
-%             FieldIronDensity - density of back iron (default: 7800 kg/m^3)
+%   MagnetDensity : density of magnet material (default: 7500 kg/m^3)
 %
-%             ArmatureIronDensity - density of laminated core material 
-%             (default: 7800 kg/m^3)
+%   CopperDensity : density of copper wire (default: 8960 kg/m^3)
 %
-%             StructMaterialDensity - density of structuaral material 
-%             (default: 7800 kg/m^3)
+%   FieldIronDensity : density of back iron (default: 7800 kg/m^3)
 %
-
+%   ArmatureIronDensity : density of laminated core material (default:
+%    7800 kg/m^3)
+%
+%   StructMaterialDensity : density of structuaral material (default: 
+%    7800 kg/m^3)
+%
+% Output
+%
+%  evaloptions - input structure with default options added where missing
+%
+%
+% See also: designandevaloptions_ROTARY
+%
+%
     if nargin == 0
         evaloptions = [];
     end

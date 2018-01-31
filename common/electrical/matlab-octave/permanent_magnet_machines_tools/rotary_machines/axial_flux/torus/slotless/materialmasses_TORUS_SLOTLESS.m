@@ -7,15 +7,15 @@ function design = materialmasses_TORUS_SLOTLESS(design, simoptions)
     % calculate the copper mass
     design.CopperVol = design.NStages * design.NCoilsPerPhase * design.Phases * design.MTL * design.CoilTurns * (pi * (design.Dc/2)^2);
     
-    design.CopperMass = design.CopperVol * simoptions.evaloptions.CopperDensity;
+    design.CopperMass = design.CopperVol * simoptions.Evaluation.CopperDensity;
 
     % calculate the yoke mass
     design.ArmatureIronVol = pi * (design.Rmo^2 - design.Rmi^2) * design.ty * design.NStages;
-    design.ArmatureIronMass = design.ArmatureIronVol * simoptions.evaloptions.ArmatureIronDensity;
+    design.ArmatureIronMass = design.ArmatureIronVol * simoptions.Evaluation.ArmatureIronDensity;
     
     % set the epoxy mass to zero
     design.EpoxyVol = 0;
-    design.EpoxyMass = design.EpoxyVol * simoptions.evaloptions.EpoxyDensity;
+    design.EpoxyMass = design.EpoxyVol * simoptions.Evaluation.EpoxyDensity;
     
     % TODO calculate the aluminium support mass
     design.ArmatureSupportMass = 0;

@@ -79,7 +79,7 @@ function [design, simoptions] = preprocsystemdesign_ACPMSM(simoptions, Chrom)
 
         guideBeamNo = round(Chrom(1,15));
 
-        design.GuideRailIMethod  = simoptions.evaloptions.GuideRailIMethod;
+        design.GuideRailIMethod  = simoptions.Evaluation.GuideRailIMethod;
 
         design.GuideRailIVars = beamvars(design.GuideRailIMethod, guideBeamNo);
 

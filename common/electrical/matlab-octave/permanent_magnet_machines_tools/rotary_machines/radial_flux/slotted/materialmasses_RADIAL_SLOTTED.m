@@ -64,7 +64,7 @@ function design = materialmasses_RADIAL_SLOTTED(design, simoptions)
                        * design.CoilTurns ... % number of turns per coil
                        * (pi * (design.Dc/2)^2); % cross-sectional area of wire
     
-    design.CopperMass = design.CopperVol * simoptions.evaloptions.CopperDensity;
+    design.CopperMass = design.CopperVol * simoptions.Evaluation.CopperDensity;
 
     % calculate the armature iron amss
     if isfield(design, 'ArmatureIronArea')
@@ -80,11 +80,11 @@ function design = materialmasses_RADIAL_SLOTTED(design, simoptions)
 %                                                   - 2*(0.5*(design.Rtsg - design.Rtsb)*(sqrt(h^2 - ))))));
     end
     
-    design.ArmatureIronMass = design.ArmatureIronVol * simoptions.evaloptions.ArmatureIronDensity;
+    design.ArmatureIronMass = design.ArmatureIronVol * simoptions.Evaluation.ArmatureIronDensity;
     
     % set the epoxy mass to zero for the moment
     design.EpoxyVol = 0;
-    design.EpoxyMass = design.EpoxyVol * simoptions.evaloptions.EpoxyDensity;
+    design.EpoxyMass = design.EpoxyVol * simoptions.Evaluation.EpoxyDensity;
     
     % TODO calculate the support mass
     design.ArmatureSupportMass = 0;

@@ -6,7 +6,7 @@ function [cost, design] = costestimate_ACPMSM(design, simoptions, buoymass)
         buoymass = 0;
     end
     
-    design.BuoyCost = buoymass * simoptions.evaloptions.BuoyMassCost;
+    design.BuoyCost = buoymass * simoptions.Evaluation.BuoyMassCost;
     
     [design.PowerConverterCost, design.PowerConverterRating] = ...
                          powerconvertercostest(design.EMFPhasePeak, ...
@@ -22,30 +22,30 @@ function [cost, design] = costestimate_ACPMSM(design, simoptions, buoymass)
     % Determine the copper cost based on the length of wire in a coil
     % multiplied by the number of Phases and armature Poles and the wire
     % cross-sectional area etc.
-    design.CopperMass = design.Phases * design.wlength * (pi* (design.Dc/2)^2) * design.Poles(2) * simoptions.evaloptions.CopperDensity;
-    design.CopperCost = design.CopperMass * simoptions.evaloptions.CopperCost;
+    design.CopperMass = design.Phases * design.wlength * (pi* (design.Dc/2)^2) * design.Poles(2) * simoptions.Evaluation.CopperDensity;
+    design.CopperCost = design.CopperMass * simoptions.Evaluation.CopperCost;
     
     % Calculate the total cost of the magnets
-    design.MagnetMass = design.Poles(1) * 2 * design.lm * design.ls * design.bp * simoptions.evaloptions.MagnetDensity;
-    design.MagnetCost = design.MagnetMass * simoptions.evaloptions.MagnetCost;
+    design.MagnetMass = design.Poles(1) * 2 * design.lm * design.ls * design.bp * simoptions.Evaluation.MagnetDensity;
+    design.MagnetCost = design.MagnetMass * simoptions.Evaluation.MagnetCost;
     
     % Calculate the cost of the back iron on the field
-    design.FieldIronMass = design.Poles(1) * 2 * design.Taup * design.ls * design.dbi * simoptions.evaloptions.FieldIronDensity;;
+    design.FieldIronMass = design.Poles(1) * 2 * design.Taup * design.ls * design.dbi * simoptions.Evaluation.FieldIronDensity;;
     design.BackIronMass = design.FieldIronMass; % in case of compatibility issues
-    design.FieldIronCost = design.FieldIronMass * simoptions.evaloptions.FieldIronCost;
+    design.FieldIronCost = design.FieldIronMass * simoptions.Evaluation.FieldIronCost;
     
     % Calculate the cost of the structure
     if isfield(design, 'OuterStructureBeamVars')
-        design.StructuralMass = structvol_ACPMSM(design, simoptions.evaloptions) * simoptions.evaloptions.StructMaterialDensity;
+        design.StructuralMass = structvol_ACPMSM(design, simoptions.Evaluation) * simoptions.Evaluation.StructMaterialDensity;
     else
         design.StructuralMass = 0.5 * design.MagnetMass;
     end
     
-    design.structureCost = design.StructuralMass * simoptions.evaloptions.StructMaterialCost;
+    design.structureCost = design.StructuralMass * simoptions.Evaluation.StructMaterialCost;
     
     if isfield(design, 'GuideRailIVars')
         % Calculate the cost of the guide rails
-        design.guideRailMass = (design.Poles(2) .* design.Taup - design.Taup) * CSArea(design.GuideRailIVars, design.GuideRailIMethod) * 4 * simoptions.evaloptions.StructMaterialDensity;
+        design.guideRailMass = (design.Poles(2) .* design.Taup - design.Taup) * CSArea(design.GuideRailIVars, design.GuideRailIMethod) * 4 * simoptions.Evaluation.StructMaterialDensity;
 
     else
 
@@ -53,7 +53,7 @@ function [cost, design] = costestimate_ACPMSM(design, simoptions, buoymass)
 
     end
     
-    design.guideRailCost = design.guideRailMass * simoptions.evaloptions.StructMaterialCost;
+    design.guideRailCost = design.guideRailMass * simoptions.Evaluation.StructMaterialCost;
     
     % calculate the estimated cost of the machine, not including converter
     design.machineCost = design.MagnetCost ...

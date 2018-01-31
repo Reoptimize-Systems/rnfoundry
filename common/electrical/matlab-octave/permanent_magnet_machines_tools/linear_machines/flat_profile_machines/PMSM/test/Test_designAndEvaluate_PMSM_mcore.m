@@ -116,7 +116,7 @@ simoptions.Translator = 2;
 % than the translator
 % options.alphab = 1.05;
 % Young's modulus of elasticity for Structural steel and laminated steel respectively
-simoptions.evaloptions.E = [200e9 151e9];  
+simoptions.Evaluation.E = [200e9 151e9];  
 % options.mlength = 6; 
 
 [score, design, simoptions, T, Y, results] = designandevaluate_PMSM(design, simoptions);

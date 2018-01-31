@@ -38,7 +38,7 @@ simoptions.reltol = 1e-6;
 simoptions.PhaseCurrentTols = repmat(0.001, 1, design.Phases);
 % simoptions.maxstep = (simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan(1)) / 10000;
 
-simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED ();
+simoptions.Evaluation = designandevaloptions_RADIAL_SLOTTED ();
 
 simoptions.MagFEASim.UseParFor = true;
 

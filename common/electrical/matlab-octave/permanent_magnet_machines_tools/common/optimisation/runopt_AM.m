@@ -99,7 +99,7 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
     % mpgaoptions.OUTPUTFCNARGS = {getmfilepath('opt_and_comp_linear_gens_mpga')};
 
     % tack the evaluation options onto the simoptions structure
-    simoptions.evaloptions = evaloptions;
+    simoptions.Evaluation = evaloptions;
     
     if istestrun
         simoptions.DoPreLinSim = false;

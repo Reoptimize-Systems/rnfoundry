@@ -13,7 +13,7 @@ function [design, simoptions] = materialmasses_TM (design, simoptions)
     
     % set the epoxy mass to zero for the moment
     design.EpoxyVol = 0;
-    design.EpoxyMass = design.EpoxyVol * simoptions.evaloptions.EpoxyDensity;
+    design.EpoxyMass = design.EpoxyVol * simoptions.Evaluation.EpoxyDensity;
     
     % TODO calculate the support mass
     design.ArmatureSupportMass = 0;
@@ -65,10 +65,10 @@ function [design, simoptions] = materialmasses_arm_TM (design, simoptions)
     end
     
     design.CopperMass = design.CopperVol ...
-                        * simoptions.evaloptions.CopperDensity;
+                        * simoptions.Evaluation.CopperDensity;
     
     design.ArmatureIronMass = design.ArmatureIronVol ...
-                              * simoptions.evaloptions.ArmatureIronDensity;
+                              * simoptions.Evaluation.ArmatureIronDensity;
 
 end
 
@@ -91,7 +91,7 @@ function [design, simoptions] = materialmasses_field_TM (design, simoptions)
     
     % Now calculate the total mass of the magnets
     design.MagnetMass = design.MagnetVol ...
-                        * simoptions.evaloptions.MagnetDensity;
+                        * simoptions.Evaluation.MagnetDensity;
 
     if ~isfield (design, 'FieldSpacerVol')
 
@@ -108,7 +108,7 @@ function [design, simoptions] = materialmasses_field_TM (design, simoptions)
 
     end
     
-    design.FieldIronMass = design.FieldSpacerVol * simoptions.evaloptions.FieldIronDensity;
+    design.FieldIronMass = design.FieldSpacerVol * simoptions.Evaluation.FieldIronDensity;
     
 end
 

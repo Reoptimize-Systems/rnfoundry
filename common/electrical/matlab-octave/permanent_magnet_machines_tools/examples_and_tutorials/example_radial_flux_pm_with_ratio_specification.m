@@ -235,7 +235,7 @@ set(get(AX(2),'Ylabel'), 'fontsize', 14);
 % simoptions stucture, which itself is also a structure. To save time, we
 % will use a function which provides some common defaults for this:
 
-simoptions.evaloptions = designandevaloptions_RADIAL_SLOTTED();
+simoptions.Evaluation = designandevaloptions_RADIAL_SLOTTED();
 
 % we could have added these at any time, and and you would normally want to
 % add them at the very start of a simulation.

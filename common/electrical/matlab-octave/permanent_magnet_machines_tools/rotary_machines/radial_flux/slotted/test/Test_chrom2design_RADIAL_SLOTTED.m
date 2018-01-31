@@ -89,12 +89,12 @@ simoptions.MagFEASim.OuterRegionsMeshSize = [-1, -1];
 simoptions.MagFEASim.AirGapMeshSize = -1;
 
 % Machine structural FEA mesh sizes
-% simoptions.evaloptions.structmeshoptions.ShaftAxialLayersPerM = 10;
-% simoptions.evaloptions.structmeshoptions.DiscAxialLayersPerM = 100;
-% simoptions.evaloptions.structmeshoptions.SupportAxialLayersPerM = 10;
-% simoptions.evaloptions.structmeshoptions.CircumPointsPerM = 20;
-% simoptions.evaloptions.structmeshoptions.BackIronRadialPointsPerM = 10; 
-% simoptions.evaloptions.structmeshoptions.MagnetRadialPointsPerM = 10;
+% simoptions.Evaluation.structmeshoptions.ShaftAxialLayersPerM = 10;
+% simoptions.Evaluation.structmeshoptions.DiscAxialLayersPerM = 100;
+% simoptions.Evaluation.structmeshoptions.SupportAxialLayersPerM = 10;
+% simoptions.Evaluation.structmeshoptions.CircumPointsPerM = 20;
+% simoptions.Evaluation.structmeshoptions.BackIronRadialPointsPerM = 10; 
+% simoptions.Evaluation.structmeshoptions.MagnetRadialPointsPerM = 10;
 
 % The simulation functions, these are suitible for a prescribed motion
 % simulation of a coreless torus machine
@@ -117,7 +117,7 @@ evaloptions.spawnslaves = false;
 evaloptions.MCoreFEADir = '';
 evaloptions.MCoreODEDir = '';
 
-simoptions.evaloptions = evaloptions;
+simoptions.Evaluation = evaloptions;
 
 %%
 

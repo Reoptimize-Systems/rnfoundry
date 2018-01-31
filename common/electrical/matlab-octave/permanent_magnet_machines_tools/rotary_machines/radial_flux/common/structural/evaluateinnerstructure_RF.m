@@ -36,7 +36,7 @@ function [maxzdef, maxstress, design] = evaluateinnerstructure_RF(design, simopt
 
         % tic
         % create the finite element  %fens, gcells, Rsio, E, nu
-        [feb,geom,u,mater] = innerstructurefeb_RF(fens, gcells, design.Rbi, simoptions.evaloptions.E, nu);
+        [feb,geom,u,mater] = innerstructurefeb_RF(fens, gcells, design.Rbi, simoptions.Evaluation.E, nu);
         % toc
 
         %% Add the forces
@@ -89,9 +89,9 @@ function [maxzdef, maxstress, design] = evaluateinnerstructure_RF(design, simopt
     % toc
     u = scatter_sysvec(u, x);
     
-    design.StructMaterialVolume = measure(feb, geom, inline('1')) * (design.NModules / simoptions.evaloptions.structmeshoptions.ModuleSubset);
+    design.StructMaterialVolume = measure(feb, geom, inline('1')) * (design.NModules / simoptions.Evaluation.structmeshoptions.ModuleSubset);
     
-    design.StructMaterialMass = design.StructMaterialVolume * simoptions.evaloptions.StructMaterialDensity;
+    design.StructMaterialMass = design.StructMaterialVolume * simoptions.Evaluation.StructMaterialDensity;
 
 %     disp('done system solving');
     

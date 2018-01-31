@@ -53,7 +53,7 @@ simoptions.ODESim.RelTol = 1e-5;
 % simoptions.PhaseCurrentTols = repmat (0.001, 1, design.Phases);
 % simoptions.maxstep = (simoptions.ODESim.TimeSpan(2) - simoptions.ODESim.TimeSpan(1)) / 10000;
 
-simoptions.evaloptions = designandevaloptions_TM_SLOTLESS ();
+simoptions.Evaluation = designandevaloptions_TM_SLOTLESS ();
 
 [design, simoptions] = feval (simoptions.ODESim.PreProcFcn, design, simoptions);
 simoptions.ODESim.PreProcFcn = [];

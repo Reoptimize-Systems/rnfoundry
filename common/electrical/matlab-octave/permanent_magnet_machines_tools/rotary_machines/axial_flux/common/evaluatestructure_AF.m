@@ -8,7 +8,7 @@ function [maxzdef, maxstress, design] = evaluatestructure_AF(design, simoptions)
 % 
 % 
 
-    simoptions.evaloptions.structmeshoptions.ModuleSubset = 1;
+    simoptions.Evaluation.structmeshoptions.ModuleSubset = 1;
     
     [fens,gcells,maglabels,shaftlabels,outersep,simoptions] = rotormodulesmesh_AF(design, simoptions);
 
@@ -21,14 +21,14 @@ function [maxzdef, maxstress, design] = evaluatestructure_AF(design, simoptions)
     % tic
     % create the finite element block
     [feb,geom,u,mater] = axialrotorfeb(fens, gcells, design.Rbi, outersep, ...
-                            design.tbi, design.tsuppb, simoptions.evaloptions.E, nu);
+                            design.tbi, design.tsuppb, simoptions.Evaluation.E, nu);
     % toc
     
     %%
     
     omega = max(simoptions.vT) / design.Rmm;
     
-    magnetmass = simoptions.evaloptions.MagnetDensity * (pi * (realpow(design.Rmo, 2) - realpow(design.Rmi, 2)) * design.tm * (design.taumm/design.taupm));
+    magnetmass = simoptions.Evaluation.MagnetDensity * (pi * (realpow(design.Rmo, 2) - realpow(design.Rmi, 2)) * design.tm * (design.taumm/design.taupm));
     
     magtheta = design.taumm / design.Rmm;
     magarea = (0.5 * magtheta * (design.Rmo.^2 - design.Rmi.^2));
@@ -45,7 +45,7 @@ function [maxzdef, maxstress, design] = evaluatestructure_AF(design, simoptions)
                                        axialforces, ...
                                        magnetmass, ...
                                        design.Poles, ...
-                                       simoptions.evaloptions.StructMaterialDensity, ...
+                                       simoptions.Evaluation.StructMaterialDensity, ...
                                        omega, ...
                                        maglabels, ...
                                        fens, gcells, feb, geom, u);
@@ -64,9 +64,9 @@ function [maxzdef, maxstress, design] = evaluatestructure_AF(design, simoptions)
     % toc
     u = scatter_sysvec(u, x);
     
-    design.StructMaterialVolume = measure(feb, geom, inline('1')) * (design.NModules / simoptions.evaloptions.structmeshoptions.ModuleSubset);
+    design.StructMaterialVolume = measure(feb, geom, inline('1')) * (design.NModules / simoptions.Evaluation.structmeshoptions.ModuleSubset);
     
-    design.StructMaterialMass = design.StructMaterialVolume * simoptions.evaloptions.StructMaterialDensity;
+    design.StructMaterialMass = design.StructMaterialVolume * simoptions.Evaluation.StructMaterialDensity;
 
 %     disp('done system solving');
     

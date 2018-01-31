@@ -4,7 +4,7 @@ function [cost, design] = costestimate_TM(design, simoptions, buoymass)
         buoymass = 0;
     end
     
-    design.BuoyCost = buoymass * simoptions.evaloptions.BuoyMassCost;
+    design.BuoyCost = buoymass * simoptions.Evaluation.BuoyMassCost;
     
     [design.PowerConverterCost, design.PowerConverterRating] = ...
                      powerconvertercostest(design.EMFPhasePeak, ...
@@ -13,15 +13,15 @@ function [cost, design] = costestimate_TM(design, simoptions, buoymass)
                                            design.L(1,1), ...
                                            design.vRmax / (2 * design.PoleWidth) );
 
-    design.CopperCost = design.CopperMass * simoptions.evaloptions.CopperCost;
+    design.CopperCost = design.CopperMass * simoptions.Evaluation.CopperCost;
 
-    design.MagnetCost = design.MagnetMass * simoptions.evaloptions.MagnetCost;
+    design.MagnetCost = design.MagnetMass * simoptions.Evaluation.MagnetCost;
 
-    design.ArmatureIronCost = design.ArmatureIronMass * simoptions.evaloptions.ArmatureIronCost;
+    design.ArmatureIronCost = design.ArmatureIronMass * simoptions.Evaluation.ArmatureIronCost;
     
-    design.FieldIronCost = design.FieldIronMass * simoptions.evaloptions.FieldIronCost;
+    design.FieldIronCost = design.FieldIronMass * simoptions.Evaluation.FieldIronCost;
                     
-    design.ShaftCost = design.ShaftMass * simoptions.evaloptions.StructMaterialCost;
+    design.ShaftCost = design.ShaftMass * simoptions.Evaluation.StructMaterialCost;
     
     % calculate the estimated cost of the machine, not including converter
     design.MachineCost = design.MagnetCost + design.CopperCost + ...
@@ -29,7 +29,7 @@ function [cost, design] = costestimate_TM(design, simoptions, buoymass)
                          design.ShaftCost;
     
     % Finally calculate the combined cost
-    cost = (design.MachineCost + design.PowerConverterCost) * simoptions.evaloptions.nmachines + design.BuoyCost;
+    cost = (design.MachineCost + design.PowerConverterCost) * simoptions.Evaluation.nmachines + design.BuoyCost;
 
     design.CostEstimate = cost;
     

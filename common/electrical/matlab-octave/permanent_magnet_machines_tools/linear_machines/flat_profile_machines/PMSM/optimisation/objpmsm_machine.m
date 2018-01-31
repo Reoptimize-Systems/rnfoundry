@@ -45,7 +45,7 @@ function ObjVal = objpmsm_machine(Chrom, rtn_type, simoptions, multicoredir)
 % 
 %   Wp - pole width
     
-    maxbeams = size(beamvars(simoptions.evaloptions.GuideRailIMethod), 1);
+    maxbeams = size(beamvars(simoptions.Evaluation.GuideRailIMethod), 1);
 
     FieldBounds = [ 0.6,   0.95;       %  1. WmVWp 
                     0.1,   0.8;        %  2. WtVWc

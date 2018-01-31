@@ -41,7 +41,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_PMSM(des
 %
 %   lm - magnet depth
 %
-%   simoptions.evaloptions - optional structure containing various optional parameters for
+%   simoptions.Evaluation - optional structure containing various optional parameters for
 %             the simultaion and evaluation. The following fields can be
 %             specified:
 %
@@ -123,20 +123,20 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_PMSM(des
 %
 
     
-    simoptions = setfieldifabsent(simoptions, 'evaloptions', []);
+    simoptions = setfieldifabsent (simoptions, 'Evaluation', []);
     
-    simoptions.evaloptions = designandevaloptions_PMSM(simoptions.evaloptions);
+    simoptions.Evaluation = designandevaloptions_PMSM(simoptions.Evaluation);
 
-    simoptions.FieldIronDensity = simoptions.evaloptions.FieldIronDensity;
-    simoptions.MagnetDensity = simoptions.evaloptions.MagnetDensity;
-    simoptions.ShaftDensity = simoptions.evaloptions.StructMaterialDensity;
-    simoptions.CopperDensity = simoptions.evaloptions.CopperDensity;
-    simoptions.ArmatureIronDensity = simoptions.evaloptions.ArmatureIronDensity;
+    simoptions.FieldIronDensity = simoptions.Evaluation.FieldIronDensity;
+    simoptions.MagnetDensity = simoptions.Evaluation.MagnetDensity;
+    simoptions.ShaftDensity = simoptions.Evaluation.StructMaterialDensity;
+    simoptions.CopperDensity = simoptions.Evaluation.CopperDensity;
+    simoptions.ArmatureIronDensity = simoptions.Evaluation.ArmatureIronDensity;
     
     [T, Y, results, design, simoptions] = evalsim_linear(design, simoptions);
     
-    if isempty(simoptions.evaloptions.mlength)
-        simoptions.evaloptions.mlength = [design.PoleWidth design.PoleWidth];
+    if isempty(simoptions.Evaluation.mlength)
+        simoptions.Evaluation.mlength = [design.PoleWidth design.PoleWidth];
     end
 
     if isfield(design, 'minLongMemberPoles')
@@ -151,21 +151,21 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_PMSM(des
     
     if design.Poles(1) == 1 && design.Poles(2) == 1
         
-        if simoptions.evaloptions.targetPower == 0;
+        if simoptions.Evaluation.targetPower == 0;
             
-            design.Poles(1) = ceil(simoptions.evaloptions.mlength(2)/design.Wp);
+            design.Poles(1) = ceil(simoptions.Evaluation.mlength(2)/design.Wp);
             
-            design.Poles(2) = ceil(simoptions.evaloptions.mlength(1)/design.Wp);
+            design.Poles(2) = ceil(simoptions.Evaluation.mlength(1)/design.Wp);
             
             design.PowerLoadMean = design.PowerLoadMean * design.Poles(2);
             
         else
-            design.Poles(2) = ceil(simoptions.evaloptions.targetPower / design.PowerLoadMean);
+            design.Poles(2) = ceil(simoptions.Evaluation.targetPower / design.PowerLoadMean);
             design.PowerLoadMean = design.PowerLoadMean * design.Poles(2);
-            % if target power specified, simoptions.evaloptions.mlength is a scalar containing the
+            % if target power specified, simoptions.Evaluation.mlength is a scalar containing the
             % overlap required (in m) between the field and armature, i.e.
             % how much longer the armature is than the field
-            design.Poles(1) = ceil(((design.Poles(2)*design.Wp)+simoptions.evaloptions.mlength)/design.Wp);
+            design.Poles(1) = ceil(((design.Poles(2)*design.Wp)+simoptions.Evaluation.mlength)/design.Wp);
         end
         
     end
@@ -179,7 +179,7 @@ function [score, design, simoptions, T, Y, results] = designandevaluate_PMSM(des
     airgapclosurefcn = @feairgapclosure_PMSM;
     structvolfcn = @structvol_PMSM;
 
-    design = designstructure_FM_new(design, simoptions.evaloptions, structvolfcn, airgapclosurefcn);
+    design = designstructure_FM_new(design, simoptions.Evaluation, structvolfcn, airgapclosurefcn);
     
     % Finally we determine the machine score and costs etc.
     [score, design] = machinescore_PMSM(design, simoptions);

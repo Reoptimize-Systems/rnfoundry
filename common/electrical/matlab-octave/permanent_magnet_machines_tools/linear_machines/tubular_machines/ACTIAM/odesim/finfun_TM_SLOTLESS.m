@@ -1,7 +1,7 @@
 function [design, simoptions] = finfun_TM_SLOTLESS (design, simoptions)
        
 
-    simoptions = setfieldifabsent (simoptions, 'evaloptions', ...
+    simoptions = setfieldifabsent (simoptions, 'Evaluation', ...
                                     designandevaloptions_TM_SLOTLESS () );
                                 
     if simoptions.GetVariableGapForce

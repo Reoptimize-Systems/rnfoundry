@@ -43,12 +43,12 @@ function [design, simoptions] = materialmasses_RADIAL_ROTOR(design, simoptions)
                           * design.ls ...
                           * design.Poles;
                       
-    design.MagnetMass = design.MagnetVolume * simoptions.evaloptions.MagnetDensity; 
+    design.MagnetMass = design.MagnetVolume * simoptions.Evaluation.MagnetDensity; 
     
     design.FieldIronVolume = annularsecarea(design.Rbi, design.Rbo, design.thetap) ...
                              * design.ls ...
                              * design.Poles;
     
-    design.FieldIronMass = design.FieldIronVolume * simoptions.evaloptions.FieldIronDensity;
+    design.FieldIronMass = design.FieldIronVolume * simoptions.Evaluation.FieldIronDensity;
     
 end
