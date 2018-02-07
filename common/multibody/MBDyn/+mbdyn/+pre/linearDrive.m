@@ -8,7 +8,30 @@ classdef linearDrive < mbdyn.pre.drive
     methods
         
         function self = linearDrive (const_coef, slope_coef)
-            
+            % evaluates the function y = mx + c on caller value
+            %
+            % Syntax
+            %
+            % ld = linearDrive (const_coef, slope_coef)
+            %
+            % Description
+            %
+            % Linear drive applies the function y = mx + c to the value
+            % supplied by it's caller.
+            %
+            % Input
+            %
+            %  const_coef - constant coefficient of function
+            %
+            %  slope_coef - slope coefficient of function
+            %
+            % Output
+            %
+            %  ld - mbdyn.pre.linearDrive object
+            %
+            % See Also: 
+            %
+
             self.checkNumericScalar (const_coef, true, 'const_coef');
             self.checkNumericScalar (slope_coef, true, 'slope_coef');
             
