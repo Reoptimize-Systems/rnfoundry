@@ -1,10 +1,17 @@
 classdef twoNodeTorque < mbdyn.mint.base
     
-    properties
+    properties (GetAccess = public, SetAccess = private)
         
         torqueFcn;
         referenceTheta;
         joint;
+        referenceNode;
+        
+    end
+    
+    properties
+        
+        nodes;
         
     end
     
@@ -14,11 +21,20 @@ classdef twoNodeTorque < mbdyn.mint.base
             
             options.InitialThetaZero = true;
             options.TorqueFcn = [];
+            options.ReferenceNode = 1;
             
             options = parse_pv_pairs (options, varargin);
             
             mbdyn.pre.base.checkLogicalScalar ( options.InitialThetaZero, ...
                                                 true, 'InitialThetaZero' );
+                                            
+            mbdyn.pre.base.checkScalarInteger ( options.ReferenceNode, ...
+                                                true, 'ReferenceNode' );
+                                            
+            assert ( options.ReferenceNode == 1 || options.ReferenceNode == 2, ...
+                'ReferenceNode must be 1 or 2');
+            
+            
             
             if isa (revolute_hinge, 'mbdyn.pre.revoluteHinge')
                 
@@ -26,6 +42,14 @@ classdef twoNodeTorque < mbdyn.mint.base
                 
             else
                 error ('revolute_hinge must be an mbdyn.pre.revoluteHinge object');
+            end
+            
+            self.referenceNode = options.ReferenceNode;
+            
+            if self.referenceNode == 1
+                self.nodes = [ self.joint.node1, self.joint.node2 ];
+            else
+                self.nodes = [ self.joint.node2, self.joint.node1 ];
             end
             
             self.referenceTheta = 0;
@@ -46,6 +70,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             
             self.torqueFcn = options.TorqueFcn;
             
+            
         end
         
         function [F, ptoforce, reldisp, relvel] = force (self)
@@ -65,7 +90,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             
         end
         
-        function [reldisp, relvel] = displacements (self)
+        function [reltheta, relomega] = displacements (self)
             % gets the relative displacement and velocity of the other node
             % relative to the reference node in the chosen axis of the
             % reference node coordinate frame
@@ -91,9 +116,8 @@ classdef twoNodeTorque < mbdyn.mint.base
             %
             
             % get the relative position and velocity of the other node
-            % relative to the reference node
-            xRvec = self.otherNode.absolutePosition - self.referenceNode.absolutePosition;
-            vRvec = self.otherNode.absoluteVelocity - self.referenceNode.absoluteVelocity;
+            % relative to the reference node in the 
+            [joint_ref_pos, joint_ref_orient] = self.joint.reference ();
             
             % perform a rotation to bring the orientation of the reference
             % node into line with the global coordinate system.
@@ -101,13 +125,22 @@ classdef twoNodeTorque < mbdyn.mint.base
             % we pre-multiply by the transpose of the reference node
             % orientation in the global frame to get the reverse rotation
             % in the global frame
-            xRforceVec = self.referenceNode.absoluteOrientation.orientationMatrix.' * xRvec;
-            vRforceVec = self.referenceNode.absoluteOrientation.orientationMatrix.' * vRvec;
+            theta_n_ref_joint_frame = joint_ref_orient.orient.orientationMatrix.' ...
+                * self.nodes(1).absoluteAngularVelocity;
+            
+            theta_n_other_joint_frame = joint_ref_orient.orient.orientationMatrix.' ...
+                * self.nodes(2).absoluteAngularVelocity;
+            
+            w_n_ref_joint_frame = joint_ref_orient.orient.orientationMatrix.' ...
+                * self.nodes(1).absoluteAngularVelocity;
+            
+            w_n_other_joint_frame = joint_ref_orient.orient.orientationMatrix.' ...
+                * self.nodes(2).absoluteAngularVelocity;
             
             % velocities and displacements are the desired components of
             % the vectors in the translator coordinate system
-            reldisp = xRforceVec(self.forceAxis) - self.referenceTheta;
-            relvel = vRforceVec(self.forceAxis);
+            reltheta = xRforceVec(self.forceAxis) - self.referenceTheta;
+            relomega = vRforceVec(self.forceAxis);
             
         end
         
