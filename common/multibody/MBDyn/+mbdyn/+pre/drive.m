@@ -1,4 +1,5 @@
 classdef drive < mbdyn.pre.base
+    % generic base class for all mbdyn drives
     
     properties
         
@@ -7,12 +8,12 @@ classdef drive < mbdyn.pre.base
     methods
         
         function self = drive ()
+            % construct a generic mbdyn drive object
             
             
         end
         
         function str = generateOutputString (self)
-            
             
              str = sprintf ('    drive : %d, %s,', self.label, self.type);
             
