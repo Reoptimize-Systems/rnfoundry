@@ -2,7 +2,9 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
     
     
     properties (GetAccess = public, SetAccess = protected)
-        
+        frictionRadius;
+        frictionModel;
+        preload;
     end
     
     methods
@@ -66,8 +68,6 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             %
             %  'Preload'' - 
             %
-            %  'FrictionModel' - 
-            %
             %  'ShapeFunction' - 
             %  
             % Output
@@ -79,9 +79,9 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             options.RelativeOrientation1 =  [];
             options.RelativeOrientation2 =  [];
             options.InitialTheta = [];
-            options.Friction = [];
-            options.Preload = [];
+            options.FrictionRadius = [];
             options.FrictionModel = [];
+            options.Preload = [];
             options.ShapeFunction = [];
             options.Offset1Reference = 'node';
             options.Offset2Reference = 'node';
@@ -101,6 +101,29 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
                         'Orientation1Reference', options.Orientation1Reference, ...
                         'Orientation2Reference', options.Orientation2Reference );
             
+            if ~isempty (options.FrictionRadius)
+                if isempty (options.FrictionModel)
+                    error ('If supplying a friction radius, you must also supply a friction model');
+                end
+                self.checkNumericScalar (options.FrictionRadius, true, 'FrictionRadius')
+                
+                if ~isempty (options.Preload)
+                    self.checkNumericScalar (options.Preload, true, 'Preload');
+                    self.preload = options.Preload;
+                end
+            end
+            
+            if ~isempty (options.FrictionModel)
+                if isempty (options.FrictionRadius)
+                    error ('If supplying a friction model, you must also supply a friction radius');
+                end
+                assert (isa (options.FrictionModel, 'mbdyn.pre.frictionModel'), ...
+                    'Supplied FrictionModel is not an mbdyn.pre.frictionModel object (or derived class)');
+            end
+            
+            self.frictionRadius = options.FrictionRadius;
+            self.frictionModel = options.FrictionModel;
+            
             self.type = 'revolute hinge';
             
         end
@@ -111,23 +134,34 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
             
-            out = self.makeCellIfNot (self.relativeOffset1);
-            str = self.addOutputLine (str, self.commaSepList ('position', out{:}), 3, true);
+%             out = self.makeCellIfNot (self.relativeOffset1);
+            str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset1Reference, self.relativeOffset1), 3, true);
             
             if ~isempty (self.relativeOrientation1)
-                out = self.makeCellIfNot (self.relativeOrientation1);
-                str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 3, true);
+%                 out = self.makeCellIfNot (self.relativeOrientation1);
+                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation1Reference, self.relativeOrientation1), 3, true);
             end
             
             str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, true, 'node 2 label');
             
-            out = self.makeCellIfNot (self.relativeOffset2);
+%             out = self.makeCellIfNot (self.relativeOffset2);
             addcomma = ~isempty (self.relativeOrientation2);
-            str = self.addOutputLine (str, self.commaSepList ('position', out{:}), 3, addcomma);
+            str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset2Reference, self.relativeOffset2), 3, addcomma);
             
+            addcomma = ~isempty (self.frictionRadius);
             if ~isempty (self.relativeOrientation2)
-                out = self.makeCellIfNot (self.relativeOrientation2);
-                str = self.addOutputLine (str, self.commaSepList ('orientation', out{:}), 3, false);
+%                 out = self.makeCellIfNot (self.relativeOrientation2);
+                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation2Reference, self.relativeOrientation2), 3, addcomma);
+            end
+            
+            if ~isempty (self.frictionRadius)
+                str = self.addOutputLine (str, self.commaSepList ('friction', self.frictionRadius), 3, true);
+                
+                if ~isempty (self.preload)
+                    str = self.addOutputLine (str, self.commaSepList ('preload', self.frictionRadius), 4, true);
+                end
+                
+                str = self.addOutputLine (str, self.frictionModel.generateOutputString (), 4, false);
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
@@ -142,12 +176,66 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             options = parse_pv_pairs (options, varargin);
             
-            draw@mbdyn.pre.element ( self, ...
-                'AxesHandle', options.AxesHandle, ...
-                'ForceRedraw', options.ForceRedraw, ...
-                'Mode', options.Mode );
+%             draw@mbdyn.pre.twoNodeOffsetJoint ( self, ...
+%                 'AxesHandle', options.AxesHandle, ...
+%                 'ForceRedraw', options.ForceRedraw, ...
+%                 'Mode', options.Mode );
 
+            if options.ForceRedraw
+                self.needsRedraw = true;
+            end
+            
+            self.checkAxes (options.AxesHandle);
+            
+            node1pos = self.node1.absolutePosition;
+            jref = self.reference ();
+            jpos = jref.pos ();
+            node2pos = self.node2.absolutePosition;
+                
+            if ~self.needsRedraw
+                % always have to redraw line, can't just transform objects
+                delete (self.shapeObjects{1})
+                self.shapeObjects{1} =  line ( self.drawAxesH, ...
+                                               [ node1pos(1), jpos(1), node2pos(1) ], ...
+                                               [ node1pos(2), jpos(2), node2pos(2) ], ...
+                                               [ node1pos(3), jpos(3), node2pos(3) ], ...
+                                               'Color', self.drawColour );
+                                       
+            end
+            
+            if isempty (self.shapeObjects) ...
+                    || self.needsRedraw
+                % a full redraw is needed (and not just a modification of
+                % transform matrices for the objects).
+                
+                % delete the current patch object
+                self.deleteAllDrawnObjects ();
+                
+                self.shapeObjects = { line( self.drawAxesH, ...
+                                            [ node1pos(1), jpos(1), node2pos(1) ], ...
+                                            [ node1pos(2), jpos(2), node2pos(2) ], ...
+                                            [ node1pos(3), jpos(3), node2pos(3) ], ...
+                                            'Color', self.drawColour ), ...
+                                      line( self.drawAxesH, ...
+                                            [ 0, 0 ], ...
+                                            [ 0, 0 ], ...
+                                            [ -self.sz/2, self.sz/2 ], ...
+                                            'Parent', self.transformObject, ...
+                                            'Color', self.drawColour, ...
+                                            'LineStyle', '--' )
+                                    };
+                
+                self.needsRedraw = false;
+
+%                 if options.Light
+%                     light (self.drawAxesH);
+%                 end
+                
+            end
+            
             self.setTransform ();
+
+%             self.setTransform ();
             
         end
         
@@ -155,16 +243,16 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
     
     methods (Access = protected)
         
-        function setTransform (self)
-            
-            om = self.absoluteJointOrientation;
-            
-            M = [ om.orientationMatrix, self.absoluteJointPosition; ...
-                  0, 0, 0, 1 ];
-                  
-            set ( self.transformObject, 'Matrix', M );
-            
-        end
+%         function setTransform (self)
+%             
+%             om = self.absoluteJointOrientation;
+%             
+%             M = [ om.orientationMatrix, self.absoluteJointPosition; ...
+%                   0, 0, 0, 1 ];
+%                   
+%             set ( self.transformObject, 'Matrix', M );
+%             
+%         end
         
     end
     
