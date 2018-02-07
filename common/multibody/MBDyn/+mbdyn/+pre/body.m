@@ -19,7 +19,64 @@ classdef body < mbdyn.pre.element
     methods
         
         function self = body (mass, cog, inertiamat, node, varargin)
-        
+            % constructs a single mass lumped rigid body or point mass
+            %
+            % Syntax
+            %
+            % bd = mbdyn.pre.body (mass, cog, inertiamat, node)
+            % bd = mbdyn.pre.body (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % mbdyn.pre.body constructs a lumped rigid body when connected
+            % to a regular, 6 degree of freedom structural node, or a point
+            % mass when connected to a rotationless, 3 degree of freedom
+            % structural node.
+            %
+            % Input
+            %
+            %  mass - mass of the body
+            %
+            %  cog - (3 x 1) matrix containing the location of the centre
+            %    of mass of the body relative to the attached node.
+            %
+            %  inertiamat - Inertia_matrix referred to the center of mass
+            %    of the body. can be a (3 x 3) matrix or
+            %    mbdyn.pre.orientmat object. The inertia_matrix is always
+            %    referred to the center of mass of the body. However, it
+            %    can be rotated locally using the 'InertialOrientation'
+            %    options (see below.
+            %
+            %  node - node to which the body is attached, can be either an
+            %    mbdyn.pre.structuralNode6dof object or a
+            %    mbdyn.pre.structuralNode3dof object.
+            %
+            % Additional arguments may be supplied as parameter-value
+            % pairs.
+            %
+            %  'InertialOrientation' - string, or (3 x 3) matrix or
+            %    mbdyn.pre.orientmat onject. This options is used to rotate
+            %    the inertial matrix supplied in inertiamat. If this is a
+            %    string, it must be 'node' which is the default, and
+            %    assumes the inertia matrix is input in the node reference
+            %    frame. Otherwise it is rotated according to the supplied
+            %    inertial matrix.
+            %
+            %  'STLFile' - path to an STL file used to plot the body in
+            %    visualisations. If not supplied, a default shape is used.
+            %
+            %  'UseSTLName' - true/false flag. If an stl file is loaded,
+            %    this option determines whether the name stored in the
+            %    stl file is assigned to the body. Default is false.
+            %
+            % Output
+            %
+            %  bd - mbdyn.pre.body object
+            %
+            %
+            % See Also: mbdyn.pre.bodyMultiMass
+            %
+
             options.InertialOrientation = [];
             options.STLFile = '';
             options.UseSTLName = false;
