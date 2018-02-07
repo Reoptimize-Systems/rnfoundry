@@ -14,9 +14,9 @@ classdef element < mbdyn.pre.base
         sx;
         sy;
         sz;
-        shapeDataChanged;
         stlLoaded;
-        patchObject;   % patch object for the body shape
+        shapeObjects;   % object for the element shape drawing
+        needsRedraw; % track whether abject needs to be redrawn
         drawAxesH; % handle to figure for plotting
         transformObject;
         defaultShape;
@@ -35,6 +35,7 @@ classdef element < mbdyn.pre.base
             self.stlLoaded = false;
             self.drawColour = [0.8, 0.8, 1.0];
             self.shapeData = struct([]);
+            self.shapeObjects = {};
             self.drawAxesH = [];
             self.sx = 1;
             self.sy = 1;
@@ -59,7 +60,7 @@ classdef element < mbdyn.pre.base
             end
             
             self.stlLoaded = true;
-            self.shapeDataChanged = true;
+            self.needsRedraw = true;
             
         end
         
@@ -83,35 +84,10 @@ classdef element < mbdyn.pre.base
             options = parse_pv_pairs (options, varargin);
             
             if options.ForceRedraw
-                if ~isempty (self.patchObject) && isvalid (self.patchObject) 
-                    delete (self.patchObject);
-                end
-                self.patchObject = [];
+                self.needsRedraw = true;
             end
             
-            % try to figure out if there is a valid set of axes to plot to
-            if isa (options.AxesHandle, 'matlab.graphics.axis.Axes')
-                if ~isvalid (options.AxesHandle)
-                    error ('provided axes object is not valid');
-                end
-                self.drawAxesH = options.AxesHandle;
-                % we need to redraw, as we're plotting in a new set of axes
-                options.ForceRedraw = true;
-                % abandon existing patch object
-                self.patchObject = [];
-                self.transformObject = [];
-            elseif isempty (options.AxesHandle)
-                % plot in the existing axes if possible as no new axes
-                % supplied
-                if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
-                    if ~isvalid (self.drawAxesH)
-                        self.drawAxesH = [];
-                        options.ForceRedraw = true;
-                        self.patchObject = [];
-                        self.transformObject = [];
-                    end
-                end
-            end
+            self.checkAxes (options.AxesHandle);
             
             if isempty (self.shapeData)
                 % make a unit box by default for drawing
@@ -131,96 +107,82 @@ classdef element < mbdyn.pre.base
                                          8, 5, 1, 4;
                                          8, 7, 6, 5 ];
                                      
-                self.shapeDataChanged = true;
+                self.needsRedraw = true;
                 
             end
             
-            if isempty (self.patchObject) ...
-                    || ~isvalid (self.patchObject) ...
-                    || options.ForceRedraw ...
-                    || self.shapeDataChanged ...
-                    || isempty (self.drawAxesH)
+            if isempty (self.shapeObjects) ...
+                    || self.needsRedraw
+                % a full redraw is needed (and not just a modification of
+                % transform matrices for the objects).
                 
                 % delete the current patch object
-                if ~isempty (self.patchObject) && isvalid (self.patchObject) 
-                    delete (self.patchObject);
-                end
-                self.patchObject = [];
-                
-                % make figure and axes if necessary
-                if isempty (self.drawAxesH)
-                    figure;
-                    self.drawAxesH = axes;
-                    if ~isempty (self.transformObject) && isvalid (self.transformObject)
-                        delete (self.transformObject);
-                    end
-                    self.transformObject = [];
-                end
-
-                if isempty (self.transformObject) || ~isvalid (self.transformObject)
-                    self.transformObject = hgtransform (self.drawAxesH);
-                end
+                self.deleteAllDrawnObjects ();
                 
                 if all ( isfield (self.shapeData, {'Faces', 'Vertices'}))
 
-                    self.patchObject = patch (self.drawAxesH, ...
-                                        'Faces', self.shapeData.Faces, ...
-                                        'Vertices', self.shapeData.Vertices, ...
-                                        'FaceLighting', 'gouraud',     ...
-                                        'AmbientStrength', 0.15, ...
-                                        'Parent', self.transformObject);
+                    self.shapeObjects = { patch( self.drawAxesH, ...
+                                                 'Faces', self.shapeData.Faces, ...
+                                                 'Vertices', self.shapeData.Vertices, ...
+                                                 'FaceLighting', 'gouraud', ...
+                                                 'AmbientStrength', 0.15, ...
+                                                 'Parent', self.transformObject ) ...
+                                        };
                                 
                 elseif all (isfield (self.shapeData, {'XData', 'YData', 'ZData'}))
                     
-                    self.patchObject = patch (self.drawAxesH, ...
-                                        'XData', self.shapeData.XData, ...
-                                        'YData', self.shapeData.YData, ...
-                                        'ZData', self.shapeData.ZData, ...
-                                        'FaceLighting', 'gouraud',     ...
-                                        'AmbientStrength', 0.15, ...
-                                        'Parent', self.transformObject);
+                    self.shapeObjects = { patch( self.drawAxesH, ...
+                                                 'XData', self.shapeData.XData, ...
+                                                 'YData', self.shapeData.YData, ...
+                                                 'ZData', self.shapeData.ZData, ...
+                                                 'FaceLighting', 'gouraud',     ...
+                                                 'AmbientStrength', 0.15, ...
+                                                 'Parent', self.transformObject) ...
+                                        };
                                     
                 else
                     error ('Invalid shape data');
                 end
                 
-                self.shapeDataChanged = false;
+                self.needsRedraw = false;
                 
                 if options.Light
                     light (self.drawAxesH);
                 end
                 
-                
-                
             end
             
-            switch options.Mode
+            for ind = 1:numel (self.shapeObjects)
                 
-                case 'solid'
-                    set (self.patchObject, 'FaceAlpha', 1.0);
-                    set (self.patchObject, 'FaceColor', self.drawColour);
-                    set (self.patchObject, 'EdgeColor', 'none');
-                case 'wiresolid'
-                    set (self.patchObject, 'FaceAlpha', 1.0);
-                    set (self.patchObject, 'FaceColor', self.drawColour);
-                    set (self.patchObject, 'EdgeColor', self.drawColour);
-                case 'ghost'
-                    set (self.patchObject, 'FaceAlpha', 0.25);
-                    set (self.patchObject, 'FaceColor', self.drawColour);
-                    set (self.patchObject, 'EdgeColor', 'none');
-                case 'wireframe'
-                    set (self.patchObject, 'EdgeColor', self.drawColour);
-                    set (self.patchObject, 'FaceColor', 'none');
-                case 'wireghost'
-                    set (self.patchObject, 'EdgeColor', self.drawColour);
-                    set (self.patchObject, 'FaceColor', self.drawColour);
-                    set (self.patchObject, 'FaceAlpha', 0.25);
-                    
-                otherwise
-                    set (self.patchObject, 'FaceAlpha', 1.0);
-                    set (self.patchObject, 'FaceColor', self.drawColour);
-                    set (self.patchObject, 'EdgeColor', 'none');
-                    
+                switch options.Mode
+
+                    case 'solid'
+                        set (self.shapeObjects{ind}, 'FaceAlpha', 1.0);
+                        set (self.shapeObjects{ind}, 'FaceColor', self.drawColour);
+                        set (self.shapeObjects{ind}, 'EdgeColor', 'none');
+                    case 'wiresolid'
+                        set (self.shapeObjects{ind}, 'FaceAlpha', 1.0);
+                        set (self.shapeObjects{ind}, 'FaceColor', self.drawColour);
+                        set (self.shapeObjects{ind}, 'EdgeColor', self.drawColour);
+                    case 'ghost'
+                        set (self.shapeObjects{ind}, 'FaceAlpha', 0.25);
+                        set (self.shapeObjects{ind}, 'FaceColor', self.drawColour);
+                        set (self.shapeObjects{ind}, 'EdgeColor', 'none');
+                    case 'wireframe'
+                        set (self.shapeObjects{ind}, 'EdgeColor', self.drawColour);
+                        set (self.shapeObjects{ind}, 'FaceColor', 'none');
+                    case 'wireghost'
+                        set (self.shapeObjects{ind}, 'EdgeColor', self.drawColour);
+                        set (self.shapeObjects{ind}, 'FaceColor', self.drawColour);
+                        set (self.shapeObjects{ind}, 'FaceAlpha', 0.25);
+
+                    otherwise
+                        set (self.shapeObjects{ind}, 'FaceAlpha', 1.0);
+                        set (self.shapeObjects{ind}, 'FaceColor', self.drawColour);
+                        set (self.shapeObjects{ind}, 'EdgeColor', 'none');
+
+                end
+            
             end
             
             if nargout > 0
@@ -254,6 +216,91 @@ classdef element < mbdyn.pre.base
                 error ('Centre of gravity offset must 3 element numeric column vector, or keyword ''null'' or empty');
             end
             
+            
+        end
+        
+        function checkAxes (self, hax)
+            % checks if there is a valid set of axes to plot to, and if
+            % not, creates them
+            
+            % try to figure out if there is a valid set of axes to plot to
+            if isempty (hax)
+                
+                % plot in the existing axes if possible as no new axes
+                % supplied
+                if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
+                    % use existing axes
+                    
+                    if ~isvalid (self.drawAxesH)
+                        % axes no longer exists, or figure has been closed
+                        self.drawAxesH = [];
+                        self.deleteAllDrawnObjects ();
+                        self.transformObject = [];
+                        self.needsRedraw = true;
+                        % make a new set of axes to draw to
+                        self.makeAxes ();
+                    end
+                    
+                elseif isempty (self.drawAxesH)
+                    % make figure and axes
+                    self.makeAxes ();
+                    self.needsRedraw = true;
+                    
+                else
+                    error ('drawAxesH property is not empty or an axes handle');
+                end
+            
+            elseif isa (hax, 'matlab.graphics.axis.Axes')
+                % an axes has been supplied, so we plot to this new axes
+                
+                if ~isvalid (hax)
+                    error ('provided axes object is not valid');
+                end
+                self.drawAxesH = hax;
+                % abandon existing shape objects and transform object
+                % TODO: should we delet objects in old axes?
+                self.shapeObjects = {};
+                self.transformObject = [];
+                % we need to redraw, as we're plotting in a different set
+                % of axes
+                self.needsRedraw = true;
+                
+            else
+                
+                error ('hax must be an axes handle or empty');
+                
+            end
+            
+            if isempty (self.transformObject) || ~isvalid (self.transformObject)
+                self.transformObject = hgtransform (self.drawAxesH);
+            end
+            
+        end
+        
+        function makeAxes (self)
+            % create axes and transform object
+            
+            figure;
+            self.drawAxesH = axes;
+            if ~isempty (self.transformObject) && isvalid (self.transformObject)
+                delete (self.transformObject);
+            end
+            self.transformObject = [];
+            self.needsRedraw = true;
+            
+        end
+        
+        function deleteAllDrawnObjects (self)
+            
+            for ind = 1:numel (self.shapeObjects)
+                if ~isempty (self.shapeObjects{ind}) ...
+                        && isvalid (self.shapeObjects{ind})
+
+                    delete (self.shapeObjects{ind});
+
+                end
+            end
+            self.shapeObjects = {};
             
         end
         
