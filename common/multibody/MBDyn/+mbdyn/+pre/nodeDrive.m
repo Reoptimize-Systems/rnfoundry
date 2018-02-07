@@ -13,7 +13,75 @@ classdef nodeDrive < mbdyn.pre.drive
     methods
         
         function self = nodeDrive (node, func_drive, varargin)
-            
+            % drive based on private data of a node
+            %
+            % Syntax
+            %
+            % nd = nodeDrive (node, func_drive)
+            % nd = nodeDrive (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % nodeDrive allows the private data of a node to be read and
+            % passed to another drive. The private datato be read can be
+            % specified either as an index or the symbolic name. If the
+            % node has ony one type of private data, the specification can
+            % be omitted.
+            %
+            % The private data value is passed to another driver, supplied
+            % in func_drive. This can be used as a sort of explicit
+            % feedback, to implement fancy springs (where a force is driven
+            % through a function by the rotation of a joint) or an active
+            % control system
+            %
+            % Input
+            %
+            %  node - the node for which the private data is to be read
+            %
+            %  func_drive - a drive which will be passed the data read by
+            %    the node drive.
+            %
+            % Additional inputs may be supplied as parameter-value pairs.
+            %
+            %  'String' - string representing the private data of the node
+            %    which is to be read
+            %
+            %  'Index' - numeric index of the private data of the node
+            %    which is to be read
+            %
+            % Output
+            %
+            %  nd - mbdyn.pre.nodeDrive object
+            %
+            %
+            % Examples
+            %
+            % Example 1
+            %
+            % % Use the value of the displacement in direction z(3) of a
+            % % structural node, as is (by passing to a linear drive with
+            % % null constant coefficient and unit linear coefficient).
+            %
+            % stnode = mbdyn.pre.structuralNode6dof ('dynamic')
+            % lindrv = mbdyn.pre.linearDrive (0, 1);
+            % nd = mbdyn.pre.NodeDrive (node, lindrv, 'String', 'X[3]')
+            %
+            % Example 2
+            %
+            % % Get value of the displacement in direction z(3) of a
+            % % structural node, addressed using the index, and pass to a
+            % % string drive to use in a formula
+            %
+            % stnode = mbdyn.pre.structuralNode6dof ('dynamic')
+            % strdrv = mbdyn.pre.stringDrive ("2.*exp(-100.*Var)");
+            % nd = mbdyn.pre.NodeDrive (node, strdrv, 'Index', 3)
+            %
+            %
+            % See Also: 
+            %
+            % 
+
+
             options.String = '';
             options.Index = [];
             
@@ -30,7 +98,7 @@ classdef nodeDrive < mbdyn.pre.drive
                 
                 warning ('''Index'' option is deprecated');
                 
-                self.checkNumericScalar (options.Index, true, 'Index');
+                self.checkScalarInteger (options.Index, true, 'Index');
                 
                 self.index = options.Index;
                 
