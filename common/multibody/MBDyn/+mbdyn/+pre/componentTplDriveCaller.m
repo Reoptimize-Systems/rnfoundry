@@ -10,6 +10,44 @@ classdef componentTplDriveCaller < mbdyn.pre.driveCaller
     methods
         
         function self = componentTplDriveCaller (drivecallers, varargin)
+            % constructs a component template drive caller
+            %
+            % Syntax
+            %
+            % obj = componentTplDriveCaller (drivecallers)
+            % obj = componentTplDriveCaller (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % componentTplDriveCaller is used to provide drives for each
+            % component of entities which have more than one component. You
+            % must supply one drive for each component of the entity.
+            %
+            % Input
+            %
+            %  drivecallers - cell array of drives of the same 
+            %
+            % Additional arguments may be supplied as parameter-value
+            % pairs:
+            %
+            %  'ShapeType' - optional string used with matrix-type entities
+            %    to specify special matrix layouts. Can be 'sym' or 'diag'.
+            %    The string 'sym' indicates that only the upper triangular
+            %    components are expected. The string 'diag' indicates that
+            %    only the diagonal components are expected.
+            %
+            % Output
+            %
+            %  obj - mbdyn.pre.componentTplDriveCaller object
+            %
+            %
+            %
+            % See Also: 
+            %
+            
+            if ~iscell (drivecallers)
+                error ('drivecallers must be a cell array');
+            end
             
             options.ShapeType = '';
             
