@@ -22,6 +22,10 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
     
     methods
         function self = twoNodeOffsetJoint (node1, node2, varargin)
+            % generic class for two node joints with position offset
+            % from these nodes
+            %
+            %
         
             options.RelativeOffset1 = [];
             options.RelativeOffset2 = [];
@@ -37,25 +41,99 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
             % call the superclass constructor
             self = self@mbdyn.pre.twoNodeJoint (node1, node2);
             
-            self.relativeOffset1 = self.checkJointPositionOffset ({options.Offset1Reference, options.RelativeOffset1});
+            allowedrefstrs = {'global', 'node', 'local', 'other position', 'other node'};
+            self.checkAllowedStringInputs ( options.Offset1Reference, allowedrefstrs, true, 'Offset1Reference');
+            self.checkAllowedStringInputs ( options.Offset2Reference, allowedrefstrs, true, 'Offset2Reference');
+            self.checkAllowedStringInputs ( options.Orientation1Reference, allowedrefstrs, true, 'Orientation1Reference');
+            self.checkAllowedStringInputs ( options.Orientation2Reference, allowedrefstrs, true, 'Orientation2Reference');
+            self.checkCartesianVector (options.RelativeOffset1, true, 'RelativeOffset1');
+            self.checkCartesianVector (options.RelativeOffset2, true, 'RelativeOffset2');
+            self.checkOrientationMatrix (options.RelativeOrientation1, true, 'RelativeOrientation1');
+            self.checkOrientationMatrix (options.RelativeOrientation2, true, 'RelativeOrientation2');
+            
+            self.relativeOffset1 = options.RelativeOffset1;
+            self.relativeOrientation1 = options.RelativeOrientation1;
+            self.relativeOffset2 = options.RelativeOffset2;
+            self.relativeOrientation2 = options.RelativeOrientation2;
             self.offset1Reference = options.Offset1Reference;
-            
-            self.relativeOrientation1 = self.checkJointOrientationOffset ({options.Orientation1Reference, options.RelativeOrientation1});
             self.orientation1Reference = options.Orientation1Reference;
-            
-            self.relativeOffset2 = self.checkJointPositionOffset ({options.Offset2Reference, options.RelativeOffset2});
             self.offset2Reference = options.Offset2Reference;
-            
-            self.relativeOrientation2 = self.checkJointOrientationOffset ({options.Orientation2Reference, options.RelativeOrientation2});
             self.orientation2Reference = options.Orientation2Reference;
             
         end
-    end
-    
-    methods
+        
+        function [ref_pos, ref_orient] = reference (self)
+            % returns a reference object for the joint position
+            
+            switch self.offset1Reference
+                
+                case {'node', 'local'}
+                    posref = self.node1.reference ();
+                case {'other node', 'other position'}
+                    posref = self.node2.reference ();
+                case {'global', ''}
+                    posref = mbdyn.pre.globalref ();
+                otherwise
+                    error ('Unrecognised reference type');
+                    
+            end
+            
+            switch self.orientation1Reference
+                
+                case {'node', 'local'}
+                    orientref = self.node1.reference ();
+                case {'other node', 'other position'}
+                    orientref = self.node2.reference ();
+                case  {'global', ''}
+                    orientref = mbdyn.pre.globalref ();
+                otherwise
+                    error ('Unrecognised reference type');
+                    
+            end
+            
+            if ischar (self.relativeOffset1)
+                reloffset = [0;0;0];
+            else
+                reloffset = self.relativeOffset1;
+            end
+            
+            if ischar (self.relativeOrientation1)
+                relorient = mbdyn.pre.orientmat ('eye');
+            else
+                relorient = mbdyn.pre.orientmat ('orientation', self.getOrientationMatrix (self.relativeOrientation1));
+            end
+            
+            ref_pos = mbdyn.pre.reference ( reloffset, ...
+                                            relorient, ...
+                                            [], ...
+                                            [], ...
+                                            'Parent', posref );
+                                        
+            ref_orient = mbdyn.pre.reference ( reloffset, ...
+                                               relorient, ...
+                                               [], ...
+                                               [], ...
+                                               'Parent', orientref );
+                                    
+        end
+        
+        
+        function draw (self, varargin)
+            
+            options.AxesHandle = [];
+            options.ForceRedraw = false;
+            options.Mode = 'solid';
+            
+            options = parse_pv_pairs (options, varargin);
+            
+
+            
+        end
+        
         function str = generateOutputString (self)
             str = generateOutputString@mbdyn.pre.joint(self);
         end
+        
     end
     
     % getters setters
@@ -63,87 +141,38 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
         
         function pos = get.absoluteJointPosition (self)
             
-            switch self.offset1Reference
-                
-                case ''
-                    ref_pos_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                        self.node1.absoluteOrientation, ...
-                                                        self.node1.absoluteVelocity, ...
-                                                        self.node1.absoluteAngularVelocity);
-                                                    
-                case 'node'
-                    ref_pos_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                        self.node1.absoluteOrientation, ...
-                                                        self.node1.absoluteVelocity, ...
-                                                        self.node1.absoluteAngularVelocity);
-                                                    
-                case 'local'
-                    ref_pos_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                        self.node1.absoluteOrientation, ...
-                                                        self.node1.absoluteVelocity, ...
-                                                        self.node1.absoluteAngularVelocity);
-                                                    
-                case 'other node'
-                    ref_pos_base = mbdyn.pre.reference (self.node2.absolutePosition, ...
-                                                        self.node2.absoluteOrientation, ...
-                                                        self.node2.absoluteVelocity, ...
-                                                        self.node2.absoluteAngularVelocity);
-                                                    
-                case 'global'
-                    ref_pos_base = mbdyn.pre.globalref;
-            end
+            ref_pos = self.reference ();
             
-            ref_joint_offset = mbdyn.pre.reference (self.relativeOffset1{end}, ...
-                            mbdyn.pre.orientmat ('orientation', self.relativeOrientation1{end}), ...
-                            [], ...
-                            [], ...
-                            'Parent', ref_pos_base);
-            
-            pos = ref_joint_offset.pos;
+            pos = ref_pos.pos;
             
         end
         
         function orientm = get.absoluteJointOrientation (self)
             
-            switch self.orientation1Reference
-                
-                case ''
-                    ref_orient_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                           self.node1.absoluteOrientation, ...
-                                                           self.node1.absoluteVelocity, ...
-                                                           self.node1.absoluteAngularVelocity);
-                                                       
-                case 'node'
-                    ref_orient_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                           self.node1.absoluteOrientation, ...
-                                                           self.node1.absoluteVelocity, ...
-                                                           self.node1.absoluteAngularVelocity);
-                case 'local'
-                    ref_orient_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                                           self.node1.absoluteOrientation, ...
-                                                           self.node1.absoluteVelocity, ...
-                                                           self.node1.absoluteAngularVelocity);
-                                                       
-                case 'other node'
-                    ref_orient_base = mbdyn.pre.reference (self.node2.absolutePosition, ...
-                                                           self.node2.absoluteOrientation, ...
-                                                           self.node2.absoluteVelocity, ...
-                                                           self.node2.absoluteAngularVelocity);
-                                                       
-                case 'global'
-                    ref_orient_base = mbdyn.pre.globalref;
-                    
-            end
-
-            ref_joint_orient = mbdyn.pre.reference (self.relativeOffset1{end}, ...
-                            mbdyn.pre.orientmat ('orientation', self.relativeOrientation1{end}), ...
-                            [], ...
-                            [], ...
-                            'Parent', ref_orient_base);
+            [~, ref_orient] = self.reference ();
                         
-            orientm = ref_joint_orient.orientm;
+            orientm = ref_orient.orientm;
                         
         end
+        
+    end
+    
+    methods (Access=protected)
+        
+       function setTransform (self)
+            
+            [ref_pos, ref_orient] = self.reference ();
+            
+            M = [ ref_orient.orientm.orientationMatrix , ref_pos.pos; ...
+                  0, 0, 0, 1 ];
+            
+            % matlab uses different convention to mbdyn for rotation
+            % matrix
+            M = self.mbdynOrient2Matlab (M);
+                  
+            set ( self.transformObject, 'Matrix', M );
+            
+        end  
         
     end
     
