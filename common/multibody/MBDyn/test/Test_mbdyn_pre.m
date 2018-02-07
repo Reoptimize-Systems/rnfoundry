@@ -199,8 +199,15 @@ sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, ...
                     
 str = sn6dof.generateOutputString ()
 
-%%
+%% structuralNode3dof
+
 sn3dof = mbdyn.pre.structuralNode3dof ('dynamic displacement', 'Accel', true);
+
+str = sn3dof.generateOutputString ()
+
+%% structuralNodeDummy
+
+sn3dof = mbdyn.pre.structuralNode6dof ('dynamic displacement', 'Accel', true);
 
 str = sn3dof.generateOutputString ()
 
@@ -294,6 +301,29 @@ sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 jnt = mbdyn.pre.revoluteRotation (sn1, sn2);
 jnt.generateOutputString ()
 
+%% Revolute Hinge
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+friction_fcn = mbdyn.pre.constScalarFunction ('jimbob', tau);
+
+friction = mbdyn.pre.discreteCoulombFriction (friction_fcn);
+
+revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
+                                     [0;0;0], [0;0;0], ...
+                                     'Offset1Reference', 'node', ...
+                                     'Offset2Reference', 'other node', ...
+                                     'RelativeOrientation1', mbdyn.pre.orientmat ('eye'), ...
+                                     'Orientation1Reference', 'node', ...
+                                     'RelativeOrientation2', mbdyn.pre.orientmat ('eye'), ...
+                                     'Orientation2Reference', 'other node', ...
+                                     'FrictionRadius', 1, ...
+                                     'FrictionModel', friction ...
+                                   );
+                               
+revhinge.generateOutputString ()
+                                 
 %% system
 
 % this is intended to replicate the sky-engineering example at:
@@ -374,9 +404,9 @@ linkjoint = mbdyn.pre.revoluteHinge ( link1node, link2node, ...
                                      'Orientation2Reference', 'global' ...
                                      );
                 
-pinjoint.setSize (L/10, L/10, L/10);
+pinjoint.setSize (L/10, L/10, 2*L/10);
 pinjoint.setColour ('k');
-linkjoint.setSize (L/10, L/10, L/10);
+linkjoint.setSize (L/10, L/10, 2*L/10);
 linkjoint.setColour ('g');
 
 prb = mbdyn.pre.initialValueProblem (0, 10, 1e-3, 'ResidualTolerance', 1e-9) %, 'DerivativesTolerance', 100000);
@@ -391,8 +421,8 @@ str = mbsys.generateMBDynInputStr ()
 
 mbsys.setStructuralNodeSize (L/10, L/10, L/10);
 
-mbsys.draw ( 'Mode', 'wireghost', ...
-             'References', true, ...
+mbsys.draw ( 'Mode', 'wireframe', ...
+             'References', false, ...
              'ReferenceScale', 0.5, ...
              'AxLims', [-2, 2; -2, 2; -2, 2;] );
 
@@ -762,4 +792,32 @@ dc = mbdyn.pre.componentTplDriveCaller (drivecallers);
 tf = mbdyn.pre.totalForce  (sn1, 'Moment', dc);
 
 tf.generateOutputString ()
+
+%% simpleShape
+
+shp = mbdyn.pre.simpleShape ()
+
+shp.generateOutputString ()
+
+%% simplePlaneHingeShape
+
+radius = pi;
+shp = mbdyn.pre.simplePlaneHingeShape (radius);
+
+shp.generateOutputString ()
+
+%% const scalar function
+
+x = mbdyn.pre.constScalarFunction ('jimbob', tau);
+
+x.generateOutputString ()
+
+%% discreteCoulombFriction Model
+
+friction_fcn = mbdyn.pre.constScalarFunction ('jimbob', tau);
+
+x = mbdyn.pre.discreteCoulombFriction (friction_fcn);
+
+x.generateOutputString ()
+
 
