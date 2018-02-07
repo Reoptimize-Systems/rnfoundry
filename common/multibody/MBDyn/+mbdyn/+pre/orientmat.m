@@ -284,12 +284,16 @@ classdef orientmat
                 
                 case {'orientation', 'orientation matrix', 'matrix'}
                     
+                    assert (~isempty (spec), 'Matrix cannot be empty.');
+                        
                     mbdyn.pre.base.check3X3Matrix (spec, true, ...
                         'when using ''orientation'', ''orientation matrix'' or ''matrix'' keyword, spec' );
                     
                     this.orientationMatrix = spec;
                     
                 case 'euler'
+                    
+                    assert (~isempty (spec), 'Input vector cannot be empty.');
                     
                     mbdyn.pre.base.check3ElementNumericVector (spec, true, 'when using ''euler'', spec');
                     
@@ -298,6 +302,8 @@ classdef orientmat
                     clear om;
                     
                 case 'euler123'
+                    
+                    assert (~isempty (spec), 'Input vector cannot be empty.');
                     
                     mbdyn.pre.base.check3ElementNumericVector (spec, true, 'when using ''euler123'', spec');
                     
@@ -318,6 +324,8 @@ classdef orientmat
                     
                 case 'euler321'
                     
+                    assert (~isempty (spec), 'Input vector cannot be empty.');
+                    
                     mbdyn.pre.base.check3ElementNumericVector (spec, true, 'when using ''euler321'', spec');
                
                     d = spec(1);
@@ -336,6 +344,8 @@ classdef orientmat
                           -dSinBeta,           dCosBeta*dSinGamma,                                 dCosBeta*dCosGamma ];
                     
                 case 'euler313'
+                    
+                    assert (~isempty (spec), 'Input vector cannot be empty.');
                     
                     mbdyn.pre.base.check3ElementNumericVector (spec, true, 'when using ''euler313'', spec');
                     
@@ -357,6 +367,8 @@ classdef orientmat
                 case {'vector', 'orientation vector'}
                     % axis and angle (angle in rad = norm of matrix)
                     
+                    assert (~isempty (spec), 'Input vector cannot be empty.');
+                    
                     mbdyn.pre.base.check3ElementNumericVector (spec, true, 'when using ''vector'' or ''orientation vector'', spec');
                     
                     wcrs = [ 0         spec(3) -spec(2)
@@ -369,6 +381,7 @@ classdef orientmat
                     
                     % chech input
                     mbdyn.pre.base.checkScalarInteger (spec.ia, true, 'ia');
+                    assert (~isempty (spec.vecA), 'vecA vector cannot be empty.');
                     mbdyn.pre.base.check3ElementNumericVector (spec.vecA, true, 'vecA');
                     mbdyn.pre.base.checkScalarInteger (spec.ib, true, 'ib');
                     
