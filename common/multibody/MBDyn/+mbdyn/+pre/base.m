@@ -25,6 +25,15 @@ classdef base < handle
             end
         end
         
+        function ok = emptyOrCheck (checkfcn, checkvar, checkfcnargs)
+            
+            ok = true;
+            if ~isempty (checkvar)
+                ok = feval (checkfcn, checkvar, checkfcnargs{:});
+            end
+            
+        end
+        
         function ok = checkIsStructuralNode (node, throw)
             % checks if input is a mbdyn.pre.structuralNode
             %
@@ -582,6 +591,14 @@ classdef base < handle
                     
                     str = [ str, varargin{ind}, ', '];
                     
+                elseif isa (varargin{ind}, 'mbdyn.pre.orientmat')
+                    
+                    str = [ str, mbdyn.pre.base.writeMatrix(mbdyn.pre.base.getOrientationMatrix (varargin{ind}) )];
+                        
+                    % add a comma and newline to end of matrix so rest
+                    % of comma separated list continues on next line
+                    str = [ str, sprintf(',\n') ];
+                    
                 end
                 
             end
@@ -811,6 +828,95 @@ classdef base < handle
             elseif isa (node, 'mbdyn.pre.abstractNode') 
                 
                 nodeType = 'abstract';
+
+            elseif isa (node, 'mbdyn.pre.electricNode') 
+                
+                nodeType = 'electric';
+                
+            elseif isa (node, 'mbdyn.pre.hydraulicNode') 
+                
+                nodeType = 'hydraulic';
+                
+            elseif isa (node, 'mbdyn.pre.parameterNode') 
+                
+                nodeType = 'parameter';
+
+            elseif isa (node, 'mbdyn.pre.thermalNode') 
+                
+                nodeType = 'thermal';
+                
+            else
+                error ('Supplied node type is not yet implemented in preprocessor')
+            end 
+            
+        end
+        
+        function elementType = getElementType (element)
+            
+            
+            if isa (element, 'mbdyn.pre.automaticStructural') 
+                
+                elementType = 'automatic structural';
+                
+            elseif isa (element, 'mbdyn.pre.beam')
+                
+                elementType = 'beam';
+                
+            elseif isa (element, 'mbdyn.pre.body')
+                
+                elementType = 'body';
+                
+            elseif isa (element, 'mbdyn.pre.couple')
+                
+                elementType = 'couple';
+                
+            elseif isa (element, 'mbdyn.pre.gravity')
+                
+                elementType = 'gravity';
+                
+            elseif isa (element, 'mbdyn.pre.joint')
+                
+                elementType = 'joint';
+                
+            elseif isa (element, 'mbdyn.pre.jointRegularization')
+                
+                elementType = 'joint regularization';
+                
+            elseif isa (element, 'mbdyn.pre.plate')
+                
+                elementType = 'plate';
+                
+            elseif isa (element, 'mbdyn.pre.electric')
+                
+                elementType = 'electric';
+                
+            elseif isa (element, 'mbdyn.pre.hydraulic')
+                
+                elementType = 'hydraulic';
+                
+            elseif isa (element, 'mbdyn.pre.bind')
+                
+                elementType = 'bind';
+                
+            elseif isa (element, 'mbdyn.pre.bulk')
+                
+                elementType = 'bulk';
+                
+            elseif isa (element, 'mbdyn.pre.force')
+                
+                elementType = 'force';
+                
+            elseif isa (element, 'mbdyn.pre.genel')
+                
+                elementType = 'genel';
+                
+            elseif isa (element, 'mbdyn.pre.loadable')
+                
+                elementType = 'loadable';
+                
+            elseif isa (element, 'mbdyn.pre.userDefined')
+                
+                elementType = 'user defined';
                 
             else
                 error ('Supplied node type is not yet implemented in preprocessor')
