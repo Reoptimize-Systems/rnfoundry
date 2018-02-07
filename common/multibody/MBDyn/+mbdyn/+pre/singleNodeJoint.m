@@ -25,7 +25,7 @@ classdef singleNodeJoint < mbdyn.pre.joint
     
     methods (Access = protected)
         
-        function ok = checkNodeReferenceType (self, ref, throw)
+        function ok = checkNodeReferenceType (self, ref, throw, name)
             % checks that the specified reference frame is valid
             %
             % Syntax
@@ -51,9 +51,13 @@ classdef singleNodeJoint < mbdyn.pre.joint
             % See Also: 
             %
             
+            if nargin < 4
+                name = 'node reference type';
+            end
+            
             allowedstrs = {'node', 'local', 'global'};
             
-            ok = self.checkAllowedStringInputs (ref, allowedstrs, throw, 'node reference type');
+            ok = self.checkAllowedStringInputs (ref, allowedstrs, throw, name);
             
         end
         
