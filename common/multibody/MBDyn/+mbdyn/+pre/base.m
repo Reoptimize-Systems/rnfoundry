@@ -182,7 +182,7 @@ classdef base < handle
             end
             
             ok = true;
-            if ~( isnumeric (num) && isscalar (num) && isreal (num) )
+            if ~( isnumeric (num) && isscalar (num) && isreal (num) && ~isnan(num) )
                 
                 ok = false;
                 
