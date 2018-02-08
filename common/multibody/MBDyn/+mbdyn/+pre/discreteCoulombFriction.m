@@ -79,20 +79,20 @@ classdef discreteCoulombFriction < mbdyn.pre.frictionModel
             
             str = self.addOutputLine ( str, ...
                                        self.frictionFunction.generateOutputString (), ...
-                                       1, addcomma, 'friction function' );
+                                       1, addcomma ); % don't add a comment!
             
             addcomma = ~isempty (self.velocityRatio);
             
             if ~isempty (self.sigma2) 
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ('sigma2', self.sigma2), ...
-                                           1, addcomma, 'sigma2' );
+                                           1, addcomma );
             end
             
             if ~isempty (self.velocityRatio) 
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ('velocity ratio', self.velocityRatio), ...
-                                           1, false, 'velocity ratio' );
+                                           1, false );
             end
             
         end
