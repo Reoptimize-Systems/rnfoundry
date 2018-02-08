@@ -7,6 +7,28 @@ classdef const < mbdyn.pre.drive
     methods
         
         function self = const (value)
+            % const drive constructor
+            %
+            % Syntax
+            %
+            % cd = mbdyn.pre.const (value)
+            %
+            % Description
+            %
+            % Drive which provides a constant value.
+            %
+            % Input
+            %
+            %  value - scalar numeric value of the constant
+            %
+            % Output
+            %
+            %  cd - mbdyn.pre.const object
+            %
+            %
+            %
+            % See Also: 
+            %
             
             assert ( isscalar (value) && isnumeric (value), ...
                 'value must be a numeric scalar');
@@ -17,7 +39,7 @@ classdef const < mbdyn.pre.drive
         
         function str = generateOutputString (self)
             
-            str = sprintf ('const, %g', self.value);
+            str = sprintf ('const, %s', self.formatNumber (self.value));
             
         end
         
