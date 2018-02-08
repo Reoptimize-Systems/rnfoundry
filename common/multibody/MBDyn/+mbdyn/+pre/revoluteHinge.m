@@ -4,6 +4,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
     properties (GetAccess = public, SetAccess = protected)
         frictionRadius;
         frictionModel;
+        frictionShapeFcn;
         preload;
     end
     
@@ -64,9 +65,16 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             %
             %  'InitialTheta' - 
             %
-            %  'Friction' - 
+            %  'FrictionRadius' - Supplying this value indicates that a
+            %    friction model is to be applied to the joint. If supplying
+            %    this, you must also supply the 'FrictionModel' and
+            %    'ShapeFunction' options, and may also optionally supply
+            %    the 'Preload' option. The friction radius is the average
+            %    radius at which to apply friction.
             %
-            %  'Preload'' - 
+            %  'FrictionModel' - 
+            %
+            %  'Preload' - 
             %
             %  'ShapeFunction' - 
             %  
@@ -103,9 +111,13 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             if ~isempty (options.FrictionRadius)
                 if isempty (options.FrictionModel)
-                    error ('If supplying a friction radius, you must also supply a friction model');
+                    error ('If supplying a friction radius, you must also supply a friction model (FrictionModel option)');
                 end
                 self.checkNumericScalar (options.FrictionRadius, true, 'FrictionRadius')
+                
+                if isempty (options.ShapeFunction)
+                    error ('If supplying a friction radius, you must also supply a friction shape function (ShapeFunction option)');
+                end
                 
                 if ~isempty (options.Preload)
                     self.checkNumericScalar (options.Preload, true, 'Preload');
@@ -115,7 +127,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             if ~isempty (options.FrictionModel)
                 if isempty (options.FrictionRadius)
-                    error ('If supplying a friction model, you must also supply a friction radius');
+                    error ('If supplying a friction model, you must also supply a friction radius (FrictionRadius option)');
                 end
                 assert (isa (options.FrictionModel, 'mbdyn.pre.frictionModel'), ...
                     'Supplied FrictionModel is not an mbdyn.pre.frictionModel object (or derived class)');
@@ -123,6 +135,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             self.frictionRadius = options.FrictionRadius;
             self.frictionModel = options.FrictionModel;
+            self.frictionShapeFcn = options.ShapeFunction;
             
             self.type = 'revolute hinge';
             
@@ -134,34 +147,32 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
             
-%             out = self.makeCellIfNot (self.relativeOffset1);
             str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset1Reference, self.relativeOffset1), 3, true);
             
             if ~isempty (self.relativeOrientation1)
-%                 out = self.makeCellIfNot (self.relativeOrientation1);
                 str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation1Reference, self.relativeOrientation1), 3, true);
             end
             
             str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, true, 'node 2 label');
             
-%             out = self.makeCellIfNot (self.relativeOffset2);
             addcomma = ~isempty (self.relativeOrientation2);
             str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset2Reference, self.relativeOffset2), 3, addcomma);
             
             addcomma = ~isempty (self.frictionRadius);
             if ~isempty (self.relativeOrientation2)
-%                 out = self.makeCellIfNot (self.relativeOrientation2);
                 str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation2Reference, self.relativeOrientation2), 3, addcomma);
             end
             
             if ~isempty (self.frictionRadius)
-                str = self.addOutputLine (str, self.commaSepList ('friction', self.frictionRadius), 3, true);
+                str = self.addOutputLine (str, self.commaSepList ('friction', self.frictionRadius), 3, true, 'friction radius');
                 
                 if ~isempty (self.preload)
-                    str = self.addOutputLine (str, self.commaSepList ('preload', self.frictionRadius), 4, true);
+                    str = self.addOutputLine (str, self.commaSepList ('preload', self.preload), 4, true, 'friction preload');
                 end
                 
-                str = self.addOutputLine (str, self.frictionModel.generateOutputString (), 4, false);
+                str = self.addOutputLine (str, self.frictionModel.generateOutputString (), 4, true, 'friction model');
+                
+                str = self.addOutputLine (str, self.frictionShapeFcn.generateOutputString (), 4, false, 'friction shape function');
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
