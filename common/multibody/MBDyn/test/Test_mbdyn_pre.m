@@ -306,9 +306,12 @@ jnt.generateOutputString ()
 sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 
-friction_fcn = mbdyn.pre.constScalarFunction ('jimbob', tau);
+friction_fcn = mbdyn.pre.constScalarFunction ('constant roller bearing', 0.0018);
 
-friction = mbdyn.pre.discreteCoulombFriction (friction_fcn);
+friction_model = mbdyn.pre.discreteCoulombFriction (friction_fcn);
+friction_radius = 1;
+radius = friction_radius;
+shp = mbdyn.pre.simpleShape ();
 
 revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
                                      [0;0;0], [0;0;0], ...
@@ -318,9 +321,29 @@ revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
                                      'Orientation1Reference', 'node', ...
                                      'RelativeOrientation2', mbdyn.pre.orientmat ('eye'), ...
                                      'Orientation2Reference', 'other node', ...
-                                     'FrictionRadius', 1, ...
-                                     'FrictionModel', friction ...
+                                     'FrictionRadius', friction_radius, ...
+                                     'FrictionModel', friction_model ...
+                                     , 'ShapeFUnction', shp ...
                                    );
+                               
+revhinge.generateOutputString ()
+
+%%
+preload = 1;
+revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
+                                     [0;0;0], [0;0;0], ...
+                                     'Offset1Reference', 'node', ...
+                                     'Offset2Reference', 'other node', ...
+                                     'RelativeOrientation1', mbdyn.pre.orientmat ('eye'), ...
+                                     'Orientation1Reference', 'node', ...
+                                     'RelativeOrientation2', mbdyn.pre.orientmat ('eye'), ...
+                                     'Orientation2Reference', 'other node', ...
+                                     'FrictionRadius', friction_radius, ...
+                                     'FrictionModel', friction_model ...
+                                     , 'Preload', preload ...
+                                   );
+                               
+
                                
 revhinge.generateOutputString ()
                                  
@@ -795,7 +818,7 @@ tf.generateOutputString ()
 
 %% simpleShape
 
-shp = mbdyn.pre.simpleShape ()
+shp = mbdyn.pre.simpleShape ();
 
 shp.generateOutputString ()
 
@@ -820,4 +843,32 @@ x = mbdyn.pre.discreteCoulombFriction (friction_fcn);
 
 x.generateOutputString ()
 
+
+%% angularVelocity
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+w = 1;
+drv = mbdyn.pre.const (w);
+rotaxis = [1;0;0];
+
+av = mbdyn.pre.angularVelocity ( sn1, rotaxis, drv );
+
+av.generateOutputString ()
+
+
+%% rampDrive
+
+rd = mbdyn.pre.rampDrive (1, 2, 4, 10);
+
+rd.generateOutputString ()
+
+rd = mbdyn.pre.rampDrive (1, 'forever', 4, 10);
+
+rd.generateOutputString ()
+
+%% stringDrive
+
+sd = mbdyn.pre.stringDrive ('5 * Var');
+
+sd.generateOutputString ()
 
