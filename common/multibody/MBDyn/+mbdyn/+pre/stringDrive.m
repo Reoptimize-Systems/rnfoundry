@@ -41,6 +41,7 @@ classdef stringDrive < mbdyn.pre.drive
             end
             
             self.string = string;
+            self.type = 'string';
                 
         end
         
