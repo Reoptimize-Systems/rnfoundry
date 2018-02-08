@@ -70,7 +70,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             %    to define a point in the reference frame of the node,
             %    and 'local', which is the same as 'node'.
             %
-            %  'NodeOrientationReference' - string defining the reference frame
+            %  'NodeRelativeOrientationReference' - string defining the reference frame
             %    in which the orientation of the joint relative to the node
             %    (see NodeRelativeOrientation above) is defined. By default
             %    this is 'global'. Other possibilities are 'node', to
@@ -94,7 +94,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             options.NodeRelativeOrientation = [];
             options.InitialTheta = [];
             options.NodeOffsetReference = 'global';
-            options.NodeOrientationReference = 'global';
+            options.NodeRelativeOrientationReference = 'global';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -108,13 +108,13 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             self.checkOrientationMatrix (options.NodeRelativeOrientation, true, 'NodeRelativeOrientation');
             self.checkOrientationMatrix (options.PinOrientation, true, 'PinOrientation');
             self.checkNodeReferenceType (options.NodeOffsetReference, true, 'NodeOffsetReference');
-            self.checkNodeReferenceType (options.NodeOrientationReference, true, 'NodeOrientationReference');
+            self.checkNodeReferenceType (options.NodeRelativeOrientationReference, true, 'NodeRelativeOrientationReference');
 
             self.relativeOffset = relative_offset;
             self.relativeOffsetReference = options.NodeOffsetReference;
             
             self.nodeRelativeOrientation = options.NodeRelativeOrientation;
-            self.nodeRelativeOrientationReference = options.NodeOrientationReference;
+            self.nodeRelativeOrientationReference = options.NodeRelativeOrientationReference;
 
             self.pinPosition = absolute_pin_position;
             self.absolutePinOrientation = options.PinOrientation;
@@ -128,8 +128,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             str = generateOutputString@mbdyn.pre.singleNodeJoint(self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, true, 'node label');
-            
-%             out = self.makeCellIfNot (self.relativeOffset);
+
             str = self.addOutputLine ( str, ...
                                        self.commaSepList ( 'position', ...
                                                            'reference', ...
@@ -140,7 +139,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
                                        'node relative position' );
             
             if ~isempty (self.nodeRelativeOrientation)
-%                 out = self.makeCellIfNot (self.nodeRelativeOrientation);
+                
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'orientation', ...
                                                                'reference', ...
@@ -149,6 +148,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
                                            3, ...
                                            true, ...
                                            'node relative orientation' );
+                                       
             end
             
             out = self.makeCellIfNot (self.pinPosition);
