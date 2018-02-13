@@ -6,8 +6,12 @@ function hfig = tightfig(hfig)
 % axes if necessary. If any 3D axes are present which have been zoomed,
 % tightfig will produce an error, as these cannot easily be dealt with.
 % 
+% Input
+%
 % hfig - handle to figure, if not supplied, the current figure will be used
-% instead.
+%   instead.
+%
+%
 
     if nargin == 0
         hfig = gcf;
@@ -24,6 +28,9 @@ function hfig = tightfig(hfig)
     % get all the axes handles note this will also fetch legends and
     % colorbars as well
     hax = findall(hfig, 'type', 'axes');
+    % TODO: fix for modern matlab, colorbars and legends are no longer axes
+    hcbar = findall(hfig, 'type', 'colorbar');
+    hleg = findall(hfig, 'type', 'legend');
     
     % get the original axes units, so we can change and reset these again
     % later
@@ -32,15 +39,47 @@ function hfig = tightfig(hfig)
     % change the axes units to cm
     set(hax, 'Units', 'centimeters');
     
+    pos = [];
+    ti = [];
+    
     % get various position parameters of the axes
     if numel(hax) > 1
 %         fsize = cell2mat(get(hax, 'FontSize'));
         ti = cell2mat(get(hax,'TightInset'));
-        pos = cell2mat(get(hax, 'Position'));
+        pos = [pos; cell2mat(get(hax, 'Position')) ];
     else
 %         fsize = get(hax, 'FontSize');
         ti = get(hax,'TightInset');
-        pos = get(hax, 'Position');
+        pos = [pos; get(hax, 'Position') ];
+    end
+    
+    if ~isempty (hcbar)
+        
+        set(hcbar, 'Units', 'centimeters');
+        
+        % colorbars do not have tightinset property
+        for cbind = 1:numel(hcbar)
+            %         fsize = cell2mat(get(hax, 'FontSize'));
+            [cbarpos, cbarti] = colorbarpos (hcbar);
+
+            pos = [pos; cbarpos];
+            ti = [ti; cbarti];
+        end
+    end
+    
+    if ~isempty (hleg)
+        
+        set(hleg, 'Units', 'centimeters');
+        
+        % legends do not have tightinset property
+        if numel(hleg) > 1
+            %         fsize = cell2mat(get(hax, 'FontSize'));
+            pos = [pos; cell2mat(get(hleg, 'Position')) ];
+        else
+            %         fsize = get(hax, 'FontSize');
+            pos = [pos; get(hleg, 'Position') ];
+        end
+        ti = [ti; repmat([0,0,0,0], numel(hleg), 1); ];
     end
     
     % ensure very tiny border so outer box always appears
@@ -89,6 +128,18 @@ function hfig = tightfig(hfig)
         
     end
     
+    for i = 1:numel(hcbar)
+        
+        set(hcbar(i), 'Position', [pos(i+numel(hax),1:2) - [moveleft,movedown], pos(i+numel(hax),3:4)]);
+        
+    end
+    
+    for i = 1:numel(hleg)
+        
+        set(hleg(i), 'Position', [pos(i+numel(hax)+numel(hcbar),1:2) - [moveleft,movedown], pos(i+numel(hax)+numel(hcbar),3:4)]);
+        
+    end
+    
     origfigunits = get(hfig, 'Units');
     
     set(hfig, 'Units', 'centimeters');
@@ -117,4 +168,66 @@ function hfig = tightfig(hfig)
     
 %      set(hfig, 'WindowStyle', origwindowstyle);
      
+end
+
+
+function [pos, ti] = colorbarpos (hcbar)
+
+    % 1 point is 0.3528 mm
+    
+    pos = hcbar.Position;
+    ti = [0,0,0,0];
+    
+    if ~isempty (strfind (hcbar.Location, 'outside'))
+
+        if strcmp (hcbar.AxisLocation, 'out')
+            
+            tlabels = hcbar.TickLabels;
+            
+            fsize = hcbar.FontSize;
+            
+            switch hcbar.Location
+                
+                case 'northoutside'
+                    
+                    % make exta space a little more than the font size/height
+                    ticklablespace_cm = 1.1 * (0.3528/10) * fsize;
+                    
+                    ti(4) = ti(4) + ticklablespace_cm;
+                    
+                case 'eastoutside'
+                    
+                    maxlabellen = max ( cellfun (@numel, tlabels, 'UniformOutput', true) );
+            
+                    % 0.62 factor is arbitrary and added because we don't
+                    % know the width of every character in the label, the
+                    % fsize refers to the height of the font
+                    ticklablespace_cm = (0.3528/10) * fsize * maxlabellen * 0.62;
+
+                    ti(3) = ti(3) + ticklablespace_cm;
+                    
+                case 'southoutside'
+                    
+                    % make exta space a little more than the font size/height
+                    ticklablespace_cm = 1.1 * (0.3528/10) * fsize;
+
+                    ti(2) = ti(2) + ticklablespace_cm;
+                    
+                case 'westoutside'
+                    
+                    maxlabellen = max ( cellfun (@numel, tlabels, 'UniformOutput', true) );
+            
+                    % 0.62 factor is arbitrary and added because we don't
+                    % know the width of every character in the label, the
+                    % fsize refers to the height of the font
+                    ticklablespace_cm = (0.3528/10) * fsize * maxlabellen * 0.62;
+
+                    ti(1) = ti(1) + ticklablespace_cm;
+                    
+            end
+            
+        end
+        
+    end
+
 end
