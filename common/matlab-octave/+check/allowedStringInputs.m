@@ -1,5 +1,5 @@
 function ok = allowedStringInputs (input, allowedstrs, throw, inputname)
-% checks is string is one of a set of allowed values
+% checks if string is one of a set of allowed values
 %
 % Syntax
 %
@@ -12,7 +12,7 @@ function ok = allowedStringInputs (input, allowedstrs, throw, inputname)
 %    compared to the list of valid strings in allowedstrs.
 %
 %  allowedstrs - cell string array of valid strings for comparison with
-%  mminput.
+%    the string provided in input.
 %
 %  throw - logical flag determining whether an error is thrown by
 %    checkOrientationDescription if input fails check
