@@ -16,6 +16,144 @@ classdef initialValueProblem < mbdyn.pre.problem
     methods
         
         function self = initialValueProblem (itime, ftime, tstep, varargin)
+            % constructs an mbdyn.pre.initialValueProblem object
+            %
+            % Syntax
+            %
+            % ivp = mbdyn.pre.initialValueProblem (itime, ftime, tstep)
+            % ivp = mbdyn.pre.initialValueProblem (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % mbdyn.pre.initialValueProblem creates an initial value
+            % problem description object for use in setting up an MBDyn
+            % multibody simulation. This solves initial value problems by
+            % means of generic integration schemes that can be cast in a
+            % broad family of multistep and, experimentally, Implicit Runge
+            % Kutta-like schemes. For more details on any of the input
+            % options described below, see the corresponding section of the
+            % MBDyn manual.
+            %
+            % Input
+            %
+            %  itime - intial time of simulation
+            %
+            %  ftime - final time of simulation
+            %
+            %  tstep - The initial time step. This value is used throughout
+            %   the simulation unless some variable time step strategy is
+            %   defined (not currently implemented in this matlab
+            %   interface).
+            %
+            % Additional optional inputs may be specified using
+            % parameter-value pairs. The avaialable options are:
+            %
+            %  'MaxIterations' - Number of iterations to attempt without
+            %    passing the convergence test before erroring out
+            %
+            %  'ResidualTolerance' - the tolerance used for the residual
+            %    test.
+            %
+            %  'SolutionTolerance' - A tolerance to test the solution (the
+            %    difference between the states at two iterations)
+            %
+            %  'Method' - cell array containing the time stepping method
+            %    settings. See the MBDyn manual for more information on the
+            %    various options. The following options are possible:
+            %
+            %    crank nicolson 
+            %
+            %    In this case Method must be a scalar cell array containing
+            %    just the string 'crank nicolson'.
+            %
+            %    ms | hope
+            %
+            %    Method must be a cell array of length 2 or three. The
+            %    first element must be either the string 'ms' or the string
+            %    'hope' The second element must be an mbdyn.pre.drive
+            %    object which returns the differential_radius of the
+            %    algorithm. The optional third cell is also an
+            %    mbdyn.pre.drive which returns the algebraic_radius of the
+            %    algorithm
+            %
+            %    third order
+            %
+            %    Method must a cell array of length 2. The fisrt cell must
+            %    contain the string 'third order'. The second must contain
+            %    either the string 'ad hoc' or an mbdyn.pre.drive object
+            %    which returns the differential_radius of the algorithm.
+            %
+            %    bdf
+            %
+            %    Method must be a cell array of length 1 or 3. The first
+            %    cell must contain the sting 'bdf', If the second and thrid
+            %    cell are supplied, they must be the string 'order' and a
+            %    scalar integer giving the order of the algorithm.
+            %    
+            %    implicit euler
+            %
+            %    In this case Method must be a scalar cell array containing
+            %    just the string 'implicit euler'
+            %
+            %  'DerivativesTolerance' - Right after the initial assembly
+            %    and before the simulation starts, the so-called
+            %    derivatives solution is performed. The system is solved
+            %    with the kinematic unknowns constrained, in order to
+            %    properly determine the dynamic unknowns, namely momenta
+            %    and constraint reactions. For this purpose, the
+            %    coefficient that relates the state perturbation to the
+            %    derivative perturbation must be set to a value that is
+            %    small enough to allow the determination of accurate
+            %    derivatives with very small change in the states. This
+            %    coefficient should be zero, but this leads to matrix
+            %    singularity, so it must be chosen by the user, since it is
+            %    highly problem dependent. A rule-of-thumb is: if the
+            %    system has small stiffness and high inertia, the
+            %    coefficient can be big, if the system has high stiffness
+            %    and small inertia, the coefficient must be small.
+            %
+            %    The derivatives solution is always performed and cannot be
+            %    disabled. If for any reason it does not converge, to
+            %    practically disable it one can set a very large tolerance.
+            %    Subsequent time steps may start with a less than ideal
+            %    initialization, resulting in a rough transient.
+            %
+            %  'Output' - Cell array of strings requesting special output
+            %    related to the solution phase. The following strings may
+            %    be supplied: 'iterations', 'residual', 'solution',
+            %    'jacobian matrix', 'messages', 'counter', 'bailout',
+            %    'matrix condition number', 'solver condition number', 'cpu
+            %    time', 'none'. The keyword 'counter' logs on the standard
+            %    output a string that summarizes the statistics of the time
+            %    step just completed. By default it is off; the same
+            %    information, by default, is logged in the .out file. The
+            %    keyword 'iterations' logs on stdout a detailed output of the
+            %    error at each iteration inside a time step. The keywords
+            %    'residual', 'solution' and 'jacobian matrix' log to stdout the
+            %    residual, the solution and the Jacobian matrix; they are
+            %    mainly intended for last resort debugging purposes, as the
+            %    output can be extremely verbose. The item messages refers
+            %    to all messaging on the .out file; by default, it is on.
+            %    The special item 'bailout' instructs the solver to output
+            %    the residual (as with residual) only in case of no
+            %    convergence, before bailing out. The special item 'none'
+            %    clears the output flags; the items are additive, so, for
+            %    instance, to clear out the default and add the iterations
+            %    output, use: {'none', 'iterations'}
+            %
+            %  'NonlinearSolver' - mbdyn.pre.nonlinearSolver object,
+            %    defining the nonlinear solver method to use.
+            %
+            %  'LinearSolver' - mbdyn.pre.linearSolver object defining the
+            %    nonlinear solver to use
+            %
+            % Output
+            %
+            %  ivp - mbdyn.pre.initialValueProblem object
+            %
+            %
+            % See Also: mbdyn.pre.system
+            %
             
             options.MaxIterations = 20;
             options.ResidualTolerance = 1e-9;
