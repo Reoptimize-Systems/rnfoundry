@@ -11,7 +11,7 @@ classdef scalarFunction < mbdyn.pre.base
             % base class for scalar function objects
             
             assert (ischar (name), 'name should be a char array');
-            assert (ischar (fcnType), 'name should be a char array');
+            assert (ischar (fcnType), 'fcnType should be a char array');
             
             self.type = 'scalar function';
             self.name = name;
