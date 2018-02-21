@@ -36,7 +36,7 @@ classdef externalStructuralForce < mbdyn.pre.force
             
             options = parse_pv_pairs (options, varargin);
             
-            self.type = 'external structural';
+            self.subType = 'external structural';
             
             if ~isempty (options.ReferenceNode)
                 self.checkIsStructuralNode (options.ReferenceNode, true);
@@ -183,7 +183,7 @@ classdef externalStructuralForce < mbdyn.pre.force
                 str = self.addOutputLine (str, self.commaSepList ('echo', ['"', self.echo, '"']), 2, false, 'echo output to file');
             end
             
-            str = self.addOutputLine (str, ';', 1, false, sprintf ('end %s', self.type));
+            str = self.addOutputLine (str, ';', 1, false, sprintf ('end %s', self.subType));
             
         end
         

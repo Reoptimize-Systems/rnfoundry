@@ -2,7 +2,7 @@ classdef force < mbdyn.pre.element
     
     
     properties (GetAccess = public, SetAccess = protected)
-       
+        subType;
     end
     
     properties (GetAccess = protected, SetAccess = protected)
@@ -11,13 +11,14 @@ classdef force < mbdyn.pre.element
     
     methods
         
-%         function self = force ()
-%             
-%             
-%         end
+        function self = force ()
+            
+            self.type = 'force';
+            
+        end
 
         function str = generateOutputString (self)
-            str = sprintf ('    force : %d, %s,', self.label, self.type);
+            str = sprintf ('    %s : %d,', self.type, self.label);
         end
         
         function setSize (self, sx, sy, sz)

@@ -118,6 +118,7 @@ classdef structuralForce < mbdyn.pre.force
                         
             end
             
+            self.subType = 'structural';
             self.force = force_value;
             self.moment = options.MomentValue;
             self.forceType = force_type;

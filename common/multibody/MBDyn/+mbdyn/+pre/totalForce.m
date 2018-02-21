@@ -42,7 +42,7 @@ classdef totalForce < mbdyn.pre.structuralForce
             self.force = options.Force;
             self.moment = options.Moment;
             
-            self.type = 'total';
+            self.subType = 'total';
             
         end
         
