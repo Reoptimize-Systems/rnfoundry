@@ -13,6 +13,9 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
         offset2Reference;
         orientation2Reference;
         
+        node1FrameRelativeOrientation;
+        node2FrameRelativeOrientation;
+        
     end
     
     properties (Dependent)
@@ -41,11 +44,12 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
             % call the superclass constructor
             self = self@mbdyn.pre.twoNodeJoint (node1, node2);
             
-            allowedrefstrs = {'global', 'node', 'local', 'other position', 'other node'};
-            self.checkAllowedStringInputs ( options.Offset1Reference, allowedrefstrs, true, 'Offset1Reference');
-            self.checkAllowedStringInputs ( options.Offset2Reference, allowedrefstrs, true, 'Offset2Reference');
-            self.checkAllowedStringInputs ( options.Orientation1Reference, allowedrefstrs, true, 'Orientation1Reference');
-            self.checkAllowedStringInputs ( options.Orientation2Reference, allowedrefstrs, true, 'Orientation2Reference');
+            allowedposrefstrs = {'global', 'node', 'local', 'other position', 'other node'};
+            allowedorientrefstrs = {'global', 'node', 'local', 'other orientation', 'other node'};
+            self.checkAllowedStringInputs ( options.Offset1Reference, allowedposrefstrs, true, 'Offset1Reference');
+            self.checkAllowedStringInputs ( options.Offset2Reference, allowedposrefstrs, true, 'Offset2Reference');
+            self.checkAllowedStringInputs ( options.Orientation1Reference, allowedorientrefstrs, true, 'Orientation1Reference');
+            self.checkAllowedStringInputs ( options.Orientation2Reference, allowedorientrefstrs, true, 'Orientation2Reference');
             self.checkCartesianVector (options.RelativeOffset1, true, 'RelativeOffset1');
             self.checkCartesianVector (options.RelativeOffset2, true, 'RelativeOffset2');
             self.checkOrientationMatrix (options.RelativeOrientation1, true, 'RelativeOrientation1');
@@ -59,6 +63,68 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
             self.orientation1Reference = options.Orientation1Reference;
             self.offset2Reference = options.Offset2Reference;
             self.orientation2Reference = options.Orientation2Reference;
+            
+            
+            ref_node1 = self.node1.reference ();
+            ref_node2 = self.node2.reference ();
+            
+            switch self.orientation1Reference
+                
+                case {'node', 'local'}
+                    % orientation in reference frame of node 1 is what is
+                    % specified in relativeOrientation1 property
+                    self.node1FrameRelativeOrientation = self.relativeOrientation1;
+
+                case {'other node', 'other orientation'}
+                    % convert position etc. of node2 in global frame to
+                    % position in the relative frame of node_1
+                    [~, dorientm, ~, ~] = ref_node1.convertGlobal ( ref_node2.pos, ...
+                                                                    ref_node2.orientm, ...
+                                                                    ref_node2.vel, ...
+                                                                    ref_node2.omega );
+                    self.node1FrameRelativeOrientation = dorientm;
+                    
+                case  {'global', ''}
+                    
+                    [~, dorientm, ~, ~] = ref_node1.convertGlobal ( ref_node1.pos, ...
+                                                                    self.relativeOrientation1, ...
+                                                                    ref_node1.vel, ...
+                                                                    ref_node1.omega );
+                    self.node1FrameRelativeOrientation = dorientm;
+                    
+                otherwise
+                    error ('Unrecognised reference type');
+                    
+            end
+            
+            switch self.orientation2Reference
+                
+                case {'node', 'local'}
+                    % orientation in reference frame of node 1 is what is
+                    % specified in relativeOrientation1 property
+                    self.node2FrameRelativeOrientation = self.relativeOrientation2;
+
+                case {'other node', 'other orientation'}
+                    % convert position etc. of node2 in global frame to
+                    % position in the relative frame of node_1
+                    [~, dorientm, ~, ~] = ref_node2.convertGlobal ( ref_node1.pos, ...
+                                                                    ref_node1.orientm, ...
+                                                                    ref_node1.vel, ...
+                                                                    ref_node1.omega );
+                    self.node2FrameRelativeOrientation = dorientm;
+                    
+                case  {'global', ''}
+                    
+                    [~, dorientm, ~, ~] = ref_node2.convertGlobal ( ref_node2.pos, ...
+                                                                    self.relativeOrientation2, ...
+                                                                    ref_node2.vel, ...
+                                                                    ref_node2.omega );
+                    self.node2FrameRelativeOrientation = dorientm;
+                    
+                otherwise
+                    error ('Unrecognised reference type');
+                    
+            end
             
         end
         
@@ -82,7 +148,7 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
                 
                 case {'node', 'local'}
                     orientref = self.node1.reference ();
-                case {'other node', 'other position'}
+                case {'other node', 'other orientation'}
                     orientref = self.node2.reference ();
                 case  {'global', ''}
                     orientref = mbdyn.pre.globalref ();
