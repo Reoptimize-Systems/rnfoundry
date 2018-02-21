@@ -15,7 +15,8 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             %
             % Syntax
             %
-            %  rh = revoluteHinge (node1, node2, position1, position2, 'Parameter', value)
+            %  rh = revoluteHinge (node1, node2, position1, position2)
+            %  rh = revoluteHinge (..., 'Parameter', value)
             %
             % Input
             %
@@ -44,7 +45,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             %    frame can be provided using this argument. Possible
             %    value for this are: 
             %      'node'          : the default behaviour
-            %      'global' -      : the global reference frame
+            %      'global'        : the global reference frame
             %      'other node'    : the frame of the other node the joint  
             %                        is attached to
             %      'other position': a relative position in the other 
@@ -55,13 +56,29 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             %  'Offset2Reference' - same as Offset1Reference, but for the
             %    second node
             %
-            %  'RelativeOrientation1' - 
+            %  'RelativeOrientation1' - mbdyn.pre.orientmat object
+            %    containing the orientation of the joint relative to the
+            %    first node. To provide an alternative reference you can
+            %    use the optional Orientation1Reference parameter (see
+            %    below)
             %
-            %  'RelativeOrientation2' - 
+            %  'RelativeOrientation2' - mbdyn.pre.orientmat object
+            %    containing the orientation of the joint relative to the
+            %    second node. To provide an alternative reference you can
+            %    use the optional Orientation2Reference parameter (see
+            %    below)
             %
-            %  'Orientation1Reference' = 'node';
+            %  'Orientation1Reference' - string containing a reference for
+            %    the orientation in RelativeOrientation1, can be one of
+            %    'node', 'local' (equivalent to 'node'), 'other node',
+            %    'other orientation' and 'global'. Defaut is 'node'. See
+            %    Offset1Reference above for more information.
             %
-            %  'Orientation2Reference' - 
+            %  'Orientation2Reference' - string containing a reference for
+            %    the orientation in RelativeOrientation2, can be one of
+            %    'node', 'local' (equivalent to 'node'), 'other node',
+            %    'other orientation' and 'global'. Defaut is 'node'. See
+            %    Offset1Reference above for more information.
             %
             %  'InitialTheta' - 
             %
