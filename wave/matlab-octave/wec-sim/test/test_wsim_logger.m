@@ -74,6 +74,44 @@ end
 
 lgr.setDefaultDesc('Subject ID');
 
+info = lgr.getInfo ({'weight', 'in'});
+
+try
+    info = lgr.getInfo ('fjdsaf');
+catch
+    fprintf ('bad variable name caught by getInfo\n');
+end
+
+%%
+lgr.setSeries ('inertia', lgr.data.('inertia') .* 10);
+
+%%
+try
+    lgr.setSeries ('inertia', lgr.data.('weight') .* 10);
+catch me
+    fprintf ('bad variable size caught by setSeries, error message: \n%s\n', me.message);
+end
+
+%%
+
+lgr.addVariable ( 'test1', [1,2], ...
+                  'Description', 'test for setSeries without indep var', ...
+                  'PreallocateStorage', n_max );
+
+lgr.setSeries ('test1', repmat ([1,1], [20, 1]));
+
+try
+    lgr.setSeries ('test1', repmat ([1,1,1], [20, 1]));
+catch me
+    fprintf ('bad variable size caught by setSeries, error message: \n%s\n', me.message);
+end
+
+try
+    lgr.setSeries ('test1', repmat ([1,1,1; 1,1,1], [1, 1, 20]));
+catch me
+    fprintf ('bad variable size caught by setSeries, error message: \n%s\n', me.message);
+end
+
 % 
 % % Plot several variables from the logger object.
 % figure; lgr.plot2Vars('weight','height','LineWidth', 2, 'Color','r'); 

@@ -125,7 +125,7 @@ classdef externalStructuralForce < mbdyn.pre.force
         
         function str = generateOutputString (self)
             
-            str = generateOutputString@mbdyn.pre.force (self);
+            str = sprintf ('%s %s,', generateOutputString@mbdyn.pre.force (self), self.subType);
             
             str = self.addOutputLine (str, self.communicator.generateOutputString (), 2, true);
             
