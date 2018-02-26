@@ -16,7 +16,7 @@ classdef twoNodeForce < mbdyn.mint.base
                 error ('reference_node must be an mbdyn.pre.structuralNode or an integer indicating the node label')
             end
             
-            if ~ ( isa (reference_node, 'mbdyn.pre.structuralNode') ...
+            if ~ ( isa (other_node, 'mbdyn.pre.structuralNode') ...
                     || mbdyn.pre.base.checkScalarInteger (other_node, false) )
                 error ('other_node must be an mbdyn.pre.structuralNode or an integer indicating the node label')
             end
