@@ -308,26 +308,6 @@ while status == 0
 
     forces (:,:,ind) = hydroforces;
     
-% 	% calculate spring damping PTO force here
-%     xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-%     vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-% 
-%     xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-%     vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
-%     
-%     % velocities and displacements are the z components of the vectors in
-%     % the pto coordinate system
-%     xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-%     vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
-%     
-%     ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
-%     
-%     FptoVec = om.orientationMatrix * [0; 0; -ptoforce(ind)];
-%     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * om.orientationMatrix)' ;
-%     
-%     forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-%     forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
-    
     [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.force ();
     
     forces (1:3,1,ind) = forces (1:3,1,ind) + Fpto(:,1);
@@ -338,20 +318,7 @@ while status == 0
 	mb.F (forces(1:3,:,ind));
     mb.M (forces(4:6,:,ind));
     
-%     f = dir([ outputfile_prefix, '.out']);
-%     outsize = f.bytes;
-    
     mbconv = mb.applyForcesAndMoments (false);
-    
-%     pause (1);
-%     
-%     f = dir([ outputfile_prefix, '.out']);
-%     
-%     if outsize == f.bytes
-%         fprintf (1, 'outfile size did not change size at time t = %f\n', time(ind));
-%     end
-%     
-%     fprintf (1, '    time: %f, ind %d, mbconv: %d\n', time(ind), ind, mbconv);
 
     status = mb.GetMotion ();
     
@@ -386,25 +353,6 @@ while status == 0
     [newhydroforces, out] = hsys.hydroForces (time(ind), pos(:,:,ind), vel(:,:,ind), accel(:,:,ind));
 
     forces (:,:,ind) = newhydroforces;
-    
-% 	% calculate spring damping PTO force here
-%     xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-%     vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-% 
-%     xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-%     vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
-%     
-%     % velocities and displacements are the z components of the vectors in
-%     % the pto coordinate system
-%     xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-%     vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
-%     
-%     ptoforce(ind) = -k*xRpto(ind) - c*vRpto(ind);
-%     
-%     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))';
-%     
-%     forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-%     forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
 
     [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.force ();
     
@@ -418,8 +366,6 @@ while status == 0
 
     mbconv = mb.applyForcesAndMoments (false);
     
-%     fprintf (1, '    time: %f, mbconv: %d\n', time(ind), mbconv);
-    
     forcediff = abs (hydroforces - newhydroforces);
 
     maxforces = max(hydroforces, newhydroforces);
@@ -431,8 +377,6 @@ while status == 0
         || itercount < miniters ...
         || (max (forcediff(:)) > absforcetol) ...
         || (ind > 3 && (max (relforcediff(:)) > relforcetol))
-        
-%         fprintf (1, '    time: %f, ind: %d, iterating, mbconv: %d, iteration: %d\n', time(ind), ind, mbconv, itercount);
             
         hydroforces = newhydroforces;
         
@@ -457,24 +401,6 @@ while status == 0
 
         forces (:,:,ind) = newhydroforces;
 
-%         % calculate spring damping PTO force here
-%         xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-%         vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-%         
-%         xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-%         vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
-% 
-%         % velocities and displacements are the z components of the vectors in
-%         % the pto coordinate system
-%         xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-%         vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
-% 
-%         ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
-% 
-%         FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))' ;
-% 
-%         forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-%         forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
 
         [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] = pto.force ();
 
@@ -524,8 +450,6 @@ while status == 0
     mb.M (forces(4:6,:,ind));
 
     mbconv = mb.applyForcesAndMoments (true);
-    
-%     fprintf (1, 'time: %f, tind: %d, final status: %d\n', time(ind), ind, status);
 
     if plotvectors && time(ind) > 150
         
