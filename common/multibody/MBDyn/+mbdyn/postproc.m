@@ -408,6 +408,143 @@ classdef postproc < handle
             
         end
         
+        function hax = plotNodePositions (self, varargin)
+            % plot the positions of the nodes
+            %
+            % Syntax
+            %
+            % hax = plotNodePositions (mbp, 'Parameter', value, ...)
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            % Additional optional arguments may be supplied as
+            % parameter-value pairs. The available options are:
+            %
+            %  'Legend' - flag determining whether to add a legend to the
+            %    position plot. Default is true.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    position plot. Default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will have their positions plotted. By default all
+            %    node trajectories are plotted.
+            %
+            % Output
+            %
+            %  hax - handle to plot axes created
+            %
+            %
+            
+            options.Legend = true;
+            options.OnlyNodes = 1:self.nNodes;
+            options.Title = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            hax = plotNodeQuantity (self, 'Position', 'x_', ...
+                            'Legend', options.Legend, ...
+                            'OnlyNodes', options.OnlyNodes );
+            
+            if options.Title
+                title (sprintf ('Node position from results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
+            end
+            
+        end
+        
+        function hax = plotNodeVelocities (self, varargin)
+            % plot the velocities of the nodes
+            %
+            % Syntax
+            %
+            % hax = plotNodePositions (mbp, 'Parameter', value, ...)
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            % Additional optional arguments may be supplied as
+            % parameter-value pairs. The available options are:
+            %
+            %  'Legend' - flag determining whether to add a legend to the
+            %    velocity plot. Default is true.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    velocity plot. Default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will have their velocity plotted. By default all
+            %    node velocities are plotted.
+            %
+            % Output
+            %
+            %  hax - handle to plot axes created
+            %
+            %
+            
+            options.Legend = true;
+            options.OnlyNodes = 1:self.nNodes;
+            options.Title = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            hax = plotNodeQuantity (self, 'Velocity', 'v_', ...
+                            'Legend', options.Legend, ...
+                            'OnlyNodes', options.OnlyNodes );
+            
+            if options.Title
+                title (sprintf ('Node velocities from results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
+            end
+            
+        end
+        
+        function hax = plotNodeAngularVelocities (self, varargin)
+            % plot the angular velocities of the nodes
+            %
+            % Syntax
+            %
+            % hax = plotNodePositions (mbp, 'Parameter', value, ...)
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            % Additional optional arguments may be supplied as
+            % parameter-value pairs. The available options are:
+            %
+            %  'Legend' - flag determining whether to add a legend to the
+            %    angular velocity plot. Default is true.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    angular velocity plot. Default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will have their angular velocity plotted. By default
+            %    all node angular velocities are plotted.
+            %
+            % Output
+            %
+            %  hax - handle to plot axes created
+            %
+            %
+            
+            options.Legend = true;
+            options.OnlyNodes = 1:self.nNodes;
+            options.Title = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            hax = plotNodeQuantity (self, 'AngularVelocity', 'omega_', ...
+                            'Legend', options.Legend, ...
+                            'OnlyNodes', options.OnlyNodes );
+            
+            if options.Title
+                title (sprintf ('Node angular velocities from results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
+            end
+            
+        end
         
         function animate (self, varargin)
             % animate the nodes and bodies of the system
@@ -420,8 +557,8 @@ classdef postproc < handle
             %
             %  mbp - mbdyn.postproc object
             %
-            %  Addtional optional arguments are supplied as parameter-value
-            %  pairs. The available options are:
+            % Addtional optional arguments are supplied as parameter-value
+            % pairs. The available options are:
             %
             %  'PlotAxes' - handle to plot axes in which to draw the
             %    trajectories. If not supplied a new figure and axes are
@@ -502,7 +639,7 @@ classdef postproc < handle
 %                     end
                     
                     % clear the axes
-%                     cla (plotdata.HAx);
+                    cla (plotdata.HAx);
                 end
                 
                 plotdata = self.drawStep(tind, ...
@@ -877,12 +1014,99 @@ classdef postproc < handle
                 'EdgeAlpha', alph, 'EdgeColor', 'none');
             
         end
-%         
-%         
-%         function h = moveobj (self, h, pos, rot)
-%             
-%             
-%         end
+        
+        function hax = plotNodeQuantity (self, fieldname, legprefix, varargin)
+            % plot the positions of the nodes
+            %
+            % Syntax
+            %
+            % hax = plotNodePositions (mbp, 'Parameter', value, ...)
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  Addtional optional arguments are supplied as paramter-value
+            %  pairs. The avaialable options are:
+            %
+            %  'Legend' - flag determining whether to add a legend to the
+            %    position plot. Default is true.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    position plot. Default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will have their positions plotted. By default all
+            %    node trajectories are plotted.
+            %
+            % Output
+            %
+            %  hfig - handle to figure created
+            %
+            %  hax - handle to plot axes created
+            %
+            %
+            
+            options.Legend = true;
+            options.OnlyNodes = 1:self.nNodes;
+            options.Title = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            % don't repeat nodes
+            options.OnlyNodes = unique (options.OnlyNodes(:));
+            
+            if ~self.resultsLoaded
+                error ('No results have been loaded yet for plotting')
+            end
+            
+            hfig = figure;
+            hax = axes;
+            
+            ColOrd = get(hax,'ColorOrder');
+            [m,n] = size(ColOrd);
+
+            legstrings = {};
+            
+            nsteps = size (self.nodes.(self.nodeNames{1}).(fieldname)(:,1), 1);
+            
+            if ~isempty (self.preProcSystem)
+                
+                time = (1:nsteps)*self.preProcSystem.problems{1}.timeStep;
+                x_label = 'Time [s]';
+            else
+                time = 1:nsteps;
+                x_label = 'Step Number';
+            end
+                
+            
+            hold on;
+            for ind = 1:numel(options.OnlyNodes)
+                
+                ColOrd = circshift (ColOrd, 1, 1);
+                
+                Col = ColOrd(1,:);
+                
+                plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,1), 'LineStyle', '-', 'Color', Col );
+                plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,2), 'LineStyle', '--', 'Color', Col );
+                plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,3), 'LineStyle', ':', 'Color', Col );
+                    
+                legstrings = [ legstrings, { sprintf('Node %d %sx', options.OnlyNodes(ind), legprefix), ...
+                                             sprintf('Node %d %sy', options.OnlyNodes(ind), legprefix), ...
+                                             sprintf('Node %d %sz', options.OnlyNodes(ind), legprefix) ...
+                                           } ...
+                             ];
+                    
+            end
+            hold off
+            
+            xlabel (x_label);
+            
+            if options.Legend
+                legend (hax, legstrings, 'Interpreter', 'none');
+            end
+            
+        end
 
     end
     
