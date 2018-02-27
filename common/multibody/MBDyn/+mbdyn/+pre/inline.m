@@ -1,13 +1,5 @@
 classdef inline < mbdyn.pre.twoNodeJoint
-    % Forces a point relative to the second node to move along a line
-    % attached to the first node
-    %
-    % A point, optionally offset by relative_offset from the position of
-    % node node_2_label, slides along a line that passes through a point
-    % that is rigidly offset by relative_line_position from the position of
-    % node_1_label, and is directed as direction 3 of relative orientation.
-    
-    
+
     properties (GetAccess = public, SetAccess = protected)
         
         relativeLinePosition;
@@ -22,6 +14,70 @@ classdef inline < mbdyn.pre.twoNodeJoint
     methods
         
         function self = inline (node1, node2, varargin)
+            % constructor for inline joint
+            %
+            %
+            % Syntax
+            %
+            % inlobj = inline (node1, node2)
+            % inlobj = inline (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % Joint which forces a point relative to the second node to
+            % move along a line attached to the first node.
+            %
+            % A point, optionally offset from the position of the second
+            % node, slides along a line that passes through a point that is
+            % rigidly offset from the position of node 1, and is directed
+            % as direction 3 of an orientation relative to node 1. See the
+            % description of the joint in the MBDyn manual for more
+            % information.
+            %
+            % Input
+            %
+            %  node1 - mbdyn.pre.structuralNode6Dof object
+            %
+            %  node2 - mbdyn.pre.structuralNode6Dof object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'RelativeLinePosition' - optional (3 x 1) vector giving the
+            %    relative offset of the line from node 1.
+            %
+            %  'RelativeOrientation' - optional mbdyn.pre.orientmat object
+            %    giving the relative orientation of the line in the frame
+            %    of node 1. The line is parallel to axis three of the
+            %    resulting orientation.
+            %
+            %  'RelativeOffset' - optional (3 x 1) vector giving the
+            %    relative offset from node 2 of the point constrained to
+            %    move along the line.
+            %
+            %  'LinePositionReference' - optional string containing an
+            %    alternative reference for the RelativeLinePosition. Can be
+            %    one of 'global', 'node', 'local', other node', 'other
+            %    position'.
+            %
+            %  'OrientationReference' - optional string containing an
+            %    alternative reference for the RelativeOrientation. Can be
+            %    one of 'global', 'node', 'local', other node', 'other
+            %    orientation'.
+            %
+            %  'OffsetReference' - optional string containing an
+            %    alternative reference for the RelativeOffset. Can be one
+            %    of 'global', 'node', 'local', other node', 'other
+            %    position'.
+            %
+            % Output
+            %
+            %  inlobj - mbdyn.pre.inline object
+            %
+            %
+            %
+            % See Also: 
+            %
             
             options.RelativeLinePosition =  [];
             options.RelativeOrientation =  [];
