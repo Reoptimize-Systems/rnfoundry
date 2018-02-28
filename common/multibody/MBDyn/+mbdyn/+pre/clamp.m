@@ -26,6 +26,57 @@ classdef clamp < mbdyn.pre.singleNodeJoint
     methods
         
         function self = clamp (node, position, orientation, varargin)
+            % clamp joint constructor
+            %
+            % Syntax
+            %
+            % cl = clamp (node, position, orientation, varargin)
+            %
+            % Description
+            %
+            % mbdyn.pre.clamp is a joint which grounds all 6 degrees of
+            % freedom of a node in an arbitrary position and orientation
+            % that remains fixed.
+            %
+            % Input
+            %
+            %  node - mbdyn.pre.structuralNode object representing the node
+            %   to be clamped
+            %
+            %  position - either a string 'node', or a (3 x 1) vector. The
+            %   keyword 'node' forces the joint to use the node’s position.
+            %   Otherwise the vector contains the position in the absolute
+            %   frame in which the node is to be clamped. To specify an
+            %   alternative reference frame the PositionReference option
+            %   can be used (see below).
+            %
+            %  orientation - either a string 'node', or an
+            %   mbdyn.pre.orientmat object. The keyword 'node' forces the
+            %   joint to use the node’s orientation. Otherwise the
+            %   mbdyn.pre.orientmat object represents the orientation in
+            %   the absolute frame in which the node is to be clamped. To
+            %   specify an alternative reference frame the
+            %   OrientationReference option can be used (see below).
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'PositionReference' - optional string containing an
+            %    alternative reference for te clamp position. Valid strings
+            %    are: 'node', 'local' and 'global'.
+            %
+            %  'OrientationReference' - optional string containing an
+            %    alternative reference for te clamp orientation. Valid
+            %    strings are: 'node', 'local' and 'global'.
+            %
+            % Output
+            %
+            %  cl - mbdyn.pre.clamp object
+            %
+            %
+            %
+            % See Also: 
+            %
             
             options.PositionReference = 'node';
             options.OrientationReference = 'node';
