@@ -62,6 +62,11 @@ classdef element < mbdyn.pre.base
             self.stlLoaded = true;
             self.needsRedraw = true;
             
+            setSize (self, ...
+                max(self.shapeData(1).Vertices(:,1)) - min(self.shapeData(1).Vertices(:,1)), ...
+                max(self.shapeData(1).Vertices(:,2)) - min(self.shapeData(1).Vertices(:,2)), ...
+                max(self.shapeData(1).Vertices(:,3)) - min(self.shapeData(1).Vertices(:,3)) )
+            
         end
         
         function setSize (self, sx, sy, sz)
