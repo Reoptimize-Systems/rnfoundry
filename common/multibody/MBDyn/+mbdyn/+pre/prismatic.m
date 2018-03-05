@@ -1,11 +1,5 @@
 classdef prismatic < mbdyn.pre.twoNodeJoint
-    % Constrains the relative orientation of two nodes, so that their
-    % orientations remain parallel. The relative position is not
-    % constrained. The initial orientation of the joint must be compatible:
-    % use the orientation keyword to assign the joint initial orientation.
-    %
-    %
-    
+   
     
     properties (GetAccess = public, SetAccess = protected)
         
@@ -20,7 +14,47 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
     methods
         
         function self = prismatic (node1, node2, varargin)
-            
+            % prismatic joint constructor
+            %
+            % Syntax
+            %
+            % pjnt = prismatic (node1, node2)
+            % pjnt = prismatic (.., 'Parameter', value)
+            %
+            % Description
+            %
+            % Constrains the relative orientation of two nodes, so that
+            % their orientations remain parallel. The relative position is
+            % not constrained. The initial orientation of the joint must be
+            % compatible: use the orientation keyword to assign the joint
+            % initial orientation.
+            %
+            % Input
+            %
+            %  node1 - mbdyn.pre.structuralNode6dof object
+            %
+            %  node2 - mbdyn.pre.structuralNode6dof object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'RelativeOrientation1' - 
+            %
+            %  'RelativeOrientation2' - 
+            %
+            %  'Orientation1Reference' - 
+            %
+            %  'Orientation2Reference' - 
+            %
+            % Output
+            %
+            %  pjnt - mbdyn.pre.prismatic object
+            %
+            %
+            %
+            % See Also: 
+            %
+
             options.RelativeOrientation1 =  [];
             options.RelativeOrientation2 =  [];
             options.Orientation1Reference = 'node';
