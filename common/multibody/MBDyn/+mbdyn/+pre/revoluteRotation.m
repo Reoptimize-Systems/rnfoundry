@@ -1,10 +1,4 @@
 classdef revoluteRotation < mbdyn.pre.twoNodeJoint
-    % This joint allows the relative rotation of two nodes about a given
-    % axis, which is axis 3 in the reference systems defined by the two
-    % orientation statements. The relative position is not constrained.
-    %
-    %
-    
     
     properties (GetAccess = public, SetAccess = protected)
         
@@ -24,7 +18,54 @@ classdef revoluteRotation < mbdyn.pre.twoNodeJoint
     methods
         
         function self = revoluteRotation (node1, node2, varargin)
-            
+            % constructor for revolute rotation joint
+            %
+            % Syntax
+            %
+            % rrjnt = revoluteRotation (node1, node2)
+            % rrjnt = revoluteRotation (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % revoluteRotation is a joint which allows the relative
+            % rotation of two nodes about a given axis, which is axis 3 in
+            % the reference systems defined by two orientations. The
+            % relative position is not constrained.
+            %
+            % Input
+            %
+            %  node1 - mbdyn.pre.structuralNode object
+            %
+            %  node2 - mbdyn.pre.structuralNode object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'RelativeOffset1' - 
+            %
+            %  'RelativeOffset1Reference' - 
+            %
+            %  'RelativeOrientation1' - 
+            %
+            %  'RelativeOrientation1Reference' - 
+            %
+            %  'RelativeOffset2' - 
+            %
+            %  'RelativeOffset2Reference' - 
+            %
+            %  'RelativeOrientation2' - 
+            %
+            %  'RelativeOrientation2Reference' - 
+            %
+            % Output
+            %
+            %  rrjnt - mbdyn.pre.revoluteRotation object
+            %
+            %
+            %
+            % See Also: 
+            %
+
             options.RelativeOffset1 = [];
             options.RelativeOffset1Reference = 'node';
             options.RelativeOrientation1 =  [];
