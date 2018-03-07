@@ -47,7 +47,7 @@ classdef reference < handle
             % keeping orientations and positions defined relative to it
             % consistent.
             %
-            % Different aspects of a referenc can also be defined relative
+            % Different aspects of a reference can also be defined relative
             % to different references. For example, the position can be
             % defined relative to reference 1, while the velocity s defined
             % relative to another reference, reference 2.
