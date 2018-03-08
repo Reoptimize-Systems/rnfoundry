@@ -33,7 +33,8 @@ sys.path.insert(0, os.path.join (os.path.abspath('.'), 'exts'))
 extensions = ['sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
-    'sphinxcontrib.fulltoc', 
+    'sphinxcontrib.fulltoc',
+    'sphinx.ext.graphviz',
     'youtube' ]
 
 numfig = True
