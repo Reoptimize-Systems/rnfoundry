@@ -24,7 +24,7 @@ classdef directDrive < mbdyn.pre.drive
             %
             % Output
             %
-            %  dd - mbdyn.pre.rampDrive object
+            %  dd - mbdyn.pre.directDrive object
             %
             %
             %
