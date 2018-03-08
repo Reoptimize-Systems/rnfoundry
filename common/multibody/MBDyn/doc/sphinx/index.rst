@@ -1,7 +1,12 @@
 .. MBDyn interface documentation master file
 
+####################
 MBDyn Matlab Toolbox
-********************
+####################
+
+************
+Introduction
+************
 
 The MBDyn Matlab Toolbox is a suite of tools for interacting with 
 MBDyn from Matlab code.
@@ -77,6 +82,10 @@ EPSRC funded project "All Electrical Drive Train for Marine Energy
 Converters (EDRIVE-MEC)", grant No. EP/N021452/1. The main contributor
 is Dr. Richard Crozier.
 
+#############
+API Reference
+#############
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -84,6 +93,9 @@ is Dr. Richard Crozier.
    self
    installation
    getting_started
+   cosimulation
+   required_knowledge
+   api_reference
 
 
 Indices and tables
