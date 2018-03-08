@@ -200,8 +200,8 @@ classdef reference < handle
             %
             % Output
             %
-            %  dpos - (3 x 1) position vector of the global input pos relative to
-            %    the reference frame
+            %  dpos - (3 x 1) position vector of the global input pos
+            %    relative to the reference frame
             %
             %  dorientm - mbdyn.pre.orientmat object representing the
             %    orientation of the global input orientm relative to the
@@ -277,7 +277,7 @@ classdef reference < handle
             %
             % Description
             %
-            % Draws a reference objects. The reference is represented as a
+            % Draws a reference object. The reference is represented as a
             % three-axis coordinate system.
             %
             % Input
