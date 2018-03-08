@@ -24,6 +24,111 @@ classdef externalStructuralForce < mbdyn.pre.force
     methods
         
         function self = externalStructuralForce (nodes, nodeoffsets, communicator, varargin)
+            % element to apply force from external software
+            %
+            % Syntax
+            %
+            % esf = externalStructuralForce (nodes, nodeoffsets, communicator)
+            % esf = externalStructuralForce (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % force element which allows communication with an external
+            % software that computes forces applied to a pool of nodes and
+            % may depend on the kinematics of those nodes.
+            %
+            % Input
+            %
+            %  nodes - cell array of mbdyn.pre.structuralNode objects which
+            %   will be the nodes to which forces are applied. Can also be
+            %   empty is a reference node is being supplied (see the
+            %   'ReferenceNode' options below).
+            %
+            %  nodeoffsets - array of structures describing any force
+            %   offsets for any of the nodes provided in the in nodes
+            %   input. The structures contain the follwoing fields:
+            %
+            %    NodeInd : the index of the node in the 'nodes' cell array
+            %     for which this offset is specified.
+            % 
+            %    Offset : (3 x 1) vector representing the location relative
+            %     to the corresponding node where the force is applied to
+            %     the node.
+            %
+            %    OffsetType : string indicating in what reference frame the
+            %     offset is specified. Must be either 'global' or 'local'. 
+            %
+            %   If no offsets are to be supplied nodeoffsets can be empty.
+            %
+            %  communicator - mbdyn.pre.externalFileCommunicator object, or
+            %   derived class, e.g. mbdyn.pre.socketCommunicator. This
+            %   defines how MBDyn will communicate with the external
+            %   software.
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'ReferenceNode' - 
+            %
+            %  'Labels' - optional character vector indicating whether
+            %    labels are to be sent by MBDyn with the kinematics data.
+            %    Can be 'yes', or 'no'. Default is 'no'.
+            %
+            %  'Sorted' - optional character vector indicating whether the
+            %    nodes are sorted by label. Can be 'yes' or 'no'. If sorted
+            %    is set to 'no', the forces might be read in arbitrary
+            %    order, so they need to be recognized by the label. The
+            %    option sorted is only meaningful when Labels (above) is
+            %    set to yes. Default is 'yes'.
+            %
+            %  'Orientation' - optional character vector indicating the
+            %    format which the orientation of the nodes will be provided
+            %    by MBDyn to the external sofware. Can be one of: 'none',
+            %    'orientation matrix', 'orientation vector', or 'euler
+            %    123'. The orientation style 'none' implies that only
+            %    positions, velocities and accelerations will be output
+            %    (the latter only if Accelerations (see bleow) is set to
+            %    yes).
+            %
+            %  'Accelerations' - optional character vector indicating whether
+            %    acceleration data is to be sent by MBDyn with the
+            %    kinematics data. Can be 'yes', or 'no'. Default is 'no'.
+            %
+            %  'UseReferenceNodeForces' - optional character vector which
+            %    can be 'yes' or 'no'. Only meaningful when a reference
+            %    node is used. It assumes the external solver is sending
+            %    the forces and moments related to the reference node. They
+            %    correspond to the rigid-body forces and moments applied to
+            %    the whole system. As such, the forces and moments applied
+            %    to each node are removed accordingly. If it is set to no,
+            %    reference node forces and moments will be ignored.
+            %
+            %  'RotateReferenceNodeForces' - optional character vector which
+            %    can be 'yes' or 'no'. When a reference node is being used,
+            %    the kinematics of the points is formulated in the
+            %    reference frame of the reference node. The forces are
+            %    expected in the same reference frame. In this case, if
+            %    RotateReferenceNodeForces is set to 'no', the force and
+            %    moment related to the reference node returned by the
+            %    external solver are used directly. If
+            %    RotateReferenceNodeForces is set to 'yes', they are first
+            %    rotated in the global reference frame.
+            %
+            %  'Echo' - optional character vector containing a path to a
+            %    file where the output of the reference configuration will
+            %    be exported. If the file exists, it is overwritten, if
+            %    allowed by file system permissions. The format is that of
+            %    the communicator in stream form. If empty nothing will be
+            %    exported. Default is empty.
+            %
+            % Output
+            %
+            %  esf - mbdyn.pre.externalStructuralForce object
+            %
+            %
+            %
+            % See Also: mbdyn.mint.MBCNodal
+            %
             
             options.ReferenceNode = [];
             options.Labels = 'no';
