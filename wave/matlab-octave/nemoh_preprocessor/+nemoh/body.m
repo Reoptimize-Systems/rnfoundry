@@ -829,7 +829,7 @@ classdef body < nemoh.base
                     hax = axes ();
                     view (3);
                 else
-                    self.checkIsAxes (options.Axes);
+                    self.checkIsAxes (options.Axes, true);
                     hax = options.Axes;
                     hfig = get (hax, 'Parent');
                     % leave the axis as it is, don't mess with user's
@@ -1179,6 +1179,26 @@ classdef body < nemoh.base
             self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
             
             self.meshPlottable = true;
+            
+        end
+        
+        function scaleMesh (self, scale_factor)
+            % scale the mesh vertex locations by a given factor
+            %
+            % Syntax
+            %
+            % scaleMesh (nb, scale_factor)
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  scale_factor - factor by which to scale the mesh vertex
+            %    locations
+            %
+            %
+            
+            self.meshVertices = self.meshVertices .* scale_factor;
             
         end
         
