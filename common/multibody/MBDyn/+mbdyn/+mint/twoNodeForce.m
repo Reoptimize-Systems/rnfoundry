@@ -10,6 +10,7 @@ classdef twoNodeForce < mbdyn.mint.base
     methods
         
         function self = twoNodeForce (reference_node, other_node)
+            % constructor for twoNodeForce base class
         
             if ~ ( isa (reference_node, 'mbdyn.pre.structuralNode') ...
                     || mbdyn.pre.base.checkScalarInteger (reference_node, false) )
@@ -25,11 +26,6 @@ classdef twoNodeForce < mbdyn.mint.base
             self.otherNode = other_node;
         
         end
-        
-%         function omat = referenceOrientation (self)
-%             
-%             
-%         end
         
     end
     

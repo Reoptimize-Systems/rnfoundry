@@ -1,6 +1,7 @@
 classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
+
     
-    properties
+    properties (GetAccess=public, SetAccess = private)
         
         forceAxis;
         forceFcn;
@@ -8,9 +9,97 @@ classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
         
     end
     
+    properties (GetAccess=private, SetAccess = private)
+        
+        hasForceFcn;
+        
+    end
+    
     methods
         
         function self = twoNodeTranslationalForce (reference_node, other_node, axisNum, varargin)
+            % mbdyn.mint.twoNodeTranslationalForce constructor
+            %
+            % Syntax
+            %
+            % tnf = mbdyn.mint.twoNodeTranslationalForce (reference_node, other_node, axisNum)
+            % tnf = mbdyn.mint.twoNodeTranslationalForce (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % twoNodeTranslationalForce is a class used to help apply
+            % forces to two appropriately constrained structural nodes
+            % during an MBDyn simulation. It is intended to help apply
+            % forces from systems such as actuators, with two nodes
+            % constrained so that only motion along a common axis is
+            % possible. However, no check that the nodes are constrained in
+            % this way is performed.
+            %
+            % The forces are applied along the chosen axis of a reference
+            % node, in the reference frame of that node and the resulting
+            % forces calculated in the global frame. The reverse of these
+            % forces is calculated for the other node.
+            %
+            % mbdyn.mint.twoNodeTranslationalForce Methods:
+            %
+            %   mbdyn.mint.twoNodeTranslationalForce - constructor
+            %   displacements - get relative displacement and velocity
+            %     of the two nodes in a direction parallel to the chosen
+            %     axis of the reference node
+            %   force - returns actuation forces in the global frame on the 
+            %     two nodes
+            %   forceFromFcn - returns actuation forces calculated from a 
+            %     function in the global frame on the two nodes
+            %
+            % Input
+            %
+            %  reference_node - mbdyn.pre.structuralNode6dof object
+            %   representing the structural node in whose reference frame
+            %   the forces will be applied along the chosen axis
+            %
+            %  other_node - mbdyn.pre.structuralNode6dof
+            %
+            %  axisNum - scalar integer indicating the axis of the
+            %   reference node along which forces will be applied. Can be
+            %   1, 2 or 3.
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'InitialDisplacementZero' - optional scalar true/false flag
+            %    indicating whether the initial position of the two nodes
+            %    should be considered a displacement of zero, and all
+            %    subsequent displacements considered relative to this
+            %    initial position. If false, the actual initial and
+            %    subsequent displacement in the direction of the reference
+            %    node's chosen axis will be reported by the 'displacements'
+            %    method (and used in the forceFromFcn method to evaluate
+            %    the force function). Default is true.
+            %    
+            %  'ForceFcn' - optional function handle or string to be used
+            %    to calculate the force to be applied between the two
+            %    nodes. This is required to use the forceFromFcn method.
+            %    forceFcn is a function which takes two arguments with the
+            %    following signature:
+            %
+            %         force_value = myfcn (reldisp, relvel)
+            %
+            %    where reldisp is the relative displacement of the two
+            %    nodes along the specified axis in forceAxis in the
+            %    reference frame of the reference node, and relvel is the
+            %    relative velocity of the two nodes in the same frame.
+            %    force_value is expected to be a scalar value, the value of
+            %    the force acting on the reference node parallel to the
+            %    axis in forceAxis in the frame of the reference node.
+            %
+            % Output
+            %
+            %  tnf - mbdyn.mint.twoNodeTranslationalForce object
+            %
+            %
+            %
+            % See Also: mbdyn.mint.twoNodeTorque
+            %
             
             options.InitialDisplacementZero = true;
             options.ForceFcn = [];
@@ -42,29 +131,125 @@ classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
                 
             end
             
-            if ~isempty (options.ForceFcn)
+            if isempty (options.ForceFcn)
+                self.hasForceFcn = false;
+            else
                 assert (isa (options.ForceFcn, 'function_handle'), ...
-                    'ForceFcn is not a function handle' ) ;
+                    'ForceFcn is not a function handle' );
+                self.hasForceFcn = true;
             end
             
             self.forceFcn = options.ForceFcn;
             
         end
         
-        function [F, ptoforce, reldisp, relvel] = force (self)
+        function [F, ptoforce, reldisp, relvel] = forceFromFcn (self)
+            % returns global forces on the two nodes evaluated from a function
+            %
+            % Syntax
+            %
+            % [F, ptoforce, reldisp, relvel] = forceFromFcn (self)
+            %
+            % Description
+            %
+            % forceFromFcn evaluates the force function supplied when
+            % constructing the twoNodeTranslationalForce object, and which
+            % is stored in the forceFcn property. It then calculates the
+            % forces on the reference node in the global frame after
+            % applying this force along the previously specified axis (the
+            % value stored n the forceAxis property) in the frame of the
+            % reference node. The reverse of these forces is also
+            % calculated to give the force on the other node.
+            %
+            % forceFcn is a function which takes two arguments with the
+            % following signature:
+            %
+            %         force_value = myfcn (reldisp, relvel)
+            %
+            % where reldisp is the relative displacement of the two nodes
+            % along the specified axis in forceAxis in the reference frame
+            % of the reference node, and relvel is the relative velocity of
+            % the two nodes in the same frame. force_value is expected to
+            % be a scalar value, the value of the force acting on the
+            % reference node parallel to the axis in forceAxis in the frame
+            % of the reference node.
+            %
+            % Input
+            %
+            %  tnf - mbdyn.mint.twoNodeTranslationalForce object
+            %
+            % Output
+            %
+            %  F - (3 X 2) matrix. The first column is the forces in the
+            %   global frame on the reference node, the second is the
+            %   forces on the other node. These are simply the inverse of
+            %   the first column.
+            %
+            %  ptoforce - scalar value of the force calculated by
+            %   evaluating the forceFcn
+            %
+            %  reldisp - scalar value of the relative displacement of the
+            %   two nodes along the specified axis in forceAxis in the
+            %   reference frame of the reference node
+            %
+            %  relvel - scalar value of the relative velocity of the
+            %   two nodes along the specified axis in forceAxis in the
+            %   reference frame of the reference node
+            %
+            %
+            % See Also: mbdyn.mint.twoNodeTranslationalForce.force
+            %
+            
+            assert (self.hasForceFcn, ...
+                'There is no force function to evaluate, use the ''ForceFcn'' option when constructing');
             
             [reldisp, relvel] = displacements (self);
             
             ptoforce = feval ( self.forceFcn, reldisp, relvel );
             
+            F = force (self, ptoforce);
+            
+        end
+        
+        function F = force (self, ptoforce)
+            % returns forces in the global frame on the two nodes 
+            %
+            % Syntax
+            %
+            % F = force (tnf, ptoforce)
+            %
+            % Description
+            %
+            % force calculates the forces on the reference node in the
+            % global frame after applying a force parallel to a previously
+            % specified axis (the value stored n the forceAxis property) in
+            % the frame of the reference node. The reverse of these forces
+            % is also calculated to give the force on the other node.
+            %
+            % Input
+            %
+            %  tnf - mbdyn.mint.twoNodeTranslationalForce object
+            %
+            %  ptoforce - scalar value of the force applied to the
+            %   reference node, parallel to the chosen axis of the
+            %   reference node.
+            %
+            % Output
+            %
+            %  F - (3 X 2) matrix. The first column is the forces in the
+            %   global frame on the reference node, the second is the
+            %   forces on the other node. These are simply the inverse of
+            %   the first column.
+            %
+            % See Also: mbdyn.mint.twoNodeTranslationalForce.forceFromFcn
+            %
+
             F_pto_frame = [0, 0, 0];
             F_pto_frame(self.forceAxis) = ptoforce;
             
-            F = (F_pto_frame * self.referenceNode.absoluteOrientation.orientationMatrix)' ;
-            F(1:3,2) = -F;
-            
-%             F(1:3,1) = F(1:3,1) + FptoVec(1:3,1);
-%             F(1:3,2,ind) = F(1:3,2) - FptoVec(1:3,1);
+            F = zeros (3,2);
+            F(1:3,1) = (F_pto_frame * self.referenceNode.absoluteOrientation.orientationMatrix)' ;
+            F(1:3,2) = -F(1:3,1);
             
         end
         
@@ -84,12 +269,12 @@ classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
             % Output
             %
             %  reldisp - displacement of the second node relative to the
-            %    reference node in the chosen axis of the reference node's
-            %    frame
+            %   reference node in the chosen axis of the reference node's
+            %   frame
             %
             %  relvel - velocity of the second node relative to the
-            %    reference node in the chosen axis of the reference node's
-            %    frame
+            %   reference node in the chosen axis of the reference node's
+            %   frame
             %
             %
             
