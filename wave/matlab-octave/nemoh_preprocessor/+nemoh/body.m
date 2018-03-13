@@ -31,6 +31,7 @@ classdef body < nemoh.base
     %    command line
     %  setTargetPanels - sets the target number of panels in refined
     %    mesh
+    %  scaleMesh - scale the mesh vertex location data by a factor
     %
     % The folowing methods are mainly for use by a nemoh.simulation object
     % to which the body has been added:
@@ -65,6 +66,8 @@ classdef body < nemoh.base
         nMeshNodes;
         nPanelsTarget; % Target for number of panels in mesh refinement
         centreOfGravity;
+        meshBoundBox;
+        meshSize;
         
         hydrostaticForces; % hydrostatic forces
         hydrostaticForcePoints; % X,Y,Z coordinates where hydrostatic forces were calculated
@@ -440,6 +443,8 @@ classdef body < nemoh.base
             self.meshPlottable = true;
             self.meshProcessed = false;
             
+            self.calcMeshProps ();
+            
             if options.Verbose
                 self.meshInfo ();
             end
@@ -557,6 +562,8 @@ classdef body < nemoh.base
             
             self.meshType = 'axi';
             self.meshPlottable = true;
+            
+            self.calcMeshProps ();
             
         end
         
@@ -842,7 +849,33 @@ classdef body < nemoh.base
                 [hmesh, hax, hfig] = self.polyMeshPlot ( self.meshVertices', ...
                                                          self.quadMesh', ...
                                                          'Axes', hax );
+                                                     
+                % add centre of gravity
+                scatter3 ( hax, self.centreOfGravity(1), ...
+                                self.centreOfGravity(2), ...
+                                self.centreOfGravity(3), ...
+                                '+' );
+                       
+                text ( hax, self.centreOfGravity(1) + 0.01 * self.meshSize(1), ...
+                            self.centreOfGravity(2) + 0.01 * self.meshSize(2), ...
+                            self.centreOfGravity(3), ...
+                            sprintf ('%s CoG', self.name) );
 
+                if self.meshProcessed && ~isempty (self.centreOfBuoyancy)
+                    
+                    % add centre of gravity
+                    scatter3 ( hax, self.centreOfGravity(1), ...
+                                    self.centreOfGravity(2), ...
+                                    self.centreOfGravity(3), ...
+                                   '+' );
+
+                    text ( hax, self.centreOfGravity(1) + 0.01 * self.meshSize(1), ...
+                                self.centreOfGravity(2) + 0.01 * self.meshSize(2), ...
+                                self.centreOfGravity(3), ...
+                                sprintf ('%s CoB', self.name) );
+                       
+                end
+                
                 % plot forces if requested, and available
                 if options.PlotForces && ~isempty (self.hydrostaticForces)
                     
@@ -1071,7 +1104,9 @@ classdef body < nemoh.base
                     self.hydrostaticForces(1,i) = line(4);
                     self.hydrostaticForces(2,i) = line(5);
                     self.hydrostaticForces(3,i) = line(6);
-                end   
+                end
+                
+                self.calcMeshProps ();
             
             else
                 error ('Mesh is not marked as ''processed''');
@@ -1179,15 +1214,21 @@ classdef body < nemoh.base
             self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
             
             self.meshPlottable = true;
+            self.calcMeshProps ();
             
         end
         
-        function scaleMesh (self, scale_factor)
+        function scaleMesh (self, scale_factor, varargin)
             % scale the mesh vertex locations by a given factor
             %
             % Syntax
             %
             % scaleMesh (nb, scale_factor)
+            %
+            % Description
+            %
+            % scaleMesh scales a mesh by multiplying every value of the
+            % vertices by a constant scale factor. 
             %
             % Input
             %
@@ -1196,9 +1237,52 @@ classdef body < nemoh.base
             %  scale_factor - factor by which to scale the mesh vertex
             %    locations
             %
+            % Additional options may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'ScaleCoG' - true/false flag indicating whether to also
+            %    scale the centre of gravity of the mesh. Default is true.
+            %    This option is ignored if the CentreOfGravity option is
+            %    used (see below) to specify directly the new centre of
+            %    gravity.
+            %
+            %  'CentreOfGravity' - option to specify directly the new
+            %    centre of gravity.  Should be a 3 element numeric vector.
+            %    If this option is used, the ScaleCoG option is ignored.
+            %
             %
             
+            options.ScaleCoG = true;
+            options.CentreOfGravity = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.checkLogicalScalar (options.ScaleCoG, true, 'ScaleCoG');
+
             self.meshVertices = self.meshVertices .* scale_factor;
+            
+            if isempty (options.CentreOfGravity)
+                if options.ScaleCoG
+                    cog = self.centreOfGravity .* scale_factor;
+                end
+            else
+                cog = options.CentreOfGravity;
+            end
+            
+            self.processMeshDraftAndCoG ([], cog);
+            
+            % force recalculation of mesh stuff as we have modified the
+            % mesh
+            self.meshProcessed = false;
+            self.hydrostaticForces = [];
+            self.hydrostaticForcePoints = [];
+            self.centreOfBuoyancy = [];
+            self.WPA = [];
+            self.mass = [];
+            self.inertia = [];
+            self.kH = [];
+            
+            self.calcMeshProps ();
             
         end
         
@@ -1325,6 +1409,7 @@ classdef body < nemoh.base
 %             self.processMeshDraftAndCoG (options.Draft, options.CentreOfGravity);
             
             self.meshPlottable = true;
+            self.calcMeshProps ();
             
         end
         
@@ -1721,6 +1806,24 @@ classdef body < nemoh.base
                            'parent', hax, ...
                            options.PatchParameters{:} );
             
+        end
+        
+        function calcMeshProps (self)
+            % calculates some basic properties of the mesh
+            
+            meshminx = min (self.meshVertices(1,:));
+            meshmaxx = max (self.meshVertices(1,:));
+            meshminy = min (self.meshVertices(2,:));
+            meshmaxy = max (self.meshVertices(2,:));
+            meshminz = min (self.meshVertices(3,:));
+            meshmaxz = max (self.meshVertices(3,:));
+            
+            self.meshBoundBox = [ meshminx, meshmaxx; 
+                                  meshminy, meshmaxy;
+                                  meshminz, meshmaxz ];
+            
+            self.meshSize = self.meshBoundBox(:,2) - self.meshBoundBox(:,1);
+
         end
         
     end
