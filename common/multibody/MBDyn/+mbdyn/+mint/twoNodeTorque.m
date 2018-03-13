@@ -50,7 +50,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             %    moment is to be calculated. Therefore the function handle
             %    must have a calling sequence like:
             %
-            %       moment_magnitude = myfcn (rel_theta, rel_omega)
+            %       moment_value = myfcn (rel_theta, rel_omega)
             % 
             %  'ReferenceNode' - scalar integer, eithe 1 or 2. Indicates
             %    which node is to be considered the reference node for
@@ -62,8 +62,8 @@ classdef twoNodeTorque < mbdyn.mint.base
             %
             %
             %
-            % See Also: 
-            %
+            % See Also: mbdyn.mint.twoNodeTranslationalForce
+            %           
             
             options.InitialThetaZero = true;
             options.TorqueFcn = [];
@@ -118,23 +118,21 @@ classdef twoNodeTorque < mbdyn.mint.base
             
         end
         
-        function [M, momentmagn, reltheta, relomega] = moment (self)
+        function [M, momentval, reltheta, relomega] = momentFromFcn (self)
             
             [reltheta, relomega] = displacements (self);
             
-            momentmagn = feval ( self.torqueFcn, reltheta, relomega );
+            momentval = feval ( self.torqueFcn, reltheta, relomega );
             
-            M = self.joint.node1FrameRelativeOrientation.orientationMatrix(:,3) * momentmagn;
+            M = moment (self, momentval);
+            
+        end
+        
+        
+        function M = moment (self, momentval)
+            
+            M = self.joint.node1FrameRelativeOrientation.orientationMatrix(:,3) * momentval;
             M(1:3,2) = -M;
-            
-%             T_joint_frame = [0, 0, 0];
-%             T_joint_frame(3) = torquemagn;
-%             
-%             T = (T_joint_frame * self.joint.absoluteJointOrientation.orientationMatrix)' ;
-%             T(1:3,2) = -T;
-            
-%             F(1:3,1) = F(1:3,1) + FptoVec(1:3,1);
-%             F(1:3,2,ind) = F(1:3,2) - FptoVec(1:3,1);
             
         end
         
