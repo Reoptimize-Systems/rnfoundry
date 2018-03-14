@@ -1,5 +1,4 @@
-classdef linearPowerTakeOff < wsim.powertakeoff
-    % power take-off from relative linear displacement of two nodes
+classdef linearPowerTakeOff < wsim.powerTakeOff
    
     properties (GetAccess = private, SetAccess = private)
         
@@ -14,9 +13,8 @@ classdef linearPowerTakeOff < wsim.powertakeoff
     
     methods
         
-        function self = linearPowerTakeOff (reference_node, other_node, axisNum, varargin)
+        function self = linearPowerTakeOff (reference_node, other_node, axisNum, force_fcn, varargin)
             % construct a wsim.linearPowerTakeOff object
-            %
             %
             % Syntax
             %
@@ -33,15 +31,39 @@ classdef linearPowerTakeOff < wsim.powertakeoff
             % are applied based on the relative displacement and velocity
             % of the two nodes along axis 3 in the reference frame of the
             % first node. It is assumed that the nodes motion is
-            % constrained appropriately by other MBDyn elements (e.g. 
+            % constrained appropriately by other MBDyn elements (e.g. a
+            % prismatic joint).
+            %
+            % wsim.linearPowerTakeOff Methods:
+            %
+            %  wsim.linearPowerTakeOff - constructor
+            %  forceAndMoment - returns pto forces and moments on the 
+            %    attached nodes
             %
             % Input
             %
             %  reference_node - mbdyn.pre.structuralNode6dof object
             %
-            %  other_node - 
+            %  other_node - mbdyn.pre.structuralNode6dof object
             %
-            %  axisNum - 
+            %  axisNum - axis in the frame of the reference node. Forces
+            %   will be applied to the node in a direction parallel to this
+            %   axis.
+            %
+            %  force_fcn - function handle or string to be used to
+            %   calculate the force to be applied between the two nodes
+            %   making up the PTO. force_fcn is a function which takes two
+            %   arguments with the following signature:
+            %
+            %        force_value = myfcn (reldisp, relvel)
+            %
+            %   where reldisp is the relative displacement of the two
+            %   nodes along the specified axis in axisNum in the
+            %   reference frame of the reference node, and relvel is the
+            %   relative velocity of the two nodes in the same frame.
+            %   force_value is expected to be a scalar value, the value of
+            %   the force acting on the reference node parallel to the
+            %   axis in forceAxis in the frame of the reference node.
             %
             % Additional options my be supplied as parameter-value pairs.
             % The avaialable options are:
@@ -62,41 +84,14 @@ classdef linearPowerTakeOff < wsim.powertakeoff
             %
             %
             %
-            % See Also: 
+            % See Also: wsim.rotaryPowerTakeOff
             %
 
             options.InitialDisplacementZero = true;
-            options.ForceFcn = [];
+            options.LoggedVars = {};
             
             options = parse_pv_pairs (options, varargin);
             
-            self = self@wsim.powertakeoff (reference_node, other_node);
-            
-            self.mbdynForceObj = mbdyn.mint.twoNodeTranslationalForce ( ...
-                                    reference_node, other_node, axisNum, ...
-                                    'InitialDisplacementZero', options.InitialDisplacementZero, ...
-                                    'ForceFcn', options.ForceFcn );
-            
-        end
-        
-        function [FM, ptoforce, reldisp, relvel] = forceAndMoment (self)
-            
-            [FM, ptoforce, reldisp, relvel] = self.mbdynForceObj.force ();
-            
-            % need to add zero moments to forces
-            FM = [FM; zeros(size (FM))];
-            
-            self.lastInternalForce = ptoforce;
-            self.lastRelativeDisplacement = reldisp;
-            self.lastRelativeVelocity = relvel;
-            
-        end
-        
-        function info = loggingSetup (self, logger)
-
-            if nargin < 2
-                logger = [];
-            end
             
             info.AvailableNames = { 'InternalForce', ...
                                     'RelativeDisplacement', ...
@@ -113,20 +108,27 @@ classdef linearPowerTakeOff < wsim.powertakeoff
             
             info.NAvailable = numel(info.AvailableNames);
             
-            self.initLogging (info, logger);
-                              
+            
+            self = self@wsim.powerTakeOff ( reference_node, other_node, info, ...
+                                            'LoggedVars', options.LoggedVars );
+            
+            self.mbdynForceObj = mbdyn.mint.twoNodeTranslationalForce ( ...
+                                    reference_node, other_node, axisNum, ...
+                                    'InitialDisplacementZero', options.InitialDisplacementZero, ...
+                                    'ForceFcn', force_fcn );
+                                
         end
         
-        function logData (self)
-            % appends the internal variable data to the log
+        function [FM, ptoforce, reldisp, relvel] = forceAndMoment (self)
             
-            if self.loggerReady
-                self.logger.logVal (self.uniqueLoggingNames{1}, self.lastInternalForce);
-                self.logger.logVal (self.uniqueLoggingNames{2}, self.lastRelativeDisplacement);
-                self.logger.logVal (self.uniqueLoggingNames{3}, self.lastRelativeVelocity);
-            else
-                error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
-            end
+            [FM, ptoforce, reldisp, relvel] = self.mbdynForceObj.forceFromFcn ();
+            
+            % need to add zero moments to forces
+            FM = [FM; zeros(size (FM))];
+            
+            self.lastInternalForce = ptoforce;
+            self.lastRelativeDisplacement = reldisp;
+            self.lastRelativeVelocity = relvel;
             
         end
         

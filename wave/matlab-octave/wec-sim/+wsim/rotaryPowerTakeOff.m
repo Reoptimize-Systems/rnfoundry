@@ -1,4 +1,4 @@
-classdef rotaryPowerTakeOff < wsim.powertakeoff
+classdef rotaryPowerTakeOff < wsim.powerTakeOff
     % power take-off from relative linear displacement of two nodes
    
     properties (GetAccess = private, SetAccess = private)
@@ -27,7 +27,7 @@ classdef rotaryPowerTakeOff < wsim.powertakeoff
                                     'InitialThetaZero', options.InitialThetaZero, ...
                                     'TorqueFcn', options.TorqueFcn );
                                 
-            self = self@wsim.powertakeoff ( momobj.nodes(1), ...
+            self = self@wsim.powerTakeOff ( momobj.nodes(1), ...
                                             momobj.nodes(2) );
             
             self.joint = revolute_hinge;
@@ -37,7 +37,7 @@ classdef rotaryPowerTakeOff < wsim.powertakeoff
         
         function [FM, ptotorque, reltheta, relomega] = forceAndMoment (self)
             
-            [FM, ptotorque, reltheta, relomega] = self.mbdynForceObj.moment ();
+            [FM, ptotorque, reltheta, relomega] = self.mbdynForceObj.momentFromFcn ();
             
             % need to add zero forces to forces
             FM = [ zeros(size (FM));
