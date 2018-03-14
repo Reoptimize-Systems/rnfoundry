@@ -54,7 +54,7 @@ cd (thisdir);
 
 %% Hydro Simulation Data
 
-simu_wsim = wsim.simsettings (getmfilepath ('test_wsim_RM3.run'));  % Create the Simulation Variable
+simu_wsim = wsim.simSettings (getmfilepath ('test_wsim_RM3.run'));  % Create the Simulation Variable
 % simu.mode = 'normal';                 % Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
 % simu.explorer='on';                   % Turn SimMechanics Explorer (on/off)
 simu_wsim.startTime = simu.startTime;   % Simulation Start Time [s]
@@ -68,7 +68,7 @@ simu_wsim.ssCalc = simu.ssCalc;
 
 %% Wave Information 
 
-waves_wsim = wsim.wavesettings (waves.type);       % Create the Wave Variable and Specify Type                               
+waves_wsim = wsim.waveSettings (waves.type);       % Create the Wave Variable and Specify Type                               
 waves_wsim.H = waves.H;                            % Wave Height [m]
 waves_wsim.T = waves.T;                            % Wave Period [s]
 waves_wsim.spectrumType = waves.spectrumType;
@@ -76,8 +76,8 @@ waves_wsim.spectrumType = waves.spectrumType;
 %% Hydrodynamic body system
 
 % Float
-float_hbody = wsim.hydrobody('hydroData/rm3.h5', 'CaseDirectory', simu_wsim.caseDir);      
-    %Create the wsim.hydrobody(1) Variable, Set Location of Hydrodynamic Data File 
+float_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu_wsim.caseDir);      
+    %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                  
     %Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
@@ -86,13 +86,13 @@ float_hbody.momOfInertia = body(1).momOfInertia;  %Moment of Inertia [kg*m^2]
 float_hbody.geometryFile = fullfile ('geometry', 'float.stl');    %Location of Geomtry File
 
 % Spar/Plate
-spar_hbody = wsim.hydrobody('hydroData/rm3.h5', 'CaseDirectory', simu_wsim.caseDir); 
+spar_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu_wsim.caseDir); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = body(2).momOfInertia;
 spar_hbody.geometryFile = fullfile ('geometry', 'plate.stl'); 
 
 % make a hydrosys object for simulation
-hsys = wsim.hydrosys (waves_wsim, simu_wsim, [float_hbody, spar_hbody]);
+hsys = wsim.hydroSystem (waves_wsim, simu_wsim, [float_hbody, spar_hbody]);
 
 % set up transient simulation
 hsys.initialiseHydrobodies ();

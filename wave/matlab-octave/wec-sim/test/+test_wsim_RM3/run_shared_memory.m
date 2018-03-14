@@ -3,7 +3,7 @@
 clear waves simu hsys mbsys float_hbody spar_hbody ref_float ref_spar mb
 
 %% Hydro Simulation Data
-simu = wsim.simsettings (getmfilepath ('test_wsim_RM3.run'));  % Create the Simulation Variable
+simu = wsim.simSettings (getmfilepath ('test_wsim_RM3.run'));  % Create the Simulation Variable
 % simu.mode = 'normal';                 %Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
 % simu.explorer='on';                   %Turn SimMechanics Explorer (on/off)
 simu.startTime = 0;                   %Simulation Start Time [s]
@@ -21,20 +21,20 @@ simu.b2b = true;
 %%%%%%%%%%%%%%%%%%%
 
 % Regular Waves
-waves = wsim.wavesettings ('regularCIC');        %Create the Wave Variable and Specify Type                               
+waves = wsim.waveSettings ('regularCIC');        %Create the Wave Variable and Specify Type                               
 waves.H = 2.5;                          %Wave Height [m]
 waves.T = 8;                            %Wave Period [s]
 %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using PM Spectrum with Convolution Integral Calculation
-% waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
+% waves = wsim.waveSettings ('irregular');       %Create the Wave Variable and Specify Type
 % waves.H = 2.5;                        %Significant Wave Height [m]
 % waves.T = 8;                          %Peak Period [s]
 % waves.spectrumType = 'PM';
 %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using BS Spectrum with State Space Calculation
-% waves = wsim.wavesettings ('irregular');       %Create the Wave Variable and Specify Type
+% waves = wsim.waveSettings ('irregular');       %Create the Wave Variable and Specify Type
 % waves.H = 2.5;                        %Significant Wave Height [m]
 % waves.T = 8;                          %Peak Period [s]
 % waves.spectrumType = 'BS';
@@ -43,20 +43,20 @@ waves.T = 8;                            %Wave Period [s]
 %%%%%%%%%%%%%%%%%%%
 
 % Irregular Waves using User-Defined Spectrum
-% waves = wsim.wavesettings ('irregularImport');  %Create the Wave Variable and Specify Type
+% waves = wsim.waveSettings ('irregularImport');  %Create the Wave Variable and Specify Type
 % waves.spectrumDataFile = 'ndbcBuoyData.txt';  %Name of User-Defined Spectrum File [2,:] = [omega, Sf]
 %%%%%%%%%%%%%%%%%%%
 
 % User-Defined Time-Series
-% waves = wsim.wavesettings ('userDefined');     %Create the Wave Variable and Specify Type
+% waves = wsim.waveSettings ('userDefined');     %Create the Wave Variable and Specify Type
 % waves.etaDataFile = 'umpqua46229_6_2008.mat'; % Name of User-Defined Time-Series File [:,2] = [time, wave_elev]
 %%%%%%%%%%%%%%%%%%%
 
 %% Hydrodynamic body system
 
 % Float
-float_hbody = wsim.hydrobody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir);      
-    %Create the wsim.hydrobody(1) Variable, Set Location of Hydrodynamic Data File 
+float_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir);      
+    %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
     %Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
@@ -65,13 +65,13 @@ float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Ine
 float_hbody.geometryFile = fullfile ('geometry', 'float.stl');    %Location of Geomtry File
 
 % Spar/Plate
-spar_hbody = wsim.hydrobody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir); 
+spar_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
 spar_hbody.geometryFile = fullfile ('geometry', 'plate.stl'); 
 
 % make a hydrosys object for simulation
-hsys = wsim.hydrosys (waves, simu, [float_hbody, spar_hbody]);
+hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
 
 % set up ode simulation
 hsys.initialiseHydrobodies ();
