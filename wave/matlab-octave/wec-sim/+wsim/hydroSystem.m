@@ -1,19 +1,27 @@
-classdef hydrosys < handle
-    % class representing a collection of bodies interacting with water
-    % waves and each other hydrodynamically
+classdef hydroSystem < handle
+    % class representing a collection of hydrodynamically interacting bodies
     %
+    % Description
+    %
+    % wsim.hydroSystem is a class used to simulate a one or more bodies
+    % interaction with fluid waves and also, optionally, body-to-body
+    % interaction. 
     %
     % Methods:
     %
     %  addHydroBodies
     %  initialiseHydrobodies
+    %
+    % 
+    % See also: wsim.hydroBody, wsim.wecSim
+    %
     
     properties (GetAccess = public, SetAccess = private)
         
         nHydroBodies;
         odeSimInitialised = false;
-        simu;        % simulation setings (wsim.simsettings object)
-        waves;       % wave settings (wsim.wavesettings object)
+        simu;        % simulation setings (wsim.simSettings object)
+        waves;       % wave settings (wsim.waveSettings object)
         bodyMBDynNodes;
         
     end
@@ -21,7 +29,7 @@ classdef hydrosys < handle
     properties (GetAccess = private, SetAccess = private)
         
         
-        hydroBodies; % array of wsim.hydrobody objects
+        hydroBodies; % array of wsim.hydroBody objects
         hydroBodyInds = []; % array of indices of the hydrobodies
         
     end
@@ -29,13 +37,13 @@ classdef hydrosys < handle
     
     methods
         
-        function self = hydrosys (waves, simu, hydrobodies)
-            % hydrosys class constructor
+        function self = hydroSystem (waves, simu, hydrobodies)
+            % hydroSystem class constructor
             %
             % Syntax
             %
-            % hsys = hydrosys (waves, simu)
-            % hsys = hydrosys (..., hydrobodyfiles)
+            % hsys = hydroSystem (waves, simu)
+            % hsys = hydroSystem (..., hydrobodyfiles)
             % 
             %
             % Input
@@ -50,7 +58,7 @@ classdef hydrosys < handle
             %
             % Output
             %
-            %  hsys - hydrosys object
+            %  hsys - hydroSystem object
             % 
             
             
@@ -81,7 +89,7 @@ classdef hydrosys < handle
             %
             % Input
             %
-            %  hsys - hydrosys object
+            %  hsys - hydroSystem object
             %
             %  hydrobodies - array of one or more hydrobody objects to be
             %    added to the system
@@ -94,7 +102,7 @@ classdef hydrosys < handle
                 
             else
                 
-                if ~isa (hydrobodies, 'wsim.hydrobody')
+                if ~isa (hydrobodies, 'wsim.hydroBody')
                     error ('hydrobodyfiles must be a hydrobody object, or array of hydrobody objects');
                 end
 
@@ -216,7 +224,7 @@ classdef hydrosys < handle
             %
             % Input
             %
-            %  hsys - hydrosys object
+            %  hsys - hydroSystem object
             
             % simulation setup
             self.simu.checkinputs ();
@@ -310,8 +318,8 @@ classdef hydrosys < handle
                             fdc = mbdyn.pre.componentTplDriveCaller (drivecallers(1:3));
                             mdc = mbdyn.pre.componentTplDriveCaller (drivecallers(4:6));
                             
-                            forces = [forces, { mbdyn.pre.absoluteForce(mbnodes{mbnodeind}, 'null', fdc), ...
-                                                mbdyn.pre.absoluteCouple(mbnodes{mbnodeind}, mdc) } ];
+                            forces = [forces, { mbdyn.pre.structuralForce(mbnodes{mbnodeind}, 'absolute', 'null', fdc), ...
+                                                mbdyn.pre.structuralCouple(mbnodes{mbnodeind}, 'absolute', mdc) } ];
                             
                         end
                     end
@@ -429,7 +437,7 @@ classdef hydrosys < handle
             %
             % Input
             %
-            %  hsys - hydrosys object
+            %  hsys - hydroSystem object
             % 
             %  t - current time
             %
@@ -543,7 +551,7 @@ classdef hydrosys < handle
             %
             % Input
             %
-            %  hs - wsim.hydrosys object
+            %  hs - wsim.hydroSystem object
             %
             %  t - the current simulation time
             %
@@ -578,15 +586,15 @@ classdef hydrosys < handle
             %
             % Input
             %
-            %  hsys - hydrosys object
+            %  hsys - hydroSystem object
             %
             %  forceTotal - the total force calculated in a transient
             %    simulation before added mass force correction (as output
-            %    by hydrosys.hydroForces)
+            %    by hydroSystem.hydroForces)
             %
             %  forceAddedMass - the added mass force calculated in a
             %    transient simulation before added mass force correction
-            %    (as output by hydrosys.hydroForces)
+            %    (as output by hydroSystem.hydroForces)
             %
             %  accel - (6 x n x nBodies) matrix of accelerations calculated
             %    during a transient simulation 
@@ -629,7 +637,7 @@ classdef hydrosys < handle
 %             %
 %             % Input
 %             %
-%             %  hsys - hydrosys object
+%             %  hsys - hydroSystem object
 %             %
 %             
 %             % call each body's odeSimReset method

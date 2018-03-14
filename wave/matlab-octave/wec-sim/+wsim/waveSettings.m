@@ -14,7 +14,7 @@
 % limitations under the License.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-classdef wavesettings < handle
+classdef waveSettings < handle
     
     properties (SetAccess = 'public', GetAccess = 'public')%input file
         type                        = 'NOT DEFINED'                        % Wave type. Options for this varaibale are 'noWave' (no waves), 'regular' (regular waves), 'regularCIC' (regular waves using convolution integral to calculate radiation effects), 'irregular' (irregular waves), 'irregularPRE' (irregular waves with pre defined phase). The default is 'regular'.
@@ -50,12 +50,12 @@ classdef wavesettings < handle
     methods (Access = 'public')
         
         % Constructor
-        function obj = wavesettings (type)
-            % Creates a wavesettings object
+        function obj = waveSettings (type)
+            % Creates a waveSettings object
             %
             % Syntax
             %
-            % ws = wavesettings (type)
+            % ws = waveSettings (type)
             % 
             % Input
             %
@@ -72,7 +72,7 @@ classdef wavesettings < handle
             %
             % Output
             %
-            %  ws - wavesettings object
+            %  ws - waveSettings object
             %
             %
             

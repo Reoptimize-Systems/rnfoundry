@@ -16,7 +16,7 @@
 % limitations under the License.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-classdef simsettings < handle
+classdef simSettings < handle
 
     properties (SetAccess = 'public', GetAccess = 'public')%input file
         multibodySolver     = 'SimMechanics';                              % solver to use for mulitbody dynamics, can be SimMechanics or MBDyn
@@ -72,7 +72,7 @@ classdef simsettings < handle
 
     methods
         
-        function obj = simsettings (casedir)
+        function obj = simSettings (casedir)
             % Initilization function
             fprintf('WEC-Sim: An open-source code for simulating wave energy converters\n')
             fprintf('Version: %s\n\n',obj.version)

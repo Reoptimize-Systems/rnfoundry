@@ -97,6 +97,12 @@ function hydro = processnemoh (filedir, varargin)
 %
 
     options.HydroStructure = struct ();
+%     options.DoRadiationIRF = true;
+%     options.IRFDuration = [];
+%     options.IRFNSteps = [];
+%     options.IRFNOmega = [];
+%     options.IRFOmegaMin = [];
+%     options.IRFOmegaMax = [];
     
     options = parse_pv_pairs (options, varargin);
     
@@ -134,7 +140,7 @@ function hydro = processnemoh (filedir, varargin)
 
     hydro(hydroind).code = 'NEMOH';
 
-    [~, hydro(hydroind).file, ~] = fileparts (filedir); % Base name
+    [hydro(hydroind).filedir, hydro(hydroind).file, ~] = fileparts (filedir); % Base name
     
     if exist ( fullfile (filedir, 'mesh'), 'dir') == 7
         
@@ -410,5 +416,19 @@ function hydro = processnemoh (filedir, varargin)
     hydro = Normalize (hydro);  % Normalize the data according the WAMIT convention
 
 %     close(p); % close the waitbar
+
+%     if options.DoRadiationIRF
+%         hydro = Radiation_IRF ( hydro, ...
+%                                 options.RadIRFDuration, ...;
+%                                 options.RadIRFNSteps, ...
+%                                 options.RadIRFNOmega, ...
+%                                 options.RadIRFOmegaMin, ...
+%                                 options.RadIRFOmegaMax );
+%     end
+%     
+%     if options.DoRadiationIRF
+%     hydro = Radiation_IRF_SS (hydro, [], []);
+% 
+%     hydro = Excitation_IRF (hydro,157, [], [], [], 1.9);
 
 end

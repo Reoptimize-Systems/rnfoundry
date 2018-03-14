@@ -175,6 +175,14 @@ classdef powerTakeOff < handle
             self.id = newid;
         end
         
+        function advanceStep (self)
+            % advance to the next simulation time step
+            %
+            
+            self.logData ();
+            
+        end
+        
         function loggingSetup (self, logger)
             % sets up data logging for a wsim.linearPowerTakeOff object
             %
