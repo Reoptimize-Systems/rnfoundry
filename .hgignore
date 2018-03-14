@@ -12,10 +12,12 @@ sphinx/generated/**
 
 # mbdyn related generated files
 +test_wsim_RM3/*.mbd
+sphinx/api_reference/**
 
 # NEMOH generated files
 RM3_NEMOH_output/**
 
+common/matlab-octave/tb-ezyfit/html/
 
 # common patterns #
 -------------------
