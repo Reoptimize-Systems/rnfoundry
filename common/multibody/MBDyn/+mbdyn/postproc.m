@@ -26,6 +26,12 @@ classdef postproc < handle
         nodeNames;
         simInfo;
         mBDynOutFileName;
+        movFile;
+        outFile;
+        logFile;
+        ineFile;
+        jntFile;
+        txtFile;
         
     end
     
@@ -45,9 +51,16 @@ classdef postproc < handle
             % Input
             %
             %  mbdoutfilename - root path of the mbdyn output files, e.g.
-            %   if the files are mysim_results.out, mysim_results.move etc.
-            %   this should be 'mysim_results' ( or the full path without
-            %   extension e.g. /home/jblogs/mysim_results )
+            %   if the files are mysim_results.out, mysim_results.mov etc.
+            %   this can be 'mysim_results' ( or the full path without
+            %   extension e.g. /home/jblogs/mysim_results ). If a file
+            %   extension is present in mbdoutfilename, the postproc class
+            %   will first check for files with a base name without the
+            %   extension, e.g. if mbdoutfilename was 'mysim_results.mbd',
+            %   it would still check first for mysim_results.out,
+            %   mysim_results.mov etc. if these were not found, it will
+            %   then check for mysim_results.mbd.out, mysim_results.mbd.mov
+            %   etc.
             %
             %  info - information about the system which has been solved.
             %    This can be either a structure or a class of type
@@ -106,53 +119,48 @@ classdef postproc < handle
         end
         
         function loadResultsFromFiles (self, mbdoutfilename)
-        % load results from mbdyn output files
-        %
-        % Syntax
-        %
-        % loadResultsFromFiles (mbp, mbdoutfilename)
-        %
-        % Description
-        %
-        % loadResultsFromFiles loads the data output by MBDyn during a
-        % simulation in preparation for post-processing. Any previous data
-        % loded from output files is cleared.
-        %
-        % Input
-        %
-        %  mbp - mbdyn.postproc object
-        %
-        %  mbdoutfilename - root path of the mbdyn output files, e.g.
-        %   if the files are mysim_results.out, mysim_results.move etc.
-        %   this should be 'mysim_results' ( or the full path without
-        %   extension e.g. /home/jblogs/mysim_results )
-        %
-        %
-            
-            [pathstr, name, ext] = fileparts (mbdoutfilename);
+            % load results from mbdyn output files
+            %
+            % Syntax
+            %
+            % loadResultsFromFiles (mbp, mbdoutfilename)
+            %
+            % Description
+            %
+            % loadResultsFromFiles loads the data output by MBDyn during a
+            % simulation in preparation for post-processing. Any previous
+            % data loded from output files is cleared.
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  mbdoutfilename - root path of the mbdyn output files, e.g.
+            %   if the files are mysim_results.out, mysim_results.mov etc.
+            %   this should be 'mysim_results' ( or the full path without
+            %   extension e.g. /home/jblogs/mysim_results ). If a file
+            %   extension is present mbdoutfilename, the postproc class
+            %   will first check for files with a base name without the
+            %   extension, e.g. if mbdoutfilename was 'mysim_results.mbd',
+            %   it would still check first for mysim_results.out,
+            %   mysim_results.mov etc. if these were not found, it will
+            %   then check for mysim_results.mbd.out, mysim_results.mbd.mov
+            %   etc.
+            %
+            %
             
             self.clearData ();
             
             self.mBDynOutFileName = mbdoutfilename;
             
+            % get the MBDyn redirected output file
+            self.txtFile = self.checkFile ('.txt');
+            
 %             self.parseLogFile (logfile);
-            
-            % load .mov file
-            movfile = fullfile (pathstr, [name, '.mov']);
-            
-            if ~exist (movfile, 'file')
-                % in case file root name has dots in it
-                movfile = fullfile (pathstr, [name, ext, '.mov']);
-                if ~exist  (movfile, 'file')
-                    error ('MBDyn output file %s not found', movfile);
-                end
-            else
-                % make ext empty sp we can add it to the other files below
-                % whether it's needed or not
-                ext = '';
-            end
 
-            movdata = dlmread(movfile);
+            self.movFile = self.checkFile ('.mov');
+            
+            movdata = dlmread(self.movFile);
             
             self.nNodes = 0;
             
@@ -179,8 +187,7 @@ classdef postproc < handle
                     
             end
             
-            
-            % TODO: loading results only works for orientation matrix format
+            % parse the data
             for ind = 1:size(movdata,1)
                 
                 label = movdata(ind,1);
@@ -220,14 +227,19 @@ classdef postproc < handle
             % load .log file
             %
             % The log file contains a description of the problem in it's
-            % intial state including bodies and their labels
-            logfile = fullfile (pathstr, ext, [name, '.log']);
+            % intial state including bodies and their labels, in futre we
+            % may be able to generate an mbdyn.pre.system object from this
+            % if it's not supplied
+            self.logFile = self.checkFile ('.log');
             
             % load .ine file
-            inefile = fullfile (pathstr, ext, [name, '.ine']);
+            self.ineFile = self.checkFile ('.ine');
             
-            % load .frc file
-            frcfile = fullfile (pathstr, ext, [name, '.frc']);
+            % load .jnt file
+            self.jntFile = self.checkFile ('.jnt');
+            
+            % load .out file
+            self.outFile = self.checkFile ('.out');
             
             self.nodeNames = fieldnames (self.nodes);
             
@@ -990,6 +1002,29 @@ classdef postproc < handle
     
     % internal methods
     methods (Access = protected)
+        
+        function fpath = checkFile (self, mbext)
+            
+            [pathstr, name, ext] = fileparts (self.mBDynOutFileName);
+            
+            fpath1 = fullfile (pathstr, [name, mbext]);
+            fpath = fpath1;
+            if ~exist (fpath1, 'file')
+                
+                if isempty (ext)
+                    error ('MBDyn output file %s not found', fpath1);
+                else
+                    % in case file root name has dots in it
+                    fpath2 = fullfile (pathstr, [name, ext, mbext]);
+                    fpath = fpath2;
+                    if ~exist  (fpath, 'file')
+                        error ('MBDyn output file not found in \n%s\nor\n%s', fpath1, fpath2);
+                    end
+                end
+                
+            end
+            
+        end
 
         function h = drawnode (self, pos, rot, sx, sy, sz)
             
