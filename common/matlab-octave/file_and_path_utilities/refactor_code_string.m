@@ -61,6 +61,17 @@ function refactor_code_string (expression, replace, topdir, stripvc)
         end
     end
     
+    % +package directories are not on the path, but we want to search them
+    % too, so we add them here
+    pkgpaths = {};
+    for ind = 1:numel(thepath)
+        
+        pkgpaths = [ pkgpaths; addpkgpaths(thepath{ind}) ];
+        
+    end
+    
+    thepath = [thepath; pkgpaths];
+
     if nargin < 4
         stripvc = true;
     end
@@ -88,6 +99,26 @@ function refactor_code_string (expression, replace, topdir, stripvc)
             regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), expression, replace, true);
         end
 
+    end
+
+end
+
+function newpaths = addpkgpaths (testpath)
+
+    pkgpaths = dir (fullfile (testpath, '+*'));
+    
+    newpaths = {};
+
+    for ind = 1:numel (pkgpaths)
+        
+        if pkgpaths(ind).isdir
+            
+            newpaths = [ newpaths; fullfile(pkgpaths(ind).folder, pkgpaths(ind).name) ];
+            
+            newpaths = [ newpaths; addpkgpaths(newpaths{end}) ];
+        
+        end
+        
     end
 
 end
