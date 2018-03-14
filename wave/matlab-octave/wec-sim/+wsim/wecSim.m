@@ -1,4 +1,4 @@
-classdef wecsim < handle
+classdef wecSim < handle
     
     properties (GetAccess = public, SetAccess = private)
         
@@ -42,7 +42,7 @@ classdef wecsim < handle
     
     methods
         
-        function self = wecsim (hsys, mbsys, varargin)
+        function self = wecSim (hsys, mbsys, varargin)
             
             options.PTOs = {};
 %             options.StartTime = [];
@@ -53,8 +53,8 @@ classdef wecsim < handle
             
             options = parse_pv_pairs (options, varargin);
             
-            assert (isa (hsys, 'wsim.hydrosys'), ...
-                'hsys must be an wsim.hydrosys object');
+            assert (isa (hsys, 'wsim.hydroSystem'), ...
+                'hsys must be an wsim.hydroSystem object');
             
             assert (isa (mbsys, 'mbdyn.pre.system'), ...
                 'mbsys must be an mbdyn.pre.system object');
@@ -93,8 +93,8 @@ classdef wecsim < handle
         
         function addPTO (self, pto)
             
-            assert (isa (pto, 'wsim.powertakeoff'), ...
-                'pto must be a wsim.powertakeoff object (or derived class)');
+            assert (isa (pto, 'wsim.powerTakeOff'), ...
+                'pto must be a wsim.powerTakeOff object (or derived class)');
             
             % check that the PTO nodes are in the MBDyn system external
             % structual force element
@@ -266,19 +266,13 @@ classdef wecsim < handle
             % these forces, and not advace the self.lastTime step)
             mbconv = mb.applyForcesAndMoments (false);
             
-            % accept the data into the time history of solutions for the
-            % hydrodynamic force solver
-            self.hydroSystem.advanceStep ( self.lastTime, ...
-                                           vel(:,self.hydroNodeIndexMap(:,1)), ...
-                                           accel(:,self.hydroNodeIndexMap(:,1)) );
-            
             % store most recently calculated motion so it can be logged
             self.lastPositions = pos;
             self.lastVelocities = vel;
             self.lastAccelerations = accel;
             self.lastNodeForcesAndMomentsUncorrected = forces_and_moments;
 
-            self.logData ();
+            self.advanceStep ();
             
             % now begin the simulation loop, beginning from the next time
             % index
@@ -429,12 +423,7 @@ classdef wecsim < handle
                 self.lastNodeForcesAndMomentsUncorrected = forces_and_moments;
                 
                 self.logData ();
-
-                % accept the last data into the time history of solutions
-                % for the hydrodynamic system and advance
-                self.hydroSystem.advanceStep ( self.lastTime, ...
-                                               vel(:,self.hydroNodeIndexMap(:,1)), ...
-                                               accel(:,self.hydroNodeIndexMap(:,1)) );
+                self.advanceStep ();
                 
                 ind = ind + 1;
                 
@@ -617,7 +606,7 @@ classdef wecsim < handle
             % nodes associated with the PTO objects with all the nodes in
             % the external sturctural force element.
             %
-            % mapPTOForceInds updates the ptoIndexMap of the wsim.wecsim
+            % mapPTOForceInds updates the ptoIndexMap of the wsim.wecSim
             % object to contain a two column matrix. Each row corresponds
             % to each of the PTO objects. The first column is the index of
             % the column of the force_and_moment matrix corresponding to
@@ -627,7 +616,7 @@ classdef wecsim < handle
             %
             % Input
             %
-            %  ws - wsim.wecsim object
+            %  ws - wsim.wecSim object
             %
             %
             
@@ -708,13 +697,13 @@ classdef wecsim < handle
             % with all the nodes in the external structural force element.
             %
             % mapHydroForceInds updates the hydroNodeIndexMap of the
-            % wsim.wecsim object to contain a column vector containing the
+            % wsim.wecSim object to contain a column vector containing the
             % index of the column of the force_and_moment matrix
             % corresponding to each hydrobody in the system.
             %
             % Input
             %
-            %  ws - wsim.wecsim object
+            %  ws - wsim.wecSim object
             %
             
             
@@ -956,14 +945,24 @@ classdef wecsim < handle
                 self.logger.logVal ( 'ForceAddedMassUncorrected', self.lastForceAddedMassUncorrected );
             end
             
-            if self.loggingSettings.powerTakeOffInternal
-                
-                for ptoind = 1:numel (self.powerTakeOffs)
+            
+        end
+        
+        function advanceStep (self)
+            
+            self.logData ();
+            
+            % accept the last data into the time history of solutions
+            % for the hydrodynamic system and advance
+            self.hydroSystem.advanceStep ( self.lastTime, ...
+                                           self.lastVelocities(:,self.hydroNodeIndexMap(:,1)), ...
+                                           self.lastAccelerations(:,self.hydroNodeIndexMap(:,1)) );
+            
+            for ptoind = 1:numel (self.powerTakeOffs)
+                % PTOs handle their own data logging which is triggered by
+                % calling advanceStep on each PTO object
+                self.powerTakeOffs{ptoind}.advanceStep (self.lastTime);
                     
-                    self.powerTakeOffs{ptoind}.logData ();
-                    
-                end
-                
             end
             
         end

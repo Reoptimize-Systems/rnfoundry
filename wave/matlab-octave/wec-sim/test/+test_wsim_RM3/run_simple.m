@@ -86,8 +86,8 @@ absforcetol = 100;
 relforcetol = 1e-3;
 
 % all of the following will be wrapped up into wecsim class in future to
-% hide details of implementation (instead you will just make a wsim.wecsim
-% object and call wsim.wecsim.run () to run the simulation).
+% hide details of implementation (instead you will just make a wsim.wecSim
+% object and call wsim.wecSim.run () to run the simulation).
 %
 
 % start mbdyn

@@ -14,7 +14,7 @@
 % limitations under the License.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-classdef hydrobody < handle
+classdef hydroBody < handle
 
     properties (SetAccess = 'private', GetAccess = 'public') % hdf5 file
         hydroData         = struct()                                            % Hydrodynamic data from BEM or user defined.
@@ -129,13 +129,13 @@ classdef hydrobody < handle
     % public pre-processing related methods (and constructor)
     methods (Access = 'public') %modify object = T; output = F
 
-        function obj = hydrobody (filename, varargin)
-            % constructor for the hydrobody class
+        function obj = hydroBody (filename, varargin)
+            % constructor for the hydroBody class
             %
             % Syntax
             %
-            % hb = hydrobody (filename)
-            % hb = hydrobody (filename, caseDir)
+            % hb = hydroBody (filename)
+            % hb = hydroBody (filename, caseDir)
             %
             % Input
             %
@@ -148,7 +148,7 @@ classdef hydrobody < handle
             %
             % Output
             %
-            %  hb - a hydrobody object
+            %  hb - a hydroBody object
             %
             %
             
@@ -189,7 +189,7 @@ classdef hydrobody < handle
             %
             % - Generating the hydrodynamic data:
             %
-            % The hydrobody requires frequency-domain hydrodynamic
+            % The hydroBody requires frequency-domain hydrodynamic
             % coefficients (added mass, radiation damping, and wave
             % excitation). Typically, these hydrodynamic coefficients for
             % each body of the WEC device are generated using a boundary
@@ -207,7 +207,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - hydrobody object
+            %  hb - hydroBody object
             %
             %
             
@@ -382,7 +382,7 @@ classdef hydrobody < handle
 
             relCoord = obj.cg - x_rot;
 
-            rotatedRelCoord = hydrobody.rotateXYZ(relCoord, ax_rot, ang_rot);
+            rotatedRelCoord = hydroBody.rotateXYZ(relCoord, ax_rot, ang_rot);
 
             newCoord = rotatedRelCoord + x_rot;
 
@@ -446,7 +446,7 @@ classdef hydrobody < handle
         end
         
         function [node, body] = makeMBDynComponents (obj)
-            % creates mbdyn components for the hydrobody
+            % creates mbdyn components for the hydroBody
             %
             % Syntax
             %
@@ -460,7 +460,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hg - wsim.hydrobody object
+            %  hg - wsim.hydroBody object
             %
             % Output
             %
@@ -469,15 +469,15 @@ classdef hydrobody < handle
             %
             %  body - mbdyn.pre.body object attached to the node and with
             %    the appropriate mass and inertial proerties for the
-            %    hydrobody.
+            %    hydroBody.
             %
             %
             
             gref = mbdyn.pre.globalref;
             
-            ref_hydrobody = mbdyn.pre.reference ( obj.cg, [], [], [], 'Parent', gref);
+            ref_hydroBody = mbdyn.pre.reference ( obj.cg, [], [], [], 'Parent', gref);
 
-            node = mbdyn.pre.structuralNode6dof ('dynamic', 'AbsolutePosition', ref_hydrobody.pos);
+            node = mbdyn.pre.structuralNode6dof ('dynamic', 'AbsolutePosition', ref_hydroBody.pos);
 
             body = mbdyn.pre.body ( obj.mass,  ...
                                   [0;0;0], ...
@@ -835,7 +835,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %   hb - hydrobody object
+            %   hb - hydroBody object
             %
             %   waves - waveClass object with the desired wave parameters
             %     to be used in the simulation
@@ -848,8 +848,8 @@ classdef hydrobody < handle
             %
             % 
             
-            assert (isa (simu, 'wsim.simsettings'), 'waves must be a wsim.simsettings object')
-            assert (isa (waves, 'wsim.wavesettings'), 'waves must be a wsim.wavesettings object');
+            assert (isa (simu, 'wsim.simSettings'), 'waves must be a wsim.simSettings object')
+            assert (isa (waves, 'wsim.waveSettings'), 'waves must be a wsim.waveSettings object');
             assert (check.isScalarInteger (bodynum, false) , 'bodynum must be a scalar integer')
 
             % store waves and simu for later access
@@ -982,14 +982,14 @@ classdef hydrobody < handle
             %
             % odeSimReset resets various internal storeage parameters and
             % settings in preparation for performing a transient simulation
-            % based on the ODE solver routines, returning the hydrobody to
+            % based on the ODE solver routines, returning the hydroBody to
             % the state it is in just after calling odeSimSetup. This
             % should be called before re-running a transient simulation
             % with the same parameters.
             %
             % Input
             %
-            %   hb - hydrobody object
+            %   hb - hydroBody object
             %
             %
             
@@ -1049,7 +1049,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - hydrobody object
+            %  hb - hydroBody object
             %
             %  t - the last computed time step (the step at which the vel
             %    and accel values are being provided).
@@ -1128,7 +1128,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - hydrobody object
+            %  hb - hydroBody object
             %
             %  t - global simulation time
             %
@@ -1454,7 +1454,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - hydrobody oject
+            %  hb - hydroBody oject
             %
             %  t - current time step
             %
@@ -1546,7 +1546,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - wsim.hydrobody object
+            %  hb - wsim.hydroBody object
             %
             %  t - current 
             %
@@ -1558,7 +1558,7 @@ classdef hydrobody < handle
             %  ramped - scaled value of nominal, zero at t = 0, and equal
             %    to input nominal for t >= ramp period
             %
-            % See Also: wsim.hydrobody.hydroForces
+            % See Also: wsim.hydroBody.hydroForces
             %
 
             if t < obj.simu.rampT
@@ -1588,7 +1588,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - wsim.hydrobody object
+            %  hb - wsim.hydroBody object
             %
             %  t - current simulation time
             %
@@ -1627,20 +1627,20 @@ classdef hydrobody < handle
             % forces.
 
             % Compute new tri coords after cog rotation and translation
-            centerMeanFS = hydrobody.offsetXYZ (obj.bodyGeometry.center, obj.hydroData.properties.cg);
+            centerMeanFS = hydroBody.offsetXYZ (obj.bodyGeometry.center, obj.hydroData.properties.cg);
             avMeanFS     = obj.bodyGeometry.tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
 
             % Compute new tri coords after cog rotation and translation
-            center = hydrobody.rotateXYZ (obj.bodyGeometry.center, [1 0 0], pos(4));
-            center = hydrobody.rotateXYZ (center, [0 1 0], pos(5));
-            center = hydrobody.rotateXYZ (center, [0 0 1], pos(6));
-            center = hydrobody.offsetXYZ (center, pos);
-            center = hydrobody.offsetXYZ (center, obj.hydroData.properties.cg);
+            center = hydroBody.rotateXYZ (obj.bodyGeometry.center, [1 0 0], pos(4));
+            center = hydroBody.rotateXYZ (center, [0 1 0], pos(5));
+            center = hydroBody.rotateXYZ (center, [0 0 1], pos(6));
+            center = hydroBody.offsetXYZ (center, pos);
+            center = hydroBody.offsetXYZ (center, obj.hydroData.properties.cg);
 
             % Compute new normal vectors coords after cog rotation and translation
-            tnorm = hydrobody.rotateXYZ (obj.bodyGeometry.tnorm, [1 0 0], pos(4));
-            tnorm = hydrobody.rotateXYZ (tnorm, [0 1 0], pos(5));
-            tnorm = hydrobody.rotateXYZ (tnorm, [0 0 1], pos(6));
+            tnorm = hydroBody.rotateXYZ (obj.bodyGeometry.tnorm, [1 0 0], pos(4));
+            tnorm = hydroBody.rotateXYZ (tnorm, [0 1 0], pos(5));
+            tnorm = hydroBody.rotateXYZ (tnorm, [0 0 1], pos(6));
 
             % Compute area vectors
             av = tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
@@ -1670,7 +1670,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - wsim.hydrobody object
+            %  hb - wsim.hydroBody object
             %
             %  center - (n x 3) matrix of coordinated at which the
             %    distribution is to be calculated
@@ -1852,16 +1852,16 @@ classdef hydrobody < handle
             % Function to apply translation and rotation and calculate forces
 
             % Compute new tri coords after cog rotation and translation
-            center = hydrobody.rotateXYZ(obj.bodyGeometry.center, [1 0 0], pos(4));
-            center = hydrobody.rotateXYZ(center, [0 1 0], pos(5));
-            center = hydrobody.rotateXYZ(center, [0 0 1], pos(6));
-            center = hydrobody.offsetXYZ(center, pos);
-            center = hydrobody.offsetXYZ(center, obj.cg);
+            center = hydroBody.rotateXYZ(obj.bodyGeometry.center, [1 0 0], pos(4));
+            center = hydroBody.rotateXYZ(center, [0 1 0], pos(5));
+            center = hydroBody.rotateXYZ(center, [0 0 1], pos(6));
+            center = hydroBody.offsetXYZ(center, pos);
+            center = hydroBody.offsetXYZ(center, obj.cg);
 
             % Compute new normal vectors coords after cog rotation
-            tnorm = hydrobody.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], pos(4));
-            tnorm = hydrobody.rotateXYZ(tnorm, [0 1 0], pos(5));
-            tnorm = hydrobody.rotateXYZ(tnorm, [0 0 1], pos(6));
+            tnorm = hydroBody.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], pos(4));
+            tnorm = hydroBody.rotateXYZ(tnorm, [0 1 0], pos(5));
+            tnorm = hydroBody.rotateXYZ(tnorm, [0 0 1], pos(6));
 
             % Calculate the hydrostatic forces
             av = tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
@@ -1959,7 +1959,7 @@ classdef hydrobody < handle
             %
             % Input
             %
-            %  hb - hydrobody object
+            %  hb - hydroBody object
             %
             %  acc - (n x 6) time history of body accelerations for which
             %   the added mass is to be recalculated
@@ -2001,10 +2001,10 @@ classdef hydrobody < handle
             for it = 1:length(t)
                 % calculate new position
                 pos = pos_all(it,:);
-                vertex_mod = hydrobody.rotateXYZ(vertex,[1 0 0],pos(4));
-                vertex_mod = hydrobody.rotateXYZ(vertex_mod,[0 1 0],pos(5));
-                vertex_mod = hydrobody.rotateXYZ(vertex_mod,[0 0 1],pos(6));
-                vertex_mod = hydrobody.offsetXYZ(vertex_mod,pos(1:3));
+                vertex_mod = hydroBody.rotateXYZ(vertex,[1 0 0],pos(4));
+                vertex_mod = hydroBody.rotateXYZ(vertex_mod,[0 1 0],pos(5));
+                vertex_mod = hydroBody.rotateXYZ(vertex_mod,[0 0 1],pos(6));
+                vertex_mod = hydroBody.offsetXYZ(vertex_mod,pos(1:3));
                 % open file
                 filename = ['vtk' filesep 'body' num2str(obj.bodyNumber) '_' bodyname filesep bodyname '_' num2str(it) '.vtp'];
                 fid = fopen(filename, 'w');

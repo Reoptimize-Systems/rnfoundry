@@ -156,7 +156,7 @@ lssett.forceViscousDamping = false;
 lssett.forceAddedMass = false;
         
 % create the wesim object
-wsobj = wsim.wecsim ( hsys, mbsys, ...
+wsobj = wsim.wecSim ( hsys, mbsys, ...
                       'PTO', pto, ... % PTO(s) could also be added later using the 
                       'LoggingSettings', lssett );
 
