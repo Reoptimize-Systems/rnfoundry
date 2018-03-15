@@ -162,7 +162,7 @@ classdef wecSim < handle
             
         end
         
-        function data = run (self, varargin)
+        function datalog = run (self, varargin)
             % Run the WEC simulation
             
             options.OutputFilePrefix = fullfile (self.hydroSystem.simu.caseDir, 'output', 'wsim');
@@ -263,7 +263,7 @@ classdef wecSim < handle
             
             % send the forces and moments to MBDyn, but noting that we have
             % not yet converged (so MBDyn will send new motion based on
-            % these forces, and not advace the self.lastTime step)
+            % these forces, and not advance the self.lastTime step)
             mbconv = mb.applyForcesAndMoments (false);
             
             % store most recently calculated motion so it can be logged
@@ -317,6 +317,8 @@ classdef wecSim < handle
                     
                     continue;
                 end
+                
+                % repeat the force calulation to test convergence
                 
                 % clear out the previous forces and moments
                 forces_and_moments = zeros (6, self.nMBDynNodes);
@@ -422,7 +424,6 @@ classdef wecSim < handle
                 self.lastAccelerations = accel;
                 self.lastNodeForcesAndMomentsUncorrected = forces_and_moments;
                 
-                self.logData ();
                 self.advanceStep ();
                 
                 ind = ind + 1;
@@ -458,7 +459,9 @@ classdef wecSim < handle
             
             self.readyToRun = false;
             
-            data = self.logger;
+            self.logger.truncateAllVariables ();
+            
+            datalog = self.logger;
             
         end
         
@@ -492,7 +495,10 @@ classdef wecSim < handle
             R = mb.GetRot();
             for Rind = 1:size (R,3)
 %                 om = mbdyn.pre.orientmat ('orientation', R(:,:,Rind));
+%                 eul(1:3,Rind) = om.euler123 ();
+
                 eul(1:3,Rind) = self.euler123(R(:,:,Rind));
+
             end
             
             pos = [ mb.NodePositions();
@@ -543,10 +549,10 @@ classdef wecSim < handle
                 ptoForceAndTorque = self.powerTakeOffs{ptoind}.forceAndMoment ();
 
                 forces_and_moments (:,self.ptoIndexMap(ptoind,1)) = ...
-                    forces_and_moments (:,self.ptoIndexMap(ptoind,1)) + ptoForceAndTorque(:,1);
+                    forces_and_moments (:,self.ptoIndexMap(ptoind,1)) + ptoForceAndTorque(:,2);
                 
                 forces_and_moments (:,self.ptoIndexMap(ptoind,2)) = ...
-                    forces_and_moments (:,self.ptoIndexMap(ptoind,2)) + ptoForceAndTorque(:,2);
+                    forces_and_moments (:,self.ptoIndexMap(ptoind,2)) + ptoForceAndTorque(:,1);
                 
             end
             
