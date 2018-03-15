@@ -308,7 +308,7 @@ while status == 0
 
     forces (:,:,ind) = hydroforces;
     
-    [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.force ();
+    [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.forceFromFcn ();
     
     forces (1:3,1,ind) = forces (1:3,1,ind) + Fpto(:,1);
     forces (1:3,2,ind) = forces (1:3,2,ind) + Fpto(:,2);
@@ -354,7 +354,7 @@ while status == 0
 
     forces (:,:,ind) = newhydroforces;
 
-    [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.force ();
+    [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] =  pto.forceFromFcn ();
     
     forces (1:3,1,ind) = forces (1:3,1,ind) + Fpto(:,1);
     forces (1:3,2,ind) = forces (1:3,2,ind) + Fpto(:,2);
@@ -402,7 +402,7 @@ while status == 0
         forces (:,:,ind) = newhydroforces;
 
 
-        [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] = pto.force ();
+        [Fpto, ptoforce(ind), xRpto(ind) vRpto(ind)] = pto.forceFromFcn ();
 
         forces (1:3,1,ind) = forces (1:3,1,ind) + Fpto(:,1);
         forces (1:3,2,ind) = forces (1:3,2,ind) + Fpto(:,2);
