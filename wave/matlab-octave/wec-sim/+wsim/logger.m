@@ -1,11 +1,11 @@
 classdef logger < handle
-% wsim.logger
+% class to log data with variables of any size
 %
 % Description
 %
-% A matlab class to create objects that can be used to log various events
-% during the execution of a matlab script/function. This class is mainly a
-% container class, with some additional functionality builtin to operate on
+% A matlab class for logging data and/or various events during the
+% execution of a matlab script/function. This class is mainly a container
+% class for logged data, with some additional functionality to operate on
 % the stored data in generating plots, applying functions etc.
 % 
 % The main aim of this class is to consolidate and store all the outputs
@@ -17,10 +17,28 @@ classdef logger < handle
 % There are several ways in which you can use this class. You can either
 % (1) create a logger object, and start logging into the class
 % (2) user's class can be inherited from logger
-% (3) a global/persistent logger object can be created to log from various 
-% functions
-% (4) you can use matlab's event framework to log events by adding 
+% (3) you can use matlab's event framework to log events by adding 
 % appropriate listeners.
+% 
+% wsim.logger Methods:
+%
+%  logger - constructor
+%  addVariable - adds a variable to be logged (initialises data structures)
+%  getInfo - get information in a structure for one or more logged variables
+%  logErr - log an error  message
+%  logMesg - log a general message
+%  logWarn - log a warning message
+%  logObj - append and object to a logged object series
+%  logVal - append a value to a logged variable to the 
+%  plot2Vars - plot two scalar logged variables against each other
+%  plotFofVar - plot funcitno of variable
+%  plotVar - plot a scalar variable
+%  setDefaultDesc - set the default description
+%  setDesc - set the description for a logged variable
+%  setMesgFunc - set the function called when logging a message
+%  setPlotFunc - set the function to be used for plotting
+%  setSeries - set an entire data series directly
+%  setSilent - turn off all messages except errors and warnings
 % 
 % Examples
 %
@@ -48,7 +66,8 @@ classdef logger < handle
 % Also see logger_demo.m for example usage.
 %
 % Author: Richard Crozier
-% Derived from the logger class developed by Pavan Mallapragada 
+%
+% Derived from the original logger class developed by Pavan Mallapragada 
 % Organization:  Massachusetts Institute of Technology
 % Contact:       <pavan_m@mit.edu>
 %
@@ -79,7 +98,7 @@ classdef logger < handle
         warnings;
 
         % Cell array to store error messages
-        errors; % Really? :)
+        errors;
 
         % Boolean value. If set to true, logger will not print any of its messages. It will still print the warnings/errors that the user specifies it to.
         silent;
@@ -97,15 +116,6 @@ classdef logger < handle
     
 
     methods 
-    % ==========================================================================
-    % @brief constructs an empty logger object.
-    % 
-    % Initializes basic plotting functions, verbosity and messaging options.
-    % Initializes the structures used for storing messages/warnings/errors
-    % etc.
-    %
-    % @retval obj object of the logger class. 
-    % ==========================================================================
 
         function obj = logger()
             % constructs an empty logger object.
@@ -140,6 +150,7 @@ classdef logger < handle
             obj.fieldNames = {};
             
         end
+        
         
         function addVariable (obj, name, varsize, varargin)
             % add a variable to be logged
@@ -313,7 +324,8 @@ classdef logger < handle
                                            'IndexDimension', logdim, ...
                                            'LastLogIndex', 0, ...
                                            'IndependentVariable', options.IndependentVariable, ...
-                                           'LoggedVariableNumber', numel(obj.info) + 1);
+                                           'LoggedVariableNumber', numel(obj.info) + 1, ...
+                                           'LoggedSize', loggedvarsize );
 
             end
             
@@ -327,96 +339,129 @@ classdef logger < handle
             obj.numVariables = numel (obj.fieldNames);
             
         end
-
-%     % ==========================================================================
-%     % @brief generic logger function without a specific name for the logged-object.
-%     % 
-%     % This function accepts any matlab variable as input, and starts logging it
-%     % with the same name.  This is useful when you do not want to give a different
-%     % name to the logged object than its own variable name. This function
-%     % determines if the variable is a numeric scalar or an object, and calls the
-%     % appropriate named-logger function.
-%     % 
-%     % @param obj An object of the logger class.
-%     % @param variable any variable from your workspace.
-%     % ==========================================================================
-% 
-%         function [] = logData (obj, variable)
-% 
-%             if isnumeric(variable)
-%                 obj.logVal(varname, variable);
-%             else
-%                 obj.logObj(varname, variable);
-%             end
-%             
-%         end
  
-    % ==========================================================================
-    % @brief logs the given message in the error category. 
-    %
-    % Logs the error messages. This can be used for failed assertions or any other errors.
-    % This is useful when a logger object is declared persistent or global and mutliple
-    % functions are communicating with the same logger object.
-    %
-    % @param obj An object of the logger class.
-    % @param mesg : a string containing your error message. If you are sure you will never set show to true, this can be any object. Although it is not recommended.
-    % @param show : true/false specifying whether to print the message on the command window.
-    % ==========================================================================
 
         function [] = logErr(obj, mesg, show)
+            % log an error text message 
+            %
+            % Syntax
+            %
+            % logErr(obj, mesg, show)
+            %
+            % Description
+            %
+            % Logs text messages given as an error, which are stored in
+            % the errors property of the logger class.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  mesg - character vector to be stored in the errors log.
+            %
+            %  show - true/false flag indicating whether to also print the
+            %   message to the command line.
+            %
+            %
+            % See Also: wsim.logger.logWarn, wsim.logger.logMesg
+            %
+            
+            assert (ischar (mesg), 'mesg must be a character vector');
+            
             obj.errors{end+1} = mesg;
             if nargin > 2 && show
                 fprintf('(e): %s\n',mesg);
             end
         end
+        
  
-    % ==========================================================================
-    % @brief logs the given message in the warning category. 
-    %
-    % Logs the warning messages. 
-    %
-    % @param obj An object of the logger class.
-    % @param mesg : a string containing your warning message. If you are sure you will never set show to true, this can be any object. Although it is not recommended.
-    % @param show : true/false specifying whether to print the message on the command window.
-    % ==========================================================================
         function [] = logWarn(obj, mesg, show)
+            % log a warning text message 
+            %
+            % Syntax
+            %
+            % logWarn(obj, mesg, show)
+            %
+            % Description
+            %
+            % Logs text messages given as a warning, which are stored in
+            % the warnings property of the logger class.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  mesg - character vector to be stored in the warnings log.
+            %
+            %  show - true/false flag indicating whether to also print the
+            %   message to the command line.
+            %
+            %
+            % See Also: wsim.logger.logErr, wsim.logger.logMesg
+            %
+            
+            assert (ischar (mesg), 'mesg must be a character vector');
+            
             obj.warnings{end+1} = mesg;
             if nargin > 2 && show
                 fprintf('(w): %s\n',mesg);
             end
         end
+        
  
-    % ==========================================================================
-    % @brief logs the given message in the information category. 
-    %
-    % Logs any information messages given. 
-    %
-    % @param obj An object of the logger class.
-    % @param mesg : a string containing your warning message. If you are sure you will never set show to true, this can be any object. Although it is not recommended.
-    % @param show : true/false specifying whether to print the message on the command window.
-    % ==========================================================================
+        function logMesg(obj, mesg, show)
+            % log a general text message 
+            %
+            % Syntax
+            %
+            % logMesg(obj, mesg, show)
+            %
+            % Description
+            %
+            % Logs text messages given for information, which are stored in
+            % the messages property of the logger class.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  mesg - character vector to be stored in the message log.
+            %
+            %  show - true/false flag indicating whether to also print the
+            %   message to the command line.
+            %
+            %
+            % See Also: wsim.logger.logErr, wsim.logger.logWarn
+            %
+            
+            assert (ischar (mesg), 'mesg must be a character vector');
 
-        function [] = logMesg(obj, mesg, show)
             obj.messages{end+1} = mesg;
             if nargin > 2 && show
-                fprintf('(i): %s\n',mesg);
+                fprintf('(i): %s\n', mesg);
             end
+            
         end
 
-    % ==========================================================================
-    % @brief This function logs the non-numeric objects, and stores them in a field as a cell array.
-    %
-    % This is useful for storing arrays, structures, etc that are non-scalar and non-numeric. These fields cannot be used for
-    % plotting at this point. More functionality on this would be added in the newer versions. At this point
-    % The class is only a container for these objects. 
-    % 
-    % @param obj An object of the logger class.
-    % @param field The field name you are logging.
-    % @param val   The value any matlab object.
-    % ==========================================================================
-        function [] = logObj(obj, field, val)
+        
+        function [] = logObj(obj, field, obj2log)
+            % logs non-numeric objects, and stores them in a field as a cell array.
+            %
+            % Description
+            %
+            % Log a non-numeric object. Non-numeric object data cannot be
+            % plotted.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  field - The field name you are logging.
+            %
+            %  val - The value any matlab object.
+    
             try
-                obj.data.(field){end+1} = val;
+                obj.data.(field){end+1} = obj2log;
             catch
                 obj.addprop(field);
                 if ~obj.silent
@@ -424,46 +469,59 @@ classdef logger < handle
                 end
                 obj.fieldNames{end+1} = field;
                 obj.data.(field) = {};
-                obj.data.(field){end+1} = val;
+                obj.data.(field){end+1} = obj2log;
             end
 
         end
 
-    % ==========================================================================
-    % @brief This function sets the default message function for the logger object.
-    %
-    % If you want logger to not quit your process, because of an error it
-    % encounters, you can set it to @warning (it is default). If you want to be
-    % strict, and debut errors in logger function calls, you can set it to @error.
-    % 
-    % @param obj An object of the logger class.
-    % @param mf function handle you would like to use for displaying logger's internal error/warning messages.
-    % ==========================================================================
-        function [] = setMesgFunc(obj, mf) 
-            obj.mesgfunc  = mf; 
+
+        function setMesgFunc(obj, mf) 
+            % set the default waring/error function for the logger object
+            %
+            % Syntax
+            %
+            % setMesgFunc(obj, mf)
+            %
+            % Description
+            %
+            % setMesgFunc sets the function which is run when an internal
+            % warning is issued (this is NOT related to the logMesg,
+            % logWarn or logErr methods). By default @warning is used for
+            % most internal warnings/errors, but this can be replaced, e.g.
+            % with @error for more strict treatment of problems.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  mf - function handle to new function to be run when an
+            %   internal error occurs. Should take a single character
+            %   vector input.
+            %
+            %
+            
+            assert (isa (mf, 'function_handle'), ...
+                'mf must be a function handle');
+            
+            obj.mesgfunc  = mf;
+            
         end 
 
-    % ==========================================================================
-    % @brief Default description which is used for labeling the x-axis.
-    % 
-    % This is useful while plotting single-variables (fields).
-    % ==========================================================================
+
         function [] = setDefaultDesc(obj, str)
+            % set the default description which is used for labeling the x-axis.
+            %
+            % Description
+            %
+            % The default description is used when plotting, for the X axis
+            % label when there is no independant variable associated with a
+            % variable.
+            %
+            
+            
             obj.defaultDesc = str;
         end
- 
-    % ==========================================================================
-    % @brief This function is not used yet. This is written here for possible future use.
-    % ==========================================================================
-        function [] = setDefaultField(obj,field)
-            obj.defaultField =  field;
-        end
 
-    % ==========================================================================
-    % @brief Overriden disp function for the logger class.
-    %
-    % Displays the logger object with all its fields and their sizes.
-    % ==========================================================================
 
         function [] = disp(obj)
             % Overriden disp function for the logger class.
@@ -497,81 +555,129 @@ classdef logger < handle
             fprintf(1, printstr, 'errors', length(obj.errors));
         end
 
-    % ==========================================================================
-    % @brief set the description for a field to be used for x-y labels in plotting. 
-    % 
-    % The arguments could be two cell arrays, with fieldname
-    % and descritpion corresponding to each other, or two strings. 
-    %
-    % @param obj An object of the logger class
-    % @param f   A string or a cell array of strings containing the field names 
-    % @param desc   A string or a cell array of strings containing descriptions of corresponding fields
-    %
-    % ==========================================================================
 
-        function [obj] = setDesc(obj, field, desc)
+        function setDesc(obj, varname, desc)
+            % set the description for a variable to be used for x-y labels in plots
+            %
+            % Syntax
+            %
+            % setDesc(obj, varname, desc)
+            %
+            % Description
+            %
+            % setDesc set the description for one or more variables. The
+            % description is used when plotting as the label for the
+            % appropriate axis.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  varname - either a character vector containing the name of
+            %   logged variable for which the description is to be set, or
+            %   a cell array of character vectors containing the names of
+            %   several variables for which the descriptions are to be set.
+            %   If a cell array, it must be the same size as desc (see
+            %   below).
+            %
+            %  desc - character vector containing the new description for
+            %   the variable in varname, or a cell array of character
+            %   vectors containing a description for each variable in
+            %   varname (when it is a cell array).
+            %
 
-            if ischar(field) && ischar(desc)
-                obj.info.(field).Description = desc;
-            elseif iscell(field) && iscell(desc)
+            if ischar(varname) && ischar(desc)
+                obj.info.(varname).Description = desc;
+            elseif iscell(varname) && iscell(desc)
                 
-                assert (samesize (field, desc), ...
-                    'If field and desc are cell string arrays they must be the same size');
+                assert (samesize (varname, desc), ...
+                    'If varname and desc are cell string arrays they must be the same size');
                 
-                for i = 1:numel(field)
-                    obj.info.(field{i}).Description = desc{i};
+                for i = 1:numel(varname)
+                    obj.info.(varname{i}).Description = desc{i};
                 end
             else
-                error ('field and desc must be both either strings, or cell string arrays of the same size')
+                error ('varname and desc must be both either character vectors, or cell arrays of the same size')
             end
             
         end
 
-    % ==========================================================================
-    % @brief Sets the plotting function to be used. 
-    % 
-    % Sets the plot function. Its default vaule is plot. You can make it semilogx, semilogy, etc.
-    %
-    % @param pf_handle Plot function handle.
-    % ==========================================================================
 
-        function [obj] = setPlotFunc(obj, pf_handle)
+        function setPlotFunc(obj, pf_handle)
+            % Set the plotting function to be used. 
+            %
+            %
+            % Syntax
+            %
+            % setPlotFunc(obj, pf_handle)
+            %
+            % Description
+            %
+            % Set the plotting function to be used when calling plotVar,
+            % plotFofVar, plot2Vars etc.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  pf_handle - function handle containing plotting function to
+            %   be used.
+            %
+            % See Also: wsim.logger.plotVar, wsim.logger.plotFofVar
+            %           wsimlogger.plot2Vars
+            %
+            
             obj.plotfunc = pf_handle;
         end
 
-    % ==========================================================================
-    % @brief given a string specifying a numeric scalar field, and a funtion handle,
-    % the function is first applied to the field, and then it is plotted.
-    %  
-    % For example, if a user logs a fields 'height', the log(heights) can be plotted as
-    % logger.plotFofVar('height',@log). The parameters to
-    % the plot can be provided after the fields, and all
-    % those arguments go to the plot function.  For example,
-    % logger.plotFofVar('height','@log','LineWidth',2,'Color','r'); will pass the
-    % last four arguments to plot.
-    %
-    % @param obj logger object
-    % @param field   a string specifying the name of logged field.
-    % @param func   a function handle that is to be evaluated on the field.
-    % @param varargin  any arguments that are to be sent to the plotting function.
-    % 
-    % @retval h A handle to the plot generated. Useful for formatting by the user.
-    % ==========================================================================
 
+        function h = plotFofVar(obj, varname, func, varargin)
+            % apply function to logged variable and plot the result
+            %
+            %
+            % Syntax
+            %
+            % h = plotFofVar(obj, varname, func) 
+            % h = plotFofVar(obj, varname, func, plotarg1, plotarg2, ..., plotargn)
+            %
+            % Description
+            %
+            % plotFofVar applies a function to a logged variable and plots
+            % the result. For example, if a user logs a variable 'height',
+            % the log(heights) can be plotted as
+            % logger.plotFofVar('height',@log). The parameters to the plot
+            % can be provided after the fields, and all those arguments go
+            % to the plot function.  For example,
+            % logger.plotFofVar('height','@log','LineWidth',2,'Color','r');
+            % will pass the last four arguments to plot.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  varname - name of logged variable to be plotted
+            %
+            %  func - function handle containing function to be applied to
+            %   the variable before plotting.
+            %
+            % Output
+            %
+            %  h - handle to created plot
+            %
+            % See Also: 
+            %
 
-        function [h] = plotFofVar(obj, field, func, varargin)
+            if ~ischar(varname), obj.mesgfunc([varname 'must be a string specifying field that are already added to the logger object.']); return; end
+            if ~isnumeric(obj.data.(varname)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' varname]); return; end
+            if ~isa(func, 'function_handle') obj.mesgfunc('third argument func must be a function handle'); return; end
 
-            if ~ischar(field), 	 mesgfunc([field 'must be a string specifying field that are already added to the logger object.']); return; end
-            if ~isnumeric(obj.data.(field)) mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' field]); return; end
-            if ~isa(func, 'function_handle') mesgfunc(['third argument func must be a function handle']); return; end
+            plotvals = func(obj.data.(varname));
 
-            plotvals = func(obj.data.(field));
-
-            h = obj.plotfunc(obj.data.(field), varargin{:});
+            h = obj.plotfunc(obj.data.(varname), varargin{:});
 
             hold on;
 
-            ylabel([func2str(func) ' (' obj.info.Descriptions.(field) ')'], 'FontSize', 16);
+            ylabel([func2str(func) ' (' obj.info.Descriptions.(varname) ')'], 'FontSize', 16);
             if ~isempty(obj.defaultDesc)
                 xlabel(obj.defaultDesc,'FontSize',16);
             end
@@ -579,37 +685,51 @@ classdef logger < handle
             set(gca,'FontSize',16);
 
             hold off;
+            
         end
 
-    % ==========================================================================
-    % @brief given a string specifying a numeric scalar field, it is plotted.
-    %  
-    % For example, if a user logs a fields 'height', using
-    % logger.plotVar('height') will plot height. The parameters to
-    % the plot can be provided after the fields, and all
-    % those arguments go to the plot function.  For example,
-    % logger.plotVar('height','LineWidth',2,'Color','r'); will pass the
-    % last four arguments to plot.
-    %
-    % @param obj logger object
-    % @param field   a string specifying the name of logged field 1.
-    % @param varargin  any arguments that are to be sent to the plotting function.
-    % 
-    % @retval h A handle to the plot generated. Useful for formatting by the user.
-    % ==========================================================================
 
-
-        function [h] = plotVar(obj, field, varargin)
-
-            if ~ischar(field), 	 mesgfunc([field 'must be a string specifying field that are already added to the logger object.']); return; end
-            if ~isnumeric(obj.data.(field)) mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' field]); return; end
+        function h = plotVar (obj, field, varargin)
+            % given a string specifying a numeric scalar field, it is plotted.
+            %
+            % Syntax
+            %
+            % h = plotVar(obj, field)
+            % h = plotVar(obj, field, plotarg1, plotarg2, ..., plotargn)
+            %
+            % Description
+            %
+            % plotVar Plots one of the logged variables. If a user logs a
+            % fields 'height', using logger.plotVar('height') will plot
+            % height. The parameters to the plot can be provided after the
+            % fields, and all those arguments go to the plot function.  For
+            % example, logger.plotVar('height','LineWidth',2,'Color','r');
+            % will pass the last four arguments to plot.
+            %
+            % Input
+            %
+            %  obj - logger object
+            % 
+            %  field - a string specifying the name of logged field 1.
+            %
+            %  plotarg1 - any arguments that are to be sent to the plotting
+            %   function.
+            % 
+            % Output
+            %
+            %  h - A handle to the plot generated. Useful for formatting by
+            %   the user.
+            % ==========================================================================
+    
+            if ~ischar(field), obj.mesgfunc([field 'must be a string specifying field that are already added to the logger object.']); return; end
+            if ~isnumeric(obj.data.(field)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' field]); return; end
 
 
             h = obj.plotfunc(obj.data.(field), varargin{:});
 
             hold on;
 
-            ylabel(obj.info.Descriptions.(field), 'FontSize', 16);
+            ylabel(obj.info.(field).Description, 'FontSize', 16);
 
             if ~isempty(obj.defaultDesc)
                 xlabel(obj.defaultDesc,'FontSize',16);
@@ -703,7 +823,7 @@ classdef logger < handle
             %
             %  status - 0 if the variable varname exists, -1 if not.
             %
-            % See Also: 
+            % See Also: wsim.logger.addVariable
             %
 
             status = 0;
@@ -738,11 +858,59 @@ classdef logger < handle
         end
         
         function setSeries (obj, varname, newdata)
-            % set values for an entire data series directly (replaces
-            % existing data)
+            % set values for an entire data series directly
+            %
+            % Syntax
+            %
+            % setSeries (obj, varname, newdata)
+            %
+            % Description
+            %
+            % setSeries set the values for an entire data series for a
+            % logged variable directly. All existing logged data will be
+            % wiped, and the new data will be put into the variable. If the
+            % variable is associated with an independant variable, the
+            % length of the new data series must match the length of the
+            % associated independant variable.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  varname - character vector with a single variable
+            %   name for which the entire data series is to be set. If no
+            %   exact match is found for the name in varname, a case
+            %   insensitive search is performed and any unambiguous
+            %   shortening of a variable name is allowed. e.g. to get the
+            %   info for a logged variable named 'ExampleLoggedVariable'
+            %   one can use the string 'ExampleLog'.
+            %
+            %  newdata - a new data series for the logged variable. This
+            %   will replace any existing data.
+            %
+            %
+            % See Also: wsim.logger.getInfo
+            %
+
+            assert (ischar (varname), 'varname should be a character vector containing the name of the variable for which to set the series.');
             
+            % getInfo will return a structure with one field, which will be
+            % the correct variable name (getInfo finds any unambiguous
+            % match for the name)
             varinfo = obj.getInfo (varname);
             
+            % there will only be one field in varinfo, which is the proper
+            % name of the variable
+            fname = fieldnames (varinfo);
+            if ~strcmp(fname, varname)
+                obj.logWarn (sprintf ('Using non-exact match in setSeries for %s. Input variable name was %s', fname, varname));
+            end
+            
+            % replace the input variable name with the matched name
+            varname = fname{1};
+            
+            % The field for this variable will contain the info for the
+            % variable, so we get it's contents
             varinfo = varinfo.(varname);
             
             if ~isempty (varinfo.IndependentVariable)
@@ -771,13 +939,30 @@ classdef logger < handle
             end
             
             % store the new data in the variable
-            obj.data.(varname) = newdata;
+            loggedvarsize = varinfo.LoggedSize;
+            loggedvarsize(varinfo.IndexDimension) = varinfo.PreallocatedLogLength;
+            % clear out existing data and replace with preallocated nans
+            obj.data.(varname) = nan (loggedvarsize);
+            
+            % copy the pre-constructed indexing structure (created when
+            % adding the variable)
+            S = varinfo.IndexAssignment;
+            
+            % build the correct indices into the logged variable by
+            % replacing the appropriate index with the new log indices
+            S.subs{varinfo.IndexDimension} = 1:sz(varinfo.IndexDimension);
+            
+            % assign the new values to the series
+            obj.data.(varname) = subsasgn (obj.data.(varname), S, newdata);
+
+            % update the log index
+            obj.info.(varname).LastLogIndex = sz(varinfo.IndexDimension);
             
         end
 
 
         function setSilent(obj, bool)
-            % turn off messages (but not warining or errors messages)
+            % turn off messages (but not warning or error messages)
             %
             % Syntax
             %
@@ -799,10 +984,6 @@ classdef logger < handle
             %  bool - true/false flag. If true, messages will be silenced,
             %   but warning and error messages will still be displayed.
             %
-            % Output
-            %
-            %
-            %
             % See Also: 
             %
             
@@ -822,7 +1003,7 @@ classdef logger < handle
             % Description
             %
             % Returns a structure containing information on one or more
-            % logged variable in the wsim.logger object. This is a subset
+            % logged variables in the wsim.logger object. This is a subset
             % of the structure in the wsim.logger.info property. Variables
             % can be found by usng their full exact name or any unambiguous
             % cases insensitive matching shorter string.
@@ -831,13 +1012,13 @@ classdef logger < handle
             %
             %  lg - wsim.logger object
             %
-            %  reqvarnames - string (char array) with a single variable
-            %    name, or a cell array of strings with multiple variable
-            %    names. If no exact match is found a case insensitive
-            %    search is performed and any unambiguous shortening of a
-            %    variable name is allowed. e.g. to get the info for a
-            %    logged variable named 'ExampleLoggedVariable' one can use
-            %    the string 'ExampleLog'.
+            %  reqvarnames - character vector with a single variable
+            %   name, or a cell array of character vectors with multiple
+            %   variable names. If no exact match is found a case
+            %   insensitive search is performed and any unambiguous
+            %   shortening of a variable name is allowed. e.g. to get the
+            %   info for a logged variable named 'ExampleLoggedVariable'
+            %   one can use the string 'ExampleLog'.
             %
             % Output
             %
@@ -867,8 +1048,13 @@ classdef logger < handle
             %      independant variable associated with this variable. Can
             %      be empty if none is assigned, typically this is 'Time'.
             %
+            %    LoggedSize : This is the size of the logged variable
+            %      internally to the logger object, after adding any
+            %      dimensions in order to log along the first singleton, or
+            %      user specified dimension, but before preallocation.
             %
-            % See Also: 
+            %
+            % See Also: wsim.logger.setSeries
             %
 
             if iscellstr (reqvarnames)
