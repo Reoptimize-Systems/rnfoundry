@@ -13,9 +13,10 @@ classdef powerTakeOff < handle
         loggingInfo;
     end
     
-    properties (GetAccess=protected, SetAccess=private)
+    properties (GetAccess=protected, SetAccess=protected)
         logger;
         loggerReady;
+        internalVariables;
     end
     
     methods (Abstract)
@@ -175,7 +176,7 @@ classdef powerTakeOff < handle
             self.id = newid;
         end
         
-        function advanceStep (self)
+        function advanceStep (self, varargin)
             % advance to the next simulation time step
             %
             
@@ -242,10 +243,10 @@ classdef powerTakeOff < handle
             if self.loggerReady
                 for ind = 1:numel(self.loggingInfo.LoggedVarInds)
                     
-                    propname = sprintf ('last%s', self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)});
+                    fieldname = sprintf ('Last%s', self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)});
                     
                     self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
-                                         self.(propname) ...
+                                         self.internalVariables.(fieldname) ...
                                        );
                 end
             else
