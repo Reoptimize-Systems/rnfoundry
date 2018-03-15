@@ -4,11 +4,6 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
         
         mbdynForceObj;
         
-        % internal logging variables
-        lastInternalForce;
-        lastRelativeDisplacement;
-        lastRelativeVelocity;
-        
     end
     
     methods
@@ -117,6 +112,10 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
                                     'InitialDisplacementZero', options.InitialDisplacementZero, ...
                                     'ForceFcn', force_fcn );
                                 
+            self.internalVariables.LastInternalForce = [];
+            self.internalVariables.LastRelativeDisplacement = [];
+            self.internalVariables.LastRelativeVelocity = [];
+                                
         end
         
         function [FM, ptoforce, reldisp, relvel] = forceAndMoment (self)
@@ -126,9 +125,9 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             % need to add zero moments to forces
             FM = [FM; zeros(size (FM))];
             
-            self.lastInternalForce = ptoforce;
-            self.lastRelativeDisplacement = reldisp;
-            self.lastRelativeVelocity = relvel;
+            self.internalVariables.LastInternalForce = ptoforce;
+            self.internalVariables.LastRelativeDisplacement = reldisp;
+            self.internalVariables.LastRelativeVelocity = relvel;
             
         end
         
