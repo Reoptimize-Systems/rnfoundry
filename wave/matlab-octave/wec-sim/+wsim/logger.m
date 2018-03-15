@@ -39,6 +39,8 @@ classdef logger < handle
 %  setPlotFunc - set the function to be used for plotting
 %  setSeries - set an entire data series directly
 %  setSilent - turn off all messages except errors and warnings
+%  truncateVariable - strip preallocated space from variable
+%  truncateAllVariables - strip preallocated space from all variables
 % 
 % Examples
 %
@@ -260,6 +262,7 @@ classdef logger < handle
             indass.type = '()';
             logdim = 0;
             loggedvarsize = varsize;
+            datadims = 1:numel(varsize);
             
             if ~isempty (options.ForceLogDimension)
                 
@@ -316,12 +319,15 @@ classdef logger < handle
             if isfield (obj.info, name)
                 error ('A variable named %s is already being logged, you must choose a unique name.', name);
             else
+                
+%                 datadims(logdim) = [];
             
                 obj.info.(name) = struct ( 'Description', options.Description, ...
                                            'Size', varsize, ...
                                            'PreallocatedLogLength', options.PreallocateStorage, ...
                                            'IndexAssignment', indass, ...
                                            'IndexDimension', logdim, ...
+                                           'DataDimensions', datadims, ...
                                            'LastLogIndex', 0, ...
                                            'IndependentVariable', options.IndependentVariable, ...
                                            'LoggedVariableNumber', numel(obj.info) + 1, ...
@@ -689,7 +695,7 @@ classdef logger < handle
         end
 
 
-        function h = plotVar (obj, field, varargin)
+        function h = plotVar (obj, varname, varargin)
             % given a string specifying a numeric scalar field, it is plotted.
             %
             % Syntax
@@ -721,44 +727,69 @@ classdef logger < handle
             %   the user.
             % ==========================================================================
     
-            if ~ischar(field), obj.mesgfunc([field 'must be a string specifying field that are already added to the logger object.']); return; end
-            if ~isnumeric(obj.data.(field)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' field]); return; end
+            if ~ischar(varname), obj.mesgfunc([varname 'must be a string specifying field that are already added to the logger object.']); return; end
+            if ~isnumeric(obj.data.(varname)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' varname]); return; end
 
+            indepvar = obj.info.(varname).IndependentVariable;
+            
+            if isempty (indepvar)
+                
+                h = obj.plotfunc(obj.data.(varname), varargin{:});
+            
+                ylabel(obj.info.(varname).Description, 'FontSize', 16);
 
-            h = obj.plotfunc(obj.data.(field), varargin{:});
+                if ~isempty(obj.defaultDesc)
+                    xlabel(obj.defaultDesc,'FontSize',16);
+                end
 
-            hold on;
-
-            ylabel(obj.info.(field).Description, 'FontSize', 16);
-
-            if ~isempty(obj.defaultDesc)
-                xlabel(obj.defaultDesc,'FontSize',16);
+                set(gca,'FontSize',16);
+                
+            else
+                
+                 h = plot2Vars ( obj, ...
+                                 obj.info.(varname).IndependentVariable, ...
+                                 varname, ...
+                                 varargin{:} );
+                
             end
 
-            set(gca,'FontSize',16);
         end
 
 
-        % ==========================================================================
-        % @brief given two numeric scalar fields, they are plotted one against another. 
-        %  
-        %  
-        % For example, if a user logs two fields 'height' and 'weight', giving
-        % logger.plotvars('height','weight') will plot height vs. weight. The parameters to
-        % the plot can be provided after the fields, and all
-        % those arguments go to the plot function.  For example,
-        % logger.plotvars('height','weight','LineWidth',2,'Color','r'); will pass the
-        % last four arguments to plot.
-        %
-        % @param obj logger object
-        % @param f1   a string specifying the name of logged field 1.
-        % @param f2   a string specifying the name of logged field 1.
-        % @param varargin  any arguments that are to be sent to the plotting function.
-        % 
-        % @retval h A handle to the plot generated. Useful for formatting by the user.
-        % ==========================================================================
-
-        function [h] = plot2Vars(obj, f1, f2, varargin)
+        function h = plot2Vars(obj, f1, f2, varargin)
+            % plot two logged variables against each other
+            %
+            %
+            % Syntax
+            %
+            % h = plot2Vars(obj, f1, f2)
+            % h = plot2Vars(obj, f1, f2, plotarg1, plotarg2, ..., plotargn)
+            %
+            % Description
+            %
+            % plot two logged variables against each other, e.g. if a user
+            % logs two variables 'height' and 'weight', giving
+            % logger.plotvars('height','weight') will plot height vs.
+            % weight. The parameters to the plot can be provided after the
+            % variables, and all those arguments go to the plot function.  For
+            % example,
+            % logger.plotvars('height','weight','LineWidth',2,'Color','r');
+            % will pass the last four arguments to plot.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  f1 - name of first variable to plot
+            %
+            %  f2 - name of second variable to plot
+            %
+            % Output
+            %
+            %  h - handle(s) to the created plot(s)
+            %
+            % See Also: wsim.logger.plotVar
+            %
             
             options.PlotFcnArgs = {};
             
@@ -768,26 +799,90 @@ classdef logger < handle
                 feval (obj.mesgfunc, 'f1 and f2 must be strings specifying fields that are already added to the logger object.');
             end
 
-            if ~isnumeric(obj.(f1)) || ~isnumeric(obj.(f2))
+            if ~isnumeric(obj.data.(f1)) || ~isnumeric(obj.data.(f2))
                 feval (obj.mesgfunc, sprintf ('Plotting only numeric values is supported at this point. Not generating the plot %s vs %s', f1, f2));
             end
             
+            f1sz = size (obj.data.(f1));
+            f2sz = size (obj.data.(f2));
+            
+            f1sztest = f1sz;
+            f1sztest(obj.info.(f1).IndexDimension) = 1;
+            
             if ( numel (obj.info.(f1).Size) ~= numel (obj.info.(f2).Size) ) ...
-                feval (obj.mesgfunc, 'Cannot plot variables of different sizes against each other');
+                    && ( all(f1sztest ~= 1) )
+                feval (obj.mesgfunc, 'Cannot plot variables of different sizes against each other (unless one variable is a vector)');
+            end
+            
+            if ndims (obj.data.(f1)) > 3
+                feval (obj.mesgfunc, 'Cannot plot variables of more than 2 dimensions');
             end
 
-            legstrs = {};
+%             legstrs = {};
             
-            h = obj.plotfunc(obj.(f1), obj.(f2), options.PlotFcnArgs{:});
+            f2datadims = obj.info.(f2).DataDimensions;
+                
+            f2szdim1 = size (obj.data.(f2), f2datadims(1));
+            
+            if numel (f2datadims) > 1
+                f2szdim2 = size (obj.data.(f2), f2datadims(2));
+            else
+                f2szdim2 = 1;
+            end
+            
+            h = [];
+            f2S.type = '()';
+            f2S.subs = cell (1, numel(f2sz));
+            for ind = 1:numel(f2S.subs), f2S.subs{ind} = 1; end
+            f2S.subs{obj.info.(f2).IndexDimension} = ':';
+            
+            
+            f1datadims = obj.info.(f2).DataDimensions;
 
-            hold on;
+            f1S.type = '()';
+            f1sz = size (obj.data.(f1));
+            f1S.subs = cell (1, numel(f1sz));
+            for ind = 1:numel(f1S.subs), f1S.subs{ind} = 1; end
+            f1S.subs{obj.info.(f1).IndexDimension} = ':';
+            
+            indevarsamesize = all (obj.info.(f1).Size == obj.info.(f2).Size);
+            
+            hold on
+            
+            for i = 1:f2szdim1
+                
+                for j = 1:f2szdim2
+                    
+                    f2S.subs{f2datadims(1)} = i;
+                    f2S.subs{f2datadims(2)} = j;
+                    
+                    if indevarsamesize
+                        % if the indepednat variable, f1 is the same size as
+                        % the dependant variable, f2, plot each component
+                        % of f1 agains f2. Otherwise we always plot
+                        f1S.subs{f1datadims(1)} = i;
+                        f1S.subs{f1datadims(2)} = j;
+                    end
+                    
+                    h = [ h, obj.plotfunc( squeeze ( subsref (obj.data.(f1), f1S) ), ...
+                                           squeeze ( subsref (obj.data.(f2), f2S) ), ...
+                                           options.PlotFcnArgs{:} ) ...
+                        ];
+                    
 
-            desc1 = obj.info.Descriptions.(f1);
-            desc2 = obj.info.Descriptions.(f2);
+                    
+                end
+                
+            end
+            
+            desc1 = obj.info.(f1).Description;
+            desc2 = obj.info.(f2).Description;
 
-            xlabel(desc1, 'FontSize', 16);
-            ylabel(desc2, 'FontSize', 16);
-            set(gca,'FontSize',16);
+            xlabel(desc1, 'FontSize', 12);
+            ylabel(desc2, 'FontSize', 12);
+            set(gca,'FontSize',12);
+            
+            hold off;
             
         end
 
@@ -839,6 +934,11 @@ classdef logger < handle
                 else
                     error ('data logging field: %s does not exist', varname);
                 end
+            end
+            
+            if obj.info.(varname).LastLogIndex + 1 > obj.info.(varname).PreallocatedLogLength
+                % TODO: make this reallocation more sophisticated ( e.g. add another 10% of size of existing data or something to preallocation)
+                obj.info.(varname).PreallocatedLogLength = obj.info.(varname).LastLogIndex + 1;
             end
             
             % copy the pre-constructed indexing structure (created when
@@ -1041,6 +1141,12 @@ classdef logger < handle
             %    IndexDimension : The matrix dimension along which the
             %      logging takes place
             %
+            %    DataDimensions : A vector containing the dimesions which
+            %      contain the variable data for each logged value of a
+            %      variable. This excludes the log index dimension, and any
+            %      singleton dimensions created in order to force logging
+            %      along a certain dimension.
+            %
             %    LastLogIndex : The index of the last logged item in the
             %      matrix
             %
@@ -1096,6 +1202,43 @@ classdef logger < handle
                     info.(varnames{ind}) = obj.info.(varnames{ind});
 
                 end
+
+            end
+            
+        end
+        
+        
+        function truncateAllVariables (obj)
+            % strips preallocated data space from all variables leaving only logged data
+            %
+            %
+            
+            fnames = fieldnames (obj.data);
+            
+            for ind = 1:numel (fnames)
+                
+                truncateVariable (obj, fnames{ind})
+                
+            end
+            
+        end
+        
+        
+        function truncateVariable (obj, varname)
+            % strips preallocated data space from one variable leaving only logged data
+            %
+            %
+            
+            assert (ischar (varname), 'varname must be a character vector');
+            assert (isfield (obj.data, varname), ...
+                'The copntents of varname does not appear to match exactly the name of any logged variables');
+            
+            if obj.info.(varname).PreallocatedLogLength > obj.info.(varname).LastLogIndex
+                    
+                % remove and data after the last log index
+                obj.data.(varname)(obj.info.(varname).LastLogIndex+1:end) = [];
+                % update the preallocated length 
+                obj.info.(varname).PreallocatedLogLength = obj.info.(varname).LastLogIndex;
 
             end
             
