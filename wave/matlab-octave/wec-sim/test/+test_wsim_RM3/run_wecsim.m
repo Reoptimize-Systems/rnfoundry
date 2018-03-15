@@ -131,8 +131,7 @@ forcefcn = @(xRpto, vRpto) -k*xRpto -c*vRpto;
 % create a power take-off object attached to the two hydro nodes, with the
 % force being based on the relative velocity and displacement along axis 3
 % of the first (reference) node (in it's coordinate frame).
-pto = wsim.linearPowerTakeOff ( hydro_mbnodes{2}, hydro_mbnodes{1}, 3, ...
-                                'ForceFcn', forcefcn );
+pto = wsim.linearPowerTakeOff ( hydro_mbnodes{2}, hydro_mbnodes{1}, 3, forcefcn );
 
 %% Run the simulation
 
@@ -143,17 +142,17 @@ lssett.velocities = true;
 lssett.accelerations = true;
 lssett.nodeForcesAndMoments = true;
 lssett.nodeForcesAndMomentsUncorrected = true;
-lssett.forceHydro = false;
-lssett.forceExcitation = false;
-lssett.forceExcitationRamp = false;
-lssett.forceExcitationLin = false;
-lssett.forceExcitationNonLin = false;
-lssett.forceRadiationDamping = false;
-lssett.forceRestoring = false;
-lssett.forceMorrison = false;
-lssett.forceViscousDamping = false;
-% lssett.forceAddedMassUncorrected = false;
-lssett.forceAddedMass = false;
+lssett.forceHydro = true;
+lssett.forceExcitation = true;
+lssett.forceExcitationRamp = true;
+lssett.forceExcitationLin = true;
+lssett.forceExcitationNonLin = true;
+lssett.forceRadiationDamping = true;
+lssett.forceRestoring = true;
+lssett.forceMorrison = true;
+lssett.forceViscousDamping = true;
+% lssett.ForceAddedMassUncorrected = false;
+lssett.forceAddedMass = true;
         
 % create the wesim object
 wsobj = wsim.wecSim ( hsys, mbsys, ...
@@ -163,7 +162,7 @@ wsobj = wsim.wecSim ( hsys, mbsys, ...
 % initialise the simulation
 wsobj.prepare ();
 
-data = wsobj.run ('TimeExecution', true);
+datalog = wsobj.run ('TimeExecution', true);
 
 %%
 % figure;
@@ -184,16 +183,18 @@ else
     tmax = 400;
 
     bodyind = 2;
-
+    
+    time = datalog.data.Time;
+    
     tmax = min ( [tmax, time(end), output.bodies(bodyind).time(end) ]);
     plotinds =  time>=tmin & time<=tmax;
 
     plotyy (time(plotinds), ...
-          [ squeeze(F_ExcitRamp(:,bodyind,plotinds))', ...
+          [ squeeze(datalog.data.ForceExcitationRamp(:,bodyind,plotinds))', ...
             ... squeeze(F_ViscousDamping(3,bodyind,plotinds)), ...
-            squeeze(F_AddedMassCorrected(:,bodyind,plotinds))', ...
-            squeeze(F_Restoring(:,bodyind,plotinds))', ...
-            squeeze(F_RadiationDamping(:,bodyind,plotinds))', ...
+            squeeze(datalog.data.ForceAddedMass(:,bodyind,plotinds))', ...
+            squeeze(datalog.data.ForceRestoring(:,bodyind,plotinds))', ...
+            squeeze(datalog.data.ForceRadiationDamping(:,bodyind,plotinds))', ...
             ...squeeze(F_ExcitNonLin(3,bodyind,plotinds)), ...
             ... squeeze(F_MorrisonElement(3,bodyind,plotinds)), ...
             ...squeeze(F_Excit(3,bodyind,plotinds)), ...
@@ -204,7 +205,7 @@ else
             output.bodies(bodyind).forceRestoring(plotinds,:), ...
             output.bodies(bodyind).forceRadiationDamping(plotinds,:), ...
             ], ...
-            time(plotinds), vRpto(plotinds) );
+            time(plotinds), datalog.data.PTO_1_RelativeVelocity(plotinds) );
 
     legend ( 'my F ExcitRamp x', ...
              'my F ExcitRamp y', ...
@@ -262,7 +263,7 @@ else
              'their M RadiationDamping y', ...
              'their M RadiationDamping z', ...
              ... 'ptoforce',  ...
-             'vRpto' );
+             'PTO\_1\_RelativeVelocity' );
 
 
     %%
@@ -291,35 +292,35 @@ else
 
             figure;
             plot (output.bodies(bodyind).time, output.bodies(bodyind).forceTotal, ...
-                  time, squeeze(forces(:,bodyind,:)));
+                  time, squeeze(datalog.data.NodeForcesAndMomentsUncorrected(:,bodyind,:)));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
             figure;
             plot (output.bodies(bodyind).time, output.bodies(bodyind).forceTotal,  ...
-                  time, squeeze(F_Total(:,bodyind,:)));
+                  time, squeeze(datalog.data.NodeForcesAndMoments(:,bodyind,:)));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
             title (sprintf ('forceTotal vs F\\_Total for body %d', bodyind));
     %         figure;
     %         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceExcitation,  output.bodies(bodyind).time, squeeze(F_ExcitRamp(:,bodyind,:))); 
             figure;
-            plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
-                  output.bodies(bodyind).time, squeeze(F_AddedMass(:,bodyind,:)));
-            title (sprintf ('forceAddedMass vs F\\_addedmass for body %d', bodyind));
+            plot (output.bodies(bodyind).time, output.bodies(bodyind).ForceAddedMass,  ...
+                  output.bodies(bodyind).time, squeeze(datalog.data.ForceAddedMass(:,bodyind,:)));
+            title (sprintf ('ForceAddedMass vs F\\_addedmass for body %d', bodyind));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
             figure;
-            plot (output.bodies(bodyind).time, output.bodies(bodyind).forceAddedMass,  ...
-                  output.bodies(bodyind).time, squeeze(F_AddedMassCorrected(:,bodyind,:)));
-            title (sprintf ('forceAddedMass vs F\\_AddedMassCorrected for body %d', bodyind));
+            plot (output.bodies(bodyind).time, output.bodies(bodyind).ForceAddedMass,  ...
+                  output.bodies(bodyind).time, squeeze(datalog.data.ForceAddedMass(:,bodyind,:)));
+            title (sprintf ('ForceAddedMass vs F\\_AddedMassCorrected for body %d', bodyind));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
             figure;
             plot (output.bodies(bodyind).time, output.bodies(bodyind).forceRadiationDamping,  ...
-                  time, squeeze(F_RadiationDamping(:,bodyind,:)));
+                  time, squeeze(datalog.data.ForceRadiationDamping(:,bodyind,:)));
             title (sprintf ('forceRadiationDamping vs F\\_RadiationDamping for body %d', bodyind));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
     %         figure;
-    %         plot (output.bodies(bodyind).time, output.bodies(bodyind).forceRestoring,  output.bodies(bodyind).time, squeeze(F_Restoring(:,bodyind,:)));
+    %         plot (output.bodies(bodyind).time, output.bodies(bodyind).ForceRestoring,  output.bodies(bodyind).time, squeeze(data.data.ForceRestoring(:,bodyind,:)));
             figure;
             plot (output.bodies(bodyind).time, output.bodies(bodyind).position,  ...
-                  time, squeeze(pos(:,bodyind,:)));
+                  time, squeeze(datalog.data.Positions(:,bodyind,:)));
             title (sprintf ('output.bodies(%d).position vs pos for body %d', bodyind, bodyind));
             legend ('1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6');
         end
@@ -371,12 +372,12 @@ else
     % % 
     % % figure;
     % % fcomp = 3;
-    % % plot (output.bodies(1).time, [output.bodies(1).forceAddedMass(:,fcomp), output.bodies(2).forceAddedMass(:,fcomp), squeeze(F_AddedMassCorrected(:,fcomp,1:2))]);
-    % % title (sprintf ('comp %d forceAddedMass vs F\\_AddedMassCorrected for both bodies', fcomp));
-    % % legend (sprintf ('body 1 forceAddedMass post-processed comp %d', fcomp), ...
-    % %     sprintf ('body 2 forceAddedMass post-processed comp %d', fcomp),...
-    % %     sprintf ('body 1 hydrobody F_AddedMassCorrected comp %d', fcomp), ...
-    % %     sprintf ('body 2 hydrobody F_AddedMassCorrected comp %d', fcomp))
+    % % plot (output.bodies(1).time, [output.bodies(1).ForceAddedMass(:,fcomp), output.bodies(2).ForceAddedMass(:,fcomp), squeeze(data.data.ForceAddedMass(:,fcomp,1:2))]);
+    % % title (sprintf ('comp %d ForceAddedMass vs F\\_AddedMassCorrected for both bodies', fcomp));
+    % % legend (sprintf ('body 1 ForceAddedMass post-processed comp %d', fcomp), ...
+    % %     sprintf ('body 2 ForceAddedMass post-processed comp %d', fcomp),...
+    % %     sprintf ('body 1 hydrobody data.data.ForceAddedMass comp %d', fcomp), ...
+    % %     sprintf ('body 2 hydrobody data.data.ForceAddedMass comp %d', fcomp))
     % 
     % data = [];
     % rowheadings = {};
@@ -386,10 +387,10 @@ else
     % gf_F_Total = gf_forceTotal;
     % gf_M_Total = gf_F_Total;
     % gf_forceExcitation = gf_forceTotal;
-    % gf_forceAddedMass = gf_forceTotal;
-    % gf_F_AddedMassCorrected = gf_forceTotal;
+    % gf_ForceAddedMass = gf_forceTotal;
+    % gf_data.data.ForceAddedMass = gf_forceTotal;
     % gf_forceRadiationDamping = gf_forceTotal;
-    % gf_forceRestoring = gf_forceTotal;
+    % gf_ForceRestoring = gf_forceTotal;
     % 
     % for bodyind = 1:numel (output.bodies)
     %     
@@ -402,20 +403,20 @@ else
     %     
     %     gf_forceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation, squeeze(F_ExcitRamp(:,bodyind,:))', stats);
     %     
-    % %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_AddedMass(:,:,bodyind));
+    % %     gf_ForceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).ForceAddedMass, F_AddedMass(:,:,bodyind));
     %     
-    %     gf_F_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, squeeze(F_AddedMassCorrected(:,bodyind,:))', stats);
+    %     gf_data.data.ForceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).ForceAddedMass, squeeze(data.data.ForceAddedMass(:,bodyind,:))', stats);
     %     
-    %     gf_forceRadiationDamping(bodyind,:) = gfit2 (output.bodies(bodyind).forceRadiationDamping, squeeze(F_RadiationDamping(:,bodyind,:))', stats);
+    %     gf_forceRadiationDamping(bodyind,:) = gfit2 (output.bodies(bodyind).forceRadiationDamping, squeeze(data.data.ForceRadiationDamping(:,bodyind,:))', stats);
     %     
-    %     gf_forceRestoring(bodyind,:) = gfit2 (output.bodies(bodyind).forceRestoring,  squeeze(F_Restoring(:,bodyind,:))', stats); 
+    %     gf_ForceRestoring(bodyind,:) = gfit2 (output.bodies(bodyind).ForceRestoring,  squeeze(data.data.ForceRestoring(:,bodyind,:))', stats); 
     % 
     %     rowheadings = [rowheadings, {
     %                ...['forceTotal_body_', int2str(bodyind)], ...
     %                sprintf('Body %d Total Force', bodyind), ...
     %                sprintf('Body %d Total Moments', bodyind), ...
     %                sprintf('Body %d Excitation Force', bodyind), ...
-    %                ...['forceAddedMass_body_', int2str(bodyind)], ...
+    %                ...['ForceAddedMass_body_', int2str(bodyind)], ...
     %                sprintf('Body %d Added Mass Force', bodyind), ...
     %                sprintf('Body %d Radiation and Damping Force', bodyind), ...
     %                sprintf('Body %d Hydrostatic Restoring Force', bodyind) }];
@@ -425,10 +426,10 @@ else
     %              gf_F_Total(bodyind,:);
     %              gf_M_Total(bodyind,:);
     %              gf_forceExcitation(bodyind,:); 
-    %              ...gf_forceAddedMass(bodyind,:);
-    %              gf_F_AddedMassCorrected(bodyind,:);
+    %              ...gf_ForceAddedMass(bodyind,:);
+    %              gf_data.data.ForceAddedMass(bodyind,:);
     %              gf_forceRadiationDamping(bodyind,:); 
-    %              gf_forceRestoring(bodyind,:)];
+    %              gf_ForceRestoring(bodyind,:)];
     % end
     % 
     % % display table
@@ -451,7 +452,7 @@ else
     %             'RowHeadings', rowheadings, ...
     %             'BookTabs', true)
 
-    data = [];
+    stattabledata = [];
     rowheadings = {};
 
     stats = {'3', '5', '8'}
@@ -459,14 +460,14 @@ else
     gf_momentTotal = nan * ones (numel (output.bodies), numel(stats));
     gf_F_Total = gf_forceTotal;
     gf_M_Total = gf_F_Total;
-    gf_forceExcitation = gf_forceTotal;
+    gf_ForceExcitation = gf_forceTotal;
     gf_momentExcitation = gf_forceTotal;
-    gf_forceAddedMass = gf_forceTotal;
-    gf_F_AddedMassCorrected = gf_forceTotal;
+    gf_ForceAddedMass = gf_forceTotal;
+    gf_ForceAddedMassCorrected = gf_forceTotal;
     gf_M_AddedMassCorrected = gf_forceTotal;
-    gf_forceRadiationDamping = gf_forceTotal;
+    gf_ForceRadiationDamping = gf_forceTotal;
     gf_momentRadiationDamping= gf_forceTotal;
-    gf_forceRestoring = gf_forceTotal;
+    gf_ForceRestoring = gf_forceTotal;
     gf_momentRestoring = gf_forceTotal;
 
     gf_pos = gf_forceTotal;
@@ -479,38 +480,38 @@ else
     for bodyind = 1:numel (output.bodies)
 
         % calculate some proper stats
-        gf_forceTotal(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotalOrig(:,1:3), squeeze(forces(1:3,bodyind,:))', stats);
-        gf_momentTotal(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotalOrig(:,4:6), squeeze(forces(4:6,bodyind,:))', stats);
+        gf_forceTotal(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotalOrig(:,1:3), squeeze(datalog.data.NodeForcesAndMoments(1:3,bodyind,:))', stats);
+        gf_momentTotal(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotalOrig(:,4:6), squeeze(datalog.data.NodeForcesAndMoments(4:6,bodyind,:))', stats);
 
     %     gf_F_Total(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotal, squeeze(F_Total(:,bodyind,:))', stats);
-        gf_F_Total(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotal(:,1:3), squeeze(F_Total(1:3,bodyind,:))', stats);
-        gf_M_Total(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotal(:,4:6), squeeze(F_Total(4:6,bodyind,:))', stats);
+        gf_F_Total(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotal(:,1:3), squeeze(datalog.data.NodeForcesAndMomentsUncorrected(1:3,bodyind,:))', stats);
+        gf_M_Total(bodyind,:) = gfit2 (output.bodies(bodyind).forceTotal(:,4:6), squeeze(datalog.data.NodeForcesAndMomentsUncorrected(4:6,bodyind,:))', stats);
 
     %     gf_forceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,1:3), squeeze(F_ExcitRamp(1:3,bodyind,:))', stats);
     %     gf_momentExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,4:6), squeeze(F_ExcitRamp(4:6,bodyind,:))', stats);
 
-        gf_forceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,1:3), squeeze(F_ExcitRamp(1:3,bodyind,:))', stats);
-        gf_momentExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,4:6), squeeze(F_ExcitRamp(4:6,bodyind,:))', stats);
+        gf_ForceExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,1:3), squeeze(datalog.data.ForceExcitation(1:3,bodyind,:))', stats);
+        gf_momentExcitation(bodyind,:) = gfit2 (output.bodies(bodyind).forceExcitation(:,4:6), squeeze(datalog.data.ForceExcitation(4:6,bodyind,:))', stats);
 
-    %     gf_forceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass, F_AddedMass(:,:,bodyind));
+    %     gf_ForceAddedMass(bodyind,:) = gfit2 (output.bodies(bodyind).ForceAddedMass, F_AddedMass(:,:,bodyind));
 
-        gf_F_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,1:3), squeeze(F_AddedMassCorrected(1:3,bodyind,:))', stats);
-        gf_M_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,4:6), squeeze(F_AddedMassCorrected(4:6,bodyind,:))', stats);
+        gf_ForceAddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,1:3), squeeze(datalog.data.ForceAddedMass (1:3,bodyind,:))', stats);
+        gf_M_AddedMassCorrected(bodyind,:) = gfit2 (output.bodies(bodyind).forceAddedMass(:,4:6), squeeze(datalog.data.ForceAddedMass(4:6,bodyind,:))', stats);
 
-        gf_forceRadiationDamping(bodyind,:) = gfit2 (output.bodies(bodyind).forceRadiationDamping(:,1:3), squeeze(F_RadiationDamping(1:3,bodyind,:))', stats);
-        gf_momentRadiationDamping(bodyind,:) = gfit2 (output.bodies(bodyind).forceRadiationDamping(:,4:6), squeeze(F_RadiationDamping(4:6,bodyind,:))', stats);
+        gf_ForceRadiationDamping(bodyind,:) = gfit2 (output.bodies(bodyind).forceRadiationDamping(:,1:3), squeeze(datalog.data.ForceRadiationDamping(1:3,bodyind,:))', stats);
+        gf_momentRadiationDamping(bodyind,:) = gfit2 (output.bodies(bodyind).forceRadiationDamping(:,4:6), squeeze(datalog.data.ForceRadiationDamping(4:6,bodyind,:))', stats);
 
-        gf_forceRestoring(bodyind,:) = gfit2 (output.bodies(bodyind).forceRestoring(:,1:3),  squeeze(F_Restoring(1:3,bodyind,:))', stats); 
-        gf_momentRestoring(bodyind,:) = gfit2 (output.bodies(bodyind).forceRestoring(:,4:6),  squeeze(F_Restoring(4:6,bodyind,:))', stats); 
+        gf_ForceRestoring(bodyind,:) = gfit2 (output.bodies(bodyind).forceRestoring(:,1:3),  squeeze(datalog.data.ForceRestoring(1:3,bodyind,:))', stats); 
+        gf_momentRestoring(bodyind,:) = gfit2 (output.bodies(bodyind).forceRestoring(:,4:6),  squeeze(datalog.data.ForceRestoring(4:6,bodyind,:))', stats); 
 
-        gf_pos(bodyind,:) = gfit2 (output.bodies(bodyind).position(:,1:3),  squeeze(pos(1:3,bodyind,:))', stats); 
-        gf_theta(bodyind,:) = gfit2 (output.bodies(bodyind).position(:,4:6),  squeeze(pos(4:6,bodyind,:))', stats); 
+        gf_pos(bodyind,:) = gfit2 (output.bodies(bodyind).position(:,1:3),  squeeze(datalog.data.Positions(1:3,bodyind,:))', stats); 
+        gf_theta(bodyind,:) = gfit2 (output.bodies(bodyind).position(:,4:6),  squeeze(datalog.data.Positions(4:6,bodyind,:))', stats); 
 
-        gf_vel(bodyind,:) = gfit2 (output.bodies(bodyind).velocity(:,1:3),  squeeze(vel(1:3,bodyind,:))', stats); 
-        gf_omega(bodyind,:) = gfit2 (output.bodies(bodyind).velocity(:,4:6),  squeeze(vel(4:6,bodyind,:))', stats); 
+        gf_vel(bodyind,:) = gfit2 (output.bodies(bodyind).velocity(:,1:3),  squeeze(datalog.data.Velocities(1:3,bodyind,:))', stats); 
+        gf_omega(bodyind,:) = gfit2 (output.bodies(bodyind).velocity(:,4:6),  squeeze(datalog.data.Velocities(4:6,bodyind,:))', stats); 
 
-        gf_accel(bodyind,:) = gfit2 (output.bodies(bodyind).acceleration(:,1:3),  squeeze(accel(1:3,bodyind,:))', stats); 
-        gf_omegaaccel(bodyind,:) = gfit2 (output.bodies(bodyind).acceleration(:,4:6),  squeeze(accel(4:6,bodyind,:))', stats); 
+        gf_accel(bodyind,:) = gfit2 (output.bodies(bodyind).acceleration(:,1:3),  squeeze(datalog.data.Accelerations(1:3,bodyind,:))', stats); 
+        gf_omegaaccel(bodyind,:) = gfit2 (output.bodies(bodyind).acceleration(:,4:6),  squeeze(datalog.data.Accelerations(4:6,bodyind,:))', stats); 
 
         rowheadings = [rowheadings, {
                    ...['forceTotal_body_', int2str(bodyind)], ...
@@ -520,7 +521,7 @@ else
                    sprintf('Body %d Total Moments', bodyind), ...
                    sprintf('Body %d Excitation Force', bodyind), ...
                    sprintf('Body %d Excitation Moment', bodyind), ...
-                   ...['forceAddedMass_body_', int2str(bodyind)], ...
+                   ...['ForceAddedMass_body_', int2str(bodyind)], ...
                    sprintf('Body %d Added Mass Force', bodyind), ...
                    sprintf('Body %d Added Mass Moment', bodyind), ...
                    sprintf('Body %d Radiation and Damping Force', bodyind), ...
@@ -535,20 +536,20 @@ else
                    sprintf('Body %d Angular Acceleration', bodyind) }];
 
 
-        data = [ data;
+        stattabledata = [ stattabledata;
                  ...gf_forceTotal(bodyind,:); 
                  gf_forceTotal(bodyind,:)
                  gf_momentTotal(bodyind,:)
                  gf_F_Total(bodyind,:);
                  gf_M_Total(bodyind,:);
-                 gf_forceExcitation(bodyind,:);
+                 gf_ForceExcitation(bodyind,:);
                  gf_momentExcitation(bodyind,:);
-                 ...gf_forceAddedMass(bodyind,:);
-                 gf_F_AddedMassCorrected(bodyind,:);
+                 ...gf_ForceAddedMass(bodyind,:);
+                 gf_ForceAddedMassCorrected(bodyind,:);
                  gf_M_AddedMassCorrected(bodyind,:);
-                 gf_forceRadiationDamping(bodyind,:);
+                 gf_ForceRadiationDamping(bodyind,:);
                  gf_momentRadiationDamping(bodyind,:); 
-                 gf_forceRestoring(bodyind,:);
+                 gf_ForceRestoring(bodyind,:);
                  gf_momentRestoring(bodyind,:);
                  gf_pos(bodyind,:); 
                  gf_theta(bodyind,:);
@@ -566,12 +567,12 @@ else
     fms = {};
     fileID = 1;
 
-    displaytable (data,colheadings,wid,fms,rowheadings,fileID);
+    displaytable (stattabledata,colheadings,wid,fms,rowheadings,fileID);
 
     colheadings = [{'Force Description'}, colheadings];
     fms = {'.2g','.2g','.2f'};
 
-    latextable (data, ...
+    latextable (stattabledata, ...
                 'ColumnHeadings', colheadings, ...
                 'NumberWidth', wid, ...
                 'FormatSpec', fms, ...
