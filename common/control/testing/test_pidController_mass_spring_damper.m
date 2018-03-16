@@ -156,7 +156,7 @@ set (gca, 'YLim', [0, 2*step]);
 
 odeopts = odeset ('MaxStep', maxstep);
 
-sol = rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, F, setx), ...
+sol = ode.rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, F, setx), ...
               tspan, ...
               x0, ...
               odeopts );
@@ -167,7 +167,7 @@ hold on
 plot ([0,tend], [setx, setx], 'k:');
 hold off
 
-title ('No control (rkfixed)');
+title ('No control (ode.rkfixed)');
 xlabel ('Time [s]');
 ylabel ('x');
 set (gca, 'YLim', [0, 2*setx]);
@@ -182,7 +182,7 @@ C = pidController (Kp, 0, 0, 'InitialTime', tstart);
 odeopts = odeset ( 'MaxStep', maxstep, ...
                    'OutputFcn', @(t,x,flag) ode.mass_spring_damper_outputFcn (t, x, flag, m, b, k, C, step ) );
 
-sol = rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
+sol = ode.rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
               tspan, ...
               x0, ...
               odeopts );
@@ -193,7 +193,7 @@ hold on
 plot ([0,tend], [step, step], 'k:');
 hold off
 
-title ( sprintf ('P control (rkfixed), Kp: %g', Kp));
+title ( sprintf ('P control (ode.rkfixed), Kp: %g', Kp));
 xlabel ('Time [s]');
 ylabel ('x');
 set (gca, 'YLim', [0, 2*step]);
@@ -208,7 +208,7 @@ C = pidController (Kp, 0, Kd, 'InitialTime', tstart, 'MaxOut', 1000, 'MinOut', -
 odeopts = odeset ( 'MaxStep', maxstep, ...
                    'OutputFcn', @(t,x,flag) ode.mass_spring_damper_outputFcn (t, x, flag, m, b, k, C, step ) );
 
-sol = rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
+sol = ode.rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
               tspan, ...
               x0, ...
               odeopts );
@@ -219,7 +219,7 @@ hold on
 plot ([0,tend], [step, step], 'k:');
 hold off
 
-title ( sprintf ('PD control (rkfixed), Kp: %g, Kd: %g', Kp, Kd));
+title ( sprintf ('PD control (ode.rkfixed), Kp: %g, Kd: %g', Kp, Kd));
 xlabel ('Time [s]');
 ylabel ('x');
 set (gca, 'YLim', [0, 2*step]);
@@ -234,7 +234,7 @@ C = pidController (Kp, Ki, 0, 'InitialTime', tstart, 'MaxOut', 1000, 'MinOut', -
 odeopts = odeset ( 'MaxStep', maxstep, ...
                    'OutputFcn', @(t,x,flag) ode.mass_spring_damper_outputFcn (t, x, flag, m, b, k, C, step ) );
 
-sol = rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
+sol = ode.rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
               tspan, ...
               x0, ...
               odeopts );
@@ -245,7 +245,7 @@ hold on
 plot ([0,tend], [step, step], 'k:');
 hold off
 
-title ( sprintf ('PI control (rkfixed), Kp: %g, Ki: %g', Kp, Ki));
+title ( sprintf ('PI control (ode.rkfixed), Kp: %g, Ki: %g', Kp, Ki));
 xlabel ('Time [s]');
 ylabel ('x');
 set (gca, 'YLim', [0, 2*step]);
@@ -261,7 +261,7 @@ C = pidController (Kp, Ki, Kd, 'InitialTime', tstart, 'MaxOut', 1000, 'MinOut', 
 odeopts = odeset ( 'MaxStep', maxstep, ...
                    'OutputFcn', @(t,x,flag) ode.mass_spring_damper_outputFcn (t, x, flag, m, b, k, C, step ) );
 
-sol = rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
+sol = ode.rkfixed ( @(t,x) ode.mass_spring_damper (t, x, m, b, k, C, step), ...
               tspan, ...
               x0, ...
               odeopts );
@@ -272,7 +272,7 @@ hold on
 plot ([0,tend], [step, step], 'k:');
 hold off
 
-title ( sprintf ('PID control (rkfixed), Kp: %g, Ki: %g, Kd: %g', Kp, Ki, Kd));
+title ( sprintf ('PID control (ode.rkfixed), Kp: %g, Ki: %g, Kd: %g', Kp, Ki, Kd));
 xlabel ('Time [s]');
 ylabel ('x');
 set (gca, 'YLim', [0, 2*step]);
