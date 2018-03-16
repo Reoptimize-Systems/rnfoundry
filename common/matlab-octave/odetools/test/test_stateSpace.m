@@ -162,13 +162,13 @@ plot (T, y(1,:))
 hold off
 legstrs = [ legstrs, sprintf('stateSpace classdef method using ode23, RelTol %g', odeopts.RelTol)];
 
-%% rkfixed
+%% ode.rkfixed
 
 SS.reset ();
 
 odeopts.MaxStep = tspan / (1.5*numel(T));
 
-[T, X] = rkfixed (@(t,x) test_state_space_odefcn (t, x, SS, K), [t0,t0+tspan],  x0, odeopts);
+[T, X] = ode.rkfixed (@(t,x) test_state_space_odefcn (t, x, SS, K), [t0,t0+tspan],  x0, odeopts);
 
 % recalculate outputs
 SS.reset ()
@@ -189,7 +189,7 @@ end
 hold on
 plot (T, y(1,:))
 hold off
-legstrs = [ legstrs, sprintf('stateSpace classdef method using rkfixed, RelTol %g', odeopts.RelTol)];
+legstrs = [ legstrs, sprintf('stateSpace classdef method using ode.rkfixed, RelTol %g', odeopts.RelTol)];
 
 %% compare to simulink
 
