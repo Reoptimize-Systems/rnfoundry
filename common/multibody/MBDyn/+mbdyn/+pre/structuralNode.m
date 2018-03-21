@@ -1,22 +1,41 @@
 classdef structuralNode < mbdyn.pre.node
-    % generic structural node class, ancestor of all structural type nodes 
-    
+% generic structural node class, ancestor of all structural type nodes
+%
+% Syntax
+%
+% [str] = mbdyn.pre.structuralNode ()
+% [str] = mbdyn.pre.structuralNode (..., 'Parameter', Value)
+%
+% Description
+%
+% Base class for the structural node types. Not generally
+% intended to be used directly by normal users of the toolbox.
+% Instead, the mbdyn.pre.structuralNode6dof and
+% mbdyn.pre.structuralNode3dof classes should be used.  
+%
+% mbdyn.pre.structuralNode Methods:
+%
+%  structuralNode - constructor
+%  generateOutputString - make MBDyn output string for node
+%  draw - draw the node in a figure
+%  setSize - set the size of the node when plotted in a figure
+%  setColour - set the colour of the node when plotted in a figure
+%
+%
     
     properties (GetAccess = public, SetAccess = public)
         
-        % we can set this later
-        absolutePosition;
-        absoluteVelocity;
+        absolutePosition; % absolute position of the node in the global frame
+        absoluteVelocity; % absolute velocity of the node in the global frame
         
     end
     
     properties (GetAccess = public, SetAccess = protected)
         
-        % assembly
         positionInitialStiffness;
         velocityInitialStiffness;
         
-        accelerations;
+        accelerations; % flag indicating whether to output acceleration data
         
     end
     
@@ -35,13 +54,69 @@ classdef structuralNode < mbdyn.pre.node
     methods
         
         function self = structuralNode (varargin)
-            
+            % mbdyn.pre.structuralNode constructor
+            %
+            % Syntax
+            %
+            % [str] = mbdyn.pre.structuralNode ()
+            % [str] = mbdyn.pre.structuralNode (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % Base class for the structural node types. Not generally
+            % intended to be used directly by normal users of the toolbox.
+            % Instead, the mbdyn.pre.structuralNode6dof and
+            % mbdyn.pre.structuralNode3dof classes should be used.
+            %
+            % Input
+            %
+            % Addtional arguments may be supplied as parameter-value pairs. The available options are:
+            %
+            %  'AbsolutePosition' - optional (3 x 1) vector containing the
+            %    intial position of the node in the global frame. Default
+            %    is [0;0;0] if not supplied.
+            %
+            %  'AbsoluteVelocity' - optional (3 x 1) vector containing the
+            %    intial velocity of the node in the global frame. Default
+            %    is [0;0;0] if not supplied.
+            %
+            %  'Accelerations' - true/false flag, or a character vector
+            %    which must be 'yes' of 'no'. Determines whether this node
+            %    will output acceleration data.
+            %
+            % 'HumanReadableLabel' - a text string intended to provide a
+            %   meaningful label. For some node types this may optionally
+            %   be displayed when they they are drawn.
+            %
+            %  'Scale' - optional. Used to control the scaling of the
+            %    residual for the node equations before performing testing
+            %    whether the required tolerance has been met. For more
+            %    information see the help for mbdyn.pre.initialValueProblem
+            %    (see the 'ScaleResidual' option in the constructor), and
+            %    mbdyn.pre.system (see the 'DefaultScales' option in the
+            %    constructor).
+            %
+            %  'Output' - true/false flag, or a character vector which must
+            %    be 'yes' of 'no'. Determines wheter this node will produce
+            %    output. By default output will be produced.
+            %
+            %
+            % Output
+            %
+            %  str - bdyn.pre.structuralNode object
+            %
+            %
+            %
+            % See Also: mbdyn.pre.structuralNode6dof, 
+            %           mbdyn.pre.structuralNode3dof
+            %
+
             options.AbsolutePosition = [0;0;0];
             options.AbsoluteVelocity = [0;0;0];
-            options.Accelerations = [];
             options.HumanReadableLabel = '';
             options.Scale = [];
             options.Output = [];
+            options.Accelerations = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -50,15 +125,29 @@ classdef structuralNode < mbdyn.pre.node
                        'Scale', options.Scale, ...
                        'Output', options.Output );
             
-            if ~isempty (options.Accelerations)
-                self.checkLogicalScalar (options.Accelerations, true, 'Accelerations');
-            end
-            
             self.checkCartesianVector (options.AbsolutePosition, true, 'AbsolutePosition');
             self.checkCartesianVector (options.AbsoluteVelocity, true, 'AbsoluteVelocity');
             
             self.absolutePosition = options.AbsolutePosition;
             self.absoluteVelocity = options.AbsoluteVelocity;
+            
+            if ~isempty (options.Accelerations)
+                
+                if self.checkLogicalScalar ( options.Accelerations, false )
+                    if options.Accelerations
+                        options.Accelerations = 'yes';
+                    else
+                        options.Accelerations = 'no';
+                    end
+                elseif self.checkAllowedStringInputs ( options.Accelerations, {'yes', 'no'}, false)
+                    % do nothing
+                else
+                    error ('Accelerations should be a lgical true/false flag, or a string ''yes'', or ''no''') 
+                end
+                
+            end
+            
+            self.accelerations = options.Accelerations;
             
             % TODO: find out what values of initial stiffness can be
             % supplied
