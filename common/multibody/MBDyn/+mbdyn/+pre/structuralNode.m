@@ -22,7 +22,10 @@ classdef structuralNode < mbdyn.pre.node
 %  setColour - set the colour of the node when plotted in a figure
 %
 %
-    
+% See Also: mbdyn.pre.structuralNode6dof, 
+%           mbdyn.pre.structuralNode3dof
+%
+
     properties (GetAccess = public, SetAccess = public)
         
         absolutePosition; % absolute position of the node in the global frame
