@@ -9,11 +9,11 @@ classdef system < mbdyn.pre.base
 %
 % Description
 %
-% This class represents a multibody system and associated problem data and
-% can be used to generate an input file for MBDyn. This class depends on
-% the many other classes in the mbdyn.pre namespace which represent the
-% various things which make up an mbdyn problem description, such as nodes,
-% forces, drives, bodies etc.
+% This class represents a multibody system and associated problem data.
+% It's primary use is to generate an input file for MBDyn. This class
+% depends on the many other classes in the mbdyn.pre namespace which
+% represent the various things which make up an mbdyn problem description,
+% such as nodes, forces, drives, bodies etc.
 %
 % The class can also be used to create a visual representaiton of the
 % system, and node positons and orientations can be set, allowing
@@ -24,7 +24,8 @@ classdef system < mbdyn.pre.base
 %
 % mbdyn.pre.system Methods:
 %
-%   system - constructor
+%   system - constructor, see constructor help for more detail on the main
+%     class options
 %   addDrivers - adds drives to the system
 %   addElements - adds elements to the system (bodies, joints, forces, 
 %     drives etc.)
@@ -61,7 +62,9 @@ classdef system < mbdyn.pre.base
 % active control, hydraulic networks, and essential fixed-wing and
 % rotorcraft aerodynamics.
 %
-    
+%
+% See Also: mbdyn.mint.MBCNodal, mbdyn.postproc
+%
     
     properties
         
@@ -111,9 +114,56 @@ classdef system < mbdyn.pre.base
             %  'Elements' - cell array of mbdyn.pre.element objects (or
             %    derived objects, such as mbdyn.pre.body).
             %
-            %  'Drivers' - 
+            %  'Drivers' - cell array mbdyn.pre.drive objects to add to the
+            %    drivers section of an MBDyn input file, see the section on
+            %    Drivers in Chapter 7 of the MBDyn manual for further
+            %    details.
             %
-            %  'DefaultOutput' - 
+            %  'DefaultOutput' - cell array of strings indicating the
+            %    default output flag for a type of node or element. It can
+            %    be overridden for each entity either when it is created or
+            %    later, for entity aggregates, in each entity module, by
+            %    means of the output directive for nodes and elements.
+            %
+            %    Special values are: 
+            %
+            %      'all' : enables output of all entities
+            %
+            %      'none' : disables output of all entities; 
+            %
+            %      'reference frames' : by default, reference frames are
+            %        not output. When enabled, a special file .rfm is
+            %        generated, which contains all the reference frames
+            %        defined, using the syntax of the .mov file.
+            %
+            %      'accelerations' enables output of linear and angular
+            %        accelerations for dynamic structural nodes, which are
+            %        disabled by default. Accelerations output can be
+            %        enabled on a node by node basis; see
+            %        mbdyn.pre.structuralNode (or derived classes) for
+            %        details.
+            %
+            %    Other possible values are:
+            %
+            %      'abstract nodes'
+            %      'electric nodes'
+            %      'hydraulic nodes'
+            %      'structural nodes'
+            %      'aerodynamic elements'
+            %      'air properties'
+            %      'beams'
+            %      'electric elements'
+            %      'forces'
+            %      'genels'
+            %      'gravity'
+            %      'hydraulic elements'
+            %      'joints'
+            %      'rigid bodies'
+            %      'induced velocity elements'
+            %
+            %    Values are additive, except for 'none', so to select only
+            %    specific entities use 'none' first, followed by a list of
+            %    the entities whose output should be activated.
             %
             %  'DefaultOrientation' - character vector which is the default
             %    orientation output format. Can be one of 'euler123',
@@ -142,7 +192,7 @@ classdef system < mbdyn.pre.base
             %
             %
             %
-            % See Also: 
+            % See Also: mbdyn.min.MBCNodal, mbdyn.postproc
             %
 
             options.Nodes = {};
@@ -182,6 +232,33 @@ classdef system < mbdyn.pre.base
             if ~isempty (options.DefaultOutput)
                 if ~iscellstr (options.DefaultOutput)
                     error ('DefaultOutput must be a cell array of strings if supplied');
+                else
+                    okstrings = { 'all', 'none', ...
+                                  'reference frames', ...
+                                  'abstract nodes', ...
+                                  'electric nodes', ...
+                                  'hydraulic nodes', ...
+                                  'structural nodes', ...
+                                  'accelerations', ...
+                                  'aerodynamic elements', ...
+                                  'air properties', ...
+                                  'beams', ...
+                                  'electric elements', ...
+                                  'forces', ...
+                                  'genels', ...
+                                  'gravity', ...
+                                  'hydraulic elements', ...
+                                  'joints', ...
+                                  'rigid bodies', ...
+                                  'induced velocity elements', ...
+                                };
+                            
+                    for ind = 1:numel (options.DefaultOutput)
+                        self.checkAllowedStringInputs ( options.DefaultOutput, ...
+                                                        okstrings, ...
+                                                        true, ...
+                                                        sprintf ('DefaultOutput{%d}', ind) );
+                    end
                 end
             end
             
