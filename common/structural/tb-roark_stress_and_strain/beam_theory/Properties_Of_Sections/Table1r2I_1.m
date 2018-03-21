@@ -20,7 +20,7 @@ function I = Table1r2I_1(IVars)
 %
 % Input: 
 %
-%   IVars - (n x 4) matrix of values as below
+%   IVars - (n x 2) matrix of values as below
 %           IVars(:,1) - d,rectangle height
 %           IVars(:,2) - b, width
 %
