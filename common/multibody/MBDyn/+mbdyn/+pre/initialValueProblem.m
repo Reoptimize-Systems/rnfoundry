@@ -20,7 +20,9 @@ classdef initialValueProblem < mbdyn.pre.problem
 % mbdyn.pre.initialValueProblem Methods:
 %
 %  initialValueProblem - constructor
-%  
+%  generateOutputString - create string representing problem for MBDyn
+%    input file
+%
     
     properties (GetAccess = public, SetAccess = protected)
         initialTime;
