@@ -162,6 +162,7 @@ wsobj = wsim.wecSim ( hsys, mbsys, ...
 % initialise the simulation
 wsobj.prepare ();
 
+% run it and get the output data
 datalog = wsobj.run ('TimeExecution', true);
 
 %%
