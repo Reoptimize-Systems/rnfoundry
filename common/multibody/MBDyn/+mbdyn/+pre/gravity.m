@@ -1,12 +1,32 @@
 classdef gravity < mbdyn.pre.element
-    
+% class to add gravity simulation to an MBDyn problem
+%
+% Syntax
+%
+% [g] = mbdyn.pre.gravity ()
+% [g] = mbdyn.pre.gravity ('Parameter', Value)
+%
+% Description
+%
+% mbdyn.pre.gravity adds a gravitational field to an MBDyn
+% simulation. Gravity can be a uniform fild or a point source.
+% The direction and magnitude can also be controlled.
+%
+% mbdyn.pre.gravity Methods:
+%
+%  gravity - constructor, see for details of class options
+%  generateOutputString - generate string for MBDyn file
+%  draw - called when plotting currently does nothing
+%
+%
+            
+            
     properties (GetAccess = public, SetAccess = private)
         gravityAcceleration;
         gravityModel;
         origin;
         mass
         G;
-%         origin;
     end
     
     methods
