@@ -709,8 +709,8 @@ classdef base < handle
             %   oldstr. Default value is zero if not supplied.
             %
             %  finalcomma - (optional) scalar logical. Flag determining
-            %    whether to append a comma chachter (',') to the end of the
-            %    new line. Default is true if not supplied.
+            %    whether to append a comma character (',') to the end of
+            %    the new line. Default is true if not supplied.
             %
             %  comment - (optional) string which will be inserted as a
             %    comment after newstring.
