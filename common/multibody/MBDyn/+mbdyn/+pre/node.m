@@ -1,15 +1,22 @@
 classdef node < mbdyn.pre.base
-    % base node class, ancestor of all node types
+% base node class, ancestor of all node types
+%
+% Description
+%
+% The mbdyn.pre.node class is the ancestor of all node classes. It is not
+% intended to be used by a normal user of the toolbox.
+%
+% 
     
     properties (GetAccess = public, SetAccess = protected)
         
-        humanReadableLabel;
+        humanReadableLabel; % character vector with a label for the node
         
 %         uniqueTextLabel;
         
-        scale;
+        scale; % factor by which to scale the residual before applying a tolerance test
 
-        output;
+        output; % flag indicating whther the node will produce output
         
     end
 
@@ -32,9 +39,17 @@ classdef node < mbdyn.pre.base
             %   meaningful label. For some node types this may optionally
             %   be displayed when they they are drawn.
             %
-            % 'Output' - 
+            %  'Scale' - optional. Used to control the scaling of the
+            %    residual for the node equations before performing testing
+            %    whether the required tolerance has been met. For more
+            %    information see the help for mbdyn.pre.initialValueProblem
+            %    (see the 'ScaleResidual' option in the constructor), and
+            %    mbdyn.pre.system (see the 'DefaultScales' option in the
+            %    constructor).
             %
-            % 'Scale' - 
+            %  'Output' - true/false flag, or a character vector which must
+            %    be 'yes' of 'no'. Determines wheter this node will produce
+            %    output. By default output will be produced.
             %
             % 
             
