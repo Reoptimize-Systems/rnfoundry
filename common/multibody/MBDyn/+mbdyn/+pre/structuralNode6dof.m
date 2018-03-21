@@ -1,10 +1,58 @@
 classdef structuralNode6dof < mbdyn.pre.structuralNode
-    
+% 6 degree of freedom structural node
+%
+% Syntax
+%
+% self = mbdyn.pre.structuralNode6dof (type, varargin)
+% self = mbdyn.pre.structuralNode6dof (type, 'Parameter', Value)
+%
+% Description
+%
+% The mbdyn.pre.structuralNode6dof node represents an MBDyn structural node
+% which has ownership of 6 degrees of freedom (position and orientation),
+% and thus can be used to describe the kinematics of rigid-body motion in
+% space. The 6 dof structural node can be one of four types, static,
+% dynamic, modal or dummy. Other elements which require both displacement
+% and orientation can only be connected to 6 degree of freedom nodes.
+%
+% Dynamic Node
+%
+% A dynamic node can have inertia attached to it, so it provides linear and
+% angular momenta degrees of freedom, and automatically generates the
+% "automatic structural elements" (described in the MBDyn manual*.
+%
+% Static Node
+%
+% A static node has inertia related to it so it must be appropriately
+% constrained or attached to elastic elements. Static nodes are useful when
+% there is no need to apply inertia to them, thus saving 6 degrees of
+% freedom.
+%
+% Modal Node
+%
+% The modal node is basically a regular dynamic node that must be used to
+% describe the rigid reference motion of a modal joint. See the MBDyn
+% manual for detailsfor further details.
+%
+% mbdyn.pre.structuralNode6dof Methods:
+%
+%  structuralNode6dof - constructor
+%  generateOutputString - make MBDyn output string for node
+%  draw - draw the node in a figure
+%  setSize - set the size of the node when plotted in a figure
+%  setColour - set the colour of the node when plotted in a figure
+%  reference - return a mbdyn.pre.reference object representing the node 
+%   position etc.
+%  relativeToAbsolutePosition - convert a position in the reference frame 
+%   of the node to a position in the global frame
+%  relativeToAbsoluteOrientation - convert an orientation in the reference  
+%   frame of the node to a position in the global frame
+%
     
     properties (GetAccess = public, SetAccess = public)
         
-        absoluteOrientation;
-        absoluteAngularVelocity;
+        absoluteOrientation; % Absolute orientation of the node in the global frame
+        absoluteAngularVelocity; % Absolute angular velocity of the node in the global frame
         
     end
     
@@ -13,12 +61,106 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
         orientationDescription;
         
         omegaRotates;
+        nodeType;
         
     end
     
     methods
         
         function self = structuralNode6dof (type, varargin)
+            % 6 degree of freedom structural node
+            %
+            % Syntax
+            %
+            % self = mbdyn.pre.structuralNode6dof (type, varargin)
+            % self = mbdyn.pre.structuralNode6dof (type, 'Parameter', Value)
+            %
+            % Description
+            %
+            % The mbdyn.pre.structuralNode6dof node represents an MBDyn
+            % structural node which has ownership of 6 degrees of freedom
+            % (position and orientation), and thus can be used to describe
+            % the kinematics of rigid-body motion in space. The 6 dof
+            % structural node can be one of four types, static, dynamic,
+            % modal or dummy. Other elements which require both
+            % displacement and orientation can only be connected to 6
+            % degree of freedom nodes.
+            %
+            % Dynamic Node
+            %
+            % A dynamic node can have inertia attached to it, so it
+            % provides linear and angular momenta degrees of freedom, and
+            % automatically generates the "automatic structural
+            % elements" (described in the MBDyn manual).
+            %
+            % Static Node
+            %
+            % A static node has inertia related to it so it must be
+            % appropriately constrained or attached to elastic elements.
+            % Static nodes are useful when there is no need to apply
+            % inertia to them, thus saving 6 degrees of freedom.
+            %
+            % Modal Node
+            %
+            % The modal node is basically a regular dynamic node that must
+            % be used to describe the rigid reference motion of a modal
+            % joint. See the MBDyn manual for detailsfor further details.
+            %
+            % Input
+            %
+            %  type - character vector containing the type of node to be
+            %  created. Can be 'static', 'dynamic' or 'modal'.
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'OrientationDescription' - 
+            %
+            %  'AbsolutePosition' - optional (3 x 1) vector containing the
+            %    intial position of the node in the global frame. Default
+            %    is [0;0;0] if not supplied.
+            %
+            %  'AbsoluteOrientation' - optional. (3 x 3) matrix or 
+            %    mbdyn.pre.orientmat object containing the intial
+            %    orientation of the node in the global frame. Default is
+            %    the identity matrix if not supplied.
+            %
+            %  'AbsoluteVelocity' - optional (3 x 1) vector containing the
+            %    intial velocity of the node in the global frame. Default
+            %    is [0;0;0] if not supplied.
+            %
+            %  'AbsoluteAngularVelocity' - optional (3 x 1) vector 
+            %    containing the intial angular velocity of the node in the
+            %    global frame. Default is [0;0;0] if not supplied.
+            %
+            %  'Accelerations' - true/false flag, or a character vector
+            %    which must be 'yes' of 'no'. Determines whether this node
+            %    will output acceleration data.
+            %
+            %  'HumanReadableLabel' - optional character vector containing
+            %    a label used in plots and so on where the uniqueness of
+            %    the label is not not important.
+            %
+            %  'Scale' - optional. Used to control the scaling of the
+            %    residual for the node equations before performing testing
+            %    whether the required tolerance has been met. For more
+            %    information see the help for mbdyn.pre.initialValueProblem
+            %    (see the 'ScaleResidual' option in the constructor), and
+            %    mbdyn.pre.system (see the 'DefaultScales' option in the
+            %    constructor).
+            %
+            %  'Output' - true/false flag, or a character vector which must
+            %    be 'yes' of 'no'. Determines whether this node will produce
+            %    output. By default output will be produced.
+            %
+            % Output
+            %
+            %  sn - mbdyn.pre.structuralNode6dof object
+            %
+            %
+            %
+            % See Also: mbdyn.pre.structuralNode3dof
+            %
             
             options.OrientationDescription = '';
             options.AbsolutePosition = [0;0;0];
@@ -39,6 +181,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                 case 'dynamic'
                     
                 case 'modal'
+                    error ('The modal structuralNode6dof is not yet implemented')
                     
                 otherwise
                     error ('Unrecognised structural node type');
@@ -47,12 +190,13 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             self = self@mbdyn.pre.structuralNode ( ...
                        'AbsoluteVelocity', options.AbsoluteVelocity, ...
                        'AbsolutePosition', options.AbsolutePosition, ...
-                       'Accelerations', options.Accelerations, ...
                        'HumanReadableLabel', options.HumanReadableLabel, ...
                        'Scale', options.Scale, ...
                        'Output', options.Output );
                    
-            self.type = type;
+            self.type = 'structural';
+            
+            self.nodeType = type;
             
             self.checkCartesianVector (options.AbsoluteAngularVelocity, true, 'AbsoluteAngularVelocity');
             self.checkOrientationMatrix (options.AbsoluteOrientation, true, 'AbsoluteOrientation');
@@ -85,7 +229,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             % delete newline character and space from start
             str(1:2) = [];
             
-            str = self.addOutputLine (str, sprintf('structural : %d, %s', self.label, self.type), 1, true, 'label, type');
+            str = self.addOutputLine (str, sprintf('structural : %d, %s', self.label, self.nodeType), 1, true, 'label, type');
             
             str = self.addOutputLine (str, self.commaSepList ('position', self.absolutePosition), 2, true, 'absolute position');
             

@@ -1,6 +1,28 @@
 classdef initialValueProblem < mbdyn.pre.problem
+% class for representing intial value MBDyn problems
+%
+% Syntax
+%
+% ivp = mbdyn.pre.initialValueProblem (itime, ftime, tstep)
+% ivp = mbdyn.pre.initialValueProblem (..., 'Parameter', value)
+%
+% Description
+%
+% mbdyn.pre.initialValueProblem creates an initial value problem
+% description object for use in setting up an MBDyn multibody simulation.
+% This solves initial value problems by means of generic integration
+% schemes that can be cast in a broad family of multistep and,
+% experimentally, Implicit Runge Kutta-like schemes. For more details on
+% this, see the corresponding section of the MBDyn manual. The help for the
+% constructor provides details on the avaialable options for the
+% initialValueProblem.
+%
+% mbdyn.pre.initialValueProblem Methods:
+%
+%  initialValueProblem - constructor
+%  
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         initialTime;
         finalTime;
         timeStep;
@@ -52,7 +74,30 @@ classdef initialValueProblem < mbdyn.pre.problem
             %    passing the convergence test before erroring out
             %
             %  'ResidualTolerance' - the tolerance used for the residual
-            %    test.
+            %    test. This can be a scalar numeric value, or the keyword
+            %    'null', which is equivalent to setting the tolerance to
+            %    value zero. This disables the residual testing, disabling
+            %    the computation of the test on the residual
+            %
+            %    Alternatively, ResidualTolerance can be a cell array. If a
+            %    cell array, the first element must be a scalar numeric
+            %    value, or 'null'. The second cell must contain the keyword
+            %    'test' and the third another keyword, one of 'none',
+            %    'norm', and 'minmax'. The test mechanism is used to select
+            %    what kind of test must be performed; currently, only norm
+            %    (the default) and minmax are supported. The special value
+            %    'none' means that the test is not actually computed; it is
+            %    the default when the test is disabled by setting the
+            %    tolerance to zero, or by using the keyword 'null'.
+            %
+            %    An optional fourth cell can contain the keyword 'scale'.
+            %    If the 'scale' keyword is present it activates scaling of
+            %    the residual before performing the tolerance test. Default
+            %    scale factors can be set for each type of degree of
+            %    freedom owner, these are set using the 'DefaultScales'
+            %    option of the mbdyn.pre.system class. Some entities also
+            %    allow individual scaling, e.g. all types of nodes. By
+            %    default, no scaling takes place.
             %
             %  'SolutionTolerance' - A tolerance to test the solution (the
             %    difference between the states at two iterations)
@@ -277,6 +322,7 @@ classdef initialValueProblem < mbdyn.pre.problem
             self.output = options.Output;
             self.nonlinearSolver = options.NonlinearSolver;
             self.linearSolver = options.LinearSolver;
+            self.scaleResidual = options.ScaleResidual;
             self.type = 'initial value';
             
         end
