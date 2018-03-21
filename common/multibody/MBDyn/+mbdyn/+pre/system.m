@@ -1,60 +1,66 @@
 classdef system < mbdyn.pre.base
-    % class representing an mbdyn multibody dynamics system
-    %
-    % Syntax
-    %
-    % 
-    %
-    % Description
-    %
-    % This class represents a multibody system and associated problem data
-    % and can be used to generate an input file for MBDyn. This class
-    % depends on the many other classes in the mbdyn.pre namespace which
-    % represent the various things which make up an mbdyn problem
-    % description, such as nodes, forces, drives, bodies etc.
-    %
-    % The class can also be used to create a visual representaiton of the
-    % system, and node positons and orientations can be set, allowing
-    % simulations to be visualised at any time point.
-    %
-    % system Methods:
-    %   addDrivers - adds drives to the system
-    %   addElements - adds elements to the system (bodies, joints, forces, 
-    %     drives etc.)
-    %   addNodes - adds nodes to the system
-    %   addProblems - adds problems to the system
-    %   draw - draws the system in a figure window
-    %   externalStructuralCommInfo - returns information about the
-    %     communication method used in any external structural force element
-    %   externalStructuralInfo - returns information about any external
-    %     structural force element in the system
-    %   generateMBDynInputFile - gerates an mbdyn input file for the system
-    %   generateMBDynInputStr - gerates a string representing an mbdyn
-    %     input file contents
-    %   setNodeOrientation - sets a node's orientation (useful for drawing)
-    %   setNodePosition - sets a node's position (useful for drawing)
-    %   setStructuralNodeSize - sets the size of all nodes for drawing
-    %   system - constructor
-    %
-    % About MBDyn
-    % -----------
-    %
-    % MBDyn is the first and possibly the only free general purpose
-    % Multibody Dynamics analysis software, released under GNU's GPL 2.1
-    % (get a cached copy here).
-    % 
-    % It has been developed at the Dipartimento di Scienze e Tecnologie
-    % Aerospaziali (formerly Dipartimento di Ingegneria Aerospaziale) of
-    % the University "Politecnico di Milano", Italy.
-    % 
-    % MBDyn features the integrated multidisciplinary simulation of
-    % multibody, multiphysics systems, including nonlinear mechanics of
-    % rigid and flexible bodies (geometrically exact & composite-ready beam
-    % and shell finite elements, component mode synthesis elements, lumped
-    % elements) subjected to kinematic constraints, along with smart
-    % materials, electric networks, active control, hydraulic networks, and
-    % essential fixed-wing and rotorcraft aerodynamics.
-    %
+% class representing an mbdyn multibody dynamics system
+%
+% Syntax
+%
+% sys = mbdyn.pre.system (problems)
+% sys = mbdyn.pre.system (..., 'Parameter', Value)
+% 
+%
+% Description
+%
+% This class represents a multibody system and associated problem data and
+% can be used to generate an input file for MBDyn. This class depends on
+% the many other classes in the mbdyn.pre namespace which represent the
+% various things which make up an mbdyn problem description, such as nodes,
+% forces, drives, bodies etc.
+%
+% The class can also be used to create a visual representaiton of the
+% system, and node positons and orientations can be set, allowing
+% simulations to be visualised at any time point.
+%
+% The mbdyn.pre.system object can also assist with cosimulation (updating
+% node postitions etc. in the system) and with postprocessing.
+%
+% mbdyn.pre.system Methods:
+%
+%   system - constructor
+%   addDrivers - adds drives to the system
+%   addElements - adds elements to the system (bodies, joints, forces, 
+%     drives etc.)
+%   addNodes - adds nodes to the system
+%   addProblems - adds problems to the system
+%   draw - draws the system in a figure window
+%   externalStructuralCommInfo - returns information about the
+%     communication method used in any external structural force element
+%   externalStructuralInfo - returns information about any external
+%     structural force element in the system
+%   generateMBDynInputFile - gerates an mbdyn input file for the system
+%   generateMBDynInputStr - gerates a string representing an mbdyn
+%     input file contents
+%   setNodeOrientation - sets a node's orientation (useful for drawing)
+%   setNodePosition - sets a node's position (useful for drawing)
+%   setStructuralNodeSize - sets the size of all nodes for drawing
+%
+%
+% About MBDyn
+% -----------
+%
+% MBDyn is the first and possibly the only free general purpose Multibody
+% Dynamics analysis software, released under GNU's GPL 2.1.
+% 
+% It has been developed at the Dipartimento di Scienze e Tecnologie
+% Aerospaziali (formerly Dipartimento di Ingegneria Aerospaziale) of the
+% University "Politecnico di Milano", Italy.
+% 
+% MBDyn features the integrated multidisciplinary simulation of multibody,
+% multiphysics systems, including nonlinear mechanics of rigid and flexible
+% bodies (geometrically exact & composite-ready beam and shell finite
+% elements, component mode synthesis elements, lumped elements) subjected
+% to kinematic constraints, along with smart materials, electric networks,
+% active control, hydraulic networks, and essential fixed-wing and
+% rotorcraft aerodynamics.
+%
     
     
     properties
@@ -76,13 +82,76 @@ classdef system < mbdyn.pre.base
     methods
         
         function self = system (problems, varargin)
-            
+            % mbdyn.pre.system constructor
+            %
+            % Syntax
+            %
+            % sys = mbdyn.pre.system (problems)
+            % sys = mbdyn.pre.system (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % mbdyn.pre.system act as a container for all the components of
+            % an MBDyn mutibody dynamics and multiphysics problem. It is
+            % used to visualise the complete problem, generate MBDyn input
+            % files and assist with cosimulation and pstprocessing.
+            %
+            % Input
+            %
+            %  problems - mbdyn.pre.problem object (or derived object such
+            %   as mbdyn.pre.initialValueProblem), or a cell array of these
+            %   objects. 
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'Nodes' - cell array of mbdyn.pre.node objects (or derived
+            %    objects, such as mbdyn.pre.structuralNode6dof).
+            %
+            %  'Elements' - cell array of mbdyn.pre.element objects (or
+            %    derived objects, such as mbdyn.pre.body).
+            %
+            %  'Drivers' - 
+            %
+            %  'DefaultOutput' - 
+            %
+            %  'DefaultOrientation' - character vector which is the default
+            %    orientation output format. Can be one of 'euler123',
+            %    'euler313', 'euler321', 'orientation vector', or
+            %    'orientation matrix'
+            %
+            %  'References' - optional cell array of mbdyn.pre.reference
+            %    objects. If supplied, these are used purely for
+            %    visualisation and have effect on the simulation in any
+            %    way.
+            %
+            %  'DefaultScales' - optional structure or array of structures
+            %    used to set default scale values to apply to the residuals
+            %    of different dof owners before applying the tolerance
+            %    test. The structure should contain only the fields
+            %    'ScaleItem' and 'ScaleFactor'. Scaleitem is a a character
+            %    vector, which can be one of the following: 'all', 'none',
+            %    'abstract nodes', 'electric nodes', 'hydraulic nodes',
+            %    'structural nodes' or 'thermal nodes'. The ScaleFactor
+            %    field must contain a scalar value with is the scale factor
+            %    to apply to the corresponding item in the ScaleItem field.
+            %
+            % Output
+            %
+            %  sys - mbdyn.pre.system object
+            %
+            %
+            %
+            % See Also: 
+            %
+
             options.Nodes = {};
             options.Elements = {};
             options.Drivers = {};
             options.DefaultOutput = {};
             options.DefaultOrientation = '';
             options.References = {};
+            options.DefaultScales = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -122,8 +191,44 @@ classdef system < mbdyn.pre.base
                     true, 'DefaultOrientation');
             end
             
+            if ~isempty (options.DefaultScales)
+                
+                assert (isstruct (options.DefaultScales), ...
+                    'DefaultScales should be an aray of one or more structures.');
+                
+                if ~all (isfield (options.DefaultScales, {'ScaleItem', 'ScaleFactor'})) ...
+                        || ( numel(fieldnames (options.DefaultScales)) > 2)
+                    error ('DefaultScales should be an aray of one or more structures with only the fields ''ScaleItem'' and ''ScaleFactor''.');
+                end
+                
+                for ind = 1:numel (options.DefaultScales)
+                    
+                    self.checkAllowedStringInputs ( ...
+                        options.DefaultScales(ind).ScaleItem, ...
+                        { 'all', ...
+                          'none', ...
+                          'abstract nodes', ...
+                          'electric nodes', ...
+                          'hydraulic nodes', ...
+                          'structural nodes', ...
+                          'thermal nodes' ...
+                        }, ...
+                        true, ...
+                        sprintf ('DefaultScales(%d).ScaleItem', ind) ...
+                        );
+                        
+                    self.checkNumericScalar ( ...
+                        options.DefaultScales(ind).ScaleFactor, ...
+                        true, ...
+                        sprintf ('DefaultScales(%d).ScaleFactor', ind) );
+
+                end
+                
+            end
+            
             self.controlData.DefaultOutput = options.DefaultOutput;
             self.controlData.DefaultOrientation = options.DefaultOrientation;
+            self.controlData.DefaultScales = options.DefaultScales;
             
         end
         
@@ -499,11 +604,35 @@ classdef system < mbdyn.pre.base
             end
             
             if ~isempty (self.controlData.DefaultOutput)
-                str = self.addOutputLine (str, sprintf ('default output: %s;', self.commaSepList (self.controlData.DefaultOutput{:})), 1, false);
+                str = self.addOutputLine ( str, ...
+                                           sprintf ( 'default output: %s;', ...
+                                                     self.commaSepList (self.controlData.DefaultOutput{:}) ), ...
+                                           1, ...
+                                           false );
             end
             
             if ~isempty (self.controlData.DefaultOrientation)
-                str = self.addOutputLine (str, sprintf ('default orientation: %s;', self.controlData.DefaultOrientation), 1, false);
+                str = self.addOutputLine ( str, sprintf ('default orientation: %s;', self.controlData.DefaultOrientation), 1, false);
+            end
+            
+            if ~isempty (self.controlData.DefaultScales)
+                
+                str = self.addOutputLine (str, 'default scale: ', 1, true);
+                
+                for ind = 1:numel (self.controlData.DefaultScales)
+                    
+                    addcomma = ind < numel (self.controlData.DefaultScales);
+                    
+                    str = self.addOutputLine ( str, ...
+                                    self.commaSepList ( self.controlData.DefaultScales.ScaleItem, ...
+                                                        self.controlData.DefaultScales.ScaleFactor ), ...
+                                               2, ...
+                                               addcomma );
+                    
+                end
+                
+                str = self.addOutputLine ( str, ';', 1, false);
+                
             end
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
