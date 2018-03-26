@@ -82,10 +82,6 @@ EPSRC funded project "All Electrical Drive Train for Marine Energy
 Converters (EDRIVE-MEC)", grant No. EP/N021452/1. The main contributor
 is Dr. Richard Crozier.
 
-#############
-API Reference
-#############
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
