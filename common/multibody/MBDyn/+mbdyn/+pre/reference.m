@@ -1,5 +1,37 @@
 classdef reference < handle
-    
+% class representing a reference frame, which can be relative to another frame
+%
+% Syntax
+%
+% ref = reference (dpos, dorientm, dv, domega)
+% ref = reference (..., 'Parameter', value)
+%
+% Description
+%
+% The reference class is intended to ease the finding of positions and
+% orientations in the global coordinate system. The reference class allows
+% you to define locations and orientation in the coordinate space relative
+% to another position and orientation. References can be defined relative
+% to other references, so the describe positions in frame of that
+% reference. The purpose of this is to allow the modification of the
+% orientation or position of a thing, keeping orientations and positions
+% defined relative to it consistent.
+%
+% Different aspects of a reference can also be defined relative to
+% different references. For example, the position can be defined relative
+% to reference 1, while the velocity s defined relative to another
+% reference, reference 2 etc. See the help for the constructor for more
+% details.
+%
+% mbdyn.pre.reference Methods:
+%
+%   reference - constructor for mbdyn.pre.reference class
+%   convertGlobal - converts quantities in the global frame to this reference frame
+%   draw - draw the reference in a figure
+%
+% See Also: mbdyn.pre.globalref
+%
+
     properties (GetAccess = public, SetAccess = private)
         
         name;            % Name associated with this reference (used in plots)
@@ -50,7 +82,7 @@ classdef reference < handle
             % Different aspects of a reference can also be defined relative
             % to different references. For example, the position can be
             % defined relative to reference 1, while the velocity s defined
-            % relative to another reference, reference 2.
+            % relative to another reference, reference 2 etc.
             %
             %
             % Input
