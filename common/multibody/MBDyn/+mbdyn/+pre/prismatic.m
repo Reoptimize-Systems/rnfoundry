@@ -83,9 +83,9 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.twoNodeJoint(self);
+            str = generateMBDynInputString@mbdyn.pre.twoNodeJoint(self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
             

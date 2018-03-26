@@ -19,9 +19,9 @@ classdef lineSearchSolver < mbdyn.pre.newtonRaphsonSolver
             
         end
 
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.newtonRaphsonSolver (self);
+            str = generateMBDynInputString@mbdyn.pre.newtonRaphsonSolver (self);
         end
          
     end

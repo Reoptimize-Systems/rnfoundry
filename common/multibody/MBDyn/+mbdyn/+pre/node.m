@@ -96,16 +96,16 @@ classdef node < mbdyn.pre.base
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             % generates string with options common to all nodes
             %
             % Syntax
             %
-            % str = generateOutputString (nd)
+            % str = generateMBDynInputString (nd)
             %
             % Description
             %
-            % generateOutputString is a method shared by all MBDyn
+            % generateMBDynInputString is a method shared by all MBDyn
             % components and is called to generate a character vector used
             % to construct an MBDyn input file.
             %

@@ -14,7 +14,7 @@ classdef abstractNode < mbdyn.pre.node
 %
 %   abstractNode - constructor
 %   draw - draw/plot the element. Inactive for this element
-%   generateOutputString - generate an mbdyn input file string for the 
+%   generateMBDynInputString - generate an mbdyn input file string for the 
 %    element
 %
 %
@@ -122,16 +122,16 @@ classdef abstractNode < mbdyn.pre.node
 
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             % generate an mbdyn input file string for the element
             %
             % Syntax
             %
-            % str = generateOutputString (an)
+            % str = generateMBDynInputString (an)
             %
             % Description
             %
-            % generateOutputString is a method shared by all MBDyn
+            % generateMBDynInputString is a method shared by all MBDyn
             % components and is called to generate a character vector used
             % to construct an MBDyn input file.
             %
@@ -145,7 +145,7 @@ classdef abstractNode < mbdyn.pre.node
             %   file.
             %
 
-            nodestr = generateOutputString@mbdyn.pre.node (self);
+            nodestr = generateMBDynInputString@mbdyn.pre.node (self);
             
             str = self.addOutputLine ('', sprintf('abstract : %d, %s', self.label, self.algebraicOrDifferential), 1, false);
             

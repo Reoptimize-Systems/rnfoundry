@@ -33,7 +33,7 @@ classdef singleTplDriveCaller < mbdyn.pre.driveCaller
         end
         
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
 
             % delete newline character and space from start
             args = {};
@@ -42,7 +42,7 @@ classdef singleTplDriveCaller < mbdyn.pre.driveCaller
                 args = [args, {'reference', self.reference}];
             end
             
-            str = sprintf ('single, %s', self.commaSepList (args{:}, self.entity, self.driveCaller.generateOutputString ()) );
+            str = sprintf ('single, %s', self.commaSepList (args{:}, self.entity, self.driveCaller.generateMBDynInputString ()) );
             
         end
         

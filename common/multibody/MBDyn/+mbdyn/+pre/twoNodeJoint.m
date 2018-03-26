@@ -22,8 +22,8 @@ classdef twoNodeJoint < mbdyn.pre.joint
     end
     
     methods
-        function str = generateOutputString (self)
-            str = generateOutputString@mbdyn.pre.joint(self);
+        function str = generateMBDynInputString (self)
+            str = generateMBDynInputString@mbdyn.pre.joint(self);
         end
     end
     

@@ -52,10 +52,10 @@ classdef angularVelocity < mbdyn.pre.singleNodeJoint
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             % generate an MBDyn input file string for the element
             
-            str = generateOutputString@mbdyn.pre.singleNodeJoint (self);
+            str = generateMBDynInputString@mbdyn.pre.singleNodeJoint (self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, true, 'node label');
             
@@ -66,7 +66,7 @@ classdef angularVelocity < mbdyn.pre.singleNodeJoint
                                        'rotation axis' );
                                    
             str = self.addOutputLine ( str, ...
-                                       self.omegaDrive.generateOutputString (), ...
+                                       self.omegaDrive.generateMBDynInputString (), ...
                                        2, ...
                                        false );
                                    

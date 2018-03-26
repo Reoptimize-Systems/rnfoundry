@@ -116,9 +116,9 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.twoNodeJoint(self);
+            str = generateMBDynInputString@mbdyn.pre.twoNodeJoint(self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
             
@@ -140,7 +140,7 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
                 str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation2Reference, self.relativeOrientation2), 3, true);
             end
             
-            str = self.addOutputLine (str, self.angularVelocity.generateOutputString (), 2, false);
+            str = self.addOutputLine (str, self.angularVelocity.generateMBDynInputString (), 2, false);
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             

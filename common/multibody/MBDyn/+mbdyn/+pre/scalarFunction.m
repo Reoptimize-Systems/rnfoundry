@@ -19,7 +19,7 @@ classdef scalarFunction < mbdyn.pre.base
             
         end
         
-%         function str = generateOutputString (self)
+%         function str = generateMBDynInputString (self)
 %             
 %            
 %         end

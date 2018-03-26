@@ -13,7 +13,7 @@ classdef drive < mbdyn.pre.base
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
              str = sprintf ('    drive : %d, %s,', self.label, self.type);
             

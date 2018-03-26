@@ -12,7 +12,7 @@ classdef genel < mbdyn.pre.element
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = sprintf ('    genel : %d, %s,', self.label, self.type);
             

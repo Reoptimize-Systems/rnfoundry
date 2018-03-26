@@ -85,7 +85,7 @@ classdef stateSpaceFilter < mbdyn.pre.genel
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
 %             str = self.addOutputLine ('' , '', 1, false, 'one-mass body');
             

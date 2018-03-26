@@ -19,9 +19,9 @@ classdef scalarFunctionElasticIsotropicConstituativeLaw < mbdyn.pre.constituativ
            
        end
        
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
                        
-            str = self.commaSepList (self.type, self.scalarFunction.generateOutputString ());     
+            str = self.commaSepList (self.type, self.scalarFunction.generateMBDynInputString ());     
             
         end
        

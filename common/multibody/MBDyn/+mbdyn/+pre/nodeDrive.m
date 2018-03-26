@@ -122,7 +122,7 @@ classdef nodeDrive < mbdyn.pre.drive
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             args = {sprintf('node, %d', self.node.label), self.nodeType};
             
@@ -133,7 +133,7 @@ classdef nodeDrive < mbdyn.pre.drive
                 args = [args, {'string', sprintf('"%s"', self.string)}];
             end
             
-            args = [args, {self.funcDrive.generateOutputString()}];
+            args = [args, {self.funcDrive.generateMBDynInputString()}];
             
             str = self.commaSepList (args{:});
             

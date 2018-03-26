@@ -37,7 +37,7 @@ classdef newtonRaphsonSolver < mbdyn.pre.nonlinearSolver
             
         end
 
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             args = {self.type};
             

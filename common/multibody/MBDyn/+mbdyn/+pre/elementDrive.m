@@ -98,7 +98,7 @@ classdef elementDrive < mbdyn.pre.drive
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             args = {sprintf('element, %d', self.element.label), self.elementType};
             
@@ -109,7 +109,7 @@ classdef elementDrive < mbdyn.pre.drive
                 args = [args, {'string', sprintf('"%s"', self.string)}];
             end
             
-            args = [args, {self.funcDrive.generateOutputString()}];
+            args = [args, {self.funcDrive.generateMBDynInputString()}];
             
             str = self.commaSepList (args{:});
             

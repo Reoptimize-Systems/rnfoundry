@@ -6,7 +6,7 @@ classdef joint < mbdyn.pre.element
     
     methods
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             str = sprintf ('    joint : %d, %s,', self.label, self.type);
         end
         

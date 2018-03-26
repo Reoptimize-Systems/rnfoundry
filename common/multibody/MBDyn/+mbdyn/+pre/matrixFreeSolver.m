@@ -42,7 +42,7 @@ classdef matrixFreeSolver < mbdyn.pre.nonlinearSolver
             
         end
 
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             % generates an output string for the element
             
 %             args = {self.type};

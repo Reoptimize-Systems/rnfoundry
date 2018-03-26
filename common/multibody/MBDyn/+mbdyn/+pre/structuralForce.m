@@ -132,9 +132,9 @@ classdef structuralForce < mbdyn.pre.force
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.force(self);
+            str = generateMBDynInputString@mbdyn.pre.force(self);
             
             str = self.addOutputLine (str, self.forceType, 2, true);
             
@@ -185,11 +185,11 @@ classdef structuralForce < mbdyn.pre.force
             addcomma = ~isempty (self.moment);
                     
             if ~isempty (self.force)
-                str = self.addOutputLine (str, self.force.generateOutputString(), 2, addcomma);
+                str = self.addOutputLine (str, self.force.generateMBDynInputString(), 2, addcomma);
             end
             
             if ~isempty (self.moment)
-                str = self.addOutputLine (str, self.moment.generateOutputString(), 2, false);
+                str = self.addOutputLine (str, self.moment.generateMBDynInputString(), 2, false);
             end
 
             str = self.addOutputLine (str, ';', 1, false, 'end structural force');

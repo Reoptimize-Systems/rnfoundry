@@ -13,7 +13,7 @@ classdef simpleShape < mbdyn.pre.shapeFunction
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = self.fcnType;              
             
