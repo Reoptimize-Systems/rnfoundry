@@ -1,10 +1,31 @@
 classdef element < mbdyn.pre.base
-    
+% base class for all MBDyn elements
+%
+% Syntax
+%
+% el = mbdyn.pre.element ('Parameter', Value)
+%
+% Description
+%
+% mbdyn.pre.element is the base class for all other element types in the
+% toolbox. It contains methods and properties common to all elements such
+% as bodies, joints and forces etc. It is not intended to be used directly
+% by ordinary users.
+%
+% mbdyn.pre.element Methods:
+%
+%   element - mbdyn.pre.element constructor
+%   draw - plot the element in a figure
+%   loadSTL - load an STL file which will be used when visualising the element
+%   setColour - set the colour of the element in plots
+%   setSize - set the size of the element in plots
+%
+%
     
     properties (GetAccess = public, SetAccess = protected)
        
-        drawColour;
-        name;
+        drawColour; % colour of the element in plots
+        name; % name of the element
         
     end
     
@@ -26,6 +47,37 @@ classdef element < mbdyn.pre.base
     methods
         
         function self = element (varargin)
+            % mbdyn.pre.element constructor
+            %
+            % Syntax
+            %
+            % el = mbdyn.pre.element ('Parameter', Value)
+            %
+            % Description
+            %
+            % mbdyn.pre.element is the base class for all other element
+            % types in the toolbox. It contains methods and properties
+            % common to all elements such as bodies, joints and forces etc.
+            % It is not intended to be used directly by ordinary users.
+            %
+            % Input
+            %
+            % Arguments may be supplied as parameter-value pairs. The
+            % available options are:
+            %
+            %  'STLFile' - character vector containing the full path to an
+            %    STL file which will be used when visualising/plotting the
+            %    element.
+            %
+            %  'UseSTLName' - true/false flag indicating whether to use the
+            %    name embedded in the STL file as the name for this
+            %    element, in which case it will be used in the 'name'
+            %    property of the element.
+            %
+            % Output
+            %
+            %  el - mbdyn.pre.element
+            %
             
             options.STLFile = '';
             options.UseSTLName = false;
@@ -52,6 +104,30 @@ classdef element < mbdyn.pre.base
         end
         
         function loadSTL (self, filename, usename)
+            % load an STL file which will be used when visualising the element
+            %
+            % Syntax
+            %
+            % mbdyn.pre.element (self, filename, usename)
+            %
+            % Description
+            %
+            % load an STL file which will be used when visualising the
+            % element instead of the default shapes.
+            %
+            % Input
+            %
+            %  el - mbdyn.pre.element object
+            %
+            %  filename - full path to the STL file to be loaded
+            %
+            %  usename - true/false 
+            %
+            %
+            % See Also: mbdyn.pre.element.node
+            %
+
+            self.checkLogicalScalar (usename, true, 'usename');
             
             [self.shapeData(1).Vertices, self.shapeData(1).Faces, self.shapeData(1).N, stlname] = stl.read(filename);
             
@@ -70,23 +146,89 @@ classdef element < mbdyn.pre.base
         end
         
         function setSize (self, sx, sy, sz)
+            % set the size of the element in plots
+            
             self.sx = sx;
             self.sy = sy;
             self.sz = sz;
         end
         
         function setColour (self, newcolour)
+            % set the colour of the element in plots
+            
             self.drawColour = newcolour;
         end
         
         function hax = draw (self, varargin)
-            
+            % plot the element in a figure
+            %
+            % Syntax
+            %
+            % hax = draw (el)
+            % hax = draw (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % The draw method creates a visualisation of the element in a
+            % figure. If an STL file has previously be added to the
+            % element, this will be plotted. Otherwise a standard shape
+            % will be used.
+            %
+            % The draw method tries to be efficient. Each element is
+            % associated with a hgtransform object. If the shape of the
+            % object has not changed, the transform matrix is simply
+            % updated to adjust the location and orientation on the plot. 
+            %
+            % Input
+            %
+            %  el - mbdyn.pre.element object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'AxesHandle' - optional handle to axes in which to plot the
+            %    element. If not supplied, a new figure and axes will be
+            %    created. The first time to element is drawn the handle to
+            %    the axes will be stored internally and future calls to
+            %    draw will plot to the same axes, unless the axes are
+            %    destroyed, or this option is used to override it.
+            %
+            %  'ForceRedraw' - true/false flag indicating whether to force
+            %    a full redraw of the object (rather than just update the
+            %    transform matrix), even if the element does not think it
+            %    needs it.
+            %
+            %  'Mode' - character vector determining the style in which the
+            %    element will be plotted. Can be one of 'solid',
+            %    'wiresolid', 'ghost', 'wireframe', 'wireghost'. Default is
+            %    'solid'.
+            %
+            %  'Light' - 
+            %
+            % Output
+            %
+            %
+            %
+            % See Also: 
+            %
+
             options.AxesHandle = [];
             options.ForceRedraw = false;
             options.Mode = 'solid';
             options.Light = false;
             
             options = parse_pv_pairs (options, varargin);
+            
+            self.checkLogicalScalar ( options.ForceRedraw, true, 'ForceRedraw' );
+            self.checkAllowedStringInputs ( options.Mode, ...
+                                            { 'solid', ...
+                                              'wiresolid', ...
+                                              'ghost', ...
+                                              'wireframe', ...
+                                              'wireghost' }, ...
+                                            true, ...
+                                            'Mode' );
+            self.checkLogicalScalar ( options.Light, true, 'Light' );
             
             if options.ForceRedraw
                 self.needsRedraw = true;
