@@ -13,6 +13,7 @@ sphinx/generated/**
 # mbdyn related generated files
 +test_wsim_RM3/*.mbd
 sphinx/api_reference/**
+images/example_basic_cosimulation_*
 
 # NEMOH generated files
 RM3_NEMOH_output/**
