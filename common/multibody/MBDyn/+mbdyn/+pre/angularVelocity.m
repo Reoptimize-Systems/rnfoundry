@@ -53,6 +53,7 @@ classdef angularVelocity < mbdyn.pre.singleNodeJoint
         end
         
         function str = generateOutputString (self)
+            % generate an MBDyn input file string for the element
             
             str = generateOutputString@mbdyn.pre.singleNodeJoint (self);
             
