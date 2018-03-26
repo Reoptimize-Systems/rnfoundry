@@ -12,8 +12,6 @@ classdef node < mbdyn.pre.base
         
         humanReadableLabel; % character vector with a label for the node
         
-%         uniqueTextLabel;
-        
         scale; % factor by which to scale the residual before applying a tolerance test
 
         output; % flag indicating whther the node will produce output
@@ -100,6 +98,26 @@ classdef node < mbdyn.pre.base
         
         function str = generateOutputString (self)
             % generates string with options common to all nodes
+            %
+            % Syntax
+            %
+            % str = generateOutputString (nd)
+            %
+            % Description
+            %
+            % generateOutputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %
+            % Input
+            %
+            %  nd - mbdyn.pre.node
+            %
+            % Output
+            %
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = '';
             
@@ -120,7 +138,8 @@ classdef node < mbdyn.pre.base
         end
         
         function draw (self, varargin)
-            % do nothing by default
+            % draw/plot the element. Inactive for this element
+            
         end
         
     end
