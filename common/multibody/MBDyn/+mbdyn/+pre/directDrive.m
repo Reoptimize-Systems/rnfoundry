@@ -35,7 +35,7 @@ classdef directDrive < mbdyn.pre.drive
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = self.type;
             

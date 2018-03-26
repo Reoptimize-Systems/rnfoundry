@@ -17,8 +17,8 @@ classdef singleNodeJoint < mbdyn.pre.joint
             
         end
         
-        function str = generateOutputString (self)
-            str = generateOutputString@mbdyn.pre.joint(self);
+        function str = generateMBDynInputString (self)
+            str = generateMBDynInputString@mbdyn.pre.joint(self);
         end
         
     end

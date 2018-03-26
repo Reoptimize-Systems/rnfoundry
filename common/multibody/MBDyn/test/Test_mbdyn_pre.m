@@ -2,17 +2,17 @@
 
 slv = mbdyn.pre.matrixFreeSolver('bicgstab');
 
-str = slv.generateOutputString ()
+str = slv.generateMBDynInputString ()
 
 %% linearsolver
 
 lslv = mbdyn.pre.linearSolver ('umfpack');
 
-str = lslv.generateOutputString ()
+str = lslv.generateMBDynInputString ()
 
 lslv = mbdyn.pre.linearSolver ('umfpack', 'BlockSize', 32);
 
-str = lslv.generateOutputString ()
+str = lslv.generateMBDynInputString ()
 
 %% initial value
 
@@ -21,20 +21,20 @@ ftime = 1;
 tstep = 0.1;
 pbm = mbdyn.pre.initialValueProblem (itime, ftime, tstep, 'Output', {'iterations', 'residual'});
 
-str = pbm.generateOutputString ()
+str = pbm.generateMBDynInputString ()
 
 pbm = mbdyn.pre.initialValueProblem (itime, ftime, tstep, ...
                     'Output', {'iterations', 'residual'}, ...
                     'ResidualTolerance', 1e-6);
 
-str = pbm.generateOutputString ()
+str = pbm.generateMBDynInputString ()
 
 pbm = mbdyn.pre.initialValueProblem (itime, ftime, tstep, ...
                     'Output', {'iterations', 'residual'}, ...
                     'ResidualTolerance', {1e-6, 'test', 'minmax', 'scale'}, ...
                     'SolutionTolerance', {1e-6, 'test', 'minmax'});
 
-str = pbm.generateOutputString ()
+str = pbm.generateMBDynInputString ()
 
 %% orientation matrix
 
@@ -128,16 +128,16 @@ ref3.orientm.orientationMatrix
 
 abn = mbdyn.pre.node ();
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 
 abn = mbdyn.pre.node ('Scale', 3);
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 abn = mbdyn.pre.node ('Scale', 'default');
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 try
 abn = mbdyn.pre.node ('Scale', 'fdasfsa');
@@ -147,11 +147,11 @@ end
 
 abn = mbdyn.pre.node ('Output', 'no');
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 abn = mbdyn.pre.node ('Scale', 3, 'Output', 'yes');
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 try
 abn = mbdyn.pre.node ('Output', 'fdasfsa');
@@ -169,47 +169,47 @@ end
 
 abn = mbdyn.pre.abstractNode ();
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 abn = mbdyn.pre.abstractNode ('Value', 10);
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 abn = mbdyn.pre.abstractNode  ('Value', 10, 'Derivative', 100);
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 abn = mbdyn.pre.abstractNode  ('Derivative', 100)
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 abn = mbdyn.pre.abstractNode ('Value', 10, 'Scale', 3, 'Output', 'yes');
 
-str = abn.generateOutputString ()
+str = abn.generateMBDynInputString ()
 
 %% structuralNode6dof
 
 
 sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 
-str = sn6dof.generateOutputString ()
+str = sn6dof.generateMBDynInputString ()
 
 sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, ...
                         'Scale', 3, 'Output', 'yes');
                     
-str = sn6dof.generateOutputString ()
+str = sn6dof.generateMBDynInputString ()
 
 %% structuralNode3dof
 
 sn3dof = mbdyn.pre.structuralNode3dof ('dynamic displacement', 'Accel', true);
 
-str = sn3dof.generateOutputString ()
+str = sn3dof.generateMBDynInputString ()
 
 %% structuralNodeDummy
 
 sn3dof = mbdyn.pre.structuralNode6dof ('dynamic displacement', 'Accel', true);
 
-str = sn3dof.generateOutputString ()
+str = sn3dof.generateMBDynInputString ()
 
 %% Body
 
@@ -220,7 +220,7 @@ inertiamat = eye (3);
 
 bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof);
 
-str = bd.generateOutputString ()
+str = bd.generateMBDynInputString ()
 
 %% Body
 
@@ -231,7 +231,7 @@ inertiamat = eye (3);
 
 bd = mbdyn.pre.body (mass, cog, inertiamat, sn6dof, 'InertialOrientation', eye (3));
 
-str = bd.generateOutputString ()
+str = bd.generateMBDynInputString ()
 
 %% Body
 
@@ -241,7 +241,7 @@ mass = 1;
 
 bd = mbdyn.pre.body (mass, [], [], sn3dof);
 
-str = bd.generateOutputString ()
+str = bd.generateMBDynInputString ()
 
 %% Multiple Mass Body
 
@@ -264,7 +264,7 @@ inertiamat = { diag([0.4, 0.4, 0.2]), diag([0.2,0.2,0.1]), diag([0.2,0.2,0.1]) }
 
 bd = mbdyn.pre.bodyMultiMass (mass, cog, inertiamat, sn6dof);
 
-str = bd.generateOutputString ()
+str = bd.generateMBDynInputString ()
 
 bd.setSize (1, 0.2, 0.2, 0.2);
 bd.setSize (2, 0.1, 0.1, 0.1);
@@ -281,17 +281,17 @@ posstatus = 'active';
 orientstatus = true;
 
 jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus);
-jnt.generateOutputString ()
+jnt.generateMBDynInputString ()
 
 
 jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
     'RelativeOffset1', [1; 2; 3]);
-jnt.generateOutputString ()
+jnt.generateMBDynInputString ()
 
 jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
     'RelativeOffset1', [1; 2; 3], ...
     'RelativeOffset1Reference', 'other node');
-jnt.generateOutputString ()
+jnt.generateMBDynInputString ()
 
 %% Revolute Rotation
 
@@ -299,7 +299,7 @@ sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 
 jnt = mbdyn.pre.revoluteRotation (sn1, sn2);
-jnt.generateOutputString ()
+jnt.generateMBDynInputString ()
 
 %% Revolute Hinge
 
@@ -326,7 +326,7 @@ revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
                                      , 'ShapeFUnction', shp ...
                                    );
                                
-revhinge.generateOutputString ()
+revhinge.generateMBDynInputString ()
 
 %%
 preload = 1;
@@ -345,7 +345,7 @@ revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
                                
 
                                
-revhinge.generateOutputString ()
+revhinge.generateMBDynInputString ()
                                  
 %% system
 
@@ -510,12 +510,12 @@ xlabel ('x'); ylabel ('y'); zlabel('z'); view (3)
 %% socket communicator
 
 soc = mbdyn.pre.socketCommunicator ('Path', '/tmp/mbdyn.sock');
-soc.generateOutputString ()
+soc.generateMBDynInputString ()
 
 %% external sturctural force
 
 soc = mbdyn.pre.socketCommunicator ('Path', '/tmp/mbdyn.sock');
-soc.generateOutputString ()
+soc.generateMBDynInputString ()
 
 
 sn6dof1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
@@ -530,7 +530,7 @@ extsf = mbdyn.pre.externalStructuralForce ( {sn6dof1, sn6dof2, sn6dof3}, ...
                                             nodeoffsets, ...
                                             soc);
                                         
-extsf.generateOutputString ()
+extsf.generateMBDynInputString ()
 
 
 
@@ -545,47 +545,47 @@ E = [ 1, 2; 3, 4 ] * 5;
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 %%
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'gain', 1, ...
                                   'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'D', D);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'E', E);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'D', D, 'E', E);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
@@ -593,20 +593,20 @@ fprintf (1, '\n\n');
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'D', D, 'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'E', E, 'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'D', D, 'E', E, 'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
@@ -615,20 +615,20 @@ fprintf (1, '\n\n');
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'D', D, 'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'E', E, 'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceFilter (state_order, A, B, C, ...
                                   'D', D, 'E', E, 'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
@@ -638,7 +638,7 @@ sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 
 dof = mbdyn.pre.nodeDOF(sn1, 'DOFNumber', 2, 'Alge', 'algebraic');
 
-dof.generateOutputString ()
+dof.generateMBDynInputString ()
 
 sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 dof2 = mbdyn.pre.nodeDOF(sn1, 'DOFNumber', 1, 'Alge', 'algebraic');
@@ -666,47 +666,47 @@ input = {dof1, dof2};
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'gain', 1, ...
                                   'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'D', D);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'E', E);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'D', D, 'E', E);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
@@ -714,20 +714,20 @@ fprintf (1, '\n\n');
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'D', D, 'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'E', E, 'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'D', D, 'E', E, 'gain', 1);
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
@@ -736,20 +736,20 @@ fprintf (1, '\n\n');
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'D', D, 'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'E', E, 'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 SSF = mbdyn.pre.stateSpaceMIMO (state_order, A, B, C, output_node_list, input, ...
                                   'D', D, 'E', E, 'balance', 'no');
 
-SSF.generateOutputString ()
+SSF.generateMBDynInputString ()
 fprintf (1, '\n\n');
 
 
@@ -761,11 +761,11 @@ func_drive = mbdyn.pre.directDrive ();
 
 nd = mbdyn.pre.nodeDrive (sn1, func_drive, 'Index', 2);
 
-nd.generateOutputString ()
+nd.generateMBDynInputString ()
 
 nd = mbdyn.pre.nodeDrive (sn1, func_drive,  'String', 'XP[1]');
 
-nd.generateOutputString ()
+nd.generateMBDynInputString ()
 
 
 %% compnent template drive caller
@@ -774,19 +774,19 @@ drivecallers = {mbdyn.pre.const(1), 'inactive', mbdyn.pre.const(2)};
 
 dc = mbdyn.pre.componentTplDriveCaller (drivecallers);
 
-dc.generateOutputString ()
+dc.generateMBDynInputString ()
 
 dc = mbdyn.pre.componentTplDriveCaller (drivecallers, 'ShapeType', 'sym');
 
-dc.generateOutputString ()
+dc.generateMBDynInputString ()
 
 dc = mbdyn.pre.componentTplDriveCaller (drivecallers, 'ShapeType', 'diag');
 
-dc.generateOutputString ()
+dc.generateMBDynInputString ()
 
 dc = mbdyn.pre.componentTplDriveCaller (drivecallers, 'ShapeType', 'bum');
 
-dc.generateOutputString ()
+dc.generateMBDynInputString ()
 
 
 %% total force
@@ -797,11 +797,11 @@ dc = mbdyn.pre.componentTplDriveCaller (drivecallers);
 
 tf = mbdyn.pre.totalForce  (sn1, 'Force', dc);
 
-tf.generateOutputString ()
+tf.generateMBDynInputString ()
 
 tf = mbdyn.pre.totalForce  (sn1, 'Force', dc, 'Moment', dc);
 
-tf.generateOutputString ()
+tf.generateMBDynInputString ()
 
 
 newabsnodes = {mbdyn.pre.abstractNode(), mbdyn.pre.abstractNode(), mbdyn.pre.abstractNode()};
@@ -814,26 +814,26 @@ dc = mbdyn.pre.componentTplDriveCaller (drivecallers);
 
 tf = mbdyn.pre.totalForce  (sn1, 'Moment', dc);
 
-tf.generateOutputString ()
+tf.generateMBDynInputString ()
 
 %% simpleShape
 
 shp = mbdyn.pre.simpleShape ();
 
-shp.generateOutputString ()
+shp.generateMBDynInputString ()
 
 %% simplePlaneHingeShape
 
 radius = pi;
 shp = mbdyn.pre.simplePlaneHingeShape (radius);
 
-shp.generateOutputString ()
+shp.generateMBDynInputString ()
 
 %% const scalar function
 
 x = mbdyn.pre.constScalarFunction ('jimbob', tau);
 
-x.generateOutputString ()
+x.generateMBDynInputString ()
 
 %% discreteCoulombFriction Model
 
@@ -841,7 +841,7 @@ friction_fcn = mbdyn.pre.constScalarFunction ('jimbob', tau);
 
 x = mbdyn.pre.discreteCoulombFriction (friction_fcn);
 
-x.generateOutputString ()
+x.generateMBDynInputString ()
 
 
 %% angularVelocity
@@ -853,24 +853,24 @@ rotaxis = [1;0;0];
 
 av = mbdyn.pre.angularVelocity ( sn1, rotaxis, drv );
 
-av.generateOutputString ()
+av.generateMBDynInputString ()
 
 
 %% rampDrive
 
 rd = mbdyn.pre.rampDrive (1, 2, 4, 10);
 
-rd.generateOutputString ()
+rd.generateMBDynInputString ()
 
 rd = mbdyn.pre.rampDrive (1, 'forever', 4, 10);
 
-rd.generateOutputString ()
+rd.generateMBDynInputString ()
 
 %% stringDrive
 
 sd = mbdyn.pre.stringDrive ('5 * Var');
 
-sd.generateOutputString ()
+sd.generateMBDynInputString ()
 
 %% deformableAxialJoint
 
@@ -892,7 +892,7 @@ obj = mbdyn.pre.deformableAxialJoint ( sn1, sn2, law, ...
                                      'Orientation2Reference', 'other node' ...
                                    );
 
-obj.generateOutputString ()
+obj.generateMBDynInputString ()
 
 
 %% axialRotation
@@ -918,4 +918,4 @@ obj = mbdyn.pre.axialRotation ( sn1, sn2, omega_drive, ...
                                      'Orientation2Reference', 'other node' ...
                                    );
 
-obj.generateOutputString ()
+obj.generateMBDynInputString ()

@@ -74,7 +74,7 @@ classdef nodeDOF < mbdyn.pre.base
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
 
             args = {sprintf('%d', self.node.label), self.nodeType};

@@ -37,7 +37,7 @@ classdef const < mbdyn.pre.drive
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = sprintf ('const, %s', self.formatNumber (self.value));
             

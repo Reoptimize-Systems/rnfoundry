@@ -115,7 +115,7 @@ classdef bodyMultiMass < mbdyn.pre.element
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
                 
             str = self.addOutputLine ('' , '', 1, false, 'multiple-mass body');

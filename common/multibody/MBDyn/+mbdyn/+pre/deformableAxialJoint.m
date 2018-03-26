@@ -152,9 +152,9 @@ classdef deformableAxialJoint < mbdyn.pre.twoNodeOffsetJoint
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.twoNodeJoint(self);
+            str = generateMBDynInputString@mbdyn.pre.twoNodeJoint(self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
             
@@ -176,7 +176,7 @@ classdef deformableAxialJoint < mbdyn.pre.twoNodeOffsetJoint
                 str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation2Reference, self.relativeOrientation2), 3, true);
             end
             
-            str = self.addOutputLine (str, self.constituativeLaw.generateOutputString (), 2, false);
+            str = self.addOutputLine (str, self.constituativeLaw.generateMBDynInputString (), 2, false);
             
             if ~isempty (self.frictionRadius)
                 str = self.addOutputLine (str, self.commaSepList ('friction', self.frictionRadius), 3, true, 'friction radius');
@@ -185,9 +185,9 @@ classdef deformableAxialJoint < mbdyn.pre.twoNodeOffsetJoint
                     str = self.addOutputLine (str, self.commaSepList ('preload', self.preload), 4, true, 'friction preload');
                 end
                 
-                str = self.addOutputLine (str, self.frictionModel.generateOutputString (), 4, true, 'friction model');
+                str = self.addOutputLine (str, self.frictionModel.generateMBDynInputString (), 4, true, 'friction model');
                 
-                str = self.addOutputLine (str, self.frictionShapeFcn.generateOutputString (), 4, false, 'friction shape function');
+                str = self.addOutputLine (str, self.frictionShapeFcn.generateMBDynInputString (), 4, false, 'friction shape function');
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));

@@ -14,7 +14,7 @@ classdef tplDriveCaller < mbdyn.pre.driveCaller
         end
         
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
 
            str = '';
             

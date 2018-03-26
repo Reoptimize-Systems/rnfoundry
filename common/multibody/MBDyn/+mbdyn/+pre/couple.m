@@ -16,7 +16,7 @@ classdef couple < mbdyn.pre.element
 %             
 %         end
 
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             str = sprintf ('    couple : %d,', self.label);
         end
         

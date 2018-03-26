@@ -16,7 +16,7 @@ classdef simplePlaneHingeShape < mbdyn.pre.shapeFunction
 
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = self.commaSepList ( self.fcnType, self.radius );
             

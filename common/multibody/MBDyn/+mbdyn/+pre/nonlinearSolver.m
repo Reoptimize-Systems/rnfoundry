@@ -6,7 +6,7 @@ classdef nonlinearSolver < mbdyn.pre.base
     
     methods
 
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = '';
             

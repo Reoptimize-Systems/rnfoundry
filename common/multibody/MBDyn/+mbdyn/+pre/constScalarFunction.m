@@ -44,7 +44,7 @@ classdef constScalarFunction < mbdyn.pre.scalarFunction
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = self.commaSepList ( ['"', self.name, '"'], ...
                                       self.fcnType, ...

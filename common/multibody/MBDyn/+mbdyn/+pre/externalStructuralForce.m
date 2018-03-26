@@ -228,11 +228,11 @@ classdef externalStructuralForce < mbdyn.pre.force
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = sprintf ('%s %s,', generateOutputString@mbdyn.pre.force (self), self.subType);
+            str = sprintf ('%s %s,', generateMBDynInputString@mbdyn.pre.force (self), self.subType);
             
-            str = self.addOutputLine (str, self.communicator.generateOutputString (), 2, true);
+            str = self.addOutputLine (str, self.communicator.generateMBDynInputString (), 2, true);
             
             if ~isempty (self.referenceNode)
                 str = self.addOutputLine (str, sprintf('%d', self.referenceNode.label), 2, true, 'reference node');

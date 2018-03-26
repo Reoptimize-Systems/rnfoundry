@@ -178,7 +178,7 @@ classdef structuralNodeDummy < mbdyn.pre.node
         end
         
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = self.addOutputLine ('' , '', 1, false, 'Dummy structural node');
             

@@ -126,9 +126,9 @@ classdef clamp < mbdyn.pre.singleNodeJoint
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.singleNodeJoint(self);
+            str = generateMBDynInputString@mbdyn.pre.singleNodeJoint(self);
             
             addcomma = ~isempty (self.position);
             str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, addcomma, 'node label');

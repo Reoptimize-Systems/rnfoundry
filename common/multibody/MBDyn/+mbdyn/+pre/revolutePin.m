@@ -123,9 +123,9 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.singleNodeJoint(self);
+            str = generateMBDynInputString@mbdyn.pre.singleNodeJoint(self);
             
             str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, true, 'node label');
 

@@ -15,7 +15,7 @@ classdef gravity < mbdyn.pre.element
 % mbdyn.pre.gravity Methods:
 %
 %  gravity - constructor, see for details of class options
-%  generateOutputString - generate string for MBDyn file
+%  generateMBDynInputString - generate string for MBDyn file
 %  draw - called when plotting currently does nothing
 %
 %
@@ -148,7 +148,7 @@ classdef gravity < mbdyn.pre.element
 
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = '';
             
@@ -157,7 +157,7 @@ classdef gravity < mbdyn.pre.element
                 case 'uniform'
                     str = self.addOutputLine (str , sprintf ('gravity : %s, %s;', ...
                                                      self.gravityModel, ...
-                                                     self.gravityAcceleration.generateOutputString() ...
+                                                     self.gravityAcceleration.generateMBDynInputString() ...
                                                             ), ...
                                               1, false);
                     

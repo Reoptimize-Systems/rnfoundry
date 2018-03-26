@@ -643,7 +643,7 @@ classdef system < mbdyn.pre.base
             %% problems section
             % write out each problem section
             for ind = 1:numel (self.problems)
-                str = sprintf ('%s\n%s\n', str, self.problems{ind}.generateOutputString ());
+                str = sprintf ('%s\n%s\n', str, self.problems{ind}.generateMBDynInputString ());
             end
             str = sprintf ('%s\n', str);
             
@@ -719,7 +719,7 @@ classdef system < mbdyn.pre.base
             if numel (self.drivers) > 0
                 str = self.addOutputLine (str , 'begin: drivers;', 0, false);
                 for ind = 1:numel (self.drivers)
-                    str = sprintf ('%s\n', self.drivers{ind}.generateOutputString ());
+                    str = sprintf ('%s\n', self.drivers{ind}.generateMBDynInputString ());
                 end
                 str = self.addOutputLine (str , 'end: drivers;', 0, false);
                 str = sprintf ('%s\n', str);
@@ -730,7 +730,7 @@ classdef system < mbdyn.pre.base
             str = sprintf ('%s\n', str);
             
             for ind = 1:numel (self.nodes)
-                str = sprintf ('%s\n%s\n', str, self.nodes{ind}.generateOutputString ());
+                str = sprintf ('%s\n%s\n', str, self.nodes{ind}.generateMBDynInputString ());
             end
             str = self.addOutputLine (str , 'end: nodes;', 0, false);
             
@@ -743,7 +743,7 @@ classdef system < mbdyn.pre.base
             str = sprintf ('%s\n', str);
             
             for ind = 1:numel (self.elements)
-                str = sprintf ('%s\n%s\n', str, self.elements{ind}.generateOutputString ());
+                str = sprintf ('%s\n%s\n', str, self.elements{ind}.generateMBDynInputString ());
             end
 
             str = self.addOutputLine (str , 'end: elements;', 0, false);

@@ -689,7 +689,7 @@ classdef base < handle
             %
             % addOutputLine is a utility function to help create readable,
             % structured MBDyn input files. It is intended to be used in
-            % the generateOutputString methods of mbdyn preprocessing
+            % the generateMBDynInputString methods of mbdyn preprocessing
             % objects like elements and nodes. It assists with keeping
             % consistant indentation levels in files. See the examples
             % section for examples of it's use.

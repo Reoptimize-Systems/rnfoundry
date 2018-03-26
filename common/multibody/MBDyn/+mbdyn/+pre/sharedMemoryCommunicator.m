@@ -37,9 +37,9 @@ classdef sharedMemoryCommunicator < mbdyn.pre.externalFileCommunicator
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.externalFileCommunicator(self);
+            str = generateMBDynInputString@mbdyn.pre.externalFileCommunicator(self);
             
 %             if ~isempty (self.create)
                 

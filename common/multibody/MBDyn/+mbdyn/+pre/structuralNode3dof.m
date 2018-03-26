@@ -41,10 +41,10 @@ classdef structuralNode3dof < mbdyn.pre.structuralNode
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             
-            nodestr = generateOutputString@mbdyn.pre.structuralNode (self);
+            nodestr = generateMBDynInputString@mbdyn.pre.structuralNode (self);
             
             str = self.addOutputLine ('' , '', 1, false, '3 DOF structural node');
             

@@ -57,10 +57,10 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             % base indent level is one
-            str = generateOutputString@mbdyn.pre.genel(self);
+            str = generateMBDynInputString@mbdyn.pre.genel(self);
             
             str = self.addOutputLine (str, self.formatInteger (self.numberOfOutputs), 2, true, 'number of outputs');
             
@@ -68,11 +68,11 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
                 
 %                 if isa (self.outputNodeDOFsind}, 'mbdyn.pre.nodeDOF')
                     
-                    str = self.addOutputLine (str, self.commaSepList (self.outputNodeDOFs(ind).generateOutputString ()), 3, true);
+                    str = self.addOutputLine (str, self.commaSepList (self.outputNodeDOFs(ind).generateMBDynInputString ()), 3, true);
                     
 %                 elseif isa (self.outputNodeDOFs{ind}, 'mbdyn.pre.abstractNode')
 %                     
-%                     str = self.addOutputLine (str, self.commaSepList ('drive', self.inputList{ind}.generateOutputString ()), 3, true);
+%                     str = self.addOutputLine (str, self.commaSepList ('drive', self.inputList{ind}.generateMBDynInputString ()), 3, true);
 %                 end
                 
             end
@@ -83,18 +83,18 @@ classdef stateSpaceMIMO < mbdyn.pre.stateSpaceFilter
                 
                 if isa (self.inputList{ind}, 'mbdyn.pre.nodeDOF')
                     
-                    str = self.addOutputLine (str, self.commaSepList ('node dof', self.inputList{ind}.generateOutputString ()), 3, true);
+                    str = self.addOutputLine (str, self.commaSepList ('node dof', self.inputList{ind}.generateMBDynInputString ()), 3, true);
                     
                 elseif isa (self.inputList{ind}, 'mbdyn.pre.drive') 
                     
-                    str = self.addOutputLine (str, self.commaSepList ('drive', self.inputList{ind}.generateOutputString ()), 3, true);
+                    str = self.addOutputLine (str, self.commaSepList ('drive', self.inputList{ind}.generateMBDynInputString ()), 3, true);
                     
                 end
                 
             end
             
             % generate common part of stste-space filter
-            str = self.addOutputLine (str, generateOutputString@mbdyn.pre.stateSpaceFilter (self), 2, false); 
+            str = self.addOutputLine (str, generateMBDynInputString@mbdyn.pre.stateSpaceFilter (self), 2, false); 
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             

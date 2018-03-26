@@ -60,7 +60,7 @@ classdef externalFileCommunicator < mbdyn.pre.base
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = sprintf ('%s,', self.type);
             

@@ -17,7 +17,7 @@ classdef force < mbdyn.pre.element
             
         end
 
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             str = sprintf ('    %s : %d,', self.type, self.label);
         end
         

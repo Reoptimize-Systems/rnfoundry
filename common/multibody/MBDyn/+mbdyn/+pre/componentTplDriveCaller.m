@@ -84,7 +84,7 @@ classdef componentTplDriveCaller < mbdyn.pre.driveCaller
         end
         
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
 
             % delete newline character and space from start
             str = 'component, ';
@@ -98,7 +98,7 @@ classdef componentTplDriveCaller < mbdyn.pre.driveCaller
                 if ischar (self.driveCallers{ind})
                     str = self.addOutputLine ( str, self.driveCallers{ind}, 1, addcomma );
                 else
-                    str = self.addOutputLine ( str, self.driveCallers{ind}.generateOutputString (), 1, addcomma );
+                    str = self.addOutputLine ( str, self.driveCallers{ind}.generateMBDynInputString (), 1, addcomma );
                 end
             end
             

@@ -37,7 +37,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
 % mbdyn.pre.structuralNode6dof Methods:
 %
 %  structuralNode6dof - constructor
-%  generateOutputString - make MBDyn output string for node
+%  generateMBDynInputString - make MBDyn output string for node
 %  draw - draw the node in a figure
 %  setSize - set the size of the node when plotted in a figure
 %  setColour - set the colour of the node when plotted in a figure
@@ -220,9 +220,9 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
         end
         
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            nodestr = generateOutputString@mbdyn.pre.structuralNode (self);
+            nodestr = generateMBDynInputString@mbdyn.pre.structuralNode (self);
             
             str = self.addOutputLine ('' , '', 1, false, '6 DOF structural node');
             

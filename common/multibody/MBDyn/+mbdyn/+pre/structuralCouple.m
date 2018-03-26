@@ -81,9 +81,9 @@ classdef structuralCouple < mbdyn.pre.couple
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
-            str = generateOutputString@mbdyn.pre.couple (self);
+            str = generateMBDynInputString@mbdyn.pre.couple (self);
             
             str = self.addOutputLine (str, self.forceType, 2, true);
             
@@ -93,7 +93,7 @@ classdef structuralCouple < mbdyn.pre.couple
                 str = self.addOutputLine (str, self.commaSepList ('position', self.position), 2, true);
             end
             
-            str = self.addOutputLine (str, self.coupleValue.generateOutputString(), 2, false);
+            str = self.addOutputLine (str, self.coupleValue.generateMBDynInputString(), 2, false);
 
             str = self.addOutputLine (str, ';', 1, false, 'end structural couple');
             

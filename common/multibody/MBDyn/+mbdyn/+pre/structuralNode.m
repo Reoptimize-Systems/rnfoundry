@@ -16,7 +16,7 @@ classdef structuralNode < mbdyn.pre.node
 % mbdyn.pre.structuralNode Methods:
 %
 %  structuralNode - constructor
-%  generateOutputString - make MBDyn output string for node
+%  generateMBDynInputString - make MBDyn output string for node
 %  draw - draw the node in a figure
 %  setSize - set the size of the node when plotted in a figure
 %  setColour - set the colour of the node when plotted in a figure
@@ -165,8 +165,8 @@ classdef structuralNode < mbdyn.pre.node
             
         end
         
-        function str = generateOutputString (self)
-            str = generateOutputString@mbdyn.pre.node (self);
+        function str = generateMBDynInputString (self)
+            str = generateMBDynInputString@mbdyn.pre.node (self);
         end
         
         function draw (self, varargin)

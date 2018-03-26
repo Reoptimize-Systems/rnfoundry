@@ -20,7 +20,7 @@ classdef initialValueProblem < mbdyn.pre.problem
 % mbdyn.pre.initialValueProblem Methods:
 %
 %  initialValueProblem - constructor
-%  generateOutputString - create string representing problem for MBDyn
+%  generateMBDynInputString - create string representing problem for MBDyn
 %    input file
 %
     
@@ -328,7 +328,7 @@ classdef initialValueProblem < mbdyn.pre.problem
             
         end
         
-        function str = generateOutputString (self)
+        function str = generateMBDynInputString (self)
             
             str = self.addOutputLine ('' , '', 0, false, 'initial value problem');
             
@@ -355,10 +355,10 @@ classdef initialValueProblem < mbdyn.pre.problem
                         
                     case {'ms', 'hope'}
                         
-                        args = {self.method{1}, self.method{2}.generateOutputString()};
+                        args = {self.method{1}, self.method{2}.generateMBDynInputString()};
 
                         if numel (self.method) == 3
-                            args = [args, {self.method{3}.generateOutputString()}];
+                            args = [args, {self.method{3}.generateMBDynInputString()}];
                         end
                         
                         methodstr = self.commaSepList (args{:});
@@ -373,7 +373,7 @@ classdef initialValueProblem < mbdyn.pre.problem
                             
                         elseif isa (options.Method{2}, 'mbdyn.pre.drive')
                             
-                            args = [args, {self.method{2}.generateOutputString()}];
+                            args = [args, {self.method{2}.generateMBDynInputString()}];
                             
                         end
                         
@@ -390,11 +390,11 @@ classdef initialValueProblem < mbdyn.pre.problem
             end
             
             if ~isempty (self.nonlinearSolver)
-                str = self.addOutputLine (str, sprintf('nonlinear solver: %s ;', self.nonlinearSolver.generateOutputString ()), 1, false);
+                str = self.addOutputLine (str, sprintf('nonlinear solver: %s ;', self.nonlinearSolver.generateMBDynInputString ()), 1, false);
             end
             
             if ~isempty (self.linearSolver)
-                str = self.addOutputLine (str, sprintf('linear solver: %s ;', self.linearSolver.generateOutputString ()), 1, false);
+                str = self.addOutputLine (str, sprintf('linear solver: %s ;', self.linearSolver.generateMBDynInputString ()), 1, false);
             end
             
             if ~isempty (self.derivativesTolerance)
