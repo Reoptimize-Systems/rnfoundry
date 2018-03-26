@@ -1,13 +1,15 @@
 classdef matrixFreeSolver < mbdyn.pre.nonlinearSolver
-    
+% class representing the MBDyn matrix-free nonlinear solver type
     
     properties (GetAccess = public, SetAccess = protected)
-       method;
+       method; % solving method (can be 'bicgstab' or 'gmres')
     end
     
     methods
         
         function self = matrixFreeSolver (method, varargin)
+            % matrix free solver constructor
+            
 %             
 %             options.Method = '';
 %             
@@ -41,6 +43,7 @@ classdef matrixFreeSolver < mbdyn.pre.nonlinearSolver
         end
 
         function str = generateOutputString (self)
+            % generates an output string for the element
             
 %             args = {self.type};
 %             
