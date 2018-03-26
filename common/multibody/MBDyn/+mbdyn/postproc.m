@@ -236,7 +236,7 @@ classdef postproc < handle
             self.ineFile = self.checkFile ('.ine');
             
             % load .jnt file
-            self.jntFile = self.checkFile ('.jnt');
+%             self.jntFile = self.checkFile ('.jnt');
             
             % load .out file
             self.outFile = self.checkFile ('.out');
@@ -1136,9 +1136,10 @@ classdef postproc < handle
             hold off
             
             xlabel (x_label);
+            set (hax, 'XLim', [time(1), time(end)]);
             
             if options.Legend
-                legend (hax, legstrings, 'Interpreter', 'none');
+                legend (hax, legstrings, 'Interpreter', 'none', 'Location', 'BestOutside');
             end
             
         end
