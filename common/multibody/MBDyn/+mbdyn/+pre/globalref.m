@@ -1,4 +1,8 @@
 classdef globalref < handle
+% provides a reference which always refers to the global coordinate frame
+%
+% See als: mbdyn.pre.reference
+%
    
    properties (GetAccess = public, SetAccess = private )
        
