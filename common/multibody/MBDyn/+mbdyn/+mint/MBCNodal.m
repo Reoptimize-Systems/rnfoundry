@@ -1,9 +1,47 @@
 classdef MBCNodal < mbdyn.mint.cppinterface
-    % MBCNodal: interface for MBDyn multibody dynamics library using sockets. 
-    %
-    % Description
-    %
-    % 
+% MBCNodal: interface for MBDyn multibody dynamics library using sockets. 
+%
+% Syntax
+%
+% mb = MBCNodal ('Parameter', value)
+%
+% Description
+%
+% MBCNodal provides an interface for interacting with the MBDyn multibody
+% dynamics package using sockets or shared memory.
+%
+%
+% mbdyn.mint.MBCNodal Methods:
+%
+%   MBCNodal - Creates an MBCNodal object
+%   Euler123 - gets the angular position of a single node with number n
+%   F - sets the nodal forces (for all structural external nodes)
+%   GetMotion - obtain the last set of results from the mbdyn system
+%   GetNodes - get the number of nodes in the system
+%   GetRefNodeRot - get the rotation matrix in the chosen format
+%   GetRot - get the rotation matrices for all nodes in the chosen format
+%   GetStatus - 
+%   KinematicsLabel - gets the label associated with the n'th node
+%   M - sets the nodal moments (for all structural external nodes)
+%   NodeAccelerations - gets the accelerations of one or more nodes
+%   NodeAngularAccels - gets the angular accelerations of one or more nodes
+%   NodeOmegas - gets the angular velocities of one or more nodes
+%   NodePositions - gets the positions of one or more nodes
+%   NodeThetas - gets the angular positions of one or more nodes
+%   NodeVelocities - gets the velocities of one or more nodes
+%   Omega - gets the angular velocity of a single node with number n
+%   OmegaP - gets the angular acceleration of a single node with number n
+%   Theta - gets the angular position of a single node with number n
+%   X - gets the position of a single node with number n
+%   XP - gets the velocity of a single node with number n
+%   XPP - gets the acceleration of a single node with number n
+%   applyForcesAndMoments - sends the forces and moments to the mbdyn system
+%   start - Start mbdyn simulation
+%
+%
+% See Also: mbdyn.mint.twoNodeTranslationalForce,
+%           mbdyn.mint.twoNodeTorque
+%
 
     properties (SetAccess = private, GetAccess = public)
         
@@ -403,10 +441,11 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             % Input
             %
+            %  mb - mbdyn.mint.MBCNodal object
+            %
             % Some optional arguments may be supplied as parameter-value
             % pairs, where the required or desired options depend on the
             % particular configuration to be set up.
-            %
             %
             % 'StartMBDyn' - determines whether the MBDyn process should be
             %   started. Default is true.
@@ -543,7 +582,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             % Syntax
             %
-            % GetMotion ()
+            % GetMotion (mb)
             %
             % Description
             %
@@ -556,7 +595,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             % Input
             %
-            %  None
+            %  mb - mbdyn.mint.MBCNodal object
             %
             % Output
             %
@@ -574,11 +613,36 @@ classdef MBCNodal < mbdyn.mint.cppinterface
 
         function nnodes = GetNodes (self)
             % get the number of nodes in the system
+            %
+            % Syntax
+            %
+            % 
+            %
+            % Input
+            %
+            %  mb - mbdyn.mint.MBCNodal object
+            %
+            % Output
+            %
+            %  nnodes - number of nodes referenced by the external
+            %   structural element in the MBDyn system
+            %
+            
             nnodes = self.cppcall ('GetNodes');
         end
 
         function label = KinematicsLabel (self, n)
-            % gets the label associated with the 'n'th node
+            % gets the label associated with the n'th node
+            %
+            % Input
+            %
+            %  mb - mbdyn.mint.MBCNodal object
+            %
+            % Output
+            %
+            %  nnodes - number of nodes referenced by the external
+            %   structural element in the MBDyn system
+            %
             
             if self.useLabels
                 label = self.cppcall ('KinematicsLabel', n);
@@ -1073,18 +1137,21 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             % Input
             %
             %  convergence_flag - boolean flag indicating whether the
-            %    external system has converged. When this flag is false,
-            %    MBDyn will no advance the time step, but rather
-            %    recalculate the state of the system and return a new set
-            %    of state variables (positions, velocities etc.) based on
-            %    the new forces. When the flag is true, it indicates the
-            %    system has converged, this is the final set of forces for
-            %    this time step, and MBDyn will apply the forces and
-            %    advance to the next time step using these forces.
+            %    external system has converged. This flag is ignored if the
+            %    coupling is 'loose'. When coupling is not loose, and this
+            %    flag is false, MBDyn will not advance the time step, but
+            %    rather recalculate the state of the system and return a
+            %    new set of state variables (positions, velocities etc.)
+            %    based on the new forces which are sent. When the flag is
+            %    true, it indicates the system has converged, this is the
+            %    final set of forces for this time step, and MBDyn will
+            %    apply the forces and advance to the next time step using
+            %    these forces.
             %
             % Output
             %
             %  result - 
+            %
             
             if self.needForces
                 error ('MBCNodal:notsetforces', ...
