@@ -324,7 +324,6 @@ classdef initialValueProblem < mbdyn.pre.problem
             self.output = options.Output;
             self.nonlinearSolver = options.NonlinearSolver;
             self.linearSolver = options.LinearSolver;
-            self.scaleResidual = options.ScaleResidual;
             self.type = 'initial value';
             
         end
