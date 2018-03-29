@@ -1,6 +1,38 @@
 classdef linearPowerTakeOff < wsim.powerTakeOff
-   
-    properties (GetAccess = private, SetAccess = private)
+% class representing a linear power take-off for a wave energy converter
+%
+% Syntax
+%
+% lpto = wsim.linearPowerTakeOff (reference_node, other_node, axisNum)
+% lpto = wsim.linearPowerTakeOff (..., 'Parameter', value)
+%
+% Description
+%
+% wsim.linearPowerTakeOff is a class representing a linear power-take-off
+% mechanism in a wave energy converter. It facilitates sending the correct
+% forces to an MBDyn multibody simulation. wsim.linearPowerTakeOff applies
+% forces between two MBDyn nodes based on their relative displacement.
+% Forces are applied based on the relative displacement and velocity of the
+% two nodes along axis 3 in the reference frame of the first node. It is
+% assumed that the nodes motion is constrained appropriately by other MBDyn
+% elements (e.g. a prismatic joint).
+%
+% wsim.linearPowerTakeOff Methods:
+%
+%   linearPowerTakeOff - construct a wsim.linearPowerTakeOff object
+%   forceAndMoment - returns the forces and moments applied by the PTO in 3D
+%
+%   Inheirited Methods
+%
+%   advanceStep - advance to the next simulation time step
+%   logData - appends the internal variable data to the log
+%   loggingSetup - sets up data logging for a wsim.linearPowerTakeOff object
+%
+%
+% See Also: wsim.rotaryPowerTakeOff, wsim.powerTakeOff
+%
+
+    properties (GetAccess = protected, SetAccess = protected)
         
         mbdynForceObj;
         
@@ -73,9 +105,13 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             %    initial position. If false, the raw position is used
             %    instead. Default is true if not supplied.
             %
+            %  'LoggedVars' - character vector, or cell array of character
+            %    vectors indicating what internal variables are to be
+            %    loggeed during a simulation. If a character vector 'none',
+            %
             % Output
             %
-            %  lpto - a wsim.linearPowerTakeOff
+            %  lpto - a wsim.linearPowerTakeOff object
             %
             %
             %
@@ -112,22 +148,56 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
                                     'InitialDisplacementZero', options.InitialDisplacementZero, ...
                                     'ForceFcn', force_fcn );
                                 
-            self.internalVariables.LastInternalForce = [];
-            self.internalVariables.LastRelativeDisplacement = [];
-            self.internalVariables.LastRelativeVelocity = [];
+            self.internalVariables.InternalForce = [];
+            self.internalVariables.RelativeDisplacement = [];
+            self.internalVariables.RelativeVelocity = [];
                                 
         end
         
         function [FM, ptoforce, reldisp, relvel] = forceAndMoment (self)
+            % returns the forces and moments applied by the PTO in 3D
+            %
+            % Syntax
+            %
+            % [FM, ptotorque, reltheta, relomega] = forceAndMoment (rot)
+            %
+            % Description
+            %
+            % wsim.linearPowerTakeOff.forceAndMoment calculates the forces
+            % and moments applied in the global frame by the PTO to the two
+            % nodes associated with the PTO.
+            %
+            % Input
+            %
+            %  rot - wsim.rotaryPowerTakeOff object
+            %
+            % Output
+            %
+            %  FM - (6 x 2) vector of forces and moments in the global
+            %   frame which the PTO is applying to the two nodes. The first
+            %   column is the forces applied to the reference node, the
+            %   second column is the forces and moments applied to the
+            %   other node.
+            %
+            %  ptoforce - scalar force value applied to the nodes parallel
+            %   to axis three of the reference node
+            %
+            %  reldisp - relative displacement of the nodes in a direction
+            %   parallel to axis three of the reference node
+            %
+            %  relvel - relative angular velocity of the nodes in a
+            %   direction parallel to axis three of the reference node
+            %
+            %
             
             [FM, ptoforce, reldisp, relvel] = self.mbdynForceObj.forceFromFcn ();
             
             % need to add zero moments to forces
             FM = [FM; zeros(size (FM))];
             
-            self.internalVariables.LastInternalForce = ptoforce;
-            self.internalVariables.LastRelativeDisplacement = reldisp;
-            self.internalVariables.LastRelativeVelocity = relvel;
+            self.internalVariables.InternalForce = ptoforce;
+            self.internalVariables.RelativeDisplacement = reldisp;
+            self.internalVariables.RelativeVelocity = relvel;
             
         end
         
