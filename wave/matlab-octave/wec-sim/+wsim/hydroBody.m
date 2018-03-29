@@ -1413,7 +1413,11 @@ classdef hydroBody < handle
 
                 case 0
                     % simple static coefficients
-                    F_RadiationDamping = obj.hydroForce.fDamping * vel(:);
+                    if obj.simu.b2b
+                        F_RadiationDamping = obj.hydroForce.fDamping * vel(:);
+                    else
+                        F_RadiationDamping = obj.hydroForce.fDamping * vel(:,obj.bodyNumber);
+                    end
 
                 case 1
                     % convolution
