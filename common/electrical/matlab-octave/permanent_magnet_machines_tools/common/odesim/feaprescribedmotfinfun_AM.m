@@ -27,7 +27,7 @@ function [design, simoptions] = feaprescribedmotfinfun_AM (design, simoptions)
     simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'OutputFcn', 'odesimoutputfcns_AM');
     
 %     simoptions.ODESim.Solver = @odef1maxstep;
-%     simoptions.ODESim.Solver = @rkfixed;
+%     simoptions.ODESim.Solver = @ode.rkfixed;
 %     simoptions.ODESim.Solver = @ode15s;
 
 end
