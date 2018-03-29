@@ -546,7 +546,7 @@ classdef wecSim < handle
                 % returned PTO force is applied to the reference node, and
                 % the opposite force is applied to the other node
                 
-                ptoForceAndTorque = self.powerTakeOffs{ptoind}.forceAndMoment ();
+                ptoForceAndTorque = self.powerTakeOffs{ptoind}.forceAndMoment (self.lastTime);
 
                 forces_and_moments (:,self.ptoIndexMap(ptoind,1)) = ...
                     forces_and_moments (:,self.ptoIndexMap(ptoind,1)) + ptoForceAndTorque(:,1);

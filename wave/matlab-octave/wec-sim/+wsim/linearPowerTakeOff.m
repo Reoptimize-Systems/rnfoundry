@@ -150,7 +150,7 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
                                 
         end
         
-        function [FM, ptoforce, reldisp, relvel] = forceAndMoment (self)
+        function [FM, ptoforce, reldisp, relvel] = forceAndMoment (self, time)
             % returns the forces and moments applied by the PTO in 3D
             %
             % Syntax
@@ -186,7 +186,7 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             %
             %
             
-            [FM, ptoforce, reldisp, relvel] = self.mbdynForceObj.forceFromFcn ();
+            [FM, ptoforce, reldisp, relvel] = self.mbdynForceObj.forceFromFcn (time);
             
             % need to add zero moments to forces
             FM = [FM; zeros(size (FM))];

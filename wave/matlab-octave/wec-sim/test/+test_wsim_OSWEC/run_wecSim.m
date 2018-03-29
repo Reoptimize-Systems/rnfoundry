@@ -74,7 +74,7 @@ mbdpath = fullfile (simu.caseDir, 'OSWEC.mbd');
 k = 0;
 c = 1;
 
-torquefcn = @(thetaRpto, omegaRpto) -k*thetaRpto -c*omegaRpto;
+torquefcn = @(time, thetaRpto, omegaRpto) -k*thetaRpto -c*omegaRpto;
 
 pto = wsim.rotaryPowerTakeOff ( pto_hinge, torquefcn );
 

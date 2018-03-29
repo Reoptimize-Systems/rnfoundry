@@ -74,7 +74,7 @@ mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
 k = 0;
 c = 1200000;
 
-forcefcn = @(xRpto, vRpto) -k*xRpto -c*vRpto;
+forcefcn = @(time, xRpto, vRpto) -k*xRpto -c*vRpto;
 
 pto = mbdyn.mint.twoNodeTranslationalForce ( hydro_mbnodes{2}, hydro_mbnodes{1}, 3, 'forcefcn', forcefcn);
 

@@ -170,21 +170,24 @@ classdef twoNodeTorque < mbdyn.mint.base
             % NON-reference (OTHER) node, and the reverse of these moments
             % is also calculated to give the force on the reference node.
             %
-            % torqueFcn is a function which takes two arguments with the
+            % torqueFcn is a function which takes three arguments with the
             % following signature:
             %
-            %         torque_value = myfcn (reltheta, relomega)
+            %         torque_value = myfcn (time, reltheta, relomega)
             %
-            % where reltheta is the relative angular displacement of the
-            % two nodes about the rotation axis of the atached revolute
-            % hinge, and relomega is the relative angular velocity of the
-            % two nodes in the same frame. torque_value is expected to be a
-            % scalar value, the value of the torque acting on the
-            % non-reference node.
+            % where time is the current simulation time, supplied as an
+            % input to momentFromFcn, reltheta is the relative angular
+            % displacement of the two nodes about the rotation axis of the
+            % atached revolute hinge, and relomega is the relative angular
+            % velocity of the two nodes in the same frame. torque_value is
+            % expected to be a scalar value, the value of the torque acting
+            % on the non-reference node.
             %
             % Input
             %
             %  tnf - mbdyn.mint.twoNodeTranslationalForce object
+            %
+            %  time - scalar value of the current simulation time
             %
             % Output
             %
