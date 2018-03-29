@@ -140,6 +140,7 @@ classdef powerTakeOff < handle
             end
             
             check.structHasAllFields ( logginginfo, {'AvailableNames', 'IndepVars', 'Sizes', 'Descriptions'}, true, 'logginginfo');
+
             
             if isempty (options.LoggedVars)
                 % log everything
@@ -311,7 +312,11 @@ classdef powerTakeOff < handle
         function initLogging (self, info, logger)
             
             for ind = 1:numel (info.AvailableNames)
+                % initialise internal variable storage
+            	self.internalVariables.(logginginfo.AvailableNames{ind}) = [];
+                
                 info.UniqueLoggingNames{ind} = sprintf ('PTO_%d_%s', self.id, info.AvailableNames{ind});
+                
             end
             
             self.uniqueLoggingNames = info.UniqueLoggingNames;
