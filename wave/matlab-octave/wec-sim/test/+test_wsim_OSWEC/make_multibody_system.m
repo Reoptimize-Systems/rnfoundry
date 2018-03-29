@@ -1,4 +1,4 @@
-function mbsys = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements, problem_options)
+function [mbsys, jhinge] = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodies, hydro_mbelements, problem_options)
 
     default_problem_options.ResidualTol = 1e-6;
     default_problem_options.MaxIterations = 20;
@@ -39,7 +39,7 @@ function mbsys = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodi
     base_mb_body.setColour ([181, 181, 181]./255);
 
     % clamp the base node to the global frame  so we can use to attach a
-    % pin to the flap
+    % hinge to the flap
     % clamp it
     jclamp = mbdyn.pre.clamp (base_node, 'node', 'node');
 
@@ -47,8 +47,13 @@ function mbsys = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodi
 
     abs_hinge_pos = [0;0;-8.9];
     om = mbdyn.pre.orientmat ('2vectors', struct ('ia', 1, 'vecA', [1., 0., 0.], 'ib', 2, 'vecB', [0., 0., 1.]));
-    jpin = mbdyn.pre.revolutePin ( flap_node, abs_hinge_pos, abs_hinge_pos, ...
-                                   'PinOrientation', om);
+    jhinge = mbdyn.pre.revoluteHinge ( base_node, flap_node, abs_hinge_pos, abs_hinge_pos, ...
+                                       'Offset1Reference', 'global', ...
+                                       'Offset2Reference', 'global', ...
+                                       'RelativeOrientation1', om, ...
+                                       'Orientation1Reference', 'global', ...
+                                       'RelativeOrientation2', om, ...
+                                       'Orientation2Reference', 'global' );
 
     if ispc
         % add the socket forces
@@ -84,8 +89,9 @@ function mbsys = make_multibody_system (waves, simu, hydro_mbnodes, hydro_mbbodi
     % assemble the system
     mbsys = mbdyn.pre.system ( prob, ...
                                'Nodes', hydro_mbnodes, ...
-                               'Elements', [{flap_mb_body, base_mb_body, jclamp, jpin, socket_force}, hydro_mbelements], ...
-                               'DefaultOrientation', 'orientation matrix', ...
-                               'DefaultOutput', {'none'} );
+                               'Elements', [{flap_mb_body, base_mb_body, jclamp, jhinge, socket_force}, hydro_mbelements], ...
+                               'DefaultOrientation', 'orientation matrix' ...
+                               ... 'DefaultOutput', {'none'} 
+                               );
 
 end
