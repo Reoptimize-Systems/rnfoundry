@@ -1,9 +1,34 @@
 classdef twoNodeTorque < mbdyn.mint.base
-    
+% class for helping with application of torques via external structural elements
+%
+% Syntax
+%
+% tnt = twoNodeTorque (revolute_hinge)
+% tnt = twoNodeTorque (..., 'Parameter', Value)
+%
+% Description
+%
+% mbdyn.mint.twoNodeTorque is a helper class used to apply a torque
+% calculated in Matlab to two nodes connected by a rotational joint
+% (specifically, a revolute hinge) during an MBDyn multibody dynamics
+% simulation.
+%
+%
+% mbdyn.mint.twoNodeTorque Methods:
+%
+%   twoNodeTorque - mbdyn.mint.twoNodeTorque constructor
+%   displacements - gets the relative displacement and velocity of the other node
+%   moment - returns moments in the global frame on the two nodes
+%   momentFromFcn - returns global forces on the two nodes evaluated from a function
+%
+%
+% See Also: mbdyn.mint.twoNodeTranslationalForce
+%
+
     properties (GetAccess = public, SetAccess = private)
         
-        torqueFcn;
-        referenceTheta;
+        torqueFcn; % torque function
+        referenceTheta; 
         joint;
         referenceNode;
         
@@ -23,13 +48,15 @@ classdef twoNodeTorque < mbdyn.mint.base
             %
             % Syntax
             %
-            % tnt = twoNodeTorque (revolute_hinge, varargin)
+            % tnt = twoNodeTorque (revolute_hinge)
+            % tnt = twoNodeTorque (..., 'Parameter', Value)
             %
             % Description
             %
             % mbdyn.mint.twoNodeTorque is a helper class used to apply a
-            % torque calculated in Matlab to a rotational joint conencting
-            % two nodes during an MBDyn simulation.
+            % torque calculated in Matlab to two nodes connected by a
+            % rotational joint (specifically, a revolute hinge) during an
+            % MBDyn multibody dynamics simulation.
             %
             % Input
             %
@@ -40,7 +67,14 @@ classdef twoNodeTorque < mbdyn.mint.base
             % Additional arguments may be supplied using parameter-value
             % pairs. The available  options are:
             %
-            %  'InitialThetaZero' - 
+            %  'InitialThetaZero' - optional scalar true/false flag
+            %    indicating whether the initial relative angular position
+            %    of the two nodes should be considered an angular
+            %    displacement of zero, and all subsequent displacements
+            %    considered relative to this initial position. If false,
+            %    the actual initial and subsequent displacement
+            %    'displacements' method (and used in the torqueFromFcn
+            %    method to evaluate the force function). Default is true.
             %
             %  'TorqueFcn' - handle to matlab function which returns a
             %    scalar value, the torque on the reference node about axis
@@ -118,21 +152,113 @@ classdef twoNodeTorque < mbdyn.mint.base
             
         end
         
-        function [M, momentval, reltheta, relomega] = momentFromFcn (self)
+        function [M, torqueval, reltheta, relomega] = momentFromFcn (self, time)
+            % returns global forces on the two nodes evaluated from a function
+            %
+            % Syntax
+            %
+            % [M, torqueval, reltheta, relomega] = momentFromFcn (self)
+            %
+            % Description
+            %
+            % momentFromFcn evaluates the torque function supplied when
+            % constructing the twoNodeTorque object, and which is stored in
+            % the torqueFcn property. It then calculates the moments on the
+            % reference and other nodes in the global frame after applying
+            % this moment about the axis of the revolute hinge to which the
+            % nodes are attached. The supplied moment is applied to the
+            % NON-reference (OTHER) node, and the reverse of these moments
+            % is also calculated to give the force on the reference node.
+            %
+            % torqueFcn is a function which takes two arguments with the
+            % following signature:
+            %
+            %         torque_value = myfcn (reltheta, relomega)
+            %
+            % where reltheta is the relative angular displacement of the
+            % two nodes about the rotation axis of the atached revolute
+            % hinge, and relomega is the relative angular velocity of the
+            % two nodes in the same frame. torque_value is expected to be a
+            % scalar value, the value of the torque acting on the
+            % non-reference node.
+            %
+            % Input
+            %
+            %  tnf - mbdyn.mint.twoNodeTranslationalForce object
+            %
+            % Output
+            %
+            %  M - (3 X 2) matrix. The first column is the moments in the
+            %   global frame on the reference node, the second is the
+            %   moments on the other node. These are simply the inverse of
+            %   the first column.
+            %
+            %  torqueval - scalar value of the torque calculated by
+            %   evaluating the torqueFcn
+            %
+            %  reltheta - scalar value of the relative angular displacement
+            %   of the two nodes about the attached revolute hinge rotation
+            %   axis
+            %
+            %  relomega - scalar value of the relative angular velocity of
+            %   the two nodes about the attached revolute hinge rotation
+            %   axis
+            %
+            %
+            % See Also: mbdyn.mint.twoNodeTranslationalForce.moment
+            %
             
             [reltheta, relomega] = displacements (self);
             
-            momentval = feval ( self.torqueFcn, reltheta, relomega );
+            torqueval = feval ( self.torqueFcn, time, reltheta, relomega );
             
-            M = moment (self, momentval);
+            M = moment (self, torqueval);
             
         end
         
         
-        function M = moment (self, momentval)
+        function M = moment (self, torqueval)
+            % returns moments in the global frame on the two nodes 
+            %
+            % Syntax
+            %
+            % M = moment (tnf, torqueval)
+            %
+            % Description
+            %
+            % moment calculates the moments on the two nodes attached to
+            % the joint node in the global frame after applying a torque
+            % about the rotation axis of a revolute hinge. The reverse of
+            % these forces is also calculated to give the moment on the
+            % other node.
+            %
+            % Input
+            %
+            %  tnf - mbdyn.mint.twoNodeTranslationalForce object
+            %
+            %  torqueval - scalar value of the torque applied to the
+            %   NON-reference node (the OTHER node), about the revolute
+            %   hinge axis.
+            %
+            % Output
+            %
+            %  M - (3 X 2) matrix. The first column is the moments in the
+            %   global frame on the reference node, the second is the
+            %   moments on the other node. These are simply the inverse of
+            %   the first column.
+            %
+            % See Also: mbdyn.mint.twoNodeTorque.momentFromFcn
+            %
             
-            M = self.joint.node1FrameRelativeOrientation.orientationMatrix(:,3) * momentval;
-            M(1:3,2) = -M;
+            M_pto_frame = [0; 0; 0];
+            M_pto_frame(3) = torqueval;
+            
+            M = zeros (3,2);
+            
+            % apply the reverse of the absolute joint orientation to the
+            % moments to put them in the global frame
+            M(1:3,2) = (self.joint.absoluteJointOrientation.orientationMatrix' * M_pto_frame)';
+            M(1:3,1) = -M(1:3,2);
             
         end
         
@@ -175,7 +301,7 @@ classdef twoNodeTorque < mbdyn.mint.base
                 * ( self.nodes(2).absoluteOrientation.orientationMatrix * self.joint.node2FrameRelativeOrientation.orientationMatrix ) ...
                             );
                         
-            reltheta = self.referenceTheta + v(3);
+            reltheta = v(3) - self.referenceTheta;
     
             % relative angular velocity
             %
@@ -196,7 +322,9 @@ classdef twoNodeTorque < mbdyn.mint.base
             R = self.nodes(2).absoluteOrientation.orientationMatrix ...
                 * self.joint.node2FrameRelativeOrientation.orientationMatrix;
             
-            relomega = R * (self.nodes(2).absoluteAngularVelocity - self.nodes(1).absoluteAngularVelocity);
+            omegas = R * (self.nodes(2).absoluteAngularVelocity - self.nodes(1).absoluteAngularVelocity);
+            
+            relomega = omegas(3);
             
         end
         
@@ -249,7 +377,7 @@ classdef twoNodeTorque < mbdyn.mint.base
                 unit = eet(:,maxcol) ./ sqrt (eet(maxcol, maxcol) * (1. - cosphi));
                 
                 % sinphi = -(Mat3x3(unit)*Phi).Trace()/2.;
-                sinphi = -(trace (cross (unit,Phi)) ) ./ 2;
+                sinphi = -(trace (cross (diag(unit),Phi)) ) ./ 2;
                 
                 unit = unit * atan2 (sinphi, cosphi);
                 
