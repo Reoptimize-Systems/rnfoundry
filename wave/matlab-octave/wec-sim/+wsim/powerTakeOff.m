@@ -1,5 +1,29 @@
 classdef powerTakeOff < handle
-   
+% base class for power take-off simulation classes
+%
+% Syntax
+%
+% pto = wsim.powerTakeOff (reference_node, other_node, logginginfo)
+% pto = wsim.powerTakeOff (..., 'Parameter', value)
+%
+% Description
+%
+% wsim.powerTakeOff is a base class for the power take-off simulation
+% classes. It has methods to help with setting up data logging and checking
+% some standard inputs.
+%
+% wsim.powerTakeOff Methods:
+%
+%   powerTakeOff - wsim.powerTakeOff constructor
+%   advanceStep - advance to the next simulation time step
+%   forceAndMoment - 
+%   logData - appends the internal variable data to the log
+%   loggingSetup - sets up data logging for a wsim.linearPowerTakeOff object
+%
+%
+% See Also: wsim.linearPowerTakeOff, wsim.rotaryPowerTakeOff
+%
+
     properties
         
         id; % positive scalar integer for uniquely idenifying the object
@@ -28,12 +52,12 @@ classdef powerTakeOff < handle
     methods
         
         function self = powerTakeOff (reference_node, other_node, logginginfo, varargin)
-            % base class for power take-off simulation classes
+            % wsim.powerTakeOff constructor
             %
             % Syntax
             %
-            % pto = powerTakeOff (reference_node, other_node, logginginfo)
-            % pto = powerTakeOff (..., 'Parameter', value)
+            % pto = wsim.powerTakeOff (reference_node, other_node, logginginfo)
+            % pto = wsim.powerTakeOff (..., 'Parameter', value)
             %
             % Description
             %
@@ -179,6 +203,29 @@ classdef powerTakeOff < handle
         function advanceStep (self, varargin)
             % advance to the next simulation time step
             %
+            % Syntax
+            %
+            % advanceStep (pto)
+            %
+            % Description
+            %
+            % wsim.powerTakeOff.advanceStep is intended to be called when
+            % the simulation is ready to advance to the next time step. It
+            % is always called when the powerTakeOff is used with the
+            % wsim.wecSim class to manage a simulation. The only tasks done
+            % by wsim.powerTakeOff.advanceStep is to log data to the
+            % wsim.logger object (internally it calls
+            % wsim.powerTakeOff.logData). It is intended that subclasses of
+            % wsim.powerTakeOff can extend this method to perform other
+            % tasks.
+            %
+            % Input
+            %
+            %  pto - wsim.powerTakeOff object
+            %
+            %
+            % See Also: wsim.powerTakeOff.logData
+            %
             
             self.logData ();
             
@@ -198,7 +245,7 @@ classdef powerTakeOff < handle
             %
             % Input
             %
-            %  lpto - wsim.linearPowerTakeOff object
+            %  lpto - wsim.powerTakeOff object
             %
             %  logger - optional wsim.logger object
             %
@@ -210,7 +257,8 @@ classdef powerTakeOff < handle
             %   NAvailable. 
             %
             %
-            % See Also: 
+            % See Also: wsim.powerTakeOff.logData,
+            %           wsim.powerTakeOff.advanceStep
             %
 
             if nargin < 2
@@ -237,13 +285,14 @@ classdef powerTakeOff < handle
             %
             %  pto - wsim.powerTakeOff object
             %
-            % See Also: wsim.powerTakeOff.loggingSetup
+            % See Also: wsim.powerTakeOff.loggingSetup,
+            %           wsim.powerTakeOff.advanceStep
             %
             
             if self.loggerReady
                 for ind = 1:numel(self.loggingInfo.LoggedVarInds)
                     
-                    fieldname = sprintf ('Last%s', self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)});
+                    fieldname = self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)};
                     
                     self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
                                          self.internalVariables.(fieldname) ...
