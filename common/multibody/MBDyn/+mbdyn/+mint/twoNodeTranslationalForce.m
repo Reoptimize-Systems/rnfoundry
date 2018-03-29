@@ -165,7 +165,7 @@ classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
             
         end
         
-        function [F, ptoforce, reldisp, relvel] = forceFromFcn (self)
+        function [F, ptoforce, reldisp, relvel] = forceFromFcn (self, time)
             % returns global forces on the two nodes evaluated from a function
             %
             % Syntax
@@ -184,22 +184,25 @@ classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
             % NON-reference (OTHER) node, and the reverse of these forces
             % is also calculated to give the force on the reference node.
             %
-            % forceFcn is a function which takes two arguments with the
+            % forceFcn is a function which takes three arguments with the
             % following signature:
             %
-            %         force_value = myfcn (reldisp, relvel)
+            %         force_value = myfcn (time, reldisp, relvel)
             %
-            % where reldisp is the relative displacement of the two nodes
-            % along the specified axis in forceAxis in the reference frame
-            % of the reference node, and relvel is the relative velocity of
-            % the two nodes in the same frame. force_value is expected to
-            % be a scalar value, the value of the force acting on the
-            % non-reference node parallel to the axis in forceAxis in the
-            % frame of the reference node.
+            % where  time is the current simulation time, supplied as an
+            % input to forceFromFcn, reldisp is the relative displacement
+            % of the two nodes along the specified axis in forceAxis in the
+            % reference frame of the reference node, and relvel is the
+            % relative velocity of the two nodes in the same frame.
+            % force_value is expected to be a scalar value, the value of
+            % the force acting on the non-reference node parallel to the
+            % axis in forceAxis in the frame of the reference node.
             %
             % Input
             %
             %  tnf - mbdyn.mint.twoNodeTranslationalForce object
+            %
+            %  time - scalar value of the current simulation time
             %
             % Output
             %
@@ -228,7 +231,7 @@ classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
             
             [reldisp, relvel] = displacements (self);
             
-            ptoforce = feval ( self.forceFcn, reldisp, relvel );
+            ptoforce = feval ( self.forceFcn, time, reldisp, relvel );
             
             F = force (self, ptoforce);
             

@@ -119,7 +119,7 @@ mbdpath = fullfile (simu_wsim.caseDir, 'RM3.mbd');
 k = pto(1).k;
 c = pto(1).c;
 
-forcefcn = @(xRpto, vRpto) -k*xRpto -c*vRpto;
+forcefcn = @(time, xRpto, vRpto) -k*xRpto -c*vRpto;
 
 pto = mbdyn.mint.twoNodeTranslationalForce ( hydro_mbnodes{2}, hydro_mbnodes{1}, 3, 'forcefcn', forcefcn);
 

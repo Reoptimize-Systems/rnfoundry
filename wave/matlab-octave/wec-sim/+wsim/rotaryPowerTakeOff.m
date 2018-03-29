@@ -166,7 +166,7 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             
         end
         
-        function [FM, ptotorque, reltheta, relomega] = forceAndMoment (self)
+        function [FM, ptotorque, reltheta, relomega] = forceAndMoment (self, time)
             % returns the forces and moments applied by the PTO in 3D
             %
             % Syntax
@@ -202,7 +202,7 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             %
             %
             
-            [M, ptotorque, reltheta, relomega] = self.mbdynMomentObj.momentFromFcn ();
+            [M, ptotorque, reltheta, relomega] = self.mbdynMomentObj.momentFromFcn (time);
             
             % need to add zero forces to forces vector
             FM = [ zeros(size (M));

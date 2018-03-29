@@ -1,6 +1,10 @@
 % +test_wsim_OSWEC/run.m.m
 
-clear waves simu hsys mbsys flap_hbody base_hbody mb
+if exist ('hmbsysfig', 'var')
+    close (hmbsysfig)
+end
+clear waves simu hsys mbsys flap_hbody base_hbody mb hmbsysfig
+
 
 %% Hydro Simulation Data
 simu = wsim.simSettings (getmfilepath ('test_wsim_OSWEC.run'));  % Create the Simulation Variable
@@ -24,32 +28,15 @@ waves.T = 8;
 %% Hydrodynamic body system
 
 %% Flap
-flap_hbody = wsim.hydroBody('hydroData/oswec.h5', 'CaseDirectory', simu.caseDir);   % Initialize bodyClass for Flap
+flap_hbody = wsim.hydroBody ('hydroData/oswec.h5', 'CaseDirectory', simu.caseDir);   % Initialize bodyClass for Flap
 flap_hbody.mass = 127000;                         % User-Defined mass [kg]
 flap_hbody.momOfInertia = [1.85e6 1.85e6 1.85e6]; % Moment of Inertia [kg-m^2]
 flap_hbody.geometryFile = fullfile ('geometry', 'flap.stl');    % Geometry File
 
 %% Base
-base_hbody = wsim.hydroBody('hydroData/oswec.h5', 'CaseDirectory', simu.caseDir);   % Initialize bodyClass for Base
+base_hbody = wsim.hydroBody ('hydroData/oswec.h5', 'CaseDirectory', simu.caseDir);   % Initialize bodyClass for Base
 base_hbody.geometryFile = fullfile ('geometry', 'base.stl');    % Geometry File
 base_hbody.mass = 'fixed';     
-
-
-% % Float
-% float_hbody = wsim.hydroBody('RM3_NEMOH_output/RM3_NEMOH_output.h5', 'CaseDirectory', simu.caseDir);      
-%     %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
-%     %and Body Number Within this File.   
-% float_hbody.mass = 'equilibrium';                   
-%     %Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
-%     %Weight.
-% float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Inertia [kg*m^2]     
-% float_hbody.geometryFile = fullfile ('geometry', 'float.stl');    %Location of Geomtry File
-% 
-% % Spar/Plate
-% spar_hbody = wsim.hydroBody('RM3_NEMOH_output/RM3_NEMOH_output.h5', 'CaseDirectory', simu.caseDir); 
-% spar_hbody.mass = 'equilibrium';                   
-% spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
-% spar_hbody.geometryFile = fullfile ('geometry', 'plate.stl'); 
 
 % make a hydrosys object for simulation
 hsys = wsim.hydroSystem (waves, simu, [flap_hbody, base_hbody]);
@@ -74,7 +61,7 @@ mbsys = test_wsim_OSWEC.make_multibody_system (waves, simu, hydro_mbnodes, hydro
 % draw it
 % mbsys.draw ('Mode', 'wireghost', 'Light', false);
 
-mbsys.draw ( 'Mode', 'ghost', ...
+[~, hmbsysfig] = mbsys.draw ( 'Mode', 'ghost', ...
              'Light', true, ...
              'AxLims', [-5, 5; -15, 15; -12, 5], ...
              'Joints', true, ...
@@ -242,19 +229,7 @@ while status == 0
     else
         time(ind) = time(ind-1) + mbsys.problems{1}.timeStep;
     end
-    
-%     for ind = 1:nnodes
-%     
-%         fprintf (1, 'Node %d has label %d\n', ind, mb.KinematicsLabel (ind));
-%     
-%     end
-
-%     [forces, out] = hsys.hydroForces ( time, ...
-%                                        [output.bodies(1).position(ind,:)', output.bodies(2).position(ind,:)'], ...
-%                                        [output.bodies(1).velocity(ind,:)', output.bodies(2).velocity(ind,:)'], ...
-%                                        [output.bodies(1).acceleration(ind,:)', output.bodies(2).acceleration(ind,:)'], ...
-%                                        output.wave.elevation(ind) );
-%                                    
+                                     
     
     R = mb.GetRot();
     
@@ -271,26 +246,26 @@ while status == 0
 
     forces (:,:,ind) = hydroforces;
     
-	% calculate spring damping PTO force here
-    xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-    vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-
-    xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-    vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
-    
-    % velocities and displacements are the z components of the vectors in
-    % the pto coordinate system
-    xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-    vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
-    
-    ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
-    
-%     FptoVec = om.orientationMatrix * [0; 0; -ptoforce(ind)];
-    FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * om.orientationMatrix)' ;
-    
-    forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-    forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
-    
+% 	% calculate spring damping PTO force here
+%     xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
+%     vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
+% 
+%     xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
+%     vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+%     
+%     % velocities and displacements are the z components of the vectors in
+%     % the pto coordinate system
+%     xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
+%     vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+%     
+%     ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
+%     
+% %     FptoVec = om.orientationMatrix * [0; 0; -ptoforce(ind)];
+%     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * om.orientationMatrix)' ;
+%     
+%     forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
+%     forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
+%     
 	mb.F (forces(1:3,:,ind));
     mb.M (forces(4:6,:,ind));
     
@@ -343,24 +318,24 @@ while status == 0
 
     forces (:,:,ind) = newhydroforces;
     
-	% calculate spring damping PTO force here
-    xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-    vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-
-    xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-    vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
-    
-    % velocities and displacements are the z components of the vectors in
-    % the pto coordinate system
-    xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-    vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
-    
-    ptoforce(ind) = -k*xRpto(ind) - c*vRpto(ind);
-    
-    FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))';
-    
-    forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-    forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
+% 	% calculate spring damping PTO force here
+%     xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
+%     vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
+% 
+%     xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
+%     vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+%     
+%     % velocities and displacements are the z components of the vectors in
+%     % the pto coordinate system
+%     xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
+%     vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+%     
+%     ptoforce(ind) = -k*xRpto(ind) - c*vRpto(ind);
+%     
+%     FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))';
+%     
+%     forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
+%     forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
     
 	mb.F (forces(1:3,:,ind));
     mb.M (forces(4:6,:,ind));
@@ -406,24 +381,24 @@ while status == 0
 
         forces (:,:,ind) = newhydroforces;
 
-        % calculate spring damping PTO force here
-        xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
-        vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
-        
-        xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
-        vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
-
-        % velocities and displacements are the z components of the vectors in
-        % the pto coordinate system
-        xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
-        vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
-
-        ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
-
-        FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))' ;
-
-        forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
-        forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
+%         % calculate spring damping PTO force here
+%         xRvec = pos(1:3,1,ind) - pos(1:3,2,ind) - initptodpos;
+%         vRvec = vel(1:3,1,ind) - vel(1:3,2,ind);
+%         
+%         xRptoVec(1:3,ind) = R(:,:,1).' * xRvec;
+%         vRptoVec(1:3,ind) = R(:,:,1).' * vRvec;
+% 
+%         % velocities and displacements are the z components of the vectors in
+%         % the pto coordinate system
+%         xRpto(ind) = xRptoVec(3,ind); % magn (pos(:,2) - pos(:,1));
+%         vRpto(ind) = vRptoVec(3,ind); % magn (vRgenvec) ;
+% 
+%         ptoforce(ind) = -k*xRpto(ind) -c*vRpto(ind);
+% 
+%         FptoVec(1:3,1,ind) = ([0; 0; ptoforce(ind)]' * R(:,:,1))' ;
+% 
+%         forces (1:3,1,ind) = forces (1:3,1,ind) + FptoVec(1:3,1,ind);
+%         forces (1:3,2,ind) = forces (1:3,2,ind) - FptoVec(1:3,1,ind);
 
         mb.F (forces(1:3,:,ind));
         mb.M (forces(4:6,:,ind));
@@ -545,19 +520,28 @@ clear mb;
 
 fprintf (1, 'Reached time %f, in %d steps\n', time(end), ind-1);
 
-return
+%%
+mbout = mbdyn.postproc ( outputfile_prefix, mbsys ); 
+
+
+%
+mbout.animate ( 'DrawMode', 'solid', ...
+                'Light', true, ...
+                'skip', 5, ...
+                'AxLims', [-5, 5; -15, 15; -12, 5])
+            
 
 %%
-figure;
-tmin = 0;
-tmax = 400;
-plotinds =  time>=tmin & time<=tmax;
-plotyy (time(plotinds), [ squeeze(forces(1:3,1,plotinds))',  ptoforce(plotinds)'], time(plotinds), vRpto(plotinds));
-legend ('fx', 'fy', 'fz', 'ptoforce', 'vRpto');
+% figure;
+% tmin = 0;
+% tmax = 400;
+% plotinds =  time>=tmin & time<=tmax;
+% plotyy (time(plotinds), [ squeeze(forces(1:3,1,plotinds))',  ptoforce(plotinds)'], time(plotinds), vRpto(plotinds));
+% legend ('fx', 'fy', 'fz', 'ptoforce', 'vRpto');
 
 %%
 
-if ~exist (output, 'var')
+if ~exist ('output', 'var')
     warning ('Not comparing output to original WEC-Sim as ''output'' variable is not in the workspace.')
 else
 
