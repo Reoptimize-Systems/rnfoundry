@@ -188,7 +188,7 @@ classdef element < mbdyn.pre.base
             %
             %  'AxesHandle' - optional handle to axes in which to plot the
             %    element. If not supplied, a new figure and axes will be
-            %    created. The first time to element is drawn the handle to
+            %    created. The first time the element is drawn the handle to
             %    the axes will be stored internally and future calls to
             %    draw will plot to the same axes, unless the axes are
             %    destroyed, or this option is used to override it.
@@ -203,7 +203,8 @@ classdef element < mbdyn.pre.base
             %    'wiresolid', 'ghost', 'wireframe', 'wireghost'. Default is
             %    'solid'.
             %
-            %  'Light' - 
+            %  'Light' - deterined whether the scene should have light
+            %    source
             %
             % Output
             %
