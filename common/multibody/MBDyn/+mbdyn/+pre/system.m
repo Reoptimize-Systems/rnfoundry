@@ -254,7 +254,7 @@ classdef system < mbdyn.pre.base
                                 };
                             
                     for ind = 1:numel (options.DefaultOutput)
-                        self.checkAllowedStringInputs ( options.DefaultOutput, ...
+                        self.checkAllowedStringInputs ( options.DefaultOutput{ind}, ...
                                                         okstrings, ...
                                                         true, ...
                                                         sprintf ('DefaultOutput{%d}', ind) );
@@ -452,15 +452,17 @@ classdef system < mbdyn.pre.base
             
         end
         
-        function draw (self, varargin)
+        function [hax, hfig] = draw (self, varargin)
             % draw the mbdyn system
             %
             % Syntax
             %
+            % [hax, hfig] = draw (mbsys)
             %
             % Description
             %
-            %
+            % mbdyn.pre.system.draw draws the complete mbdyn system in a
+            % figure.
             %
             % Input
             %
@@ -469,33 +471,50 @@ classdef system < mbdyn.pre.base
             % Additional optional arguments may be supplied using parameter
             %-value pairs. The available options are:
             %
-            % 'AxesHandle' - self.drawAxesH
             %
-            % 'ForceRedraw' - Default is false
+            %  'AxesHandle' - optional handle to axes in which to plot the
+            %    system. If not supplied, a new figure and axes will be
+            %    created. The first time the system is drawn the handle to
+            %    the axes will be stored internally and future calls to
+            %    draw will plot to the same axes, unless the axes are
+            %    destroyed, or this option is used to override it.
             %
-            % 'Mode' - Default is 'solid'
+            %  'ForceRedraw' - true/false flag indicating whether to force
+            %    a full redraw of the system (rather than just update the
+            %    transform matrices of the elements), even if the system
+            %    does not think it needs it.
             %
-            % 'Bodies' - Default is true
+            %  'Bodies' - true/false flag determining whether to draw the
+            %    system bodies. Default is true.
             %
-            % 'StructuralNodes' - Default is true
+            %  'StructuralNodes' - true/false flag determining whether to
+            %    draw the system structural nodes. Default is true.
             %
-            % 'Joints' - Default is true
+            %  'Joints' - true/false flag determining whether to draw the
+            %    system joints. Default is true.
             %
-            % 'Light' - Default is false
+            %  'Mode' - character vector determining the style in which the
+            %    element will be plotted. Can be one of 'solid',
+            %    'wiresolid', 'ghost', 'wireframe', 'wireghost'. Default is
+            %    'solid'.
             %
-            % 'AxLims' - (3 x 2) matrix containing new axis limites for the
-            %   X,Y and Z axes. Each row has the new limits for the X,Y and
-            %   Z axes respectively. Default is empty matrix meaning axis
-            %   limites are not modified from the automatic values.
+            %  'Light' - deterined whether the scene should have light
+            %    source
             %
-            % 'References' - logical flag determining whether to draw the
-            %   references (if there are any present in the system object).
+            %  'AxLims' - (3 x 2) matrix containing new axis limites for
+            %    the X,Y and Z axes. Each row has the new limits for the
+            %    X,Y and Z axes respectively. Default is empty matrix
+            %    meaning axis limites are not modified from the automatic
+            %    values.
+            %
+            %  'References' - logical flag determining whether to draw the
+            %    references (if there are any present in the system object).
             %
             % Output
             %
+            %  hax - axes handle for axes in which the system is drawn
             %
-            %
-            % See Also: 
+            %  hfig - figure handle for figure in which the system is drawn
             %
             
             if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
@@ -528,11 +547,13 @@ classdef system < mbdyn.pre.base
             
             % make figure and axes if necessary
             if isempty (options.AxesHandle)
-                figure;
+                hfig = figure;
                 self.drawAxesH = axes;
             else
                 self.drawAxesH = options.AxesHandle;
+                hfig = get (self.drawAxesH, 'Parent');
             end
+            hax = self.drawAxesH;
             
             if options.References
                 if ~isempty (self.references)
