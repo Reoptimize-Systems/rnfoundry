@@ -148,10 +148,6 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
                                     'InitialDisplacementZero', options.InitialDisplacementZero, ...
                                     'ForceFcn', force_fcn );
                                 
-            self.internalVariables.InternalForce = [];
-            self.internalVariables.RelativeDisplacement = [];
-            self.internalVariables.RelativeVelocity = [];
-                                
         end
         
         function [FM, ptoforce, reldisp, relvel] = forceAndMoment (self)
@@ -195,6 +191,8 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             % need to add zero moments to forces
             FM = [FM; zeros(size (FM))];
             
+            % note that this internalVariables property is astructure which
+            % is initialised by wsim.powerTakeOff
             self.internalVariables.InternalForce = ptoforce;
             self.internalVariables.RelativeDisplacement = reldisp;
             self.internalVariables.RelativeVelocity = relvel;

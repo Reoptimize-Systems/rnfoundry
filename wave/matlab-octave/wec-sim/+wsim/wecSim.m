@@ -549,10 +549,10 @@ classdef wecSim < handle
                 ptoForceAndTorque = self.powerTakeOffs{ptoind}.forceAndMoment ();
 
                 forces_and_moments (:,self.ptoIndexMap(ptoind,1)) = ...
-                    forces_and_moments (:,self.ptoIndexMap(ptoind,1)) + ptoForceAndTorque(:,2);
+                    forces_and_moments (:,self.ptoIndexMap(ptoind,1)) + ptoForceAndTorque(:,1);
                 
                 forces_and_moments (:,self.ptoIndexMap(ptoind,2)) = ...
-                    forces_and_moments (:,self.ptoIndexMap(ptoind,2)) + ptoForceAndTorque(:,1);
+                    forces_and_moments (:,self.ptoIndexMap(ptoind,2)) + ptoForceAndTorque(:,2);
                 
             end
             
