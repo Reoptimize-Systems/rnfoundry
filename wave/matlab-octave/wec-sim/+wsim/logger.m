@@ -22,7 +22,7 @@ classdef logger < handle
 % 
 % wsim.logger Methods:
 %
-%  logger - constructor
+%  logger - constructs a logger object
 %  addVariable - adds a variable to be logged (initialises data structures)
 %  getInfo - get information in a structure for one or more logged variables
 %  logErr - log an error  message
@@ -114,17 +114,22 @@ classdef logger < handle
         % A string used for labeling the x-axis when plotting single variables.
         defaultDesc;
         
+        % factor by which to expand preallocated space when the end of the
+        % preallocated space is reached and more data is logged
+        expandPreallocFactor;
+        
     end
     
 
     methods 
 
-        function obj = logger()
-            % constructs an empty logger object.
+        function obj = logger(varargin)
+            % constructs a logger object.
             %
             % Syntax
             %
             % obj = wsim.logger ()
+            % obj = wsim.logger ('Parameter', Value)
             %
             % Description
             %
@@ -132,8 +137,61 @@ classdef logger < handle
             % options. Initializes the structures used for storing
             % messages/warnings/errors etc.
             %
-            % 
+            % Input
+            %
+            % Arguments may be supplied as parameter-value pairs. The
+            % available options are:
+            %
+            %  'ExpandPreallocFactor' - variables can have data
+            %    preallocated to improve speed. This option can be used to
+            %    control how the preallocated arrays expand when the end of
+            %    the preallocated array is reached. When this occurs the
+            %    arrays are expanded by this factor multiplied by the
+            %    current array length. Default is 0.25 if not supplied.
+            %
+            %  'PlotFcn' - handle to function to be used for plotting
+            %    variables. Default is @plot if not supplied.
+            %
+            %  'MesgFcn' - handle to function to be called when reporting
+            %    messages. By default this is @warning, but it could, for
+            %    example, be made  @error to result in more stringent
+            %    checking.
+            %
+            %  'Silent' - Sets the silent property true or false. If true,
+            %    then the internal error messages of the logger class are
+            %    not printed out. Whatever the user specifies by setting
+            %    the show variable in the logWarn, logMesg functions are
+            %    still printed out to the command window. Defualt is true.
+            %
+            %  'DefaultDescription' - character vector containing the
+            %    default description for variables, which is used as the x
+            %    axis label in plots. Default is '' (an empty character
+            %    vector).
+            %
+            % Output
+            %
+            %  obj - wsim.logger object
+            %
+            %
 
+            
+            options.ExpandPreallocFactor = 0.25;
+            options.PlotFcn = @plot;
+            options.MesgFcn = @warning;
+            options.Silent = true;
+            options.DefaultDescription = '';
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            check.isNumericScalar (options.ExpandPreallocFactor, true, 'ExpandPreallocFactor', 1);
+            assert (isa (options.PlotFcn, 'function_handle'), ...
+                'PlotFcn must be a function handle' );
+            assert (isa (options.MesgFcn, 'function_handle'), ...
+                'MesgFcn must be a function handle' );
+            check.isLogicalScalar (options.Silent, true, 'Silent');
+            assert (ischar (options.DefaultDescription), ...
+                'DefaultDescription must be a character vector' );
+            
             obj.silent = false;
 
             obj.info = struct ();
@@ -142,11 +200,11 @@ classdef logger < handle
             obj.warnings = {};
             obj.errors   = {};
 
-            obj.plotfunc = @plot;
-            obj.mesgfunc = @warning;
-            obj.silent   = true;
+            obj.plotfunc = options.PlotFcn;
+            obj.mesgfunc = options.MesgFcn;
+            obj.silent   = options.Silent;
 
-            obj.defaultDesc = '';
+            obj.defaultDesc = options.DefaultDescription;
             
             obj.numVariables = 0;
             obj.fieldNames = {};
@@ -302,11 +360,13 @@ classdef logger < handle
                     indass.subs = repmat ({':'}, 1, numel (loggedvarsize));
                 else
                     if numel (loggedvarsize) == 2 && loggedvarsize(1) == 1
-                        indass.subs = {1, 1};
+                        indass.subs = {1, ':'};
                         logdim = 1;
+                        datadims = 2;
                     elseif numel (loggedvarsize) == 2 && loggedvarsize(2) == 1
-                        indass.subs = {1, 1};
+                        indass.subs = {':', 1};
                         logdim = 2;
+                        datadims = 1;
                     else
                         indass.subs = repmat ({':'}, 1, numel (loggedvarsize));
                     end
@@ -320,8 +380,6 @@ classdef logger < handle
                 error ('A variable named %s is already being logged, you must choose a unique name.', name);
             else
                 
-%                 datadims(logdim) = [];
-            
                 obj.info.(name) = struct ( 'Description', options.Description, ...
                                            'Size', varsize, ...
                                            'PreallocatedLogLength', options.PreallocateStorage, ...
@@ -718,15 +776,24 @@ classdef logger < handle
             % 
             %  field - a string specifying the name of logged field 1.
             %
-            %  plotarg1 - any arguments that are to be sent to the plotting
-            %   function.
+            % Additional arguments may be supplied as parameter-value
+            % pairs. The available options are:
+            %
+            %  'PlotArgs' - cell array of additional arguments that are to
+            %    be sent to the plotting function.
+            %
+            %  'Skip' - 
             % 
             % Output
             %
             %  h - A handle to the plot generated. Useful for formatting by
             %   the user.
-            % ==========================================================================
     
+            options.PlotFcnArgs = {};
+            options.Skip = 1;
+            
+            options = parse_pv_pairs (options, varargin);
+            
             if ~ischar(varname), obj.mesgfunc([varname 'must be a string specifying field that are already added to the logger object.']); return; end
             if ~isnumeric(obj.data.(varname)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' varname]); return; end
 
@@ -734,7 +801,7 @@ classdef logger < handle
             
             if isempty (indepvar)
                 
-                h = obj.plotfunc(obj.data.(varname), varargin{:});
+                h = obj.plotfunc(obj.data.(varname), options.PlotFcnArgs{:});
             
                 ylabel(obj.info.(varname).Description, 'FontSize', 16);
 
@@ -749,7 +816,8 @@ classdef logger < handle
                  h = plot2Vars ( obj, ...
                                  obj.info.(varname).IndependentVariable, ...
                                  varname, ...
-                                 varargin{:} );
+                                 'PlotFcnArgs', options.PlotFcnArgs, ...
+                                 'Skip', options.Skip );
                 
             end
 
@@ -792,8 +860,11 @@ classdef logger < handle
             %
             
             options.PlotFcnArgs = {};
+            options.Skip = 1;
             
             options = parse_pv_pairs (options, varargin);
+            
+            check.isPositiveScalarInteger (options.Skip, true, 'Skip');
 
             if ~ischar(f1) || ~ischar(f2)
                 feval (obj.mesgfunc, 'f1 and f2 must be strings specifying fields that are already added to the logger object.');
@@ -817,8 +888,6 @@ classdef logger < handle
             if ndims (obj.data.(f1)) > 3
                 feval (obj.mesgfunc, 'Cannot plot variables of more than 2 dimensions');
             end
-
-%             legstrs = {};
             
             f2datadims = obj.info.(f2).DataDimensions;
                 
@@ -834,46 +903,138 @@ classdef logger < handle
             f2S.type = '()';
             f2S.subs = cell (1, numel(f2sz));
             for ind = 1:numel(f2S.subs), f2S.subs{ind} = 1; end
-            f2S.subs{obj.info.(f2).IndexDimension} = ':';
+            if options.Skip ~= 1
+                f2S.subs{obj.info.(f2).IndexDimension} = 1:options.Skip:obj.info.(f2).LastLogIndex;
+            else
+                f2S.subs{obj.info.(f2).IndexDimension} = ':';
+            end
             
             
-            f1datadims = obj.info.(f2).DataDimensions;
+            f1datadims = obj.info.(f1).DataDimensions;
 
             f1S.type = '()';
             f1sz = size (obj.data.(f1));
             f1S.subs = cell (1, numel(f1sz));
             for ind = 1:numel(f1S.subs), f1S.subs{ind} = 1; end
-            f1S.subs{obj.info.(f1).IndexDimension} = ':';
+            if options.Skip ~= 1
+                f1S.subs{obj.info.(f1).IndexDimension} = 1:options.Skip:obj.info.(f1).LastLogIndex;
+            else
+                f1S.subs{obj.info.(f1).IndexDimension} = ':';
+            end
             
             indevarsamesize = all (obj.info.(f1).Size == obj.info.(f2).Size);
             
             hold on
             
-            for i = 1:f2szdim1
+            legstrs = {};
+            
+            switch numel (f2datadims)
                 
-                for j = 1:f2szdim2
+                case 1
                     
-                    f2S.subs{f2datadims(1)} = i;
-                    f2S.subs{f2datadims(2)} = j;
+                    for dataind = 1:size (obj.data.(f2), f2datadims)
+                        
+                        % get the indexing for this series
+                        f2S.subs{f2datadims} = dataind;
                     
-                    if indevarsamesize
-                        % if the indepednat variable, f1 is the same size as
-                        % the dependant variable, f2, plot each component
-                        % of f1 agains f2. Otherwise we always plot
-                        f1S.subs{f1datadims(1)} = i;
-                        f1S.subs{f1datadims(2)} = j;
+                        if indevarsamesize
+                            % if the independant variable, f1 is the same size
+                            % as the dependant variable, f2, plot each
+                            % component of f1 against f2. Otherwise we always
+                            % plot the same series from f1 against each
+                            % component of f2
+                            f1S.subs{f1datadims} = dataind;
+                        end
+
+                        h = [ h, obj.plotfunc( squeeze ( subsref (obj.data.(f1), f1S) ), ...
+                                               squeeze ( subsref (obj.data.(f2), f2S) ), ...
+                                               options.PlotFcnArgs{:} ) ...
+                            ];
+                        
+                        legstrs = [ legstrs, {sprintf('Series %d', dataind)}];
+                        
                     end
                     
-                    h = [ h, obj.plotfunc( squeeze ( subsref (obj.data.(f1), f1S) ), ...
-                                           squeeze ( subsref (obj.data.(f2), f2S) ), ...
-                                           options.PlotFcnArgs{:} ) ...
-                        ];
+                case 2
                     
+                    for dataind1 = 1:size (obj.data.(f2), f2datadims(1))
+                        
+                        for dataind2 = 1:size (obj.data.(f2), f2datadims(2))
+                        
+                            % get the indexing for this series
+                            f2S.subs{f2datadims(1)} = dataind1;
+                            f2S.subs{f2datadims(2)} = dataind2;
 
+                            if indevarsamesize
+                                % if the independant variable, f1 is the same size
+                                % as the dependant variable, f2, plot each
+                                % component of f1 against f2. Otherwise we always
+                                % plot the same series from f1 against each
+                                % component of f2
+                                f1S.subs{f1datadims(1)} = dataind1;
+                                f1S.subs{f1datadims(2)} = dataind2;
+                            end
+
+                            h = [ h, obj.plotfunc( squeeze ( subsref (obj.data.(f1), f1S) ), ...
+                                                   squeeze ( subsref (obj.data.(f2), f2S) ), ...
+                                                   options.PlotFcnArgs{:} ) ...
+                                ];
+                            
+                            legstrs = [ legstrs, {sprintf('Series (%d,%d)', dataind1, dataind2)}];
+                        
+                        end
+                        
+                    end
                     
-                end
-                
+                    
+                otherwise
+                    error ('plotting data with more than 2 data dimensions (i.e. three dimensions in total) is not currently supported');
             end
+                
+%             for datadimind = 1:numel(f2datadims)
+%                 
+%                 % reset all the non index dimension subs to 1
+%                 indexdimsize = f1S.subs{obj.info.(f1).IndexDimension};
+%                 for ind = 1:numel(f1S.subs), f1S.subs{ind} = 1; end
+%                 f1S.subs{obj.info.(f1).IndexDimension} = indexdimsize;
+%                 
+%                 indexdimsize = f2S.subs{obj.info.(f2).IndexDimension};
+%                 for ind = 1:numel(f2S.subs), f2S.subs{ind} = 1; end
+%                 f2S.subs{obj.info.(f2).IndexDimension} = indexdimsize;
+%                 
+%                 % check if this dimension is the index dimension of the
+%                 % dependant variable
+%                 if f2datadims(datadimind) ~= obj.info.(f2).IndexDimension
+%                     % if it it not the index dimension we have to plot each
+%                     % series from this dimension along the index dimension
+%                     
+%                     for dataind = 1:size (obj.data.(f2), f2datadims(datadimind))
+%                         
+%                         % get the indexing for this series
+%                         f2S.subs{f2datadims(datadimind)} = dataind;
+%                     
+%                         if indevarsamesize
+%                             % if the independant variable, f1 is the same size
+%                             % as the dependant variable, f2, plot each
+%                             % component of f1 against f2. Otherwise we always
+%                             % plot the same series from f1 against each
+%                             % component of f2
+%                             f1S.subs{f1datadims(datadimind)} = dataind;
+%                         end
+% 
+%                         h = [ h, obj.plotfunc( squeeze ( subsref (obj.data.(f1), f1S) ), ...
+%                                                squeeze ( subsref (obj.data.(f2), f2S) ), ...
+%                                                options.PlotFcnArgs{:} ) ...
+%                             ];
+%                         
+%                     end
+%                     
+%                     
+%                 end
+%                 
+%             end
+
+            hold off;
             
             desc1 = obj.info.(f1).Description;
             desc2 = obj.info.(f2).Description;
@@ -882,7 +1043,11 @@ classdef logger < handle
             ylabel(desc2, 'FontSize', 12);
             set(gca,'FontSize',12);
             
-            hold off;
+            if numel (legstrs) > 1
+                legend (legstrs{:});
+            end
+            
+            
             
         end
 
@@ -936,14 +1101,27 @@ classdef logger < handle
                 end
             end
             
-            if obj.info.(varname).LastLogIndex + 1 > obj.info.(varname).PreallocatedLogLength
-                % TODO: make this reallocation more sophisticated ( e.g. add another 10% of size of existing data or something to preallocation)
-                obj.info.(varname).PreallocatedLogLength = obj.info.(varname).LastLogIndex + 1;
-            end
-            
             % copy the pre-constructed indexing structure (created when
             % adding the variable)
             S = obj.info.(varname).IndexAssignment;
+            
+            if obj.info.(varname).LastLogIndex + 1 > obj.info.(varname).PreallocatedLogLength
+                % expand the data array as we have run out of preallocated
+                % space. Use the expandPreallocFactor to determine by how
+                % much to expand
+                obj.info.(varname).PreallocatedLogLength = max ( ...
+                                obj.info.(varname).LastLogIndex + 1, ...
+                                round (obj.info.(varname).LastLogIndex * obj.expandPreallocFactor) ...
+                                                               );
+                % build the correct index into the logged variable by
+                % replacing the appropriate index with the new index of the
+                % end of the preallocated data
+                S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).PreallocatedLogLength;
+
+                % assign nan to expand the array
+                obj.data.(varname) = subsasgn (obj.data.(varname), S, nan);
+            
+            end
             
             % build the correct index into the logged variable by replacing
             % the appropriate index with the new log index
@@ -1245,5 +1423,17 @@ classdef logger < handle
         end
         
     end % of methods
+    
+%     methods (Access=protected)
+%         
+%         function recPlotVar (obj, inds)
+%             
+%             for ind = 1:numel ()
+%                 
+%             end
+%             
+%         end
+%         
+%     end
 
 end % of class.
