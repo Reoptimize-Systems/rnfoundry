@@ -1,12 +1,11 @@
-function refactor_code_string (expression, replace, topdir, stripvc)
+function refactor_code_string (expression, replace, varargin)
 % refactor a code string, changing all occurances of the string name in the
 % path to the new string
 %
 % Syntax
 %
-% refactor_fcn_name(expression, replace)
-% refactor_fcn_name(..., topdir)
-% refactor_fcn_name(..., strinvc)
+% replace_fcnname (expression, replace)
+% replace_fcnname (..., 'Parameter', Value)
 %
 % Description
 %
@@ -14,27 +13,52 @@ function refactor_code_string (expression, replace, topdir, stripvc)
 % and replaces it with the string in newstr in all .m files in the entire
 % matlab path. 'expression' is a regular expression as understood by the
 % regexp family of functions. The expression is applied to each line of
-% all mfiles searched, and not to the entire file as sngle string.
+% all mfiles searched, and not to the entire file as sngle string. An
+% alternative list of directories can be searched by using the TopDir
+% option. By default version control directoies 
 %
-% refactor_fcn_name(expression, replace, topdir) performs the same action
-% but searching the folder provided in 'topdir' and all it's subdirectories
-% rather than the entire Matlab path. If topdir is the string 'allbutroot'
-% all direcotries on the path will be searched, which are not
-% sibdirectories of the matlab root path (as returned by matlabroot.m). In
-% practice this means built-in toolbox directories will be ignored.
+% Input
 %
-% refactor_fcn_name(expression, replace, topdir, strinvc) performs the same
-% action but the 'strinvc' flag determines whether the directories used by
-% common version control systems will be ignored. This currently includes
-% directories starting with '.svn', '.hg', '.git', '.cvs'. Default is true,
-% so these directories will be ignored.
+%  expression - character vector containing regular expression to search
+%   for.
 %
+%  replace - character vector containing the string with which to replace
+%   any instances of expression which are found
 %
-% See also: regexprepfile
+% Addtional arguments may be supplied as parameter-value pairs. The
+% available options are:
+%
+%  'IgnoreVCDirs' - true/false flag determining whether common source
+%    control system directories will be ignored. This currently includes
+%    directories starting with '.svn', '.hg', '.git', '.cvs'. Default is
+%    true, so these directories will be ignored.
+%
+%  'TopDir' - character vector used to control what paths are searched,
+%    instead of searching the entire Matlab path. If TopDir is specified,
+%    the folder provided in TopDir' and all it's subdirectories are
+%    searched rather than the entire Matlab path. If topdir is the string
+%    'allbutroot' all direcotries on the path will be searched, which are
+%    not subdirectories of the matlab root path (as returned by
+%    matlabroot.m). In practice this means built-in toolbox directories
+%    will be ignored.
+%
+%  'DryRun' - true/false flag indicating whether to perform a dry run only,
+%    where no changes are really made to the files. The output of what
+%    would be changed is still displayed on the command line.
+%
+% See Also: refactor_fcn_name.m, regexprepfile.m
 %
 
-% Copyright Richard Crozier 2013-2015
+% Copyright Richard Crozier 2013-2018
 
+    options.IgnoreVCDirs = true;
+    options.TopDir = [];
+    options.DryRun = false;
+    
+    options = parse_pv_pairs (options, varargin);
+    
+    check.isLogicalScalar (options.IgnoreVCDirs, true, 'IgnoreVCDirs');
+    check.isLogicalScalar (options.DryRun, true, 'DryRun');
 
     if ~ischar (expression)
         error ('fcnname must be a string');
@@ -44,20 +68,20 @@ function refactor_code_string (expression, replace, topdir, stripvc)
         error ('newfcnname must be a string');
     end
     
-    if nargin < 3 || isempty (topdir)
+    if isempty (options.TopDir)
         thepath = path2cell (path);
     else
-        if ~ischar (topdir)
+        if ~ischar (options.TopDir)
             error ('topdir must be a string');
         end
-        if strcmpi (topdir, 'allbutroot')
+        if strcmpi (options.TopDir, 'allbutroot')
             thepath = path2cell (path);
             thepath(strncmpi (thepath, matlabroot, numel (matlabroot))) = [];
         else
-            if exist (topdir, 'file') ~= 7
+            if exist (options.TopDir, 'file') ~= 7
                 error ('supplied directory name does not exist.')
             end
-            thepath = path2cell (genpath (topdir));
+            thepath = path2cell (genpath (options.TopDir));
         end
     end
     
@@ -76,7 +100,7 @@ function refactor_code_string (expression, replace, topdir, stripvc)
         stripvc = true;
     end
     
-    if stripvc
+    if options.IgnoreVCDirs
         rminds = [];
         vclist = {'.svn', '.hg', '.git', '.cvs'};
         for indi = 1:numel(thepath)
@@ -96,7 +120,7 @@ function refactor_code_string (expression, replace, topdir, stripvc)
 
         for indii = 1:numel(mfiles)
             % replace string in file using regexprepfile
-            regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), expression, replace, true);
+            regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), expression, replace, true, options.DryRun);
         end
 
     end
