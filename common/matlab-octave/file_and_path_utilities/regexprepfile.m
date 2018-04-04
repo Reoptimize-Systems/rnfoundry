@@ -1,4 +1,4 @@
-function changecount = regexprepfile(filename,exp,repstr,display)
+function changecount = regexprepfile(filename,exp,repstr,display,dryrun)
 % Replace string in one or more files using regular expressions.
 %
 % Syntax
@@ -42,6 +42,10 @@ function changecount = regexprepfile(filename,exp,repstr,display)
 
     if nargin < 4
         display = false;
+    end
+    
+    if nargin < 5
+        dryrun = false;
     end
     
     if ~iscellstr(filename) && ischar(filename)
@@ -107,6 +111,7 @@ function changecount = regexprepfile(filename,exp,repstr,display)
             error('Error opening search file.');
         end
         
+        linenum = 1;
         while 1
             tline = fgets(origfid);
             
@@ -124,11 +129,9 @@ function changecount = regexprepfile(filename,exp,repstr,display)
                     
                     if display
                         
-                        fprintf (1, '---- original string\n');
-                        fprintf (1, '%s\n', strtrim (tline));
-                        fprintf (1, '---- new string\n');
-                        fprintf (1, '%s\n', strtrim (newtline));
-                        fprintf (1, '----\n');
+                        fprintf (1, 'match found on line %d of file %s\n', linenum, filename{i});
+                        fprintf (1, 'orig: %s\n', strtrim (tline));
+                        fprintf (1, 'new:  %s\n', strtrim (newtline));
                         
                     end
                 end
@@ -148,9 +151,12 @@ function changecount = regexprepfile(filename,exp,repstr,display)
                 
                 break;
             end
+            
+            linenum = linenum + 1;
+            
         end
         
-        if changecount(i) > 0
+        if changecount(i) > 0 && ~dryrun
             % copy over the new file to the original location
             [status,message,messageid] = copyfile(tempfilename, fullfile(pathstr, [name, ext]));
             
@@ -162,6 +168,7 @@ function changecount = regexprepfile(filename,exp,repstr,display)
             if display
                 fprintf (1, '^^^ changes above found in file %s\n', filename{i});
             end
+            
         end
         
         try
