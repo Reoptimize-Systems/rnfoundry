@@ -199,6 +199,15 @@ classdef wecSim < handle
                 error ('Simulation is not ready to run, have you run ''prepare'' yet?');
             end
             
+            siminfo.TStart = self.mBDynSystem.problems{1}.initialTime;
+            siminfo.TEnd = self.mBDynSystem.problems{1}.finalTime;
+            siminfo.TStep = self.mBDynSystem.problems{1}.timeStep;
+            siminfo.MBDynSystem = self.mBDynSystem;
+            siminfo.HydroSystem = self.hydroSystem;
+            
+            % start the PTO components
+            self.startPTOs (siminfo);
+            
             % generate input file and start mbdyn
             
             % clear out previous files
@@ -230,7 +239,7 @@ classdef wecSim < handle
             forces_and_moments = zeros (6, self.nMBDynNodes);
             
             % take initial time from the MBDyn system problem
-            self.lastTime = self.mBDynSystem.problems{1}.initialTime;
+            self.lastTime = siminfo.TStart;
             
             % fetch the initial configuration of the nodes from MBDyn and
             % check for errors
@@ -556,6 +565,16 @@ classdef wecSim < handle
                 
             end
             
+            
+        end
+        
+        function startPTOs (self, siminfo)
+            
+            for ptoind = 1:size (self.ptoIndexMap, 1)
+                
+                self.powerTakeOffs{ptoind}.start (siminfo);
+                
+            end 
             
         end
         
