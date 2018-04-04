@@ -41,6 +41,7 @@ classdef powerTakeOff < handle
         logger;
         loggerReady;
         internalVariables;
+        simulationInfo;
     end
     
     methods (Abstract)
@@ -201,6 +202,48 @@ classdef powerTakeOff < handle
             self.id = newid;
         end
         
+        function start (self, siminfo)
+            % initialise the pto simulation
+            % replace h1 line
+            %
+            % Syntax
+            %
+            % start (pto, siminfo)
+            %
+            % Description
+            %
+            % wsim.powerTakeOff.start is called by wecSim at the beginning
+            % of a simulation to allow any initialisation to take place.
+            %
+            % Input
+            %
+            %  pto - wsim.powerTakeOff object
+            %
+            %  siminfo - structure containing information about the
+            %   simulation the PTO is part of. It should contain the
+            %   following fields:
+            %
+            %   TStart : Start time of the simulation
+            %   
+            %   TEnd : End time of the simulation
+            %
+            %   TStep : Time step size
+            %
+            %   MBDynSystem : the MBDyn object used in the simulation
+            %
+            %   HydroSystem : the wsim.hydroSystem object used in the
+            %    simulation
+            %
+            %
+            % See Also: wsim.powerTakeOff.advanceStep
+            %
+            
+            % TODO: put in restricted class access block when Octave supports this
+            
+            self.simulationInfo = siminfo;
+
+        end
+        
         function advanceStep (self, varargin)
             % advance to the next simulation time step
             %
@@ -227,6 +270,8 @@ classdef powerTakeOff < handle
             %
             % See Also: wsim.powerTakeOff.logData
             %
+            
+            % TODO: put in restricted class access block when Octave supports this
             
             self.logData ();
             
@@ -313,7 +358,7 @@ classdef powerTakeOff < handle
             
             for ind = 1:numel (info.AvailableNames)
                 % initialise internal variable storage
-            	self.internalVariables.(logginginfo.AvailableNames{ind}) = [];
+            	self.internalVariables.(info.AvailableNames{ind}) = [];
                 
                 info.UniqueLoggingNames{ind} = sprintf ('PTO_%d_%s', self.id, info.AvailableNames{ind});
                 
@@ -340,10 +385,19 @@ classdef powerTakeOff < handle
                 % putting IndepVar in will automatically allocate enough
                 % space for variable, same length as indepvar, if there is
                 % no Indep var, preallocated length will be 1
+                
+                if ischar (info.IndepVars{ind})
+                    indepvar = info.IndepVars{ind};
+                elseif check.isScalarInteger (info.IndepVars{ind}, false)
+                    indepvar = info.UniqueLoggingNames{info.IndepVars{ind}};
+                else
+                    error ('Invalid PTO IndepVar');
+                end
+                
                 logger.addVariable ( info.UniqueLoggingNames{ind}, ...
                                      info.Sizes{ind}, ...
                                      'Desc', info.Descriptions{ind}, ...
-                                     'Indep', info.IndepVars{ind} );
+                                     'Indep', indepvar );
                 
             end
             
