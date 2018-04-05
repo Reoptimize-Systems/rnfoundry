@@ -1,6 +1,5 @@
 function idqo = dqo(iabc, theta)
-% performs the direct quadrature zero transformation on a set of
-% three-phase currents
+% performs the clarke transformation on a set of three-phase quantities
 %
 % Syntax
 %
