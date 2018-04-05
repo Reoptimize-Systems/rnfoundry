@@ -106,7 +106,7 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
         fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
     end
 
-    [status, cmdout] = cleansystem ( cmdline );
+    [status, cmdout] = mbdyn.mint.cleansystem ( cmdline );
 
     pause (options.StartWaitTime);
 
