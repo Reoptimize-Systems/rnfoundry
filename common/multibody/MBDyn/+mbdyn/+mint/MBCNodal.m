@@ -1177,6 +1177,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             % Sends the forces to the mbdyn system
             result = self.cppcall ('PutForces', logical (convergence_flag) );
+            
         end
 
     end
@@ -1190,28 +1191,14 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             options = parse_pv_pairs (options, varargin);
             
-            if options.Verbosity > 0
-                Pcmds = ['-', repmat('P', [1, options.Verbosity])];
-            else
-                Pcmds = '';
-            end
-            
-            % start mbdyn
-            cmdline = sprintf ('%s %s -f "%s" -o "%s" > "%s" 2>&1 &', ...
-                                self.MBDynExecutable, ...
-                                Pcmds, ...
-                                self.MBDynInputFile, ...
-                                self.outputPrefix, ...
-                                self.MBDynOutputFile  ...
-                                                 );
-                                             
-            if options.Verbosity > 0
-                fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
-            end
-
-            [status, cmdout] = mbdyn.mint.cleansystem ( cmdline );
-            
-            pause (self.MBDynStartWaitTime);
+            mbdyn.mint.start_mbdyn ( ...
+                                self.MBDynInputFileinputfile, ...
+                                'Verbosity', options.Verbosity, ...
+                                'StartWaitTime', self.MBDynStartWaitTime, ...
+                                'MBDynExecutable', self.MBDynExecutable, ...
+                                'MBDynOutputFile', self.MBDynOutputFile, ...
+                                'OutputPrefix', self.outputPrefix ...
+                                   );
             
         end
         
