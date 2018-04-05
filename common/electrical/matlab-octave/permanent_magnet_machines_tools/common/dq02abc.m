@@ -1,18 +1,18 @@
-function iabc = invdqo(idqo, theta)
+function iabc = dq02abc (idqo, theta)
 % performs the inverse direct quadrature zero transformation on a set of
 % d-q axis currents
 %
 % Syntax
 %
-% iabc = dqo(idqo, theta)
+% iabc = invdqo (idqo, theta)
 %
 % Description
 %
-% The direct quadrature zero (or dq0 or dqo) transformation or
+% The direct quadrature zero (or dq0 or abc2dq0) transformation or
 % zero direct quadrature (or 0dq or odq) transformation is a mathematical
 % transformation used to simplify the analysis of three-phase circuits.
-% This function performs the inverse dqo transform to obtain the equivalent
-% three-phase currents. See 'dqo' for more information.
+% This function performs the inverse abc2dq0 transform to obtain the equivalent
+% three-phase currents. See 'abc2dq0' for more information.
 %
 % Input
 %
