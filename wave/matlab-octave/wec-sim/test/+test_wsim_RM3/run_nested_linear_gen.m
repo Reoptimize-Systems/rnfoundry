@@ -169,7 +169,7 @@ socket_force = mbdyn.pre.externalStructuralForce ({float_node, spar_node}, [], c
                                                   'Echo', fullfile (simu.caseDir, 'output', 'socket_echo.txt'));
 
 prob = mbdyn.pre.initialValueProblem (simu.startTime, simu.endTime, simu.dt, ...
-                                'Tol', 1e-6, 'MaxIterations', 200);
+                                'ResidualTol', 1e-6, 'MaxIterations', 200);
 
 % assemble the system
 mbsys = mbdyn.pre.system ( prob, ...
@@ -246,7 +246,7 @@ mb = mbdyn.mint.MBCNodal ('MBDynPreProc', mbsys, ...
                           'OutputPrefix', outputfile_prefix ...
                           );
                       
-mb.start ('Verbose', true);
+mb.start ('Verbosity', 0);
 
 nnodes = mb.GetNodes ();
 
@@ -318,7 +318,7 @@ F_ExcitRamp = out.F_ExcitRamp;
 FptoVec = [0;0;0];
 
 % accept the last data into the time history of solutions
-hsys.advanceStep (time(end), accel);
+hsys.advanceStep (time(end), vel, accel);
     
 ind = 2;
 
@@ -639,7 +639,7 @@ while status == 0
     F_ExcitRamp(:,:,ind) = out.F_ExcitRamp;
     
     % accept the last data into the time history of solutions
-    hsys.advanceStep (time(end), accel(:,:,ind));
+    hsys.advanceStep (time(end),  vel(:,:,ind), accel(:,:,ind));
     
     % get the full output from the last generator sim
     
