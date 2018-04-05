@@ -1,9 +1,9 @@
-function idqo = abc2dq0 (iabc, theta)
+function dqo = abc2dq0 (abc, theta)
 % performs the clarke transformation on a set of three-phase quantities
 %
 % Syntax
 %
-% idqo = abc2dq0 (iabc, theta)
+% dqo = abc2dq0 (abc, theta)
 %
 % Description
 %
@@ -23,27 +23,28 @@ function idqo = abc2dq0 (iabc, theta)
 %
 % Input
 %
-% iabc - vector of three values, the currents in a balanced three phase
-%   system which are to be projected onto the direct quadrature zero axes
+% abc - vector of three values, the quantities (e.g. currents or voltages)
+%   in a balanced three phase system which are to be projected onto the
+%   direct quadrature zero axes
 %
-% theta - angle between the d axis and first current in iabc, this is given
+% theta - angle between the d axis and first current in abc, this is given
 %   by omega*t in a time varying system 
 %
 % Output
 %
-% idqo - vector of three values containing the transformed currents on the
+% dqo - vector of three values containing the transformed quantities on the
 %   direct quadrature zero axes.
 %
 
-    if ~(isvector(iabc) && numel(iabc) == 3 && all(isreal(iabc)))
-        error('DQO:badcurrentinput', 'i must be a vector of three real values.')
+    if ~(isvector(abc) && numel(abc) == 3 && all(isreal(abc)))
+        error('DQO:badabcinput', 'abc must be a vector of three real values.')
     end
     
     rt2over2 = sqrt(2) / 2;
     
-    idqo = sqrt(2/3) * [cos(theta), cos(theta - 2*pi/3), cos(theta + 2*pi/3);
+    dqo = sqrt(2/3) * [ cos(theta), cos(theta - 2*pi/3), cos(theta + 2*pi/3);
                         sin(theta), sin(theta - 2*pi/3), sin(theta + 2*pi/3);
                         rt2over2,   rt2over2,            rt2over2] ...
-                     * iabc(:);
+                    * abc(:);
 
 end
