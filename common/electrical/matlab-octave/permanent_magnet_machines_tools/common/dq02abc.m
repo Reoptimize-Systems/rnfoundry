@@ -1,6 +1,5 @@
-function iabc = dq02abc (idqo, theta)
-% performs the inverse direct quadrature zero transformation on a set of
-% d-q axis currents
+function abc = dq02abc (dqo, theta)
+% performs the inverse direct quadrature zero transformation on a set of quantities
 %
 % Syntax
 %
@@ -16,32 +15,33 @@ function iabc = dq02abc (idqo, theta)
 %
 % Input
 %
-% idqo - vector of two or three values, the d-q currents, or d-q-o
-%   currents. If only two values are supplied, these are assumed to be the
-%   d-q currents, and the third value is set to zero.
+% dqo - vector of two or three values, the d-q values, or d-q-o
+%   values. If only two values are supplied, these are assumed to be the
+%   d-q values, and the third value is set to zero.
 %
-% theta - angle between the d axis and first three phase current
+% theta - angle between the d axis and first three phase quantity
 %
 % Output
 %
-% iabc - vector of three values containing the three phase currents
+% abc - vector of three values containing the three phase quantities
 %   obtained from the inverse transform of the d-q axis values
 %
 
-    if ~(isvector(idqo) && all(isreal(idqo)))
-        error('DQO:badcurrentinput', 'idqo must be a real valued vector.')
+    if ~(isvector(dqo) && all(isreal(dqo)))
+        error('DQO:baddqoinput', 'dqo must be a real valued vector.')
     end
     
     if numel(idq) == 2
-        idqo(3) = 0;
+        dqo(3) = 0;
     elseif numel(idq) ~= 3
-        error('DQO:badcurrentinput', 'idqo must be a vector of 2 or three values')
+        error('DQO:baddqoinput', 'dqo must be a vector of 2 or three values')
     end
     
     rt2over2 = sqrt(2) / 2;
     
-    iabc = sqrt(2/3) * [ cos(theta),          sin(theta),          rt2over2;
-                         cos(theta - 2*pi/3), sin(theta - 2*pi/3), rt2over2;
-                         cos(theta + 2*pi/3), sin(theta + 2*pi/3), rt2over2] * idqo(:);
+    abc = sqrt(2/3) * [ cos(theta),          sin(theta),          rt2over2;
+                        cos(theta - 2*pi/3), sin(theta - 2*pi/3), rt2over2;
+                        cos(theta + 2*pi/3), sin(theta + 2*pi/3), rt2over2 ] ...
+                    * dqo(:);
                      
 end
