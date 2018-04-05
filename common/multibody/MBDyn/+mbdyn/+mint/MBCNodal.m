@@ -56,11 +56,11 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         dataAndNext;
         
         
-        host;
-        port;
-        path;
-        sharedMemoryName;
-        commMethod;
+        host; % host name for remote socket communication
+        port; % port for inet socket communication
+        path; % path to local unix socket
+        sharedMemoryName; % name of shared memory block for share mem communication
+        commMethod; % communication method
         MBDynInputFile;
         MBDynExecutable;
         MBDynStartWaitTime;
@@ -450,10 +450,22 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             % 'StartMBDyn' - determines whether the MBDyn process should be
             %   started. Default is true.
             %
-            % 'Verbose' - 
+            % 'Verbosity' - scalar integer indicating how much output
+            %   should be produced by MBDyn during execution. This
+            %   correlates to the number of -P flags passed to MBDyn. The
+            %   more -P's, the more output is produced by MBDyn. Default is
+            %   zero.
             %
-            % 'Timeout' - 
+            % 'Timeout' - scalar value of the period in seconds after which
+            %   any communication attempt will be abandoned. Default is -1
+            %   which means there is no timeout, operations will wait
+            %   forever.
             %
+            % 'MBDynStartWaitTime' - time in seconds to wait after starting
+            %   MBDyn before proceeding (to give MBDyn time to start up).
+            %   This is acheived by simply calling the pause function
+            %   internally. With the given number of seconds. Default is
+            %   1.0.
             %
             
             options.Timeout = -1;
@@ -1197,34 +1209,32 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
             end
 
-            [status, cmdout] = cleansystem ( cmdline );
+            [status, cmdout] = mbdyn.mint.cleansystem ( cmdline );
             
             pause (self.MBDynStartWaitTime);
             
         end
         
         
-        
-        
-        function status = cppstatus2statusenum (cppstatus)
-        
-            switch cppstatus
-                
-                case -1
-                    
-                case -2
-                    
-                case 0
-                    
-                case 1
-                    
-                otherwise
-                    
-                    error ('Unknown status number');
-                    
-            end
-            
-        end
+%         function status = cppstatus2statusenum (cppstatus)
+%         
+%             switch cppstatus
+%                 
+%                 case -1
+%                     
+%                 case -2
+%                     
+%                 case 0
+%                     
+%                 case 1
+%                     
+%                 otherwise
+%                     
+%                     error ('Unknown status number');
+%                     
+%             end
+%             
+%         end
              
         
     end
