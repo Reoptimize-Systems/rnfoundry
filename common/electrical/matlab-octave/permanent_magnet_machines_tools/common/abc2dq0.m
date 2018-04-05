@@ -1,23 +1,23 @@
-function idqo = dqo(iabc, theta)
+function idqo = abc2dq0 (iabc, theta)
 % performs the clarke transformation on a set of three-phase quantities
 %
 % Syntax
 %
-% idqo = dqo(iabc, theta)
+% idqo = abc2dq0 (iabc, theta)
 %
 % Description
 %
 % The direct quadrature zero (or dq0 or dqo) transformation or zero direct
 % quadrature (or 0dq or odq) transformation is a mathematical
 % transformation used to simplify the analysis of three-phase circuits. In
-% the case of balanced three-phase circuits, application of the dqo
+% the case of balanced three-phase circuits, application of the dq0
 % transform reduces the three AC quantities to two DC quantities.
 % Simplified calculations can then be carried out on these imaginary DC
 % quantities before performing the inverse transform to recover the actual
 % three-phase AC results. It is often used in order to simplify the
 % analysis of three-phase synchronous machines or to simplify calculations
-% for the control of three-phase inverters. The dqo transform is similar to
-% the transform first proposed in 1929 by R.H. Park. In fact, the dqo
+% for the control of three-phase inverters. The dq0 transform is similar to
+% the transform first proposed in 1929 by R.H. Park. In fact, the dq0
 % transform is often referred to as Park s transformation, although there
 % are in fact important differences.
 %
