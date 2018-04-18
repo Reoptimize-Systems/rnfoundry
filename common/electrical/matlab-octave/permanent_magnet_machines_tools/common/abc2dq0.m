@@ -1,5 +1,5 @@
-function dqo = abc2dq0 (abc, theta)
-% performs the clarke transformation on a set of three-phase quantities
+function dqo = abc2dq0 (abc, theta, startaxisd)
+% performs the dq0 transformation on a set of three-phase quantities
 %
 % Syntax
 %
@@ -40,11 +40,22 @@ function dqo = abc2dq0 (abc, theta)
         error('DQO:badabcinput', 'abc must be a vector of three real values.')
     end
     
-    rt2over2 = sqrt(2) / 2;
+    pi2v3 = 2*pi/3;
     
-    dqo = sqrt(2/3) * [ cos(theta), cos(theta - 2*pi/3), cos(theta + 2*pi/3);
-                        sin(theta), sin(theta - 2*pi/3), sin(theta + 2*pi/3);
-                        rt2over2,   rt2over2,            rt2over2] ...
-                    * abc(:);
+    if startaxisd
+    
+        dqo = 2/3 * [  cos(theta),   cos(theta - pi2v3),   cos(theta + pi2v3);
+                      -sin(theta),  -sin(theta - pi2v3),  -sin(theta + pi2v3);
+                       0.5,           0.5,                 0.5             ] ...
+                  * abc(:);
+          
+    else
+        
+        dqo = 2/3 * [  sin(theta),   sin(theta - pi2v3),   sin(theta + pi2v3);
+                       cos(theta),   cos(theta - pi2v3),   cos(theta + pi2v3);
+                       0.5,           0.5,                 0.5             ] ...
+                  * abc(:);
+              
+    end
 
 end
