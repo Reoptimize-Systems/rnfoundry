@@ -455,7 +455,7 @@ classdef base < handle
                 error ('allowedstrs must be a cell array of strings containing a list of allowed values for the input');
             end
             
-            assert (ischar (input), '%s must be a char array', inputname);
+            assert (ischar (input), '%s must be a character vector', inputname);
             
             ok = true;
             if ~any(strcmp (input, allowedstrs))
