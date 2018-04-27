@@ -25,10 +25,10 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %
 %   PreProcFcn : optional function handle or string containing the function
 %     which will be run to generate data prior to running the simulation.
-%     simfun will be passed the design and simoptions structure, and can
-%     also be supplied with additional arguments by using the
-%     'ExtraPreProcFcnArgs' parameter-value pair. The extra arguments must be
-%     placed in a cell array. It must return two arguments which will
+%     the PreProcFcn will be passed the design and simoptions structure,
+%     and can also be supplied with additional arguments by using the
+%     'ExtraPreProcFcnArgs' parameter-value pair. The extra arguments must
+%     be placed in a cell array. It must return two arguments which will
 %     overwrite the design and simoptions variables.
 %
 %     The supplied function must have the calling syntax
@@ -42,12 +42,13 @@ function [T, Y, results, design, simoptions] = simulatemachine_AM(design, simopt
 %     simulatemachine_AM(design, simoptions, 'ExtraPreProcFcnArgs', {1, 'another', [1,2;3,4]})
 %
 %   PostPreProcFcn : optional function handle or string containing a
-%     function which will be run after simfun. finfun will also be passed
-%     the design and simoptions structure, and can also be supplied with
-%     additional arguments by using the 'ExtraPostPreProcFcnArgs'
-%     parameter-value pair. The extra arguments must be placed in a cell
-%     array. It must return two arguments which will overwrite the design
-%     and simoptions variables.
+%     function which will be run after PreProcFcn (see above). The
+%     PostPreProcFcn will also be passed the design and simoptions
+%     structure (as returned by PreProcFcn if there is one, or unprocessed,
+%     if there is not), and can also be supplied with additional arguments
+%     by using the 'ExtraPostPreProcFcnArgs' parameter-value pair. The
+%     extra arguments must be placed in a cell array. It must return two
+%     arguments which will overwrite the design and simoptions variables.
 %
 %     The supplied function must have the calling syntax
 %
