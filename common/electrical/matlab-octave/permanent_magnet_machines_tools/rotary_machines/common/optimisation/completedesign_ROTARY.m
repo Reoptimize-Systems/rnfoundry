@@ -26,6 +26,7 @@ function design = completedesign_ROTARY (design, simoptions)
 %  Qcb - basic winding (the minimum number of coils required to make up a 
 %    repetitive segment of the machine that can be modelled using symmetry)
 %  pb - the number of poles corresponding to the basic winding in Qcb
+%  qsp - the number of slots per pole
 %  CoilLayers - the number of layers in the coil slot
 %
 % This pole/slot/coil/winding terminology is based on that presented in
