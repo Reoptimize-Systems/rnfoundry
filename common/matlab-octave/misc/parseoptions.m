@@ -26,8 +26,8 @@ function defaults = parseoptions(defaults, args)
 %   the parameter names, and their contents the values. This is then
 %   treated identically to the cell array p-v pairs input.
 %
-%   args can als be a scalar cell array, which contains only a sturcture as
-%   described above, to facilitate accepting the contents of varargin as
+%   args can also be a scalar cell array, which contains only a structure
+%   as described above, to facilitate accepting the contents of varargin as
 %   input.
 %
 % Output
