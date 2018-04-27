@@ -117,19 +117,22 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     % store the rms value of the flux linkage
     design.FluxLinkageRms = rms(slmeval(linspace(0,2,1000), design.slm_fluxlinkage, 0, false));
     
-    design.FluxLinkagePeak = slmpar(design.slm_fluxlinkage, 'maxfun');
+    design.FluxLinkageCoilPeak = slmpar(design.slm_fluxlinkage, 'maxfun');
     
-    % we will make the minimum phase current of interest that which
-    % generates a power of 10W per coil at 1m/s, or a current density of
-    % 0.1 A/mm^2 in the winding, whichever is less
-    minIofinterest = min(design.ConductorArea * 0.1e6, ...
-                         (10 / (design.Maxdlambdadx)) ) * design.Branches;
+    design.FluxLinkagePhasePeak = design.FluxLinkageCoilPeak * design.CoilsPerBranch;
 
     % by default we will add the phase currents to the list of solution
     % components to be solved
-    simoptions = setfieldifabsent (simoptions, 'AddPhaseCurrentsComponents', true);
+    simoptions = setfieldifabsent (simoptions, 'AddPhaseCurrentsComponents', false);
     
-    if simoptions.AddPhaseCurrentsComponents
+    if simoptions.AddPhaseCurrentsComponents   
+        
+        % we will make the minimum phase current of interest that which
+        % generates a power of 10W per coil at 1m/s, or a current density of
+        % 0.1 A/mm^2 in the winding, whichever is less
+        minIofinterest = min(design.ConductorArea * 0.1e6, ...
+                         (10 / (design.Maxdlambdadx)) ) * design.Branches;
+                     
         % create the phase current solution component specification
         simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
                                               'PhaseCurrents', ...
@@ -159,6 +162,8 @@ function [design, simoptions] = finfun_AM(design, simoptions)
         design.p_gforce = polyfitn(design.gvar, design.gforce, order);
         
     end
+    
+    design.PostPreProcessingComplete = true;
     
 end
 

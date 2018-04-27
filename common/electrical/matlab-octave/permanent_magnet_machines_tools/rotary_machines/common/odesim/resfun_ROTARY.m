@@ -21,28 +21,45 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
     
     % calculate the input power and efficiency if the required information
     % is present
-    if all(isfield(results, {'Tqpto', 'omegaT'}))
+    if isfield(results, 'Tqpto')
         
-        if ~isfield(results, 'TqaddE')
-            results.TqaddE = 0;
+        design.TorquePtoPeak = max(abs(results.Tqpto));
+            
+        % get the maximum force on the magnets
+        %
+        % convert torques to forces at the mean magnet radius
+        results.Fpto = results.Tqpto ./ design.Rmm;
+        %
+        % determine the maximum force on the magnets
+        design.MaxFpto = design.TorquePtoPeak / design.Rmm;
+        
+        % divide the maximum amplitude of the normalised torque ripple by the
+        % mean to get the ripple factor
+        design.TorqueRippleFactor = torqueripple(T, results);
+        
+        if isfield (results, 'omegaT')
+
+            if ~isfield(results, 'TqaddE')
+                results.TqaddE = 0;
+            end
+
+            % instantaneous power is force / velocity
+            results.Pinput = -(results.Tqpto + results.TqaddE) .* results.omegaT;
+
+            design.PowerInputMean = contmean(T, results.Pinput);
+
+            design.EnergyInputTotal = trapz(T, results.Pinput);
+
+            if isfield (design, 'EnergyLoadTotal')
+                design.Efficiency = design.EnergyLoadTotal / design.EnergyInputTotal;
+            end
+
+            design.TorquePtoMean = contmean(T, results.Tqpto);
+
         end
         
-        % instantaneous power is force / velocity
-        results.Pinput = -(results.Tqpto + results.TqaddE) .* results.omegaT;
-        
-        design.PowerInputMean = contmean(T, results.Pinput);
-        
-        design.EnergyInputTotal = trapz(T, results.Pinput);
-        
-        design.Efficiency = design.EnergyLoadTotal / design.EnergyInputTotal;
-        
-        design.TorquePtoMean = contmean(T, results.Tqpto);
-        
     end
-    
-    % get the maximum force on the magnets
-    design.TorquePtoPeak = max(abs(results.Tqpto));
-    
+
     if isfield(results, 'TqaddEBD')
         
         % get iron losses forces
@@ -59,21 +76,6 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
         design.PowerLossMean = contmean(T, results.PLiron + results.PLeddy);
         
     end
-    
-    % convert forces to torques at the shaft
-    results.Fpto = results.Tqpto ./ design.Rmm;
-    
-    % determine the maximum torque on the rotor
-    design.MaxFpto = design.TorquePtoPeak / design.Rmm;
-    
-%     % calculate a torque ripple factor
-%     normripple = results.TorquePto ./ results.vT;
-%     
-%     normripple(results.vT == 0) = 0;
-
-    % divide the maximum amplitude of the normalised torque ripple by the
-    % mean to get the ripple factor
-    design.TorqueRippleFactor = torqueripple(T, results);
     
     [design.FrequencyPeak, design.OmegaPeak] = freqest_ROTARY(design, results);
 

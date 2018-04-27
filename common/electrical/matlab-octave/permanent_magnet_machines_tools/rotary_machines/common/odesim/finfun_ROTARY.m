@@ -19,7 +19,7 @@ function [design, simoptions] = finfun_ROTARY(design, simoptions)
     simoptions = setfieldifabsent(simoptions, 'IC', zeros(1, design.Phases));
     
     % complete the circuit properties
-    [design, simoptions] = circuitprops_AM(design, simoptions);
+%     [design, simoptions] = circuitprops_AM(design, simoptions);
     
     % call finfun_AM to finish off the design
     [design, simoptions] = finfun_AM(design, simoptions);
