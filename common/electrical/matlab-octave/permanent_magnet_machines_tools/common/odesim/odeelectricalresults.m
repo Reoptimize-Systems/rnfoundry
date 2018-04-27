@@ -59,59 +59,71 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
     % peak phase EMF (coil EMF time the number of coils per branch)
     design.EMFPhasePeak = max(abs(EMF(:)));
 
-    if numel(T) > 1
+    switch lower (regexprep (simoptions.LoadModel, '\s+', ''))
         
-        % calculate the power from the phase currents in the load
-        loadPower = sum(realpow(Iphase,2), 2) * design.LoadResistance ...
-                        * design.NStages * simoptions.NoOfMachines;
-        
-        design.EnergyLoadTotal = sum(trapz(T, loadPower));
-        
-        design.PowerLoadMean = contmean(T, loadPower);
-        
-        phasePower = sum(bsxfun (@times, realpow(Iphase,2), RPhase), 2) ...
-                        .* design.NStages .* simoptions.NoOfMachines;
-        
-        design.EnergyPhaseRTotal = trapz(T, phasePower);
+        case {'simplerlcircuit', 'zeropowerfactor'}
+            
+            if numel(T) > 1
 
-        design.PowerPhaseRMean = contmean(T, phasePower);
+                % calculate the power from the phase currents in the load
+                loadPower = sum(realpow(Iphase,2), 2) * design.LoadResistance ...
+                                * design.NStages * simoptions.NoOfMachines;
 
-        design.PowerSystemMean = design.PowerPhaseRMean + design.PowerLoadMean;
-        
-        design.PowerLoadPeak = max(loadPower);
-        
-        % divide reall power by apparent power to get power factor
-        design.PowerFactorEstimate = (design.Phases ...
-                                        .* design.IPhaseRms.^2 ...
-                                        .* (design.PhaseResistance(end)+design.LoadResistance)) ...
-                                      ./ (design.Phases * design.EMFPhaseRms * design.IPhaseRms);
+                design.EnergyLoadTotal = sum(trapz(T, loadPower));
 
-%         
-%         Y = fft(y,251);
-%         Pyy = Y.*conj(Y)/251;
-%         f = 1000/251*(0:127
+                design.PowerLoadMean = contmean(T, loadPower);
 
-%         % use Lomb normalized periodogram to find the main frequency,
-%         % cannot use fft (without interpolating) as data is not uniformly
-%         % spaced
-%         [design.Periodogram,design.PeriodogramFrequencies] = fastlomb(EMF,T,0,2);
-%         
-%         % find the main harmonic frequency and store it
-%         [junk,I] = max(design.Periodogram);
-%         
-%         design.ElectricalFrequency = design.PeriodogramFrequencies(I);
-        
-        % use this frequency to calculate the power factor
-        % design.PowerFactor = rlcpowerfactor(design.R(1,1), design.L(1,1), 0, 2 * pi * design.ElectricalFrequency);
-        
-    else
-        
-        design.EnergyLoadTotal = 1e-4;
-        design.EnergyLoadMean = 1e-4;
-        design.PowerLoadMean = 1e-4;
-        design.PowerLoadPeak = 1e-4;
-        design.PowerSystemMean  = 1e-4;
-        design.PowerPhaseRMean = 1e-4;
+                phasePower = sum(bsxfun (@times, realpow(Iphase,2), RPhase), 2) ...
+                                .* design.NStages .* simoptions.NoOfMachines;
+
+                design.EnergyPhaseRTotal = trapz(T, phasePower);
+
+                design.PowerPhaseRMean = contmean(T, phasePower);
+
+                design.PowerSystemMean = design.PowerPhaseRMean + design.PowerLoadMean;
+
+                design.PowerLoadPeak = max(loadPower);
+
+                % divide real power by apparent power to get power factor
+                design.PowerFactorEstimate = (design.Phases ...
+                                                .* design.IPhaseRms.^2 ...
+                                                .* (design.PhaseResistance(end)+design.LoadResistance)) ...
+                                              ./ (design.Phases * design.EMFPhaseRms * design.IPhaseRms);
+
+        %         
+        %         Y = fft(y,251);
+        %         Pyy = Y.*conj(Y)/251;
+        %         f = 1000/251*(0:127
+
+        %         % use Lomb normalized periodogram to find the main frequency,
+        %         % cannot use fft (without interpolating) as data is not uniformly
+        %         % spaced
+        %         [design.Periodogram,design.PeriodogramFrequencies] = fastlomb(EMF,T,0,2);
+        %         
+        %         % find the main harmonic frequency and store it
+        %         [junk,I] = max(design.Periodogram);
+        %         
+        %         design.ElectricalFrequency = design.PeriodogramFrequencies(I);
+
+                % use this frequency to calculate the power factor
+                % design.PowerFactor = rlcpowerfactor(design.R(1,1), design.L(1,1), 0, 2 * pi * design.ElectricalFrequency);
+
+            else
+
+                design.EnergyLoadTotal = 1e-4;
+                design.EnergyLoadMean = 1e-4;
+                design.PowerLoadMean = 1e-4;
+                design.PowerLoadPeak = 1e-4;
+                design.PowerSystemMean  = 1e-4;
+                design.PowerPhaseRMean = 1e-4;
+
+            end
+    
+        case 'machinesidepowerconverter'
+            
+        otherwise
+            
+            error ('Unknown load model type (in simoptions.LoadModel)');
         
     end
 

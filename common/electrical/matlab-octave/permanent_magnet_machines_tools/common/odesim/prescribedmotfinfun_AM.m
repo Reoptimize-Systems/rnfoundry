@@ -4,21 +4,22 @@ function [design, simoptions] = prescribedmotfinfun_AM (design, simoptions, finf
     % values set in finfun, if any, are used
     simoptions = rmiffield(simoptions, 'abstol');
 
-    if ~all(isfield(design, {'slm_fluxlinkage'}))
-        % In this case we assume we have not already run the finalisation
-        % code on this design and must do so
+    if design.PostPreProcessingComplete == false
+        % run the post pre-processing function (finfun) on this design
         [design, simoptions] = feval(finfun, design, simoptions);
     end
-
-%     % by default we will add the phase currents to the list of solution
-%     % components to be solved
-%     simoptions = setfieldifabsent (simoptions, 'AddPhaseCurrentsComponents', true);
-%     
-%     if simoptions.AddPhaseCurrentsComponents
-%         % create the phase current solution component specification
-%         simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
-%                                               'PhaseCurrents', ...
-%                                               struct ('InitialConditions', zeros (1, design.Phases) ));
-%     end
+    
+    if isfield (design, 'FOControl')
+       
+       % if no turn-on time is set for the FOControl, make it be turned on
+       % from the start of the simulation
+       simoptions = setfieldifabsent (simoptions, 'FOCStartTime', simoptions.drivetimes(1));
+       
+       % reset the PID controllers so the intial time can be set to the
+       % desired FOC turn-on time
+       design.FOControl.PI_d.reset (simoptions.FOCStartTime);
+       design.FOControl.PI_q.reset (simoptions.FOCStartTime);
+       
+    end
 
 end

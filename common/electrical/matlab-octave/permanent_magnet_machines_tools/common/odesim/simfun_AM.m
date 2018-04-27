@@ -138,4 +138,9 @@ function [design, simoptions] = simfun_AM(design, simoptions)
 	simoptions.MagFEASim = setfieldifabsent(simoptions.MagFEASim, 'QuietFemm', true);
     check.isLogicalScalar (simoptions.MagFEASim.QuietFemm, true, 'QuietFemm');
     
+    % indicate what state the design is in in terms of processing of the
+    % magnetics
+    design.PreProcessingComplete = true;
+    design.PostPreProcessingComplete = false;
+    
 end

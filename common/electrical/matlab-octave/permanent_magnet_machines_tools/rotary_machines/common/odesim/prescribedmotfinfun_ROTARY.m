@@ -29,19 +29,41 @@ function [design, simoptions] = prescribedmotfinfun_ROTARY(design, simoptions, f
 
     [design, simoptions] = prescribedmotfinfun_AM (design, simoptions, finfun);
     
-    if all(isfield(simoptions, {'PoleCount', 'RPM'}))
-
-        simoptions = setfieldifabsent (simoptions, 'RampPoles', ceil (simoptions.PoleCount * 2/100));
-
-        simoptions = simsetup_ROTARY(design, simoptions.ODESim.PreProcFcn, simoptions.ODESim.PostPreProcFcn, ...
-                                'RPM', simoptions.RPM, ...
-                                'PoleCount', simoptions.PoleCount, ...
-                                'RampPoles', simoptions.RampPoles, ...
-                                'EvalFcn', 'prescribedmotode_linear', ...
-                                'simoptions', simoptions);
-
-    end
-
+%     if all(isfield(simoptions, {'PoleCount', 'RPM'}))
+% 
+%         simoptions = setfieldifabsent (simoptions, 'RampPoles', ceil (simoptions.PoleCount * 2/100));
+% 
+%         simoptions = simsetup_ROTARY(design, simoptions.ODESim.PreProcFcn, simoptions.ODESim.PostPreProcFcn, ...
+%                                 'RPM', simoptions.RPM, ...
+%                                 'PoleCount', simoptions.PoleCount, ...
+%                                 'RampPoles', simoptions.RampPoles, ...
+%                                 'EvalFcn', 'prescribedmotode_linear', ...
+%                                 'simoptions', simoptions);
+% 
+%     end
     
+    % set up power converter properties, if there is one and the required
+    % data is also available
+    if isfield (design, 'MachineSidePowerConverter') ...
+         && isfield (simoptions, 'omegaT')
+     
+        maxomega = max (abs (simoptions.omegaT));
+        
+        % the minum DC link voltage is the natural rectification voltage at
+        % the maximum expected speed
+        minVdc = (3 * sqrt(6) / pi) * ...
+                 peakemfest_ROTARY (design.FluxLinkagePhasePeak, maxomega, design.Poles/2) / sqrt(2);
+             
+        if ~isfield (design.MachineSidePowerConverter, 'Vdc')
+            % make the DC link voltage 10% bigger than the minimum possible
+            design.MachineSidePowerConverter.Vdc = 1.1 * minVdc;
+            
+        elseif design.MachineSidePowerConverter.Vdc < minVdc
+            
+            warning ('Machine side power converter DC voltage is lower than the minimum reccomended value of %gV', minVdc)
+            
+        end
+        
+    end
 
 end

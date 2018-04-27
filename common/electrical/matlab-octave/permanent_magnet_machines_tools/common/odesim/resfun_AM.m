@@ -65,6 +65,8 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
         results.RPhase = design.PhaseResistance;
     end
     
+    simoptions = setfieldifabsent (simoptions, 'SkipODEElectricalResults', false);
+    
     if ~simoptions.SkipODEElectricalResults
         % Determine some interesting machine electrical outputs
         design = odeelectricalresults(T, ...
