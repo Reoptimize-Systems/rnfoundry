@@ -3,7 +3,7 @@ function status = odesimoutputfcns_AM (t, y, flag, design, simoptions)
     
     compnames = fieldnames (simoptions.ODESim.SolutionComponents);
 
-    status = zeros (size(compnames));
+    status = zeros(numel (compnames), 1);
     
     for ind = 1:numel (compnames)
 
@@ -30,6 +30,6 @@ function status = odesimoutputfcns_AM (t, y, flag, design, simoptions)
 
     end
     
-    status = any (status(:));
+    status = any (status);
 
 end
