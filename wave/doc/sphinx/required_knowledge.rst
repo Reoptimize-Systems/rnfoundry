@@ -103,6 +103,8 @@ documentation for this `here`__.
 
 .. __: https://uk.mathworks.com/help/matlab/matlab_env/what-is-the-matlab-search-path.html
 
+.. _required-knowledge-matlab-packages:
+
 Namespaces (+package directories)
 =================================
 
