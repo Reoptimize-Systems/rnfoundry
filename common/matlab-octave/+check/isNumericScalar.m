@@ -9,7 +9,7 @@ function ok = isNumericScalar (num, throw, name, posorneg)
 %
 % Input
 %
-%  num - value to be tested if it is a real numeric scalar
+%  num - input to be tested if it is a real numeric scalar
 %
 %  throw - logical flag determining whether an error is thrown by
 %   isNumericScalar if num fails check
@@ -21,14 +21,17 @@ function ok = isNumericScalar (num, throw, name, posorneg)
 %  posorneg - optional scalar integer flag indicating if an additional
 %   check for the number being positive or negative  should be performed.
 %   If posorneg == 0, no additional check is performed. If posorneg > 0,
-%   isNumericScalar checks is 'num' is greater than or equal to zero. If
-%   posorneg < 0, isNumericScalar checks is 'num' is less than or equal to
+%   isNumericScalar checks if 'num' is greater than or equal to zero. If
+%   posorneg < 0, isNumericScalar checks if 'num' is less than or equal to
 %   zero. If checks fail ok is set to false, and an error is thrown
 %   depending on the value of 'throw'. Default is zero.
 %
 % Output
 %
 %  ok - logical flag indicating if check was passed
+%
+%
+% See also: check.isNumeric, check.isNumericMatrix
 %
 
     if nargin < 3
@@ -46,7 +49,7 @@ function ok = isNumericScalar (num, throw, name, posorneg)
         if throw
             error ('%s must be a real scalar numeric value', name);
         end
-    elseif posorneg > 0 &&  num < 0
+    elseif posorneg > 0 && num < 0
         ok = false;
         if throw
             error ('%s must be a real scalar numeric value greater than or equal to zero');
