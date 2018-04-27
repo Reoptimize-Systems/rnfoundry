@@ -20,23 +20,38 @@ classdef pidController < handle
 %  calculate - calculate the pid output signal
 %
 
-            
+
+    properties (GetAccess = public, SetAccess = public)
+        
+        Kp;        % proportional control gain 
+        Kd;        % derivative control gain
+        Ki;        % integral control gain
+        taui;      % integral control factor
+        saturationTimeConstant; % saturation time constant for antiwindup action
+        
+    end
+    
     properties (GetAccess = public, SetAccess = private)
         
         fixed_dt;  % fixed time step value for when time step is not provided
         maxOutput; % maximum possible output value from the controller
         minOutput; % minimum possible output value from the controller
-        Kp;        % proportional control gain 
-        Kd;        % derivative control gain
-        Ki;        % integral control gain
+        antiWindup;
+        
+        error; % current value of the error 
+        integral;  % current value of the input signal integral
+        saturationError; 
+        active;
         
     end
     
     properties (GetAccess = private, SetAccess = private)
         
-        error; % current value of the error 
         prevError; % previously calculated value of the error signal
-        integral;  % current value of the input signal integral
+        prevIntegral; % previous value of the input signal integral
+        prevSaturationError;
+        saturationIntegral;
+        prevSaturationIntegral;
         prevT;
         initT;
         
@@ -108,6 +123,8 @@ classdef pidController < handle
             options.MinOut = -inf;
             options.FixedDT = nan;
             options.InitialTime = [];
+            options.SaturationTimeConstant = [];
+            options.AntiWindup = false;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -118,12 +135,32 @@ classdef pidController < handle
             check.isNumericScalar (Kd, true, 'Kd');
             check.isNumericScalar (Ki, true, 'Ki');
             assert (options.MaxOut > options.MinOut, 'MaxOut must be greater than MinOut');
+            check.isLogicalScalar (options.AntiWindup, true, 'AntiWindup');
             
             self.maxOutput = options.MaxOut;
             self.minOutput = options.MinOut;
             self.Kp = Kp;
             self.Kd = Kd;
             self.Ki = Ki;
+            
+            self.taui = self.Kp / self.Ki;
+            
+            self.antiWindup = options.AntiWindup;
+            
+            if self.antiWindup == false
+                self.saturationTimeConstant = inf;
+            else
+                
+                if isempty (options.SaturationTimeConstant)
+                    % calcuate the saturation time constant
+                    options.SaturationTimeConstant = self.taui / 2;
+                end
+                
+                check.isNumericScalar (options.SaturationTimeConstant, true, 'SaturationTimeConstant');
+                
+                self.saturationTimeConstant = options.SaturationTimeConstant;
+                
+            end
             
             if ~isempty (options.InitialTime)
                 check.isNumericScalar (options.InitialTime, true, 'InitialTime');
@@ -152,18 +189,38 @@ classdef pidController < handle
             %
             %  pidobj - pidController object
             %
+            %  t - optional new value for the initial time of the PID
+            %   controller. If not supplied, the intial time supplied (if
+            %   any) when creating the controller is used. If it is
+            %   supplied, the value also replaces the stored initial time
+            %   value (so future calls to reset without supplying a new
+            %   value for t, will reset to the last value supplied here).
+            %   The time is used in the calcDt method which is used when
+            %   not using a fixed time step.
             %
-            % See Also:
+            % See Also: pidController.calcDt
             %
             
             if nargin < 2
                 t = self.initT;
+            else
+                self.initT = t;
             end
             
             self.prevT = t;
+            self.error = 0;
             self.prevError = 0;
             self.integral = 0;
+            self.prevIntegral = 0;
+            self.prevSaturationError = 0;
+            self.saturationIntegral = 0;
+            self.prevSaturationIntegral = 0;
+            self.active = true;
             
+        end
+        
+        function toggleOnOff (self)
+            self.active = ~self.active;
         end
         
         function output = calculate (self, actual, setpoint, dt)
@@ -205,39 +262,73 @@ classdef pidController < handle
             % See Also: 
             %
 
-            if nargin < 4
-                dt = self.fixed_dt;
+            if self.active
+                
+                if nargin < 4
+                    dt = self.fixed_dt;
+                end
+
+                % Calculate error
+                self.error = setpoint - actual;
+
+                % Proportional term
+                Pout = self.Kp * self.error;
+
+                % Integral term
+                self.integral = self.prevIntegral + self.error * dt;
+                Iout = self.Ki * self.integral;
+
+                % Derivative term
+                derivative = (self.error - self.prevError) / dt;
+                Dout = self.Kd * derivative;
+
+                % Calculate total output
+                total_action = Pout + Iout + Dout;
+
+                % Restrict to max/min
+                if ( total_action > self.maxOutput )
+                    output = self.maxOutput;
+                elseif ( total_action < self.minOutput )
+                    output = self.minOutput;
+                else
+                    output = total_action;
+                end
+
+                if self.antiWindup == true
+
+                    self.saturationError = output - total_action;
+
+                    self.saturationIntegral = self.prevSaturationIntegral + ...
+                                  (1/self.saturationTimeConstant) * self.saturationError * dt;
+
+                    output = output + self.saturationIntegral;
+
+                end
+            
+            else
+                output = 0;
             end
-            
-            % Calculate error
-            self.error = setpoint - actual;
-            
-            % Proportional term
-            Pout = self.Kp * self.error;
-            
-            % Integral term
-            self.integral = self.integral + self.error * dt;
-            Iout = self.Ki * self.integral;
-            
-            % Derivative term
-            derivative = (self.error - self.prevError) / dt;
-            Dout = self.Kd * derivative;
-            
-            % Calculate total output
-            output = Pout + Iout + Dout;
-            
-            % Restrict to max/min
-            if ( output > self.maxOutput )
-                output = self.maxOutput;
-            elseif ( output < self.minOutput )
-                output = self.minOutput;
-            end
-            
-            
-            
         end
         
         function advanceStep (self, t)
+            % accept the current values into the time history of PID states
+            %
+            % Syntax
+            %
+            % advanceStep (pidobj, t)
+            % Description
+            %
+            % Accepts the current value of the error and integral into the
+            % PID history. This must be called before advancing to the next
+            % time point. 
+            %
+            % Input
+            %
+            %  pidobj - pidController object
+            %
+            %  t - current simulation time
+            %
+            %
             
             if nargin < 2
                 t = nan;
@@ -245,8 +336,15 @@ classdef pidController < handle
             
             self.prevT = t;
             
-            % Save error to previous error
+            % Save current error to previous error
             self.prevError = self.error;
+            
+            % update the integral
+            self.prevIntegral = self.integral;
+            
+            self.prevSaturationError = self.saturationError;
+            
+            self.prevSaturationIntegral = self.saturationIntegral;
             
         end
         
@@ -258,25 +356,5 @@ classdef pidController < handle
         end
         
     end
-    
-%     methods (Static)
-%        
-%         function status = outputFcn (t, y, flag)
-%             
-%             switch flag
-%                 
-%                 case []
-%                     
-%                     
-%                     
-%                 case 'init'
-%                     
-%                 case 'done'
-%                     
-%             end
-%             
-%         end
-%         
-%     end
     
 end
