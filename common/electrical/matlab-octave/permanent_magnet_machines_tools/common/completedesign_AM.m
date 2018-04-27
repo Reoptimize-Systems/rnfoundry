@@ -186,4 +186,6 @@ function design = completedesign_AM (design, simoptions)
         error ('LINEAR:badwinding', 'Impossible winding design, basic winding poles greater than total number of poles.')
     end
     
+    design.qsp = design.Qs/design.Poles;
+    
 end
