@@ -55,10 +55,6 @@ function idot = activerectifiercurrentderiv(I, E, R, M, D, Vo, VnN)
 %
 
     % Calculate di/dt
-    idot = ((E(:) - R * I(:) - D*Vo + VnN)' / M)';
-    
-%     % Fancier version to take position dependant inductance
-%     idot = ((E(:) - R * I(:) - D*Vo + VnN)' / feval(simparams.Lfcn, x))';
-
+    idot = ( (E(:) - R * I(:) - D*Vo + VnN)' / M )';
 
 end
