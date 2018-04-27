@@ -43,6 +43,8 @@ classdef wecSim < handle
     methods
         
         function self = wecSim (hsys, mbsys, varargin)
+            % wsim.wecSim constructor
+            %
             
             options.PTOs = {};
 %             options.StartTime = [];
@@ -461,6 +463,9 @@ classdef wecSim < handle
                 end
             
             end
+            
+            % tell the PTOs we are done
+            self.finishPTOs ();
             
             if options.TimeExecution, toc; end
             
@@ -987,6 +992,17 @@ classdef wecSim < handle
                 % PTOs handle their own data logging which is triggered by
                 % calling advanceStep on each PTO object
                 self.powerTakeOffs{ptoind}.advanceStep (self.lastTime);
+                    
+            end
+            
+        end
+        
+        function finishPTOs (self)
+            % tell all the PTOs that the simulation is complete
+            
+            for ptoind = 1:numel (self.powerTakeOffs)
+
+                self.powerTakeOffs{ptoind}.finish (self.lastTime);
                     
             end
             
