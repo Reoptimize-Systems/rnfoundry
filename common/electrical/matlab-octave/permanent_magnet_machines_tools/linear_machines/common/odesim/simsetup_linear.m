@@ -119,8 +119,43 @@ function simoptions = simsetup_linear (design, PreProcFcn, PostPreProcFcn, varar
     
     % construct a piecewise polynomial interpolation of the position
     % and velocity data
-    simoptions.pp_xT = interp1 (simoptions.drivetimes,simoptions.xT, 'pchip', 'pp');
-    simoptions.pp_vT = interp1 (simoptions.drivetimes,simoptions.vT, 'pchip', 'pp');
+    simoptions.pp_xT = interp1 (simoptions.drivetimes, simoptions.xT, 'pchip', 'pp');
+    simoptions.pp_vT = interp1 (simoptions.drivetimes, simoptions.vT, 'pchip', 'pp');
+    
+    % we will make the minimum phase current of interest that which
+    % generates a power of 10W per coil at 1m/s, or a current density of
+    % 0.1 A/mm^2 in the winding, whichever is less
+    minIofinterest = min(design.ConductorArea * 0.1e6, ...
+                         (10 / (design.Maxdlambdadx)) ) * design.Branches;
+                     
+    switch Inputs.EvalFcn
+        
+        
+        case { 'prescribedmotode_linear', ...
+               'prescribedmotodeforcefcn_linear', ...
+               'feaprescribedmotodeforcefcn_linear' }
+            
+            % create the phase current solution component specification
+            simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
+                                                  'PhaseCurrents', ...
+                                                  struct ('InitialConditions', zeros (1, design.Phases), ...
+                                                          'AbsTol', repmat (minIofinterest, 1, design.Phases) ) ...
+                                                                    );
+                                                                
+%         case { 'prescribedmotodetorquefcn_dqactiverect_linear' }
+% 
+%             % create the phase current solution component specification
+%             simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
+%                                                   'DQPhaseCurrents', ...
+%                                                   struct ('InitialConditions', zeros (1, 2), ...
+%                                                           'AbsTol', repmat (minIofinterest, 1, 2) ) ...
+%                                                                     );
+                                                                
+        otherwise
+            
+            
+            
+    end
     
     
 end
