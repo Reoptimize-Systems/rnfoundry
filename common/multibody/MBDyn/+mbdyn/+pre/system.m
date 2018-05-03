@@ -79,7 +79,7 @@ classdef system < mbdyn.pre.base
     end
     
     properties (GetAccess = protected, SetAccess = protected)
-        drawAxesH; % handle to figure for plotting
+%         drawAxesH; % handle to figure for plotting
     end
     
     methods

@@ -24,23 +24,15 @@ classdef element < mbdyn.pre.base
     
     properties (GetAccess = public, SetAccess = protected)
        
-        drawColour; % colour of the element in plots
         name; % name of the element
         
     end
     
     properties (GetAccess = protected, SetAccess = protected)
        
-        shapeData;
-        sx;
-        sy;
-        sz;
         stlLoaded;
-        shapeObjects;   % object for the element shape drawing
-        needsRedraw; % track whether abject needs to be redrawn
-        drawAxesH; % handle to figure for plotting
-        transformObject;
         defaultShape;
+        defaultShapeOrientation;
         
     end
     
@@ -79,19 +71,56 @@ classdef element < mbdyn.pre.base
             %  el - mbdyn.pre.element
             %
             
-            options.STLFile = '';
-            options.UseSTLName = false;
+            [options, ~] = mbdyn.pre.element.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            self.checkAllowedStringInputs ( options.DefaultShape, ...
+                                            { 'cuboid', 'box', 'cylinder', 'sphere', 'ellipsoid', 'tube', 'pipe', 'annularcylinder' }, ...
+                                            true, ...
+                                            'DefaultShape' );
+                                        
+            self.checkOrientationMatrix ( options.DefaultShapeOrientation, ...
+                                          true, ...
+                                          'DefaultShapeOrientation' );
             
             self.stlLoaded = false;
             self.drawColour = [0.8, 0.8, 1.0];
             self.shapeData = struct([]);
             self.shapeObjects = {};
             self.drawAxesH = [];
-            self.sx = 1;
-            self.sy = 1;
-            self.sz = 1;
+            self.defaultShape = options.DefaultShape;
+            self.defaultShapeOrientation = options.DefaultShapeOrientation;
+            
+            switch self.defaultShape
+                    
+                case {'cuboid', 'box'}
+                    
+                    % cuboid, 3 arguments expected, x, y and z dimensions
+                    self.setSize (1, 1, 1);
+
+                case 'cylinder'
+                    
+                    % cylinder, two arguments expected, radius and axial
+                    % length
+                    self.setSize (1, 2);
+
+                case {'tube', 'pipe', 'annularcylinder'}
+
+                    % tube, 3 arguments expected, router, rinner and
+                    % axiallength dimensions
+                    self.setSize (1, 0.5, 2);
+
+                case 'sphere'
+
+
+                case 'ellipsoid'
+
+
+                otherwise
+                    error ('Bad defaultShape string');
+                        
+            end
             
             if ~isempty (options.STLFile)
                 if exist (options.STLFile, 'file')
@@ -129,7 +158,9 @@ classdef element < mbdyn.pre.base
 
             self.checkLogicalScalar (usename, true, 'usename');
             
-            [self.shapeData(1).Vertices, self.shapeData(1).Faces, self.shapeData(1).N, stlname] = stl.read(filename);
+            self.shapeData{1} = struct ();
+            
+            [self.shapeData{1}.Vertices, self.shapeData{1}.Faces, self.shapeData{1}.N, stlname] = stl.read(filename);
             
             if usename
                 self.name = stlname;
@@ -139,18 +170,136 @@ classdef element < mbdyn.pre.base
             self.needsRedraw = true;
             
             setSize (self, ...
-                max(self.shapeData(1).Vertices(:,1)) - min(self.shapeData(1).Vertices(:,1)), ...
-                max(self.shapeData(1).Vertices(:,2)) - min(self.shapeData(1).Vertices(:,2)), ...
-                max(self.shapeData(1).Vertices(:,3)) - min(self.shapeData(1).Vertices(:,3)) )
+                max(self.shapeData{1}.Vertices(:,1)) - min(self.shapeData{1}.Vertices(:,1)), ...
+                max(self.shapeData{1}.Vertices(:,2)) - min(self.shapeData{1}.Vertices(:,2)), ...
+                max(self.shapeData{1}.Vertices(:,3)) - min(self.shapeData{1}.Vertices(:,3)) )
             
         end
         
-        function setSize (self, sx, sy, sz)
+        function setSize (self, varargin)
             % set the size of the element in plots
+            %
+            % Syntax
+            %
+            % setSize (el, sx, sy, sz)
+            % setSize (el, radius, axiallength)
+            % setSize (el, router, rinner, axiallength)
+            %
+            % Description
+            %
+            % setSize is used to set the size of the default element shape
+            % for plotting the element in a figure. This is used when no
+            % STL file is avaialable, of the subclassed elemnt does not
+            % provide it's own drawing of the element. The inputs to
+            % setSize depend on what the element's chosen shape is.
+            %
+            % Input
+            %
+            %  el - mbdyn.pre.element object
+            %
+            %  sx - used when the shape is a box/cuboid, this is the
+            %   length along the x axis
+            %
+            %  sy - used when the shape is a box/cuboid, this is the
+            %   length along the y axis
+            %
+            %  sz - used when the shape is a box/cuboid, this is the
+            %   length along the z axis
+            %
+            %  radius - used when the shape is a cylinder, this is the
+            %   radius of the cylinder
+            %
+            %  axiallength - used when the shape is a cylinder, this is the
+            %   axial length of the cylinder
+            %
+            %  router - used when the shape is a tube/pipe/annularcylinder,
+            %   this is the outer radius of the tube.
+            %
+            %  rinne - used when the shape is a tube/pipe/annularcylinder,
+            %   this is the inner radius of the tube.
+            %
+            %  axiallength - used when the shape is a tube/pipe/annularcylinder,
+            %   this is the axial length of the tube.
+            %
+            % Output
+            %
+            %
+            %
+            % See Also: 
+            %
+
+            switch self.defaultShape
+                    
+                case {'cuboid', 'box'}
+                    
+                    % cuboid, 3 arguments expected, x, y and z dimensions
+                    assert (numel (varargin) == 3, ...
+                            'setSize requires 3 size input arguments when the shape is a box/cuboid, sx, sy and sz');
+                        
+                    self.checkNumericScalar (varargin{1}, true, 'sx');
+                    self.checkNumericScalar (varargin{2}, true, 'sy');
+                    self.checkNumericScalar (varargin{3}, true, 'sz');
+                    
+                    assert (varargin{1} > 0, 'sx must be greater than zero');
+                    assert (varargin{2} > 0, 'sy must be greater than zero');
+                    assert (varargin{3} > 0, 'sz must be greater than zero');
+
+                    self.shapeParameters(1) = varargin{1};
+                    self.shapeParameters(2) = varargin{2};
+                    self.shapeParameters(3) = varargin{3};
+
+                case 'cylinder'
+                    
+                    % cylinder, two arguments expected, radius and axial
+                    % length
+                    assert (numel (varargin) == 2, ...
+                            'setSize requires 2 size input arguments when the shape is a cylinder, radius, axiallength');
+                        
+                    self.checkNumericScalar (varargin{1}, true, 'radius');
+                    self.checkNumericScalar (varargin{2}, true, 'axiallength');
+                    
+                    assert (varargin{1} > 0, 'radius must be greater than zero');
+                    assert (varargin{2} > 0, 'axiallength must be greater than zero');
+
+                    self.shapeParameters(1) = varargin{1};
+                    self.shapeParameters(2) = varargin{2};
+
+
+                case {'tube', 'pipe', 'annularcylinder'}
+
+                    % tube, 3 arguments expected, router, rinner and
+                    % axiallength dimensions
+                    assert (numel (varargin) == 3, ...
+                            'setSize requires 3 size input arguments when the shape is a tube/pipe/annularcylinder, router, rinner and axiallength');
+                        
+                    self.checkNumericScalar (varargin{1}, true, 'router');
+                    self.checkNumericScalar (varargin{2}, true, 'rinner');
+                    self.checkNumericScalar (varargin{3}, true, 'axiallength');
+                    
+                    assert (varargin{1} > 0, 'router must be greater than zero');
+                    assert (varargin{2} > 0, 'rinner must be greater than zero');
+                    assert (varargin{1} > varargin{2}, 'router must be greater than rinner');
+                    assert (varargin{3} > 0, 'axiallength must be greater than zero');
+
+                    self.shapeParameters(1) = varargin{1};
+                    self.shapeParameters(2) = varargin{2};
+                    self.shapeParameters(3) = varargin{3};
+
+                case 'sphere'
+
+
+                case 'ellipsoid'
+
+
+                otherwise
+                    error ('Bad defaultShape string');
+                        
+            end
+
+            % set the shapedata to empty so it is recreated with the new
+            % sizes when draw is next called
+            self.shapeData = [];
             
-            self.sx = sx;
-            self.sy = sy;
-            self.sz = sz;
         end
         
         function setColour (self, newcolour)
@@ -238,22 +387,171 @@ classdef element < mbdyn.pre.base
             self.checkAxes (options.AxesHandle);
             
             if isempty (self.shapeData)
-                % make a unit box by default for drawing
-                self.shapeData(1).Vertices = [ -self.sx/2, -self.sy/2, -self.sz/2;
-                                                self.sx/2, -self.sy/2, -self.sz/2;
-                                                self.sx/2,  self.sy/2, -self.sz/2;
-                                               -self.sx/2,  self.sy/2, -self.sz/2;
-                                               -self.sx/2, -self.sy/2,  self.sz/2;
-                                                self.sx/2, -self.sy/2,  self.sz/2;
-                                                self.sx/2,  self.sy/2,  self.sz/2;
-                                               -self.sx/2,  self.sy/2,  self.sz/2; ];
-                                        
-                self.shapeData.Faces = [ 1, 4, 3, 2;
-                                         1, 5, 6, 2;
-                                         2, 6, 7, 3;
-                                         7, 8, 4, 3;
-                                         8, 5, 1, 4;
-                                         8, 7, 6, 5 ];
+                
+                switch self.defaultShape
+                    
+                    case {'cuboid', 'box'}
+                        
+                        self.shapeData{1} = struct ();
+                        
+                        % make a unit box by default for drawing
+                        self.shapeData{1}.Vertices = [ -self.shapeParameters(1)/2, -self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
+                                                        self.shapeParameters(1)/2, -self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
+                                                        self.shapeParameters(1)/2,  self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
+                                                       -self.shapeParameters(1)/2,  self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
+                                                       -self.shapeParameters(1)/2, -self.shapeParameters(2)/2,  self.shapeParameters(3)/2;
+                                                        self.shapeParameters(1)/2, -self.shapeParameters(2)/2,  self.shapeParameters(3)/2;
+                                                        self.shapeParameters(1)/2,  self.shapeParameters(2)/2,  self.shapeParameters(3)/2;
+                                                       -self.shapeParameters(1)/2,  self.shapeParameters(2)/2,  self.shapeParameters(3)/2; ];
+
+                        self.shapeData{1}.Faces = [ 1, 4, 3, 2;
+                                                    1, 5, 6, 2;
+                                                    2, 6, 7, 3;
+                                                    7, 8, 4, 3;
+                                                    8, 5, 1, 4;
+                                                    8, 7, 6, 5 ];
+                                     
+                    case 'cylinder'
+                        
+                        npnts = 30;
+                        [X,Y,Z] = cylinder (self.shapeParameters(1), npnts-1);
+                        Z = Z .* self.shapeParameters(2);
+                        Z = Z - self.shapeParameters(3)/2;
+                        
+                        % rotate
+                        XYZtemp = [ X(1,:);
+                                    Y(1,:)
+                                    Z(1,:) ];
+                                
+                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
+                        
+                        X(1,:) = XYZtemp(1,:);
+                        Y(1,:) = XYZtemp(2,:);
+                        Z(1,:) = XYZtemp(3,:);
+                        
+                        XYZtemp = [ Xo(2,:);
+                                    Yo(2,:)
+                                    Zo(2,:) ];
+                                
+                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
+                        
+                        X(2,:) = XYZtemp(1,:);
+                        Y(2,:) = XYZtemp(2,:);
+                        Z(2,:) = XYZtemp(3,:);
+                        
+                        
+                        self.shapeData{1} = struct ();
+                        self.shapeData{1}.Vertices = [];
+                        self.shapeData{1}.Faces = [];
+                        
+                        self.shapeData{1}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)';
+                                                       X(2,:)', Y(2,:)', Z(2,:)'; ];
+                                                   
+                        self.shapeData{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
+                        self.shapeData{1}.Faces (end, 2) = 1;
+                        self.shapeData{1}.Faces (end, 3) = 1 + npnts;
+                        
+                        self.shapeData{2} = struct ();
+                        self.shapeData{2}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)' ];
+                        self.shapeData{2}.Faces = 1:npnts;
+                        
+                        self.shapeData{3} = struct ();
+                        self.shapeData{3}.Vertices = [ X(2,:)', Y(2,:)', Z(2,:)' ];
+                        self.shapeData{3}.Faces = 1:npnts;
+                        
+                    case {'tube', 'pipe', 'annularcylinder'}
+                        
+                        npnts = 20;
+                        [Xo,Yo,Zo] = cylinder (self.shapeParameters(1), npnts-1);
+                        Zo = Zo .* self.shapeParameters(3);
+                        
+                        [Xi,Yi,Zi] = cylinder (self.shapeParameters(2), npnts-1);
+                        Zi = Zi .* self.shapeParameters(3);
+                        
+                        Zo = Zo - self.shapeParameters(3)/2;
+                        Zi = Zi - self.shapeParameters(3)/2;
+                        
+                        % rotate
+                        XYZtemp = [ Xo(1,:);
+                                    Yo(1,:)
+                                    Zo(1,:) ];
+                                
+                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
+                        
+                        Xo(1,:) = XYZtemp(1,:);
+                        Yo(1,:) = XYZtemp(2,:);
+                        Zo(1,:) = XYZtemp(3,:);
+                        
+                        XYZtemp = [ Xo(2,:);
+                                    Yo(2,:)
+                                    Zo(2,:) ];
+                                
+                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
+                        
+                        Xo(2,:) = XYZtemp(1,:);
+                        Yo(2,:) = XYZtemp(2,:);
+                        Zo(2,:) = XYZtemp(3,:);
+                        
+                        XYZtemp = [ Xi(1,:);
+                                    Yi(1,:)
+                                    Zi(1,:) ];
+                                
+                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
+                        
+                        Xi(1,:) = XYZtemp(1,:);
+                        Yi(1,:) = XYZtemp(2,:);
+                        Zi(1,:) = XYZtemp(3,:);
+                        
+                        XYZtemp = [ Xi(2,:);
+                                    Yi(2,:)
+                                    Zi(2,:) ];
+                                
+                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
+                        
+                        Xi(2,:) = XYZtemp(1,:);
+                        Yi(2,:) = XYZtemp(2,:);
+                        Zi(2,:) = XYZtemp(3,:);
+                        
+                        
+                        self.shapeData{1} = struct ();
+                        self.shapeData{1}.Vertices = [];
+                        self.shapeData{1}.Faces = [];
+                        
+                        self.shapeData{1}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
+                                                       Xo(2,:)', Yo(2,:)', Zo(2,:)'; ];
+                                                   
+                        self.shapeData{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
+                        self.shapeData{1}.Faces (end, 2) = 1;
+                        self.shapeData{1}.Faces (end, 3) = 1 + npnts;
+                        
+                        self.shapeData{2}.Vertices = [ Xi(1,:)', Yi(1,:)', Zi(1,:)';
+                                                       Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
+                                                   
+                        self.shapeData{2}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
+                        self.shapeData{2}.Faces (end, 2) = 1;
+                        self.shapeData{2}.Faces (end, 3) = 1 + npnts;
+                        
+                        self.shapeData{3} = struct ();
+                        self.shapeData{3}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
+                                                       Xi(1,:)', Yi(1,:)', Zi(1,:)'; ];
+                        self.shapeData{3}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
+                        
+                        self.shapeData{4} = struct ();
+                        self.shapeData{4}.Vertices = [ Xo(2,:)', Yo(2,:)', Zo(2,:)';
+                                                       Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
+                        self.shapeData{4}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
+                        
+                        
+                    case 'sphere'
+                        
+                        
+                    case 'ellipsoid'
+                        
+                        
+                    otherwise
+                        error ('Bad defaultShape string');
+                        
+                end
                                      
                 self.needsRedraw = true;
                 
@@ -266,30 +564,24 @@ classdef element < mbdyn.pre.base
                 
                 % delete the current patch object
                 self.deleteAllDrawnObjects ();
+                self.shapeObjects = {};
                 
-                if all ( isfield (self.shapeData, {'Faces', 'Vertices'}))
+                for ind = 1:numel (self.shapeData)
+                    if all ( isfield (self.shapeData{ind}, {'Faces', 'Vertices'})) ...
+                        || all (isfield (self.shapeData{ind}, {'XData', 'YData', 'ZData'}))
 
-                    self.shapeObjects = { patch( self.drawAxesH, ...
-                                                 'Faces', self.shapeData.Faces, ...
-                                                 'Vertices', self.shapeData.Vertices, ...
-                                                 'FaceLighting', 'gouraud', ...
-                                                 'AmbientStrength', 0.15, ...
-                                                 'Parent', self.transformObject ) ...
-                                        };
-                                
-                elseif all (isfield (self.shapeData, {'XData', 'YData', 'ZData'}))
-                    
-                    self.shapeObjects = { patch( self.drawAxesH, ...
-                                                 'XData', self.shapeData.XData, ...
-                                                 'YData', self.shapeData.YData, ...
-                                                 'ZData', self.shapeData.ZData, ...
-                                                 'FaceLighting', 'gouraud',     ...
-                                                 'AmbientStrength', 0.15, ...
-                                                 'Parent', self.transformObject) ...
-                                        };
-                                    
-                else
-                    error ('Invalid shape data');
+                        self.shapeObjects = [ self.shapeObjects, ...
+                                              { patch( self.drawAxesH, ...
+                                                       self.shapeData{ind}, ...
+                                                       'FaceLighting', 'gouraud', ...
+                                                       'AmbientStrength', 0.15, ...
+                                                       'Parent', self.transformObject ) ...
+                                              } ...
+                                             ];
+
+                    else
+                        error ('Invalid shape data');
+                    end
                 end
                 
                 self.needsRedraw = false;
@@ -367,91 +659,21 @@ classdef element < mbdyn.pre.base
             
         end
         
-        function checkAxes (self, hax)
-            % checks if there is a valid set of axes to plot to, and if
-            % not, creates them
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
             
-            % try to figure out if there is a valid set of axes to plot to
-            if isempty (hax)
-                
-                % plot in the existing axes if possible as no new axes
-                % supplied
-                if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
-                    % use existing axes
-                    
-                    if ~isvalid (self.drawAxesH)
-                        % axes no longer exists, or figure has been closed
-                        self.drawAxesH = [];
-                        self.deleteAllDrawnObjects ();
-                        self.transformObject = [];
-                        self.needsRedraw = true;
-                        % make a new set of axes to draw to
-                        self.makeAxes ();
-                    end
-                    
-                elseif isempty (self.drawAxesH)
-                    % make figure and axes
-                    self.makeAxes ();
-                    self.needsRedraw = true;
-                    
-                else
-                    error ('drawAxesH property is not empty or an axes handle');
-                end
+            options.STLFile = '';
+            options.UseSTLName = false;
+            options.DefaultShape = 'cuboid';
+            options.DefaultShapeOrientation = mbdyn.pre.orientmat ('eye');
             
-            elseif isa (hax, 'matlab.graphics.axis.Axes')
-                % an axes has been supplied, so we plot to this new axes
-                
-                if ~isvalid (hax)
-                    error ('provided axes object is not valid');
-                end
-                self.drawAxesH = hax;
-                % abandon existing shape objects and transform object
-                % TODO: should we delet objects in old axes?
-                self.shapeObjects = {};
-                self.transformObject = [];
-                % we need to redraw, as we're plotting in a different set
-                % of axes
-                self.needsRedraw = true;
-                
-            else
-                
-                error ('hax must be an axes handle or empty');
-                
-            end
-            
-            if isempty (self.transformObject) || ~isvalid (self.transformObject)
-                self.transformObject = hgtransform (self.drawAxesH);
-            end
+            nopass_list = {};
             
         end
-        
-        function makeAxes (self)
-            % create axes and transform object
-            
-            figure;
-            self.drawAxesH = axes;
-            if ~isempty (self.transformObject) && isvalid (self.transformObject)
-                delete (self.transformObject);
-            end
-            self.transformObject = [];
-            self.needsRedraw = true;
-            
-        end
-        
-        function deleteAllDrawnObjects (self)
-            
-            for ind = 1:numel (self.shapeObjects)
-                if ~isempty (self.shapeObjects{ind}) ...
-                        && isvalid (self.shapeObjects{ind})
 
-                    delete (self.shapeObjects{ind});
-
-                end
-            end
-            self.shapeObjects = {};
-            
-        end
-        
     end
     
 end

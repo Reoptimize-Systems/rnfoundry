@@ -30,19 +30,15 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
             %
             %
         
-            options.RelativeOffset1 = [];
-            options.RelativeOffset2 = [];
-            options.RelativeOrientation1 =  [];
-            options.RelativeOrientation2 =  [];
-            options.Offset1Reference = 'node';
-            options.Offset2Reference = 'node';
-            options.Orientation1Reference = 'node';
-            options.Orientation2Reference = 'node';
+            [options, nopass_list] = mbdyn.pre.twoNodeOffsetJoint.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.twoNodeJoint (node1, node2);
+            self = self@mbdyn.pre.twoNodeJoint ( node1, node2, ...
+                                                 pvpairs{:} );
             
             allowedposrefstrs = {'global', 'node', 'local', 'other position', 'other node'};
             allowedorientrefstrs = {'global', 'node', 'local', 'other orientation', 'other node'};
@@ -238,7 +234,33 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
                   
             set ( self.transformObject, 'Matrix', M );
             
-        end  
+       end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.twoNodeJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            % add default options common to all twoNodeOffsetJoint objects
+            options.RelativeOffset1 = [];
+            options.RelativeOffset2 = [];
+            options.RelativeOrientation1 =  [];
+            options.RelativeOrientation2 =  [];
+            options.Offset1Reference = 'node';
+            options.Offset2Reference = 'node';
+            options.Orientation1Reference = 'node';
+            options.Orientation2Reference = 'node';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff (allfnames, parentfnames);
+            
+        end
         
     end
     

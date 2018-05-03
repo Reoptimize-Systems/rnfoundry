@@ -71,13 +71,29 @@ classdef deformableAxialJoint < mbdyn.pre.twoNodeOffsetJoint
             %  'Offset2Reference' - same as Offset1Reference, but for the
             %    second node
             %
-            %  'RelativeOrientation1' - 
+            %  'RelativeOrientation1' - mbdyn.pre.orientmat object
+            %    containing the orientation of the joint relative to the
+            %    first node. To provide an alternative reference you can
+            %    use the optional Orientation1Reference parameter (see
+            %    below)
             %
-            %  'RelativeOrientation2' - 
+            %  'RelativeOrientation2' - mbdyn.pre.orientmat object
+            %    containing the orientation of the joint relative to the
+            %    second node. To provide an alternative reference you can
+            %    use the optional Orientation2Reference parameter (see
+            %    below)
             %
-            %  'Orientation1Reference' - 
+            %  'Orientation1Reference' - string containing a reference for
+            %    the orientation in RelativeOrientation1, can be one of
+            %    'node', 'local' (equivalent to 'node'), 'other node',
+            %    'other orientation' and 'global'. Defaut is 'node'. See
+            %    Offset1Reference above for more information.
             %
-            %  'Orientation2Reference' - 
+            %  'Orientation2Reference' - string containing a reference for
+            %    the orientation in RelativeOrientation2, can be one of
+            %    'node', 'local' (equivalent to 'node'), 'other node',
+            %    'other orientation' and 'global'. Defaut is 'node'. See
+            %    Offset1Reference above for more information.
             %
             % Output
             %
