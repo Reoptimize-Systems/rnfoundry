@@ -18,11 +18,11 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             %
             % Description
             %
-            % deformableAxialJoint implements joint which forces two nodes
-            % to rotate about relative axis 3 with imposed angular velocity
-            % angular_velocity. This joint is equivalent to a revolute
-            % hinge, but the angular velocity about axis 3 is imposed by
-            % means of the driver.
+            % mbdyn.pre.axialRotation implements joint which forces two
+            % nodes to rotate about relative axis 3 with imposed angular
+            % velocity angular_velocity. This joint is equivalent to a
+            % revolute hinge, but the angular velocity about axis 3 is
+            % imposed by means of the driver.
             %
             % Input
             %
@@ -56,7 +56,7 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             %    frame can be provided using this argument. Possible
             %    value for this are: 
             %      'node'          : the default behaviour
-            %      'global' -      : the global reference frame
+            %      'global'        : the global reference frame
             %      'other node'    : the frame of the other node the joint  
             %                        is attached to
             %      'other position': a relative position in the other 
@@ -67,13 +67,29 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             %  'Offset2Reference' - same as Offset1Reference, but for the
             %    second node
             %
-            %  'RelativeOrientation1' - 
+            %  'RelativeOrientation1' - mbdyn.pre.orientmat object
+            %    containing the orientation of the joint relative to the
+            %    first node. To provide an alternative reference you can
+            %    use the optional Orientation1Reference parameter (see
+            %    below)
             %
-            %  'RelativeOrientation2' - 
+            %  'RelativeOrientation2' - mbdyn.pre.orientmat object
+            %    containing the orientation of the joint relative to the
+            %    second node. To provide an alternative reference you can
+            %    use the optional Orientation2Reference parameter (see
+            %    below)
             %
-            %  'Orientation1Reference' - 
+            %  'Orientation1Reference' - string containing a reference for
+            %    the orientation in RelativeOrientation1, can be one of
+            %    'node', 'local' (equivalent to 'node'), 'other node',
+            %    'other orientation' and 'global'. Defaut is 'node'. See
+            %    Offset1Reference above for more information.
             %
-            %  'Orientation2Reference' - 
+            %  'Orientation2Reference' - string containing a reference for
+            %    the orientation in RelativeOrientation2, can be one of
+            %    'node', 'local' (equivalent to 'node'), 'other node',
+            %    'other orientation' and 'global'. Defaut is 'node'. See
+            %    Offset1Reference above for more information.
             %
             % Output
             %
@@ -84,27 +100,17 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             % See Also: 
             %
             
-            options.Offset1 = [];
-            options.Offset2 = [];
-            options.RelativeOrientation1 =  [];
-            options.RelativeOrientation2 =  [];
-            options.Offset1Reference = 'node';
-            options.Offset2Reference = 'node';
-            options.Orientation1Reference = 'node';
-            options.Orientation2Reference = 'node';
+            [ options, nopass_list ] = mbdyn.pre.axialRotation.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
             
             % call the superclass constructor
             self = self@mbdyn.pre.twoNodeOffsetJoint (node1, node2, ...
                     'RelativeOffset1', options.Offset1, ...
                     'RelativeOffset2', options.Offset2, ...
-                    'RelativeOrientation1', options.RelativeOrientation1, ...
-                    'RelativeOrientation2', options.RelativeOrientation2, ...
-                    'Offset1Reference', options.Offset1Reference, ...
-                    'Offset2Reference', options.Offset2Reference, ...
-                    'Orientation1Reference', options.Orientation1Reference, ...
-                    'Orientation2Reference', options.Orientation2Reference );
+                    pvpairs{:} );
 
 
             assert (isa (omega_drive, 'mbdyn.pre.drive'), ...
@@ -143,6 +149,30 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             str = self.addOutputLine (str, self.angularVelocity.generateMBDynInputString (), 2, false);
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [ options, nopass_list ] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.twoNodeOffsetJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            options.Offset1 = [];
+            options.Offset2 = [];
+            
+            allfnames = fieldnames (options);
+            
+            newnames = setdiff (allfnames, parentfnames);
+            
+            nopass_list = [ newnames; 
+                            { 'RelativeOffset1'; ...
+                              'RelativeOffset2' }; ...
+                          ];
             
         end
         

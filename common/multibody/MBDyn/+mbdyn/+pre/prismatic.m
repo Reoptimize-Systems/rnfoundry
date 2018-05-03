@@ -26,8 +26,8 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
             % Constrains the relative orientation of two nodes, so that
             % their orientations remain parallel. The relative position is
             % not constrained. The initial orientation of the joint must be
-            % compatible: use the orientation keyword to assign the joint
-            % initial orientation.
+            % compatible: use the RelativeOrientation1 option to assign the
+            % joint initial orientation.
             %
             % Input
             %
@@ -55,26 +55,25 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
             % See Also: 
             %
 
-            options.RelativeOrientation1 =  [];
-            options.RelativeOrientation2 =  [];
-            options.Orientation1Reference = 'node';
-            options.Orientation2Reference = 'node';
+            [options, nopass_list] = mbdyn.pre.prismatic.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.twoNodeJoint (node1, node2);
+            self = self@mbdyn.pre.twoNodeJoint (node1, node2, pvpairs{:});
             
             self.type = 'prismatic';
             
-            if ~isempty (self.relativeOrientation1)
-                self.relativeOrientation1 = self.checkJointOrientationOffset ({options.Orientation1Reference, ptions.RelativeOrientation1});
+            if ~isempty (options.RelativeOrientation1)
+                self.relativeOrientation1 = self.checkJointOrientationOffset ({options.Orientation1Reference, options.RelativeOrientation1});
                 self.orientation1Reference = options.Orientation1Reference;
             else
                 self.relativeOrientation1 = [];
             end
             
-            if ~isempty (self.relativeOrientation2)
+            if ~isempty (options.RelativeOrientation2)
                 self.relativeOrientation2 = self.checkJointOrientationOffset ({options.Orientation2Reference, options.RelativeOrientation2});
                 self.orientation2Reference = options.Orientation2Reference;
             else
@@ -107,18 +106,105 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
         end
         
         function draw (self, varargin)
+
+            options.AxesHandle = [];
+            options.ForceRedraw = false;
+            options.Mode = 'solid';
             
-%             options.AxesHandle = [];
-%             options.ForceRedraw = false;
-%             options.Mode = 'solid';
-%             
-%             options = parse_pv_pairs (options, varargin);
-%             
-%             draw@mbdyn.pre.element ( self, ...
+            options = parse_pv_pairs (options, varargin);
+            
+%             draw@mbdyn.pre.twoNodeOffsetJoint ( self, ...
 %                 'AxesHandle', options.AxesHandle, ...
 %                 'ForceRedraw', options.ForceRedraw, ...
 %                 'Mode', options.Mode );
-% 
+
+            if options.ForceRedraw
+                self.needsRedraw = true;
+            end
+            
+            self.checkAxes (options.AxesHandle);
+            
+            node1pos = self.node1.absolutePosition;
+            node2pos = self.node2.absolutePosition;
+                
+            if ~self.needsRedraw
+                % always have to redraw the line connecting the two points.
+                % This changes shape, so we can't just transform the line
+                % object
+                delete (self.shapeObjects{1})
+                self.shapeObjects{1} =  line ( self.drawAxesH, ...
+                                               [ node1pos(1), node2pos(1) ], ...
+                                               [ node1pos(2), node2pos(2) ], ...
+                                               [ node1pos(3), node2pos(3) ], ...
+                                               'Color', self.drawColour );
+                                       
+            end
+            
+            if isempty (self.shapeObjects) ...
+                    || self.needsRedraw
+                % a full redraw is needed (and not just a modification of
+                % transform matrices for the objects).
+                
+                % delete the current objects
+                self.deleteAllDrawnObjects ();
+                radius = max ( 1.05*[self.node1.sx, self.node1.sy, self.node1.sz]/2 );
+                
+                % circle centre locations will be set by the node
+                % transform matrices
+                circ1_points = self.circlePoints3D ([0;0;0], [1,0,0], radius, 20);
+                circ2_points = self.circlePoints3D ([0;0;0], [0,1,0], radius, 20);
+                circ3_points = self.circlePoints3D ([0;0;0], [0,0,1], radius, 20);
+                
+                self.shapeObjects = { line( self.drawAxesH, ...
+                                            [ node1pos(1), node2pos(1) ], ...
+                                            [ node1pos(2), node2pos(2) ], ...
+                                            [ node1pos(3), node2pos(3) ], ...
+                                            'Color', self.drawColour ), ...
+                                      line( self.drawAxesH, ...
+                                            circ1_points(1,:), ...
+                                            circ1_points(2,:), ...
+                                            circ1_points(3,:), ...
+                                            'Color', self.drawColour, ...
+                                            'Parent', self.node1.transformObject ), ...
+                                      line( self.drawAxesH, ...
+                                            circ2_points(1,:), ...
+                                            circ2_points(2,:), ...
+                                            circ2_points(3,:), ...
+                                            'Color', self.drawColour, ...
+                                            'Parent', self.node1.transformObject ), ...
+                                      line( self.drawAxesH, ...
+                                            circ3_points(1,:), ...
+                                            circ3_points(2,:), ...
+                                            circ3_points(3,:), ...
+                                            'Color', self.drawColour, ...
+                                            'Parent', self.node1.transformObject ), ...
+                                      line( self.drawAxesH, ...
+                                            circ1_points(1,:), ...
+                                            circ1_points(2,:), ...
+                                            circ1_points(3,:), ...
+                                            'Color', self.drawColour, ...
+                                            'Parent', self.node2.transformObject ), ...
+                                      line( self.drawAxesH, ...
+                                            circ1_points(1,:), ...
+                                            circ1_points(2,:), ...
+                                            circ1_points(3,:), ...
+                                            'Color', self.drawColour, ...
+                                            'Parent', self.node2.transformObject ), ...
+                                      line( self.drawAxesH, ...
+                                            circ1_points(1,:), ...
+                                            circ1_points(2,:), ...
+                                            circ1_points(3,:), ...
+                                            'Color', self.drawColour, ...
+                                            'Parent', self.node2.transformObject ) ...
+                                    };
+                
+                self.needsRedraw = false;
+                
+            end
+            
+            % normally we would set the transform matrix around here, but
+            % we don't need to for the prismatic joint because the nodes
+            % set the transform matrix and we are using the same transform
 %             self.setTransform ();
             
         end
@@ -127,8 +213,8 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
     
     methods (Access = protected)
         
-        function setTransform (self)
-            
+%         function setTransform (self)
+%             
 %             switch self.orientation1Reference
 %                 
 %                 case 'node'
@@ -157,6 +243,28 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
 %             M = self.mbdynOrient2Matlab (M);
 %                   
 %             set ( self.transformObject, 'Matrix', M );
+%             
+%         end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.twoNodeJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            % add default options common to all twoNodeOffsetJoint objects
+            options.RelativeOrientation1 =  [];
+            options.RelativeOrientation2 =  [];
+            options.Orientation1Reference = 'node';
+            options.Orientation2Reference = 'node';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff (allfnames, parentfnames);
             
         end
         

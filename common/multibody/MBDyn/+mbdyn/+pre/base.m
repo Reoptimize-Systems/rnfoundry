@@ -6,13 +6,112 @@ classdef base < handle
         
         label;
         type;
+        transformObject;
         
     end
     
-    methods 
+    properties (GetAccess = protected, SetAccess = protected)
+       
+        shapeData;
+        shapeParameters;
+        shapeObjects;   % object for the element shape drawing
+        needsRedraw; % track whether object needs to be redrawn
+        drawAxesH; % handle to figure for plotting
+        drawColour;
+        
+    end
+    
+    methods
+        
         function setLabel (self, label)
             self.label = label;
         end
+        
+        function checkAxes (self, hax)
+            % checks if there is a valid set of axes to plot to, and if
+            % not, creates them
+            
+            % try to figure out if there is a valid set of axes to plot to
+            if isempty (hax)
+                
+                % plot in the existing axes if possible as no new axes
+                % supplied
+                if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
+                    % use existing axes
+                    
+                    if ~isvalid (self.drawAxesH)
+                        % axes no longer exists, or figure has been closed
+                        self.drawAxesH = [];
+                        self.deleteAllDrawnObjects ();
+                        self.transformObject = [];
+                        self.needsRedraw = true;
+                        % make a new set of axes to draw to
+                        self.makeAxes ();
+                    end
+                    
+                elseif isempty (self.drawAxesH)
+                    % make figure and axes
+                    self.makeAxes ();
+                    self.needsRedraw = true;
+                    
+                else
+                    error ('drawAxesH property is not empty or an axes handle');
+                end
+            
+            elseif isa (hax, 'matlab.graphics.axis.Axes')
+                % an axes has been supplied, so we plot to this new axes
+                
+                if ~isvalid (hax)
+                    error ('provided axes object is not valid');
+                end
+                self.drawAxesH = hax;
+                % abandon existing shape objects and transform object
+                % TODO: should we delet objects in old axes?
+                self.shapeObjects = {};
+                self.transformObject = [];
+                % we need to redraw, as we're plotting in a different set
+                % of axes
+                self.needsRedraw = true;
+                
+            else
+                
+                error ('hax must be an axes handle or empty');
+                
+            end
+            
+            if isempty (self.transformObject) || ~isvalid (self.transformObject)
+                self.transformObject = hgtransform (self.drawAxesH);
+            end
+            
+        end
+        
+        function makeAxes (self)
+            % create axes and transform object
+            
+            figure;
+            self.drawAxesH = axes;
+            if ~isempty (self.transformObject) && isvalid (self.transformObject)
+                delete (self.transformObject);
+            end
+            self.transformObject = [];
+            self.needsRedraw = true;
+            
+        end
+        
+        function deleteAllDrawnObjects (self)
+            
+            for ind = 1:numel (self.shapeObjects)
+                if ~isempty (self.shapeObjects{ind}) ...
+                        && isvalid (self.shapeObjects{ind})
+
+                    delete (self.shapeObjects{ind});
+
+                end
+            end
+            self.shapeObjects = {};
+            
+        end
+        
     end
     
     methods (Static)
@@ -31,6 +130,16 @@ classdef base < handle
             if ~isempty (checkvar)
                 ok = feval (checkfcn, checkvar, checkfcnargs{:});
             end
+            
+        end
+        
+        function pvpairs = passThruPVPairs (options, excludelist)
+            
+            for ind = 1:numel (excludelist)
+                options = rmfield (options, excludelist{ind});
+            end
+            
+            pvpairs = struct2pvpairs (options);
             
         end
         
@@ -1042,10 +1151,44 @@ classdef base < handle
             
         end
         
+        function points = circlePoints3D (center, normal, radius, npnts)
+            % generates points for a 2D circle in 3D space
+
+            if nargin < 4
+                npnts = 50;
+            end
+            
+            theta = linspace (0, 2*pi, npnts);
+            
+            v = null (normal(:)');
+            
+            points = repmat (center, 1, size(theta,2)) ...
+                        + radius * (v(:,1) * cos(theta) + v(:,2) * sin(theta) );
+
+        end
+        
     end
     
 end
 
+function pvpairs = struct2pvpairs(s)
+% struct2pvpairs: converts a structure to a cell array of parameter-value
+% pairs where the parameters are the field names and the values their
+% contents
+
+    fnames = fieldnames(s);
+    
+    pvpairs = cell(numel(s), numel(fnames) * 2);
+    
+    for i = 1:numel(s)
+        
+        pvpairs(i, 1:2:2*numel(fnames)-1) = fnames;
+
+        pvpairs(i, 2:2:2*numel(fnames)) = struct2cell(s(i));
+
+    end
+
+end
 
 function result = isint2eps(X)
 % isint2eps determines if the numbers in a matrix are integers to the limit

@@ -101,30 +101,17 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             %
             %
             
-            options.RelativeOrientation1 =  [];
-            options.RelativeOrientation2 =  [];
-            options.InitialTheta = [];
-            options.FrictionRadius = [];
-            options.FrictionModel = [];
-            options.Preload = [];
-            options.ShapeFunction = [];
-            options.Offset1Reference = 'node';
-            options.Offset2Reference = 'node';
-            options.Orientation1Reference = 'node';
-            options.Orientation2Reference = 'node';
+            [ options, nopass_list ] = mbdyn.pre.revoluteHinge.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs ( options, nopass_list);
             
             % call the superclass constructor
             self = self@mbdyn.pre.twoNodeOffsetJoint (node1, node2, ...
                         'RelativeOffset1', position1, ...
                         'RelativeOffset2', position2, ...
-                        'RelativeOrientation1', options.RelativeOrientation1, ...
-                        'RelativeOrientation2', options.RelativeOrientation2, ...
-                        'Offset1Reference', options.Offset1Reference, ...
-                        'Offset2Reference', options.Offset2Reference, ...
-                        'Orientation1Reference', options.Orientation1Reference, ...
-                        'Orientation2Reference', options.Orientation2Reference );
+                        pvpairs{:} );
             
             if ~isempty (options.FrictionRadius)
                 if isempty (options.FrictionModel)
@@ -221,7 +208,9 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             node2pos = self.node2.absolutePosition;
                 
             if ~self.needsRedraw
-                % always have to redraw line, can't just transform objects
+                % always have to redraw the line connecting the two points.
+                % This changes shape, so we can't just transform the line
+                % object
                 delete (self.shapeObjects{1})
                 self.shapeObjects{1} =  line ( self.drawAxesH, ...
                                                [ node1pos(1), jpos(1), node2pos(1) ], ...
@@ -247,7 +236,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
                                       line( self.drawAxesH, ...
                                             [ 0, 0 ], ...
                                             [ 0, 0 ], ...
-                                            [ -self.sz/2, self.sz/2 ], ...
+                                            [ -self.shapeParameters(1)/2, self.shapeParameters(3)/2 ], ...
                                             'Parent', self.transformObject, ...
                                             'Color', self.drawColour, ...
                                             'LineStyle', '--' )
@@ -281,6 +270,33 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
 %             set ( self.transformObject, 'Matrix', M );
 %             
 %         end
+        
+    end
+    
+    methods (Static)
+        
+        function [ options, nopass_list ] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.twoNodeOffsetJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            % add default options common to all revoluteHinge objects
+            options.InitialTheta = [];
+            options.FrictionRadius = [];
+            options.FrictionModel = [];
+            options.Preload = [];
+            options.ShapeFunction = [];
+            
+            allfnames = fieldnames (options);
+            
+            C = setdiff (allfnames, parentfnames, 'stable');
+            
+            nopass_list = [ { 'RelativeOffset1'; ...
+                              'RelativeOffset2' }; ...
+                            C ];
+            
+        end
         
     end
     

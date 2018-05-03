@@ -9,9 +9,17 @@ classdef twoNodeJoint < mbdyn.pre.joint
     end
     
     methods
-        function self = twoNodeJoint (node1, node2)
+        function self = twoNodeJoint (node1, node2, varargin)
             % generic base class for joints which constrains two nodes
-        
+            
+            [options, nopass_list] = mbdyn.pre.twoNodeJoint.defaultConstructorOptions ();
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
+            self = self@mbdyn.pre.joint ( pvpairs{:} );
+            
             self.checkIsStructuralNode (node1, true);
             self.checkIsStructuralNode (node2, true);
             
@@ -123,6 +131,18 @@ classdef twoNodeJoint < mbdyn.pre.joint
                     processed = offset;
                 end
             end
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.joint.defaultConstructorOptions ();
+            
+            nopass_list = {};
+            
         end
         
     end

@@ -77,15 +77,14 @@ classdef body < mbdyn.pre.element
             % See Also: mbdyn.pre.bodyMultiMass
             %
 
-            options.InertialOrientation = [];
-            options.STLFile = '';
-            options.UseSTLName = false;
+            [options, nopass_list] = mbdyn.pre.body.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
             % call superclass constructor
-            self = self@mbdyn.pre.element ('STLFile', options.STLFile, ...
-                                           'UseSTLName', options.UseSTLName);
+            self = self@mbdyn.pre.element ( pvpairs{:} );
             
             if ~(isscalar (mass) && isnumeric (mass))
                 error ('mass should be a numeric scalar value');
@@ -198,6 +197,24 @@ classdef body < mbdyn.pre.element
             set ( self.transformObject, 'Matrix', M );
             
         end        
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.element.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            options.InertialOrientation = [];
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff (allfnames, parentfnames);
+            
+        end
         
     end
     
