@@ -491,6 +491,33 @@ el.draw('Mode', 'wireframe');
 
 %%
 
+el = mbdyn.pre.element ('DefaultShape', 'cylinder');
+% 
+el.draw ()
+el.draw('Mode', 'solid');
+
+%%
+
+el = mbdyn.pre.element ('DefaultShape', 'tube');
+% 
+el.draw ()
+el.draw('Mode', 'wireframe');
+view (3);
+axis equal;
+
+
+%%
+om = mbdyn.pre.orientmat ('euler', [0,pi/2,0]); % rotate 90 degrees around y axis
+el = mbdyn.pre.element ('DefaultShape', 'tube', ...
+                        'DefaultShapeOrientation', om );
+
+el.draw ()
+el.draw('Mode', 'wireframe');
+view (3);
+axis equal;
+
+%%
+
 % om = mbdyn.pre.orientmat ('2vectors', struct ('vec1axis', 1, 'vec1', [cos(pi/6);sin(pi/6);0], 'vec2axis', 3, 'vec2', [0;0;1])); 
 
 om = mbdyn.pre.orientmat ('euler', [0,0,pi/6]);
