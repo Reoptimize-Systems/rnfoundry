@@ -5,7 +5,9 @@ classdef wecSim < handle
         powerTakeOffs;
         forceRelTol;
         forceAbsTol;
-        
+        mBDynOutputFile;
+        mBDynInputFile;
+
         loggingSettings;
         
     end
@@ -17,7 +19,7 @@ classdef wecSim < handle
         mBDynSystem;
         hydroSystem;
         readyToRun;
-        mBDynInputFile;
+        
         logger;
         nMBDynNodes;
         
@@ -52,6 +54,7 @@ classdef wecSim < handle
             options.NEMOHSim = [];
             options.MBDynInputFile = '';
             options.LoggingSettings = wsim.loggingSettings ();
+            options.MBDynVerbosity = 0;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -177,10 +180,7 @@ classdef wecSim < handle
             
             options = parse_pv_pairs (options, varargin);
             
-            check.isScalarInteger (options.Verbosity, true, 'Verbosity');
-            
-            assert (options.Verbosity >= 0, ...
-                'Verbosity must an integer greater than or equal to zero');
+            check.isPositiveScalarInteger (options.Verbosity, true, 'Verbosity', true);
             
             assert (ischar (options.OutputFilePrefix), ...
                 'OutputFilePrefix must be a string');
@@ -226,6 +226,10 @@ classdef wecSim < handle
                 'NodeOrientationType', 'euler 123' ...
                 );
             
+            % copy over the input file location to make it easier to
+            % examine later if required
+            self.mBDynOutputFile = mb.MBDynOutputFile;
+            
             % ensure MBCNodal is destroyed in the event of a problem
             % (closes communication to MBDyn and tells it to quit so
             % sockets and so on are also cleaned up)
@@ -249,6 +253,9 @@ classdef wecSim < handle
             
             if status ~= 0
                 self.readyToRun = false;
+                if exist (self.mBDynOutputFile, 'file')
+                    self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
+                end
                 error ('mbdyn returned %d, aborting sim, check output file:\n%s\nfor clues at to why this happened.', ...
                         status, mb.MBDynOutputFile)
             end
@@ -1004,6 +1011,39 @@ classdef wecSim < handle
 
                 self.powerTakeOffs{ptoind}.finish (self.lastTime);
                     
+            end
+            
+        end
+        
+        function displayLastNLinesOfFile (self, filename, nlines)
+            % display the last n lines of a text file on the command line
+            
+            lines = cell (nlines,1);
+            
+            fid = fopen (filename);
+            
+            if fid ~= -1
+                
+                CC = onCleanup (@() fclose (fid));
+
+                line1ind = nlines + 1;
+                
+                while ~feof(fid)
+                    
+                    line1ind = max (1, line1ind - 1);
+                    
+                    lines = circshift (lines, -1, 1);
+                    
+                    lines{end,1} = fgetl(fid);
+                    
+                end
+                
+                % only print the lines we actually read in if there's less
+                % than the max allowed
+                for ind = line1ind:nlines
+                    fprintf (1, '%s\n', lines{ind});
+                end
+            
             end
             
         end
