@@ -76,7 +76,7 @@ classdef element < mbdyn.pre.base
             options = parse_pv_pairs (options, varargin);
             
             self.checkAllowedStringInputs ( options.DefaultShape, ...
-                                            { 'cuboid', 'box', 'cylinder', 'sphere', 'ellipsoid', 'tube', 'pipe', 'annularcylinder' }, ...
+                                            { 'none', 'cuboid', 'box', 'cylinder', 'sphere', 'ellipsoid', 'tube', 'pipe', 'annularcylinder' }, ...
                                             true, ...
                                             'DefaultShape' );
                                         
@@ -93,6 +93,9 @@ classdef element < mbdyn.pre.base
             self.defaultShapeOrientation = options.DefaultShapeOrientation;
             
             switch self.defaultShape
+                
+                case 'none'
+                    % do nothing
                     
                 case {'cuboid', 'box'}
                     
@@ -229,6 +232,10 @@ classdef element < mbdyn.pre.base
             %
 
             switch self.defaultShape
+                    
+                case 'none'
+                    
+                    warning ('Default shape is set to ''none'', setting the size has no effect');
                     
                 case {'cuboid', 'box'}
                     
@@ -389,6 +396,10 @@ classdef element < mbdyn.pre.base
             if isempty (self.shapeData)
                 
                 switch self.defaultShape
+                    
+                    case 'none'
+                        
+                        self.shapeData = {};
                     
                     case {'cuboid', 'box'}
                         
@@ -658,10 +669,21 @@ classdef element < mbdyn.pre.base
             
             
         end
+
         
     end
     
     methods (Static)
+                
+        function comment = nodeLabelComment (node)
+            
+            if isempty (node.name)
+                comment = sprintf ('node label');
+            else 
+                comment = sprintf ('node label: %s', node.name);
+            end
+            
+        end
         
         function [options, nopass_list] = defaultConstructorOptions ()
             

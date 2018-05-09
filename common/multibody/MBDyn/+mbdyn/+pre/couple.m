@@ -20,15 +20,15 @@ classdef couple < mbdyn.pre.element
             str = sprintf ('    couple : %d,', self.label);
         end
         
-        function setSize (self, sx, sy, sz)
-            self.sx = sx;
-            self.sy = sy;
-            self.sz = sz;
-        end
-        
-        function setColour (self, newcolour)
-            self.drawColour = newcolour;
-        end
+%         function setSize (self, sx, sy, sz)
+%             self.sx = sx;
+%             self.sy = sy;
+%             self.sz = sz;
+%         end
+%         
+%         function setColour (self, newcolour)
+%             self.drawColour = newcolour;
+%         end
         
     end
     

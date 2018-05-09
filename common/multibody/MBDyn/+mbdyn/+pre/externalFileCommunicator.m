@@ -1,4 +1,7 @@
 classdef externalFileCommunicator < mbdyn.pre.base
+% base class of the external file communicator classes
+%
+% See also: 
     
     properties (GetAccess = public, SetAccess = protected)
         sleepTime;
@@ -11,6 +14,8 @@ classdef externalFileCommunicator < mbdyn.pre.base
     methods
         
         function self = externalFileCommunicator (varargin)
+            % construct an mbdyn.pre.externalFileCommunicator object
+            %
             
             options.SleepTime = [];
             options.Precision = [];
@@ -61,6 +66,27 @@ classdef externalFileCommunicator < mbdyn.pre.base
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for external file communicators
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (efc)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  efc - mbdyn.pre.externalFileCommunicator object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = sprintf ('%s,', self.type);
             
