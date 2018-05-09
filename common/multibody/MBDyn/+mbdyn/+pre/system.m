@@ -313,6 +313,9 @@ classdef system < mbdyn.pre.base
             
             problems = self.makeCellIfNot (problems);
             
+            % ensure it's a row vector
+            problems = reshape (problems, 1, []);
+            
             self.checkCellArrayClass (problems, 'mbdyn.pre.problem');
             
             self.problems = [self.problems, problems];
@@ -322,6 +325,12 @@ classdef system < mbdyn.pre.base
         function addNodes (self, nodes)
             
             nodes = self.makeCellIfNot (nodes);
+            
+            % ensure it's a row vector
+            nodes = reshape (nodes, 1, []);
+            
+            % remove empty
+            nodes(cellfun('isempty',nodes)) = [];
             
             self.checkCellArrayClass (nodes, 'mbdyn.pre.node');
             
@@ -333,6 +342,12 @@ classdef system < mbdyn.pre.base
             
             elements = self.makeCellIfNot (elements);
             
+            % ensure it's a row vector
+            elements = reshape (elements, 1, []);
+            
+            % remove empty
+            elements(cellfun('isempty',elements)) = [];
+            
             self.checkCellArrayClass (elements, 'mbdyn.pre.element');
             
             self.elements = [self.elements, elements];
@@ -342,6 +357,12 @@ classdef system < mbdyn.pre.base
         function addDrivers (self, drivers)
             
             drivers = self.makeCellIfNot (drivers);
+            
+            % ensure it's a row vector
+            drivers = reshape (drivers, 1, []);
+            
+            % remove empty
+            drivers(cellfun('isempty',drivers)) = [];
             
             self.checkCellArrayClass (drivers, 'mbdyn.pre.driver');
             
@@ -353,6 +374,12 @@ classdef system < mbdyn.pre.base
             
             refs = self.makeCellIfNot (refs);
             
+            % ensure it's a row vector
+            refs = reshape (refs, 1, []);
+            
+            % remove empty
+            refs(cellfun('isempty',refs)) = [];
+            
             self.checkCellArrayClass (refs, 'mbdyn.pre.reference');
             
             self.references = [self.references, refs];
@@ -360,7 +387,38 @@ classdef system < mbdyn.pre.base
         end
         
         function setNodePosition (self, label, newposition)
+            % set the absolute position of node with the given label
+            %
+            % Syntax
+            %
+            % setNodePosition (sys, label, newposition)
+            %
+            % Description
+            %
+            % setNodePosition is used to set the absolute position of one
+            % of the nodes in the system in the gloabl frame. Typically
+            % this is used for post-processing data from a simulation to
+            % create a visualisation of the system from the positions
+            % output by MBDyn.
+            %
+            % Input
+            %
+            %  sys - mbdyn.pre.system object
+            %
+            %  label - the label of the node for which the new absolute
+            %   position is to be set
+            %
+            %  newposition - (3 x 1) vector containing the new position of
+            %   the node in the global coordinate system.
+            %
+            %
+            % See Also: mbdyn.pre.system.setNodeOrientation
+            %
+
+            self.checkScalarInteger (label, true, 'label');
             
+            % the nodes check that newposition is valid, so no need to
+            % check here
             for ind = 1:numel (self.nodes)
                
                 if self.nodes{ind}.label == label
@@ -373,7 +431,38 @@ classdef system < mbdyn.pre.base
         end
         
         function setNodeOrientation (self, label, neworientation)
+            % set the absolute orientation of node with the given label
+            %
+            % Syntax
+            %
+            % setNodeOrientation (sys, label, newposition)
+            %
+            % Description
+            %
+            % setNodePosition is used to set the absolute orientation of
+            % one of the nodes in the system in the gloabl frame. Typically
+            % this is used for post-processing data from a simulation to
+            % create a visualisation of the system from the orientations
+            % output by MBDyn.
+            %
+            % Input
+            %
+            %  sys - mbdyn.pre.system object
+            %
+            %  label - the label of the node for which the new absolute
+            %   orientation is to be set
+            %
+            %  neworientation - (3 x 1) vector containing the new 
+            %   orientation of the node in the global coordinate system.
+            %
+            %
+            % See Also: mbdyn.pre.system.setNodePosition
+            %
             
+            self.checkScalarInteger (label, true, 'label');
+            
+            % the nodes check that neworientation is valid, so no need to
+            % check here
             for ind = 1:numel (self.nodes)
                
                 if self.nodes{ind}.label == label
@@ -387,9 +476,40 @@ classdef system < mbdyn.pre.base
         
         function comminfo = externalStructuralCommInfo (self)
             % gets communication info for an external structural force.
-            % Throws an error if there is no external structural force in
-            % the system
             %
+            % Syntax
+            %
+            % comminfo = externalStructuralCommInfo (sys)
+            %
+            % Description
+            %
+            % externalStructuralCommInfo gets information about the
+            % communication method used by an external structural force
+            % (mbdyn.pre.structuralExternal object). Throws an error if
+            % there is no external structural force in the system.
+            %
+            % Input
+            %
+            %  sys - mbdyn.pre.system object
+            %
+            % Output
+            %
+            %  comminfo - structure containing information about the
+            %   communication method used by the external structural force.
+            %   It always contains the field 'commMethod' which contains a
+            %   string describing the type of communation method used by
+            %   the external structural force. Example strings include:
+            %   'inet socket', 'local socket' or 'shared memory'. The other
+            %   fields in the structure (if any) are dependent on the type
+            %   of communication. To generate this structure,
+            %   externalStructuralCommInfo simply calles the commInfo
+            %   method of the external structural force object's
+            %   communicator. So to see the expected contents of the
+            %   sturcture for the different communicator types, see the
+            %   help for the commInfo method for that class.
+            %
+            %
+            % See Also: mbdyn.pre.system.externalStructuralInfo
             %
             
             for ind = 1:numel (self.elements)
@@ -408,6 +528,49 @@ classdef system < mbdyn.pre.base
         end
         
         function extforceinfo = externalStructuralInfo (self)
+            % gets information on any external structural force in the system
+            %
+            % Syntax
+            %
+            % comminfo = externalStructuralInfo (sys)
+            %
+            % Description
+            %
+            % externalStructuralInfo gets information about the an external
+            % structural force (mbdyn.pre.structuralExternal object)
+            % present in the system. Throws an error if there is no
+            % external structural force in the system.
+            %
+            % Input
+            %
+            %  sys - mbdyn.pre.system object
+            %
+            % Output
+            %
+            %  extforceinfo - structure containing information about the
+            %   external structural force. Contains the following fields:
+            %
+            %   UseLabels : true/false flag indicating whether MBDyn will
+            %    use the node labels when communicating.
+            %
+            %   UseAccelerations : true/false flag indicating whether MBDyn
+            %    will return acceleration data when communicating.
+            %
+            %   NodeOrientationType : string containing the node
+            %    orientation description, i.e. one of 'none',
+            %    'orientation matrix', 'orientation vector', or 'euler
+            %    123'
+            %
+            %   NNodes : The number of nodes referenced by the external
+            %    structural force
+            %
+            %   Nodes : An array of mbdyn.pre.structuralNode objects
+            %    representing the referenced nodes in the external
+            %    structural force
+            %
+            %
+            % See Also: mbdyn.pre.system.externalStructuralInfo
+            %
             
             testyesno = @(x) strcmp (x, 'yes');
             
@@ -697,6 +860,10 @@ classdef system < mbdyn.pre.base
                 str = self.addOutputLine (str , sprintf('genels: %d;', elcount.Genels), 1, false);
             end
             
+            if elcount.LoadableElements > 0
+                str = self.addOutputLine (str , sprintf('loadable elements: %d;', elcount.LoadableElements), 1, false);
+            end
+            
             if elcount.Gravity
                 str = self.addOutputLine (str , 'gravity;', 1, false);
             end
@@ -736,11 +903,36 @@ classdef system < mbdyn.pre.base
             str = self.addOutputLine (str , 'end: control data;', 0, false);
             str = sprintf ('%s\n', str);
             
+            %% Loadable modules
+            if elcount.LoadableElements > 0
+                % gather up all the loadable modules from the user defined
+                % elements and generate the module-load commands
+                loadable_mods = mbdyn.pre.loadableModule.empty();
+                for ind = 1:numel (self.elements)
+
+                    if isa (self.elements{ind}, 'mbdyn.pre.userDefined')
+                        loadable_mods(end+1) = self.elements{ind}.loadableModule;
+                    end
+                    
+                end
+                
+                loadable_mods = unique (loadable_mods);
+                
+                for ind = 1:numel (loadable_mods)
+                    
+                    str = sprintf ('%s\n%s\n', str, loadable_mods(ind).generateMBDynInputString ());
+                    
+                end
+                
+                str = sprintf ('%s\n', str);
+                
+            end
+            
             %% drivers section
             if numel (self.drivers) > 0
                 str = self.addOutputLine (str , 'begin: drivers;', 0, false);
                 for ind = 1:numel (self.drivers)
-                    str = sprintf ('%s\n', self.drivers{ind}.generateMBDynInputString ());
+                    str = sprintf ('%s\n%s\n', str, self.drivers{ind}.generateMBDynInputString ());
                 end
                 str = self.addOutputLine (str , 'end: drivers;', 0, false);
                 str = sprintf ('%s\n', str);
@@ -880,6 +1072,10 @@ classdef system < mbdyn.pre.base
                         error ('Gravity present more than once');
                     end
                     elcount.Gravity = true;
+                end
+                
+                if isa (self.elements{ind}, 'mbdyn.pre.userDefined')
+                    elcount.LoadableElements = elcount.LoadableElements + 1;
                 end
                 
             end

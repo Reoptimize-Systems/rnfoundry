@@ -16,6 +16,8 @@ classdef node < mbdyn.pre.base
 
         output; % flag indicating whther the node will produce output
         
+        name; % name of the node
+        
     end
 
     methods

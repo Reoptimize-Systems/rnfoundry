@@ -387,6 +387,31 @@ classdef base < handle
             % gets the raw 3x3 orientation matrix
             %
             % Syntax
+            %
+            % mat = getOrientationMatrix (om)
+            %
+            % Description
+            %
+            % mbdyn.pre.base.getOrientationMatrix returns a 3x3 orientation
+            % matrix. The input can be either a 3x3 matrix or an
+            % mbdyn.pre.orientmat object. No checking is done if the input
+            % is not an mbdyn.pre.orientmat object, the input is simply
+            % returned as is.
+            %
+            % Input
+            %
+            %  om - either a 3x3 matrix or an mbdyn.pre.orientmat object
+            %
+            % Output
+            %
+            %  mat - 3x3 matrix, wither the same as the input, or, if the
+            %   input was an mbdyn.pre.orientmat object, it is the raw
+            %   orientation matrix from the object
+            %
+            %
+            % See also: mbdyn.pre.base.checkOrientationMatrix
+            %
+            %
             
             if isa (om, 'mbdyn.pre.orientmat')
                 mat = om.orientationMatrix;
@@ -783,7 +808,7 @@ classdef base < handle
             
         end
         
-        function str = addOutputLine (oldstr, str, indentlevel, finalcomma, comment)
+        function str = addOutputLine (oldstr, str, indentlevel, finalcomma, comment, startnewline)
             % add a line of output to the output string representing the
             % contents of an MBDyn input file. 
             %
@@ -885,6 +910,14 @@ classdef base < handle
             % See also: mbdyn.pre.base.formatNumber, 
             %           mbdyn.pre.base.commaSepList
             
+            if nargin < 6
+                startnewline = true;
+            end
+            
+            if nargin < 5
+                comment = '';
+            end
+            
             if nargin < 4
                 finalcomma = true;
             end
@@ -900,15 +933,22 @@ classdef base < handle
             % consistant
             str = strrep (str, sprintf ('\n'), sprintf ('\n%s', prefix));
             
-            % joint the string to the existing string with a newline and
-            % the appropriate indentation
-            str = sprintf ('%s\n%s%s', oldstr, prefix, str);
+            % joint the string to the existing string with the appropriate
+            % indentation
+            if startnewline
+                % add a newline to the start of the output line before
+                % adding the line
+                firstchar = sprintf ('\n');
+            else
+                firstchar = '';
+            end
+            str = sprintf ('%s%s%s%s', oldstr, firstchar, prefix, str);
             
             if finalcomma
                 str = [str, ','];
             end
             
-            if nargin > 4
+            if ~isempty (comment)
                 str = [ str, ' # ', comment ];
             end
             
