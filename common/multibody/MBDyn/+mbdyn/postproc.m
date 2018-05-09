@@ -222,7 +222,7 @@ classdef postproc < handle
             end
             
             % determine the final time
-            self.simInfo.FinalTime = self.simInfo.InitialTime + (size(movdata,1)-1)*self.simInfo.TimeStep;
+            self.simInfo.FinalTime = self.simInfo.InitialTime + (size(movdata,1)/self.nNodes-1)*self.simInfo.TimeStep;
             
             % load .log file
             %
@@ -456,7 +456,7 @@ classdef postproc < handle
             
             options = parse_pv_pairs (options, varargin);
             
-            hax = plotNodeQuantity (self, 'Position', 'x_', ...
+            hax = plotNodeQuantity (self, 'Position', 'pos_', ...
                             'Legend', options.Legend, ...
                             'OnlyNodes', options.OnlyNodes );
             
@@ -1012,13 +1012,13 @@ classdef postproc < handle
             if ~exist (fpath1, 'file')
                 
                 if isempty (ext)
-                    error ('MBDyn output file %s not found', fpath1);
+                    warning ('MBDyn output file %s not found', fpath1);
                 else
                     % in case file root name has dots in it
                     fpath2 = fullfile (pathstr, [name, ext, mbext]);
                     fpath = fpath2;
                     if ~exist  (fpath, 'file')
-                        error ('MBDyn output file not found in \n%s\nor\n%s', fpath1, fpath2);
+                        warning ('MBDyn output file not found in \n%s\nor\n%s', fpath1, fpath2);
                     end
                 end
                 
@@ -1125,10 +1125,12 @@ classdef postproc < handle
                 plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,1), 'LineStyle', '-', 'Color', Col );
                 plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,2), 'LineStyle', '--', 'Color', Col );
                 plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,3), 'LineStyle', ':', 'Color', Col );
-                    
-                legstrings = [ legstrings, { sprintf('Node %d %sx', options.OnlyNodes(ind), legprefix), ...
-                                             sprintf('Node %d %sy', options.OnlyNodes(ind), legprefix), ...
-                                             sprintf('Node %d %sz', options.OnlyNodes(ind), legprefix) ...
+                
+                node_label = self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Label;
+                
+                legstrings = [ legstrings, { sprintf('Node %d %sx', node_label, legprefix), ...
+                                             sprintf('Node %d %sy', node_label, legprefix), ...
+                                             sprintf('Node %d %sz', node_label, legprefix) ...
                                            } ...
                              ];
                     
