@@ -19,7 +19,7 @@
 classdef simSettings < handle
 
     properties (SetAccess = 'public', GetAccess = 'public')%input file
-        multibodySolver     = 'SimMechanics';                              % solver to use for mulitbody dynamics, can be SimMechanics or MBDyn
+        multibodySolver     = 'MBDyn';                                     % solver to use for mulitbody dynamics, can be SimMechanics or MBDyn
         simMechanicsFile    = ''                                           % Simulink/SimMechanics model file (default = '', first .slx file found in dir will be used)
         mBDynFile           = ''                                           % Simulink/SimMechanics model file (default = '', first .mbd file found in dir will be used)
         startTime           = 0                                            % Simulation start time (default = 0 s)
@@ -34,10 +34,10 @@ classdef simSettings < handle
         CITime              = 60                                           % Convolution integral time (default = 60 s)
         ssCalc              = 0                                            % Option for convolution integral or state-space calculation: convolution integral->'0', state-space->'1', (default = 0)
         mode                = 'normal'                                     %'normal','accelerator','rapid-accelerator' (default = 'normal')
-        solver              = 'ode4'                                       % PDE solver used by the Simulink/SimMechanics simulation (default = 'ode4')
+        solver              = 'ode4'                                       % PDE solver used by the Simulink/SimMechanics simulation (default = 'ode4') ignored if multibodySolver is MBDyn
         autoRateTranBlk     = 'on'                                         % Automatically handle rate transition for data transfer
         zeroCrossCont       = 'DisableAll'                                 % Disable zero cross control 
-        explorer            = 'on'                                         % SimMechanics Explorer 'on' or 'off' (default = 'on'
+        explorer            = 'on'                                         % SimMechanics Explorer 'on' or 'off' (default = 'on') ignored if multibodySolver is MBDyn
         rho                 = 1000                                         % Density of water (default = 1000 kg/m^3)
         g                   = 9.81                                         % Acceleration due to gravity (default = 9.81 m/s)
         nlHydro             = 0                                            % Option for nonlinear hydrohanamics calculation: linear->'0', nonlinear->'1', (default = 0)
