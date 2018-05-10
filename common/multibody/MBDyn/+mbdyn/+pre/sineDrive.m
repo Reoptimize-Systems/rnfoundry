@@ -10,7 +10,7 @@ classdef sineDrive < mbdyn.pre.drive
     
     methods
         
-        function self = sineDrive (t_init, omega, amplitude, num_cycles, initial_val)
+        function self = sineDrive (initial_time, omega, amplitude, num_cycles, varargin)
             % Constructor for sine drive
             %
             % Syntax
@@ -42,13 +42,24 @@ classdef sineDrive < mbdyn.pre.drive
             %
             %   'forever' : the oscillation never stops
             %   
-            %   'one' : exactly half period is performed (equivalent to number_of_cycles = 1);
+            %   'one' : exactly half period is performed (equivalent to
+            %     number_of_cycles = 1);
             %
             %   'half' : exactly a quarter of period is performed
             %     (equivalent to number_of_cycles = -1), so the function
             %     stops at
             %
-            %  initial_val - offset of sine wave (mean value)
+            %   If num_cylces is a numeric value and it is positive,
+            %   num_cycles-1/2 oscillations are performed. If it is
+            %   negative, the oscillations end after num_cycles-3/4 cycles
+            %   at the top of the sine, with null tangent.
+            %
+            % Additional arguments may be supplied as parameter-value
+            % pairs. The available options are:
+            %
+            %  'InitialValue' - offset of sine wave from the x axis (i.e. 
+            %    the mean value of the sine wave). Default is zero if not
+            %    supplied.
             %
             % Output
             %
@@ -59,27 +70,33 @@ classdef sineDrive < mbdyn.pre.drive
             % See Also: 
             %
             
-            self.checkNumericScalar (t_init, true, 't_init');
+            options.InitialValue = 0;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.checkNumericScalar (initial_time, true, 't_init');
 
             self.checkNumericScalar (omega, true, 'omega');
+            assert (omega > 0, 'omega must be greater than zero');
             self.checkNumericScalar (amplitude, true, 'amplitude');
+            assert (amplitude > 0, 'amplitude must be greater than zero');
             
             if ischar (num_cycles)
                 ok = self.checkAllowedStringInputs (num_cycles, {'forever', 'one', 'half'}, false);
             else
-                ok = self.checkNumericScalar (t_final, false, 't_final');
+                ok = self.checkScalarInteger (num_cycles, false, 'num_cycles');
             end
             
-            assert (ok, 'num_cycles msut be a scalar numeric value of a character vector, ''forever'' | ''one'' | ''half''');
+            assert (ok, 'num_cycles must be a scalar integer or a character vector, ''forever'' | ''one'' | ''half''');
             
-            self.checkNumericScalar (initial_val, true, 'initial_val');
+            self.checkNumericScalar (options.InitialValue, true, 'InitialValue');
             
             self.type = 'sine';
             self.numberOfCycles = num_cycles;
-            self.initialTime = t_init;
+            self.initialTime = initial_time;
             self.omega = omega;
             self.amplitude = amplitude;
-            self.initialValue = initial_val;
+            self.initialValue = options.InitialValue;
             
         end
         
@@ -87,11 +104,17 @@ classdef sineDrive < mbdyn.pre.drive
             
             str = [ self.type, ',' ];
             
+            if ischar (self.numberOfCycles)
+                num_cycles = self.numberOfCycles;
+            else
+                num_cycles = self.formatInteger (self.numberOfCycles);
+            end
+            
             str = self.addOutputLine ( str, ...
                                        self.commaSepList ( self.initialTime, ...
                                                            self.omega, ...
                                                            self.amplitude, ...
-                                                           self.numberOfCycles, ...
+                                                           num_cycles, ...
                                                            self.initialValue ), ...
                                        1, ...
                                        false );
