@@ -629,12 +629,13 @@ classdef wecSim < handle
                 self.hydroMotionSyncStepCount = 1;
             
             else
+                
                 % just return the last set of hydro forces calculated
                 hydroforces = self.lastForceHydro;
                 
+                self.hydroMotionSyncStepCount = self.hydroMotionSyncStepCount + 1;
+                
             end
-            
-            self.hydroMotionSyncStepCount = self.hydroMotionSyncStepCount + 1;
             
             % add hydrodynamic forces to the correct nodes (which are the
             % nodes attached to bodies with hydrodynamic interaction). This
