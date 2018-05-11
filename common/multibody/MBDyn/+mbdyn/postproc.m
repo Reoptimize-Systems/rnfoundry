@@ -21,6 +21,7 @@ classdef postproc < handle
         
         preProcSystem;
         resultsLoaded;
+        haveNetCDF;
         nNodes;
         nodes;
         nodeNames;
@@ -32,6 +33,7 @@ classdef postproc < handle
         ineFile;
         jntFile;
         txtFile;
+        ncFile;
         
     end
     
@@ -151,95 +153,257 @@ classdef postproc < handle
             
             self.clearData ();
             
+            
+            
             self.mBDynOutFileName = mbdoutfilename;
             
             % get the MBDyn redirected output file
             self.txtFile = self.checkFile ('.txt');
+                
+            self.ncFile = self.checkFile ('.nc');
             
-%             self.parseLogFile (logfile);
+            if isempty (self.ncFile)
+                % no netcdf format file was found
+                
+                self.movFile = self.checkFile ('.mov');
 
-            self.movFile = self.checkFile ('.mov');
-            
-            movdata = dlmread(self.movFile);
-            
-            self.nNodes = 0;
-            
-            posinds = 2:4;
-            
-            switch self.simInfo.DefaultOrientation
-                
-                case {'euler123', 'euler313', 'euler321', 'orientation vector'}
-                    
-                    orientinds = 5:7;
-                    velinds = 8:10;
-                    omegainds = 11:13;
-                    
-                case 'orientation matrix'
-                    
-                    orientinds = 5:13;
-                    velinds = 14:16;
-                    omegainds = 17:19;
-                    
-                otherwise
-                    
-                    error ('Invalid DefaultOrientation: %s', ...
-                        self.simInfo.DefaultOrientation);
-                    
-            end
-            
-            % parse the data
-            for ind = 1:size(movdata,1)
-                
-                label = movdata(ind,1);
-                
-                nodename = ['node_', int2str(movdata(ind,1))];
-                
-                if ~isfield (self.nodes, nodename)
-                    
-                    self.nodes.(nodename) = struct ( ...
-                                               'Label', label, ...
-                                               'Name', nodename, ...
-                                               'Position', movdata(ind,posinds), ...
-                                               'Orientation', movdata(ind,orientinds), ...
-                                               'Velocity', movdata(ind,velinds), ...
-                                               'AngularVelocity', movdata(ind,omegainds) ...
-                                              );
-                                          
-                    self.nNodes = self.nNodes + 1;
-                    
-                else
-                    
-                    self.nodes.(nodename).Position = [self.nodes.(nodename).Position; movdata(ind,posinds)];
-                    
-                    self.nodes.(nodename).Orientation = [self.nodes.(nodename).Orientation; movdata(ind,orientinds)];
-                    
-                    self.nodes.(nodename).Velocity = [self.nodes.(nodename).Velocity; movdata(ind,velinds)];
-                    
-                    self.nodes.(nodename).AngularVelocity = [self.nodes.(nodename).AngularVelocity; movdata(ind,omegainds)];
-                                
+                if isempty (self.movFile)
+                    error ('Neither the netcdf format file or the .mov output file cound be found');
                 end
                 
+                movdata = dlmread(self.movFile);
+
+                self.nNodes = 0;
+
+                posinds = 2:4;
+
+                switch self.simInfo.DefaultOrientation
+
+                    case {'euler123', 'euler313', 'euler321', 'orientation vector'}
+
+                        orientinds = 5:7;
+                        velinds = 8:10;
+                        omegainds = 11:13;
+
+                    case 'orientation matrix'
+
+                        orientinds = 5:13;
+                        velinds = 14:16;
+                        omegainds = 17:19;
+
+                    otherwise
+
+                        error ('Invalid DefaultOrientation: %s', ...
+                            self.simInfo.DefaultOrientation);
+
+                end
+
+                % parse the data
+                for ind = 1:size(movdata,1)
+
+                    label = movdata(ind,1);
+
+                    nodename = ['node_', int2str(movdata(ind,1))];
+
+                    if ~isfield (self.nodes, nodename)
+
+                        self.nodes.(nodename) = struct ( ...
+                                                   'Label', label, ...
+                                                   'Name', nodename, ...
+                                                   'Position', movdata(ind,posinds), ...
+                                                   'Orientation', movdata(ind,orientinds), ...
+                                                   'Velocity', movdata(ind,velinds), ...
+                                                   'AngularVelocity', movdata(ind,omegainds) ...
+                                                  );
+
+                        self.nNodes = self.nNodes + 1;
+
+                    else
+
+                        self.nodes.(nodename).Position = [self.nodes.(nodename).Position; movdata(ind,posinds)];
+
+                        switch self.simInfo.DefaultOrientation
+                            
+                            case {'euler123', 'euler313', 'euler321', 'orientation vector'}
+                                
+                                self.nodes.(nodename).Orientation = [self.nodes.(nodename).Orientation; deg2rad (movdata(ind,orientinds))];
+                                
+                            case 'orientation matrix'
+                                
+                                self.nodes.(nodename).Orientation = cat (3, self.nodes.(nodename).Orientation, reshape(movdata(ind,orientinds), 3, 3)');
+                                
+                        end
+
+                        self.nodes.(nodename).Velocity = [self.nodes.(nodename).Velocity; movdata(ind,velinds)];
+
+                        self.nodes.(nodename).AngularVelocity = [self.nodes.(nodename).AngularVelocity; movdata(ind,omegainds)];
+
+                    end
+
+                end
+                 
+
+                % determine the final time
+                self.simInfo.FinalTime = self.simInfo.InitialTime + (size(movdata,1)/self.nNodes-1)*self.simInfo.TimeStep;
+
+                % load .log file
+                %
+                % The log file contains a description of the problem in it's
+                % intial state including bodies and their labels, in futre we
+                % may be able to generate an mbdyn.pre.system object from this
+                % if it's not supplied
+                self.logFile = self.checkFile ('.log');
+
+                % load .ine file
+                self.ineFile = self.checkFile ('.ine');
+
+                % load .jnt file
+    %             self.jntFile = self.checkFile ('.jnt');
+
+                % load .out file
+                self.outFile = self.checkFile ('.out');
+
+            else
+                % there was a netcdf format file to load
+                
+                % get a description of what's in the file
+                nci = ncinfo (self.ncFile);
+                
+                structlabels = ncread ( nci.Filename, 'node.struct');
+                
+                self.nNodes = numel (structlabels);
+                
+                % open netcdf file in read only mode (the default). Will
+                % throw an error if the file cannot be opened
+                ncid = netcdf.open (self.ncFile);
+                
+                % make sure the file's closed when we're done
+                CC = onCleanup (@() netcdf.close (ncid));
+                
+                self.simInfo.DefaultOrientation = [];
+                
+                for ind = 1:numel (structlabels)
+                    
+                    label = structlabels(ind);
+                    
+                    labelstr = int2str(label); 
+                    
+                    nodename = [ 'node_', labelstr ];
+                    
+                    self.nodes.(nodename) = struct ( ...
+                           'Label', double(label), ...
+                           'Name', nodename, ...
+                           'Position', [], ...
+                           'Orientation', [], ...
+                           'Velocity', [], ...
+                           'AngularVelocity', [], ...
+                           'OrientationType', '' ...
+                          );
+                      
+                    
+                    nodestr = sprintf('node.struct.%s', labelstr );
+
+                    varid = netcdf.inqVarID (ncid, sprintf('%s.X', nodestr));
+                    
+                    self.nodes.(nodename).Position = netcdf.getVar(ncid,varid).';
+                    
+                    varid = netcdf.inqVarID (ncid, sprintf('%s.XP', nodestr));
+                    
+                    self.nodes.(nodename).Velocity = netcdf.getVar(ncid,varid).';
+                    
+                    varid = netcdf.inqVarID (ncid, sprintf('%s.Omega', nodestr));
+                   
+                    self.nodes.(nodename).AngularVelocity = netcdf.getVar(ncid,varid).';
+                    
+                    % now get orientation type by examining what variables
+                    % are in the file
+                    if isempty (self.simInfo.DefaultOrientation)
+                        
+                        try
+
+                            varid = netcdf.inqVarID (ncid, sprintf('%s.R', nodestr));
+
+                            self.simInfo.DefaultOrientation = 'orientation matrix';
+
+                        catch
+
+                            try
+                                
+                                varid = netcdf.inqVarID (ncid, sprintf('%s.Phi', nodestr));
+
+                                self.simInfo.DefaultOrientation = 'orientation vector';
+
+                            catch
+
+                                try
+                                    
+                                    varid = netcdf.inqVarID (ncid, sprintf('%s.E', nodestr));
+                                    
+                                    attrvalue = netcdf.getAtt(ncid,varid,'description');
+
+                                    if ~isempty(strfind (attrvalue, '123'))
+                                        
+                                        self.simInfo.DefaultOrientation = 'euler123';
+                                        
+                                    elseif ~isempty(strfind (attrvalue, '313'))
+                                        
+                                        self.simInfo.DefaultOrientation = 'euler313';
+                                        
+                                    elseif ~isempty(strfind (attrvalue, '321'))
+                                        
+                                        self.simInfo.DefaultOrientation = 'euler321';
+                                        
+                                    else
+                                        
+                                        error ('Could not determine euler angle type (123, 313 or 321)');
+                                        
+                                    end
+
+                                catch
+
+                                    error ('Could not get structural node orientation');
+
+                                end
+
+                            end
+
+                        end
+
+                    end
+                    
+                    % extract the orientation    
+                    switch self.simInfo.DefaultOrientation
+
+                        case {'euler123', 'euler313', 'euler321'}
+
+                            varid = netcdf.inqVarID (ncid, sprintf('%s.E', nodestr));
+                            
+                            self.nodes.(nodename).Orientation = netcdf.getVar(ncid,varid).' ;
+
+                        case 'orientation vector'
+                            
+                            varid = netcdf.inqVarID (ncid, sprintf('%s.Phi', nodestr));
+                            
+                            self.nodes.(nodename).Orientation = netcdf.getVar(ncid,varid).' ;
+
+                        case 'orientation matrix'
+                            
+                            varid = netcdf.inqVarID (ncid, sprintf('%s.R', nodestr));
+                            
+                            self.nodes.(nodename).Orientation = netcdf.getVar(ncid,varid) ;
+
+                        otherwise
+
+                            error ('Invalid DefaultOrientation: %s', ...
+                                self.simInfo.DefaultOrientation);
+
+                    end
+
+                end
+                   
+                self.haveNetCDF = true;
+                
             end
-            
-            % determine the final time
-            self.simInfo.FinalTime = self.simInfo.InitialTime + (size(movdata,1)/self.nNodes-1)*self.simInfo.TimeStep;
-            
-            % load .log file
-            %
-            % The log file contains a description of the problem in it's
-            % intial state including bodies and their labels, in futre we
-            % may be able to generate an mbdyn.pre.system object from this
-            % if it's not supplied
-            self.logFile = self.checkFile ('.log');
-            
-            % load .ine file
-            self.ineFile = self.checkFile ('.ine');
-            
-            % load .jnt file
-%             self.jntFile = self.checkFile ('.jnt');
-            
-            % load .out file
-            self.outFile = self.checkFile ('.out');
             
             self.nodeNames = fieldnames (self.nodes);
             
@@ -915,9 +1079,9 @@ classdef postproc < handle
                     if defaultOrientationIsMatrix
                         % get the transpose of the matrix as mbdyn writes
                         % it out row-wise, not columnwise
-                        om = mbdyn.pre.orientmat (self.simInfo.DefaultOrientation, reshape (self.nodes.(self.nodeNames{indii}).Orientation(tind,:), 3, 3)');
+                        om = mbdyn.pre.orientmat (self.simInfo.DefaultOrientation, self.nodes.(self.nodeNames{indii}).Orientation(:,:,tind));
                     else
-                        om = mbdyn.pre.orientmat (self.simInfo.DefaultOrientation, deg2rad ( self.nodes.(self.nodeNames{indii}).Orientation(tind,:) ));
+                        om = mbdyn.pre.orientmat (self.simInfo.DefaultOrientation, self.nodes.(self.nodeNames{indii}).Orientation(tind,:));
                     end
                     self.preProcSystem.setNodeOrientation (self.nodes.(self.nodeNames{indii}).Label, om);
                 end
@@ -1012,13 +1176,13 @@ classdef postproc < handle
             if ~exist (fpath1, 'file')
                 
                 if isempty (ext)
-                    warning ('MBDyn output file %s not found', fpath1);
+                    fpath = '';
                 else
                     % in case file root name has dots in it
                     fpath2 = fullfile (pathstr, [name, ext, mbext]);
                     fpath = fpath2;
                     if ~exist  (fpath, 'file')
-                        warning ('MBDyn output file not found in \n%s\nor\n%s', fpath1, fpath2);
+                        fpath = '';
                     end
                 end
                 
