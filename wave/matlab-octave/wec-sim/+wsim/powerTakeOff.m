@@ -202,9 +202,89 @@ classdef powerTakeOff < handle
             self.id = newid;
         end
         
+
+        
+        function loggingSetup (self, logger)
+            % sets up data logging for a wsim.linearPowerTakeOff object
+            %
+            % Syntax
+            %
+            % info = loggingSetup (lpto)
+            % info = loggingSetup (lpto, logger)
+            %
+            % Description
+            %
+            % loggingSetup initialises
+            %
+            % Input
+            %
+            %  lpto - wsim.powerTakeOff object
+            %
+            %  logger - optional wsim.logger object
+            %
+            % Output
+            %
+            %  info - structure containing information on the data to be
+            %   logged by the PTO. Will contain the following fields:
+            %   AvailableNames, IndepVars, Sizes, Descriptions, and
+            %   NAvailable. 
+            %
+            %
+            % See Also: wsim.powerTakeOff.logData,
+            %           wsim.powerTakeOff.advanceStep
+            %
+
+            if nargin < 2
+                logger = [];
+            end
+
+            self.initLogging (self.loggingInfo, logger);
+                              
+        end
+        
+        function logData (self)
+            % appends the internal variable data to the log
+            %
+            % Syntax
+            %
+            % logData (pto)
+            %
+            % Description
+            %
+            % logData appends the last recorded values of the internal
+            % variables to a logger object.
+            %
+            % Input
+            %
+            %  pto - wsim.powerTakeOff object
+            %
+            % See Also: wsim.powerTakeOff.loggingSetup,
+            %           wsim.powerTakeOff.advanceStep
+            %
+            
+            if self.loggerReady
+                for ind = 1:numel(self.loggingInfo.LoggedVarInds)
+                    
+                    fieldname = self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)};
+                    
+                    self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
+                                         self.internalVariables.(fieldname) ...
+                                       );
+                end
+            else
+                error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
+            end
+            
+        end
+        
+    end
+    
+    methods % (Access={?wsim.powerTakeOff, ?wsim.wecSim})
+        % methods in this block accessible only by this class, it's
+        % subclasses, the wsim.wecSim class, and it's subclasses
+        
         function start (self, siminfo)
             % initialise the pto simulation
-            % replace h1 line
             %
             % Syntax
             %
@@ -277,76 +357,8 @@ classdef powerTakeOff < handle
             
         end
         
-        function loggingSetup (self, logger)
-            % sets up data logging for a wsim.linearPowerTakeOff object
-            %
-            % Syntax
-            %
-            % info = loggingSetup (lpto)
-            % info = loggingSetup (lpto, logger)
-            %
-            % Description
-            %
-            % loggingSetup initialises
-            %
-            % Input
-            %
-            %  lpto - wsim.powerTakeOff object
-            %
-            %  logger - optional wsim.logger object
-            %
-            % Output
-            %
-            %  info - structure containing information on the data to be
-            %   logged by the PTO. Will contain the following fields:
-            %   AvailableNames, IndepVars, Sizes, Descriptions, and
-            %   NAvailable. 
-            %
-            %
-            % See Also: wsim.powerTakeOff.logData,
-            %           wsim.powerTakeOff.advanceStep
-            %
-
-            if nargin < 2
-                logger = [];
-            end
-
-            self.initLogging (self.loggingInfo, logger);
-                              
-        end
-        
-        function logData (self)
-            % appends the internal variable data to the log
-            %
-            % Syntax
-            %
-            % logData (pto)
-            %
-            % Description
-            %
-            % logData appends the last recorded values of the internal
-            % variables to a logger object.
-            %
-            % Input
-            %
-            %  pto - wsim.powerTakeOff object
-            %
-            % See Also: wsim.powerTakeOff.loggingSetup,
-            %           wsim.powerTakeOff.advanceStep
-            %
-            
-            if self.loggerReady
-                for ind = 1:numel(self.loggingInfo.LoggedVarInds)
-                    
-                    fieldname = self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)};
-                    
-                    self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
-                                         self.internalVariables.(fieldname) ...
-                                       );
-                end
-            else
-                error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
-            end
+        function finish (self, varargin)
+            % method called at end of wecSim simulation 
             
         end
         
