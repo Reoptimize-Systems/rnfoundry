@@ -107,11 +107,11 @@ problem_options.LinearSolver = [];
 % draw it
 % mbsys.draw ('Mode', 'wireghost', 'Light', false);
 
-mbsys.draw ( 'Mode', 'solid', ...
+mbsys.draw ( 'Mode', 'ghost', ...
              'Light', true, ...
              'AxLims', [-30, 30; -30, 30; -35, 35], ...
              'Joints', false, ...
-             'StructuralNodes', false)
+             'StructuralNodes', true)
 
 mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
 
@@ -630,17 +630,17 @@ else
 
 
     %%
-% 
-%     mbout = mbdyn.postproc ( outputfile_prefix, mbsys ); 
-% 
-%     mbout.plotNodeTrajectories ('AxLims', [-1.5, 1.5; -1.5, 1.5; -25, 5]);
+
+    mbout = mbdyn.postproc ( outputfile_prefix, mbsys ); 
+
+    mbout.plotNodeTrajectories ('AxLims', [-1.5, 1.5; -1.5, 1.5; -25, 5]);
 
 
     %%
-    % mbout.animate ( 'DrawMode', 'solid', ...
-    %                 'Light', true, ...
-    %                 'skip', 5, ...
-    %                 'AxLims', [-30, 30; -30, 30; -35, 35])
+    mbout.animate ( 'DrawMode', 'solid', ...
+                    'Light', true, ...
+                    'skip', 5, ...
+                    'AxLims', [-30, 30; -30, 30; -35, 35])
 
 
     %% Compare to origninal WEC-Sim
