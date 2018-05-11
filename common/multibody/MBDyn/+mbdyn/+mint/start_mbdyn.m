@@ -48,6 +48,12 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
 %    are passed to MBDyn on the command line when starting. The more -P's
 %    the output MBDyn produces. Default is 0, for no additional output.
 %
+%  'Block' - optional true/false flag indicating whether start_mbdyn will
+%    wait for MBDyn to complete the requested operation, or run it
+%    asynchronously in the background. Deafault is true, so start_mbdyn
+%    will wait while MBDyn runs the command.
+%
+%
 % Output
 %
 %  status - the status returned by the operating system after attempting to
@@ -65,6 +71,7 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
     options.MBDynExecutable = mbdyn.mint.find_mbdyn (false);
     options.MBDynOutputFile = '';
     options.OutputPrefix = '';
+    options.Block = true;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -73,6 +80,7 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
     assert (ischar (options.MBDynExecutable), 'MBDynExecutable must be a character vector');
     assert (ischar (options.MBDynOutputFile), 'MBDynOutputFile must be a character vector');
     assert (ischar (options.OutputPrefix), 'OutputPrefix must be a character vector');
+    mbdyn.pre.base.checkLogicalScalar (options.Block, true, 'Block');
     
     if ~exist (options.MBDynExecutable, 'file')
         error ('MBDyn executable was not found in the specified location.');
@@ -92,15 +100,22 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
     else
         Pcmds = '';
     end
+    
+    if options.Block
+        blockstr = '';
+    else
+        blockstr = '&';
+    end
 
     % start mbdyn
-    cmdline = sprintf ('%s %s -f "%s" -o "%s" > "%s" 2>&1 &', ...
+    cmdline = sprintf ( '%s %s -f "%s" -o "%s" > "%s" 2>&1 %s', ...
                         options.MBDynExecutable, ...
                         Pcmds, ...
                         inputfile, ...
                         options.OutputPrefix, ...
-                        options.MBDynOutputFile  ...
-                                         );
+                        options.MBDynOutputFile,  ...
+                        blockstr ...
+                      );
 
     if options.Verbosity > 0
         fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
