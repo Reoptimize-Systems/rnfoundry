@@ -60,7 +60,28 @@ classdef userDefined < mbdyn.pre.element
         end
         
         function str = generateMBDynInputString (self)
-            
+            % generates MBDyn input string for userDefined joint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (ud)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  ud - mbdyn.pre.userDefined object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
+
             str = self.addOutputLine ( '', ...
                                        sprintf('%s : %d, %s', self.type, self.label, self.userTypeName), ...
                                        1, ...

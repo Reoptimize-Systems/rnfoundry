@@ -13,8 +13,8 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             %
             % Syntax
             %
-            % daj = mbdyn.pre.axialRotation (node1, node2, omega_drive)
-            % daj = mbdyn.pre.axialRotation (..., 'Parameter', value)
+            % arj = mbdyn.pre.axialRotation (node1, node2, omega_drive)
+            % arj = mbdyn.pre.axialRotation (..., 'Parameter', value)
             %
             % Description
             %
@@ -93,7 +93,7 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             %
             % Output
             %
-            %  daj - mbdyn.pre.axialRotation
+            %  arj - mbdyn.pre.axialRotation object
             %
             %
             %
@@ -123,6 +123,27 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for axialRotation joint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (arj)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  arj - mbdyn.pre.axialRotation object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = generateMBDynInputString@mbdyn.pre.twoNodeJoint(self);
             

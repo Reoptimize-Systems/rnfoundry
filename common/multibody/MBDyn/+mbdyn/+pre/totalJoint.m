@@ -109,6 +109,27 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for totalJoint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (tj)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  tpj - mbdyn.pre.totalJoint object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = generateMBDynInputString@mbdyn.pre.twoNodeJoint (self);
             
