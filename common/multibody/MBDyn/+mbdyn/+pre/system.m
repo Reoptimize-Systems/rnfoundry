@@ -202,6 +202,7 @@ classdef system < mbdyn.pre.base
             options.DefaultOrientation = '';
             options.References = {};
             options.DefaultScales = [];
+            options.OutputResults = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -303,9 +304,35 @@ classdef system < mbdyn.pre.base
                 
             end
             
+            if ~isempty (options.OutputResults)
+                
+                if ischar (options.OutputResults)
+                    
+                    self.checkAllowedStringInputs (options.OutputResults, {'netcdf'}, true, 'OutputResults');
+                    
+                    % convert to cell array
+                    options.OutputResults = {options.OutputResults};
+                    
+                elseif ~iscellstr (options.OutputResults)
+                    
+                    error ('OutputResults must be a character vector (''netcdf'') or a cell array of character vectors of length 1, 2 or 3');
+                    
+                end
+                
+                self.checkAllowedStringInputs (options.OutputResults{1}, {'netcdf'}, true, 'OutputResults{1}');
+                if numel (options.OutputResults) > 1
+                    self.checkAllowedStringInputs (options.OutputResults{2}, {'sync', 'no text'}, true, 'OutputResults{2}');
+                end
+                if numel (options.OutputResults) > 2
+                    self.checkAllowedStringInputs (options.OutputResults{3}, {'no text'}, true, 'OutputResults{3}');
+                end
+                    
+            end
+            
             self.controlData.DefaultOutput = options.DefaultOutput;
             self.controlData.DefaultOrientation = options.DefaultOrientation;
             self.controlData.DefaultScales = options.DefaultScales;
+            self.controlData.OutputResults = options.OutputResults;
             
         end
         
@@ -898,6 +925,17 @@ classdef system < mbdyn.pre.base
                 
                 str = self.addOutputLine ( str, ';', 1, false);
                 
+            end
+            
+            if ~isempty (self.controlData.OutputResults)
+                
+                str = self.addOutputLine ( str, ...
+                                           [ 'output results: ', ...
+                                             self.commaSepList(self.controlData.OutputResults{:}), ...
+                                             ';' ], ...
+                                           1, ...
+                                           false );
+                                       
             end
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
