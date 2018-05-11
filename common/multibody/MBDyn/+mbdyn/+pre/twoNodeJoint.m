@@ -31,6 +31,28 @@ classdef twoNodeJoint < mbdyn.pre.joint
     
     methods
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for twoNodeJoint object
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (tnj)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  tnj - mbdyn.pre.twoNodeJoint object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
+            
             str = generateMBDynInputString@mbdyn.pre.joint(self);
         end
     end

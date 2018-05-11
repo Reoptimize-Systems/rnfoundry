@@ -21,6 +21,28 @@ classdef joint < mbdyn.pre.element
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for common joint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (jnt)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  jnt - mbdyn.pre.joint object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
+            
             str = sprintf ('    joint : %d, %s,', self.label, self.type);
         end
         

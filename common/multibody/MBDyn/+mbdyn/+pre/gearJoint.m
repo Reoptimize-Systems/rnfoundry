@@ -91,6 +91,27 @@ classdef gearJoint < mbdyn.pre.userDefined
     methods
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for gearJoint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (gj)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  gj - mbdyn.pre.totalJoint object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = generateMBDynInputString@mbdyn.pre.userDefined(self);
             

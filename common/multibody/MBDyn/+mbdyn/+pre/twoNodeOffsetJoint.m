@@ -193,6 +193,28 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for twoNodeOffsetJoint joint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (tnoj)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  tnoj - mbdyn.pre.twoNodeOffsetJoint object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
+            
             str = generateMBDynInputString@mbdyn.pre.joint(self);
         end
         

@@ -53,7 +53,27 @@ classdef angularVelocity < mbdyn.pre.singleNodeJoint
         end
         
         function str = generateMBDynInputString (self)
-            % generate an MBDyn input file string for the element
+            % generates MBDyn input string for angularVelocity joint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (av)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  av - mbdyn.pre.angularVelocity object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = generateMBDynInputString@mbdyn.pre.singleNodeJoint (self);
             
