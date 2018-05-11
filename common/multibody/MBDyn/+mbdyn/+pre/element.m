@@ -33,6 +33,7 @@ classdef element < mbdyn.pre.base
         stlLoaded;
         defaultShape;
         defaultShapeOrientation;
+        stlNormals;
         
     end
     
@@ -163,7 +164,7 @@ classdef element < mbdyn.pre.base
             
             self.shapeData{1} = struct ();
             
-            [self.shapeData{1}.Vertices, self.shapeData{1}.Faces, self.shapeData{1}.N, stlname] = stl.read(filename);
+            [self.shapeData{1}.Vertices, self.shapeData{1}.Faces, self.stlNormals, stlname] = stl.read(filename);
             
             if usename
                 self.name = stlname;
@@ -231,81 +232,103 @@ classdef element < mbdyn.pre.base
             % See Also: 
             %
 
-            switch self.defaultShape
-                    
-                case 'none'
-                    
-                    warning ('Default shape is set to ''none'', setting the size has no effect');
-                    
-                case {'cuboid', 'box'}
-                    
-                    % cuboid, 3 arguments expected, x, y and z dimensions
-                    assert (numel (varargin) == 3, ...
-                            'setSize requires 3 size input arguments when the shape is a box/cuboid, sx, sy and sz');
+            if self.stlLoaded
+                
+                % cuboid, 3 arguments expected, x, y and z dimensions
+                assert (numel (varargin) == 3, ...
+                        'setSize requires 3 size input arguments when the shape is from an STL file, sx, sy and sz, which represent the bounding box of the shape');
+
+                self.checkNumericScalar (varargin{1}, true, 'sx');
+                self.checkNumericScalar (varargin{2}, true, 'sy');
+                self.checkNumericScalar (varargin{3}, true, 'sz');
+
+                assert (varargin{1} > 0, 'sx must be greater than zero');
+                assert (varargin{2} > 0, 'sy must be greater than zero');
+                assert (varargin{3} > 0, 'sz must be greater than zero');
+
+                self.shapeParameters(1) = varargin{1};
+                self.shapeParameters(2) = varargin{2};
+                self.shapeParameters(3) = varargin{3};
                         
-                    self.checkNumericScalar (varargin{1}, true, 'sx');
-                    self.checkNumericScalar (varargin{2}, true, 'sy');
-                    self.checkNumericScalar (varargin{3}, true, 'sz');
-                    
-                    assert (varargin{1} > 0, 'sx must be greater than zero');
-                    assert (varargin{2} > 0, 'sy must be greater than zero');
-                    assert (varargin{3} > 0, 'sz must be greater than zero');
+            else
+                
+                switch self.defaultShape
 
-                    self.shapeParameters(1) = varargin{1};
-                    self.shapeParameters(2) = varargin{2};
-                    self.shapeParameters(3) = varargin{3};
+                    case 'none'
 
-                case 'cylinder'
-                    
-                    % cylinder, two arguments expected, radius and axial
-                    % length
-                    assert (numel (varargin) == 2, ...
-                            'setSize requires 2 size input arguments when the shape is a cylinder, radius, axiallength');
-                        
-                    self.checkNumericScalar (varargin{1}, true, 'radius');
-                    self.checkNumericScalar (varargin{2}, true, 'axiallength');
-                    
-                    assert (varargin{1} > 0, 'radius must be greater than zero');
-                    assert (varargin{2} > 0, 'axiallength must be greater than zero');
+                        warning ('Default shape is set to ''none'', setting the size has no effect');
 
-                    self.shapeParameters(1) = varargin{1};
-                    self.shapeParameters(2) = varargin{2};
+                    case {'cuboid', 'box'}
 
+                        % cuboid, 3 arguments expected, x, y and z dimensions
+                        assert (numel (varargin) == 3, ...
+                                'setSize requires 3 size input arguments when the shape is a box/cuboid, sx, sy and sz');
 
-                case {'tube', 'pipe', 'annularcylinder'}
+                        self.checkNumericScalar (varargin{1}, true, 'sx');
+                        self.checkNumericScalar (varargin{2}, true, 'sy');
+                        self.checkNumericScalar (varargin{3}, true, 'sz');
 
-                    % tube, 3 arguments expected, router, rinner and
-                    % axiallength dimensions
-                    assert (numel (varargin) == 3, ...
-                            'setSize requires 3 size input arguments when the shape is a tube/pipe/annularcylinder, router, rinner and axiallength');
-                        
-                    self.checkNumericScalar (varargin{1}, true, 'router');
-                    self.checkNumericScalar (varargin{2}, true, 'rinner');
-                    self.checkNumericScalar (varargin{3}, true, 'axiallength');
-                    
-                    assert (varargin{1} > 0, 'router must be greater than zero');
-                    assert (varargin{2} > 0, 'rinner must be greater than zero');
-                    assert (varargin{1} > varargin{2}, 'router must be greater than rinner');
-                    assert (varargin{3} > 0, 'axiallength must be greater than zero');
+                        assert (varargin{1} > 0, 'sx must be greater than zero');
+                        assert (varargin{2} > 0, 'sy must be greater than zero');
+                        assert (varargin{3} > 0, 'sz must be greater than zero');
 
-                    self.shapeParameters(1) = varargin{1};
-                    self.shapeParameters(2) = varargin{2};
-                    self.shapeParameters(3) = varargin{3};
+                        self.shapeParameters(1) = varargin{1};
+                        self.shapeParameters(2) = varargin{2};
+                        self.shapeParameters(3) = varargin{3};
 
-                case 'sphere'
+                    case 'cylinder'
+
+                        % cylinder, two arguments expected, radius and axial
+                        % length
+                        assert (numel (varargin) == 2, ...
+                                'setSize requires 2 size input arguments when the shape is a cylinder, radius, axiallength');
+
+                        self.checkNumericScalar (varargin{1}, true, 'radius');
+                        self.checkNumericScalar (varargin{2}, true, 'axiallength');
+
+                        assert (varargin{1} > 0, 'radius must be greater than zero');
+                        assert (varargin{2} > 0, 'axiallength must be greater than zero');
+
+                        self.shapeParameters(1) = varargin{1};
+                        self.shapeParameters(2) = varargin{2};
 
 
-                case 'ellipsoid'
+                    case {'tube', 'pipe', 'annularcylinder'}
+
+                        % tube, 3 arguments expected, router, rinner and
+                        % axiallength dimensions
+                        assert (numel (varargin) == 3, ...
+                                'setSize requires 3 size input arguments when the shape is a tube/pipe/annularcylinder, router, rinner and axiallength');
+
+                        self.checkNumericScalar (varargin{1}, true, 'router');
+                        self.checkNumericScalar (varargin{2}, true, 'rinner');
+                        self.checkNumericScalar (varargin{3}, true, 'axiallength');
+
+                        assert (varargin{1} > 0, 'router must be greater than zero');
+                        assert (varargin{2} > 0, 'rinner must be greater than zero');
+                        assert (varargin{1} > varargin{2}, 'router must be greater than rinner');
+                        assert (varargin{3} > 0, 'axiallength must be greater than zero');
+
+                        self.shapeParameters(1) = varargin{1};
+                        self.shapeParameters(2) = varargin{2};
+                        self.shapeParameters(3) = varargin{3};
+
+                    case 'sphere'
 
 
-                otherwise
-                    error ('Bad defaultShape string');
-                        
+                    case 'ellipsoid'
+
+
+                    otherwise
+                        error ('Bad defaultShape string');
+
+                end
+
+                % set the shapedata to empty so it is recreated with the new
+                % sizes when draw is next called
+                self.shapeData = [];
+            
             end
-
-            % set the shapedata to empty so it is recreated with the new
-            % sizes when draw is next called
-            self.shapeData = [];
             
         end
         
