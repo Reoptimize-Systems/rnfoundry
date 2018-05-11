@@ -176,6 +176,27 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for totalPin joint
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (tpj)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  tpj - mbdyn.pre.totalPin object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = generateMBDynInputString@mbdyn.pre.singleNodeJoint (self);
             
@@ -255,7 +276,7 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                 
                 str = self.addOutputLine (str, 'orientation constraint', 2, true);
                 str = self.addOutputLine (str, self.commaSepList (self.orientationConstraint{:}), 3, true, 'orientation constraint status');
-                if ischar (self.positionConstraintDrive)
+                if ischar (self.orientationConstraintDrive)
                     str = self.addOutputLine (str, self.orientationConstraintDrive, 3, false);
                 else
                     str = self.addOutputLine (str, self.orientationConstraintDrive.generateMBDynInputString (), 3, false);
