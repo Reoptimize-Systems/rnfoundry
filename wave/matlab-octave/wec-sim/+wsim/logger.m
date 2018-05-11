@@ -273,8 +273,11 @@ classdef logger < handle
             options.ForceLogDimension = [];
             options.PreallocateStorage = [];
             options.IndependentVariable = '';
+            options.Windowed = false;
             
             options = parse_pv_pairs (options, varargin);
+            
+            check.isLogicalScalar (options.Windowed, true, 'Windowed');
             
             assert (isvarname (name), 'name must be a string containing a valid variable name');
             
@@ -389,7 +392,8 @@ classdef logger < handle
                                            'LastLogIndex', 0, ...
                                            'IndependentVariable', options.IndependentVariable, ...
                                            'LoggedVariableNumber', numel(obj.info) + 1, ...
-                                           'LoggedSize', loggedvarsize );
+                                           'LoggedSize', loggedvarsize, ...
+                                           'Windowed', options.Windowed );
 
             end
             
@@ -1106,20 +1110,31 @@ classdef logger < handle
             S = obj.info.(varname).IndexAssignment;
             
             if obj.info.(varname).LastLogIndex + 1 > obj.info.(varname).PreallocatedLogLength
-                % expand the data array as we have run out of preallocated
-                % space. Use the expandPreallocFactor to determine by how
-                % much to expand
-                obj.info.(varname).PreallocatedLogLength = max ( ...
-                                obj.info.(varname).LastLogIndex + 1, ...
-                                round (obj.info.(varname).LastLogIndex * obj.expandPreallocFactor) ...
-                                                               );
-                % build the correct index into the logged variable by
-                % replacing the appropriate index with the new index of the
-                % end of the preallocated data
-                S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).PreallocatedLogLength;
+                
+                if obj.info.(varname).Windowed
+                    % rotate the log as we have reached the end of the
+                    % window
+                    obj.data.(varname) = circshift (obj.data.(varname), 1, obj.info.(varname).IndexDimension);
+                    % step the LastLogIndex back one, so the new data
+                    % replaces the last item in the log (the data is later
+                    % placed in the  LastLogIndex + 1 position)
+                    obj.info.(varname).LastLogIndex = obj.info.(varname).LastLogIndex - 1;
+                else
+                    % expand the data array as we have run out of preallocated
+                    % space. Use the expandPreallocFactor to determine by how
+                    % much to expand
+                    obj.info.(varname).PreallocatedLogLength = max ( ...
+                                    obj.info.(varname).LastLogIndex + 1, ...
+                                    round (obj.info.(varname).LastLogIndex * obj.expandPreallocFactor) ...
+                                                                   );
+                    % build the correct index into the logged variable by
+                    % replacing the appropriate index with the new index of the
+                    % end of the preallocated data
+                    S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).PreallocatedLogLength;
 
-                % assign nan to expand the array
-                obj.data.(varname) = subsasgn (obj.data.(varname), S, nan);
+                    % assign nan to expand the array
+                    obj.data.(varname) = subsasgn (obj.data.(varname), S, nan);
+                end
             
             end
             
