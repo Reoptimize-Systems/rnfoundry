@@ -805,6 +805,8 @@ classdef logger < handle
             
             if isempty (indepvar)
                 
+                figure;
+                
                 h = obj.plotfunc(obj.data.(varname), options.PlotFcnArgs{:});
             
                 ylabel(obj.info.(varname).Description, 'FontSize', 16);
@@ -928,9 +930,12 @@ classdef logger < handle
             
             indevarsamesize = all (obj.info.(f1).Size == obj.info.(f2).Size);
             
-            hold on
-            
             legstrs = {};
+            
+            % make a new figure to plot in
+            figure;
+            
+            hold on
             
             switch numel (f2datadims)
                 
