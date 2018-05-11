@@ -1,3 +1,37 @@
+%% mbdyn.pre.base.addOutputLine
+
+fprintf (1, '-- mbdyn.pre.base.addOutputLine test start --\n');
+
+str = mbdyn.pre.base.addOutputLine ( '', ...
+                               sprintf('%s : %d, %s', 'user defined', 1, 'GearJoint'), ...
+                               1, ...
+                               true, ...
+                               'label, node label, user defined element type' );
+                           
+fprintf (1, '%s\n', str);
+
+str = mbdyn.pre.base.addOutputLine ( '', ...
+                               sprintf('%s : %d, %s', 'user defined', 1, 'GearJoint'), ...
+                               1, ...
+                               true, ...
+                               'label, node label, user defined element type', ...
+                               true );
+                           
+fprintf (1, '%s\n', str);
+
+
+str = mbdyn.pre.base.addOutputLine ( '', ...
+                               sprintf('%s : %d, %s', 'user defined', 1, 'GearJoint'), ...
+                               1, ...
+                               true, ...
+                               'label, node label, user defined element type', ...
+                               false );
+                           
+fprintf (1, '%s\n', str);
+
+
+fprintf (1, '-- mbdyn.pre.base.addOutputLine test end --\n');
+
 %% mbdyn.pre.matrixFreeSolver('bicgstab')
 
 slv = mbdyn.pre.matrixFreeSolver('bicgstab');
@@ -794,6 +828,30 @@ nd = mbdyn.pre.nodeDrive (sn1, func_drive,  'String', 'XP[1]');
 
 nd.generateMBDynInputString ()
 
+%% sineDrive
+
+sd = mbdyn.pre.sineDrive (0, 1, 2, 'one');
+
+sd.generateMBDynInputString ()
+
+
+sd = mbdyn.pre.sineDrive (0, 1, 2, 'one', 'InitialValue', 3);
+
+sd.generateMBDynInputString ()
+
+
+sd = mbdyn.pre.sineDrive (0, 1, 2, 4, 'InitialValue', 3);
+
+sd.generateMBDynInputString ()
+
+% error
+try
+    sd = mbdyn.pre.sineDrive (0, 1, 2, 4.5, 'InitialValue', 3);
+
+    sd.generateMBDynInputString ()
+catch me
+    fprintf (1, 'caught error: %s\n', me.message);
+end
 
 %% compnent template drive caller
 
@@ -946,3 +1004,26 @@ obj = mbdyn.pre.axialRotation ( sn1, sn2, omega_drive, ...
                                    );
 
 obj.generateMBDynInputString ()
+
+
+%% loadableModule (path, args)
+
+obj = mbdyn.pre.loadableModule ('libmodule-fabricate.so');
+
+obj.generateMBDynInputString ()
+
+obj = mbdyn.pre.loadableModule ('libmodule-fabricate.so', 'arg1, arg1val');
+
+obj.generateMBDynInputString ()
+
+
+%% gearJoint
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn3 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+obj = mbdyn.pre.gearJoint (sn1, sn2, sn3, 'Ratio', 10);
+
+obj.generateMBDynInputString ()
+
