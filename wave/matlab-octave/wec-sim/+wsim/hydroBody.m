@@ -228,21 +228,21 @@ classdef hydroBody < handle
             obj.hydroData.properties.body_number = h5read(filename,[name '/properties/body_number']);
             obj.hydroData.properties.cg = h5read(filename,[name '/properties/cg']);
             obj.hydroData.properties.disp_vol = h5read(filename,[name '/properties/disp_vol']);
-            obj.hydroData.hydro_coeffs.linear_restoring_stiffness = h5load(filename, [name '/hydro_coeffs/linear_restoring_stiffness']);
-            obj.hydroData.hydro_coeffs.excitation.re = h5load(filename, [name '/hydro_coeffs/excitation/re']);
-            obj.hydroData.hydro_coeffs.excitation.im = h5load(filename, [name '/hydro_coeffs/excitation/im']);
-            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f = h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/f']); end
-            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t = h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/t']); end
-            obj.hydroData.hydro_coeffs.added_mass.all = h5load(filename, [name '/hydro_coeffs/added_mass/all']);
-            obj.hydroData.hydro_coeffs.added_mass.inf_freq = h5load(filename, [name '/hydro_coeffs/added_mass/inf_freq']);
-            obj.hydroData.hydro_coeffs.radiation_damping.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/all']);
-            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K = h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/K']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t = h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/t']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.it = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/it']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/A/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/B/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
+            obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.h5load(filename, [name '/hydro_coeffs/linear_restoring_stiffness']);
+            obj.hydroData.hydro_coeffs.excitation.re = wsim.h5load(filename, [name '/hydro_coeffs/excitation/re']);
+            obj.hydroData.hydro_coeffs.excitation.im = wsim.h5load(filename, [name '/hydro_coeffs/excitation/im']);
+            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f = wsim.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/f']); end
+            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t = wsim.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/t']); end
+            obj.hydroData.hydro_coeffs.added_mass.all = wsim.h5load(filename, [name '/hydro_coeffs/added_mass/all']);
+            obj.hydroData.hydro_coeffs.added_mass.inf_freq = wsim.h5load(filename, [name '/hydro_coeffs/added_mass/inf_freq']);
+            obj.hydroData.hydro_coeffs.radiation_damping.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/all']);
+            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/K']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/t']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.it = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/it']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/A/all']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/B/all']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
         end
 
         function loadHydroData (obj, hydroData)
