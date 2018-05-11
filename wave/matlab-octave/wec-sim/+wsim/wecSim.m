@@ -19,6 +19,9 @@ classdef wecSim < handle
         mBDynSystem;
         hydroSystem;
         readyToRun;
+        hydroMotionSyncStep = 1;
+        hydroMotionSyncStepCount = 1;
+        
         
         logger;
         nMBDynNodes;
@@ -177,6 +180,7 @@ classdef wecSim < handle
             options.MinIterations = 0;
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
             options.TimeExecution = false;
+            options.HydroMotionSyncSteps = 1;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -201,11 +205,21 @@ classdef wecSim < handle
                 error ('Simulation is not ready to run, have you run ''prepare'' yet?');
             end
             
+            check.isPositiveScalarInteger (options.HydroMotionSyncSteps, true, 'HydroMotionSyncSteps')
+            
+            self.hydroMotionSyncStep = options.HydroMotionSyncSteps;
+            % set the hydro--mbdyn motion sync step count equal to the
+            % number of steps to sync on so that forces are calculated the
+            % first time applyHydroForces is called (where this step count
+            % is used)
+            self.hydroMotionSyncStepCount = self.hydroMotionSyncStep;
+            
             siminfo.TStart = self.mBDynSystem.problems{1}.initialTime;
             siminfo.TEnd = self.mBDynSystem.problems{1}.finalTime;
             siminfo.TStep = self.mBDynSystem.problems{1}.timeStep;
             siminfo.MBDynSystem = self.mBDynSystem;
             siminfo.HydroSystem = self.hydroSystem;
+            siminfo.HydroMotionSyncSteps = options.HydroMotionSyncSteps;
             
             % start the PTO components
             self.startPTOs (siminfo);
@@ -306,116 +320,117 @@ classdef wecSim < handle
                 end
                 
                 self.lastTime = self.lastTime + self.mBDynSystem.problems{1}.timeStep;
-                
-                % clear out the previous forces and moments
-                forces_and_moments = zeros (6, self.nMBDynNodes);
-                
+
                 % get the current motion of the multibody system
                 [pos, vel, accel] = self.getMotion (mb);
-                
+                    
+                % clear out the previous forces and moments
+                forces_and_moments = zeros (6, self.nMBDynNodes);
+
                 % calculate new hydrodynamic interaction forces (also
                 % updates self.lastForceHydro with new values)
                 forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
-                
+
                 % PTO forces
                 forces_and_moments = self.applyPTOForces (forces_and_moments);
-                
+
                 mb.F (forces_and_moments(1:3,:));
                 mb.M (forces_and_moments(4:6,:));
-                
+
                 mbconv = mb.applyForcesAndMoments (false);
-                
+
                 status = mb.GetMotion ();
-                
+
                 if status ~= 0
                     % quit, MBDyn has finished simulation (or some error
                     % occured)
                     self.readyToRun = false;
                     ind = ind + 1;
-                    
+
                     continue;
                 end
-                
+
                 % repeat the force calulation to test convergence
-                
+
                 % clear out the previous forces and moments
                 forces_and_moments = zeros (6, self.nMBDynNodes);
-                
+
                 % get the current motion of the multibody system
                 [pos, vel, accel] = self.getMotion (mb);
-                
+
                 % get the previous calculated values of hydrodynamic forces
                 hydroforces = self.lastForceHydro;
-                
+
                 % calculate new hydrodynamic interaction forces (also
                 % updates self.lastForceHydro with new values)
                 forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
-                
+
                 % PTO forces
                 forces_and_moments = self.applyPTOForces (forces_and_moments);
-                
+
                 mb.F (forces_and_moments(1:3,:));
                 mb.M (forces_and_moments(4:6,:));
-                
+
                 mbconv = mb.applyForcesAndMoments (false);
-                
+
                 % check for force convergence
                 forcediff = abs (hydroforces - self.lastForceHydro);
-                
+
                 maxforces = max(hydroforces, self.lastForceHydro);
                 relforcediff = abs(forcediff) ./ abs(maxforces);
                 relforcediff(maxforces == 0) = 0;
                 itercount = 1;
-                
+
                 % iterate until force/motion convergence (or max
                 % iterations)
                 while mbconv ~= 0 ...
                         || itercount < options.MinIterations ...
                         || (max (forcediff(:)) > options.AbsForceTolerance) ...
                         || (ind > 3 && (max (relforcediff(:)) > options.RelForceTolerance))
-                    
+
                     status = mb.GetMotion ();
-                    
+
                     if status ~= 0
                         self.readyToRun = false;
                         break;
                     end
-                    
+
                     % clear out the previous forces and moments
                     forces_and_moments = zeros (6, self.nMBDynNodes);
-                
+
                     % get the current motion of the multibody system
                     [pos, vel, accel] = self.getMotion (mb);
 
                     % get the previous calculated values of hydrodynamic forces
                     hydroforces = self.lastForceHydro;
-                
+
                     % calculate new hydrodynamic interaction forces (also
                     % updates self.lastForceHydro with new values)
                     forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
 
                     % PTO forces
                     forces_and_moments = self.applyPTOForces (forces_and_moments);
-                    
+
                     mb.F (forces_and_moments(1:3,:));
                     mb.M (forces_and_moments(4:6,:));
-                    
+
                     mbconv = mb.applyForcesAndMoments (false);
-                    
+
                     itercount = itercount + 1;
-                    
+
                     if itercount > options.MaxIterations
                         % TODO: exit gracefully if max iterations exceeded
                         error ('mbdyn iterations exceeded max allowed');
                     end
-                    
+
                     forcediff = abs (hydroforces - self.lastForceHydro);
                     maxforces = max(hydroforces, self.lastForceHydro);
                     relforcediff = abs(forcediff) ./ abs(maxforces);
                     relforcediff(maxforces == 0) = 0;
-                    
+
                 end
-                
+
+
                 % get latest motion from MBDyn
                 status = mb.GetMotion ();
                 
@@ -504,11 +519,6 @@ classdef wecSim < handle
     
     methods (Access = private)
         
-        function finalise (self)
-            
-            
-        end
-        
         function [pos, vel, accel] = getMotion (self, mb)
             
             eul = zeros (3, self.nMBDynNodes);
@@ -593,11 +603,38 @@ classdef wecSim < handle
 
         function forces_and_moments = applyHydroForces (self, forces_and_moments, time, pos, vel, accel)
                     
-            % calculate hydrodynamic forces based on the motion
-            [hydroforces, out] = self.hydroSystem.hydroForces (time, ...
-                                            pos(:,self.hydroNodeIndexMap), ...
-                                            vel(:,self.hydroNodeIndexMap), ...
-                                            accel(:,self.hydroNodeIndexMap) );
+            if self.hydroMotionSyncStepCount == self.hydroMotionSyncStep
+                
+                % calculate hydrodynamic forces based on the motion
+                [hydroforces, out] = self.hydroSystem.hydroForces (time, ...
+                                                pos(:,self.hydroNodeIndexMap), ...
+                                                vel(:,self.hydroNodeIndexMap), ...
+                                                accel(:,self.hydroNodeIndexMap) );
+
+                
+
+                % store the last generated forces fo later use (e.g. logging)
+                self.lastForceHydro = hydroforces;
+                self.lastForceExcitation = out.F_Excit;
+                self.lastForceExcitationRamp = out.F_ExcitRamp;
+                self.lastForceExcitationLin = out.F_ExcitLin;
+                self.lastForceExcitationNonLin = out.F_ExcitNonLin;
+                self.lastForceRadiationDamping = out.F_RadiationDamping;
+                self.lastForceRestoring = out.F_Restoring;
+                self.lastForceMorrison = out.F_MorrisonElement;
+                self.lastForceViscousDamping = out.F_ViscousDamping;
+                self.lastForceAddedMassUncorrected = out.F_AddedMass;
+                
+                % reset step count
+                self.hydroMotionSyncStepCount = 1;
+            
+            else
+                % just return the last set of hydro forces calculated
+                hydroforces = self.lastForceHydro;
+                
+            end
+            
+            self.hydroMotionSyncStepCount = self.hydroMotionSyncStepCount + 1;
             
             % add hydrodynamic forces to the correct nodes (which are the
             % nodes attached to bodies with hydrodynamic interaction). This
@@ -608,18 +645,6 @@ classdef wecSim < handle
                 forces_and_moments (:,self.hydroNodeIndexMap(ind,1)) = ...
                     forces_and_moments (:,self.hydroNodeIndexMap(ind,1)) + hydroforces(:,ind);
             end
-                
-            % store the last generated forces fo later use (e.g. logging)
-            self.lastForceHydro = hydroforces;
-            self.lastForceExcitation = out.F_Excit;
-            self.lastForceExcitationRamp = out.F_ExcitRamp;
-            self.lastForceExcitationLin = out.F_ExcitLin;
-            self.lastForceExcitationNonLin = out.F_ExcitNonLin;
-            self.lastForceRadiationDamping = out.F_RadiationDamping;
-            self.lastForceRestoring = out.F_Restoring;
-            self.lastForceMorrison = out.F_MorrisonElement;
-            self.lastForceViscousDamping = out.F_ViscousDamping;
-            self.lastForceAddedMassUncorrected = out.F_AddedMass;
             
         end
         
