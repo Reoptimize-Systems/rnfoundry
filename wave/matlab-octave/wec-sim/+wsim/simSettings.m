@@ -58,7 +58,7 @@ classdef simSettings < handle
     properties (SetAccess = 'protected', GetAccess = 'public')%internal
         simMechanicsModel   = '';
         version             = 'NOT DEFINED'                                % WEC-Sim version
-        simulationDate      = datetime                                     % Simulation date and time
+        simulationDate      = datestr (now ())                             % Simulation date and time
         outputDir           = 'output'                                     % Data output directory name
         time                = 0                                            % Simulation time [s] (default = 0 s)
         inputFile           = 'wecSimInputFile'                            % Name of WEC-Sim input file (default = 'wecSimInputFile')
