@@ -7,6 +7,7 @@ classdef wecSim < handle
         forceAbsTol;
         mBDynOutputFile;
         mBDynInputFile;
+        caseDirectory;
 
         loggingSettings;
         
@@ -55,9 +56,9 @@ classdef wecSim < handle
 %             options.StartTime = [];
 %             options.EndTime = [];
             options.NEMOHSim = [];
-            options.MBDynInputFile = '';
             options.LoggingSettings = wsim.loggingSettings ();
             options.MBDynVerbosity = 0;
+            options.OutputDir = '';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -72,18 +73,11 @@ classdef wecSim < handle
                     'NEMOHSim must be a nemoh.simulation object' ); 
             end
             
-            if isempty (options.MBDynInputFile)
-                options.MBDynInputFile = fullfile (hsys.simu.caseDir, 'mbdyn_input_file.mbd');
-            else
-                assert (ischar (options.MBDynInputFile), ...
-                    'MBDynInputFile must be string containing the file path where the MBDyn input file should be generated');
-            end
-            
+            self.caseDirectory = hsys.simu.caseDir;
             self.loggingSettings = options.LoggingSettings;
             self.mBDynSystem = mbsys;
             self.hydroSystem = hsys;
             self.readyToRun = false;
-            self.mBDynInputFile = options.MBDynInputFile;
             self.nMBDynNodes = nan;
             
             % add the spplies PTOs
@@ -95,7 +89,6 @@ classdef wecSim < handle
                     self.addPTO (options.PTOs{ptoind});
                 end
             end
-            
 
         end
         
@@ -166,6 +159,9 @@ classdef wecSim < handle
             
             % TODO: check if NEMOH data needs updated
             
+            % ensure hydro system transient simulation is ready
+            self.hydroSystem.timeDomainSimSetup ();
+            
             self.readyToRun = true;
             
         end
@@ -173,7 +169,8 @@ classdef wecSim < handle
         function datalog = run (self, varargin)
             % Run the WEC simulation
             
-            options.OutputFilePrefix = fullfile (self.hydroSystem.simu.caseDir, 'output', 'wsim');
+            options.MBDynInputFile = '';
+            options.OutputFilePrefix = fullfile (self.caseDirectory, ['output_', datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF')]);
             options.Verbosity = 0;
             options.AbsForceTolerance = 100;
             options.RelForceTolerance = 1e-5;
@@ -182,6 +179,13 @@ classdef wecSim < handle
             options.TimeExecution = false;
             options.HydroMotionSyncSteps = 1;
             
+            if isempty (options.MBDynInputFile)
+                self.mBDynInputFile = fullfile (options.OutputFilePrefix, 'mbdyn_input_file.mbd');
+            else
+                assert (ischar (options.MBDynInputFile), ...
+                    'MBDynInputFile must be string containing the file path where the MBDyn input file should be generated');
+            end
+            
             options = parse_pv_pairs (options, varargin);
             
             check.isPositiveScalarInteger (options.Verbosity, true, 'Verbosity', true);
@@ -189,6 +193,10 @@ classdef wecSim < handle
             assert (ischar (options.OutputFilePrefix), ...
                 'OutputFilePrefix must be a string');
             
+            if exist (options.OutputFilePrefix, 'dir') == 0
+                mkdir (options.OutputFilePrefix);
+            end
+                
             % check for positive numeric scalar
             check.isNumericScalar (options.AbsForceTolerance, true, 'AbsForceTolerance', 1);
             check.isNumericScalar (options.RelForceTolerance, true, 'RelForceTolerance', 1);
@@ -220,15 +228,14 @@ classdef wecSim < handle
             siminfo.MBDynSystem = self.mBDynSystem;
             siminfo.HydroSystem = self.hydroSystem;
             siminfo.HydroMotionSyncSteps = options.HydroMotionSyncSteps;
+            siminfo.OutputDirectory = options.OutputFilePrefix;
+            siminfo.CaseDirectory = self.caseDirectory;
             
             % start the PTO components
             self.startPTOs (siminfo);
             
             % generate input file and start mbdyn
-            
-            % clear out previous files
-            delete ([options.OutputFilePrefix, '.*']);
-            
+
             % create the communicator object. As an mbdyn system object is
             % supplied, the mbdyn input file will be generated
             % automatically

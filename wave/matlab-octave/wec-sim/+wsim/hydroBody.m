@@ -79,7 +79,8 @@ classdef hydroBody < handle
         freeSurfaceMethod;
         bodyToBodyInteraction;
         doMorrisonElementViscousDrag;
-        caseDir;
+        caseDirectory;
+        hydroDataFileFullPath = ''                                              % full path to hdf5 or mat file containing the hydrodynamic data
 
     end
 
@@ -129,22 +130,19 @@ classdef hydroBody < handle
     % public pre-processing related methods (and constructor)
     methods (Access = 'public') %modify object = T; output = F
 
-        function obj = hydroBody (filename, varargin)
+        function obj = hydroBody (filename)
             % constructor for the hydroBody class
             %
             % Syntax
             %
             % hb = hydroBody (filename)
-            % hb = hydroBody (filename, caseDir)
             %
             % Input
             %
-            %  filename - string containing the h5 file containing the
-            %    hydrodynamic data for the body
-            %
-            %  CaseDirectory - optional string containng the path to the 
-            %    case directory. If not supplied, the case directory is
-            %    assumed to be the current working directory.
+            %  filename - string containing the h5 or mat file containing
+            %    the hydrodynamic data for the body, without the path, e.g.
+            %    float.mat, or rm3.h5. The hydrobody searches for the file
+            %    in the <case_directory>/hydroData folder.
             %
             % Output
             %
@@ -154,14 +152,36 @@ classdef hydroBody < handle
             
 %             options.Waves = [];
 %             options.Simu = [];
-            options.CaseDirectory = pwd();
+%             options.CaseDirectory = pwd();
+%             
+%             options = parse_pv_pairs (options, varargin);
+%             
+%             hydrofile = fullfile (options.CaseDirectory, 'hydroData', filename);
+%             
+%             if exist (hydrofile, 'file') ~= 2
+%                 if exist (options.CaseDirectory, 'dir') ~= 7
+%                     error ('The case directory %s does not appear to exist', options.CaseDirectory);
+%                 else
+%                     [filepath,~,ext] = fileparts (hydrofile);
+%                     error ( 'The specified hydro data (%s) file was not found in the directory:\n%s', ...
+%                             ext, ...
+%                             filepath );
+%                 end
+%             end
+
+            % hydro data file
+%             obj.caseDir = options.CaseDirectory;
+            obj.hydroDataFile = filename;
             
-            options = parse_pv_pairs (options, varargin);
+        end
+        
+        function setCaseDirectory (obj, case_directory)
+            % set the case directory for the simulation
             
-            hydrofile = fullfile (options.CaseDirectory, 'hydroData', filename);
+            hydrofile = fullfile (case_directory, 'hydroData', obj.hydroDataFile);
             
             if exist (hydrofile, 'file') ~= 2
-                if exist (options.CaseDirectory, 'dir') ~= 7
+                if exist (case_directory, 'dir') ~= 7
                     error ('The case directory %s does not appear to exist', options.CaseDirectory);
                 else
                     [filepath,~,ext] = fileparts (hydrofile);
@@ -170,10 +190,10 @@ classdef hydroBody < handle
                             filepath );
                 end
             end
-
-            % hydro data file
-            obj.caseDir = options.CaseDirectory;
-            obj.hydroDataFile = hydrofile;
+            
+            obj.caseDirectory = case_directory;
+            
+            obj.hydroDataFileFullPath = hydrofile;
             
         end
 
@@ -216,7 +236,7 @@ classdef hydroBody < handle
             %
             %
             
-            filename = obj.hydroDataFile;
+            filename = obj.hydroDataFileFullPath;
             name = ['/body' num2str(obj.bodyNumber)];
             obj.cg = h5read(filename,[name '/properties/cg']);
             obj.cg = obj.cg';
@@ -268,12 +288,12 @@ classdef hydroBody < handle
             %
             %  hg - wsim.hydroBody object
             %
-            %  filename - character vector containing the name of the file
-            %   from which to load the hydrodynamic data. Can be either a
-            %   .h5 file or a .mat file. If a .mat file it must contain all
-            %   the fields expected to be in the hydroBody hydroData
-            %   property. This file can also be created using the
-            %   wsim.hydroBody.saveHydroData method
+            %  filename - character vector containing the full path of the
+            %   file from which to load the hydrodynamic data. Can be
+            %   either a .h5 file or a .mat file. If a .mat file it must
+            %   contain all the fields expected to be in the hydroBody
+            %   hydroData property. This file can also be created using the
+            %   wsim.hydroBody.saveHydroData method.
             %
             %  hydroData - structure containing the data which is loaded
             %   directly into the hydrBody's hydroData property
@@ -284,7 +304,7 @@ classdef hydroBody < handle
             %
             
             if nargin < 2
-                hydroData = obj.hydroDataFile;
+                hydroData = obj.hydroDataFileFullPath;
             end
             
             if ischar (hydroData)
@@ -293,15 +313,16 @@ classdef hydroBody < handle
                     error ('file: "%s" not found.', hydroData);
                 end
                 
-                [~,~,ext] = fileparts (hydroData);
+                [~,basename,ext] = fileparts (hydroData);
                 
-                obj.hydroDataFile = hydroData;
+                obj.hydroDataFileFullPath = hydroData;
+                obj.hydroDataFile = [basename, ext];
                     
                 switch ext
                     
                     case '.mat'
                         
-                        hd = load (obj.hydroDataFile);
+                        hd = load (obj.hydroDataFileFullPath);
                         
                         obj.loadHydroData (hd);
                         
@@ -334,7 +355,7 @@ classdef hydroBody < handle
         function saveHydroData (obj, filename, varargin)
             % saves the body's hydrodata structure to a .mat file
             
-            options.Directory = fullfile (obj.caseDir, 'hydroData');
+            options.Directory = fullfile (obj.caseDirectory, 'hydroData');
             
             options = parse_pv_pairs (options, varargin);
             
@@ -528,19 +549,19 @@ classdef hydroBody < handle
             hold off
         end
 
-        function checkinputs(obj)
+        function checkInputs(obj)
             % Checks the user inputs
             
             % hydro data file
-            if exist (fullfile (obj.hydroDataFile),'file') == 0 % && obj.nhBody==0
+            if exist (fullfile (obj.hydroDataFileFullPath),'file') == 0 % && obj.nhBody==0
                 
                 error ( 'The hydro data file %s does not exist', ...
-                        fullfile (obj.caseDir, obj.hydroDataFile) );
+                        obj.hydroDataFileFullPath );
                 
             end
             
             % geometry file
-            geomfile = fullfile (obj.caseDir, 'geometry', obj.geometryFile);
+            geomfile = fullfile (obj.caseDirectory, 'geometry', obj.geometryFile);
             
             if exist (geomfile, 'file') == 0
                 
@@ -586,13 +607,12 @@ classdef hydroBody < handle
             node = mbdyn.pre.structuralNode6dof ('dynamic', 'AbsolutePosition', ref_hydroBody.pos);
 
             body = mbdyn.pre.body ( obj.mass,  ...
-                                  [0;0;0], ...
-                                  diag (obj.momOfInertia), ...
-                                  node, ...
-                                  'STLFile', fullfile (obj.caseDir, 'geometry', obj.geometryFile) );
+                                    [0;0;0], ...
+                                    diag (obj.momOfInertia), ...
+                                    node, ...
+                                    'STLFile', fullfile (obj.caseDirectory, 'geometry', obj.geometryFile) );
             
         end
-        
         
     end
 
@@ -926,16 +946,16 @@ classdef hydroBody < handle
     methods (Access = 'public')
         
         
-        function odeSimSetup (obj, waves, simu, bodynum)
+        function timeDomainSimSetup (obj, waves, simu, bodynum)
             % sets up the body in preparation for a transient simulation
             %
             % Syntax
             %
-            % odeSimSetup (hb, waves, simu, bodynum)
+            % timeDomainSimSetup (hb, waves, simu, bodynum)
             %
             % Desciription
             %
-            % odeSimSetup initialises various parmaters and settings in
+            % timeDomainSimSetup initialises various parmaters and settings in
             % preparation for performing a transient simulation based on
             % the ODE solver routines. 
             %
@@ -1089,7 +1109,7 @@ classdef hydroBody < handle
             % odeSimReset resets various internal storeage parameters and
             % settings in preparation for performing a transient simulation
             % based on the ODE solver routines, returning the hydroBody to
-            % the state it is in just after calling odeSimSetup. This
+            % the state it is in just after calling timeDomainSimSetup. This
             % should be called before re-running a transient simulation
             % with the same parameters.
             %
