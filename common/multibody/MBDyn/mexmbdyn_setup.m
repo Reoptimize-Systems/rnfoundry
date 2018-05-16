@@ -61,8 +61,13 @@ function mexmbdyn_setup (varargin)
     
     cd(fullfile(getmfilepath (mfilename), '+mbdyn', '+mint'));
 
-    mexMBCNodal_mexargs = {'mexMBCNodal.cpp', 'CXXFLAGS="$CXXFLAGS -std=c++11"'};
-    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp', 'CXXFLAGS="$CXXFLAGS -std=c++11"'};
+    mexMBCNodal_mexargs = {'mexMBCNodal.cpp'};
+    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp'};
+    
+    if ~isoctave
+        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'CXXFLAGS="$CXXFLAGS -std=c++11"'}];
+        mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'CXXFLAGS="$CXXFLAGS -std=c++11"'}];
+    end
     
     if ispc
         mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lws2_32'}];
@@ -89,7 +94,8 @@ function mexmbdyn_setup (varargin)
     end
     
     mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lmbc'}];
-    mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc', 'LDFLAGS="$LDFLAGS -Wl,-rpath,"/opt/lib""'}];
+    mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc'}];
+    %mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc', 'LDFLAGS="$LDFLAGS -Wl,-rpath,"/opt/lib""'}];
     
     % compiling mexMBCNodal
     try
@@ -105,7 +111,7 @@ function mexmbdyn_setup (varargin)
         end
     end
     
-    % compiling mexMBCNodal
+    % compiling mexMBCNodalSharedMem
     try
         mex (mexMBCNodalSharedMem_mexargs{:});
         fprintf (1, 'Finished setting up mexMBCNodalSharedMem.\n');
