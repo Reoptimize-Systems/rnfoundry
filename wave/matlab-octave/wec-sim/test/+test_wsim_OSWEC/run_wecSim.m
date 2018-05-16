@@ -28,14 +28,14 @@ waves.T = 8;
 %% Hydrodynamic body system
 
 %% Flap
-flap_hbody = wsim.hydroBody ('hydroData/oswec.h5', 'CaseDirectory', simu.caseDir);   % Initialize bodyClass for Flap
+flap_hbody = wsim.hydroBody ('oswec.h5');   % Initialize bodyClass for Flap
 flap_hbody.mass = 127000;                         % User-Defined mass [kg]
 flap_hbody.momOfInertia = [1.85e6 1.85e6 1.85e6]; % Moment of Inertia [kg-m^2]
-flap_hbody.geometryFile = fullfile ('geometry', 'flap.stl');    % Geometry File
+flap_hbody.geometryFile = 'flap.stl';    % Geometry File
 
 %% Base
-base_hbody = wsim.hydroBody ('hydroData/oswec.h5', 'CaseDirectory', simu.caseDir);   % Initialize bodyClass for Base
-base_hbody.geometryFile = fullfile ('geometry', 'base.stl');    % Geometry File
+base_hbody = wsim.hydroBody ('oswec.h5');   % Initialize bodyClass for Base
+base_hbody.geometryFile = 'base.stl';    % Geometry File
 base_hbody.mass = 'fixed';     
 
 % make a hydrosys object for simulation
@@ -43,7 +43,7 @@ hsys = wsim.hydroSystem (waves, simu, [flap_hbody, base_hbody]);
 
 % set up transient simulation
 hsys.initialiseHydrobodies ();
-hsys.odeSimSetup ();
+hsys.timeDomainSimSetup ();
 [hydro_mbnodes, hydro_mbbodies, hydro_mbelements] = hsys.makeMBDynComponents ();
 
 %% Multibody dynamics system specification (mbdyn)

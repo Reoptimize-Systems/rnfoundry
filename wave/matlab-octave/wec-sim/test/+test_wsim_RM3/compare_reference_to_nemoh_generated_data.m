@@ -29,7 +29,7 @@ hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
 
 % set up transient simulation
 hsys.initialiseHydrobodies ();
-hsys.odeSimSetup ();
+hsys.timeDomainSimSetup ();
 [hydro_mbnodes, hydro_mbbodies, hydro_mbelements] = hsys.makeMBDynComponents ();
 
 %% Multibody dynamics system specification (mbdyn)
