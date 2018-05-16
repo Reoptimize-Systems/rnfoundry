@@ -1236,7 +1236,7 @@ classdef base < handle
             if isoctave ()
                 ret = isaxes (hax);
             else
-                ret = isa (self.drawAxesH, 'matlab.graphics.axis.Axes');
+                ret = isa (hax, 'matlab.graphics.axis.Axes');
             end
 
         end
