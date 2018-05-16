@@ -119,8 +119,15 @@ classdef hydroSystem < handle
                     
                     hydrobodies(ind).bodyNumber = nextbodyind;
                     
-                    % add the new hydrobodies to the collection
-                    self.hydroBodies = [ self.hydroBodies, hydrobodies(ind) ];
+                    % the following complication is necessary to support
+                    % Octave, otherwise we could just do
+                    % self.hydroBodies = [self.hydroBodies, hydrobodies(ind)];
+                    if isempty (self.hydroBodies)
+                        self.hydroBodies = hydrobodies(ind);
+                    else
+                        % add the new hydrobodies to the collection
+                        self.hydroBodies(end+1) = hydrobodies(ind);
+                    end
                 
                     % increment the number of bodies in simu
                     self.simu.numWecBodies = self.simu.numWecBodies + 1;
@@ -186,8 +193,8 @@ classdef hydroSystem < handle
                     self.hydroBodies(bodyind).loadHydroData (hydroData(bodyind));
                     
                 else
-                    % load the hydrodynamic data
-                    self.hydroBodies(bodyind).readH5File ();
+                    % load the hydrodynamic data from file
+                    self.hydroBodies(bodyind).loadHydroData ();
                     
 %                     % check water depth is the same as the previously added
 %                     % body

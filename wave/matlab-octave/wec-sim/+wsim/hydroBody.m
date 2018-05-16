@@ -26,7 +26,7 @@ classdef hydroBody < handle
         momOfInertia      = []                                                  % Moment of inertia [Ixx Iyy Izz] in kg*m^2
         cg                = []                                                  % Center of gravity [x y z] in meters. For WEC bodies this is given in the h5 file.
         dispVol           = []                                                  % Displaced volume at equilibrium position in meters cubed. For WEC bodies this is given in the h5 file.
-        geometryFile      = 'NONE'                                              % Location of geomtry stl files
+        geometryFile      = 'NONE'                                              % Names of geomtry stl files in geometry subfolder
         viscDrag          = struct(...                                          % Structure defining the viscous (quadratic) drag
                                    'cd',                   [0 0 0 0 0 0], ...       % Viscous (quadratic) drag cd, vector length 6
                                    'characteristicArea',   [0 0 0 0 0 0])           % Characteristic area for viscous drag, vector length 6
@@ -61,7 +61,7 @@ classdef hydroBody < handle
 
     properties (SetAccess = 'public', GetAccess = 'public') %internal
         hydroForce        = struct()                                            % Hydrodynamic forces and coefficients used during simulation.
-        h5File            = ''                                                  % hdf5 file containing the hydrodynamic data
+        hydroDataFile     = ''                                                  % hdf5 or mat file containing the hydrodynamic data
         hydroDataBodyNum  = []                                                  % Body number within the hdf5 file.
         massCalcMethod    = []                                                  % Method used to obtain mass: 'user', 'fixed', 'equilibrium'
         bodyNumber        = []                                                  % bodyNumber in WEC-Sim as defined in the input file. Can be different from the BEM body number.
@@ -158,18 +158,23 @@ classdef hydroBody < handle
             
             options = parse_pv_pairs (options, varargin);
             
-            if exist (fullfile (options.CaseDirectory, filename), 'file') ~= 2
+            hydrofile = fullfile (options.CaseDirectory, 'hydroData', filename);
+            
+            if exist (hydrofile, 'file') ~= 2
                 if exist (options.CaseDirectory, 'dir') ~= 7
                     error ('The case directory %s does not appear to exist', options.CaseDirectory);
                 else
-                    error ('The h5 file was not found in the case directory:\n%s', options.CaseDirectory);
+                    [filepath,~,ext] = fileparts (hydrofile);
+                    error ( 'The specified hydro data (%s) file was not found in the directory:\n%s', ...
+                            ext, ...
+                            filepath );
                 end
             end
 
             % hydro data file
-            obj.h5File = filename;
             obj.caseDir = options.CaseDirectory;
-
+            obj.hydroDataFile = hydrofile;
+            
         end
 
         function readH5File (obj)
@@ -211,7 +216,7 @@ classdef hydroBody < handle
             %
             %
             
-            filename = fullfile (obj.caseDir, obj.h5File);
+            filename = obj.hydroDataFile;
             name = ['/body' num2str(obj.bodyNumber)];
             obj.cg = h5read(filename,[name '/properties/cg']);
             obj.cg = obj.cg';
@@ -246,15 +251,107 @@ classdef hydroBody < handle
         end
 
         function loadHydroData (obj, hydroData)
-            % Loads hydroData structure from matlab variable as alternative
-            % to reading the h5 file. Used when doing multiple condition
-            % runs on the same system
+            % load hydrodynamic data from file or variable
+            %
+            % Syntax
+            %
+            % loadHydroData (obj)
+            % loadHydroData (obj, filename)
+            % loadHydroData (obj, hydroData)
+            %
+            % Description
+            %
+            % Loads hydrodynamic data from a .mat file, .h5 file or a
+            % matlab variable.
+            %
+            % Input
+            %
+            %  hg - wsim.hydroBody object
+            %
+            %  filename - character vector containing the name of the file
+            %   from which to load the hydrodynamic data. Can be either a
+            %   .h5 file or a .mat file. If a .mat file it must contain all
+            %   the fields expected to be in the hydroBody hydroData
+            %   property. This file can also be created using the
+            %   wsim.hydroBody.saveHydroData method
+            %
+            %  hydroData - structure containing the data which is loaded
+            %   directly into the hydrBody's hydroData property
+            %
+            %
+            % See Also: wsim.hydroBody.readH5File,
+            %           wsim.hydroBody.saveHydroData
             %
             
-            obj.hydroData = hydroData;
-            obj.cg        = hydroData.properties.cg';
-            obj.dispVol   = hydroData.properties.disp_vol;
-            obj.name      = hydroData.properties.name;
+            if nargin < 2
+                hydroData = obj.hydroDataFile;
+            end
+            
+            if ischar (hydroData)
+                
+                if exist (hydroData, 'file') == 0
+                    error ('file: "%s" not found.', hydroData);
+                end
+                
+                [~,~,ext] = fileparts (hydroData);
+                
+                obj.hydroDataFile = hydroData;
+                    
+                switch ext
+                    
+                    case '.mat'
+                        
+                        hd = load (obj.hydroDataFile);
+                        
+                        obj.loadHydroData (hd);
+                        
+                    case '.h5'
+                        
+                        readH5File (obj)
+                        
+                    otherwise
+                        
+                        error ('Unsupported file extension "%s". Must be .mat or .h5', ext);
+                        
+                end
+                    
+            elseif isstruct (hydroData)
+                
+                obj.hydroData = hydroData;
+                obj.cg        = hydroData.properties.cg';
+                obj.dispVol   = hydroData.properties.disp_vol;
+                obj.name      = hydroData.properties.name;
+                
+            else
+                
+                error ('hydroData must be a character vector or a structure.');
+                
+            end
+            
+            
+        end
+        
+        function saveHydroData (obj, filename, varargin)
+            % saves the body's hydrodata structure to a .mat file
+            
+            options.Directory = fullfile (obj.caseDir, 'hydroData');
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            assert (ischar (options.Directory), ...
+                'Directory must be a character vector' );
+            
+            if ~exist (options.Directory, 'dir')
+                mkdir (options.Directory);
+            end
+            
+            if isempty (fieldnames(obj.hydroData))
+                warning ('hydroData property is empty, so it will not be saved to file');
+            else
+                tmphdata = obj.hydroData;
+                save (fullfile (options.Directory, filename), '-struct', 'tmphdata');
+            end
+            
         end
 
         function hydroForcePre(obj)
@@ -433,16 +530,25 @@ classdef hydroBody < handle
 
         function checkinputs(obj)
             % Checks the user inputs
+            
             % hydro data file
-            if exist(fullfile (obj.caseDir, obj.h5File),'file')==0 % && obj.nhBody==0
-                error('The hdf5 file %s does not exist', ...
-                    fullfile (obj.caseDir, obj.h5File))
+            if exist (fullfile (obj.hydroDataFile),'file') == 0 % && obj.nhBody==0
+                
+                error ( 'The hydro data file %s does not exist', ...
+                        fullfile (obj.caseDir, obj.hydroDataFile) );
+                
             end
+            
             % geometry file
-            if exist(fullfile (obj.caseDir, obj.geometryFile),'file') == 0
-                error('Could not locate and open geometry file %s', ...
-                    fullfile (obj.caseDir, obj.geometryFile))
+            geomfile = fullfile (obj.caseDir, 'geometry', obj.geometryFile);
+            
+            if exist (geomfile, 'file') == 0
+                
+                error ( 'Could not locate and open geometry file:\n%s', ...
+                        geomfile )
+                    
             end
+            
         end
         
         function [node, body] = makeMBDynComponents (obj)
@@ -483,7 +589,7 @@ classdef hydroBody < handle
                                   [0;0;0], ...
                                   diag (obj.momOfInertia), ...
                                   node, ...
-                                  'STLFile', fullfile (obj.caseDir, obj.geometryFile) );
+                                  'STLFile', fullfile (obj.caseDir, 'geometry', obj.geometryFile) );
             
         end
         
