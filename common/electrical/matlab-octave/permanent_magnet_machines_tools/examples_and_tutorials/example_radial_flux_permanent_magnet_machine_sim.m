@@ -40,7 +40,7 @@
 % q  -  number of slots per pole and phase
 % qn  -  numerator of q
 % qd  -  denominator of q
-% qc - number of coils per pole and phase, i.e. the ratio coils / (Poles * Phases)
+% qc - number of coils per pole and phase, i.e. the ratio Qc / (Poles * Phases)
 % qcn  -  numerator of qc
 % qcd  -  denominator of qc
 %
@@ -63,9 +63,9 @@
 % confuse us, i.e. any existing design and simoptions structure
 clear design simoptions
 
-% we will design a 4-pole machine, so it will have 4 magnets, and 2
+% we will design a 12-pole machine, so it will have 12 magnets, and 6
 % pole-pairs
-design.Poles = 4;
+design.Poles = 12;
 % Choose the number of Phases, the conventional 3
 design.Phases = 3;
 % The desired number of layers is stored in 'CoilLayers'
@@ -78,7 +78,8 @@ design.CoilLayers = 2;
 % below. To simplify things we will use one coil per pole and phase, but
 % many other ratios are possible, see the help for "fr" (run "help fr" at
 % the command prompt) for more information on using fractions objects
-design.qc = fr(36,design.Poles*design.Phases);
+design.Qc = design.Phases * design.Poles;
+design.qc = fr(design.Qc,design.Poles*design.Phases);
 % Specify the actual coil slot pitch in slots
 design.yd = 4;
 % We must also specify a fill factor for the coils, this is the wire fill
