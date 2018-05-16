@@ -245,7 +245,7 @@ classdef baseSystem < mbdyn.pre.base
             %
             
             if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
-                if ~isvalid (self.drawAxesH)
+                if ~ishghandle (self.drawAxesH)
                     self.drawAxesH = [];
                 end
             end
