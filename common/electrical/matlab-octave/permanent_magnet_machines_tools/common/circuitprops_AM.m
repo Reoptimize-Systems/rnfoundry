@@ -257,7 +257,7 @@ function design = get_load_resistance (design)
         
         % calculate the loar resistance based on the desired resistance
         % ratio if supplied
-        design.LoadResistance = design.PhaseResistance * design.RlVRp;
+        design.LoadResistance = design.PhaseResistance(1) * design.RlVRp;
         
     else
         error ('Neither ''LoadResistance'' nor ''RlVRp'' were specified in the design structure. Check you have chosen the correct value for simoptinos.LoadModel');
