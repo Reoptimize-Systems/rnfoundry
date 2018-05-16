@@ -18,10 +18,29 @@ classdef base < handle
         needsRedraw; % track whether object needs to be redrawn
         drawAxesH; % handle to figure for plotting
         drawColour;
+        uid;
         
     end
     
     methods
+        
+        function self = base ()
+           
+            if isoctave
+                self.uid = round (rand ()*1e12);
+            end
+            
+        end
+        
+        function test = eq (a, b)
+            
+            if isoctave
+                test = a.uid == b.uid;
+            else
+                test = eq@handle (a, b);
+            end
+            
+        end
         
         function setLabel (self, label)
             self.label = label;
@@ -36,10 +55,10 @@ classdef base < handle
                 
                 % plot in the existing axes if possible as no new axes
                 % supplied
-                if isa (self.drawAxesH, 'matlab.graphics.axis.Axes')
+                if self.isAxesHandle (self.drawAxesH)
                     % use existing axes
                     
-                    if ~isvalid (self.drawAxesH)
+                    if ~ishghandle (self.drawAxesH)
                         % axes no longer exists, or figure has been closed
                         self.drawAxesH = [];
                         self.deleteAllDrawnObjects ();
@@ -58,10 +77,14 @@ classdef base < handle
                     error ('drawAxesH property is not empty or an axes handle');
                 end
             
-            elseif isa (hax, 'matlab.graphics.axis.Axes')
+            elseif self.isAxesHandle (hax)
                 % an axes has been supplied, so we plot to this new axes
                 
-                if ~isvalid (hax)
+                if isoctave
+                    drawnow ();
+                end
+                
+                if ~ishghandle (hax)
                     error ('provided axes object is not valid');
                 end
                 self.drawAxesH = hax;
@@ -79,7 +102,7 @@ classdef base < handle
                 
             end
             
-            if isempty (self.transformObject) || ~isvalid (self.transformObject)
+            if isempty (self.transformObject) || ~ishghandle (self.transformObject)
                 self.transformObject = hgtransform (self.drawAxesH);
             end
             
@@ -90,7 +113,7 @@ classdef base < handle
             
             figure;
             self.drawAxesH = axes;
-            if ~isempty (self.transformObject) && isvalid (self.transformObject)
+            if ~isempty (self.transformObject) && ishghandle (self.transformObject)
                 delete (self.transformObject);
             end
             self.transformObject = [];
@@ -102,7 +125,7 @@ classdef base < handle
             
             for ind = 1:numel (self.shapeObjects)
                 if ~isempty (self.shapeObjects{ind}) ...
-                        && isvalid (self.shapeObjects{ind})
+                        && ishghandle (self.shapeObjects{ind})
 
                     delete (self.shapeObjects{ind});
 
@@ -1206,7 +1229,18 @@ classdef base < handle
                         + radius * (v(:,1) * cos(theta) + v(:,2) * sin(theta) );
 
         end
-        
+       
+        function ret = isAxesHandle (hax)
+            % test if variable is axes handle
+            
+            if isoctave ()
+                ret = isaxes (hax);
+            else
+                ret = isa (self.drawAxesH, 'matlab.graphics.axis.Axes');
+            end
+
+        end
+    
     end
     
 end
