@@ -11,7 +11,6 @@ simu.endTime=400;                       %Simulation End bdcloseTime [s]
 simu.solver = 'ode4';                   %simu.solver = 'ode4' for fixed step & simu.solver = 'ode45' for variable step 
 simu.dt = 0.1; 							%Simulation time-step [s]
 simu.rampT = 100;                       %Wave Ramp Time Length [s]
-simu.multibodySolver = 'MBDyn';
 simu.b2b = true;
 
 %% Wave Information 
@@ -69,27 +68,27 @@ waves.T = 8;                            %Wave Period [s]
 %% Hydrodynamic body system
 
 % Float
-float_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir);      
+float_hbody = wsim.hydroBody('rm3.h5');      
     %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
     %Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
     %Weight.
 float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Inertia [kg*m^2]     
-float_hbody.geometryFile = fullfile ('geometry', 'float.stl');    %Location of Geomtry File
+float_hbody.geometryFile = 'float.stl';    %Location of Geomtry File
 
 % Spar/Plate
-spar_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir); 
+spar_hbody = wsim.hydroBody('rm3.h5'); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
-spar_hbody.geometryFile = fullfile ('geometry', 'plate.stl'); 
+spar_hbody.geometryFile = 'plate.stl'; 
 
 % make a hydrosys object for simulation
 hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
 
 % set up transient simulation
 hsys.initialiseHydrobodies ();
-hsys.odeSimSetup ();
+hsys.timeDomainSimSetup ();
 [hydro_mbnodes, hydro_mbbodies, hydro_mbelements] = hsys.makeMBDynComponents ();
 
 %% Multibody dynamics system specification (mbdyn)

@@ -75,7 +75,7 @@ hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
 
 % set up ode simulation
 hsys.initialiseHydrobodies ();
-hsys.odeSimSetup ();
+hsys.timeDomainSimSetup ();
 
 %% Multibody dynamics system specification (mbdyn)
 

@@ -75,7 +75,7 @@ hsys = wsim.hydroSystem (waves, simu, hydrobodies);
 
 % set up ode simulation (runs 
 hsys.initialiseHydrobodies ();
-hsys.odeSimSetup ();
+hsys.timeDomainSimSetup ();
 
 %% Compare to origninal WEC-Sim
 

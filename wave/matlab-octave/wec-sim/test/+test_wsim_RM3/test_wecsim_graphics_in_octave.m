@@ -94,7 +94,7 @@ hsys = wsim.hydroSystem (waves, simu, tmp);
 
 % set up transient simulation
 hsys.initialiseHydrobodies ();
-hsys.odeSimSetup ();
+hsys.timeDomainSimSetup ();
 
 % generate the nodes and elements for simulation of the hydrodynamic system
 % in MBDyn. One node and one body element are created for each hydrodynamic
