@@ -215,10 +215,10 @@ function mexlsei_setup(varargin)
     
     if strcmpi (libfilename(1:3), 'lib')
         
-        libfilemexcallname = libfilename(4:end);
-        
-        [~,libfilemexcallname] = fileparts (libfilemexcallname);
-        
+        % we force linking to the static library. This fixes the
+        % "libf2c.so: undefined reference to `MAIN__' " error
+        libfilemexcallname = [':', libfilename, '.a'];
+
     elseif strcmpi (libfilename(end-4:end), '.lib')
         libfilemexcallname = libfilename(1:3);
     else
@@ -250,7 +250,6 @@ function mexlsei_setup(varargin)
         % spaces, 'C:\libraries' on my system, you might need to change
         % this directory for your windows machine
         mexinputs = [mexinputs, { 'LINKFLAGS="$LINKFLAGS /NODEFAULTLIB:LIBCMT.lib"'}];
-
     end
     
     % call mex
