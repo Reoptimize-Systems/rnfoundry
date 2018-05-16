@@ -15,7 +15,6 @@ simu.startTime = 0;                   % Simulation Start Time [s]
 simu.endTime=400;                     % Simulation End Time [s]
 simu.dt = 0.1;                        % Simulation time-step [s]
 simu.rampT = 100;                     % Wave Ramp Time Length [s]
-simu.multibodySolver = 'MBDyn';
 simu.b2b = true;                      % BOdy-to-body interaction
 
 %% Wave Information 
@@ -77,7 +76,7 @@ waves.T = 8;                            %Wave Period [s]
 %
 
 % Float
-float_hbody = wsim.hydroBody('float.mat', 'CaseDirectory', simu.caseDir);      
+float_hbody = wsim.hydroBody('float.mat');      
     %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
@@ -87,7 +86,7 @@ float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Ine
 float_hbody.geometryFile = 'float.stl';    %Location of Geomtry File
 
 % Spar/Plate
-spar_hbody = wsim.hydroBody('spar.mat', 'CaseDirectory', simu.caseDir); 
+spar_hbody = wsim.hydroBody('spar.mat'); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
 spar_hbody.geometryFile = 'plate.stl'; 
@@ -101,7 +100,7 @@ hsys = wsim.hydroSystem (waves, simu, obj_array);
 
 % set up transient simulation
 hsys.initialiseHydrobodies ();
-hsys.odeSimSetup ();
+hsys.timeDomainSimSetup ();
 
 % generate the nodes and elements for simulation of the hydrodynamic system
 % in MBDyn. One node and one body element are created for each hydrodynamic
