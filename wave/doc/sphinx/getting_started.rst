@@ -58,8 +58,55 @@ functions from existing ones by just copying the package directory
 to a new directory (also starting with a ``+`` symbol). We will use 
 this method of organisation in all subsequent examples. 
 
-Example 1: The RM3 Point Absorber
-=================================
+Example 1: The RM3 Two Body Point Absorber
+==========================================
 
+This section describes the application of the WEC-Sim code to model 
+the Reference Model 3 (RM3) two-body point absorber WEC. This 
+example application can be found in the |TNshort| examples 
+directory. In this example, we will start from having only an 
+existing geometry file, to simulating the entire system.
 
+Device Geometry
+---------------
 
+The RM3 two-body point absorber WEC has been characterized both 
+numerically and experimentally as a result of the DOE-funded 
+Reference Model Project. The details and outcomes of this study can 
+be found `here`__. The RM3 is a two-body point absorber consisting 
+of a float and a reaction plate. Full-scale dimensions of the RM3 
+and its mass properties are shown below.
+
+.. __: http://energy.sandia.gov/energy/renewable-energy/water-power/technology-development/reference-model-project-rmp/
+
+.. image:: /images/RM3_Geom.png
+
+|
+
++--------------------------------------------------------------+
+| Float Full Scale Properties                                  |
++--------+--------------+--------------------------------------+
+| CG (m) | Mass (tonne) | Moment of Inertia (kg-m^2)           |
++========+==============+============+============+============+
+| 0.0    |              | 20'907'301 |            |            |
++--------+              +------------+------------+------------+
+| 0.0    |  727.0       |            | 21'306'091 | 4305       |
++--------+              +------------+------------+------------+
+| -0.72  |              |            | 4305       | 37'085'481 |
++--------+--------------+------------+------------+------------+
+
+|
+
++--------------------------------------------------------------+
+| Plate Full Scale Properties                                  |
++--------+--------------+--------------------------------------+
+| CG (m) | Mass (tonne) | Moment of Inertia (kg-m^2)           |
++========+==============+============+============+============+
+| 0.0    |              | 94'419'615 |            |            |
++--------+              +------------+------------+------------+
+| 0.0    |  878.30      |            | 94'407'091 | 217'593    |
++--------+              +------------+------------+------------+
+| -21.29 |              |            | 217'593    | 28'542'225 |
++--------+--------------+------------+------------+------------+
+
+WEC-Sim RM3 Model Package
