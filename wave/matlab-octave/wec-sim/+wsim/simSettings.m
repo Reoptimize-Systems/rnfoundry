@@ -21,7 +21,6 @@ classdef simSettings < handle
     properties (SetAccess = 'public', GetAccess = 'public')%input file
         multibodySolver     = 'MBDyn';                                     % solver to use for mulitbody dynamics, can be SimMechanics or MBDyn
         simMechanicsFile    = ''                                           % Simulink/SimMechanics model file (default = '', first .slx file found in dir will be used)
-        mBDynFile           = ''                                           % Simulink/SimMechanics model file (default = '', first .mbd file found in dir will be used)
         startTime           = 0                                            % Simulation start time (default = 0 s)
         endTime             = 500                                          % Simulation end time (default = 500 s)
         dt                  = 0.1                                          % Simulation time step (default = 0.1 s)
@@ -179,28 +178,29 @@ classdef simSettings < handle
                 
             elseif strcmpi (obj.multibodySolver, 'MBDyn')
                 
-                if isempty (obj.mBDynFile)
-                    % find all slx files
-                    mbdfiles = dir (fullfile (obj.caseDir, '*.mbd'));
-                    
-                    if isempty (mbdfiles)
-                        warning ('No MBDyn input files were found in the case directory %s', obj.caseDir)
-                        return;
-                    end
-                    
-                    % if any found use the first one (warn if multiple)
-                    obj.mBDynFile = fullfile (obj.caseDir, mbdfiles(1).name);
-                    
-                    if numel (mbdfiles) > 1
-                        warning ('You did not specify a specific MBDyn mbd file and multiple were found in the case directory, the following file will be used:\n%s', ...
-                            obj.mBDynFile);
-                    end
-                    
-                end
-                
-                if exist(obj.mBDynFile, 'file') ~= 2
-                    error ('The mBDynFile file, %s, does not exist in the case directory', obj.mBDynFile)
-                end
+%                 if isempty (obj.mBDynFile)
+%                     % find all mbd files
+%                     mbdfiles = dir (fullfile (obj.caseDir, '*.mbd'));
+%                     
+%                     if isempty (mbdfiles)
+%                         warning ('No MBDyn input files were found in the case directory %s', obj.caseDir)
+%                         return;
+%                     end
+%                     
+%                     % if any found use the first one (warn if multiple)
+%                     obj.mBDynFile = fullfile (obj.caseDir, mbdfiles(1).name);
+%                     
+%                     if numel (mbdfiles) > 1
+%                         warning ('You did not specify a specific MBDyn mbd file and multiple were found in the case directory, the following file will be used:\n%s', ...
+%                             obj.mBDynFile);
+%                     end
+%                     
+%                 end
+%                 
+%                 if exist(obj.mBDynFile, 'file') ~= 2
+%                     error ('The mBDynFile file, %s, does not exist in the case directory', obj.mBDynFile)
+%                 end
+
             end
             
             % Remove existing output folder

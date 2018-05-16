@@ -20,9 +20,11 @@ classdef hydroSystem < handle
         
         nHydroBodies;
         odeSimInitialised = false;
+        hydroBodiesInitialised = false;
         simu;        % simulation setings (wsim.simSettings object)
         waves;       % wave settings (wsim.waveSettings object)
         bodyMBDynNodes;
+        caseDirectory;
         
     end
     
@@ -73,6 +75,9 @@ classdef hydroSystem < handle
             % initialise the number of WEC bodies in the sim to 0, this
             % will be incremented as they are added
             self.simu.numWecBodies = 0;
+            
+            % get the case directory from the sim settings
+            self.caseDirectory = self.simu.caseDir;
             
             % add the supplied hyrobodies to the hydrodynamic system
             addHydroBodies (self, hydrobodies);
@@ -135,6 +140,8 @@ classdef hydroSystem < handle
                     nextbodyind = nextbodyind + 1;
 
                 end
+                
+                self.hydroBodiesInitialised = false;
             
             end
             
@@ -180,8 +187,10 @@ classdef hydroSystem < handle
             for bodyind = 1:numel (self.hydroBodies)
                 
 %                 self.hydroBodies(bodyind).initialiseSimParams (waves, simu);
+
+                self.hydroBodies(bodyind).setCaseDirectory (self.caseDirectory);
                 
-                self.hydroBodies(bodyind).checkinputs ();
+                self.hydroBodies(bodyind).checkInputs ();
                 
                 % Determine if hydro data needs to be reloaded from h5
                 % file, or if hydroData was stored in memory from a
@@ -219,15 +228,17 @@ classdef hydroSystem < handle
                 
             end
             
+            self.hydroBodiesInitialised = true;
+            
         end
         
-        function odeSimSetup (self)
+        function timeDomainSimSetup (self)
             % set up the hydrodynamic system in preparation for performaing
             % a transient ode solution
             %
             % Syntax
             %
-            %  odeSimSetup (hsys)
+            %  timeDomainSimSetup (hsys)
             %
             % Input
             %
@@ -253,10 +264,10 @@ classdef hydroSystem < handle
                 end
             end
             
-            % call each body's odeSimSetup method
+            % call each body's timeDomainSimSetup method
             for bodyind = 1:numel(self.hydroBodies)
                 
-                self.hydroBodies(bodyind).odeSimSetup (self.waves, self.simu, self.hydroBodyInds(bodyind));
+                self.hydroBodies(bodyind).timeDomainSimSetup (self.waves, self.simu, self.hydroBodyInds(bodyind));
                 
             end
             
@@ -270,14 +281,13 @@ classdef hydroSystem < handle
         
         function [mbnodes, mbbodies, mbelements] = makeMBDynComponents (self)
             
-            if self.odeSimInitialised
+            if self.hydroBodiesInitialised
                             
                 mbnodes = {};
                 mbbodies = {};
                 mbelements = {};
                 
                 input_list = {};
-                
                 
                 % make the structural nodes and bodies
                 for bodyind = 1:numel (self.hydroBodies)
@@ -430,7 +440,7 @@ classdef hydroSystem < handle
                 mbnodes = [mbnodes, absnodes];
                 
             else
-                error ('You must call odeSimSetup before attempting to create the mbdyn components.');
+                error ('You must call initialiseHydrobodies before attempting to create the mbdyn components.');
             end
             
             
@@ -635,26 +645,26 @@ classdef hydroSystem < handle
             
         end
         
-%         function odeSimReset (self)
-%             % reset the hydrodynamic system for transient simulation
-%             %
-%             % Syntax
-%             %
-%             %  odeSimSetup (hsys)
-%             %
-%             % Input
-%             %
-%             %  hsys - hydroSystem object
-%             %
-%             
-%             % call each body's odeSimReset method
-%             for ind = 1:numel(self.hydroBodies)
-%                 self.hydroBodies(ind).odeSimReset ();
-%             end
-%             
-%             self.odeSimInitialised = false;
-%             
-%         end
+        function odeSimReset (self)
+            % reset the hydrodynamic system for transient simulation
+            %
+            % Syntax
+            %
+            %  odeSimReset (hsys)
+            %
+            % Input
+            %
+            %  hsys - hydroSystem object
+            %
+            
+            % call each body's odeSimReset method
+            for ind = 1:numel(self.hydroBodies)
+                self.hydroBodies(ind).odeSimReset ();
+            end
+            
+            self.odeSimInitialised = false;
+            
+        end
 
         function n = get.nHydroBodies (self)
             
