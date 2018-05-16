@@ -35,7 +35,8 @@ function hydro = Read_NEMOH (filedir, varargin)
 %
 %  hydro - 
 %
-% See ‘…\WEC-Sim\tutorials\BEMIO\NEMOH\...’ for examples of usage.
+% See ‘..\WEC-Sim\tutorials\BEMIO\NEMOH\...’ for examples of usage.
+%
 
     options.HydroStructure = struct ();
     
