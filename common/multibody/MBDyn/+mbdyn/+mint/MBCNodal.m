@@ -253,7 +253,13 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     || strcmp (comminfo.commMethod, 'local socket')
                         % initialise the cppinterface parent class by passing the
                         % mexfunction to the superclass constructor
-                        mexfcn = @mbdyn.mint.mexMBCNodal;
+                        if isoctave
+                            % work around for Ocave bug #46659
+                            mexfcn = str2func ('mbdyn.mint.mexMBCNodal');
+                        else
+                            mexfcn = @mbdyn.mint.mexMBCNodal;
+                        end
+                          
                 elseif strcmp (comminfo.commMethod, 'shared memory')
                         mexfcn = @mbdyn.mint.mexMBCNodalSharedMem;
                 else
