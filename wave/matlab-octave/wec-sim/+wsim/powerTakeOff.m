@@ -46,7 +46,7 @@ classdef powerTakeOff < handle
     
     methods (Abstract)
         
-        forceAndMoment (self);
+        
         
     end
     
@@ -202,8 +202,6 @@ classdef powerTakeOff < handle
             self.id = newid;
         end
         
-
-        
         function loggingSetup (self, logger)
             % sets up data logging for a wsim.linearPowerTakeOff object
             %
@@ -274,6 +272,10 @@ classdef powerTakeOff < handle
             else
                 error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
             end
+            
+        end
+        
+        function forceAndMoment (self)
             
         end
         
