@@ -68,21 +68,24 @@ waves.T = 8;                            %Wave Period [s]
 
 %% Hydrodynamic body system
 
+% hydro data fiels assumed to be in assumed to be in folder 
+% <case_directory>/hydroData
+
 % Float
-float_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir);      
+float_hbody = wsim.hydroBody('rm3.h5', 'CaseDirectory', simu.caseDir);      
     %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
     %Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
     %Weight.
 float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Inertia [kg*m^2]     
-float_hbody.geometryFile = fullfile ('geometry', 'float.stl');    %Location of Geomtry File
+float_hbody.geometryFile = 'float.stl'; % Geomtry File Name (assumed to be in <case_directory>/geometry)
 
 % Spar/Plate
-spar_hbody = wsim.hydroBody('hydroData/rm3.h5', 'CaseDirectory', simu.caseDir); 
+spar_hbody = wsim.hydroBody('rm3.h5', 'CaseDirectory', simu.caseDir); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
-spar_hbody.geometryFile = fullfile ('geometry', 'plate.stl'); 
+spar_hbody.geometryFile = 'plate.stl'; % Geomtry File Name (assumed to be in <case_directory>/geometry)
 
 % make a hydrosys object for simulation
 hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
