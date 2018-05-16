@@ -88,7 +88,10 @@ design.CoilLayers = 2;
 % below. To simplify things we will use one coil per pole and phase, but
 % many other ratios are possible, see the help for "fr" (run "help fr" at
 % the command prompt) for more information on using fractions objects
-design.qc = fr(1,1);
+design.Qc = design.Phases * design.Poles;
+design.qc = fr(design.Qc,design.Poles*design.Phases);
+% Specify the actual coil slot pitch in slots
+design.yd = 4;
 % We must also specify a fill factor for the coils, this is the wire fill
 % factor acheived
 design.CoilFillFactor = 0.6;
