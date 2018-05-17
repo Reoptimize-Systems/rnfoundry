@@ -1,5 +1,5 @@
 function path = mbdyn_rootdir()
-% returns the root directory for rnfoundry common code
+% returns the root directory for MBDyn related code
 
     path = getmfilepath(mfilename());
 
