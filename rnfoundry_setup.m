@@ -252,8 +252,24 @@ function rnfoundry_setup (varargin)
         error ('The options ForceMBDynSetup and SkipMBDynSetup are both set to true');
     end
     
+    % octave's which funciton doesn't currently work for functions in
+    % package directories, so wrap the call the getmfilepath in a try catch
+    % with a fallback. If Octave is fixed this will then start working
+    % again
+    try
+        mexMBCNodalexists = exist (fullfile (getmfilepath ('mbdyn.mint.MBCNodal'), ['mexMBCNodal.', mexext()]), 'file') == 3;
+    catch
+        % this version is more fragile to files/directories being moved
+        % around
+        mexMBCNodalexists = exist ( fullfile ( mbdyn_rootdir (), ...
+                                              '+mbdyn', ...
+                                              '+mint', ...
+                                              ['mexMBCNodal.', mexext()]), ...
+                                    'file' ) == 3;
+    end
+    
     if ~Inputs.SkipMBDynSetup
-        if Inputs.ForceMBDynSetup || (exist (fullfile(getmfilepath('mbdyn.mint.MBCNodal'), ['mexMBCNodal.', mexext]), 'file') ~= 3)
+        if Inputs.ForceMBDynSetup || ~mexMBCNodalexists
             didcompwarn = compilerwarning (didcompwarn);
             mexmbdyn_setup ( 'Verbose', Inputs.Verbose, ...
                              'MBCLibDir', Inputs.MBCLibDir, ...
