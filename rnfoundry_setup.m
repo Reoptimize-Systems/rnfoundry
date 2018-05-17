@@ -252,8 +252,8 @@ function rnfoundry_setup (varargin)
         error ('The options ForceMBDynSetup and SkipMBDynSetup are both set to true');
     end
     
-    % octave's which funciton doesn't currently work for functions in
-    % package directories, so wrap the call the getmfilepath in a try catch
+    % octave's which function doesn't currently work for functions in
+    % package directories, so wrap the call to getmfilepath in a try catch
     % with a fallback. If Octave is fixed this will then start working
     % again
     try
