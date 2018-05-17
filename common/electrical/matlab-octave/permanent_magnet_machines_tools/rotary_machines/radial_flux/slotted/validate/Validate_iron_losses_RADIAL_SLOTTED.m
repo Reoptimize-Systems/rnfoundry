@@ -7,7 +7,7 @@
 %
 %
 
-outputdir = '/home/rcrozier/Dropbox (Nova Innovation)/KTP/Outputs/iron-losses-validation-I'
+outputdir = '/home/rcrozier/Dropbox--Nova-Innovation/KTP/Outputs/iron-losses-validation-IIII'
 
 %% set up design parameters
     
@@ -40,7 +40,7 @@ chordanglefcn = @(r,l) 2 .* asin(l / (2.*r));
 design.thetacg = feval(chordanglefcn, design.Rtsb, 5.178e-3);
 design.thetacy = feval(chordanglefcn, design.Ryi, 7.2156e-3);
 design.thetasg = feval(chordanglefcn, design.Ryi, 3e-3);
-design.ls = 88.9e-3;
+design.ls = 76e-3; % paper value: 88.9e-3;
 
 design.ArmatureType = 'external';
 design.MagnetPolarisation = 'radial';
