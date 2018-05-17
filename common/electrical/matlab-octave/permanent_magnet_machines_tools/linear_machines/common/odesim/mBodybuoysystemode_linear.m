@@ -126,7 +126,7 @@ function varargout = mBodybuoysystemode_linear (t, x, design, simoptions)
     if nargin == 0
 
         % get the output names
-        varargout{1} = {'ydot', 'EMF', 'Feff', 'xE', 'vE', ...
+        varargout{1} = {'ydot', 'EMF', 'Feff', 'xBh', 'vBh', 'xBs', 'vBs', 'xT', 'vT', ...
                         'Ffea_heave', 'Ffea_surge', 'FBDh', 'FBDs', ...
                         'buoyancy_force', 'excitation_force_heave', ...
                         'excitation_force_surge', 'radiation_force_heave', ...
@@ -137,33 +137,30 @@ function varargout = mBodybuoysystemode_linear (t, x, design, simoptions)
     
     % get the multibody system 
     mb = design.MultiBodySystem;
-%     % update it's state, this will allow us to use buoy.vel etc. to the
-%     % velocities and positions
-%     overwriteState (mb, t, x(simoptions.ODESim.SolutionComponents.MultiBodySystem.SolutionIndices));
-    % get the buoy
-    buoy = simoptions.ODESim.SolutionComponents.MultiBodySystem.Buoy;
-    
-    mbsolutioninds = simoptions.ODESim.SolutionComponents.MultiBodySystem.SolutionIndices;
-    
+
     % Change the x members into more useful variables names, MATLAB will
     % optimise away any memory penalty associated with this I think
-    xBh = x(mbsolutioninds(simoptions.ODESim.SolutionComponents.MultiBodySystem.BuoyPositionSolutionInd),:) ...
-            - buoy.sz/2 + simoptions.BuoySim.BuoyParameters.draft; % x(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices);
-    vBh = x(mbsolutioninds(simoptions.ODESim.SolutionComponents.MultiBodySystem.BuoyVelocitySolutionInd),:); % x(simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices);
+    [pos, vel] = mb.sensors{1}.posandvelinfo ();
+    xBh = pos(3,3);
+    vBh = vel(3,3);
+%     xBh = x(mbsolutioninds(simoptions.ODESim.SolutionComponents.MultiBodySystem.BuoyPositionSolutionInd),:) ...
+%             - buoy.sz/2 + simoptions.BuoySim.BuoyParameters.draft; % x(simoptions.ODESim.SolutionComponents.BuoyPositionHeave.SolutionIndices);
+%     vBh = x(mbsolutioninds(simoptions.ODESim.SolutionComponents.MultiBodySystem.BuoyVelocitySolutionInd),:); % x(simoptions.ODESim.SolutionComponents.BuoyVelocityHeave.SolutionIndices);
 %     xBh = buoy.pos(3) - buoy.sz/2 + simoptions.BuoySim.BuoyParameters.draft;
 %     vBh = buoy.vel(3);
     xBs = 0; % x(simoptions.ODESim.SolutionComponents.BuoyPositionSurge.SolutionIndices);
     vBs = 0; % x(simoptions.ODESim.SolutionComponents.BuoyVelocitySurge.SolutionIndices);
-    Iphases = x(simoptions.ODESim.SolutionComponents.PhaseCurrents.SolutionIndices);
-    
-    Icoils = Iphases ./ design.Branches;
 
     % Initialize dx with zeros
     dx = zeros(size(x));
     
+    % first solve the nested simulation
+    vRgenvec = vel(:,2) - vel(:,1);
+    xT = magn (pos(:,2) - pos(:,1));
+    vT = magn (vRgenvec);
+    
     % determine the machine outputs
-    [dpsidxR, EMF, Feff, FfeaVec, xE, vE, unitv, design] = ...
-        machineodesim_linear(design, simoptions, Icoils, xBh, vBh, xBs, vBs);
+    [Feff, ~, EMF, dpsidxR, design] = machineodesim_AM (design, simoptions, xT, 0, vT, 0, Icoils);
 
     % find the derivative of the coil current (solving the differential
     % equation describing the simple output circuit)
@@ -175,56 +172,44 @@ function varargout = mBodybuoysystemode_linear (t, x, design, simoptions)
 %     [FaddB, ForceEBD] = feval ( simoptions.ODESim.ForceFcn, design, simoptions, ...
 %                                  xE, vE, EMF, Iphases, xBh, vBh, xBs, vBs, ...
 %                                  simoptions.ODESim.ForceFcnArgs{:} );
-    
-    % ********************************************************************
-    % Buoy Acceleration, these calcs assume all of the mass is in the buoy,
-    % this should be a reasonable assumption provided the mass of the
-    % translator is not too significant in comparison
-
-%     Fexternal = FfeaVec + FaddB;
-    
+    FaddB = 0;
+    ForceEBD = [0, 0, 0, 0, 0, 0, 0];
+      
     % Determine the buoy/sea interaction forces and derivatives
     % Get the solution indices for the hydrodynamic variables
-%     buoyinds = [ simoptions.ODESim.SolutionComponents.BuoyRadiationHeave.SolutionIndices, ...
-%                  simoptions.ODESim.SolutionComponents.BuoyRadiationSurge.SolutionIndices ];
+    buoyinds = [ simoptions.ODESim.SolutionComponents.BuoyRadiationHeave.SolutionIndices, ...
+                 simoptions.ODESim.SolutionComponents.BuoyRadiationSurge.SolutionIndices ];
     
     % calculate the forces acting on the buoy
-%     [ buoyforcedx, ...
-%       buoyancy_force, ...
-%       excitation_force_heave, ...
-%       excitation_force_surge, ...
-%       radiation_force_heave, ...
-%       radiation_force_surge, ...
-%       FBDh, ...
-%       FBDs, ...
-%       wave_height] = buoyodeforces (t, x(buoyinds), xBh, vBh, vBs, simoptions);
-
-      buoyforcedx = 0;
-      buoyancy_force = 0;
-      excitation_force_heave = 0;
-      excitation_force_surge = 0;
-      radiation_force_heave = 0;
-      radiation_force_surge = 0;
-      FBDh = 0;
-      FBDs = 0;
-      FaddB = 0;
-      ForceEBD = [0, 0, 0, 0, 0, 0, 0];
-      wave_height = 0;
+    [ buoyforcedx, ...
+      buoyancy_force, ...
+      excitation_force_heave, ...
+      excitation_force_surge, ...
+      radiation_force_heave, ...
+      radiation_force_surge, ...
+      FBDh, ...
+      FBDs, ...
+      wave_height] = buoyodeforces (t, x(buoyinds), xBh, vBh, vBs, simoptions.BuoySim);
 
     % copy the force derivatives to the derivatives vector at the
     % appropriae point
-%     dx(buoyinds,:) = buoyforcedx;
+    dx(buoyinds,:) = buoyforcedx;
 
     % ************************************************************************
 
     % set the forces in the multibody system
-    % buoy forces
-%     simoptions.ODESim.SolutionComponents.MultiBodySystem.Buoy.data = ...
-%         [0; 0; buoyancy_force+excitation_force_heave+radiation_force_heave+FBDh+Feff];
-%     simoptions.ODESim.SolutionComponents.MultiBodySystem.Buoy.data = buoyancy_force;
+
+    % the buoy handle class is stored in simoptions, we set the force on
+    % the body through the 'data' 
+    simoptions.ODESim.SolutionComponents.MultiBodySystem.Buoy.data = ...
+        [0; 0; buoyancy_force...
+              + excitation_force_heave ...
+              + radiation_force_heave ...
+              + FBDh ...
+              + 9.8*simoptions.ODESim.SolutionComponents.MultiBodySystem.PrimeMoverMass ] + ...
+         q2d(mb.bodies{3}.att) * [0; 0; Feff];
 
     % advance the multibody system
-    
     dx(simoptions.ODESim.SolutionComponents.MultiBodySystem.SolutionIndices) ...
          = eom ( mb, ...
                  t, ...
@@ -239,40 +224,44 @@ function varargout = mBodybuoysystemode_linear (t, x, design, simoptions)
         
         % per-coil induced voltage 
         varargout{2} = EMF;
-        % total power take-off force acting on effector (
+        % total power take-off force acting on effector
         varargout{3} = Feff;
-        % vertical displacement of the effector  
-        varargout{4} = xE;
-        % vertical velocity of the effector
-        varargout{5} = vE;
+        % vertical displacement of the buoy  
+        varargout{4} = xBh;
+        % vertical velocity of the buoy
+        varargout{5} = vBh;
+        % vertical displacement of the buoy  
+        varargout{6} = xBs;
+        % vertical velocity of the buoy
+        varargout{7} = vBs;
         % heave component of generator forces
-        varargout{6} = FfeaVec(1);
+        varargout{8} = xT;
         % surge component of generator forces
-        varargout{7} = FfeaVec(2);
+        varargout{9} = vT;
         % buoy drag forces in heave
-        varargout{8} = FBDh;
+        varargout{10} = FBDh;
         % buoy drag forces in surge
-        varargout{9} = FBDs;
+        varargout{11} = FBDs;
         % simple buoyancy force
-        varargout{10} = buoyancy_force;
+        varargout{12} = buoyancy_force;
         % excitation force in heave
-        varargout{11} = excitation_force_heave;
+        varargout{13} = excitation_force_heave;
         % excitation force in surge
-        varargout{12} = excitation_force_surge;
+        varargout{14} = excitation_force_surge;
         % radiation force in heave
-        varargout{13} = radiation_force_heave;
+        varargout{15} = radiation_force_heave;
         % radiation force in surge
-        varargout{14} = radiation_force_surge;
+        varargout{16} = radiation_force_surge;
         % Additional forces on buoy
-        varargout{15} = FaddB;
+        varargout{17} = FaddB;
         % rate of change of flux linkage with displacement 
-        varargout{16} = dpsidxR;
+        varargout{18} = dpsidxR;
         % wave height
-        varargout{17} = wave_height;
+        varargout{19} = wave_height;
         % breakdown of forces on effector
-        varargout{18} = ForceEBD;
+        varargout{20} = ForceEBD;
         % Phase resistance
-        varargout{19} = diag(design.RPhase);
+        varargout{21} = diag(design.RPhase);
         
     end
 
