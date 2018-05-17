@@ -426,16 +426,22 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
     
     % we will make the minimum phase current of interest that which
     % generates a power of 10W per coil at 1m/s, or a current density of
-    % 0.1 A/mm^2 in the winding, whichever is less
-    minIofinterest = min ( design.ConductorArea * 0.1e6, ...
-                           (10 / (design.Maxdlambdadx)) ) ...
-                        * design.Branches;
+    % 0.1 A/mm^2 in the winding, whichever is less              
+    if isfield (design, 'Maxdlambdadx')
+        minIofinterest = min ( design.ConductorArea * 0.1e6, ...
+                               (10 / (design.Maxdlambdadx)) ) ...
+                            * design.Branches;
+    else
+        minIofinterest = design.ConductorArea * 0.1e6;
+    end
                      
     switch Inputs.EvalFcn
         
         case { 'prescribedmotodetorquefcn_ROTARY', ...
                'prescribedmotodetorquefcn_activerect_ROTARY', ...
                'feaprescribedmotodetorquefcn_ROTARY' }
+           
+            simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
             
             % create the phase current solution component specification
             simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
@@ -445,6 +451,8 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
                                                                     );
                                                                 
         case { 'prescribedmotodetorquefcn_dqactiverect_ROTARY' }
+            
+            simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
 
             % create the phase current solution component specification
             simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...

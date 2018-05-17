@@ -125,8 +125,12 @@ function simoptions = simsetup_linear (design, PreProcFcn, PostPreProcFcn, varar
     % we will make the minimum phase current of interest that which
     % generates a power of 10W per coil at 1m/s, or a current density of
     % 0.1 A/mm^2 in the winding, whichever is less
-    minIofinterest = min(design.ConductorArea * 0.1e6, ...
-                         (10 / (design.Maxdlambdadx)) ) * design.Branches;
+    if isfield (design, 'Maxdlambdadx')
+        minIofinterest = min(design.ConductorArea * 0.1e6, ...
+                             (10 / (design.Maxdlambdadx)) ) * design.Branches;
+    else
+        minIofinterest = design.ConductorArea * 0.1e6;
+    end
                      
     switch Inputs.EvalFcn
         
@@ -134,6 +138,8 @@ function simoptions = simsetup_linear (design, PreProcFcn, PostPreProcFcn, varar
         case { 'prescribedmotode_linear', ...
                'prescribedmotodeforcefcn_linear', ...
                'feaprescribedmotodeforcefcn_linear' }
+            
+            simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
             
             % create the phase current solution component specification
             simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
