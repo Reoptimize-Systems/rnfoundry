@@ -8,7 +8,7 @@ load ('/home/rcrozier/Sync/work/enercro/Projects/WES-Wavedrive/Outputs/design_00
 
 simoptions = struct ();
 
-simoptions.set_CoilResistance = 
+simoptions.set_CoilResistance = 0.497091;
 
 %%
 design.RlVRp = 4;
@@ -39,8 +39,8 @@ simoptions = simsetup_linear (design, 'simfun_TM_SLOTLESS', 'feaprescribedmotfin
                                 'ForceFcn', 'forcefcn_linear_pscbmot', ...
                                 'EvalFcn', 'feaprescribedmotodeforcefcn_linear', ...
                                 'simoptions', simoptions, ...
-                                'PoleCount', 10, ...
-                                'RampPoles', 10, ...
+                                'PoleCount', 15, ...
+                                'RampPoles', 5, ...
                                 'Velocity', 1.0 );
                             
 
@@ -61,11 +61,22 @@ simoptions.ODESim.PreProcFcn = [];
 [design, simoptions] = feval (simoptions.ODESim.PostPreProcFcn, design, simoptions);
 % simoptions.ODESim.PostPreProcFcn = [];
 
+steptol = 1e-5;
+
+Tind = find (simoptions.xT >= 3*steptol);
+
+initsteps = linspace (simoptions.drivetimes(1), simoptions.drivetimes(Tind(1)), 100);
+
+[xE, vE] = prescribedmotvelpos (initsteps, simoptions);
+
+Tind = find (xE >= 3*steptol);
+
+simoptions.ODESim.InitialStep = min ([simoptions.ODESim.MaxStep, max([simoptions.ODESim.MaxStep/5, initsteps(Tind(1))])]);
+
 %%
 close all
 simoptions.ODESim.SolutionComponents.PhaseFluxLinkages.ResetFcn ()
 
-simoptions.ODESim.InitialStep = simoptions.ODESim.MaxStep/3;
 
 % simoptions.ODESim.MaxStep = simoptions.ODESim.MaxStep / 10;
 
