@@ -70,7 +70,7 @@ classdef hydroSystem < handle
             self.odeSimInitialised = false;
             
             % Waves and Simu: check inputs
-            self.waves.checkinputs ();
+            self.waves.checkInputs ();
             
             % initialise the number of WEC bodies in the sim to 0, this
             % will be incremented as they are added
@@ -245,7 +245,7 @@ classdef hydroSystem < handle
             %  hsys - hydroSystem object
             
             % simulation setup
-            self.simu.checkinputs ();
+            self.simu.checkInputs ();
             self.simu.setupSim ();
             
             % wave setup
