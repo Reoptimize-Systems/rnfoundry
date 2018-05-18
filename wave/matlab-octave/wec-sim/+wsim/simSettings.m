@@ -20,53 +20,53 @@ classdef simSettings < handle
 
     properties (SetAccess = 'public', GetAccess = 'public')%input file
         multibodySolver     = 'MBDyn';                                     % solver to use for mulitbody dynamics, can be SimMechanics or MBDyn
-        simMechanicsFile    = ''                                           % Simulink/SimMechanics model file (default = '', first .slx file found in dir will be used)
-        startTime           = 0                                            % Simulation start time (default = 0 s)
-        endTime             = 500                                          % Simulation end time (default = 500 s)
-        dt                  = 0.1                                          % Simulation time step (default = 0.1 s)
-        dtMax               = []                                           % Maximum simulation time step for variable step (default = 0.1 s) 
-        dtOut               = []                                           % Output sampling time (default = dt)
-        dtFeNonlin          = []                                           % Sample time to calculate nonlinear forces (default = dt)
-        dtCITime            = []                                           % Sample time to calculate Convolution Integral (default = dt)
-        rampT               = 100                                          % Ramp time for wave forcing (default = 100 s)
-        domainSize          = 200                                          % Size of free surface and seabed. This variable is only used for visualization (default = 200 m)
-        CITime              = 60                                           % Convolution integral time (default = 60 s)
-        ssCalc              = 0                                            % Option for convolution integral or state-space calculation: convolution integral->'0', state-space->'1', (default = 0)
-        mode                = 'normal'                                     %'normal','accelerator','rapid-accelerator' (default = 'normal')
-        solver              = 'ode4'                                       % PDE solver used by the Simulink/SimMechanics simulation (default = 'ode4') ignored if multibodySolver is MBDyn
-        autoRateTranBlk     = 'on'                                         % Automatically handle rate transition for data transfer
-        zeroCrossCont       = 'DisableAll'                                 % Disable zero cross control 
-        explorer            = 'on'                                         % SimMechanics Explorer 'on' or 'off' (default = 'on') ignored if multibodySolver is MBDyn
-        rho                 = 1000                                         % Density of water (default = 1000 kg/m^3)
-        g                   = 9.81                                         % Acceleration due to gravity (default = 9.81 m/s)
-        nlHydro             = 0                                            % Option for nonlinear hydrohanamics calculation: linear->'0', nonlinear->'1', (default = 0)
-        b2b                 = false                                        % Option for body2body interactions: off->false, on->true, (default = false)
-        paraview            = 0                                            % Option for writing vtp files for paraview visualization.
-        adjMassWeightFun    = 2                                            % Weighting function for adjusting added mass term in the translational direction (default = 2)
-        numIntMidTimeSteps  = 5                                            % Number of intermidiate time steps (default = 5 for ode4 method)
-        mcrCaseFile         = []                                           % mat file that contain a list of the multiple conditions runs with given conditions  
-        morrisonElement     = 0                                            % Option for Morrison Element calculation: Off->'0', On->'1', (default = 0)
-        outputtxt           = 0                                            % Option to save results as ASCII files.
-        reloadH5Data        = 0                                            % Option to re-load hydro data from hf5 file between runs: Off->'0', On->'1', (default = 0)
-        numWecBodies        = []                                           % Number of hydrodynamic bodies that comprise the WEC device (default = 'NOT DEFINED')
-        numPtos             = []                                           % Number of power take-off elements in the model (default = 'NOT DEFINED')
-        numConstraints      = []                                           % Number of contraints in the wec model (default = 'NOT DEFINED')
-        numMoorings         = []                                           % Number of moorings in the wec model (default = 'NOT DEFINED')
+        simMechanicsFile    = '';                                          % Simulink/SimMechanics model file (default = '', first .slx file found in dir will be used)
+        startTime           = 0;                                           % Simulation start time (default = 0 s)
+        endTime             = 500;                                         % Simulation end time (default = 500 s)
+        dt                  = 0.1;                                         % Simulation time step (default = 0.1 s)
+        dtMax               = [];                                          % Maximum simulation time step for variable step (default = 0.1 s) 
+        dtOut               = [];                                          % Output sampling time (default = dt)
+        dtFeNonlin          = [];                                          % Sample time to calculate nonlinear forces (default = dt)
+        dtCITime            = [];                                          % Sample time to calculate Convolution Integral (default = dt)
+        rampT               = 100;                                         % Ramp time for wave forcing (default = 100 s)
+        domainSize          = 200;                                         % Size of free surface and seabed. This variable is only used for visualization (default = 200 m)
+        CITime              = 60;                                          % Convolution integral time (default = 60 s)
+        ssCalc              = 0;                                           % Option for convolution integral or state-space calculation: convolution integral->'0', state-space->'1', (default = 0)
+        mode                = 'normal';                                    %'normal','accelerator','rapid-accelerator' (default = 'normal')
+        solver              = 'ode4';                                      % PDE solver used by the Simulink/SimMechanics simulation (default = 'ode4') ignored if multibodySolver is MBDyn
+        autoRateTranBlk     = 'on';                                        % Automatically handle rate transition for data transfer
+        zeroCrossCont       = 'DisableAll';                                % Disable zero cross control 
+        explorer            = 'on';                                        % SimMechanics Explorer 'on' or 'off' (default = 'on') ignored if multibodySolver is MBDyn
+        rho                 = 1000;                                        % Density of water (default = 1000 kg/m^3)
+        g                   = 9.81;                                        % Acceleration due to gravity (default = 9.81 m/s)
+        nlHydro             = 0;                                           % Option for nonlinear hydrohanamics calculation: linear->'0', nonlinear->'1', (default = 0)
+        b2b                 = false;                                       % Option for body2body interactions: off->false, on->true, (default = false)
+        paraview            = 0;                                           % Option for writing vtp files for paraview visualization.
+        adjMassWeightFun    = 2;                                           % Weighting function for adjusting added mass term in the translational direction (default = 2)
+        numIntMidTimeSteps  = 5;                                           % Number of intermidiate time steps (default = 5 for ode4 method)
+        mcrCaseFile         = [];                                          % mat file that contain a list of the multiple conditions runs with given conditions  
+        morrisonElement     = 0;                                           % Option for Morrison Element calculation: Off->'0', On->'1', (default = 0)
+        outputtxt           = 0;                                           % Option to save results as ASCII files.
+        reloadH5Data        = 0;                                           % Option to re-load hydro data from hf5 file between runs: Off->'0', On->'1', (default = 0)
+        numWecBodies        = [];                                          % Number of hydrodynamic bodies that comprise the WEC device (default = 'NOT DEFINED')
+        numPtos             = [];                                          % Number of power take-off elements in the model (default = 'NOT DEFINED')
+        numConstraints      = [];                                          % Number of contraints in the wec model (default = 'NOT DEFINED')
+        numMoorings         = [];                                          % Number of moorings in the wec model (default = 'NOT DEFINED')
     end
 
     properties (SetAccess = 'protected', GetAccess = 'public')%internal
         simMechanicsModel   = '';
-        version             = 'NOT DEFINED'                                % WEC-Sim version
-        simulationDate      = datestr (now ())                             % Simulation date and time
-        outputDir           = 'output'                                     % Data output directory name
-        time                = 0                                            % Simulation time [s] (default = 0 s)
-        inputFile           = 'wecSimInputFile'                            % Name of WEC-Sim input file (default = 'wecSimInputFile')
-        logFile             = []                                           % File with run information summary
-        caseFile            = []                                           % .mat file with all simulation information
-        caseDir             = []                                           % WEC-Sim case directory
-        CIkt                = []                                           % Number of timesteps in the convolution integral length
-        maxIt               = []                                           % Total number of simulation time steps (default = dependent)        CIkt                                                               % Calculate the number of convolution integral timesteps (default = dependent)
-        CTTime              = []                                           % Convolution integral time series (default = dependent)
+        version             = 'NOT DEFINED';                               % WEC-Sim version
+        simulationDate      = datestr (now ());                            % Simulation date and time
+        outputDir           = 'output';                                    % Data output directory name
+        time                = 0;                                           % Simulation time [s] (default = 0 s)
+        inputFile           = 'wecSimInputFile';                           % Name of WEC-Sim input file (default = 'wecSimInputFile')
+        logFile             = [];                                          % File with run information summary
+        caseFile            = [];                                          % .mat file with all simulation information
+        caseDir             = [];                                          % WEC-Sim case directory
+        CIkt                = [];                                          % Number of timesteps in the convolution integral length
+        maxIt               = [];                                          % Total number of simulation time steps (default = dependent)        CIkt                                                               % Calculate the number of convolution integral timesteps (default = dependent)
+        CTTime              = [];                                          % Convolution integral time series (default = dependent)
     end
 
     methods
