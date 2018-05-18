@@ -16,68 +16,89 @@
 
 classdef waveSettings < handle
     
-    properties (SetAccess = 'public', GetAccess = 'public')%input file
-        type                        = 'NOT DEFINED'                        % Wave type. Options for this varaibale are 'noWave' (no waves), 'regular' (regular waves), 'regularCIC' (regular waves using convolution integral to calculate radiation effects), 'irregular' (irregular waves), 'irregularPRE' (irregular waves with pre defined phase). The default is 'regular'.
-        T                           = 'NOT DEFINED'                        % [s] Wave period (regular waves) or peak period (irregular waves) (default = 8)
-        H                           = 'NOT DEFINED'                        % [m] Wave height (regular waves) or significant wave height (irregular waves) (default = 1)
-        noWaveHydrodynamicCoeffT    = 'NOT DEFINED'                        % Period of BEM simulation used to determine hydrodynamic coefficients for simulations with no wave. This option is only used with the 'noWave' wave type.
-        spectrumType                = 'NOT DEFINED'                        % Type of wave spectrum. Only PM, BS, JS, and Imported spectrum are supported.
-        randPreDefined              = 0;                                   % Only used for irregular waves. Default is equal to 0; if equals to 1,2,3,...,etc, the waves pahse is seeded.
-        spectrumDataFile            = 'NOT DEFINED'                        % Data file that contains the spectrum data file. 
-        etaDataFile                 = 'NOT DEFINED'                        % Data file that contains the times-series data file. 
-        numFreq                     = 1001                                 % Number of interpolated wave frequencies (default = 'NOT DEFINED')
-        freqRange                   = [];                                  % Min and max frequency for irregular waves. 2x1 vector, rad/s, (default = frequency range in BEM data) 
-        waveDir                     = 0                                    % Wave Direction in degrees
-        viz                         = struct(...                           %Structure defining visualization options
-                                             'numPointsX', 50, ...              % Visualization number of points in x direction.
-                                             'numPointsY', 50)                  % Visualization number of points in y direction.
-        statisticsDataLoad          = [];                                  % File name to load wave statistics data
+    % these properties may be set by the user
+    properties (SetAccess = 'public', GetAccess = 'public')
+        
+        type = 'NOT DEFINED'; % Wave type (stirng defining type of wave definition)
+        T = 'NOT DEFINED'; % [s] Wave period (regular waves) or peak period (irregular waves) (default = 8)
+        H = 'NOT DEFINED'; % [m] Wave height (regular waves) or significant wave height (irregular waves) (default = 1)
+        noWaveHydrodynamicCoeffT = 'NOT DEFINED'; % Period of BEM simulation used to determine hydrodynamic coefficients for simulations with no wave. This option is only used with the 'noWave' wave type.
+        spectrumType = 'NOT DEFINED'; % Type of wave spectrum. Only PM, BS, JS, and Imported spectrum are supported.
+        randPreDefined = 0; % Only used for irregular waves. Default is equal to 0; if equals to 1,2,3,...,etc, the waves pahse is seeded.
+        spectrumDataFile = 'NOT DEFINED'; % Data file that contains the spectrum data file. 
+        etaDataFile = 'NOT DEFINED'; % Data file that contains the times-series data file. 
+        numFreq = 1001; % Number of interpolated wave frequencies (default = 'NOT DEFINED')
+        freqRange = []; % Min and max frequency for irregular waves. 2x1 vector, rad/s, (default = frequency range in BEM data) 
+        waveDir= 0; % Wave Direction in degrees
+        viz = struct( 'numPointsX', 50, 'numPointsY', 50); %Structure defining visualization options
+        statisticsDataLoad = []; % File name from which to load wave statistics data
+        
     end
     
-    properties (SetAccess = 'private', GetAccess = 'public')%internal
-        typeNum                     = []                                   % Number to represent different type of waves
-        bemFreq                     = []                                   % Number of wave frequencies from BEM
-        waterDepth                  = []                                   % [m] Water depth (from BEM)
-        deepWaterWave               = []                                   % Deep water or not, depending on input from WAMIT, NEMOH and AQWA
-        waveAmpTime                 = []                                   % [m] Wave elevation time history
-        A                           = []                                   % [m] Wave amplitude for regular waves or 2*(wave spectrum vector) for irregular waves
-        w                           = []                                   % [rad/s] Wave frequency (regular waves) or wave frequency vector (irregular waves)
-        phaseRand                   = 0;                                   % [rad] Random wave phase (only used for irregular waves)
-        dw                          = 0;                                   % [rad] Frequency spacing for irregular waves.
-        k                           = []                                   % Wave Number
+    % internally calculated properties
+    properties (SetAccess = 'private', GetAccess = 'public')
+        typeNum = []; % Number to represent different type of waves
+        bemFreq = []; % Number of wave frequencies from BEM
+        waterDepth = []; % [m] Water depth (from BEM)
+        deepWaterWave = []; % Deep water or not, depending on input from WAMIT, NEMOH and AQWA
+        waveAmpTime = []; % [m] Wave elevation time history
+        A = []; % [m] Wave amplitude for regular waves or 2*(wave spectrum vector) for irregular waves
+        w = []; % [rad/s] Wave frequency (regular waves) or wave frequency vector (irregular waves)
+        phaseRand  = 0; % [rad] Random wave phase (only used for irregular waves)
+        dw = 0; % [rad] Frequency spacing for irregular waves.
+        k = []; % Wave Number
     end
     
     methods (Access = 'public')
         
         % Constructor
-        function obj = waveSettings (type)
-            % Creates a waveSettings object
+        function obj = waveSettings (wavetype)
+            % wsim.waveSettings constructor
             %
             % Syntax
             %
-            % ws = waveSettings (type)
+            % ws = wsim.waveSettings (type)
             % 
             % Input
             %
             %  type - string containing the type of wave simulation to be
-            %    generated, the possible options are
+            %    generated, the possible values are
             %
-            %    'noWave'          % No/Regular Waves
-            %    'noWaveCIC'       % No/Regular Waves w/Convolution Integral Calculation
-            %    'regular'         % No/Regular Waves
-            %    'regularCIC'      % No/Regular Waves w/Convolution Integral Calculation
-            %    'irregular'       % Irregular Waves
-            %    'irregularImport' % Irregular Waves w/Predefined Phase
-            %    'userDefined'     % User defined waves
+            %    'noWave' : no waves
             %
+            %    'noWaveCIC' : No waves but with the Convolution Integral 
+            %      Calculation  to calculate radiation effects
+            %
+            %    'regular' : Regular waves
+            %
+            %    'regularCIC' : Regular waves with Convolution Integral 
+            %      Calculation to calculate radiation effects
+            %
+            %    'irregular' : Irregular Waves
+            %
+            %    'irregularImport' : Irregular Waves with predefined phase
+            %
+            %    'userDefined' : User defined waves
+            %
+            %    
             % Output
             %
-            %  ws - waveSettings object
+            %  ws - wsim.waveSettings object
             %
             %
             
+            allowed_wave_strs = { 'noWave', ...
+                                  'noWaveCIC', ...
+                                  'regular', ...
+                                  'regularCIC', ...
+                                  'irregular', ...
+                                  'irregularImport', ...
+                                  'userDefined' };
+                              
+            check.allowedStringInputs ( wavetype, allowed_wave_strs, true, 'wavetype');
+            
             % Set wave type and type number
-            obj.type = type;
+            obj.type = wavetype;
             
             switch obj.type
                 case {'noWave'}        % No/Regular Waves
@@ -110,8 +131,8 @@ classdef waveSettings < handle
             % Plot wave elevation time-history
             figure
             plot(obj.waveAmpTime(:,1),obj.waveAmpTime(:,2))
-            xlabel('Time (s)')
-            ylabel('Eta (m)')
+            xlabel('Time [s]')
+            ylabel('Eta (Wave Elevation) [m]')
         end
         
         function waveSetup(obj,bemFreq,wDepth,rampT,dt,maxIt,g,endTime)
@@ -221,7 +242,7 @@ classdef waveSettings < handle
             end
         end    
 
-        function checkinputs(obj)
+        function checkInputs(obj)
             % Check user inputs
             % noWaveHydrodynamicCoeffT defined for noWave case
             if strcmp(obj.type,'noWave')
@@ -241,6 +262,37 @@ classdef waveSettings < handle
                 error(['Unexpected wave environment type setting. ' ...
                     'Only noWave, noWaveCIC, regular, regularCIC, irregular, irregularImport, and userDefined waves are supported at this time'])
             end
+        end
+        
+        function Z = waveElevationGrid (obj, t, X, Y)
+            % calculates wave elevation on a grid at a given time
+            
+            switch obj.type
+                
+                case{'noWave', 'noWaveCIC', 'userDefined'}
+                    
+                    Z = zeros (size (X));
+                    
+                case{'regular', 'regularCIC'}
+                    
+                    Xt = X*cos (obj.waveDir*pi/180) + Y * sin(obj.waveDir*pi/180);
+                    
+                    Z = obj.A * cos(-1 * obj.k * Xt  +  obj.w * t);
+                    
+                case{'irregular', 'irregularImport'}
+                    
+                    Z = zeros (size (X));
+                    
+                    Xt = X.*cos (obj.waveDir*pi/180) + Y.*sin (obj.waveDir*pi/180);
+                    
+                    for iw = 1:length (obj.w)
+                        
+                        Z = Z + sqrt (obj.A(iw)*obj.dw) * cos ( -1*obj.k(iw)*Xt + obj.w(iw)*t + obj.phaseRand(iw) );
+                        
+                    end
+                    
+            end
+                
         end
 
         function write_paraview_vtp (obj, t, numPointsX, numPointsY, domainSize, model, simdate, mooring)
@@ -264,20 +316,10 @@ classdef waveSettings < handle
                 % open file
                 filename = ['vtk' filesep 'waves' filesep 'waves_' num2str(it) '.vtp'];
                 fid = fopen(filename, 'w');
+                
                 % calculate wave elevation
-                switch obj.type
-                case{'noWave','noWaveCIC','userDefined'}
-                    Z = zeros(size(X));
-                case{'regular','regularCIC'}
-                    Xt = X*cos(obj.waveDir*pi/180) + Y*sin(obj.waveDir*pi/180);
-                    Z = obj.A * cos(-1 * obj.k * Xt  +  obj.w * t(it));
-                case{'irregular','irregularImport'}
-                    Z = zeros(size(X));
-                    Xt = X*cos(obj.waveDir*pi/180) + Y*sin(obj.waveDir*pi/180);
-                    for iw = 1:length(obj.w)
-                        Z = Z + sqrt(obj.A(iw)*obj.dw) * cos(-1*obj.k(iw)*Xt + obj.w(iw)*t(it) + obj.phaseRand(iw));
-                    end
-                end
+                Z = waveElevationGrid (obj, t(it), X, Y);
+                
                 % write header
                 fprintf(fid, '<?xml version="1.0"?>\n');
                 fprintf(fid, ['<!-- WEC-Sim Visualization using ParaView -->\n']);
