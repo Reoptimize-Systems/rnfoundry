@@ -8,7 +8,7 @@ function path = find_mbdyn (throw)
 % Description
 %
 % findmbdyn searches in set of predetermined locations for an MBDyn
-% executable. It first searched the current directory, then various
+% executable. It first searches the current directory, then various
 % directories in which it might be expected to be found on different
 % systems.
 %
@@ -21,7 +21,7 @@ function path = find_mbdyn (throw)
 %  path - path to the MBDyn executeable which was found
 %
 %
-% See Also: mbdyn.mint.start_mbdyn
+% See Also: mbdyn.mint.start_mbdyn, mbdyn.mint.find_libmbc
 %
 
     if nargin < 1
@@ -35,14 +35,15 @@ function path = find_mbdyn (throw)
         fullfile(pwd (), 'mbdyn.exe'), ...
         'c:\Program Files (x86)\MBDyn\mbdyn.exe', ...
         'c:\Program Files\MBDyn\mbdyn.exe', ...
-        '/usr/local/bin/mbdyn/mbdyn', ...
+        '/usr/local/mbdyn/bin/mbdyn', ...
         '/usr/local/bin/mbdyn' ...
-        '/opt/bin/mbdyn/mbdyn', ...
+        '/opt/mbdyn/bin/mbdyn', ...
         '/opt/bin/mbdyn' ...
         '/opt/mbdyn' ...
                      };
 
-    switch computer ('arch')
+    comparch = computer ('arch');
+    switch comparch
 
         case 'win64'
             candidate_locs = [candidate_locs, ...
@@ -60,7 +61,7 @@ function path = find_mbdyn (throw)
     end
 
     if exist ('rnfoundry_setup', 'file') == 2
-        switch computer ('arch')
+        switch comparch
 
             case 'win64'
                 candidate_locs = [candidate_locs, ...
