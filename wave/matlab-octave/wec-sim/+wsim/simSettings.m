@@ -137,7 +137,7 @@ classdef simSettings < handle
             obj.getWecSimVer;
         end
 
-        function checkinputs (obj)
+        function checkInputs (obj)
             % Validate user input for simulation
             
             if exist (obj.caseDir, 'dir') ~= 7
