@@ -127,6 +127,8 @@ function rnfoundry_setup (varargin)
     % functions we can then use
     thisfilepath = fileparts (which ('rnfoundry_setup'));
     addpath(genpath (thisfilepath));
+    
+    
     workdir = pwd ();
     % restore working directory on error or exit
     CC = onCleanup (@() cd (workdir));
@@ -145,12 +147,11 @@ function rnfoundry_setup (varargin)
     % mbdyn
     Inputs.ForceMBDynSetup = false;
     Inputs.SkipMBDynSetup = false;
+    [Inputs.MBCLibDir, Inputs.MBCIncludeDir] = mbdyn.mint.find_libmbc ();
     if isunix
         Inputs.GSLLibDir = ''; % for mexslmeval
         Inputs.GSLIncludeDir = ''; % for mexslmeval
         Inputs.F2CLibPath = ''; % for mlse
-        Inputs.MBCLibDir = ''; % for mbdyn
-        Inputs.MBCIncludeDir = '';
     else
         Inputs.GSLLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib'); % for mexslmeval
         Inputs.GSLIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'include'); % for mexslmeval
@@ -159,8 +160,6 @@ function rnfoundry_setup (varargin)
         else
             Inputs.F2CLibPath = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib', 'f2c.lib'); % for mlse
         end
-        Inputs.MBCLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib'); % for mbdyn
-        Inputs.MBCIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'include'); % for mbdyn
     end
     % mex ppval related
     Inputs.ForceMexPPValSetup = false;
