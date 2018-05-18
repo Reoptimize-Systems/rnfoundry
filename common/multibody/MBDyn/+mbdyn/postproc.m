@@ -153,8 +153,6 @@ classdef postproc < handle
             
             self.clearData ();
             
-            
-            
             self.mBDynOutFileName = mbdoutfilename;
             
             % get the MBDyn redirected output file
@@ -473,6 +471,7 @@ classdef postproc < handle
             options.Legend = true;
             options.OnlyNodes = 1:self.nNodes;
             options.Title = true;
+            options.View = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -579,7 +578,12 @@ classdef postproc < handle
                 title (sprintf ('Node trajectories plot for results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
             end
             
-            view(3);
+            if isempty (options.View)
+                view(plotdata.HAx, 3);
+            else
+                view (plotdata.HAx, options.View);
+            end
+            
             drawnow;
             
         end
@@ -774,12 +778,32 @@ classdef postproc < handle
             %    supplied, the nodes are drawn with a size based on the
             %    axes limits.
             %
+            %  'ExternalDrawFcn' - function handle or string to function
+            %    which  will be called after drawing the scene is complete.
+            %    Intended to be used by external programs to add their own
+            %    features to the scene. The funciton must take two
+            %    arguments, the first is the handle to the axes contining
+            %    the plot, the second is the time step index of the
+            %    simulation.
+            %
+            %  'View' - viewpoint of plot in the same format as any of the
+            %    single input styles of the 'view' function. See output of
+            %    'help view' for more information. The contents of the
+            %    'View' option is passed directly to the view function to
+            %    set the axes view.
+            %
+            %  'FigPositionAndSize' - figure position and size as a four
+            %    element vector in the same format as a figure's 'Position'
+            %    property, i.e. [ x, y, w, h ] where x and y are the
+            %    coordinates of the lower left corner of the figure and w
+            %    and h are the height and width respectively.
             %
             
             if ~self.resultsLoaded
                 error ('No results have been loaded yet for plotting')
             end
             
+            options.PlotAxes = [];
             options.DrawLabels = false;
             options.AxLims = [];
             options.PlotTrajectories = false;
@@ -792,6 +816,9 @@ classdef postproc < handle
             options.VideoFile = [];
             options.VideoSpeed = 1;
             options.OnlyNodes = 1:self.nNodes;
+            options.ExternalDrawFcn = [];
+            options.View = [];
+            options.FigPositionAndSize = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -816,6 +843,10 @@ classdef postproc < handle
                     
                     % clear the axes
                     cla (plotdata.HAx);
+                    
+                    % clear the FigPositionAndSize option so we don't keep
+                    % setting the size every step
+                    options.FigPositionAndSize = [];
                 end
                 
                 plotdata = self.drawStep(tind, ...
@@ -826,10 +857,13 @@ classdef postproc < handle
                               'DrawNodes', options.DrawNodes, ...
                               'DrawBodies', options.DrawBodies, ...
                               'Light', options.Light, ...
-                              'PlotAxes', plotdata.HAx, ...
+                              'PlotAxes', options.PlotAxes, ...
                               'Title', false, ...
                               'OnlyNodes', options.OnlyNodes, ...
-                              'ForceRedraw', true);
+                              'ForceRedraw', true, ...
+                              'ExternalDrawFcn', options.ExternalDrawFcn, ...
+                              'View', options.View, ...
+                              'FigPositionAndSize', options.FigPositionAndSize );
                           
                 if tind == 1
                     
@@ -1030,6 +1064,26 @@ classdef postproc < handle
             %    supplied, the nodes are drawn with a size based on the
             %    axes limits.
             %
+            %  'ExternalDrawFcn' - function handle or string to function
+            %    which  will be called after drawing the scene is complete.
+            %    Intended to be used by external programs to add their own
+            %    features to the scene. The funciton must take two
+            %    arguments, the first is the handle to the axes contining
+            %    the plot, the second it the time step index of the
+            %    simulation.
+            %
+            %  'View' - viewpoint of plot in the same format as any of the
+            %    single input styles of the 'view' function. See output of
+            %    'help view' for more information. The contents of the
+            %    'View' option is passed directly to the view function to
+            %    set the axes view.
+            %
+            %  'FigPositionAndSize' - figure position and size as a four
+            %    element vector in the same format as a figure's 'Position'
+            %    property, i.e. [ x, y, w, h ] where x and y are the
+            %    coordinates of the lower left corner of the figure and w
+            %    and h are the height and width respectively.
+            %
             % Output
             %
             %  hfig - handle to figure created
@@ -1053,6 +1107,9 @@ classdef postproc < handle
             options.Title = true;
             options.OnlyNodes = 1:self.nNodes;
             options.ForceRedraw = false;
+            options.ExternalDrawFcn = [];
+            options.View = [];
+            options.FigPositionAndSize = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -1066,6 +1123,10 @@ classdef postproc < handle
             else
                 plotdata.HAx = options.PlotAxes;
                 plotdata.HFig = get (plotdata.HAx, 'Parent');
+            end
+            
+            if ~isempty (options.FigPositionAndSize)
+                set (plotdata.HFig, 'Position', options.FigPositionAndSize);
             end
             
             if ~isempty (self.preProcSystem)
@@ -1153,12 +1214,21 @@ classdef postproc < handle
                           );
                 end
             end
+                        
+            if ~isempty (options.ExternalDrawFcn)
+                feval (options.ExternalDrawFcn, plotdata.HAx, tind);
+            end
             
             daspect (plotdata.HAx, [1,1,1]);
             
-            view(3);
-            
+            if isempty (options.View)
+                view (plotdata.HAx, 3);
+            else
+                view (plotdata.HAx, options.View);
+            end
+
             drawnow;
+            
         end
 
     end
