@@ -72,7 +72,7 @@ waves.T = 8;                            %Wave Period [s]
 % <case_directory>/hydroData
 
 % Float
-float_hbody = wsim.hydroBody('float.mat', 'CaseDirectory', simu.caseDir);      
+float_hbody = wsim.hydroBody('float.mat');      
     %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
@@ -82,7 +82,7 @@ float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Ine
 float_hbody.geometryFile = 'float.stl'; % Geomtry File Name (assumed to be in <case_directory>/geometry)
 
 % Spar/Plate
-spar_hbody = wsim.hydroBody('spar.mat', 'CaseDirectory', simu.caseDir); 
+spar_hbody = wsim.hydroBody('spar.mat'); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
 spar_hbody.geometryFile = 'plate.stl'; % Geomtry File Name (assumed to be in <case_directory>/geometry)
