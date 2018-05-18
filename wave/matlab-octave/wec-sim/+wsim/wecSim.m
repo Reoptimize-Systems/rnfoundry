@@ -1,5 +1,11 @@
 classdef wecSim < handle
     
+    properties
+        wavePlotNumPointsX = 50;
+        wavePlotNumPointsY = 50;
+        wavePlotDomainSize = [];
+    end
+    
     properties (GetAccess = public, SetAccess = private)
         
         powerTakeOffs;
@@ -20,12 +26,14 @@ classdef wecSim < handle
         mBDynSystem;
         hydroSystem;
         readyToRun;
+        simComplete;
         hydroMotionSyncStep = 1;
         hydroMotionSyncStepCount = 1;
         
         
         logger;
         nMBDynNodes;
+        mBDynPostProc;
         
         % logging variables
         lastTime;                   % last value of simulation time
@@ -43,6 +51,13 @@ classdef wecSim < handle
         lastForceViscousDamping;    % last calculated value of hydrodynamic viscous damping forces
         lastForceAddedMassUncorrected; % last calculated value of hydrodynamic forces due to added mass (uncorrected)
         lastNodeForcesAndMomentsUncorrected;
+        
+        
+        wavePlotX;
+        wavePlotY;
+        
+        drawAxesH;
+        waveSurfH;
         
     end
     
@@ -78,6 +93,7 @@ classdef wecSim < handle
             self.mBDynSystem = mbsys;
             self.hydroSystem = hsys;
             self.readyToRun = false;
+            self.simComplete = false;
             self.nMBDynNodes = nan;
             
             % add the spplies PTOs
@@ -160,13 +176,17 @@ classdef wecSim < handle
             % TODO: check if NEMOH data needs updated
             
             % ensure hydro system transient simulation is ready
-            self.hydroSystem.timeDomainSimSetup ();
+%             self.hydroSystem.timeDomainSimSetup ();
+
+            % clear any mbdyn.postproc object
+            self.mBDynPostProc = [];
             
             self.readyToRun = true;
+            self.simComplete = false;
             
         end
         
-        function datalog = run (self, varargin)
+        function [ datalog, mbdyn_postproc ] = run (self, varargin)
             % Run the WEC simulation
             
             options.MBDynInputFile = '';
@@ -178,6 +198,7 @@ classdef wecSim < handle
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
             options.TimeExecution = false;
             options.HydroMotionSyncSteps = 1;
+            options.ForceMBDynNetCDF = true;
             
             if isempty (options.MBDynInputFile)
                 self.mBDynInputFile = fullfile (options.OutputFilePrefix, 'mbdyn_input_file.mbd');
@@ -209,11 +230,23 @@ classdef wecSim < handle
             
             check.isLogicalScalar (options.TimeExecution, true, 'TimeExecution');
             
+            check.isPositiveScalarInteger (options.HydroMotionSyncSteps, true, 'HydroMotionSyncSteps');
+            
+            check.isLogicalScalar (options.ForceMBDynNetCDF, true, 'ForceMBDynNetCDF');
+            
+            % -----------------   input checking finished
+            
             if self.readyToRun == false
                 error ('Simulation is not ready to run, have you run ''prepare'' yet?');
             end
             
-            check.isPositiveScalarInteger (options.HydroMotionSyncSteps, true, 'HydroMotionSyncSteps')
+            if nargout > 1 || options.ForceMBDynNetCDF
+                % ensure mbdyn will output a netcdf file so we can load the
+                % results from this after the sim
+                if isempty (self.mBDynSystem.controlData.OutputResults)
+                    self.mBDynSystem.controlData.OutputResults = {'netcdf', 'no text'};
+                end
+            end
             
             self.hydroMotionSyncStep = options.HydroMotionSyncSteps;
             % set the hydro--mbdyn motion sync step count equal to the
@@ -506,6 +539,437 @@ classdef wecSim < handle
             
             datalog = self.logger;
             
+            self.simComplete = true;
+            
+            if nargout > 1
+                mbdyn_postproc = mbdyn.postproc (self.mBDynInputFile, self.mBDynSystem);
+                self.mBDynPostProc = mbdyn_postproc;
+            end
+            
+        end
+        
+        
+        function plotdata = drawStep (self, tind, varargin)
+            % draw the system at the given time step index
+            %
+            % Syntax
+            %
+            % plotdata = drawStep (wsobj, tind, 'Parameter', value)
+            %
+            % Input
+            %
+            %  wsobj - wsim.wecSim object
+            %
+            %  Addtional optional arguments are supplied as parameter-value
+            %  pairs. The available options are:
+            %
+            %  'PlotAxes' - handle to plot axes in which to draw the
+            %    trajectories. If not supplied a new figure and axes are
+            %    created for the plot.
+            %
+            %  'AxLims' - (3 x 2) matrix containing limits the plot axes
+            %    should be set to, each row is the x, y and z axes limits
+            %    respectively. Uselful to focus on a particular region of
+            %    the system. If not supplied, suitable axes limits will be
+            %    determined based on the motion data.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    system plot. Default is true.
+            %
+            %  'DrawMode' - string indicating the drawing mode. Can be one
+            %    of: 'solid', 'ghost', 'wire', 'wireghost'.
+            %
+            %  'DrawLabels' - flag indicating whether to draw node labels,
+            %    default is false.
+            %
+            %  'DrawNodes' - flag determining whether to draw nodes,
+            %    default is true
+            %
+            %  'DrawBodies' - flag determining whether to draw bodies,
+            %    default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will be plotted. By default all nodes are plotted if
+            %    'DrawNodes' is true. This setting is ignored if
+            %    'DrawNodes' is false.
+            %
+            %  'Light' - flag determining whether to light the scene to
+            %    give a more realistic look. Best used with 'solid' option.
+            %
+            %  'NodeSize' - scalar value indicating how large the nodes
+            %    should be drawn (in the same units as the plot). If not
+            %    supplied, the nodes are drawn with a size based on the
+            %    axes limits.
+            %
+            %  'View' - viewpoint of plot in the same format as any of the
+            %    single input styles of the 'view' function. See output of
+            %    'help view' for more information. The contents of the
+            %    'View' option is passed directly to the view function to
+            %    set the axes view.
+            %
+            %  'FigPositionAndSize' - figure position and size as a four
+            %    element vector in the same format as a figure's 'Position'
+            %    property, i.e. [ x, y, w, h ] where x and y are the
+            %    coordinates of the lower left corner of the figure and w
+            %    and h are the height and width respectively.
+            %
+            % Output
+            %
+            %  hfig - handle to figure created
+            %
+            %  hax - handle to plot axes created
+            %
+            %
+            
+            if ~self.simComplete
+                error ('Simulation data is not available for plotting')
+            end
+            
+            options.PlotAxes = [];
+            options.DrawLabels = false;
+            options.AxLims = [];
+            options.NodeSize = [];
+            options.DrawMode = 'wireghost';
+            options.DrawNodes = true;
+            options.DrawBodies = true;
+            options.Light = false;
+            options.Title = true;
+            options.OnlyNodes = [];
+            options.ForceRedraw = false;
+            options.DrawWaves = true;
+            options.View = [];
+            options.FigPositionAndSize = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.checkAxes (options.PlotAxes);
+            
+            if isempty (self.mBDynPostProc)
+                self.mBDynPostProc = mbdyn.postproc (self.mBDynInputFile, self.mBDynSystem);
+            end
+            
+            if isempty (options.OnlyNodes)
+                options.OnlyNodes = self.mBDynPostProc.nNodes;
+            end
+            
+            if options.DrawWaves
+                
+                wavedrawfcn = @(hax, tind) wavePlot3D ( self, ...
+                                                        [], ...
+                                                        'PlotAxes', hax, ...
+                                                        'DomainSize', 'fromaxes', ...
+                                                        'TimeIndex', tind );
+                
+                plotdata = self.mBDynPostProc.drawStep ( tind, ...
+                                              'PlotAxes', self.drawAxesH, ...
+                                              'DrawLabels', options.DrawLabels, ...
+                                              'AxLims', options.AxLims, ...
+                                              'NodeSize', options.NodeSize, ...
+                                              'DrawMode', options.DrawMode, ...
+                                              'DrawNodes', options.DrawNodes, ...
+                                              'DrawBodies', options.DrawBodies, ...
+                                              'Light', options.Light, ...
+                                              'Title', options.Title, ...
+                                              'OnlyNodes', options.OnlyNodes, ...
+                                              'ForceRedraw', options.ForceRedraw, ...
+                                              'ExternalDrawFcn', wavedrawfcn, ...
+                                              'View', options.View, ...
+                                              'FigPositionAndSize', options.FigPositionAndSize );
+                                      
+            else
+                
+                plotdata = self.mBDynPostProc.drawStep ( tind, ...
+                                              'PlotAxes', self.drawAxesH, ...
+                                              'DrawLabels', options.DrawLabels, ...
+                                              'AxLims', options.AxLims, ...
+                                              'NodeSize', options.NodeSize, ...
+                                              'DrawMode', options.DrawMode, ...
+                                              'DrawNodes', options.DrawNodes, ...
+                                              'DrawBodies', options.DrawBodies, ...
+                                              'Light', options.Light, ...
+                                              'Title', options.Title, ...
+                                              'OnlyNodes', options.OnlyNodes, ...
+                                              'ForceRedraw', options.ForceRedraw, ...
+                                              'View', options.View, ...
+                                              'FigPositionAndSize', options.FigPositionAndSize  );
+                                          
+            end
+            
+        end
+        
+        
+        function animate (self, varargin)
+            % animate the wave energy system
+            %
+            % Syntax
+            %
+            % animate (wsobj, 'Parameter', value) 
+            %
+            % Input
+            %
+            %  wsobj - wsim.wecSim object
+            %
+            % Addtional optional arguments are supplied as parameter-value
+            % pairs. The available options are:
+            %
+            %  'PlotAxes' - handle to plot axes in which to draw the
+            %    trajectories. If not supplied a new figure and axes are
+            %    created for the plot.
+            %
+            %  'AxLims' - (3 x 2) matrix containing limits the plot axes
+            %    should be set to, each row is the x, y and z axes limits
+            %    respectively. Uselful to focus on a particular region of
+            %    the system. If not supplied, suitable axes limits will be
+            %    determined based on the motion data.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    system plot. Default is true.
+            %
+            %  'DrawMode' - string indicating the drawing mode. Can be one
+            %    of: 'solid', 'ghost', 'wire', 'wireghost'.
+            %
+            %  'DrawLabels' - flag indicating whether to draw node labels,
+            %    default is false.
+            %
+            %  'DrawNodes' - flag determining whether to draw nodes,
+            %    default is true
+            %
+            %  'DrawBodies' - flag determining whether to draw bodies,
+            %    default is true.
+            %
+            %  'OnlyNodes' - vector of indices of nodes to plot, only these
+            %    nodes will be plotted. By default all nodes are plotted if
+            %    'DrawNodes' is true. This setting is ignored if
+            %    'DrawNodes' is false.
+            %
+            %  'Light' - flag determining whether to light the scene to
+            %    give a more realistic look. Best used with 'solid' option.
+            %
+            %  'NodeSize' - scalar value indicating how large the nodes
+            %    should be drawn (in the same units as the plot). If not
+            %    supplied, the nodes are drawn with a size based on the
+            %    axes limits.
+            %
+            %  'ExternalDrawFcn' - function handle or string to function
+            %    which  will be called after drawing the scene is complete.
+            %    Intended to be used by external programs to add their own
+            %    features to the scene. The funciton must take two
+            %    arguments, the first is the handle to the axes contining
+            %    the plot, the second is the time step index of the
+            %    simulation.
+            %
+            %  'View' - viewpoint of plot in the same format as any of the
+            %    single input styles of the 'view' function. See output of
+            %    'help view' for more information. The contents of the
+            %    'View' option is passed directly to the view function to
+            %    set the axes view.
+            %
+            %  'FigPositionAndSize' - figure position and size as a four
+            %    element vector in the same format as a figure's 'Position'
+            %    property, i.e. [ x, y, w, h ] where x and y are the
+            %    coordinates of the lower left corner of the figure and w
+            %    and h are the height and width respectively.
+            %
+            
+            if ~self.simComplete
+                error ('No simulation results are available for plotting')
+            end
+            
+            options.PlotAxes = [];
+            options.DrawLabels = false;
+            options.AxLims = [];
+            options.PlotTrajectories = false;
+            options.NodeSize = [];
+            options.DrawMode = 'wireghost';
+            options.DrawNodes = true;
+            options.DrawBodies = true;
+            options.Skip = 1;
+            options.Light = false;
+            options.VideoFile = [];
+            options.VideoSpeed = 1;
+            options.OnlyNodes = [];
+            options.ExternalDrawFcn = [];
+            options.View = [];
+            options.DrawWaves = true;
+            options.FigPositionAndSize  = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            self.checkAxes (options.PlotAxes);
+
+            if isempty (self.mBDynPostProc)
+                self.mBDynPostProc = mbdyn.postproc (self.mBDynInputFile, self.mBDynSystem);
+            end
+
+            if isempty (options.OnlyNodes)
+                options.OnlyNodes = 1:self.mBDynPostProc.nNodes;
+            end
+
+            if options.DrawWaves
+
+                wavedrawfcn = @(hax, tind) wavePlot3D ( self, ...
+                                                        [], ...
+                                                        'PlotAxes', hax, ...
+                                                        'DomainSize', 'fromaxes', ...
+                                                        'TimeIndex', tind );
+
+                self.mBDynPostProc.animate ( ...
+                                              'PlotAxes', self.drawAxesH, ...
+                                              'DrawLabels', options.DrawLabels, ...
+                                              'AxLims', options.AxLims, ...
+                                              'NodeSize', options.NodeSize, ...
+                                              'DrawMode', options.DrawMode, ...
+                                              'DrawNodes', options.DrawNodes, ...
+                                              'DrawBodies', options.DrawBodies, ...
+                                              'Light', options.Light, ...
+                                              'VideoFile', options.VideoFile, ...
+                                              'VideoSpeed', options.VideoSpeed, ...
+                                              ...'Title', options.Title, ...
+                                              'OnlyNodes', options.OnlyNodes, ...
+                                              ...'ForceRedraw', options.ForceRedraw, ...
+                                              'ExternalDrawFcn', wavedrawfcn, ...
+                                              'View', options.View, ...
+                                              'FigPositionAndSize', options.FigPositionAndSize );
+
+            else
+
+                self.mBDynPostProc.animate (  ...
+                                              'PlotAxes', self.drawAxesH, ...
+                                              'DrawLabels', options.DrawLabels, ...
+                                              'AxLims', options.AxLims, ...
+                                              'NodeSize', options.NodeSize, ...
+                                              'DrawMode', options.DrawMode, ...
+                                              'DrawNodes', options.DrawNodes, ...
+                                              'DrawBodies', options.DrawBodies, ...
+                                              'Light', options.Light, ...
+                                              'VideoFile', options.VideoFile, ...
+                                              'VideoSpeed', options.VideoSpeed, ...
+                                              ...'Title', options.Title, ...
+                                              'OnlyNodes', options.OnlyNodes, ...
+                                              ...'ForceRedraw', options.ForceRedraw, ...
+                                              'View', options.View, ...
+                                              'FigPositionAndSize', options.FigPositionAndSize  );
+
+            end
+
+        end
+        
+        
+        function [hsurf, hax] = wavePlot3D (self, t, varargin)
+            % plot the wave elevation as a 3D surface
+            
+            options.PlotAxes = [];
+            options.NumPointsX = self.wavePlotNumPointsX;
+            options.NumPointsY = self.wavePlotNumPointsY;
+            options.DomainSize = self.wavePlotDomainSize;
+            options.DomainCorner = [];
+            options.TimeIndex = [];
+            options.ForceRedraw = false;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            check.isLogicalScalar (options.ForceRedraw, true, 'ForceRedraw');
+            
+            self.checkAxes (options.PlotAxes);
+            
+            hax = self.drawAxesH;
+            
+            if ~isempty (options.TimeIndex)
+                % override the t value with logged time from index
+                check.isPositiveScalarInteger (options.TimeIndex, true, 'TimeIndex', false);
+                t = self.logger.data.Time (options.TimeIndex);
+            end
+            
+%             xlim = get (hax, 'Xlim');
+%             ylim = get (hax, 'Ylim');
+            
+            if ischar (options.DomainSize)
+                switch options.DomainSize
+                    
+                    case 'fromaxes'
+                        
+                        xlim = get (hax, 'Xlim');
+                        ylim = get (hax, 'Ylim');
+                        options.DomainSize = [ xlim(2) - xlim(1), ylim(2) - ylim(1) ];
+                        options.DomainCorner = [ xlim(1), ylim(1) ];
+                        
+                end
+            end
+            
+            % the following test is supposed to capture when we are doing a
+            % brand new plot, or changing the domain of the existing plot
+            if isempty (self.wavePlotDomainSize) && isempty (options.DomainSize)
+                
+                options.DomainSize = [ 10, 10 ];
+                
+            elseif isscalar (options.DomainSize)
+                
+                options.DomainSize = [options.DomainSize, options.DomainSize];
+                
+            end
+            
+            if isempty (options.DomainCorner)
+                options.DomainCorner = [ -options.DomainSize(1)/2, -options.DomainSize(2)/2 ];
+            end
+            
+            % check if the desired plot parameters have changed at all,
+            % requiring the surface to be re-plotted
+            if isempty (self.waveSurfH) ...
+                || isempty (self.wavePlotDomainSize) ...
+                || options.NumPointsX ~= self.wavePlotNumPointsX ...
+                || options.NumPointsY ~= self.wavePlotNumPointsY ...
+                || ~all (options.DomainSize == self.wavePlotDomainSize) ...
+                || options.ForceRedraw ...
+                || ~ishghandle (self.waveSurfH)
+                
+                self.wavePlotNumPointsX = options.NumPointsX;
+                self.wavePlotNumPointsY = options.NumPointsY;
+                self.wavePlotDomainSize = options.DomainSize;
+                
+                % make the grid
+                x = linspace ( options.DomainCorner(1), ...
+                               options.DomainCorner(1) + options.DomainSize(1), ...
+                               self.wavePlotNumPointsX );
+                           
+                y = linspace ( options.DomainCorner(2), ...
+                               options.DomainCorner(2) + options.DomainSize(2), ...
+                               self.wavePlotNumPointsY );
+                
+                [self.wavePlotX, self.wavePlotY] = meshgrid (x, y);
+                
+                wavecolour = [0.3010, 0.7450, 0.9330];
+                
+                if ~isempty (self.waveSurfH) && ishghandle (self.waveSurfH)
+                    delete (self.waveSurfH);
+                end
+
+                hold on
+                self.waveSurfH = surf ( hax, ...
+                                        self.wavePlotX, ...
+                                        self.wavePlotY, ...
+                                        self.hydroSystem.waves.waveElevationGrid (t, self.wavePlotX, self.wavePlotY), ...
+                                        'EdgeColor', wavecolour, ...
+                                        'FaceColor', wavecolour, ...
+                                        'EdgeAlpha', 0.25, ...
+                                        'FaceAlpha', 0.25 );
+                hold off
+                                    
+            else
+                % there is an existing plot
+                
+                % recalculate Z
+                Z = self.hydroSystem.waves.waveElevationGrid (t, self.wavePlotX, self.wavePlotY);
+            
+                % update the z data for the surface plot
+                set ( self.waveSurfH, 'Zdata', Z );
+                
+                % drawnow () % don't know if we need a drawnow call here 
+            end
+            
+            if nargout > 0
+                hsurf = self.waveSurfH;
+            end
+            
         end
         
     end
@@ -519,6 +983,22 @@ classdef wecSim < handle
                 'loggingSettings property must be an wsim.loggingSettings object');
             
             self.loggingSettings = newsettings;
+            
+        end
+        
+        function set.wavePlotNumPointsX (self, n)
+            
+            check.isPositiveScalarInteger (n, true, 'wavePlotNumPointsX', true);
+            
+            self.wavePlotNumPointsX = n;
+            
+        end
+        
+        function set.wavePlotNumPointsY (self, n)
+            
+            check.isPositiveScalarInteger (n, true, 'wavePlotNumPointsY', true);
+            
+            self.wavePlotNumPointsY = n;
             
         end
         
@@ -1077,6 +1557,65 @@ classdef wecSim < handle
                     fprintf (1, '%s\n', lines{ind});
                 end
             
+            end
+            
+        end
+        
+        function makeAxes (self)
+            % create axes and transform object
+            
+            figure;
+            self.drawAxesH = axes;
+            
+        end
+        
+        function checkAxes (self, hax)
+            % checks if there is a valid set of axes to plot to, and if
+            % not, creates them
+            
+            % try to figure out if there is a valid set of axes to plot to
+            if isempty (hax)
+                
+                % plot in the existing axes if possible as no new axes
+                % supplied
+                if mbdyn.pre.base.isAxesHandle (self.drawAxesH)
+                    % use existing axes
+                    
+                    if ~ishghandle (self.drawAxesH)
+                        % axes no longer exists, or figure has been closed
+                        self.drawAxesH = [];
+%                         self.deleteAllDrawnObjects ();
+                        % make a new set of axes to draw to
+                        self.makeAxes ();
+                    end
+                    
+                elseif isempty (self.drawAxesH)
+                    % make figure and axes
+                    self.makeAxes ();
+%                     self.needsRedraw = true;
+                    
+                else
+                    error ('drawAxesH property is not empty or an axes handle');
+                end
+            
+            elseif mbdyn.pre.base.isAxesHandle (hax)
+                % an axes has been supplied, so we plot to this new axes
+                
+                if isoctave
+                    drawnow ();
+                end
+                
+                if ~ishghandle (hax)
+                    error ('provided axes object is not valid');
+                end
+                self.drawAxesH = hax;
+               
+%                 self.needsRedraw = true;
+                
+            else
+                
+                error ('hax must be an axes handle or empty');
+                
             end
             
         end
