@@ -37,21 +37,23 @@ function mexmbdyn_setup (varargin)
     options.Debug = false;
     options.ThrowErrors = false;
     
-    if ispc
-        switch computer ('arch')
-            case 'win64'
-                options.MBCLibDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win64', 'lib');
-                options.MBCIncludeDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win64', 'include');
-            case 'win32'
-                options.MBCLibDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win32', 'lib');
-                options.MBCIncludeDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win32', 'include');
-            otherwise
-                error ('Arch not supported.')
-        end
-    else
-        options.MBCLibDir = '';
-        options.MBCIncludeDir = '';
-    end
+    [options.MBCLibDir, options.MBCIncludeDir] = mbdyn.mint.find_libmbc ();
+    
+%     if ispc
+%         switch computer ('arch')
+%             case 'win64'
+%                 options.MBCLibDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win64', 'lib');
+%                 options.MBCIncludeDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win64', 'include');
+%             case 'win32'
+%                 options.MBCLibDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win32', 'lib');
+%                 options.MBCIncludeDir = fullfile (getmfilepath ('mexmbdyn_setup'), 'mbdyn_win32', 'include');
+%             otherwise
+%                 error ('Arch not supported.')
+%         end
+%     else
+%         options.MBCLibDir = '';
+%         options.MBCIncludeDir = '';
+%     end
     
     options = parse_pv_pairs (options, varargin);
 
@@ -98,9 +100,10 @@ function mexmbdyn_setup (varargin)
     %mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc', 'LDFLAGS="$LDFLAGS -Wl,-rpath,"/opt/lib""'}];
     
     % compiling mexMBCNodal
+    success = false;
     try
         mex (mexMBCNodal_mexargs{:});
-        fprintf (1, 'Finished setting up mmexMBCNodal.\n');
+        success = true; 
     catch err
         if options.ThrowErrors
             rethrow (err);
@@ -111,10 +114,17 @@ function mexmbdyn_setup (varargin)
         end
     end
     
+    if success
+        fprintf (1, 'Successfully compiled mexMBCNodal.\n');
+    else
+        fprintf (1, 'mexMBCNodal was not able to be compiled.\n');
+    end
+    
     % compiling mexMBCNodalSharedMem
+    success = false;
     try
         mex (mexMBCNodalSharedMem_mexargs{:});
-        fprintf (1, 'Finished setting up mexMBCNodalSharedMem.\n');
+        success = true;
     catch err
         if options.ThrowErrors
             rethrow (err);
@@ -123,6 +133,12 @@ function mexmbdyn_setup (varargin)
                 'Unable to compile mex function mexMBCNodalSharedMem. Error reported was:\n%s', ...
                 err.message);
         end
+    end
+    
+    if success
+        fprintf (1, 'Successfully compiled mexMBCNodalSharedMem.\n');
+    else
+        fprintf (1, 'mexMBCNodalSharedMem was not able to be compiled.\n');
     end
     
 end
