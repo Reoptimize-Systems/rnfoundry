@@ -83,7 +83,7 @@ public:
             {
                 refnoderot = MBCBase::MAT;
             }
-            else if (refnoderotargstr.compare ("euler 123") == 0)
+            else if (refnoderotargstr.compare ("euler123") == 0)
             {
                 refnoderot = MBCBase::EULER_123;
             }
@@ -135,7 +135,7 @@ public:
         {
             rot = MBCBase::MAT;
         }
-        else if (rotargstr.compare ("euler 123") == 0)
+        else if (rotargstr.compare ("euler123") == 0)
         {
             rot = MBCBase::EULER_123;
         }
@@ -255,17 +255,17 @@ public:
 
     }
 
-    void GetStatus (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-    {
-        std::vector<int> nallowed;
-
-        nallowed.push_back (0);
-        int nargin = mxnarginchk (nrhs, nallowed, 2);
-
-        int status = mbc->GetStatus ();
-
-        mxSetLHS (status, 1, nlhs, plhs);
-    }
+//     void GetStatus (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+//     {
+//         std::vector<int> nallowed;
+// 
+//         nallowed.push_back (0);
+//         int nargin = mxnarginchk (nrhs, nallowed, 2);
+// 
+//         int status = mbc->GetStatus ();
+// 
+//         mxSetLHS (status, 1, nlhs, plhs);
+//     }
 
     void GetMotion (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
@@ -434,6 +434,35 @@ public:
         Theta.push_back (mbc->Theta(n, 3));
 
         mxSetLHS (Theta, 1, nlhs, plhs);
+    }
+    
+    void Eul (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+
+        MBCBase::Rot rottype = mbc->GetRot ();
+
+        if (rottype != MBCBase::EULER_123)
+        {
+            mexErrMsgIdAndTxt ("MBCNodal:Theta:wrongrottype",
+                    "Rotation type is not set to euler123, so you cannot use Eul method.");
+        }
+
+        std::vector<int> nallowed;
+
+        // one arg, the node number
+        nallowed.push_back (1);
+
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+
+        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+
+        std::vector<double> Euler123;
+
+        Euler123.push_back (mbc->Euler123(n, 1));
+        Euler123.push_back (mbc->Euler123(n, 2));
+        Euler123.push_back (mbc->Euler123(n, 3));
+
+        mxSetLHS (Euler123, 1, nlhs, plhs);
     }
 
     void Omega (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -1002,6 +1031,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,XP)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,XPP)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,Theta)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,Eul)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,Omega)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,OmegaP)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,PutForces)

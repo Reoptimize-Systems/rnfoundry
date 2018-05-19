@@ -20,7 +20,6 @@ classdef MBCNodal < mbdyn.mint.cppinterface
 %   GetNodes - get the number of nodes in the system
 %   GetRefNodeRot - get the rotation matrix in the chosen format
 %   GetRot - get the rotation matrices for all nodes in the chosen format
-%   GetStatus - 
 %   KinematicsLabel - gets the label associated with the n'th node
 %   M - sets the nodal moments (for all structural external nodes)
 %   NodeAccelerations - gets the accelerations of one or more nodes
@@ -589,11 +588,11 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             end
         end
         
-        function status = GetStatus (self)
-            
-            status = self.cppcall ( 'GetStatus');
-            
-        end
+%         function status = GetStatus (self)
+%             
+%             status = self.cppcall ( 'GetStatus');
+%             
+%         end
 
         function status = GetMotion (self)
             % obtain the last set of results from the mbdyn system
