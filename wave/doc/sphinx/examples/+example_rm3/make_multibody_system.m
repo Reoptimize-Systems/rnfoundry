@@ -6,7 +6,7 @@ function [mbsys, initptodpos] = make_multibody_system (waves, simu, hydro_mbnode
     default_problem_options.NonLinearSolver = mbdyn.pre.newtonRaphsonSolver ();
     default_problem_options.LinearSolver = mbdyn.pre.linearSolver ('umfpack');
     default_problem_options.SteppingMethod = {};
-    default_problem_options.DefaultElementOutput = {'none'};
+    default_problem_options.DefaultElementOutput = {'all'};
         
     if nargin < 6
         problem_options = struct ();
