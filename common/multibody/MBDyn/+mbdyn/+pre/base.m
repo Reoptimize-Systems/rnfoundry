@@ -7,6 +7,7 @@ classdef base < handle
         label;
         type;
         transformObject;
+        netCDFName;
         
     end
     

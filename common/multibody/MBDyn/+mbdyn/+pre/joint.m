@@ -18,6 +18,8 @@ classdef joint < mbdyn.pre.element
             % call superclass constructor
             self = self@mbdyn.pre.element ( pvpairs{:} );
             
+            self.netCDFName = 'joint';
+            
         end
         
         function str = generateMBDynInputString (self)
