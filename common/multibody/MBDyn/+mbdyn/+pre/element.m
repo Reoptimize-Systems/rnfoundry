@@ -604,7 +604,7 @@ classdef element < mbdyn.pre.base
                     if all ( isfield (self.shapeData{ind}, {'Faces', 'Vertices'})) ...
                         || all (isfield (self.shapeData{ind}, {'XData', 'YData', 'ZData'}))
 
-                        self.shapeData{ind}.FaceLighting = 'gouraud';
+                        self.shapeData{ind}.FaceLighting = 'Gouraud';
                         self.shapeData{ind}.AmbientStrength = 0.15;
                         self.shapeData{ind}.Parent = self.transformObject;
                         
@@ -632,7 +632,7 @@ classdef element < mbdyn.pre.base
                 if options.Light
                     light (self.drawAxesH);
                 end
-                
+               
             end
             
             for ind = 1:numel (self.shapeObjects)
@@ -667,6 +667,10 @@ classdef element < mbdyn.pre.base
                 end
             
             end
+%             
+%             s = self.shapeData;
+% %             
+% %             save ('shape_data.mat', 's');
             
             if nargout > 0
                 hax = self.drawAxesH;

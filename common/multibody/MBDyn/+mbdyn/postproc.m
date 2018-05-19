@@ -24,6 +24,7 @@ classdef postproc < handle
         haveNetCDF;
         nNodes;
         nodes;
+        time;
         nodeNames;
         simInfo;
         mBDynOutFileName;
@@ -243,6 +244,8 @@ classdef postproc < handle
 
                 % determine the final time
                 self.simInfo.FinalTime = self.simInfo.InitialTime + (size(movdata,1)/self.nNodes-1)*self.simInfo.TimeStep;
+                
+                self.time = (1:nsteps)*self.simInfo.TimeStep;
 
                 % load .log file
                 %
@@ -273,10 +276,15 @@ classdef postproc < handle
                 
                 % open netcdf file in read only mode (the default). Will
                 % throw an error if the file cannot be opened
-                ncid = netcdf.open (self.ncFile);
+                ncid = self.netcdf_open (self.ncFile);
                 
                 % make sure the file's closed when we're done
                 CC = onCleanup (@() netcdf.close (ncid));
+                
+                % get the simulation time steps
+                varid = netcdf.inqVarID (ncid, 'time');
+                
+                self.time = self.netcdf_getVar (ncid,varid);
                 
                 self.simInfo.DefaultOrientation = [];
                 
@@ -301,17 +309,17 @@ classdef postproc < handle
                     
                     nodestr = sprintf('node.struct.%s', labelstr );
 
-                    varid = netcdf.inqVarID (ncid, sprintf('%s.X', nodestr));
+                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.X', nodestr));
                     
-                    self.nodes.(nodename).Position = netcdf.getVar(ncid,varid).';
+                    self.nodes.(nodename).Position = self.netcdf_getVar (ncid,varid).';
                     
-                    varid = netcdf.inqVarID (ncid, sprintf('%s.XP', nodestr));
+                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.XP', nodestr));
                     
-                    self.nodes.(nodename).Velocity = netcdf.getVar(ncid,varid).';
+                    self.nodes.(nodename).Velocity = self.netcdf_getVar (ncid,varid).';
                     
-                    varid = netcdf.inqVarID (ncid, sprintf('%s.Omega', nodestr));
+                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.Omega', nodestr));
                    
-                    self.nodes.(nodename).AngularVelocity = netcdf.getVar(ncid,varid).';
+                    self.nodes.(nodename).AngularVelocity = self.netcdf_getVar (ncid,varid).';
                     
                     % now get orientation type by examining what variables
                     % are in the file
@@ -319,7 +327,7 @@ classdef postproc < handle
                         
                         try
 
-                            varid = netcdf.inqVarID (ncid, sprintf('%s.R', nodestr));
+                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.R', nodestr));
 
                             self.simInfo.DefaultOrientation = 'orientation matrix';
 
@@ -327,7 +335,7 @@ classdef postproc < handle
 
                             try
                                 
-                                varid = netcdf.inqVarID (ncid, sprintf('%s.Phi', nodestr));
+                                varid = self.netcdf_inqVarID (ncid, sprintf('%s.Phi', nodestr));
 
                                 self.simInfo.DefaultOrientation = 'orientation vector';
 
@@ -335,7 +343,7 @@ classdef postproc < handle
 
                                 try
                                     
-                                    varid = netcdf.inqVarID (ncid, sprintf('%s.E', nodestr));
+                                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.E', nodestr));
                                     
                                     attrvalue = netcdf.getAtt(ncid,varid,'description');
 
@@ -374,21 +382,21 @@ classdef postproc < handle
 
                         case {'euler123', 'euler313', 'euler321'}
 
-                            varid = netcdf.inqVarID (ncid, sprintf('%s.E', nodestr));
+                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.E', nodestr));
                             
-                            self.nodes.(nodename).Orientation = netcdf.getVar(ncid,varid).' ;
+                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncid,varid).' ;
 
                         case 'orientation vector'
                             
-                            varid = netcdf.inqVarID (ncid, sprintf('%s.Phi', nodestr));
+                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.Phi', nodestr));
                             
-                            self.nodes.(nodename).Orientation = netcdf.getVar(ncid,varid).' ;
+                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncid,varid).' ;
 
                         case 'orientation matrix'
                             
-                            varid = netcdf.inqVarID (ncid, sprintf('%s.R', nodestr));
+                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.R', nodestr));
                             
-                            self.nodes.(nodename).Orientation = netcdf.getVar(ncid,varid) ;
+                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncid,varid) ;
 
                         otherwise
 
@@ -725,6 +733,138 @@ classdef postproc < handle
             end
             
         end
+        
+        function [ names, info ] = availableOutput (self)
+            % gets information on the available output in the mbdyn netcdf file
+            %
+            % Syntax
+            
+            if ~self.haveNetCDF
+                error ('No netcdf file is available')
+            end
+            
+            info = ncinfo (mbdyn_pproc.ncFile);
+            
+            % get all the variable names into a cell array
+            names = { info.Variables(:).Name };
+            
+        end
+        
+        
+%         function hax = plotOutput (self, component, quantity, varargin)
+%             % plot the output of a components (such as a joint or other element)
+%             %
+%             % Syntax
+%             %
+%             % hax = plotOutput (mbp, component_type, quantity, label) 
+%             % hax = plotOutput (..., 'Parameter', value);
+%             %
+%             % Description
+%             %
+%             % 
+%             %
+%             % Input
+%             %
+%             %  mbp - mbdyn.postproc object
+%             %
+%             %  Addtional optional arguments are supplied as paramter-value
+%             %  pairs. The avaialable options are:
+%             %
+%             %  'Legend' - flag determining whether to add a legend to the
+%             %    position plot. Default is true.
+%             %
+%             %  'Title' - flag determining whether to add a title to the
+%             %    position plot. Default is true.
+%             %
+%             % Output
+%             %
+%             %  hfig - handle to figure created
+%             %
+%             %  hax - handle to plot axes created
+%             %
+%             %
+%             
+%             options.Legend = true;
+%             options.Title = true;
+%             
+%             options = parse_pv_pairs (options, varargin);
+%             
+%             if ~self.haveNetCDF
+%                 error ('No netcdf file is available for plotting')
+%             end
+%             
+%             var = self.getNetCDFVariable (component, quantity);
+%             
+%             dims = size (var);
+%             
+%             plotdim = find (dim == length (self.time));
+%             
+%             if isempty (plotdim)
+%                 error ('Variable not the right size to plot against time.');
+%             end
+%             
+%             hfig = figure;
+%             hax = axes;
+%             
+%             ColOrd = get(hax,'ColorOrder');
+%             [m,n] = size(ColOrd);
+% 
+%             legstrings = {};
+%             
+%             switch numel (dims)
+%                 
+%                 case 2
+%                     
+%                     hold on
+%                     for ind = 1:numel (dims)
+%                         plot (self.time);
+%                     end
+%                     hold off
+%                     
+%                 case 3
+%                     
+%                 otherwise
+%                     
+%                     error ('Can only plot vars with 2 or 3 dimensions');
+%                     
+%             end
+%             
+%             xlabel (x_label);
+%             set (hax, 'XLim', [self.time(1), self.time(end)]);
+%             
+%             if options.Legend
+%                 legend (hax, legstrings, 'Interpreter', 'none', 'Location', 'BestOutside');
+%             end
+%             
+%         end
+        
+        
+        function var = getNetCDFVariable (self, component)
+            
+            if ~self.haveNetCDF
+                error ('No netcdf file is available for plotting')
+            end
+            
+            if ischar (component)
+                
+                varname = component;
+                
+            elseif isa (component, 'mbdyn.pre.element')
+                
+                varname = [ 'element.' component.netCDFName, '.', quantity, int2str(component.label) ];
+                
+            elseif isa (component, 'mbdyn.pre.node')
+                
+                varname = [ 'node.' component.netCDFName, '.', quantity, int2str(component.label) ];
+                
+            end
+            
+            varid = self.netcdf_getVar (ncid, varname);
+                            
+            var = self.netcdf_getVar (ncid,varid);
+            
+        end
+        
         
         function animate (self, varargin)
             % animate the nodes and bodies of the system
@@ -1204,7 +1344,7 @@ classdef postproc < handle
                 if ~isempty (self.preProcSystem)
                     title ( plotdata.HAx, ...
                             sprintf ( 'System plot at time t = %.2fs for MBDyn results file:\n%s', ...
-                                      (tind-1)*self.preProcSystem.problems{1}.timeStep, ...
+                                      self.time(tind), ...
                                       filestr ) ...
                           );
                 else
@@ -1337,18 +1477,6 @@ classdef postproc < handle
 
             legstrings = {};
             
-            nsteps = size (self.nodes.(self.nodeNames{1}).(fieldname)(:,1), 1);
-            
-            if ~isempty (self.preProcSystem)
-                
-                time = (1:nsteps)*self.preProcSystem.problems{1}.timeStep;
-                x_label = 'Time [s]';
-            else
-                time = 1:nsteps;
-                x_label = 'Step Number';
-            end
-                
-            
             hold on;
             for ind = 1:numel(options.OnlyNodes)
                 
@@ -1356,9 +1484,9 @@ classdef postproc < handle
                 
                 Col = ColOrd(1,:);
                 
-                plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,1), 'LineStyle', '-', 'Color', Col );
-                plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,2), 'LineStyle', '--', 'Color', Col );
-                plot ( time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,3), 'LineStyle', ':', 'Color', Col );
+                plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,1), 'LineStyle', '-', 'Color', Col );
+                plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,2), 'LineStyle', '--', 'Color', Col );
+                plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,3), 'LineStyle', ':', 'Color', Col );
                 
                 node_label = self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Label;
                 
@@ -1372,7 +1500,7 @@ classdef postproc < handle
             hold off
             
             xlabel (x_label);
-            set (hax, 'XLim', [time(1), time(end)]);
+            set (hax, 'XLim', [self.time(1), self.time(end)]);
             
             if options.Legend
                 legend (hax, legstrings, 'Interpreter', 'none', 'Location', 'BestOutside');
@@ -1380,6 +1508,55 @@ classdef postproc < handle
             
         end
 
+    end
+    
+    % octave and matlab compatible netcdf functions
+    methods (Static)
+        
+        function ncid = netcdf_open (varargin)
+            
+            if isoctave
+                ncid = netcdf_open (varargin{:});
+            else
+                ncid = netcdf.open (varargin{:});
+            end
+            
+        end
+        
+        
+        function netcdf_close ()
+            
+            if isoctave
+                netcdf_close (varargin{:});
+            else
+                netcdf.close (varargin{:});
+            end
+            
+        end
+        
+        
+        function varid = netcdf_inqVarID (varargin)
+            
+            if isoctave
+                varid = netcdf_close (varargin{:});
+            else
+                varid = netcdf.inqVarID (varargin{:});
+            end
+            
+        end
+        
+        
+        function data = netcdf_getVar (varargin)
+            
+            if isoctave
+                data = netcdf_getVar (varargin{:});
+            else
+                data = netcdf.getVar (varargin{:});
+            end
+            
+        end
+        
+        
     end
     
 end

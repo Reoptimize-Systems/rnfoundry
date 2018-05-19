@@ -161,6 +161,8 @@ classdef structuralNode < mbdyn.pre.node
             self.sy = 1;
             self.sz = 1;
             
+            self.netCDFName = 'struct';
+            
         end
         
         function str = generateMBDynInputString (self)
