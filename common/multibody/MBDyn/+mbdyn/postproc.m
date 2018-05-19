@@ -425,6 +425,8 @@ classdef postproc < handle
             self.resultsLoaded = false;
             self.nodeNames = {};
             self.mBDynOutFileName = '';
+            self.time = [];
+            self.ncFile = '';
             
         end
         
@@ -743,13 +745,35 @@ classdef postproc < handle
                 error ('No netcdf file is available')
             end
             
-            info = ncinfo (mbdyn_pproc.ncFile);
+            info = ncinfo (self.ncFile);
             
             % get all the variable names into a cell array
             names = { info.Variables(:).Name };
             
         end
         
+        function displayNetCDFVarNames (self)
+            % gets information on the available output in the mbdyn netcdf file
+            %
+            % Syntax
+            
+            [ names, info ] = availableOutput (self);
+
+            for ind = 1:numel (names)
+                
+                description = 'no description';
+                for attind = 1:numel (info.Variables(ind).Attributes)
+                    if strcmpi (info.Variables(ind).Attributes(attind).Name, 'description')
+                        description = info.Variables(ind).Attributes(attind).Value;
+                        break;
+                    end
+                end
+                
+                fprintf (1, '%s : %s\n', names{ind}, description );
+                
+            end
+            
+        end
         
 %         function hax = plotOutput (self, component, quantity, varargin)
 %             % plot the output of a components (such as a joint or other element)
@@ -839,7 +863,7 @@ classdef postproc < handle
 %         end
         
         
-        function var = getNetCDFVariable (self, component)
+        function var = getNetCDFVariable (self, component, quantity)
             
             if ~self.haveNetCDF
                 error ('No netcdf file is available for plotting')
@@ -859,9 +883,13 @@ classdef postproc < handle
                 
             end
             
-            varid = self.netcdf_getVar (ncid, varname);
+            ncid = self.netcdf_open (self.ncFile);
+            
+            CC = onCleanup (@() self.netcdf_close (ncid));
+            
+            varid = self.netcdf_inqVarID (ncid, varname);
                             
-            var = self.netcdf_getVar (ncid,varid);
+            var = self.netcdf_getVar (ncid, varid);
             
         end
         
@@ -1524,7 +1552,7 @@ classdef postproc < handle
         end
         
         
-        function netcdf_close ()
+        function netcdf_close (varargin)
             
             if isoctave
                 netcdf_close (varargin{:});
