@@ -47,6 +47,6 @@ function mexppval_setup (varargin)
         warning ('Unable to compile mex functions ppmval and ppuval. Do you have a compiler setup?');
     end
     
-    fprintf (1, 'Finished setting up mex ppval and ppuval.\n');
+    fprintf (1, 'Exiting mex ppval and ppuval setup.\n');
     
 end
