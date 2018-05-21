@@ -10,7 +10,10 @@
 clear waves simu hsys mbsys float_hbody spar_hbody hydro_mbnodes hydro_mbbodies hydro_mbelements lgsett wsobj
 
 %% Hydro Simulation Data
-simu = wsim.simSettings (fullfile ( wecsim_rootdir(), '..', '..', 'doc', 'sphinx', 'examples', '+example_rm3'));  % Create the Simulation Variable
+
+% some global simulation settings 
+simu = wsim.simSettings ( fullfile ( wecsim_rootdir(), '..', '..', 'doc', 'sphinx', 'examples', '+example_rm3'), ...
+                          'Verbose', true); 
 simu.startTime = 0;                   % Simulation Start Time [s]
 simu.endTime=400;                     % Simulation End Time [s]
 simu.dt = 0.1;                        % Simulation time-step [s]
@@ -76,7 +79,7 @@ waves.T = 8;                            %Wave Period [s]
 %
 
 % Float
-float_hbody = wsim.hydroBody('float.mat');      
+float_hbody = wsim.hydroBody('rm3.h5');      
     %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
@@ -86,7 +89,7 @@ float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Ine
 float_hbody.geometryFile = 'float.stl';    %Location of Geomtry File
 
 % Spar/Plate
-spar_hbody = wsim.hydroBody('spar.mat'); 
+spar_hbody = wsim.hydroBody('rm3.h5'); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
 spar_hbody.geometryFile = 'plate.stl'; 
@@ -128,9 +131,6 @@ mbsys.draw ( 'Mode', 'solid', ...
              'Joints', false, ...
              'StructuralNodes', false)
 
-% create the path where the MBDyn input file will be generated
-mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
-
 %% Set up Power Take-Off (PTO)
 
 % set up a simple linear spring-damper power take-off force based on a
@@ -166,7 +166,7 @@ lgsett.forceViscousDamping = true;
 % lssett.ForceAddedMassUncorrected = false;
 lgsett.forceAddedMass = true;
         
-% create the wesim object
+% create the wecSim object
 wsobj = wsim.wecSim ( hsys, mbsys, ...
                       'PTO', pto, ... % multiple PTOs may be added
                       'LoggingSettings', lgsett );
@@ -174,11 +174,31 @@ wsobj = wsim.wecSim ( hsys, mbsys, ...
 % initialise the simulation
 wsobj.prepare ();
 
-% run it and get the output data
-datalog = wsobj.run ('TimeExecution', true);
+% run it and get the output data. The results from wecSim are stored in a
+% wsim.logger object. What's stored in here is controlled by the
+% loggingsettings above, but also by each PTO object, which controls its
+% own logging output. 
+[datalog, mbdyn_pproc] = wsobj.run ('TimeExecution', true);
 
 %% Plot some results
 
 datalog.plotVar ('Positions');
 
 datalog.plotVar ('Velocities');
+
+% plot the force from the PTO (note the 'PTO_1_' prefix added by
+% wsim.wecSim, this allows mustliple PTO objects of the same type to by
+% used in one system)
+datalog.plotVar ('PTO_1_InternalForce')
+
+%% Animate the system
+
+% create an animation of the simulation
+wsobj.animate ( 'DrawMode', 'solid', ...
+                'Light', true, ...
+                'AxLims', [-30, 30; -30, 30; -35, 35], ...
+                'DrawNodes', false, ...
+                'View', [-53.9000e+000, 14.8000e+000], ...
+                'FigPositionAndSize', [200, 200, 800, 800] );
+             
+             
