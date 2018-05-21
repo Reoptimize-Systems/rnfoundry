@@ -757,7 +757,7 @@ classdef logger < handle
         end
 
 
-        function h = plotVar (obj, varname, varargin)
+        function [h, hax, hfig] = plotVar (obj, varname, varargin)
             % given a string specifying a numeric scalar field, it is plotted.
             %
             % Syntax
@@ -790,8 +790,15 @@ classdef logger < handle
             % 
             % Output
             %
-            %  h - A handle to the plot generated. Useful for formatting by
-            %   the user.
+            %  h - A handle (or array of handles) for the plot series
+            %   generated. Useful for formatting by the user.
+            %
+            %  hax - handle to the axes object in which the plot was drawn.
+            %
+            %  hfig - handle to the figure object in which the plot was
+            %   drawn
+            %
+            %
     
             options.PlotFcnArgs = {};
             options.Skip = 1;
@@ -805,9 +812,10 @@ classdef logger < handle
             
             if isempty (indepvar)
                 
-                figure;
+                hfig = figure;
+                hax = axes (hfig);
                 
-                h = obj.plotfunc(obj.data.(varname), options.PlotFcnArgs{:});
+                h = obj.plotfunc(hax, obj.data.(varname), options.PlotFcnArgs{:});
             
                 ylabel(obj.info.(varname).Description, 'FontSize', 16);
 
@@ -819,18 +827,18 @@ classdef logger < handle
                 
             else
                 
-                 h = plot2Vars ( obj, ...
-                                 obj.info.(varname).IndependentVariable, ...
-                                 varname, ...
-                                 'PlotFcnArgs', options.PlotFcnArgs, ...
-                                 'Skip', options.Skip );
+                 [h, hax, hfig] = plot2Vars ( obj, ...
+                                              obj.info.(varname).IndependentVariable, ...
+                                              varname, ...
+                                              'PlotFcnArgs', options.PlotFcnArgs, ...
+                                              'Skip', options.Skip );
                 
             end
 
         end
 
 
-        function h = plot2Vars(obj, f1, f2, varargin)
+        function [h, hax, hfig] = plot2Vars(obj, f1, f2, varargin)
             % plot two logged variables against each other
             %
             %
@@ -860,7 +868,14 @@ classdef logger < handle
             %
             % Output
             %
-            %  h - handle(s) to the created plot(s)
+            %  h - A handle (or array of handles) for the plot series
+            %   generated. Useful for formatting by the user.
+            %
+            %  hax - handle to the axes object in which the plot was drawn.
+            %
+            %  hfig - handle to the figure object in which the plot was
+            %   drawn
+            %
             %
             % See Also: wsim.logger.plotVar
             %
@@ -933,7 +948,8 @@ classdef logger < handle
             legstrs = {};
             
             % make a new figure to plot in
-            figure;
+            hfig = figure;
+            hax = axes (hfig);
             
             hold on
             
@@ -955,7 +971,8 @@ classdef logger < handle
                             f1S.subs{f1datadims} = dataind;
                         end
 
-                        h = [ h, obj.plotfunc( squeeze ( subsref (obj.data.(f1), f1S) ), ...
+                        h = [ h, obj.plotfunc( hax, ...
+                                               squeeze ( subsref (obj.data.(f1), f1S) ), ...
                                                squeeze ( subsref (obj.data.(f2), f2S) ), ...
                                                options.PlotFcnArgs{:} ) ...
                             ];
@@ -984,7 +1001,8 @@ classdef logger < handle
                                 f1S.subs{f1datadims(2)} = dataind2;
                             end
 
-                            h = [ h, obj.plotfunc( squeeze ( subsref (obj.data.(f1), f1S) ), ...
+                            h = [ h, obj.plotfunc( hax, ...
+                                                   squeeze ( subsref (obj.data.(f1), f1S) ), ...
                                                    squeeze ( subsref (obj.data.(f2), f2S) ), ...
                                                    options.PlotFcnArgs{:} ) ...
                                 ];
