@@ -395,7 +395,7 @@ classdef waveSettings < handle
             if ~isfloat(wDepth)
                 obj.deepWaterWave = 1;
                 obj.waterDepth = 200;
-                warning('Invalid water depth given. waves.waterDepth set to 200m for vizualisation.')
+                warning('Invalid water depth given. waves.waterDepth set to 200m for vizualisation.');
             else
                 obj.deepWaterWave = 0;
                 obj.waterDepth = double(wDepth);
@@ -549,13 +549,13 @@ classdef waveSettings < handle
             % Lists the wave spectrum type
             % Used by listInfo
             if strcmp(obj.spectrumType,'BS')
-                fprintf('\tSpectrum Type                        = Bretschneider \n')
+                fprintf('\tSpectrum Type                        = Bretschneider \n');
             elseif strcmp(obj.spectrumType,'JS')
-                fprintf('\tSpectrum Type                        = JONSWAP \n')
+                fprintf('\tSpectrum Type                        = JONSWAP \n');
             elseif strcmp(obj.spectrumType,'PM')
-                fprintf('\tSpectrum Type                        = Pierson-Moskowitz  \n')
+                fprintf('\tSpectrum Type                        = Pierson-Moskowitz  \n');
             elseif strcmp(obj.spectrumType,'Imported')
-                fprintf('\tSpectrum Type                        = User-Defined \n')
+                fprintf('\tSpectrum Type                        = User-Defined \n');
             end
         end
         
