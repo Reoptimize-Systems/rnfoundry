@@ -244,13 +244,13 @@ function [rules, vars] = implicit_mmakefile(options)
         rules(idx).deps     = {'%.c'};
         rules(idx).commands = {'mex -c ${MEXFLAGS} "${CFLAGSKEY}${CFLAGS}" "${CXXFLAGSKEY}${CXXFLAGS}" "${LDFLAGSKEY}${LDFLAGS}" $<', ...
                                '[pathstr,name,ext] = fileparts (''$<'');', ...
-                               'movefile ([name,''.'',''${OBJ_EXT}''], pathstr)' };
+                               'if ~isempty (pathstr), movefile ([name,''.'',''${OBJ_EXT}''], pathstr); end;' };
         idx = idx+1;
         rules(idx).target   = {['%.' vars.OBJ_EXT]};
         rules(idx).deps     = {'%.cpp'};
         rules(idx).commands = {'mex -c ${MEXFLAGS} "${CFLAGSKEY}${CFLAGS}" "${CXXFLAGSKEY}${CXXFLAGS}" "${LDFLAGSKEY}${LDFLAGS}" $<', ...
                                '[pathstr,name,ext] = fileparts (''$<'');', ...
-                               'movefile ([name,''.'',''${OBJ_EXT}''], pathstr);'};
+                               'if ~isempty (pathstr), movefile ([name,''.'',''${OBJ_EXT}''], pathstr); end;'};
         idx = idx+1;
         rules(idx).target   = {'%.dlm'};
         rules(idx).deps     = {'%.mdl'};
