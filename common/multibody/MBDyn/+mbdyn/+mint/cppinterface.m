@@ -39,7 +39,9 @@ classdef cppinterface < handle
             % allow it to destroy the C++ class instance as it is no longer
             % required
             if ~isempty(this.objectHandle)
-                this.mex_interface_fcn('delete', this.objectHandle);
+                if ~isempty (this.mex_interface_fcn)
+                    this.mex_interface_fcn('delete', this.objectHandle);
+                end
             end
         end
         
