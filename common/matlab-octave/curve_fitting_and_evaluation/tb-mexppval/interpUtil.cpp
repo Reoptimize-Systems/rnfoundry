@@ -22,20 +22,20 @@ inline int findidx(double v, int l, int u, const double *a)
         if ((u - l) <= 1) return l;
     }
     // This return is spurious but dampens the compiler warning
-    return l; 
+    return l;
 }
 
 double nested_sum(unsigned int nest_levels,const double *x, const double **b,
 	const int *ix, const int *p, const int *d,const double *c, const int *c_dim, int &ind)
 {
     double sum = 0;
-	
+
     if ( nest_levels == 1 )
     {
-        // end of recursion 
+        // end of recursion
         double lx = x[0]-b[0][ix[0]];
         double pow_x = 1;
-        
+
 		ind += (ix[0] + p[0]*d[0]) * c_dim[0];
 		int dec_x = p[0] * c_dim[0];
 		int inc_x = p[0] * d[0] * c_dim[0];
@@ -51,7 +51,7 @@ double nested_sum(unsigned int nest_levels,const double *x, const double **b,
     {
         double lx = x[0]-b[0][ix[0]];
         double pow_x = 1;
-        
+
 		ind += (ix[0] + p[0]*d[0]) * c_dim[0];
 		int dec_x = p[0] * c_dim[0];
         int inc_x = p[0] * d[0] * c_dim[0];
@@ -65,7 +65,7 @@ double nested_sum(unsigned int nest_levels,const double *x, const double **b,
     return sum;
 }
 
-double eval_polynomial(const double *xPtr, int x_dims, const double **b, const int *ix, 
+double eval_polynomial(const double *xPtr, int x_dims, const double **b, const int *ix,
         const int *p, const int *d, const double *coefs, const int* coefs_dim, int f_dim)
 {
     switch (x_dims)
@@ -102,15 +102,15 @@ double eval_polynomial(const double *xPtr, int x_dims, const double **b, const i
 	}
 	case 1 :
 	{
-		// optimize x_dims = 1 case to avoid recursion.  
-        // For one dimensional polynomial, it is easy to take 
+		// optimize x_dims = 1 case to avoid recursion.
+        // For one dimensional polynomial, it is easy to take
         // advantage of nested valuation. Saves few CPU cycles
         double sum = 0;
         double x = xPtr[0]-b[0][ix[0]];
 
         int off_x = f_dim+ix[0]*coefs_dim[0];
         int inc_x = p[0] * coefs_dim[0];
-        
+
         sum = coefs[off_x];
         for (int l = 1; l < d[0]; l++)
         {
@@ -132,7 +132,7 @@ double eval_polynomial(const double *xPtr, int x_dims, const double **b, const i
 		int off_x = f_dim + (ix[0] + p[0]*d[0]) * coefs_dim[0];
         int off_y = (ix[1] + p[1]*d[1]) * coefs_dim[1];
 		int off_z = (ix[2] + p[2]*d[2]) * coefs_dim[2];
-		
+
 		double x = xPtr[0]-b[0][ix[0]];
         double y = xPtr[1]-b[1][ix[1]];
 		double z = xPtr[2]-b[2][ix[2]];
@@ -165,9 +165,9 @@ double eval_polynomial(const double *xPtr, int x_dims, const double **b, const i
 	}
 	default :
 		// General case goes here
-		// If you want, feel free to add more non recursive nested loops. 
+		// If you want, feel free to add more non recursive nested loops.
 		// My personal need restricts to dim = 3
-        return nested_sum(x_dims,xPtr,b,ix,p,d,coefs,coefs_dim,f_dim); 
+        return nested_sum(x_dims,xPtr,b,ix,p,d,coefs,coefs_dim,f_dim);
 	}
 }
 
@@ -175,12 +175,12 @@ void ppuval( int nlhs, mxArray *plhs[],
                   int nrhs, const mxArray *prhs[])
 {
     // Check proper number of arguments:
-    if ( nrhs < 2 ) 
-    { 
-        mexErrMsgTxt(ERR_HEAD_PPUVAL "not enough input arguments"); 
-        return; 
+    if ( nrhs < 2 )
+    {
+        mexErrMsgTxt(ERR_HEAD_PPUVAL "not enough input arguments");
+        return;
     }
-    else if (nrhs > 2 ) 
+    else if (nrhs > 2 )
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "too many input arguments");
     }
@@ -195,14 +195,14 @@ void ppuval( int nlhs, mxArray *plhs[],
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form");
     }
-    double *x = mxGetPr(X); 
+    double *x = mxGetPr(X);
     mxArray *Form = mxGetField(pp_form,0,"form");
     mxArray *Breaks = mxGetField(pp_form,0,"breaks");
     mxArray *Coefs = mxGetField(pp_form,0,"coefs");
     mxArray *Order = mxGetField(pp_form,0,"order");
     mxArray *Dim = mxGetField(pp_form,0,"dim");
     mxArray *Pieces = mxGetField(pp_form,0,"pieces");
-    if (Form == 0 || Breaks == 0 || Coefs == 0 || Order == 0 || Dim == 0 || 
+    if (Form == 0 || Breaks == 0 || Coefs == 0 || Order == 0 || Dim == 0 ||
         Pieces == 0 || strcmp(mxArrayToString(Form),"pp") != 0)
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form");
@@ -215,19 +215,19 @@ void ppuval( int nlhs, mxArray *plhs[],
     double *d_dim = mxGetPr(Dim);
     if (pc == 0 || d_pieces == 0 || d_order == 0 || d_dim == 0)
     {
-        mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form"); 
+        mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form");
     }
-    
+
     size_t pieces = (size_t)*d_pieces;
     size_t order = (size_t)*d_order;
     size_t dim = (size_t)*d_dim;
-    
+
     if ( breaks == 0 || dim != 1 )
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial is not univariate."
             "Use ppmval-function for multivariate valuation");
     }
-    
+
     plhs[0] = mxCreateNumericArray(mxGetNumberOfDimensions(X),
               mxGetDimensions(X) ,mxDOUBLE_CLASS, mxREAL);
     double *out = mxGetPr(plhs[0]);
@@ -238,7 +238,7 @@ void ppuval( int nlhs, mxArray *plhs[],
 		size_t j;
 		double d;
 		double lx;
-		for (size_t i = 0; i < n; i++) 
+		for (size_t i = 0; i < n; i++)
 		{
 			j = findidx(x[i], 0, pieces-1, breaks); /* breaks[j] <= X[i] < breaks[j+1] */
 			lx = x[i] - breaks[j];
@@ -253,7 +253,7 @@ void ppuval( int nlhs, mxArray *plhs[],
 	}
 	else
 	{
-		Concurrency::parallel_for (size_t(0), n, [&](size_t i) 
+		Concurrency::parallel_for (size_t(0), n, [&](size_t i)
 		{
 			size_t j = findidx(x[i], 0, pieces-1, breaks); /* breaks[j] <= X[i] < breaks[j+1] */
 			double lx = x[i] - breaks[j];
@@ -271,19 +271,19 @@ void ppuval( int nlhs, mxArray *plhs[],
 
 void ppmval( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] ) {
     // Check proper number of arguments:
-    if ( nrhs < 2 ) 
-    { 
-        mexErrMsgTxt(ERR_HEAD_PPUVAL "not enough input arguments"); 
-        return; 
+    if ( nrhs < 2 )
+    {
+        mexErrMsgTxt(ERR_HEAD_PPUVAL "not enough input arguments");
+        return;
     }
-    else if (nrhs > 2 ) 
+    else if (nrhs > 2 )
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "too many input arguments");
     }
 
     const mxArray *X = prhs[0];
     const mxArray *pp_form = prhs[1];
-    
+
     if ( !mxIsDouble(X) )
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "Evaluation sites must be numeric");
@@ -295,11 +295,11 @@ void ppmval( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] ) {
     else if (!mxIsStruct(pp_form))
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form");
-    } 
+    }
     size_t X_dim = mxGetM(X);
     size_t n_sites = mxGetN(X);
 
-    double *x = mxGetPr(X); 
+    double *x = mxGetPr(X);
     mxArray *Form = mxGetField(pp_form,0,"form");
     mxArray *Breaks = mxGetField(pp_form,0,"breaks");
     mxArray *Coefs = mxGetField(pp_form,0,"coefs");
@@ -307,7 +307,7 @@ void ppmval( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] ) {
     mxArray *Dim = mxGetField(pp_form,0,"dim");
     mxArray *Pieces = mxGetField(pp_form,0,"pieces");
 
-    if (Form == 0 || Breaks == 0 || Coefs == 0 || Order == 0 || Dim == 0 || 
+    if (Form == 0 || Breaks == 0 || Coefs == 0 || Order == 0 || Dim == 0 ||
         Pieces == 0 || strcmp(mxArrayToString(Form),"pp") != 0)
     {
         mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form");
@@ -318,26 +318,26 @@ void ppmval( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] ) {
     double *d_dim = mxGetPr(Dim);
     if (p == 0 || o == 0 || d_dim == 0)
     {
-        mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form"); 
+        mexErrMsgTxt(ERR_HEAD_PPUVAL "Polynomial must be in 'pp'-form");
     }
 
     if ( !mxIsCell(Breaks) )
     {
-        mexErrMsgTxt(ERR_HEAD_PPMVAL "Polynomial is not multivariate." 
+        mexErrMsgTxt(ERR_HEAD_PPMVAL "Polynomial is not multivariate."
             "Use ppval-function for univariate valuation");
     }
-    // polynomial coefficients   
+    // polynomial coefficients
     size_t coefs_dims = mxGetNumberOfDimensions(Coefs);
-	const int *coefs_dim = mxGetDimensions(Coefs);
+	const mwSize *coefs_dim = mxGetDimensions(Coefs);
     double *c = mxGetPr(Coefs);
     // polynomial is a mapping from R^(x_dims) -> R^(f_dims)
     size_t f_dims = (size_t) *d_dim;
     size_t x_dims = mxGetNumberOfElements(Breaks);
-    
+
     const double **brk_pointers = new const double*[x_dims];
     const double *brk_pointer;
-    int *pieces = new int[x_dims];  // number of intervals = number of breaks - 1 
-    int *order = new int[x_dims];   // polynomial order + 1    
+    int *pieces = new int[x_dims];  // number of intervals = number of breaks - 1
+    int *order = new int[x_dims];   // polynomial order + 1
 	int *prod_coefs_dim = new int[1+x_dims]; // preallocate arrays to store indices
     int *ix;
 	prod_coefs_dim[0] = coefs_dim[0];
@@ -357,7 +357,7 @@ void ppmval( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] ) {
 			prod_coefs_dim[i+1] = prod_coefs_dim[i]*coefs_dim[i+1];
         }
     }
-     
+
     // allocate memory to the result that is returned to Matlab
     plhs[0] = mxCreateDoubleMatrix(f_dims,n_sites, mxREAL);
     double *out = mxGetPr(plhs[0]);
@@ -371,7 +371,7 @@ void ppmval( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] ) {
 		for (size_t site = 0; site < n_sites; site++)
 		{
 			off_x = site*x_dims;
-			for (size_t x_dim = 0; x_dim < x_dims; x_dim++) 
+			for (size_t x_dim = 0; x_dim < x_dims; x_dim++)
 			{
 				//brk_pointer = mxGetPr(mxGetCell(breaks,x_dim));
 				brk_pointer = brk_pointers[x_dim];
@@ -395,7 +395,7 @@ void ppmval( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] ) {
 		{
 			const double *brk_pointer;
 			int off_x = site*x_dims;
-			for (size_t x_dim = 0; x_dim < x_dims; x_dim++) 
+			for (size_t x_dim = 0; x_dim < x_dims; x_dim++)
 			{
 				brk_pointer = brk_pointers[x_dim];
 				// before polynomial can be evaluated on the given site, its all breaks needs to be found
