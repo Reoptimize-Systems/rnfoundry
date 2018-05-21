@@ -112,8 +112,14 @@ classdef base < handle
         function makeAxes (self)
             % create axes and transform object
             
-            figure;
-            self.drawAxesH = axes;
+            hfig = figure;
+            
+            if isoctave
+                self.drawAxesH = axes;
+            else
+                self.drawAxesH = axes (hfig);
+            end
+            
             if ~isempty (self.transformObject) && ishghandle (self.transformObject)
                 delete (self.transformObject);
             end
