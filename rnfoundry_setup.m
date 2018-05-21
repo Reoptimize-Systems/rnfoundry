@@ -403,32 +403,42 @@ function rnfoundry_setup (varargin)
     
 end
 
+
 function runtests ()
-    % put some tests in here
+    % run some examples to test the installation
     
-    % get all variables names currently in memory
-    vars = who (); vars{end+1} = 'vars';
-    
-    fprintf (1, 'Running "example_basic_heaving_buoy_simulation"\n');
-    example_basic_heaving_buoy_simulation;
-    clearvars ('-except', vars{:});
+    run_one_test ('example_basic_heaving_buoy_simulation');
     close all;
     
-    fprintf (1, 'Running "example_buoy_sim_with_ACTM"\n');
-    example_buoy_sim_with_ACTM;
-    clearvars ('-except', vars{:});
+    run_one_test ('example_buoy_sim_with_ACTM');
     close all;
     
-    fprintf (1, 'Running "example_radial_flux_permanent_magnet_machine_sim"\n');
-    example_radial_flux_permanent_magnet_machine_sim;
-    clearvars ('-except', vars{:});
+    run_one_test ('example_radial_flux_permanent_magnet_machine_sim');
     close all;
     
-    fprintf (1, 'Running "example_radial_flux_pm_with_ratio_specification"\n');
-    example_radial_flux_pm_with_ratio_specification
-    clearvars ('-except', vars{:});
+    run_one_test ('example_radial_flux_pm_with_ratio_specification');
     close all;
     
+    if isoctave
+        run_one_test ('example_rm3.run_wecsim_in_octave');
+    else
+        run_one_test ('example_rm3.run_wecsim');
+    end
+    close all;
+    
+end
+
+
+function run_one_test (script_name)
+
+    fprintf (1, 'Running test script: "%s"\n', script_name);
+    
+    try
+        eval (script_name);
+    catch err
+        fprintf (1, 'The following test script: \n"%s"\nresulted in the following error:\n%s\n', err.message);
+    end
+
 end
 
 
