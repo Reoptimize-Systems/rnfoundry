@@ -284,10 +284,13 @@ classdef wecSim < handle
             % examine later if required
             self.mBDynOutputFile = mb.MBDynOutputFile;
             
-            % ensure MBCNodal is destroyed in the event of a problem
-            % (closes communication to MBDyn and tells it to quit so
-            % sockets and so on are also cleaned up)
-            CC = onCleanup (@() delete (mb));
+%             % ensure MBCNodal is destroyed in the event of a problem
+%             % (closes communication to MBDyn and tells it to quit so
+%             % sockets and so on are also cleaned up)
+%             if ~isoctave
+%                 % FIXME: put onCleanup back when Octave is compatible
+%                 CC = onCleanup (@() delete (mb));
+%             end
             
             mb.start ('Verbosity', options.Verbosity);
             
@@ -503,10 +506,11 @@ classdef wecSim < handle
                 
             end
             
-            fprintf ( 1, 'Reached time %f, in %d steps (of an intended %d), postprocessing ...\n', ...
+            fprintf ( 1, 'Reached time %fs (%fs of an intended %fs), in %d steps, postprocessing ...\n', ...
                       self.lastTime, ...
-                      ind-1, ...
-                      self.logger.info.Time.PreallocatedLogLength );
+                      self.lastTime - siminfo.TStart, ...
+                      siminfo.TEnd - siminfo.TStart, ...
+                      ind-1 );
             
             if self.loggingSettings.nodeForcesAndMoments || self.loggingSettings.forceAddedMass
                 
