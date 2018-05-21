@@ -129,7 +129,7 @@ mbsys.draw ( 'Mode', 'solid', ...
              'Light', true, ...
              'AxLims', [-30, 30; -30, 30; -35, 35], ...
              'Joints', false, ...
-             'StructuralNodes', false)
+             'StructuralNodes', false);
 
 %% Set up Power Take-Off (PTO)
 
@@ -189,7 +189,7 @@ datalog.plotVar ('Velocities');
 % plot the force from the PTO (note the 'PTO_1_' prefix added by
 % wsim.wecSim, this allows mustliple PTO objects of the same type to by
 % used in one system)
-datalog.plotVar ('PTO_1_InternalForce')
+datalog.plotVar ('PTO_1_InternalForce');
 
 %% Animate the system
 
