@@ -436,7 +436,14 @@ function run_one_test (script_name)
     try
         eval (script_name);
     catch err
-        fprintf (1, 'The following test script: \n"%s"\nresulted in the following error:\n%s\n', err.message);
+        
+        if isempty (err.message)
+            msg = 'error message was empty';
+        else    
+            msg = err.message;
+        end
+        
+        fprintf (1, 'The following test script: \n"%s"\nresulted in the following error:\n%s\n\n', msg);
     end
 
 end
