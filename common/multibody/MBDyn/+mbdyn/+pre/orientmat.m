@@ -621,7 +621,7 @@ classdef orientmat
            if isempty (options.PlotAxes)
                figure;
                hax = axes;
-               view (3);
+               view (hax, 3);
                axis (hax, 'equal');
            else
                hax = options.PlotAxes;
