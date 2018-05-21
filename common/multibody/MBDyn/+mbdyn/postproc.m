@@ -117,7 +117,7 @@ classdef postproc < handle
             end
             
             % load the results
-            loadResultsFromFiles (self, mbdoutfilename)
+            loadResultsFromFiles (self, mbdoutfilename);
             
         end
         
@@ -276,13 +276,13 @@ classdef postproc < handle
                 
                 % open netcdf file in read only mode (the default). Will
                 % throw an error if the file cannot be opened
-                ncid = self.netcdf_open (self.ncFile);
+                ncid = self.netcdf_open (self.ncFile, 'NOWRITE');
                 
                 % make sure the file's closed when we're done
-                CC = onCleanup (@() netcdf.close (ncid));
+                CC = onCleanup (@() self.netcdf_close (ncid));
                 
                 % get the simulation time steps
-                varid = netcdf.inqVarID (ncid, 'time');
+                varid = self.netcdf_inqVarID (ncid, 'time');
                 
                 self.time = self.netcdf_getVar (ncid,varid);
                 
@@ -883,7 +883,7 @@ classdef postproc < handle
                 
             end
             
-            ncid = self.netcdf_open (self.ncFile);
+            ncid = self.netcdf_open (self.ncFile, 'NOWRITE');
             
             CC = onCleanup (@() self.netcdf_close (ncid));
             
@@ -1544,7 +1544,22 @@ classdef postproc < handle
         function ncid = netcdf_open (varargin)
             
             if isoctave
-                ncid = netcdf_open (varargin{:});
+                if numel (varargin) > 1
+                    switch varargin{2}
+                        
+                        case 'NOWRITE'
+                            mode = netcdf_getConstant ('NC_NOWRITE');
+                        case 'WRITE'
+                            mode = netcdf_getConstant ('NC_WRITE');
+                        case 'SHARE'
+                            mode = netcdf_getConstant ('NC_SHARE');
+                        otherwise
+                            
+                            error ('unrecognised mode');
+                    end
+                end
+                
+                ncid = netcdf_open (varargin{1}, mode);
             else
                 ncid = netcdf.open (varargin{:});
             end
@@ -1566,7 +1581,7 @@ classdef postproc < handle
         function varid = netcdf_inqVarID (varargin)
             
             if isoctave
-                varid = netcdf_close (varargin{:});
+                varid = netcdf_inqVarID (varargin{:});
             else
                 varid = netcdf.inqVarID (varargin{:});
             end
