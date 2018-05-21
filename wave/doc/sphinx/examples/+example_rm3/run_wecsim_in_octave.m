@@ -12,7 +12,7 @@ clear waves simu hsys mbsys float_hbody spar_hbody hydro_mbnodes hydro_mbbodies 
 %% Hydro Simulation Data
 simu = wsim.simSettings (fullfile ( wecsim_rootdir(), '..', '..', 'doc', 'sphinx', 'examples', '+example_rm3'));  % Create the Simulation Variable
 simu.startTime = 0;                   % Simulation Start Time [s]
-simu.endTime=400;                     % Simulation End Time [s]
+simu.endTime=10;                     % Simulation End Time [s]
 simu.dt = 0.1;                        % Simulation time-step [s]
 simu.rampT = 100;                     % Wave Ramp Time Length [s]
 simu.b2b = true;                      % BOdy-to-body interaction
@@ -130,7 +130,7 @@ mbsys.draw ( 'Mode', 'solid', ...
              'Light', true, ...
              'AxLims', [-30, 30; -30, 30; -35, 35], ...
              'Joints', false, ...
-             'StructuralNodes', false)
+             'StructuralNodes', false);
 
 % create the path where the MBDyn input file will be generated
 mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
@@ -170,7 +170,7 @@ lgsett.forceViscousDamping = true;
 % lssett.ForceAddedMassUncorrected = false;
 lgsett.forceAddedMass = true;
         
-% create the wesim object
+% create the wecSim object
 wsobj = wsim.wecSim ( hsys, mbsys, ...
                       'PTO', pto, ... % multiple PTOs may be added
                       'LoggingSettings', lgsett );
@@ -178,11 +178,32 @@ wsobj = wsim.wecSim ( hsys, mbsys, ...
 % initialise the simulation
 wsobj.prepare ();
 
-% run it and get the output data
-datalog = wsobj.run ('TimeExecution', true);
+% run it and get the output data. The results from wecSim are stored in a
+% wsim.logger object. What's stored in here is controlled by the
+% loggingsettings above, but also by each PTO object, which controls its
+% own logging output.
+[datalog, mbdyn_pproc] = wsobj.run ('TimeExecution', true);
 
 %% Plot some results
 
 datalog.plotVar ('Positions');
 
 datalog.plotVar ('Velocities');
+
+% plot the force from the PTO (note the 'PTO_1_' prefix added by
+% wsim.wecSim, this allows mustliple PTO objects of the same type to by
+% used in one system)
+datalog.plotVar ('PTO_1_InternalForce');
+
+%% Animate the system
+
+% % create an animation of the simulation, currently octave has trouble
+% with this
+% wsobj.animate ( 'DrawMode', 'solid', ...
+%                 'Light', true, ...
+%                 'AxLims', [-30, 30; -30, 30; -35, 35], ...
+%                 'DrawNodes', false, ...
+%                 'View', [-53.9000e+000, 14.8000e+000], ...
+%                 'FigPositionAndSize', [200, 200, 800, 800] );
+             
+             
