@@ -370,8 +370,8 @@ classdef simulation < nemoh.base
             
             if isempty (options.Axes)
                 hfig = figure ();
-                hax = axes ();
-                view (3);
+                hax = axes (hfig);
+                view (hax, 3);
                 axis equal;
             else
                 hax = options.Axes;

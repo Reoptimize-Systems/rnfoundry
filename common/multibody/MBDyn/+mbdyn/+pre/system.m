@@ -807,7 +807,7 @@ classdef system < mbdyn.pre.base
                 axis (self.drawAxesH, 'equal')
             end
             
-            view (3);
+            view (self.drawAxesH, 3);
             
         end
         

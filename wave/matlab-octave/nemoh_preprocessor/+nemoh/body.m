@@ -833,8 +833,8 @@ classdef body < nemoh.base
                 
                 if isempty (options.Axes)
                     hfig = figure;
-                    hax = axes ();
-                    view (3);
+                    hax = axes (hfig);
+                    view (hax, 3);
                 else
                     self.checkIsAxes (options.Axes, true);
                     hax = options.Axes;
