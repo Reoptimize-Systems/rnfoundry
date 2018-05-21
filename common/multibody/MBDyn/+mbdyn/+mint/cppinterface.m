@@ -38,18 +38,22 @@ classdef cppinterface < handle
             % call the mex interface function with the 'delete' keyword to
             % allow it to destroy the C++ class instance as it is no longer
             % required
+
             if ~isempty(this.objectHandle)
                 if ~isempty (this.mex_interface_fcn)
                     this.mex_interface_fcn('delete', this.objectHandle);
+                    this.mex_interface_fcn = [];
+                    this.objectHandle = [];
                 end
             end
+            
         end
         
         %% C++ Function Call
         function varargout = cppcall(this, varargin)
             
-            % call the mex funtion with the supplied keyword and the object
-            % handle
+            % call the mex function with the supplied keyword and the
+            % object handle
             if numel(varargin) > 1
                 [varargout{1:nargout}] = this.mex_interface_fcn(varargin{1}, this.objectHandle, varargin{2:end});
             else
