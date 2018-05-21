@@ -104,7 +104,7 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             %    the names of internal variables to be logged. If supplied,
             %    only those variables named in this cell array will
             %    actually have data logged. The available variables are:
-            %
+            %            
             %    'InternalMoment' : the scalar moment (torque) applied
             %      about the revolute hinge axis
             %
@@ -118,6 +118,13 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             %    which case no internal variables will be logged. Default
             %    is an empty cell array, which means all available nternal
             %    variables will be logged.
+            %
+            %    The logged variables will be put in the wecSim wsim.logger
+            %    object with unique names, created by adding a prefix
+            %    'PTO_X_' where 'X' is replaced with an integer. The
+            %    integer is incremented for each PTO in the system, e.g.
+            %    PTO_1_, PTO_2_ etc. This allows multiple PTO objects with
+            %    the same internal variable names to be used.
             %
             % Output
             %

@@ -108,7 +108,26 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             %
             %  'LoggedVars' - character vector, or cell array of character
             %    vectors indicating what internal variables are to be
-            %    loggeed during a simulation. If a character vector 'none',
+            %    logged during a simulation. If a character vector, it must
+            %    be 'none', meaning nothing will be logged. Otherwise it
+            %    must be a cell array containing any combination of the
+            %    following names:
+            %
+            %    'InternalForce' : This is the internal PTO force
+            %      calculated using the function supplied in force_fcn
+            %
+            %    'RelativeDisplacement' : The relative displacement used to 
+            %      calculate the PTO force
+            %
+            %    'RelativeVelocity' : The relative velocity used to 
+            %      calculate the PTO force
+            %
+            %    The logged variables will be put in the wecSim wsim.logger
+            %    object with unique names, created by adding a prefix
+            %    'PTO_X_' where 'X' is replaced with an integer. The
+            %    integer is incremented for each PTO in the system, e.g.
+            %    PTO_1_, PTO_2_ etc. This allows multiple PTO objects with
+            %    the same internal variable names to be used.
             %
             % Output
             %

@@ -77,17 +77,25 @@ classdef powerTakeOff < handle
             %
             %   AvailableNames : cell array of variable names that can be
             %    logged. To use the logData method of the powerTakeOff
-            %    class, each name must correspond to a class property,
-            %    names "last<var name>", where <var name> is replaced by
-            %    the contents of each cell in AvailableNames. When calling
-            %    logData, it is the contents of the class property which is
+            %    class, each name must correspond to a field of a structure
+            %    in the class property, internalVariables. When calling
+            %    logData, it is the contents of the this variable which is
             %    appended to the log.
             %
+            %    From the AvailableNames, a unique variable name is created
+            %    for use in the logger object based on the pto id. Data is
+            %    actually logged to this unique name in the logger. This
+            %    ensures data for mutiple PTO objects of the same type can
+            %    be logged in the same logger object. The unique logging
+            %    names are stored in the uniqueLoggingNames property of the
+            %    class. The variables which are actually logged can be
+            %    restricted by using the LoggedVars option (see below)
+            %
             %   IndepVars : cell array the same size as the AvailableNames
-            %    field containingthe name of the independant variable
+            %    field containing the name of the independant variable
             %    associated with the corresponding variable name in
             %    AvailableNames, e.g. 'Time'. If there is no independant
-            %    variable, the cell should containin an empty character
+            %    variable, the cell should contain an empty character
             %    vector (or just be empty).
             %
             %   Sizes : cell array containing vector containing the size of
@@ -97,16 +105,6 @@ classdef powerTakeOff < handle
             %    descriptions of the variables. Each cell can be empty, but
             %    the cell array must be of the same length as the
             %    AvailableNames cell array.
-            %
-            %  From the AvailableNames, a unique variable name is created
-            %  for use in the logger object based on the pto id. Data is
-            %  actually logged to this unique name in the logger. This
-            %  ensures data for mutiple PTO objects of the same type can be
-            %  logged in the same logger object. The unique logging names
-            %  are stored in the uniqueLoggingNames property of the class.
-            %  The variables which are actually logged can be restricted by
-            %  using the LoggedVars option (see below)
-            %
             %
             % Addtional arguments may be supplied as parameter-value pairs.
             % The available options are:
