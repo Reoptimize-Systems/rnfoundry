@@ -813,7 +813,11 @@ classdef logger < handle
             if isempty (indepvar)
                 
                 hfig = figure;
-                hax = axes (hfig);
+                if isoctave
+                    hax = axes ();
+                else
+                    hax = axes (hfig);
+                end
                 
                 h = obj.plotfunc(hax, obj.data.(varname), options.PlotFcnArgs{:});
             
@@ -949,7 +953,11 @@ classdef logger < handle
             
             % make a new figure to plot in
             hfig = figure;
-            hax = axes (hfig);
+            if isoctave
+                hax = axes ();
+            else
+                hax = axes (hfig);
+            end
             
             hold on
             
