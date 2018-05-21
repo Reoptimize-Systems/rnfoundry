@@ -306,8 +306,8 @@ function rnfoundry_setup (varargin)
     if ~Inputs.SkipMexmPhaseWLSetup
         if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mexext], 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
-            mmake ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
-            mmake ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+            mmake.make ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+            mmake.make ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'mPhaseWL')
