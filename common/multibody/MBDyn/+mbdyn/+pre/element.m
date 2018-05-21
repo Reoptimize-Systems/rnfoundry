@@ -396,6 +396,7 @@ classdef element < mbdyn.pre.base
             options.ForceRedraw = false;
             options.Mode = 'solid';
             options.Light = false;
+            options.SaveShapeData = '';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -612,15 +613,6 @@ classdef element < mbdyn.pre.base
                                               { patch( self.drawAxesH, ...
                                                        self.shapeData{ind} ) } ...
                                              ];
-                                             
-%                        self.shapeObjects = [ self.shapeObjects, ...
-%                                               { patch( self.drawAxesH, ...
-%                                                        self.shapeData{ind}, ...
-%                                                        'FaceLighting', 'gouraud', ...
-%                                                        'AmbientStrength', 0.15, ...
-%                                                        'Parent', self.transformObject ) ...
-%                                               } ...
-%                                              ];
 
                     else
                         error ('Invalid shape data');
@@ -667,10 +659,15 @@ classdef element < mbdyn.pre.base
                 end
             
             end
-%             
-%             s = self.shapeData;
-% %             
-% %             save ('shape_data.mat', 's');
+            
+            if ~isempty (options.SaveShapeData)
+                
+                % mostly for debugging plotting in octave
+                s = self.shapeData;
+                
+                save (options.SaveShapeData, 's');
+                
+            end
             
             if nargout > 0
                 hax = self.drawAxesH;
