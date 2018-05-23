@@ -14,6 +14,7 @@ classdef force < mbdyn.pre.element
         function self = force ()
             
             self.type = 'force';
+            self.netCDFName = 'force';
             
         end
 
