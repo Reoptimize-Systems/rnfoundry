@@ -153,16 +153,27 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %   /home/jbloggs/my_mbdyn_sim.jnt
             %   /home/jbloggs/my_mbdyn_sim.log
             %
+            %   and/or possibly a netcdf format file:
+            %
+            %   /home/jbloggs/my_mbdyn_sim.nc
+            %
             %   A windows example might look like
             %   C:\Users\IEUser\Documents\my_mbdyn_sim 
             %   producing the files:
             %
-            %   C:\Users\IEUser\Documents\my_mbdyn_sim.frc
-            %   C:\Users\IEUser\Documents\my_mbdyn_sim.ine
-            %   C:\Users\IEUser\Documents\my_mbdyn_sim.out
-            %   C:\Users\IEUser\Documents\my_mbdyn_sim.mov
-            %   C:\Users\IEUser\Documents\my_mbdyn_sim.jnt
-            %   C:\Users\IEUser\Documents\my_mbdyn_sim.log
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.frc
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.ine
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.out
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.mov
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.jnt
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.log
+            %
+            %   and/or:
+            %
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.nc
+            %
+            %   The netcdf format is preferred for the mbdyn.postproc class
+            %   which can be used to postprocess the results. 
             %
             % 'MBDynExecutable' - used to specify the full path to the
             %   mbdyn executeable file. If not supplied, MBCNodal will look
