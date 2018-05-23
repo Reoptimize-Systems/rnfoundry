@@ -170,11 +170,6 @@ classdef system < mbdyn.pre.base
             %    'euler313', 'euler321', 'orientation vector', or
             %    'orientation matrix'
             %
-            %  'References' - optional cell array of mbdyn.pre.reference
-            %    objects. If supplied, these are used purely for
-            %    visualisation and have effect on the simulation in any
-            %    way.
-            %
             %  'DefaultScales' - optional structure or array of structures
             %    used to set default scale values to apply to the residuals
             %    of different dof owners before applying the tolerance
@@ -185,6 +180,37 @@ classdef system < mbdyn.pre.base
             %    'structural nodes' or 'thermal nodes'. The ScaleFactor
             %    field must contain a scalar value with is the scale factor
             %    to apply to the corresponding item in the ScaleItem field.
+            %
+            %  'OutputResults' - this option can be used to enable the
+            %    output of data in the NetCDF format. It can be a character
+            %    vector, or a cell array of character vectors. If a
+            %    character vector, it must  be the keyword 'netcdf', which
+            %    enable netcdf output in addition to the normal text
+            %    output. If a cell array, it must be of length 1, 2 or
+            %    three elements. The first cell must contain the keyword
+            %    'netcdf'. The second cell can contain the keywords 'sync'
+            %    or 'no text'. The 'no text' means only the netcdf file
+            %    will be produced, otherwise both the standard text format
+            %    output files are produced as well as the netcdf format
+            %    files. The sync option is currently undocumented. If the
+            %    second cell contains 'no text' no third cell may be
+            %    present, if the second cell contains 'sync', the third
+            %    cell may contain 'no text'. So in summary, the possible
+            %    values for OutputResults are:
+            %
+            %    'netcdf'
+            %    { 'netcdf' }
+            %    { 'netcdf', 'no text' }
+            %    { 'netcdf', 'sync' }
+            %    { 'netcdf', 'sync', 'no text' }
+            %
+            %    By default OutputResults is empty, meaning only the
+            %    default text format output is produced by MBDyn. 
+            %
+            %  'References' - optional cell array of mbdyn.pre.reference
+            %    objects. If supplied, these are used purely for
+            %    visualisation and have no effect on the simulation in any
+            %    way.
             %
             % Output
             %
@@ -308,7 +334,9 @@ classdef system < mbdyn.pre.base
                 
                 if ischar (options.OutputResults)
                     
-                    self.checkAllowedStringInputs (options.OutputResults, {'netcdf'}, true, 'OutputResults');
+                    ok = self.checkAllowedStringInputs (options.OutputResults, {'netcdf'}, false);
+                    
+                    assert (ok, 'If OutputResults is a character vector, it must be ''netcdf''');
                     
                     % convert to cell array
                     options.OutputResults = {options.OutputResults};
@@ -324,9 +352,12 @@ classdef system < mbdyn.pre.base
                     self.checkAllowedStringInputs (options.OutputResults{2}, {'sync', 'no text'}, true, 'OutputResults{2}');
                 end
                 if numel (options.OutputResults) > 2
+                    if strcmp (options.OutputResults{2}, 'no text')
+                        error ('If the second cell in OutputResults is ''no text'', there can be no third cell (if using ''sync'' it must come before ''no text'')');
+                    end
                     self.checkAllowedStringInputs (options.OutputResults{3}, {'no text'}, true, 'OutputResults{3}');
                 end
-                    
+
             end
             
             self.controlData.DefaultOutput = options.DefaultOutput;
