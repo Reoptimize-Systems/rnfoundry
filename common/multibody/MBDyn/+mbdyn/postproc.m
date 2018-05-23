@@ -73,10 +73,14 @@ classdef postproc < handle
             %   information avaialable as otherwise only the .mov file can
             %   be imported. To make MBDyn export a netcdf format file use
             %   the 'output results' keyword in the MBDyn input file, or,
-            %   if using the mbdyn.pre.system class, use the 
+            %   if using the mbdyn.pre.system class, use the OutputResults
+            %   option when creating the mbdyn.pre.system object.
             %
-            %   In general, if the prefix ix /home/jbloggs/mysim_resultsMBDyn   will create the
-            %   files:
+            %   In general, if the prefix is
+            %
+            %   /home/jbloggs/mysim_results
+            %
+            %   MBDyn will create the files:
             %
             %   /home/jbloggs/my_mbdyn_sim.frc
             %   /home/jbloggs/my_mbdyn_sim.ine
@@ -85,12 +89,12 @@ classdef postproc < handle
             %   /home/jbloggs/my_mbdyn_sim.jnt
             %   /home/jbloggs/my_mbdyn_sim.log
             %
-            %   and/or possibly a netcdf format file:
+            %   and/or a netcdf format file:
             %
             %   /home/jbloggs/my_mbdyn_sim.nc
             %
             %   A windows example might look like
-            %   C:\Users\IEUser\Documents\my_mbdyn_sim 
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim 
             %   producing the files:
             %
             %   C:\Users\JBloggs\Documents\my_mbdyn_sim.frc
@@ -105,7 +109,8 @@ classdef postproc < handle
             %   C:\Users\JBloggs\Documents\my_mbdyn_sim.nc
             %
             %   The netcdf format is preferred for the mbdyn.postproc class
-            %   which can be used to postprocess the results. 
+            %   as otherwise only .mov file can be used/parsed. All data is
+            %   available if the netcdf format is used.
             %
             %  info - information about the system which has been solved.
             %    This can be either a structure or a class of type
@@ -118,7 +123,8 @@ classdef postproc < handle
             %    Alternatively, if it is a structure, it must have the
             %    following fields:
             %
-            %    InitialTime - scalar value of the intial simualtion time
+            %    InitialTime - scalar value of the intial simulation time,
+            %    this 
             %
             %    TimeStep - scalar value of the time step used in the
             %      simulation
@@ -128,9 +134,15 @@ classdef postproc < handle
             %      'default orientation' keyword in the MBDyn input file,
             %      MBDyn's default is 'euler123' if this is not set). The
             %      possible values are: 'euler123', 'euler313', 'euler321',
-            %      'orientation vector' or 'orientation matrix'.
+            %      'orientation vector' or 'orientation matrix'. This
+            %      field is ignored if a netcdf format output file is
+            %      avaialable as the default orientation is determined from
+            %      the contents of the file.
             %
             
+            self.mBDynOutFileName = mbdoutfilename;
+            
+            self.ncFile = self.checkFile ('.nc');
             
             if nargin > 1
                 if isa (info, 'mbdyn.pre.system')
@@ -140,6 +152,10 @@ classdef postproc < handle
                                             ...'FinalTime', self.preProcSystem.problems{1}.finalTime, ...
                                             'TimeStep', self.preProcSystem.problems{1}.timeStep, ...
                                             'DefaultOrientation', self.preProcSystem.controlData.DefaultOrientation);
+                                        
+                elseif ~isempty (self.ncFile)
+                    
+                    warning ('A simulation info structure was provided, but this will be ignored as the simulation info will be determined from a netcdf output file.');
                     
                 elseif isstruct (info)
                     if all (isfield (info, {'InitialTime', 'TimeStep', 'DefaultOrientation'}))
@@ -151,11 +167,19 @@ classdef postproc < handle
                     error ('preprocsys must be a mbdyn.pre.system object or a structure')
                 end
             else
-                self.simInfo = struct ( 'InitialTime', 0, ...
-                                        'TimeStep', 1, ...
-                                        'DefaultOrientation', 'euler123' );
-                warning ( 'No simulation info supplied, using initial time of 0, time step of 1, and default orientation %s.', ...
-                          self.simInfo.DefaultOrientation );
+                
+                if isempty (self.ncFile)
+                    % no simInfo and no netcdf file to get it from
+                    self.simInfo = struct ( 'InitialTime', 0, ...
+                                            'TimeStep', 1, ...
+                                            'DefaultOrientation', 'euler123' );
+                    warning ( 'No simulation info supplied, using initial time of 0, time step of 1, and default orientation %s.', ...
+                              self.simInfo.DefaultOrientation );
+                else
+                    % simInfo will be determined from the netcdf file
+                    self.simInfo = struct ();
+                end
+                
             end
             
             % load the results
@@ -198,7 +222,7 @@ classdef postproc < handle
             
             self.mBDynOutFileName = mbdoutfilename;
             
-            % get the MBDyn redirected output file
+            % try to get the MBDyn redirected output file
             self.txtFile = self.checkFile ('.txt');
                 
             self.ncFile = self.checkFile ('.nc');
@@ -289,23 +313,6 @@ classdef postproc < handle
                 
                 self.time = (1:nsteps)*self.simInfo.TimeStep;
 
-                % load .log file
-                %
-                % The log file contains a description of the problem in it's
-                % intial state including bodies and their labels, in futre we
-                % may be able to generate an mbdyn.pre.system object from this
-                % if it's not supplied
-                self.logFile = self.checkFile ('.log');
-
-                % load .ine file
-                self.ineFile = self.checkFile ('.ine');
-
-                % load .jnt file
-    %             self.jntFile = self.checkFile ('.jnt');
-
-                % load .out file
-                self.outFile = self.checkFile ('.out');
-
             else
                 % there was a netcdf format file to load
                 
@@ -327,6 +334,8 @@ classdef postproc < handle
                 varid = self.netcdf_inqVarID (ncid, 'time');
                 
                 self.time = self.netcdf_getVar (ncid,varid);
+                
+                self.simInfo.FinalTime = self.time(end);
                 
                 self.simInfo.DefaultOrientation = [];
                 
@@ -460,15 +469,20 @@ classdef postproc < handle
         end
         
         function clearData (self)
-            % clears all the data in the object, resetting it
+            % clears all the simulation data in the object
             
             self.nodes = [];
             self.nNodes = [];
-            self.resultsLoaded = false;
             self.nodeNames = {};
             self.mBDynOutFileName = '';
             self.time = [];
+            self.txtFile = '';
+            self.movFile = '';
             self.ncFile = '';
+            self.haveNetCDF = false;
+            self.simInfo = [];
+            
+            self.resultsLoaded = false;
             
         end
         
@@ -478,10 +492,10 @@ classdef postproc < handle
             self.clearData ();
             
             self.preProcSystem = [];
-            simInfo = [];
+            
         end
         
-        function [hfig, hax] = plotNodeTrajectories (self, varargin)
+        function [ hax, hplot, hfig ] = plotNodeTrajectories (self, varargin)
             % plot the trajectories of the nodes
             %
             % Syntax
@@ -524,6 +538,7 @@ classdef postproc < handle
             options.OnlyNodes = 1:self.nNodes;
             options.Title = true;
             options.View = [];
+            options.PlotAxes = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -534,36 +549,48 @@ classdef postproc < handle
                 error ('No results have been loaded yet for plotting')
             end
             
-            hfig = figure;
-            hax = axes;
+            if isempty (options.PlotAxes)
+                
+                hfig = figure ();
+                hax = axes ();
+
+            else
+                assert (self.isAxesHandle (options.PlotAxes), ...
+                    'PlotAxes must be an axes handle' );
+                
+                hax = options.PlotAxes;
+                hfig = get (hax, 'Parent');
+                
+            end
             
             hold on;
             legstrings = cell (1, numel(options.OnlyNodes));
             
             for ind = 1:numel(options.OnlyNodes)
                 
-                plot3 ( self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1), ...
-                        self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2), ...
-                        self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3), ...
-                        '-' );
+                hplot = plot3 ( hax, ...
+                                self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1), ...
+                                self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2), ...
+                                self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3), ...
+                                '-' );
                 
                 if isempty (options.AxLims)
                     if ind == 1
                         axXlim = [ min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)), ...
-                                  max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ];
+                                   max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ];
                         axYlim = [ min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)), ...
-                                  max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ];
+                                   max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ];
                         axZlim = [ min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)), ...
-                                  max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ];
+                                   max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ];
 
                     else
 
                         axXlim = [ min( axXlim(1), min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ), ...
-                                  max( axXlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ) ];
+                                   max( axXlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,1)) ) ];
                         axYlim = [ min( axYlim(1), min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ), ...
-                                  max( axYlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ) ];
+                                   max( axYlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,2)) ) ];
                         axZlim = [ min( axZlim(1), min(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ), ...
-                                  max( axZlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ) ];
+                                   max( axZlim(2), max(self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Position(:,3)) ) ];
 
                     end
                 end
@@ -631,16 +658,16 @@ classdef postproc < handle
             end
             
             if isempty (options.View)
-                view(plotdata.HAx, 3);
+                view(hax, 3);
             else
-                view (plotdata.HAx, options.View);
+                view (hax, options.View);
             end
             
             drawnow;
             
         end
         
-        function hax = plotNodePositions (self, varargin)
+        function [ hax, hplot, hfig ] = plotNodePositions (self, varargin)
             % plot the positions of the nodes
             %
             % Syntax
@@ -673,12 +700,15 @@ classdef postproc < handle
             options.Legend = true;
             options.OnlyNodes = 1:self.nNodes;
             options.Title = true;
+            options.PlotAxes = [];
             
             options = parse_pv_pairs (options, varargin);
             
-            hax = plotNodeQuantity (self, 'Position', 'pos_', ...
+            [ hax, hplot, hfig ] = plotNodeQuantity (self, ...
+                            'Position', 'pos_', ...
                             'Legend', options.Legend, ...
-                            'OnlyNodes', options.OnlyNodes );
+                            'OnlyNodes', options.OnlyNodes, ...
+                            'PlotAxes', options.PlotAxes );
             
             if options.Title
                 title (sprintf ('Node position from results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
@@ -686,7 +716,7 @@ classdef postproc < handle
             
         end
         
-        function hax = plotNodeVelocities (self, varargin)
+        function [ hax, hplot, hfig ] = plotNodeVelocities (self, varargin)
             % plot the velocities of the nodes
             %
             % Syntax
@@ -719,12 +749,15 @@ classdef postproc < handle
             options.Legend = true;
             options.OnlyNodes = 1:self.nNodes;
             options.Title = true;
+            options.PlotAxes = [];
             
             options = parse_pv_pairs (options, varargin);
             
-            hax = plotNodeQuantity (self, 'Velocity', 'v_', ...
+            [ hax, hplot, hfig ] = plotNodeQuantity (self, ...
+                            'Velocity', 'v_', ...
                             'Legend', options.Legend, ...
-                            'OnlyNodes', options.OnlyNodes );
+                            'OnlyNodes', options.OnlyNodes, ...
+                            'PlotAxes', options.PlotAxes );
             
             if options.Title
                 title (sprintf ('Node velocities from results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
@@ -732,7 +765,7 @@ classdef postproc < handle
             
         end
         
-        function hax = plotNodeAngularVelocities (self, varargin)
+        function [ hax, hplot, hfig ] = plotNodeAngularVelocities (self, varargin)
             % plot the angular velocities of the nodes
             %
             % Syntax
@@ -765,12 +798,15 @@ classdef postproc < handle
             options.Legend = true;
             options.OnlyNodes = 1:self.nNodes;
             options.Title = true;
+            options.PlotAxes = [];
             
             options = parse_pv_pairs (options, varargin);
             
-            hax = plotNodeQuantity (self, 'AngularVelocity', 'omega_', ...
+            [ hax, hplot, hfig ] = plotNodeQuantity (self, ...
+                            'AngularVelocity', 'omega_', ...
                             'Legend', options.Legend, ...
-                            'OnlyNodes', options.OnlyNodes );
+                            'OnlyNodes', options.OnlyNodes, ...
+                            'PlotAxes', options.PlotAxes);
             
             if options.Title
                 title (sprintf ('Node angular velocities from results file:\n%s', strrep (self.mBDynOutFileName, '_', '\_')));
@@ -917,11 +953,11 @@ classdef postproc < handle
                 
             elseif isa (component, 'mbdyn.pre.element')
                 
-                varname = [ 'element.' component.netCDFName, '.', quantity, int2str(component.label) ];
+                varname = [ 'elem.' component.netCDFName, '.' int2str(component.label), '.', quantity ];
                 
             elseif isa (component, 'mbdyn.pre.node')
                 
-                varname = [ 'node.' component.netCDFName, '.', quantity, int2str(component.label) ];
+                varname = [ 'node.' component.netCDFName, '.' int2str(component.label), '.', quantity ];
                 
             end
             
@@ -1059,7 +1095,7 @@ classdef postproc < handle
                     options.FigPositionAndSize = [];
                 end
                 
-                plotdata = self.drawStep(tind, ...
+                plotdata = self.drawStep ( tind, ...
                               'NodeSize', options.NodeSize, ...
                               'DrawLabels', options.DrawLabels, ...
                               'AxLims', options.AxLims, ...
@@ -1067,7 +1103,7 @@ classdef postproc < handle
                               'DrawNodes', options.DrawNodes, ...
                               'DrawBodies', options.DrawBodies, ...
                               'Light', options.Light, ...
-                              'PlotAxes', options.PlotAxes, ...
+                              'PlotAxes', plotdata.HAx, ...
                               'Title', false, ...
                               'OnlyNodes', options.OnlyNodes, ...
                               'ForceRedraw', true, ...
@@ -1494,7 +1530,7 @@ classdef postproc < handle
             
         end
         
-        function hax = plotNodeQuantity (self, fieldname, legprefix, varargin)
+        function [ hax, hplot, hfig ] = plotNodeQuantity (self, fieldname, legprefix, varargin)
             % plot the positions of the nodes
             %
             % Syntax
@@ -1529,6 +1565,7 @@ classdef postproc < handle
             options.Legend = true;
             options.OnlyNodes = 1:self.nNodes;
             options.Title = true;
+            options.PlotAxes = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -1539,8 +1576,19 @@ classdef postproc < handle
                 error ('No results have been loaded yet for plotting')
             end
             
-            hfig = figure;
-            hax = axes;
+            if isempty (options.PlotAxes)
+                
+                hfig = figure ();
+                hax = axes ();
+
+            else
+                assert (self.isAxesHandle (options.PlotAxes), ...
+                    'PlotAxes must be an axes handle' );
+                
+                hax = options.PlotAxes;
+                hfig = get (hax, 'Parent');
+                
+            end
             
             ColOrd = get(hax,'ColorOrder');
             [m,n] = size(ColOrd);
@@ -1554,9 +1602,9 @@ classdef postproc < handle
                 
                 Col = ColOrd(1,:);
                 
-                plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,1), 'LineStyle', '-', 'Color', Col );
-                plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,2), 'LineStyle', '--', 'Color', Col );
-                plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,3), 'LineStyle', ':', 'Color', Col );
+                hplot = plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,1), 'LineStyle', '-', 'Color', Col );
+                hplot(2) = plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,2), 'LineStyle', '--', 'Color', Col );
+                hplot(3) = plot ( self.time, self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).(fieldname)(:,3), 'LineStyle', ':', 'Color', Col );
                 
                 node_label = self.nodes.(self.nodeNames{options.OnlyNodes(ind)}).Label;
                 
@@ -1569,13 +1617,82 @@ classdef postproc < handle
             end
             hold off
             
-            xlabel (x_label);
+            xlabel ('MBDyn Sim Time [s]');
             set (hax, 'XLim', [self.time(1), self.time(end)]);
             
             if options.Legend
                 legend (hax, legstrings, 'Interpreter', 'none', 'Location', 'BestOutside');
             end
             
+        end
+        
+%         function checkAxes (self, hax)
+%             % checks if there is a valid set of axes to plot to, and if
+%             % not, creates them
+%             
+%             % try to figure out if there is a valid set of axes to plot to
+%             if isempty (hax)
+%                 
+%                 % plot in the existing axes if possible as no new axes
+%                 % supplied
+%                 if self.isAxesHandle (self.drawAxesH)
+%                     % use existing axes
+%                     
+%                     if ~ishghandle (self.drawAxesH)
+%                         % axes no longer exists, or figure has been closed
+%                         self.drawAxesH = [];
+%                         self.deleteAllDrawnObjects ();
+%                         self.transformObject = [];
+%                         self.needsRedraw = true;
+%                         % make a new set of axes to draw to
+%                         self.makeAxes ();
+%                     end
+%                     
+%                 elseif isempty (self.drawAxesH)
+%                     % make figure and axes
+%                     self.makeAxes ();
+%                     self.needsRedraw = true;
+%                     
+%                 else
+%                     error ('drawAxesH property is not empty or an axes handle');
+%                 end
+%             
+%             elseif self.isAxesHandle (hax)
+%                 % an axes has been supplied, so we plot to this new axes
+%                 
+%                 if isoctave
+%                     drawnow ();
+%                 end
+%                 
+%                 if ~ishghandle (hax)
+%                     error ('provided axes object is not valid');
+%                 end
+%                 self.drawAxesH = hax;
+%                 % abandon existing shape objects and transform object
+%                 % TODO: should we delet objects in old axes?
+%                 self.shapeObjects = {};
+%                 self.transformObject = [];
+%                 % we need to redraw, as we're plotting in a different set
+%                 % of axes
+%                 self.needsRedraw = true;
+%                 
+%             else
+%                 
+%                 error ('hax must be an axes handle or empty');
+%                 
+%             end
+%             
+%         end
+        
+        function ret = isAxesHandle (self, hax)
+            % test if variable is axes handle
+            
+            if isoctave ()
+                ret = isaxes (hax);
+            else
+                ret = isa (hax, 'matlab.graphics.axis.Axes');
+            end
+
         end
 
     end
