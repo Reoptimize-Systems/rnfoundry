@@ -1,4 +1,4 @@
-function path = find_mbdyn (throw)
+function [ path, found ] = find_mbdyn (throw)
 % locate the mbdyn executeable
 %
 % Syntax
@@ -19,6 +19,9 @@ function path = find_mbdyn (throw)
 % Output
 %
 %  path - path to the MBDyn executeable which was found
+%
+%  found - true/false flag indicating whether the MBDYn executeable was
+%   found n any of the searched locations
 %
 %
 % See Also: mbdyn.mint.start_mbdyn, mbdyn.mint.find_libmbc
@@ -80,9 +83,11 @@ function path = find_mbdyn (throw)
     end
 
     path = '';
+    found = false;
     for ind = 1:numel (candidate_locs)
         if exist (candidate_locs{ind}, 'file') == 2
             path = candidate_locs{ind};
+            found = true;
             return;
         end
     end
