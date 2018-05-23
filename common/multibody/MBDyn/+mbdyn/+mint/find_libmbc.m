@@ -1,4 +1,4 @@
-function [libdir, includedir] = find_libmbc ()
+function [libdir, includedir, libwasfound, headerwasfound] = find_libmbc ()
 % locate the mbdyn mbc library directory and header directory
 %
 % Syntax
@@ -17,6 +17,13 @@ function [libdir, includedir] = find_libmbc ()
 %
 %  includedir - path to the directoy where the mbc.h library header file
 %   was found
+%
+%  libwasfound - true/false flag indicating whether the library was found
+%   in any of the searched locations
+%
+%  headerwasfound - true/false flag indicating whether the header mbc files
+%   were found in any of the searched locations
+%
 %
 % See Also: mbdyn.mint.start_mbdyn, mbdyn.mint.find_mbdyn
 %
@@ -103,6 +110,8 @@ function [libdir, includedir] = find_libmbc ()
         end
     end
 
+    libwasfound = false;
+    
     libdir = '';
     for ind = 1:numel (libdir_candidate_locs)
         
@@ -112,6 +121,7 @@ function [libdir, includedir] = find_libmbc ()
                 || ( exist (fullfile (libdir_candidate_locs{ind}, 'libmbc.a'), 'file') == 2 )
 
                 libdir = libdir_candidate_locs{ind};
+                libwasfound = true;
                 break;
                 
             end
@@ -119,6 +129,8 @@ function [libdir, includedir] = find_libmbc ()
         end
         
     end
+    
+    headerwasfound = false;
     
     includedir = '';
     for ind = 1:numel (includedir_candidate_locs)
@@ -129,6 +141,7 @@ function [libdir, includedir] = find_libmbc ()
                 || ( exist (fullfile (includedir_candidate_locs{ind}, 'mbcxx.h'), 'file') == 2 )
 
                 includedir = includedir_candidate_locs{ind};
+                headerwasfound = true;
                 break;
                 
             end
