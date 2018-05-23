@@ -11,10 +11,11 @@ classdef couple < mbdyn.pre.element
     
     methods
         
-%         function self = force ()
-%             
-%             
-%         end
+        function self = couple ()
+            
+            self.netCDFName = 'couple';
+            
+        end
 
         function str = generateMBDynInputString (self)
             str = sprintf ('    couple : %d,', self.label);
