@@ -1,48 +1,36 @@
 classdef TextWrapper
-% Port of the python TextWrapper class to m-code
+% Port of the python TextWrapper class for wrapping long lines of text
+%
+% Syntax
+%
+%
+% twobj = TextWrapper ()
+% twobj = TextWrapper ('Parameter', Value)
+%
+% Description
+%
+% TexWrapper is a class for wrapping/filling text. Text can be wrapped to
+% given line width. See the help for the TexWrapper constructor for details
+% of it's use. The static methods wraplines and wraptext are provided as
+% convenince functions and can be used like normal Matlab funcitons (they
+% set up a TexWrapper class internally).
+%
+% TextWrapper Methods:
+%
+%   TextWrapper - TextWrapper constructor
+%   fill - wrap paragraph to desired width and return as a character vector
+%   wrap - wrap paragraph to desired width and return lines in cell array
+%   wraplines - wrap paragraph to desired width and returns lines in cell array
+%   wraptext - wrap paragraph to desired width and returns as a character vector
+%
+%
+
+%  
 % Copyright (C) 1999-2001 Gregory P. Ward.
 % Copyright (C) 2002, 2003 Python Software Foundation.
 % Written by Greg Ward <gward@python.net>
-
-%     Object for wrapping/filling text.  The public interface consists of
-%     the wrap() and fill() methods; the other methods are just there for
-%     subclasses to override in order to tweak the default behaviour.
-%     If you want to completely replace the main wrapping algorithm,
-%     you'll probably have to override _wrap_chunks().
-% 
-%     Several instance attributes control various aspects of wrapping:
-%       width (default: 70)
-%         the maximum width of wrapped lines (unless breakLongWords
-%         is false)
-%       initialIndent (default: "")
-%         string that will be prepended to the first line of wrapped
-%         output.  Counts towards the line's width.
-%       subsequentIndent (default: "")
-%         string that will be prepended to all lines save the first
-%         of wrapped output; also counts towards each line's width.
-%       expandTabs (default: true)
-%         Expand tabs in input text to spaces before further processing.
-%         Each tab will become 1 .. 8 spaces, depending on its position in
-%         its line.  If false, each tab is treated as a single character.
-%       replaceWhiteWpaceChars (default: true)
-%         Replace all whitespace characters in the input text by spaces
-%         after tab expansion.  Note that if expandTabs is false and
-%         replaceWhiteWpaceChars is true, every tab will be converted to a
-%         single space!
-%       fixSentenceEndings (default: false)
-%         Ensure that sentence-ending punctuation is always followed
-%         by two spaces.  Off by default because the algorithm is
-%         (unavoidably) imperfect.
-%       breakLongWords (default: true)
-%         Break words longer than 'width'.  If false, those words will not
-%         be broken, and some lines might be longer than 'width'.
-%       breakOnHyphens (default: true)
-%         Allow breaking hyphenated words. If true, wrapping will occur
-%         preferably on whitespaces and right after hyphens part of
-%         compound words.
-%       dropWhiteSpaceChars (default: true)
-%         Drop leading and trailing whitespace from lines.
-%     
+% Ported to m-code by Richard Crozier
+%
 
     properties
         
@@ -54,7 +42,7 @@ classdef TextWrapper
         % same as any other whitespace char, which is clearly wrong (it's a
         % *non-breaking* space), 2) possibly cause problems with Unicode,
         % since 0xa0 is not in range(128).
-        whitespacechars = {sprintf('\t'), sprintf('\n'), sprintf('\x0b'), sprintf('\x0c'), sprintf('\r')};
+        whitespacechars = { sprintf('\t'), sprintf('\n'), sprintf('\x0b'), sprintf('\x0c'), sprintf('\r') };
         
         wordsep_re;
         wordsep_simple_re;
@@ -63,7 +51,7 @@ classdef TextWrapper
         initialIndent;
         subsequentIndent;
         expandTabs;
-        replaceWhiteWpaceChars;
+        ReplaceWhiteSpaceChars;
         fixSentenceEndings;
         breakLongWords;
         dropWhiteSpaceChars;
@@ -71,23 +59,126 @@ classdef TextWrapper
         sentence_end_re;
         
     end
+    
+% beginning to implement dedent funciton (see bottom of this file)    
+%     properties (Constant)
+%         whitespacechars_only_re = re.compile('^[ \t]+$', re.MULTILINE)
+%         leadingwhitespacechars_re = re.compile('(^[ \t]*)(?:[^ \t\n])', re.MULTILINE)    
+%     end
    
 
 	methods 
 
-        function self = TextWrapper(varargin)
+        function self = TextWrapper (varargin)
+            % TextWrapper constructor
+            %
+            % Syntax
+            %
+            % twobj = TextWrapper ()
+            % twobj = TextWrapper ('Parameter', Value)
+            %
+            % Description
+            %
+            % TexWrapper is a class for wrapping/filling text. Text can be
+            % wrapped to given line width.
+            %
+            % Input
+            %
+            % Arguments are supplied as parameter-value pairs. The
+            % available options are:
+            %
+            %  'Width' - the maximum width of wrapped lines (unless
+            %    breakLongWords is false). Default is 70.
+            %
+            %  'InitialIndent' - character vector that will be prepended to
+            %    the first line of wrapped output; Counts towards each
+            %    line's width. Default is ''.
+            %
+            %  'SubsequentIndent' - character vector that will be prepended to
+            %    the all lines of wrapped output except the first line.
+            %    Counts towards each line's width. Default is ''.
+            %
+            %  'ExpandTabs' - true/false flag indicating whether to expand 
+            %    tabs in input text to spaces before further processing.
+            %    Each tab will become 1 .. 8 spaces, depending on its
+            %    position in its line. If false, each tab is treated as a
+            %    single character. Default is true.
+            %
+            %  'ReplaceWhiteSpaceChars' - true/false flag indicating
+            %    whether to Replace all whitespace characters in the input
+            %    text by spaces after tab expansion. Note that if
+            %    expandTabs is false and ReplaceWhiteSpaceChars is true,
+            %    every tab will be converted to a single space! Default is
+            %    true.
+            %
+            %  'FixSentenceEndings' - true/false flag indicating whether to
+            %    ensure that sentence-ending punctuation is always followed
+            %    by two spaces. Off by default because the algorithm is
+            %    (unavoidably) imperfect. Default is false.
+            %
+            %  'BreakLongWords' - true/false flag indicating whether to
+            %    break words longer than 'width'. If false, those words
+            %    will not be broken, and some lines might be longer than
+            %    'width'. Default is true.
+            %
+            %  'DropWhiteSpaceChars' - true/false flag indicating whether
+            %    to drop leading and trailing whitespace from lines.
+            %    Default is true.
+            %
+            %  'BreakOnHyphens' - true/false flag indicating whether to
+            %    allow breaking hyphenated words. If true, wrapping will
+            %    occur preferably on whitespaces and right after hyphens
+            %    part of compound words. Default is true.
+            %
+            % Output
+            %
+            %  twobj - TextWrapper object
+            %
+            %
+            % See Also: TextWrapper.wrap, TextWrapper.fill, 
+            %           TextWrapper.wraplines, TextWrapper.wraptext 
+            %
+            
+            % The public interface of TextWrapper consists of the wrap()
+            % and fill() methods; the other methods are just there for
+            % subclasses to override in order to tweak the default
+            % behaviour. If you want to completely replace the main
+            % wrapping algorithm, you'll probably have to override
+            % _wrap_chunks().
                      
-            options.width = 70;
-            options.initialIndent = '';
-            options.subsequentIndent = '';
-            options.expandTabs = true;
-            options.replaceWhiteWpaceChars = true;
-            options.fixSentenceEndings = false;
-            options.breakLongWords = true;
-            options.dropWhiteSpaceChars = true;
-            options.breakOnHyphens = true;
+            options.Width = 70;
+            options.InitialIndent = '';
+            options.SubsequentIndent = '';
+            options.ExpandTabs = true;
+            options.ReplaceWhiteSpaceChars = true;
+            options.FixSentenceEndings = false;
+            options.BreakLongWords = true;
+            options.DropWhiteSpaceChars = true;
+            options.BreakOnHyphens = true;
             
             options = parse_pv_pairs (options, varargin);
+            
+            assert (isscalar (options.Width) && (options.Width > 0) && (options.Width >= 1), ...
+                'Width must be a scalar value >= 1' );
+            
+            assert (ischar (options.InitialIndent), ...
+                'InitialIndent must be character vector' );
+            assert (ischar (options.SubsequentIndent), ...
+                'SubsequentIndent must be character vector' );
+            
+            assert (isscalar (options.ExpandTabs) && islogical (options.ExpandTabs), ...
+                'ExpandTabs must be a scalar logical value (true/false)' );
+            assert (isscalar (options.ReplaceWhiteSpaceChars) && islogical (options.ReplaceWhiteSpaceChars), ...
+                'ReplaceWhiteSpaceChars must be a scalar logical value (true/false)' );
+            assert (isscalar (options.FixSentenceEndings) && islogical (options.FixSentenceEndings), ...
+                'FixSentenceEndings must be a scalar logical value (true/false)' );
+            assert (isscalar (options.BreakLongWords) && islogical (options.BreakLongWords), ...
+                'BreakLongWords must be a scalar logical value (true/false)' );
+            assert (isscalar (options.DropWhiteSpaceChars) && islogical (options.DropWhiteSpaceChars), ...
+                'DropWhiteSpaceChars must be a scalar logical value (true/false)' );
+            assert (isscalar (options.BreakOnHyphens) && islogical (options.BreakOnHyphens), ...
+                'BreakOnHyphens must be a scalar logical value (true/false)' );
+            
 %             
 %             whitespace_trans = string.maketrans(whitespacechars, ' ' * len(whitespacechars))
 % 
@@ -122,15 +213,15 @@ classdef TextWrapper
                                          % string.lowercase)
             
                      
-            self.width = options.width;
-            self.initialIndent = options.initialIndent;
-            self.subsequentIndent = options.subsequentIndent;
-            self.expandTabs = options.expandTabs;
-            self.replaceWhiteWpaceChars = options.replaceWhiteWpaceChars;
-            self.fixSentenceEndings = options.fixSentenceEndings;
-            self.breakLongWords = options.breakLongWords;
-            self.dropWhiteSpaceChars = options.dropWhiteSpaceChars;
-            self.breakOnHyphens = options.breakOnHyphens;
+            self.width = round (options.Width);
+            self.initialIndent = options.InitialIndent;
+            self.subsequentIndent = options.SubsequentIndent;
+            self.expandTabs = options.ExpandTabs;
+            self.ReplaceWhiteSpaceChars = options.ReplaceWhiteSpaceChars;
+            self.fixSentenceEndings = options.FixSentenceEndings;
+            self.breakLongWords = options.BreakLongWords;
+            self.dropWhiteSpaceChars = options.DropWhiteSpaceChars;
+            self.breakOnHyphens = options.BreakOnHyphens;
 
 %             % recompile the regexes for Unicode mode -- done in this clumsy way for
 %             % backwards compatibility because it's rather common to monkey-patch
@@ -138,18 +229,40 @@ classdef TextWrapper
 %             self.wordsep_re_uni = re.compile(self.wordsep_re.pattern, re.U)
 %             self.wordsep_simple_re_uni = re.compile(
 %                 self.wordsep_simple_re.pattern, re.U)
+
         end
         
-            % -- Public interface ----------------------------------------------
-
-        function lines = wrap(self, text)
-            % wrap(text : string) -> [string]
-            % 
-            % Reformat the single paragraph in 'text' so it fits in lines of
-            % no more than 'self.width' columns, and return a list of wrapped
-            % lines.  Tabs in 'text' are expanded with string.expandtabs(),
-            % and all other whitespace characters (including newline) are
-            % converted to space.
+        
+        function lines = wrap (self, text)
+            % wrap paragraph to desired width and return lines in cell array
+            %
+            % Syntax
+            %
+            % lines = wrap(twobj, text)
+            %
+            % Description
+            %
+            % Reformat the single paragraph in 'text' so it fits in lines
+            % of no more than the number of columns specified in the
+            % 'width' property, and return a cell array of wrapped lines.
+            % By default Tabs in 'text' are expanded, and all other
+            % whitespace characters (including newline) are converted to
+            % space.
+            %
+            % Input
+            %
+            %  twobj - TextWrapper object
+            %
+            %  text - character vector containing the paragraph to be
+            %    wrapped
+            %
+            % Output
+            %
+            %  lines - cell array containg each line of the wrapped text
+            %
+            %
+            % See also: TexWrapper.fill, TextWrapper.wraplines
+            %
 
             text = self.mungewhitespacechars (text);
 
@@ -162,22 +275,46 @@ classdef TextWrapper
             lines = self.wrap_chunks (chunks);
 
         end
+        
 
-        function text = fill(self, text)
-            % fill(text : string) -> string
-            % 
-            % Reformat the single paragraph in 'text' to fit in lines of no
-            % more than 'self.width' columns, and return a new string
-            % containing the entire wrapped paragraph.
+        function text = fill (self, text)
+            % wrap paragraph to desired width and return as a character vector
+            %
+            % Syntax
+            %
+            % lines = fill(twobj, text)
+            %
+            % Description
+            %
+            % Reformat the single paragraph in 'text' so it fits in lines
+            % of no more than the number of columns specified in the
+            % 'width' property, and return a cell array of wrapped lines.
+            % By default Tabs in 'text' are expanded, and all other
+            % whitespace characters (including newline) are converted to
+            % space.
+            %
+            % Input
+            %
+            %  twobj -  TextWrapper object
+            %
+            %  text - character vector containing the paragraph to be
+            %    wrapped
+            %
+            % Output
+            %
+            %  text - character vector containing the wrapped paragraph
+            %
+            %
+            % See also: TexWrapper.wrap, TextWrapper.wraptext
+            %
 
-            text = strjoin (self.wrap(text), sprintf ('\n'));
+            text = strjoin (self.wrap(text), sprintf ('\n')); %#ok<*SPRINTFN>
 
         end
             
     end
 
     methods (Access = protected)
-        % -- Private methods -----------------------------------------------
         % (possibly useful for subclasses to override)
 
         function text = mungewhitespacechars(self, text)
@@ -191,7 +328,7 @@ classdef TextWrapper
                 text = strrep (text, sprintf ('\t'), repmat (' ' , 1, 8));
             end
             
-            if self.replaceWhiteWpaceChars
+            if self.ReplaceWhiteSpaceChars
                 for ind = 1:numel (self.whitespacechars)
                     text = strrep (text, self.whitespacechars{ind}, ' ');
                 end
@@ -422,14 +559,83 @@ classdef TextWrapper
     methods (Static)
         
         function wrappedlines = wraplines (text, varargin)
-            % Wrap a single paragraph of text, returning a list of wrapped lines.
-            % 
-            % Reformat the single paragraph in 'text' so it fits in lines of no
-            % more than 'width' columns, and return a list of wrapped lines.  By
-            % default, tabs in 'text' are expanded with string.expandtabs(), and
-            % all other whitespace characters (including newline) are converted to
-            % space.  See TextWrapper class for available keyword args to customize
-            % wrapping behaviour.
+            % wrap paragraph to desired width and returns lines in cell array
+            %
+            % Syntax
+            %
+            % wrappedlines = TextWrapper.wraplines (text)
+            % wrappedlines = TextWrapper.wraplines (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % Reformat the single paragraph in 'text' so it fits in lines
+            % of no more than the number of columns specified in the
+            % 'width' property, and return a cell array of wrapped lines.
+            % By default Tabs in 'text' are expanded, and all other
+            % whitespace characters (including newline) are converted to
+            % space.
+            %
+            % This is a static method of the TextWrapper class provided as
+            % a convenience function.
+            %
+            % Input
+            %
+            %  text - character vector containing the paragraph to be
+            %    wrapped
+            %
+            % Additional arguments may be supplied as parameter-value
+            % pairs. The available options are:
+            %
+            %  'Width' - the maximum width of wrapped lines (unless
+            %    breakLongWords is false). Default is 70.
+            %
+            %  'InitialIndent' - character vector that will be prepended to
+            %    the first line of wrapped output; Counts towards each
+            %    line's width. Default is ''.
+            %
+            %  'SubsequentIndent' - character vector that will be prepended to
+            %    the all lines of wrapped output except the first line.
+            %    Counts towards each line's width. Default is ''.
+            %
+            %  'ExpandTabs' - true/false flag indicating whether to expand 
+            %    tabs in input text to spaces before further processing.
+            %    Each tab will become 1 .. 8 spaces, depending on its
+            %    position in its line. If false, each tab is treated as a
+            %    single character. Default is true.
+            %
+            %  'ReplaceWhiteSpaceChars' - true/false flag indicating
+            %    whether to Replace all whitespace characters in the input
+            %    text by spaces after tab expansion. Note that if
+            %    expandTabs is false and ReplaceWhiteSpaceChars is true,
+            %    every tab will be converted to a single space! Default is
+            %    true.
+            %
+            %  'FixSentenceEndings' - true/false flag indicating whether to
+            %    ensure that sentence-ending punctuation is always followed
+            %    by two spaces. Off by default because the algorithm is
+            %    (unavoidably) imperfect. Default is false.
+            %
+            %  'BreakLongWords' - true/false flag indicating whether to
+            %    break words longer than 'width'. If false, those words
+            %    will not be broken, and some lines might be longer than
+            %    'width'. Default is true.
+            %
+            %  'DropWhiteSpaceChars' - true/false flag indicating whether
+            %    to drop leading and trailing whitespace from lines.
+            %    Default is true.
+            %
+            %  'BreakOnHyphens' - true/false flag indicating whether to
+            %    allow breaking hyphenated words. If true, wrapping will
+            %    occur preferably on whitespaces and right after hyphens
+            %    part of compound words. Default is true.
+            %
+            % Output
+            %
+            %  lines - cell array containg each line of the wrapped text
+            %
+            %
+            % See also: TexWrapper.wraptext, TextWrapper
+            %
             
             w = TextWrapper(varargin{:});
             
@@ -438,14 +644,83 @@ classdef TextWrapper
         end
         
         function text = wraptext (text, varargin)
-            % Wrap a single paragraph of text, returning a list of wrapped lines.
-            % 
-            % Reformat the single paragraph in 'text' so it fits in lines of no
-            % more than 'width' columns, and return a list of wrapped lines.  By
-            % default, tabs in 'text' are expanded with string.expandtabs(), and
-            % all other whitespace characters (including newline) are converted to
-            % space.  See TextWrapper class for available keyword args to customize
-            % wrapping behaviour.
+            % wrap paragraph to desired width and returns as a character vector
+            %
+            % Syntax
+            %
+            % text = TextWrapper.wraptext (text)
+            % text = TextWrapper.wraptext (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % Reformat the single paragraph in 'text' so it fits in lines
+            % of no more than the number of columns specified in the
+            % 'width' property, and return a cell array of wrapped lines.
+            % By default Tabs in 'text' are expanded, and all other
+            % whitespace characters (including newline) are converted to
+            % space.
+            %
+            % This is a static method of the TextWrapper class provided as
+            % a convenience function.
+            %
+            % Input
+            %
+            %  text - character vector containing the paragraph to be
+            %    wrapped
+            %
+            % Additional arguments may be supplied as parameter-value
+            % pairs. The available options are:
+            %
+            %  'Width' - the maximum width of wrapped lines (unless
+            %    breakLongWords is false). Default is 70.
+            %
+            %  'InitialIndent' - character vector that will be prepended to
+            %    the first line of wrapped output; Counts towards each
+            %    line's width. Default is ''.
+            %
+            %  'SubsequentIndent' - character vector that will be prepended to
+            %    the all lines of wrapped output except the first line.
+            %    Counts towards each line's width. Default is ''.
+            %
+            %  'ExpandTabs' - true/false flag indicating whether to expand 
+            %    tabs in input text to spaces before further processing.
+            %    Each tab will become 1 .. 8 spaces, depending on its
+            %    position in its line. If false, each tab is treated as a
+            %    single character. Default is true.
+            %
+            %  'ReplaceWhiteSpaceChars' - true/false flag indicating
+            %    whether to Replace all whitespace characters in the input
+            %    text by spaces after tab expansion. Note that if
+            %    expandTabs is false and ReplaceWhiteSpaceChars is true,
+            %    every tab will be converted to a single space! Default is
+            %    true.
+            %
+            %  'FixSentenceEndings' - true/false flag indicating whether to
+            %    ensure that sentence-ending punctuation is always followed
+            %    by two spaces. Off by default because the algorithm is
+            %    (unavoidably) imperfect. Default is false.
+            %
+            %  'BreakLongWords' - true/false flag indicating whether to
+            %    break words longer than 'width'. If false, those words
+            %    will not be broken, and some lines might be longer than
+            %    'width'. Default is true.
+            %
+            %  'DropWhiteSpaceChars' - true/false flag indicating whether
+            %    to drop leading and trailing whitespace from lines.
+            %    Default is true.
+            %
+            %  'BreakOnHyphens' - true/false flag indicating whether to
+            %    allow breaking hyphenated words. If true, wrapping will
+            %    occur preferably on whitespaces and right after hyphens
+            %    part of compound words. Default is true.
+            %
+            % Output
+            %
+            %  lines - cell array containg each line of the wrapped text
+            %
+            %
+            % See also: TexWrapper.wraplines, TextWrapper
+            %
             
             w = TextWrapper(varargin{:});
             
