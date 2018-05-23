@@ -91,6 +91,13 @@ function rnfoundry_setup (varargin)
 %    alternative multibody dynamics modelling functions will not work.
 %    Default is false.
 %
+%  'PreventMBDynCheck' :  Some functions in the renewnet foundry require 
+%    the 'MBDyn' multibody dynamics package. This option determines whether
+%    rnfoundry_setup checks to see if MBDyn is already installed (by
+%    looking for MBDyn libraries and header files in standard or specified
+%    directories). Default is false, so rnfoundry_setup WILL check to see
+%    if MBDyn is installed and display a notice if it is not.
+%
 %  'ForceAllMex' : Equivalent to setting all the Force* options above to
 %    true. Default is false.
 %
@@ -147,6 +154,7 @@ function rnfoundry_setup (varargin)
     % mbdyn
     Inputs.ForceMBDynSetup = false;
     Inputs.SkipMBDynSetup = false;
+    Inputs.PreventMBDynCheck = false;
     [Inputs.MBCLibDir, Inputs.MBCIncludeDir] = mbdyn.mint.find_libmbc ();
     if isunix
         Inputs.GSLLibDir = ''; % for mexslmeval
@@ -272,7 +280,8 @@ function rnfoundry_setup (varargin)
             didcompwarn = compilerwarning (didcompwarn);
             mexmbdyn_setup ( 'Verbose', Inputs.Verbose, ...
                              'MBCLibDir', Inputs.MBCLibDir, ...
-                             'MBCIncludeDir', Inputs.MBCIncludeDir);
+                             'MBCIncludeDir', Inputs.MBCIncludeDir, ...
+                             'PreventMBDynCheck', Inputs.PreventMBDynCheck );
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'mbdyn')
