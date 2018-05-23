@@ -1,21 +1,22 @@
 classdef postproc < handle
-    % postproc   class for post-processing and display of mbdyn output
-    %
-    % Description
-    %
-    % postproc is a class for the post-processing and visualisation of
-    % mbdyn output files.
-    %
-    % postproc Methods:
-    %  postproc - constructor
-    %  loadResultsFromFiles - loads mbdyn output data
-    %  clear - clears all data (loaded by loadResultsFromFiles)
-    %  plotNodeTrajectories - create plot of the trajectories of all or a
-    %     subset of nodes
-    %  drawStep - draw the system at the given time step index
-    %  animate - animate the system
-    %
-    % 
+% postproc class for post-processing and display of mbdyn output
+%
+% Description
+%
+% postproc is a class for the post-processing and visualisation of
+% mbdyn output files.
+%
+% postproc Methods:
+%
+%  postproc - constructor
+%  loadResultsFromFiles - loads mbdyn output data
+%  clear - clears all data (loaded by loadResultsFromFiles)
+%  plotNodeTrajectories - create plot of the trajectories of all or a
+%     subset of nodes
+%  drawStep - draw the system at the given time step index
+%  animate - animate the system
+%
+% 
     
     properties (GetAccess = public, SetAccess = private)
         
@@ -45,11 +46,12 @@ classdef postproc < handle
             %
             % Syntax
             %
-            % postproc(mbdoutfilename, info)
+            % mbdyn.postproc (mbdoutfilename, info)
             %
             % Description
             %
-            % mbdyn.postproc(mbdoutfilename, info) creates a new postpoc class
+            % mbdyn.postproc constructor, creates a new mbdyn.postproc
+            % object
             %
             % Input
             %
@@ -64,6 +66,46 @@ classdef postproc < handle
             %   mysim_results.mov etc. if these were not found, it will
             %   then check for mysim_results.mbd.out, mysim_results.mbd.mov
             %   etc.
+            %
+            %   MBDyn can produce netcdf format ouput files, which are
+            %   preferred for post-processing using this class. Using the
+            %   netcd output format will make much more simulation
+            %   information avaialable as otherwise only the .mov file can
+            %   be imported. To make MBDyn export a netcdf format file use
+            %   the 'output results' keyword in the MBDyn input file, or,
+            %   if using the mbdyn.pre.system class, use the 
+            %
+            %   In general, if the prefix ix /home/jbloggs/mysim_resultsMBDyn   will create the
+            %   files:
+            %
+            %   /home/jbloggs/my_mbdyn_sim.frc
+            %   /home/jbloggs/my_mbdyn_sim.ine
+            %   /home/jbloggs/my_mbdyn_sim.out
+            %   /home/jbloggs/my_mbdyn_sim.mov
+            %   /home/jbloggs/my_mbdyn_sim.jnt
+            %   /home/jbloggs/my_mbdyn_sim.log
+            %
+            %   and/or possibly a netcdf format file:
+            %
+            %   /home/jbloggs/my_mbdyn_sim.nc
+            %
+            %   A windows example might look like
+            %   C:\Users\IEUser\Documents\my_mbdyn_sim 
+            %   producing the files:
+            %
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.frc
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.ine
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.out
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.mov
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.jnt
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.log
+            %
+            %   and/or:
+            %
+            %   C:\Users\JBloggs\Documents\my_mbdyn_sim.nc
+            %
+            %   The netcdf format is preferred for the mbdyn.postproc class
+            %   which can be used to postprocess the results. 
             %
             %  info - information about the system which has been solved.
             %    This can be either a structure or a class of type
