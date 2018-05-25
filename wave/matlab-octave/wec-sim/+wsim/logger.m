@@ -112,7 +112,7 @@ classdef logger < handle
         mesgfunc;
 
         % A string used for labeling the x-axis when plotting single variables.
-        defaultDesc;
+        defaultXLabel;
         
         % factor by which to expand preallocated space when the end of the
         % preallocated space is reached and more data is logged
@@ -204,7 +204,7 @@ classdef logger < handle
             obj.mesgfunc = options.MesgFcn;
             obj.silent   = options.Silent;
 
-            obj.defaultDesc = options.DefaultDescription;
+            obj.defaultXLabel = options.DefaultDescription;
             
             obj.numVariables = 0;
             obj.fieldNames = {};
@@ -270,6 +270,7 @@ classdef logger < handle
 
             
             options.Description = '';
+            options.AxisLabel = '';
             options.ForceLogDimension = [];
             options.PreallocateStorage = [];
             options.IndependentVariable = '';
@@ -288,7 +289,8 @@ classdef logger < handle
                 check.isPositiveScalarInteger (options.PreallocateStorage, true, 'PreallocateStorage');
             end
             
-            assert (ischar (options.Description), 'Description must be a string');
+            assert (ischar (options.Description), 'Description must be a character vector');
+            assert (ischar (options.AxisLabel), 'AxisLabel must be a character vector');
 
             if ~isempty (options.IndependentVariable)
                 
@@ -393,7 +395,8 @@ classdef logger < handle
                                            'IndependentVariable', options.IndependentVariable, ...
                                            'LoggedVariableNumber', numel(obj.info) + 1, ...
                                            'LoggedSize', loggedvarsize, ...
-                                           'Windowed', options.Windowed );
+                                           'Windowed', options.Windowed, ...
+                                           'AxisLabel', options.AxisLabel );
 
             end
             
@@ -587,7 +590,7 @@ classdef logger < handle
             %
             
             
-            obj.defaultDesc = str;
+            obj.defaultXLabel = str;
         end
 
 
@@ -699,7 +702,7 @@ classdef logger < handle
         end
 
 
-        function h = plotFofVar(obj, varname, func, varargin)
+        function [hplot, hax, hfig] = plotFofVar (obj, varname, func, varargin)
             % apply function to logged variable and plot the result
             %
             %
@@ -730,49 +733,63 @@ classdef logger < handle
             %
             % Output
             %
-            %  h - handle to created plot
+            %  hplot - A handle (or array of handles) for the plot series
+            %   generated. Useful for formatting by the user.
             %
-            % See Also: 
+            %  hax - handle to the axes object in which the plot was drawn.
             %
+            %  hfig - handle to the figure object in which the plot was
+            %   drawn
+            %
+            %
+            % See Also: wsim.logger.plotVar, wsim.logger.plot2Vars
+            %
+            
+            options.PlotFcnArgs = {};
+            options.Skip = 1;
+            
+            options = parse_pv_pairs (options, varargin);
 
             if ~ischar(varname), obj.mesgfunc([varname 'must be a string specifying field that are already added to the logger object.']); return; end
             if ~isnumeric(obj.data.(varname)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' varname]); return; end
             if ~isa(func, 'function_handle') obj.mesgfunc('third argument func must be a function handle'); return; end
 
-            plotvals = func(obj.data.(varname));
+            plotvals = feval (func, obj.data.(varname));
+            
+            hfig = figure ();
+            hax = axes ();
 
-            h = obj.plotfunc(obj.data.(varname), varargin{:});
+            hplot = obj.plotfunc (hax, obj.data.(varname), options.PlotFcnArgs{:});
 
             hold on;
 
-            ylabel([func2str(func) ' (' obj.info.Descriptions.(varname) ')'], 'FontSize', 16);
-            if ~isempty(obj.defaultDesc)
-                xlabel(obj.defaultDesc,'FontSize',16);
+            ylabel ([func2str(func) ' (' obj.info.(varname).AxisLabel ')'], 'FontSize', 16);
+            if ~isempty (obj.defaultXLabel)
+                xlabel (obj.defaultXLabel,'FontSize',16);
             end
 
-            set(gca,'FontSize',16);
+            set (hax, 'FontSize', 16);
 
             hold off;
             
         end
 
 
-        function [h, hax, hfig] = plotVar (obj, varname, varargin)
+        function [hplot, hax, hfig] = plotVar (obj, varname, varargin)
             % given a string specifying a numeric scalar field, it is plotted.
             %
             % Syntax
             %
-            % h = plotVar(obj, field)
-            % h = plotVar(obj, field, plotarg1, plotarg2, ..., plotargn)
+            % plotVar(obj, field)
+            % plotVar(obj, field, plotarg1, plotarg2, ..., plotargn)
+            % [hplot, hax, hfig] = plotVar(...)
             %
             % Description
             %
             % plotVar Plots one of the logged variables. If a user logs a
             % fields 'height', using logger.plotVar('height') will plot
-            % height. The parameters to the plot can be provided after the
-            % fields, and all those arguments go to the plot function.  For
-            % example, logger.plotVar('height','LineWidth',2,'Color','r');
-            % will pass the last four arguments to plot.
+            % height. Additional arguments for the plotting funtion (e.g.
+            % plot) can be provided using the 'PlotFcnArgs' option.
             %
             % Input
             %
@@ -783,14 +800,15 @@ classdef logger < handle
             % Additional arguments may be supplied as parameter-value
             % pairs. The available options are:
             %
-            %  'PlotArgs' - cell array of additional arguments that are to
-            %    be sent to the plotting function.
+            %  'PlotFcnArgs' - cell array of additional arguments that are 
+            %    to be sent to the plotting function.
             %
-            %  'Skip' - 
+            %  'Skip' - integer defining a number of values to skip between
+            %    plotted values (to reduce plot size for large series)
             % 
             % Output
             %
-            %  h - A handle (or array of handles) for the plot series
+            %  hplot - A handle (or array of handles) for the plot series
             %   generated. Useful for formatting by the user.
             %
             %  hax - handle to the axes object in which the plot was drawn.
@@ -819,19 +837,34 @@ classdef logger < handle
                     hax = axes (hfig);
                 end
                 
-                h = obj.plotfunc(hax, obj.data.(varname), options.PlotFcnArgs{:});
+                
+                
+                hplot = obj.plotfunc (hax, obj.data.(varname), options.PlotFcnArgs{:});
             
-                ylabel(obj.info.(varname).Description, 'FontSize', 16);
+                ylabel (obj.info.(varname).AxisLabel, 'FontSize', 16);
 
-                if ~isempty(obj.defaultDesc)
-                    xlabel(obj.defaultDesc,'FontSize',16);
+                if ~isempty (obj.defaultXLabel)
+                    xlabel (obj.defaultXLabel, 'FontSize',16);
                 end
 
-                set(gca,'FontSize',16);
+                set (hax, 'FontSize', 16);
                 
+%                 indexvarname = sprintf ('%s_index', varname);
+%                 
+%                 obj.data = setfield (obj.data, indexvarname, 1:obj.data.(varname).last );
+%                 
+%                 CC = onCleanup ( @() rmfield (obj.data, indexvarname) );
+%                 
+%                 
+%                 [hplot, hax, hfig] = plot2Vars ( obj, ...
+%                                               obj.info.(varname).IndependentVariable, ...
+%                                               varname, ...
+%                                               'PlotFcnArgs', options.PlotFcnArgs, ...
+%                                               'Skip', options.Skip );
+%                 
             else
                 
-                 [h, hax, hfig] = plot2Vars ( obj, ...
+                 [hplot, hax, hfig] = plot2Vars ( obj, ...
                                               obj.info.(varname).IndependentVariable, ...
                                               varname, ...
                                               'PlotFcnArgs', options.PlotFcnArgs, ...
@@ -842,14 +875,15 @@ classdef logger < handle
         end
 
 
-        function [h, hax, hfig] = plot2Vars(obj, f1, f2, varargin)
+        function [h, hax, hfig] = plot2Vars (obj, f1, f2, varargin)
             % plot two logged variables against each other
             %
             %
             % Syntax
             %
-            % h = plot2Vars(obj, f1, f2)
-            % h = plot2Vars(obj, f1, f2, plotarg1, plotarg2, ..., plotargn)
+            % plot2Vars (obj, f1, f2)
+            % plot2Vars (obj, f1, f2, plotarg1, plotarg2, ..., plotargn)
+            % [h, hax, hfig] = plot2Vars (...)
             %
             % Description
             %
@@ -894,7 +928,7 @@ classdef logger < handle
             if ~ischar(f1) || ~ischar(f2)
                 feval (obj.mesgfunc, 'f1 and f2 must be strings specifying fields that are already added to the logger object.');
             end
-
+            
             if ~isnumeric(obj.data.(f1)) || ~isnumeric(obj.data.(f2))
                 feval (obj.mesgfunc, sprintf ('Plotting only numeric values is supported at this point. Not generating the plot %s vs %s', f1, f2));
             end
@@ -1071,12 +1105,12 @@ classdef logger < handle
 
             hold off;
             
-            desc1 = obj.info.(f1).Description;
-            desc2 = obj.info.(f2).Description;
+            desc1 = obj.info.(f1).AxisLabel;
+            desc2 = obj.info.(f2).AxisLabel;
 
-            xlabel(desc1, 'FontSize', 12);
-            ylabel(desc2, 'FontSize', 12);
-            set(gca,'FontSize',12);
+            xlabel (desc1, 'FontSize', 12);
+            ylabel (desc2, 'FontSize', 12);
+            set (hax, 'FontSize', 12);
             
             if numel (legstrs) > 1
                 legend (legstrs{:});
