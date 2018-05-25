@@ -5,6 +5,9 @@ classdef loggingSettings
         positions = true;
         velocities = true;
         accelerations = true;
+        angularPositions = true;
+        angularVelocities = true;
+        angularAccelerations = true;
         nodeForcesAndMoments = true;
         nodeForcesAndMomentsUncorrected = true;
         forceHydro = true;
@@ -38,6 +41,21 @@ classdef loggingSettings
         function self = set.accelerations (self, val)
             check.isLogicalScalar (val, true, 'accelerations');
             self.accelerations = val;
+        end
+        
+        function self = set.angularPositions (self, val)
+            check.isLogicalScalar (val, true, 'angularPositions');
+            self.angularPositions = val;
+        end
+        
+        function self = set.angularVelocities (self, val)
+            check.isLogicalScalar (val, true, 'angularVelocities');
+            self.angularVelocities = val;
+        end
+        
+        function self = set.angularAccelerations (self, val)
+            check.isLogicalScalar (val, true, 'angularAccelerations');
+            self.angularAccelerations = val;
         end
         
         function self = set.nodeForcesAndMoments (self, val)
