@@ -1,19 +1,19 @@
 % +test_wsim_OSWEC/run.m.m
 
 if exist ('hmbsysfig', 'var')
-    close (hmbsysfig)
+    if ishghandle (hmbsysfig)
+        close (hmbsysfig)
+    end
 end
 clear waves simu hsys mbsys flap_hbody base_hbody mb hmbsysfig
 
 
 %% Hydro Simulation Data
 simu = wsim.simSettings (getmfilepath ('test_wsim_OSWEC.run'));  % Create the Simulation Variable
-simu.multibodySolver = 'MBDyn';
 % simu.mode = 'normal';                       % Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
 % simu.explorer='on';                         % Turn SimMechanics Explorer (on/off)
 % simu.startTime = 0;                         % Simulation Start Time [s]
 simu.endTime=400;
-simu.solver = 'ode4';                         %simu.solver = 'ode4' for fixed step & simu.solver = 'ode45' for variable step 
 simu.dt = 0.1; 							      %Simulation time-step [s] for a convolution function in the radiation force calculation 
 simu.rampT = 100;
 simu.CITime = 30;
@@ -72,7 +72,7 @@ mbdpath = fullfile (simu.caseDir, 'OSWEC.mbd');
 %% Set up PTO
 
 k = 0;
-c = 1;
+c = 6000e5 / 0.3;
 
 torquefcn = @(time, thetaRpto, omegaRpto) -k*thetaRpto -c*omegaRpto;
 
@@ -109,15 +109,13 @@ wsobj = wsim.wecSim ( hsys, mbsys, ...
 wsobj.prepare ();
 
 % run it and get the output data
-datalog = wsobj.run ('TimeExecution', true);
+[ datalog, mbout ] = wsobj.run ('TimeExecution', true);
 
+%% 
 
-%%
-mbout = mbdyn.postproc ( outputfile_prefix, mbsys ); 
-
-
-%
-mbout.animate ( 'DrawMode', 'solid', ...
+datalog.data.
+%% animate the sim
+wsobj.animate ( 'DrawMode', 'solid', ...
                 'Light', true, ...
                 'skip', 5, ...
                 'AxLims', [-5, 5; -15, 15; -12, 5])
