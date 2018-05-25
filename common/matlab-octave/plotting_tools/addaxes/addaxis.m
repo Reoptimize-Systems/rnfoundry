@@ -1,4 +1,4 @@
-function hplts = addaxis(varargin)
+function [ hplts, h_ax ] = addaxis(varargin)
 %ADDAXIS  adds an axis to the current plot
 %  you can add as many axes as you want.
 %
