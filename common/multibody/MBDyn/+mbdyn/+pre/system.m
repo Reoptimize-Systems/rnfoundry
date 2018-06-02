@@ -1220,7 +1220,11 @@ classdef system < mbdyn.pre.base
             
             uids = cellfun (@(x) x.uid, A, 'UniformOutput', true);
             
-            [~,ia,~] = unique (uids, 'stable');
+            if isoctave
+                [~,ia,~] = unique (uids);
+            else
+                [~,ia,~] = unique (uids, 'stable');
+            end
             
         end
         
