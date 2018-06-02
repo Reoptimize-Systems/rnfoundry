@@ -76,6 +76,8 @@ classdef element < mbdyn.pre.base
             
             options = parse_pv_pairs (options, varargin);
             
+            self = self@mbdyn.pre.base ();
+            
             self.checkAllowedStringInputs ( options.DefaultShape, ...
                                             { 'none', 'cuboid', 'box', 'cylinder', 'sphere', 'ellipsoid', 'tube', 'pipe', 'annularcylinder' }, ...
                                             true, ...
@@ -608,6 +610,10 @@ classdef element < mbdyn.pre.base
                         self.shapeData{ind}.FaceLighting = 'Gouraud';
                         self.shapeData{ind}.AmbientStrength = 0.15;
                         self.shapeData{ind}.Parent = self.transformObject;
+                        
+                        if isoctave () && self.stlLoaded
+                            self.shapeData{ind}.FaceNormals = self.stlNormals;
+                        end
                         
                         self.shapeObjects = [ self.shapeObjects, ...
                                               { patch( self.drawAxesH, ...

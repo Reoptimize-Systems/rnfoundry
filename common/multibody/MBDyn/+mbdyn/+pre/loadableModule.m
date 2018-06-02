@@ -51,6 +51,8 @@ classdef loadableModule < mbdyn.pre.base
             assert (ischar (path), 'path must be a character vector');
             assert (ischar (args), 'args must be a character vector');
             
+            self = self@mbdyn.pre.base ();
+            
             self.type = 'loadable module';
             self.path = path;
             self.arguments = args;

@@ -10,6 +10,7 @@ classdef drive < mbdyn.pre.base
         function self = drive ()
             % construct a generic mbdyn drive object
             
+            self = self@mbdyn.pre.base ();
             
         end
         

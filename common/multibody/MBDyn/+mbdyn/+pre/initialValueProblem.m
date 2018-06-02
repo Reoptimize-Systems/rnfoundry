@@ -213,6 +213,8 @@ classdef initialValueProblem < mbdyn.pre.problem
             
             options = parse_pv_pairs (options, varargin);
             
+            self = self@mbdyn.pre.problem ();
+            
             self.checkNumericScalar (itime, true, 'itime');
             self.checkNumericScalar (ftime, true, 'ftime');
             self.checkNumericScalar (tstep, true, 'tstep');
