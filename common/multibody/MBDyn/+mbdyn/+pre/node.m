@@ -60,6 +60,8 @@ classdef node < mbdyn.pre.base
             
             options = parse_pv_pairs (options, varargin);
             
+            self = self@mbdyn.pre.base ();
+            
             if ~ischar (options.HumanReadableLabel)
                 error ('''HumanReadableLabel'' must be a char array');
             end

@@ -378,6 +378,8 @@ classdef system < mbdyn.pre.base
             
             self.problems = [self.problems, problems];
             
+            self.problems = self.uniqueCells (self.problems);
+            
         end
         
         function addNodes (self, nodes)
@@ -393,6 +395,8 @@ classdef system < mbdyn.pre.base
             self.checkCellArrayClass (nodes, 'mbdyn.pre.node');
             
             self.nodes = [self.nodes, nodes];
+            
+            self.nodes = self.uniqueCells (self.nodes);
             
         end
         
@@ -410,6 +414,8 @@ classdef system < mbdyn.pre.base
             
             self.elements = [self.elements, elements];
             
+            self.elements = self.uniqueCells (self.elements);
+            
         end
         
         function addDrivers (self, drivers)
@@ -426,6 +432,8 @@ classdef system < mbdyn.pre.base
             
             self.drivers = [self.drivers, drivers];
             
+            self.drivers = self.uniqueCells (self.drivers);
+            
         end
         
         function addReferences (self, refs)
@@ -441,6 +449,8 @@ classdef system < mbdyn.pre.base
             self.checkCellArrayClass (refs, 'mbdyn.pre.reference');
             
             self.references = [self.references, refs];
+            
+            self.references = self.uniqueCells (self.references);
             
         end
         
@@ -1195,6 +1205,22 @@ classdef system < mbdyn.pre.base
                 self.elements{ind}.label = label;
                 label = label + 1;
             end
+            
+        end
+        
+        function C = uniqueCells (self, A)
+            
+            ia = uniqueCellsIDXs (self, A);
+            
+            C = A(ia);
+            
+        end
+        
+        function ia = uniqueCellsIDXs (self, A)
+            
+            uids = cellfun (@(x) x.uid, A, 'UniformOutput', true);
+            
+            [~,ia,~] = unique (uids, 'stable');
             
         end
         

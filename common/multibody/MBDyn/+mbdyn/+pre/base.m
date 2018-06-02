@@ -27,9 +27,7 @@ classdef base < handle
         
         function self = base ()
            
-            if isoctave
-                self.uid = round (rand ()*1e12);
-            end
+            self.uid = round (rand ()*1e12);
             
         end
         
@@ -173,7 +171,7 @@ classdef base < handle
             
         end
         
-        function ok = checkIsStructuralNode (node, throw)
+        function ok = checkIsStructuralNode (node, throw, name)
             % checks if input is a mbdyn.pre.structuralNode
             %
             % Syntax
@@ -192,12 +190,16 @@ classdef base < handle
             %  ok - logical flag indicating if check was passed
             %
             
+            if nargin < 3
+                name = 'Input';
+            end
+            
             ok = true;
             if ~isa (node, 'mbdyn.pre.structuralNode')
                 ok = false;
                 
                 if throw
-                    error ('Input must be a mbdyn.pre.structuralNode object or subclass')
+                    error ('%s must be a mbdyn.pre.structuralNode object or subclass', name);
                 end
             end
             

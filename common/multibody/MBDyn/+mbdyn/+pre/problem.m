@@ -5,7 +5,12 @@ classdef problem < mbdyn.pre.base
     end
     
     methods
-       
+        
+        function self = problem ()
+            
+            self = self@mbdyn.pre.base ();
+            
+        end
         
     end
     
