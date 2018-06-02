@@ -295,7 +295,7 @@ classdef wecSim < handle
                 % so we make sure it is called for the MBCNodal when wecSim
                 % finishes. This makes sure the sockets are closed and
                 % memory is freed. See Octave bug #46497
-                CC = onCleanup (@() delete (mb));
+                CC = onCleanup (@() mb.delete ());
             end
             
             mb.start ('Verbosity', options.Verbosity);
