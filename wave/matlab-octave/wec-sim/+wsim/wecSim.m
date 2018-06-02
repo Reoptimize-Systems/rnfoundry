@@ -286,13 +286,17 @@ classdef wecSim < handle
             % examine later if required
             self.mBDynOutputFile = mb.MBDynOutputFile;
             
-%             % ensure MBCNodal is destroyed in the event of a problem
-%             % (closes communication to MBDyn and tells it to quit so
-%             % sockets and so on are also cleaned up)
-%             if ~isoctave
-%                 % FIXME: put onCleanup back when Octave is compatible
-%                 CC = onCleanup (@() delete (mb));
-%             end
+            % ensure MBCNodal is destroyed in the event of a problem
+            % (closes communication to MBDyn and tells it to quit so
+            % sockets and so on are also cleaned up)
+            if isoctave ()
+                % FIXME: octave calls the delete method multiple times, so
+                % calling it has been disabled in the development sources,
+                % so we make sure it is called for the MBCNodal when wecSim
+                % finishes. This makes sure the sockets are closed and
+                % memory is freed. See Octave bug #46497
+                CC = onCleanup (@() delete (mb));
+            end
             
             mb.start ('Verbosity', options.Verbosity);
             
