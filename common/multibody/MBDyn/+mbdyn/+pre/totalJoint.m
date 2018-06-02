@@ -18,13 +18,20 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
         
         positionStatus;
         orientationStatus;
+        imposedRelativePosition;
+        imposedRelativeOrientation
         
     end
     
     
     methods
         
-        function self = totalJoint (node1, node2, posstatus, orientstatus, varargin)
+        function self = totalJoint (node1, node2, varargin)
+            
+            options.PositionStatus = {};
+            options.OrientationStatus = {};
+            options.ImposedRelativePosition = 'null';
+            options.ImposedRelativeOrientation = 'null';
             
             options.RelativeOffset1 = [];
             options.RelativeOffset1Reference = 'node';
@@ -83,28 +90,21 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
                 self.relativeRotOrientation2 = [];
             end
             
-            self.checkPosStatus (posstatus);
-            self.checkOrientStatus (orientstatus);
+            options.PositionStatus = self.checkPosStatus (options.PositionStatus);
+            options.OrientationStatus = self.checkOrientStatus (options.OrientationStatus);
             
-            if islogical (posstatus)
-                if posstatus == true
-                    posstatus = 'active';
-                else
-                    posstatus = 'inactive';
-                end
-            end
+            assert (ischar (options.ImposedRelativePosition) ...
+                        || isa (options.ImposedRelativePosition, 'mbdyn.pre.tplDriveCaller'), ...
+                    'ImposedRelativePosition must be the keyword ''null'' or a mbdyn.pre.tplDriveCaller object' );
             
-            self.positionStatus = posstatus;
-            
-            if islogical (orientstatus)
-                if orientstatus == true
-                    orientstatus = 'active';
-                else
-                    orientstatus = 'inactive';
-                end
-            end
-            
-            self.orientationStatus = orientstatus;
+            assert (ischar (options.ImposedRelativeOrientation) ...
+                        || isa (options.ImposedRelativeOrientation, 'mbdyn.pre.tplDriveCaller'), ...
+                    'ImposedRelativeOrientation must be the keyword ''null'' or a mbdyn.pre.tplDriveCaller object' );
+                
+            self.positionStatus = options.PositionStatus;
+            self.orientationStatus = options.OrientationStatus;
+            self.imposedRelativePosition = options.ImposedRelativePosition;
+            self.imposedRelativeOrientation = options.ImposedRelativeOrientation;
             
         end
         
@@ -133,7 +133,7 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             
             str = generateMBDynInputString@mbdyn.pre.twoNodeJoint (self);
             
-            str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
+            str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, self.nodeLabelComment (self.node1));
             
             if ~isempty (self.relativeOffset1)
                 out = self.makeCellIfNot (self.relativeOffset1);
@@ -150,26 +150,82 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
                 str = self.addOutputLine (str, self.commaSepList ('rotation orientation', out{:}), 3, true);
             end
             
-            str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, true, 'node 2 label');
+            addcomma = ~isempty (self.relativeOffset2) ...
+                        || ~isempty (self.relativePositionOrientation2) ...
+                        || ~isempty (self.relativeRotOrientation2) ...
+                        || ~isempty (self.positionStatus) ...
+                        || ~isempty (self.orientationStatus);
+                    
+            str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, addcomma, self.nodeLabelComment (self.node2));
+            
+            addcomma = ~isempty (self.relativePositionOrientation2) ...
+                        || ~isempty (self.relativeRotOrientation2) ...
+                        || ~isempty (self.positionStatus) ...
+                        || ~isempty (self.orientationStatus);
             
             if ~isempty (self.relativeOffset2)
                 out = self.makeCellIfNot (self.relativeOffset2);
-                str = self.addOutputLine (str, self.commaSepList ('position', out{:}), 3, true);
+                str = self.addOutputLine (str, self.commaSepList ('position', out{:}), 3, addcomma);
             end
+            
+            addcomma = ~isempty (self.relativeRotOrientation2) ...
+                        || ~isempty (self.positionStatus) ...
+                        || ~isempty (self.orientationStatus);
             
             if ~isempty (self.relativePositionOrientation2)
                 out = self.makeCellIfNot (self.relativePositionOrientation2);
-                str = self.addOutputLine (str, self.commaSepList ('position orientation', out{:}), 3, true);
+                str = self.addOutputLine (str, self.commaSepList ('position orientation', out{:}), 3, addcomma);
             end
+            
+            addcomma = ~isempty (self.positionStatus) ...
+                        || ~isempty (self.orientationStatus);
             
             if ~isempty (self.relativeRotOrientation2)
                 out = self.makeCellIfNot (self.relativeRotOrientation2);
-                str = self.addOutputLine (str, self.commaSepList ('rotation orientation', out{:}), 3, true);
+                str = self.addOutputLine (str, self.commaSepList ('rotation orientation', out{:}), 3, addcomma);
             end
             
-            str = self.addOutputLine (str, self.positionStatus, 2, true, 'position constraint status');
+            if ~isempty (self.positionStatus)
+                
+                str = self.addOutputLine (str, 'position constraint', 2, true);
+                
+                str = self.addOutputLine (str, self.commaSepList (self.positionStatus{:}), 3, true, 'position constraint status');
+                
+                addcomma = ~isempty (self.orientationStatus);
+                
+                if ischar (self.imposedRelativePosition)
+                    
+                    str = self.addOutputLine (str, self.imposedRelativePosition, 3, addcomma, 'imposed relative position');
+                
+                elseif isa (self.imposedRelativePosition, 'mbdyn.pre.tplDriveCaller')
+                    
+                    str = self.addOutputLine (str, self.imposedRelativePosition.generateMBDynInputString (), 3, addcomma, 'imposed relative position');
+                    
+                else
+                    error ('Unexpected value in self.imposedRelativePosition');
+                end
+                
+            end
             
-            str = self.addOutputLine (str, self.orientationStatus, 2, false, 'orientation constraint status');
+            if ~isempty (self.orientationStatus)
+                
+                str = self.addOutputLine (str, 'orientation constraint', 2, true);
+                
+                str = self.addOutputLine (str, self.commaSepList (self.orientationStatus{:}), 3, true, 'orientation constraint status');
+                
+                if ischar (self.imposedRelativeOrientation)
+                    
+                    str = self.addOutputLine (str, self.imposedRelativeOrientation, 3, false, 'imposed relative position');
+                
+                elseif isa (self.imposedRelativeOrientation, 'mbdyn.pre.tplDriveCaller')
+                    
+                    str = self.addOutputLine (str, self.imposedRelativeOrientation.generateMBDynInputString (), 3, false, 'imposed relative orientation');
+                    
+                else
+                    error ('Unexpected value in imposedRelativeOrientation');
+                end
+                
+            end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf ('end %s', self.type));
             
@@ -215,24 +271,95 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             
         end
         
-        function checkPosStatus (self, posstatus)
-            % checks if the position status choice is valid
+        function newposstatus = checkPosStatus (self, posstatus)
+            % checks if the position status choicesare valid
             
-            if (ischar (posstatus) && ~any(strcmp (posstatus, {'inactive', 'active', 'position', 'velocity'}))) ...
-                    && ~islogical (posstatus)
+            if isempty (posstatus)
                 
-                error ('total joint position status must be: inactive | active | position | velocity | boolean');
+                newposstatus = posstatus;
+                
+            else
+            
+                assert (numel (posstatus) == 3, ...
+                    'PositionStatus must have 3 elements (logical array or cell string array)');
+                
+                newposstatus = cell (1, 3);
+                
+                if islogical (posstatus)
+                    
+                    for ind = 1:3
+                        
+                        if posstatus(ind) == true
+                            newposstatus{ind} = 'active';
+                        else
+                            newposstatus{ind} = 'inactive';
+                        end
+                        
+                    end
+                    
+                elseif ~iscellstr (posstatus)
+                    error ('PositionStatus must be a 3 element logical array or 3 element cell string array');
+                    
+                else
+                    newposstatus = posstatus;
+                end
+                
+                for ind = 1:3
+                    self.checkAllowedStringInputs ( newposstatus{ind}, ...
+                                                    { 'inactive', ...
+                                                      'active', ...
+                                                      'position', ...
+                                                      'velocity'}, ...
+                                                    true, ...
+                                                    sprintf ('PostionStatus{%d}', ind) );
+                end
+            
             end
             
         end
         
-        function checkOrientStatus (self, orientstatus)
+        function neworientstatus = checkOrientStatus (self, orientstatus)
             % checks if the orientation status choice is valid
             
-            if (ischar (orientstatus) && ~any(strcmp (orientstatus, {'inactive', 'active', 'rotation', 'angular velocity'}))) ...
-                    && ~islogical (orientstatus)
+            if isempty (orientstatus)
                 
-                error ('total joint orientation status must be: inactive | active | rotation | angular velocity | boolean');
+                neworientstatus = orientstatus;
+                
+            else
+            
+                assert (numel (orientstatus) == 3, ...
+                    'OrientationStatus must have 3 elements (logical array or cell string array)');
+                
+                neworientstatus = cell (1, 3);
+                
+                if islogical (orientstatus)
+                    
+                    for ind = 1:3
+                        
+                        if orientstatus(ind) == true
+                            neworientstatus{ind} = 'active';
+                        else
+                            neworientstatus{ind} = 'inactive';
+                        end
+                        
+                    end
+                    
+                elseif ~iscellstr (orientstatus)
+                    error ('OrientationStatus must be a 3 element logical array or 3 element cell string array');
+                else
+                    neworientstatus = orientstatus;
+                end
+                
+                for ind = 1:3
+                    self.checkAllowedStringInputs ( neworientstatus{ind}, ...
+                                                    { 'inactive', ...
+                                                      'active', ...
+                                                      'rotation', ...
+                                                      'angular velocity'}, ...
+                                                    true, ...
+                                                    sprintf ('OrientationStatus{%d}', ind) );
+                end
+            
             end
             
         end
