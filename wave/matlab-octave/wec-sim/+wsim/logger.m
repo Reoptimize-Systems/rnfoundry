@@ -1492,9 +1492,17 @@ classdef logger < handle
                 'The copntents of varname does not appear to match exactly the name of any logged variables');
             
             if obj.info.(varname).PreallocatedLogLength > obj.info.(varname).LastLogIndex
-                    
-                % remove and data after the last log index
-                obj.data.(varname)(obj.info.(varname).LastLogIndex+1:end) = [];
+                % copy the pre-constructed indexing structure (created when
+                % adding the variable)
+                S = obj.info.(varname).IndexAssignment;
+            
+                % build the correct index into the logged variable by replacing
+                % the appropriate index with the new log index
+                S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).LastLogIndex : obj.info.(varname).PreallocatedLogLength;
+            
+                % assign the new value
+                obj.data.(varname) = subsasgn (obj.data.(varname), S, []);
+            
                 % update the preallocated length 
                 obj.info.(varname).PreallocatedLogLength = obj.info.(varname).LastLogIndex;
 
