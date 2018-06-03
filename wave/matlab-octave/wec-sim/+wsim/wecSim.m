@@ -68,13 +68,47 @@ classdef wecSim < handle
         function self = wecSim (hsys, mbsys, varargin)
             % wsim.wecSim constructor
             %
-            
+            % Syntax
+            %
+            % wsobj = wsim.wecSim (hsys, mbsys)
+            % wsobj = wsim.wecSim (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % wsim.wecSim is a class which manages a wave energy converter
+            % simulation.
+            %
+            % Input
+            %
+            %  hsys - a wsim.hydroSystem object
+            %
+            %  mbsys - a mbdyn.pre.sysem object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'PTOs' - either a scalar wsim.powerTakeOff object or a cell
+            %    array of multiple wsim.powerTakeOff objects.
+            %
+            %  'NEMOHSim' - 
+            %
+            %  'LoggingSettings' - 
+            %
+            % Output
+            %
+            %  wsobj - wsim.wecSim 
+            %
+            %
+            %
+            % See Also: 
+            %
+
             options.PTOs = {};
 %             options.StartTime = [];
 %             options.EndTime = [];
             options.NEMOHSim = [];
             options.LoggingSettings = wsim.loggingSettings ();
-            options.MBDynVerbosity = 0;
+%             options.MBDynVerbosity = 0;
             options.OutputDir = '';
             
             options = parse_pv_pairs (options, varargin);
@@ -289,14 +323,14 @@ classdef wecSim < handle
             % ensure MBCNodal is destroyed in the event of a problem
             % (closes communication to MBDyn and tells it to quit so
             % sockets and so on are also cleaned up)
-            if isoctave ()
-                % FIXME: octave calls the delete method multiple times, so
-                % calling it has been disabled in the development sources,
-                % so we make sure it is called for the MBCNodal when wecSim
-                % finishes. This makes sure the sockets are closed and
-                % memory is freed. See Octave bug #46497
-                CC = onCleanup (@() mb.delete ());
-            end
+%             if isoctave ()
+%                 % FIXME: octave calls the delete method multiple times, so
+%                 % calling it has been disabled in the development sources,
+%                 % so we make sure it is called for the MBCNodal when wecSim
+%                 % finishes. This makes sure the sockets are closed and
+%                 % memory is freed. See Octave bug #46497
+%                 CC = onCleanup (@() mb.delete ());
+%             end
             
             mb.start ('Verbosity', options.Verbosity);
             
