@@ -135,7 +135,7 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             % See Also: wsim.linearPowerTakeOff, wsim.powerTakeOff
             %
 
-            options.InitialThetaZero = true;
+            options.InitialTheta = 0;
             options.ReferenceNode = 1;
             options.LoggedVars = {};
             
@@ -144,7 +144,7 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             momobj = mbdyn.mint.twoNodeTorque ( ...
                                     revolute_hinge, ...
                                     'ReferenceNode', options.ReferenceNode, ...
-                                    'InitialThetaZero', options.InitialThetaZero, ...
+                                    'InitialTheta', options.InitialTheta, ...
                                     'TorqueFcn', torque_fcn );
                                 
             lginfo.AvailableNames = { 'InternalTorque', ...
@@ -222,6 +222,22 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             self.internalVariables.InternalTorque = ptotorque;
             self.internalVariables.RelativeAngularDisplacement = reltheta;
             self.internalVariables.RelativeAngularVelocity = relomega;
+            
+        end
+        
+        function start (self, siminfo)
+            
+            self.mbdynMomentObj.initialise (siminfo.TStart);
+            
+            start@wsim.powerTakeOff (self, siminfo);
+
+        end
+        
+        function advanceStep (self, time)
+            
+            self.mbdynMomentObj.advance (time);
+            
+            advanceStep@wsim.powerTakeOff (self);
             
         end
          
