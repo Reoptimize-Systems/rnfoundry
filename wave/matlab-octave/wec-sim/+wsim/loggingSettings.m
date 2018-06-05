@@ -8,8 +8,9 @@ classdef loggingSettings
         angularPositions = true;
         angularVelocities = true;
         angularAccelerations = true;
-        nodeForcesAndMoments = true;
-        nodeForcesAndMomentsUncorrected = true;
+        
+        nodeForces = true;
+        nodeForcesUncorrected = true;
         forceHydro = true;
         forceExcitation = true;
         forceExcitationRamp = true;
@@ -21,6 +22,20 @@ classdef loggingSettings
         forceViscousDamping = true;
         forceAddedMassUncorrected = true;
         forceAddedMass = true;
+        
+        nodeMoments = true;
+        nodeMomentsUncorrected = true;
+        momentHydro = true;
+        momentExcitation = true;
+        momentExcitationRamp = true;
+        momentExcitationLin = true;
+        momentExcitationNonLin = true;
+        momentRadiationDamping = true;
+        momentRestoring = true;
+        momentMorrison = true;
+        momentViscousDamping = true;
+        momentAddedMassUncorrected = true;
+        momentAddedMass = true;
         
         powerTakeOffInternal = true;
         
@@ -58,17 +73,19 @@ classdef loggingSettings
             self.angularAccelerations = val;
         end
         
-        function self = set.nodeForcesAndMoments (self, val)
-            check.isLogicalScalar (val, true, 'nodeForcesAndMoments');
-            self.nodeForcesAndMoments = val;
+        % forces logging settings
+        
+        function self = set.nodeForces (self, val)
+            check.isLogicalScalar (val, true, 'nodeForces');
+            self.nodeForces = val;
             
-            self = self.setNodeForcesAndMoments (val);
+            self = self.setNodeForces (val);
             
         end
         
-        function self = set.nodeForcesAndMomentsUncorrected (self, val)
-            check.isLogicalScalar (val, true, 'nodeForcesAndMomentsUncorrected');
-            self.nodeForcesAndMomentsUncorrected = val;
+        function self = set.nodeForcesUncorrected (self, val)
+            check.isLogicalScalar (val, true, 'nodeForcesUncorrected');
+            self.nodeForcesUncorrected = val;
         end
         
         function self = set.forceHydro (self, val)
@@ -122,9 +139,80 @@ classdef loggingSettings
             
             self.forceAddedMass = val;
             
-            self = self.setforceAddedMass (val);
+            self = self.setForceAddedMass (val);
             
         end
+        
+        % moments logging settings
+        
+        function self = set.nodeMoments (self, val)
+            check.isLogicalScalar (val, true, 'nodeForces');
+            self.nodeMoments = val;
+            
+            self = self.setNodeMoments (val);
+            
+        end
+        
+        function self = set.nodeMomentsUncorrected (self, val)
+            check.isLogicalScalar (val, true, 'nodeMomentsUncorrected');
+            self.nodeMomentsUncorrected = val;
+        end
+        
+        function self = set.momentHydro (self, val)
+            check.isLogicalScalar (val, true, 'momentHydro');
+            self.momentHydro = val;
+        end
+        
+        function self = set.momentExcitation (self, val)
+            check.isLogicalScalar (val, true, 'momentExcitation');
+            self.momentExcitation = val;
+        end
+        
+        function self = set.momentExcitationRamp (self, val)
+            check.isLogicalScalar (val, true, 'momentExcitationRamp');
+            self.momentExcitationRamp = val;
+        end
+        
+        function self = set.momentExcitationLin (self, val)
+            check.isLogicalScalar (val, true, 'momentExcitationLin');
+            self.momentExcitationLin = val;
+        end
+        
+        function self = set.momentExcitationNonLin (self, val)
+            check.isLogicalScalar (val, true, 'momentExcitationNonLin');
+            self.momentExcitationNonLin = val;
+        end
+        
+        function self = set.momentRadiationDamping (self, val)
+            check.isLogicalScalar (val, true, 'momentRadiationDamping');
+            self.momentRadiationDamping = val;
+        end
+        
+        function self = set.momentRestoring (self, val)
+            check.isLogicalScalar (val, true, 'momentRestoring');
+            self.momentRestoring = val;
+        end
+        
+        function self = set.momentMorrison (self, val)
+            check.isLogicalScalar (val, true, 'momentMorrison');
+            self.momentMorrison = val;
+        end
+        
+        function self = set.momentViscousDamping (self, val)
+            check.isLogicalScalar (val, true, 'momentViscousDamping');
+            self.momentViscousDamping = val;
+        end
+        
+        function self = set.momentAddedMass (self, val)
+            
+            check.isLogicalScalar (val, true, 'momentAddedMass');
+            
+            self.momentAddedMass = val;
+            
+            self = self.setMomentAddedMass (val);
+            
+        end
+        
         
         function self = set.powerTakeOffInternal (self, val)
             check.isLogicalScalar (val, true, 'powerTakeOffInternal');
@@ -135,26 +223,55 @@ classdef loggingSettings
     
     methods (Access=private)
         
-        function self = setforceAddedMass (self, val)
-            % funciton needed so we can set value of other property which
+        function self = setForceAddedMass (self, val)
+            % function needed so we can set value of other property which
             % is otherwise prohibited
             
             if val == true
                 % the uncorrected added mass force must be logged to get
                 % corrected added mass force
                 self.forceAddedMassUncorrected = true;
+                self.momentAddedMassUncorrected = true;
             end
         end
         
-        function self = setNodeForcesAndMoments (self, val)
-            % funciton needed so we can set value of other property which
+        function self = setNodeForces (self, val)
+            % function needed so we can set value of other property which
             % is otherwise prohibited
             
             if val == true
                 % the uncorrected added mass force must be logged to get
                 % corrected added mass force
-                self.nodeForcesAndMomentsUncorrected = true;
+                self.nodeForcesUncorrected = true;
+                self.nodeMomentsUncorrected = true;
                 self.forceAddedMassUncorrected = true;
+                self.momentAddedMassUncorrected = true;
+            end
+        end
+        
+        function self = setMomentAddedMass (self, val)
+            % function needed so we can set value of other property which
+            % is otherwise prohibited
+            
+            if val == true
+                % the uncorrected added mass force must be logged to get
+                % corrected added mass force
+                self.forceAddedMassUncorrected = true;
+                self.momentAddedMassUncorrected = true;
+            end
+        end
+        
+        function self = setNodeMoments (self, val)
+            % function needed so we can set value of other property which
+            % is otherwise prohibited
+            
+            if val == true
+                % the uncorrected added mass force must be logged to get
+                % corrected added mass force
+                self.nodeForcesUncorrected = true;
+                self.nodeMomentsUncorrected = true;
+                self.forceAddedMassUncorrected = true;
+                self.momentAddedMassUncorrected = true;
             end
         end
         
