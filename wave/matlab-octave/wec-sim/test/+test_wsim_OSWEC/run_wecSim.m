@@ -72,7 +72,7 @@ mbdpath = fullfile (simu.caseDir, 'OSWEC.mbd');
 %% Set up PTO
 
 k = 0;
-c = 6000e5 / 0.3;
+c = 6.2e6 / 0.3;
 
 torquefcn = @(time, thetaRpto, omegaRpto) -k*thetaRpto -c*omegaRpto;
 
@@ -86,8 +86,8 @@ lssett = wsim.loggingSettings ();
 lssett.positions = true;
 lssett.velocities = true;
 lssett.accelerations = true;
-lssett.nodeForcesAndMoments = true;
-lssett.nodeForcesAndMomentsUncorrected = true;
+lssett.nodeForces = true;
+lssett.nodeForcesUncorrected = true;
 lssett.forceHydro = true;
 lssett.forceExcitation = true;
 lssett.forceExcitationRamp = true;
@@ -98,8 +98,21 @@ lssett.forceRestoring = true;
 lssett.forceMorrison = true;
 lssett.forceViscousDamping = true;
 % lssett.ForceAddedMassUncorrected = false;
-lssett.forceAddedMass = true;
-        
+lssett.momentAddedMass = true;
+lssett.nodeMoments = true;
+lssett.nodeMomentsUncorrected = true;
+lssett.momentHydro = true;
+lssett.momentExcitation = true;
+lssett.momentExcitationRamp = true;
+lssett.momentExcitationLin = true;
+lssett.momentExcitationNonLin = true;
+lssett.momentRadiationDamping = true;
+lssett.momentRestoring = true;
+lssett.momentMorrison = true;
+lssett.momentViscousDamping = true;
+% lssett.momentAddedMassUncorrected = false;
+lssett.momentAddedMass = true;
+
 % create the wesim object
 wsobj = wsim.wecSim ( hsys, mbsys, ...
                       'PTO', pto, ... % PTO(s) could also be added later using the 
@@ -113,7 +126,9 @@ wsobj.prepare ();
 
 %% 
 
-datalog.data.
+% figure;
+datalog.plotVar ('PTO_1_InternalTorque');
+
 %% animate the sim
 wsobj.animate ( 'DrawMode', 'solid', ...
                 'Light', true, ...
