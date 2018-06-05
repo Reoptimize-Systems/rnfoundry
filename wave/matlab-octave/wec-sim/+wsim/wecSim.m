@@ -31,8 +31,8 @@ classdef wecSim < handle
         hydroMotionSyncStepCount = 1;
         
         
-        logger;
-        nMBDynNodes;
+        logger; % wsim.logger object containing the logged simulation data from the last sim
+        nMBDynNodes; 
         mBDynPostProc;
         
         % logging variables
@@ -53,7 +53,18 @@ classdef wecSim < handle
         lastForceMorrison;          % last calculated value of hydrodynamic morrison forces
         lastForceViscousDamping;    % last calculated value of hydrodynamic viscous damping forces
         lastForceAddedMassUncorrected; % last calculated value of hydrodynamic forces due to added mass (uncorrected)
-        lastNodeForcesAndMomentsUncorrected;
+        lastNodeForcesUncorrected; % last calculated value ofcombined forces but with uncorrected added mass forces
+        lastMomentHydro;             % last calculated total of all hydrodynamic forces
+        lastMomentExcitation;        % last calculated value of all hydrodynamic excitation forces
+        lastMomentExcitationRamp;    % last calculated value of all hydrodynamic excitation forces with applied ramp
+        lastMomentExcitationLin;     % last calculated value of hydrodynamic linear excitation forces
+        lastMomentExcitationNonLin;  % last calculated value of hydrodynamic nonlinear excitation forces
+        lastMomentRadiationDamping;  % last calculated value of hydrodynamic radiation damping forces
+        lastMomentRestoring;         % last calculated value of hydrodynamic restoring (buoyancy) forces
+        lastMomentMorrison;          % last calculated value of hydrodynamic morrison forces
+        lastMomentViscousDamping;    % last calculated value of hydrodynamic viscous damping forces
+        lastMomentAddedMassUncorrected; % last calculated value of hydrodynamic forces due to added mass (uncorrected)
+        lastNodeMomentsUncorrected; % last calculated value ofcombined moments but with uncorrected added mass forces
         
         wavePlotX;
         wavePlotY;
@@ -75,8 +86,8 @@ classdef wecSim < handle
             %
             % Description
             %
-            % wsim.wecSim is a class which manages a wave energy converter
-            % simulation.
+            % wsim.wecSim is a class which manages wave energy converter
+            % simulations.
             %
             % Input
             %
@@ -87,12 +98,26 @@ classdef wecSim < handle
             % Addtional arguments may be supplied as parameter-value pairs.
             % The available options are:
             %
-            %  'PTOs' - either a scalar wsim.powerTakeOff object or a cell
-            %    array of multiple wsim.powerTakeOff objects.
+            %  'PTOs' - optional scalar wsim.powerTakeOff object or a cell
+            %    array of multiple wsim.powerTakeOff objects (or derived
+            %    objects). The wsim.powerTakeOff class is used to simplify
+            %    the calculation of forces and moments for the multibody
+            %    simulation and make it easier to apply them in the
+            %    multibody simulation with the correct directions etc.
+            %    Rather than using the basic wsim.powerTakeOff class,
+            %    usually a derived class such as wsim.rotaryPowerTakeOff or
+            %    wsim.linearPowerTakeOff is used. See the help for these
+            %    classes for more information.
             %
-            %  'NEMOHSim' - 
-            %
-            %  'LoggingSettings' - 
+            %  'LoggingSettings' - wsim.loggingSettings object. 
+            %    wsim.loggingSetting is a small class which holds the
+            %    settings determining what is logged during the simulation.
+            %    The simulation data is stored in a wsim.logger object. The
+            %    logger object for a simulation is returned by the 'run'
+            %    method. See the help for both wsim.loggingSettings and
+            %    wsim.logger for more information. If the LoggingSettings
+            %    option is not used a new loggingSettings object is created
+            %    internally with all logging turned off.
             %
             % Output
             %
@@ -100,7 +125,8 @@ classdef wecSim < handle
             %
             %
             %
-            % See Also: 
+            % See Also: wsim.hydroSystem, wsim.logger,
+            %           wsim.loggingSettings, mbdyn.pre.system
             %
 
             options.PTOs = {};
@@ -145,6 +171,36 @@ classdef wecSim < handle
         end
         
         function addPTO (self, pto)
+            % add one or more PTO objects to a simulation
+            %
+            % Syntax
+            %
+            % addPTO (wsobj, pto)
+            %
+            % Description
+            %
+            % addPTO adds one or more wsim.powerTakeOff (or derived)
+            % objects to a wsim.wecSim simulation. The wsim.powerTakeOff
+            % class is used to simplify the calculation of forces and
+            % moments for the multibody simulation and make it easier to
+            % apply them in the multibody simulation with the correct
+            % directions etc. Rather than using the basic wsim.powerTakeOff
+            % class, usually a derived class such as
+            % wsim.rotaryPowerTakeOff or wsim.linearPowerTakeOff is used.
+            % See the help for these classes for more information.
+            %
+            % Input
+            %
+            %  wsobj - wsim.wecSim object
+            %
+            %  pto - wsim.powerTakeOff object (or derived object), or a
+            %   cell array of wsim.powerTakeOff objects.
+            %
+            %
+            % See Also: wsim.powerTakeOff, wsim.rotaryPowerTakeOff,
+            %           wsim.linearPowerTakeOff
+            %
+            %
             
             assert (isa (pto, 'wsim.powerTakeOff'), ...
                 'pto must be a wsim.powerTakeOff object (or derived class)');
@@ -204,6 +260,25 @@ classdef wecSim < handle
         end
         
         function prepare (self)
+            % prepare the wsim.wecSim simulation so it is ready to run
+            %
+            % Syntax
+            %
+            % prepare (wsobj)
+            %
+            % Description
+            %
+            % prepare performs various preprocessing taks to get the
+            % simulation into a state where it is ready to be run. prepare
+            % must be called before the run method is called. 
+            %
+            % Input
+            %
+            %  wsobj - wsim.wecSim object
+            %
+            %
+            % See Also: wsim.wecSim.run
+            %
             
             self.mapPTOForceInds ();
             self.mapHydroForceInds ();
@@ -224,9 +299,134 @@ classdef wecSim < handle
         
         function [ datalog, mbdyn_postproc ] = run (self, varargin)
             % Run the WEC simulation
+            %
+            % Syntax
+            %
+            % [datalog, mbdyn_postproc] = run (wsobj)
+            % [datalog, mbdyn_postproc] = run (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % run runs the wsim.wecSim simulation
+            %
+            % Input
+            %
+            %  wsobj - wsim.wecSim object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'MBDynInputFile' - optional character vector containing the
+            %    full path which should be used for the MBDyn input file.
+            %    If not supplied, a default file name will generated with
+            %    the extension '.mbd' and placed in the outut directory.
+            %
+            %  'Verbosity' - flag controlling how much text output is
+            %    produced at the command line during simulation, and in the
+            %    MBDyn output file during the simulation. Verbosity should
+            %    be a scalar integer. The higher the value, the more output
+            %    will be produced. Default is 0, indicating the minimum
+            %    amount of output. The value of verbosity adds that umber
+            %    of -p input arguments to the command line used to launch
+            %    MBDyn (more -p inputs means more verbose output, see the
+            %    documentation for MBDYn for more information).
+            %
+            %  'AbsForceTolerance' - positive scalar value representing the
+            %    absolute tolerance on the forces applied. The system is
+            %    solved iteratively with forces and motion being
+            %    recalculated repeatedly until convergence is achieved.
+            %    This is the smallest absolute change possible before the
+            %    force calculation is considered to be converged. Default
+            %    is 100N if not supplied.
+            %
+            %  'RelForceTolerance' - positive scalar value representing the
+            %    relative tolerance on the forces applied. The system is
+            %    solved iteratively with forces and motion being
+            %    recalculated repeatedly until convergence is achieved.
+            %    This is the smallest change possible in the force relative
+            %    to it's absolute value before the force calculation is
+            %    considered to be converged. Default is 1e-5 if not
+            %    supplied.
+            %
+            %  'MinIterations' - scalar integer indicating the minimum
+            %    number of iterations of the force/motion calculation which
+            %    should be performed. Default is 0.
+            %
+            %  'TimeExecution' - true/false flag indicating whether to time
+            %    the execution of the simulation and report it at the end
+            %    of the sim.
+            %
+            %  'HydroMotionSyncSteps' - 
+            %
+            %  'ForceMBDynNetCDF' - true/false flag indicating whether to
+            %    ensure MBDyn will generate a netcdf format output file by
+            %    modifying the supplied mbdyn.pre.system object
+            %    OutputResults setting in the control data (if necessary).
+            %    Default is true.
+            %
+            %  'OutputFilePrefix' - character vector containing the output
+            %    path prefix. This
+            %    is the name of output files, but without their file
+            %    extension. e.g. /home/jbloggs/my_mbdyn_sim will create the
+            %    files:
+            %
+            %    /home/jbloggs/my_mbdyn_sim.frc
+            %    /home/jbloggs/my_mbdyn_sim.ine
+            %    /home/jbloggs/my_mbdyn_sim.out
+            %    /home/jbloggs/my_mbdyn_sim.mov
+            %    /home/jbloggs/my_mbdyn_sim.jnt
+            %    /home/jbloggs/my_mbdyn_sim.log
+            %
+            %    and/or possibly a netcdf format file:
+            %
+            %    /home/jbloggs/my_mbdyn_sim.nc
+            %
+            %    A windows example might look like
+            %    C:\Users\IEUser\Documents\my_mbdyn_sim 
+            %    producing the files:
+            %
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.frc
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.ine
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.out
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.mov
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.jnt
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.log
+            %
+            %    and/or:
+            %
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.nc
+            %
+            %    The netcdf format is preferred for the mbdyn.postproc
+            %    class output in the mbdy_postproc variable. By default
+            %    wsim.wecSim will force the output of a netcdf format file
+            %    (see the ForceMBDynNetCDF output above).
+            %
+            %  'MaxIterations' - optiona scalar integer indicating the
+            %    maximum number of interations which should be performed in
+            %    any simulation step. If this number of iterations is
+            %    exceeded, the simulation will simply advance anyway using
+            %    the last set of forces calculated, regardless of meeting
+            %    tolerances etc. so this option should be used with care.
+            %    Default is Inf, so there is no limit to the number of
+            %    iterations that will be performed.
+            %
+            % Output
+            %
+            %  datalog - wsim.logger object containing the logged data (if
+            %   any) from the simulation.
+            %
+            %  mbdyn_postproc - mbdyn.postproc object which can be used to
+            %   access the full output for all joints and elements from
+            %   MBDyn produced during the simulation. See the help for
+            %   mbdyn.postproc for more information.
+            %
+            %
+            % See Also: wsim.logger, mbdyn.postproc
+            %
             
             options.MBDynInputFile = '';
-            options.OutputFilePrefix = fullfile (self.caseDirectory, ['output_', datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF')]);
+            thedate = datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF');
+            options.OutputFilePrefix = fullfile (self.caseDirectory, ['output_', thedate], ['mbdyn_sim_results_', thedate]);
             options.Verbosity = 0;
             options.AbsForceTolerance = 100;
             options.RelForceTolerance = 1e-5;
@@ -237,7 +437,8 @@ classdef wecSim < handle
             options.ForceMBDynNetCDF = true;
             
             if isempty (options.MBDynInputFile)
-                self.mBDynInputFile = fullfile (options.OutputFilePrefix, 'mbdyn_input_file.mbd');
+                [ pathstr, ~ ] = fileparts (options.OutputFilePrefix);
+                self.mBDynInputFile = fullfile (pathstr, ['mbdyn_input_file_', thedate, '.mbd']);
             else
                 assert (ischar (options.MBDynInputFile), ...
                     'MBDynInputFile must be string containing the file path where the MBDyn input file should be generated');
@@ -251,7 +452,8 @@ classdef wecSim < handle
                 'OutputFilePrefix must be a string');
             
             if exist (options.OutputFilePrefix, 'dir') == 0
-                mkdir (options.OutputFilePrefix);
+                pathstr = fileparts (options.OutputFilePrefix);
+                mkdir (pathstr);
             end
                 
             % check for positive numeric scalar
@@ -388,7 +590,8 @@ classdef wecSim < handle
             self.lastAngularVelocities = vel(4:6,:);
             self.lastAccelerations = accel(1:3,:);
             self.lastAngularAccelerations = accel(4:6,:);
-            self.lastNodeForcesAndMomentsUncorrected = forces_and_moments;
+            self.lastNodeForcesUncorrected = forces_and_moments(1:3,:);
+            self.lastNodeMomentsUncorrected = forces_and_moments(4:6,:);
 
             self.advanceStep ();
             
@@ -445,7 +648,7 @@ classdef wecSim < handle
                 [pos, vel, accel] = self.getMotion (mb);
 
                 % get the previous calculated values of hydrodynamic forces
-                hydroforces = self.lastForceHydro;
+                hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
 
                 % calculate new hydrodynamic interaction forces (also
                 % updates self.lastForceHydro with new values)
@@ -460,9 +663,9 @@ classdef wecSim < handle
                 mbconv = mb.applyForcesAndMoments (false);
 
                 % check for force convergence
-                forcediff = abs (hydroforces - self.lastForceHydro);
+                forcediff = abs (hydro_forces_and_moments - [ self.lastForceHydro; self.lastMomentHydro ]);
 
-                maxforces = max(hydroforces, self.lastForceHydro);
+                maxforces = max(hydro_forces_and_moments, [ self.lastForceHydro; self.lastMomentHydro ]);
                 relforcediff = abs(forcediff) ./ abs(maxforces);
                 relforcediff(maxforces == 0) = 0;
                 itercount = 1;
@@ -488,7 +691,7 @@ classdef wecSim < handle
                     [pos, vel, accel] = self.getMotion (mb);
 
                     % get the previous calculated values of hydrodynamic forces
-                    hydroforces = self.lastForceHydro;
+                    hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
 
                     % calculate new hydrodynamic interaction forces (also
                     % updates self.lastForceHydro with new values)
@@ -509,8 +712,8 @@ classdef wecSim < handle
                         error ('mbdyn iterations exceeded max allowed');
                     end
 
-                    forcediff = abs (hydroforces - self.lastForceHydro);
-                    maxforces = max(hydroforces, self.lastForceHydro);
+                    forcediff = abs (hydro_forces_and_moments - [ self.lastForceHydro; self.lastMomentHydro ]);
+                    maxforces = max(hydro_forces_and_moments, [ self.lastForceHydro; self.lastMomentHydro ]);
                     relforcediff = abs(forcediff) ./ abs(maxforces);
                     relforcediff(maxforces == 0) = 0;
 
@@ -544,7 +747,8 @@ classdef wecSim < handle
                 self.lastAngularVelocities = vel(4:6,:);
                 self.lastAccelerations = accel(1:3,:);
                 self.lastAngularAccelerations = accel(4:6,:);
-                self.lastNodeForcesAndMomentsUncorrected = forces_and_moments;
+                self.lastNodeForcesUncorrected = forces_and_moments(1:3,:);
+                self.lastNodeMomentsUncorrected = forces_and_moments(4:6,:);
                 
                 self.advanceStep ();
                 
@@ -558,20 +762,35 @@ classdef wecSim < handle
                       siminfo.TEnd - siminfo.TStart, ...
                       ind-1 );
             
-            if self.loggingSettings.nodeForcesAndMoments || self.loggingSettings.forceAddedMass
+            if self.loggingSettings.nodeForces ...
+                    || self.loggingSettings.forceAddedMass ...
+                    || self.loggingSettings.nodeMoments ...
+                    || self.loggingSettings.momentAddedMass
                 
-                self.logger.setSeries ('NodeForcesAndMoments', self.logger.data.NodeForcesAndMomentsUncorrected);
+                self.logger.setSeries ('NodeForces', self.logger.data.NodeForcesUncorrected);
+                self.logger.setSeries ('NodeMoments', self.logger.data.NodeMomentsUncorrected);
 
                 % the total forces on hydrodynamic bodies must be corrected
-                [ self.logger.data.NodeForcesAndMoments(:,self.hydroNodeIndexMap(:,1),:), ...
-                  F_added_mass ] = ...
-                    correctAddedMassForce ( self.hydroSystem, ...
-                                            self.logger.data.NodeForcesAndMomentsUncorrected(:,self.hydroNodeIndexMap(:,1),:), ...
-                                            self.logger.data.ForceAddedMassUncorrected, ...
-                                            [ self.logger.data.Accelerations; self.logger.data.AngularAccelerations ] );
+                [ corrected_node_forces_and_moments, ...
+                  F_and_M_added_mass ] = ...
+                    correctAddedMassForce ( self.hydroSystem ...
+                                            , [ self.logger.data.NodeForcesUncorrected(:,self.hydroNodeIndexMap(:,1),:); ...
+                                                self.logger.data.NodeMomentsUncorrected(:,self.hydroNodeIndexMap(:,1),:) ] ...
+                                            , [ self.logger.data.ForceAddedMassUncorrected; ...
+                                                self.logger.data.MomentAddedMassUncorrected ] ...
+                                            , [ self.logger.data.Accelerations; ...
+                                                self.logger.data.AngularAccelerations ] ...
+                                          );
 
+                self.logger.data.NodeForces(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(1:3,:,:);
+                self.logger.data.NodeMoments(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(4:6,:,:);
+                
                 if self.loggingSettings.forceAddedMass
-                    self.logger.setSeries ('ForceAddedMass', F_added_mass);
+                    self.logger.setSeries ('ForceAddedMass', F_and_M_added_mass(1:3,:,:));
+                end
+                
+                if self.loggingSettings.momentAddedMass
+                    self.logger.setSeries ('MomentAddedMass', F_and_M_added_mass(4:6,:,:));
                 end
             
             end
@@ -592,7 +811,7 @@ classdef wecSim < handle
             self.simComplete = true;
             
             if nargout > 1
-                mbdyn_postproc = mbdyn.postproc (self.mBDynInputFile, self.mBDynSystem);
+                mbdyn_postproc = mbdyn.postproc (options.OutputFilePrefix, self.mBDynSystem);
                 self.mBDynPostProc = mbdyn_postproc;
             end
             
@@ -1143,24 +1362,35 @@ classdef wecSim < handle
             if self.hydroMotionSyncStepCount == self.hydroMotionSyncStep
                 
                 % calculate hydrodynamic forces based on the motion
-                [hydroforces, out] = self.hydroSystem.hydroForces (time, ...
-                                                pos(:,self.hydroNodeIndexMap), ...
-                                                vel(:,self.hydroNodeIndexMap), ...
-                                                accel(:,self.hydroNodeIndexMap) );
-
-                
+                [hydro_forces_and_moments, out] = self.hydroSystem.hydroForces ( ...
+                                                    time, ...
+                                                    pos(:,self.hydroNodeIndexMap), ...
+                                                    vel(:,self.hydroNodeIndexMap), ...
+                                                    accel(:,self.hydroNodeIndexMap) ...
+                                                                               );
 
                 % store the last generated forces fo later use (e.g. logging)
-                self.lastForceHydro = hydroforces;
-                self.lastForceExcitation = out.F_Excit;
-                self.lastForceExcitationRamp = out.F_ExcitRamp;
-                self.lastForceExcitationLin = out.F_ExcitLin;
-                self.lastForceExcitationNonLin = out.F_ExcitNonLin;
-                self.lastForceRadiationDamping = out.F_RadiationDamping;
-                self.lastForceRestoring = out.F_Restoring;
-                self.lastForceMorrison = out.F_MorrisonElement;
-                self.lastForceViscousDamping = out.F_ViscousDamping;
-                self.lastForceAddedMassUncorrected = out.F_AddedMass;
+                self.lastForceHydro = hydro_forces_and_moments(1:3,:);
+                self.lastForceExcitation = out.F_Excit(1:3,:);
+                self.lastForceExcitationRamp = out.F_ExcitRamp(1:3,:);
+                self.lastForceExcitationLin = out.F_ExcitLin(1:3,:);
+                self.lastForceExcitationNonLin = out.F_ExcitNonLin(1:3,:);
+                self.lastForceRadiationDamping = out.F_RadiationDamping(1:3,:);
+                self.lastForceRestoring = out.F_Restoring(1:3,:);
+                self.lastForceMorrison = out.F_MorrisonElement(1:3,:);
+                self.lastForceViscousDamping = out.F_ViscousDamping(1:3,:);
+                self.lastForceAddedMassUncorrected = out.F_AddedMass(1:3,:);
+                
+                self.lastMomentHydro = hydro_forces_and_moments(4:6,:);
+                self.lastMomentExcitation = out.F_Excit(4:6,:);
+                self.lastMomentExcitationRamp = out.F_ExcitRamp(4:6,:);
+                self.lastMomentExcitationLin = out.F_ExcitLin(4:6,:);
+                self.lastMomentExcitationNonLin = out.F_ExcitNonLin(4:6,:);
+                self.lastMomentRadiationDamping = out.F_RadiationDamping(4:6,:);
+                self.lastMomentRestoring = out.F_Restoring(4:6,:);
+                self.lastMomentMorrison = out.F_MorrisonElement(4:6,:);
+                self.lastMomentViscousDamping = out.F_ViscousDamping(4:6,:);
+                self.lastMomentAddedMassUncorrected = out.F_AddedMass(4:6,:);
                 
                 % reset step count
                 self.hydroMotionSyncStepCount = 1;
@@ -1168,7 +1398,7 @@ classdef wecSim < handle
             else
                 
                 % just return the last set of hydro forces calculated
-                hydroforces = self.lastForceHydro;
+                hydro_forces_and_moments = self.lastForceHydro;
                 
                 self.hydroMotionSyncStepCount = self.hydroMotionSyncStepCount + 1;
                 
@@ -1181,7 +1411,7 @@ classdef wecSim < handle
             % method
             for ind = 1:size (self.hydroNodeIndexMap, 1)
                 forces_and_moments (:,self.hydroNodeIndexMap(ind,1)) = ...
-                    forces_and_moments (:,self.hydroNodeIndexMap(ind,1)) + hydroforces(:,ind);
+                    forces_and_moments (:,self.hydroNodeIndexMap(ind,1)) + hydro_forces_and_moments(:,ind);
             end
             
         end
@@ -1404,110 +1634,226 @@ classdef wecSim < handle
                                           'Indep', 'Time' );
             end
             
-            if self.loggingSettings.nodeForcesAndMoments || self.loggingSettings.forceAddedMass
-                self.logger.addVariable ( 'NodeForcesAndMoments', [6, extforceinfo.NNodes], ...
+            
+            % all the hydro forces
+            
+            
+            if self.loggingSettings.nodeForces || self.loggingSettings.forceAddedMass
+                self.logger.addVariable ( 'NodeForces', [3, extforceinfo.NNodes], ...
                                           'Desc', 'sum of all forces for all nodes with external forces', ...
-                                          'AxisLabel', 'Total Forces [N] and Moments [Nm] on External Struct Nodes', ...
+                                          'AxisLabel', 'Total Forces [N] on External Struct Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
-            if self.loggingSettings.nodeForcesAndMomentsUncorrected || self.loggingSettings.forceAddedMass
-                self.logger.addVariable ( 'NodeForcesAndMomentsUncorrected', [6, extforceinfo.NNodes], ...
+            if self.loggingSettings.nodeForcesUncorrected || self.loggingSettings.forceAddedMass
+                self.logger.addVariable ( 'NodeForcesUncorrected', [3, extforceinfo.NNodes], ...
                                           'Desc', 'sum of all forces (with uncorrected added mass forces) for all external structural nodes with external forces', ...
-                                          'AxisLabel', 'Uncorrected Added Mass Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Uncorrected Added Mass Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             
             if self.loggingSettings.forceHydro
-                self.logger.addVariable ( 'ForceHydro', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceHydro', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'sum of all hydrodynamic forces for all hydro nodes', ...
-                                          'AxisLabel', 'Total Hydro Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Total Hydro Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceExcitation
-                self.logger.addVariable ( 'ForceExcitation', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceExcitation', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'sum of linear and nonlinear hydrodynamic excitation force for all hydro nodes', ...
-                                          'AxisLabel', 'Total Hydro Excitation Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Total Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceExcitationRamp
-                self.logger.addVariable ( 'ForceExcitationRamp', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceExcitationRamp', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'sum of linear and nonlinear hydrodynamic excitation force for all hydro nodes, but with a ramp function applied', ...
-                                          'AxisLabel', 'Ramped Hydro Excitation Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Ramped Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceExcitationLin
-                self.logger.addVariable ( 'ForceExcitationLin', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceExcitationLin', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'linear hydrodynamic excitation forces for all hydro nodes', ...
-                                          'AxisLabel', 'Linear Hydro Excitation Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Linear Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceExcitationNonLin
-                self.logger.addVariable ( 'ForceExcitationNonLin', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceExcitationNonLin', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'nonlinear hydrodynamic excitation forces for all hydro nodes', ...
-                                          'AxisLabel', 'Nonlinear Hydro Excitation Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Nonlinear Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceRadiationDamping
-                self.logger.addVariable ( 'ForceRadiationDamping', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceRadiationDamping', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'hydrodynamic radiation and damping forces for all hydro nodes', ...
-                                          'AxisLabel', 'Hydro Radiation Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Hydro Radiation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceRestoring
-                self.logger.addVariable ( 'ForceRestoring', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceRestoring', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'hydrodynamic restoring forces for all hydro nodes', ...
-                                          'AxisLabel', 'Hydro Restoring Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Hydro Restoring Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceMorrison
-                self.logger.addVariable ( 'ForceMorrison', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceMorrison', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'morrison forces for all hydro nodes', ...
-                                          'AxisLabel', 'Morrison Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Morrison Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceViscousDamping
-                self.logger.addVariable ( 'ForceViscousDamping', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceViscousDamping', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'hydrodynamic viscous damping forces for all hydro nodes', ...
-                                          'AxisLabel', 'Viscous Damping Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Viscous Damping Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceAddedMass
-                self.logger.addVariable ( 'ForceAddedMass', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceAddedMass', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'hydrodynamic added mass forces for all hydro nodes', ...
-                                          'AxisLabel', 'Added Mass Forces [N] and Moments [Nm] on Nodes ', ...
+                                          'AxisLabel', 'Added Mass Forces [N] on Nodes ', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
             
             if self.loggingSettings.forceAddedMassUncorrected
-                self.logger.addVariable ( 'ForceAddedMassUncorrected', [6, self.hydroSystem.nHydroBodies], ...
+                self.logger.addVariable ( 'ForceAddedMassUncorrected', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'uncorrected hydrodynamic added mass forces for all hydro nodes', ...
-                                          'AxisLabel', 'Uncorrected Added Mass Forces [N] and Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Uncorrected Added Mass Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
                                           'Indep', 'Time' );
             end
+            
+            
+            
+            % all the hydro moments
+            
+            
+            if self.loggingSettings.nodeMoments || self.loggingSettings.momentAddedMass
+                self.logger.addVariable ( 'NodeMoments', [3, extforceinfo.NNodes], ...
+                                          'Desc', 'sum of all moments for all nodes with external moments', ...
+                                          'AxisLabel', 'Total Moments [Nm] on External Struct Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.nodeMomentsUncorrected || self.loggingSettings.momentAddedMass
+                self.logger.addVariable ( 'NodeMomentsUncorrected', [3, extforceinfo.NNodes], ...
+                                          'Desc', 'sum of all moments (with uncorrected added mass moments) for all external structural nodes with external moments', ...
+                                          'AxisLabel', 'Uncorrected Added Mass Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            
+            if self.loggingSettings.momentHydro
+                self.logger.addVariable ( 'MomentHydro', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'sum of all hydrodynamic moments for all hydro nodes', ...
+                                          'AxisLabel', 'Total Hydro Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentExcitation
+                self.logger.addVariable ( 'MomentExcitation', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'sum of linear and nonlinear hydrodynamic excitation moments for all hydro nodes', ...
+                                          'AxisLabel', 'Total Hydro Excitation Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentExcitationRamp
+                self.logger.addVariable ( 'MomentExcitationRamp', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'sum of linear and nonlinear hydrodynamic excitation moments for all hydro nodes, but with a ramp function applied', ...
+                                          'AxisLabel', 'Ramped Hydro Excitation Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentExcitationLin
+                self.logger.addVariable ( 'MomentExcitationLin', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'linear hydrodynamic excitation moments for all hydro nodes', ...
+                                          'AxisLabel', 'Linear Hydro Excitation Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentExcitationNonLin
+                self.logger.addVariable ( 'MomentExcitationNonLin', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'nonlinear hydrodynamic excitation moments for all hydro nodes', ...
+                                          'AxisLabel', 'Nonlinear Hydro Excitation Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentRadiationDamping
+                self.logger.addVariable ( 'MomentRadiationDamping', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'hydrodynamic radiation and damping moments for all hydro nodes', ...
+                                          'AxisLabel', 'Hydro Radiation Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentRestoring
+                self.logger.addVariable ( 'MomentRestoring', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'hydrodynamic restoring moments for all hydro nodes', ...
+                                          'AxisLabel', 'Hydro Restoring Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentMorrison
+                self.logger.addVariable ( 'MomentMorrison', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'morrison moments for all hydro nodes', ...
+                                          'AxisLabel', 'Morrison Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentViscousDamping
+                self.logger.addVariable ( 'MomentViscousDamping', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'hydrodynamic viscous damping moments for all hydro nodes', ...
+                                          'AxisLabel', 'Viscous Damping Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentAddedMass
+                self.logger.addVariable ( 'MomentAddedMass', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'hydrodynamic added mass moments for all hydro nodes', ...
+                                          'AxisLabel', 'Added Mass Moments [Nm] on Nodes ', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            if self.loggingSettings.momentAddedMassUncorrected
+                self.logger.addVariable ( 'MomentAddedMassUncorrected', [3, self.hydroSystem.nHydroBodies], ...
+                                          'Desc', 'uncorrected hydrodynamic added mass moments for all hydro nodes', ...
+                                          'AxisLabel', 'Uncorrected Added Mass Moments [Nm] on Nodes', ...
+                                          'Pre', nsteps, ...
+                                          'Indep', 'Time' );
+            end
+            
+            % initialise PTO internal logging
             
             if self.loggingSettings.powerTakeOffInternal
                 
@@ -1553,9 +1899,11 @@ classdef wecSim < handle
                 self.logger.logVal ( 'Accelerations', self.lastAccelerations );
             end
             
-            if self.loggingSettings.nodeForcesAndMomentsUncorrected ...
+            % log the forces
+            
+            if self.loggingSettings.nodeForcesUncorrected ...
                     || self.loggingSettings.forceAddedMass
-                self.logger.logVal ( 'NodeForcesAndMomentsUncorrected', self.lastNodeForcesAndMomentsUncorrected );
+                self.logger.logVal ( 'NodeForcesUncorrected', self.lastNodeForcesUncorrected );
             end
             
             if self.loggingSettings.forceHydro
@@ -1596,6 +1944,53 @@ classdef wecSim < handle
             
             if self.loggingSettings.forceAddedMass || self.loggingSettings.forceAddedMassUncorrected
                 self.logger.logVal ( 'ForceAddedMassUncorrected', self.lastForceAddedMassUncorrected );
+            end
+            
+            % log the moments
+            
+            if self.loggingSettings.nodeMomentsUncorrected ...
+                    || self.loggingSettings.momentAddedMass
+                self.logger.logVal ( 'NodeMomentsUncorrected', self.lastNodeMomentsUncorrected );
+            end
+            
+            if self.loggingSettings.momentHydro
+                self.logger.logVal ( 'MomentHydro', self.lastMomentHydro );
+            end
+            
+            if self.loggingSettings.momentExcitation
+                self.logger.logVal ( 'MomentExcitation', self.lastMomentExcitation );
+            end
+            
+            if self.loggingSettings.momentExcitationRamp
+                self.logger.logVal ( 'MomentExcitationRamp', self.lastMomentExcitationRamp );
+            end
+            
+            if self.loggingSettings.momentExcitationLin
+                self.logger.logVal ( 'MomentExcitationLin', self.lastMomentExcitationLin );
+            end
+            
+            if self.loggingSettings.momentExcitationNonLin
+                self.logger.logVal ( 'MomentExcitationNonLin', self.lastMomentExcitationNonLin );
+            end
+            
+            if self.loggingSettings.momentRadiationDamping
+                self.logger.logVal ( 'MomentRadiationDamping', self.lastMomentRadiationDamping );
+            end
+            
+            if self.loggingSettings.momentRestoring
+                self.logger.logVal ( 'MomentRestoring', self.lastMomentRestoring );
+            end
+            
+            if self.loggingSettings.momentMorrison
+                self.logger.logVal ( 'MomentMorrison', self.lastMomentMorrison );
+            end
+            
+            if self.loggingSettings.momentViscousDamping
+                self.logger.logVal ( 'MomentViscousDamping', self.lastMomentViscousDamping );
+            end
+            
+            if self.loggingSettings.momentAddedMass || self.loggingSettings.momentAddedMassUncorrected
+                self.logger.logVal ( 'MomentAddedMassUncorrected', self.lastMomentAddedMassUncorrected );
             end
             
             
