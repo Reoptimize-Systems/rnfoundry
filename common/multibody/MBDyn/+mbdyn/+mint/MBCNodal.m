@@ -421,12 +421,27 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             end
                 
             if isempty (options.OutputPrefix)
+                % no output prefix was supplied, so we generate one from
+                % the input file name by stripping the file extension (if
+                % any) from the MBDyn input file
                 [pathstr, name] = fileparts (self.MBDynInputFile);
                 self.outputPrefix = fullfile (pathstr, name);
             else
+                % an output prefix was supplied
                 [pathstr, ~] = fileparts (options.OutputPrefix);
                 if exist (pathstr, 'dir') ~= 7
                     error ('Output prefix directory does not exist');
+                end
+                if exist (options.OutputPrefix, 'dir') == 7
+                    % the output prefix is actually an existing directory
+                    % so the user probably didn't read the documentation
+                    % properly and put in a directory instead of a
+                    % directory and file name without any file extension,
+                    % just generate a file name here. This is
+                    % understandable, since I, the developer, have also
+                    % made the same mistake
+                    thedate = datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF');
+                    options.OutputPrefix = fullfile (options.OutputPrefix, ['mbdyn_sim_results_', thedate]);
                 end
                 self.outputPrefix = options.OutputPrefix;
             end
