@@ -4,14 +4,10 @@ clear waves simu hsys mbsys float_hbody spar_hbody hydro_mbnodes hydro_mbbodies 
 
 %% Hydro Simulation Data
 simu = wsim.simSettings (fullfile ( wecsim_rootdir(), 'test', '+test_wsim_RM3'));  % Create the Simulation Variable
-% simu.mode = 'normal';                 %Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
-% simu.explorer='on';                   %Turn SimMechanics Explorer (on/off)
 simu.startTime = 0;                   %Simulation Start Time [s]
 simu.endTime=400;                       %Simulation End bdcloseTime [s]
-simu.solver = 'ode4';                   %simu.solver = 'ode4' for fixed step & simu.solver = 'ode45' for variable step 
 simu.dt = 0.1; 							%Simulation time-step [s]
 simu.rampT = 100;                       %Wave Ramp Time Length [s]
-simu.multibodySolver = 'MBDyn';
 simu.b2b = true;
 
 %% Wave Information 
