@@ -1398,7 +1398,7 @@ classdef wecSim < handle
             else
                 
                 % just return the last set of hydro forces calculated
-                hydro_forces_and_moments = self.lastForceHydro;
+                hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
                 
                 self.hydroMotionSyncStepCount = self.hydroMotionSyncStepCount + 1;
                 
