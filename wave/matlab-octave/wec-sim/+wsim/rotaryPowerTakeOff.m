@@ -1,5 +1,5 @@
 classdef rotaryPowerTakeOff < wsim.powerTakeOff
-% power take-off from relative linear displacement of two nodes
+% power take-off from relative angular displacement and velocity of two nodes
 %
 % Syntax
 %
@@ -12,9 +12,9 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
 % mechanism in a wave energy converter. It facilitates sending the correct
 % forces to an MBDyn multibody simulation. wsim.rotaryPowerTakeOff applies
 % opposite moments to two MBDyn nodes based attahed to a
-% mbdyn.pre.revoluteHinge object from the MBDYn simulation toolbox. Forces
-% are applied based on the relative displacement and velocity of the two
-% nodes about the revolute hinge rotation axis.
+% mbdyn.pre.revoluteHinge object from the MBDYn simulation toolbox. Moments
+% are applied based on the relative angular displacement and velocity of
+% the two nodes about the revolute hinge rotation axis.
 %
 % wsim.rotaryPowerTakeOff Methods:
 %
@@ -55,7 +55,7 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
             % facilitates sending the correct forces to an MBDyn multibody
             % simulation. wsim.rotaryPowerTakeOff applies opposite moments
             % to two MBDyn nodes based attahed to a mbdyn.pre.revoluteHinge
-            % object from the MBDYn simulation toolbox. Forces are applied
+            % object from the MBDYn simulation toolbox. Moments are applied
             % based on the relative displacement and velocity of the two
             % nodes about the revolute hinge rotation axis.
             %
@@ -158,7 +158,11 @@ classdef rotaryPowerTakeOff < wsim.powerTakeOff
                               
             lginfo.Sizes = { [1,1], [1,1], [1,1] };
             
-            lginfo.Descriptions = {'', '', ''};
+            lginfo.Descriptions = { 'Internal torque applied between the two PTo nodes', ...
+                                    'Relative angular displacement of the other node relative to the reference node', ...
+                                    'Relative angular velocity of the other node relative to the reference node'};
+            
+            lginfo.AxisLabels = {'Torque [Nm]', 'Theta [rad]', 'Omega [rads^{-1}]'};
             
             lginfo.NAvailable = numel(lginfo.AvailableNames);
             

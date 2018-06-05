@@ -106,6 +106,12 @@ classdef powerTakeOff < handle
             %    the cell array must be of the same length as the
             %    AvailableNames cell array.
             %
+            %   AxisLabels : cell array of character vectors, each
+            %    containing the label to use when plotting the variable, on
+            %    the axis for that variable, e.g. 'Force [N]', or 
+            %    'Displacement [m]'.
+            %    
+            %
             % Addtional arguments may be supplied as parameter-value pairs.
             % The available options are:
             %
@@ -115,7 +121,8 @@ classdef powerTakeOff < handle
             %    actually have data logged. Alternatively, this can be a
             %    character vector, 'none', in which case no internal
             %    variables will be logged. Default is an empty cell array,
-            %    which mans all available nternal variables will be logged.
+            %    which means all available internal variables will be
+            %    logged.
             %
             % Output
             %
@@ -138,7 +145,14 @@ classdef powerTakeOff < handle
                 error ('other_node must be an mbdyn.pre.structuralNode')
             end
             
-            check.structHasAllFields ( logginginfo, {'AvailableNames', 'IndepVars', 'Sizes', 'Descriptions'}, true, 'logginginfo');
+            check.structHasAllFields ( logginginfo, ...
+                                       { 'AvailableNames', ...
+                                         'IndepVars', ...
+                                         'Sizes', ...
+                                         'Descriptions', ...
+                                         'AxisLabels' }, ...
+                                       true, ...
+                                       'logginginfo' );
 
             
             if isempty (options.LoggedVars)
@@ -409,7 +423,8 @@ classdef powerTakeOff < handle
                 logger.addVariable ( info.UniqueLoggingNames{ind}, ...
                                      info.Sizes{ind}, ...
                                      'Desc', info.Descriptions{ind}, ...
-                                     'Indep', indepvar );
+                                     'Indep', indepvar, ...
+                                     'AxisLabel', info.AxisLabels{ind} );
                 
             end
             
