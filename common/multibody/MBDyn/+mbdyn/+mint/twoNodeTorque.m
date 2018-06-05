@@ -34,9 +34,18 @@ classdef twoNodeTorque < mbdyn.mint.base
         
     end
     
-    properties
+    properties 
         
         nodes;
+        
+    end
+    
+    properties (GetAccess = private, SetAccess = private)
+        
+        omegaIntegral;
+        lastTime;
+        lastTheta;
+        lastOmega;
         
     end
     
@@ -99,14 +108,14 @@ classdef twoNodeTorque < mbdyn.mint.base
             % See Also: mbdyn.mint.twoNodeTranslationalForce
             %           
             
-            options.InitialThetaZero = true;
+            options.InitialTheta = 0;
             options.TorqueFcn = [];
             options.ReferenceNode = 1;
             
             options = parse_pv_pairs (options, varargin);
             
-            mbdyn.pre.base.checkLogicalScalar ( options.InitialThetaZero, ...
-                                                true, 'InitialThetaZero' );
+            mbdyn.pre.base.checkNumericScalar ( options.InitialTheta, ...
+                                                true, 'InitialTheta' );
                                             
             mbdyn.pre.base.checkScalarInteger ( options.ReferenceNode, ...
                                                 true, 'ReferenceNode' );
@@ -114,7 +123,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             assert ( options.ReferenceNode == 1 || options.ReferenceNode == 2, ...
                 'ReferenceNode must be 1 or 2');
             
-            
+            self = self@mbdyn.mint.base ();
             
             if isa (revolute_hinge, 'mbdyn.pre.revoluteHinge')
                 
@@ -132,16 +141,18 @@ classdef twoNodeTorque < mbdyn.mint.base
                 self.nodes = [ self.joint.node2, self.joint.node1 ];
             end
             
-            self.referenceTheta = 0;
-            if options.InitialThetaZero
-                % make the initial displacement be set to zero so all
-                % future displacements are reported as relative to this
-                % initial position
-                [reltheta, ~] = displacements (self);
-                
-                self.referenceTheta = reltheta;
-                
-            end
+%             self.referenceTheta = 0;
+%             if options.InitialThetaZero
+%                 % make the initial displacement be set to zero so all
+%                 % future displacements are reported as relative to this
+%                 % initial position
+%                 [reltheta, ~] = displacements (self);
+%                 
+%                 self.referenceTheta = reltheta;
+%                 
+%             end
+
+            self.referenceTheta = options.InitialTheta;
             
             if ~isempty (options.TorqueFcn)
                 assert (isa (options.TorqueFcn, 'function_handle'), ...
@@ -211,7 +222,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             % See Also: mbdyn.mint.twoNodeTranslationalForce.moment
             %
             
-            [reltheta, relomega] = displacements (self);
+            [reltheta, relomega] = displacements (self, time);
             
             torqueval = feval ( self.torqueFcn, time, reltheta, relomega );
             
@@ -265,7 +276,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             
         end
         
-        function [reltheta, relomega] = displacements (self)
+        function [reltheta, relomega] = displacements (self, time)
             % gets the relative displacement and velocity of the other node
             % relative to the reference node in the chosen axis of the
             % reference node coordinate frame
@@ -298,36 +309,62 @@ classdef twoNodeTorque < mbdyn.mint.base
             % 	doublereal dThetaTmp(v(3));
             % 
             % 
-
-            v = self.vecRot ( ...
-                ( self.nodes(1).absoluteOrientation.orientationMatrix * self.joint.node1FrameRelativeOrientation.orientationMatrix ) ...
-                * ( self.nodes(2).absoluteOrientation.orientationMatrix * self.joint.node2FrameRelativeOrientation.orientationMatrix ) ...
-                            );
-                        
-            reltheta = v(3) - self.referenceTheta;
+            % pNode2->GetRCurr()*tilde_R2h
+%             R1h = self.nodes(1).absoluteOrientation.orientationMatrix * self.joint.relativeOrientation1.orientationMatrix;
+%             R2h = self.nodes(2).absoluteOrientation.orientationMatrix * self.joint.relativeOrientation2.orientationMatrix;
+%             v = self.vecRot (R1h * R2h);
+            
+% orig
+%             v = self.vecRot ( ...
+%                 ( self.nodes(1).absoluteOrientation.orientationMatrix * self.joint.node1FrameRelativeOrientation.orientationMatrix ) ...
+%                 * ( self.nodes(2).absoluteOrientation.orientationMatrix * self.joint.node2FrameRelativeOrientation.orientationMatrix ) ...
+%                             );
+%                      
+%             reltheta = v(3) - self.referenceTheta;
     
             % relative angular velocity
-            %
-            % perform a rotation to bring the orientation of the joint into
-            % line with the global coordinate system.
-            % 
-            % we pre-multiply by the transpose of the joint orientation in
-            % the global frame to get the reverse rotation in the global
-            % frame
-%             w_n_ref_joint_frame = joint_ref_orient.orient.orientationMatrix.' ...
-%                 * self.nodes(1).absoluteAngularVelocity;
-%             
-%             w_n_other_joint_frame = joint_ref_orient.orient.orientationMatrix.' ...
-%                 * self.nodes(2).absoluteAngularVelocity;
-%             
-%             relomega = w_n_other_joint_frame(3) - w_n_ref_joint_frame(3);
 
-            R = self.nodes(2).absoluteOrientation.orientationMatrix ...
-                * self.joint.node2FrameRelativeOrientation.orientationMatrix;
+% orig
+%             R = self.nodes(2).absoluteOrientation.orientationMatrix ...
+%                 * self.joint.node2FrameRelativeOrientation.orientationMatrix;
+
+            R = self.nodes(1).absoluteOrientation.orientationMatrix * self.joint.relativeOrientation1.orientationMatrix;
             
             omegas = R * (self.nodes(2).absoluteAngularVelocity - self.nodes(1).absoluteAngularVelocity);
             
             relomega = omegas(3);
+            
+            reltheta = self.omegaIntegral + ( relomega * (time - self.lastTime) );
+            
+            self.lastOmega = relomega;
+            self.lastTheta = reltheta;
+            
+        end
+        
+        function initialise (self, time)
+            % intialise the twoNodeTorque object
+           
+%             options.InitialTheta = 0;
+%             
+%             options = parse_pv_pairs (options, varargin);
+%             
+            mbdyn.pre.base.checkNumericScalar (time, true, 'time');
+%             mbdyn.pre.base.checkNumericScalar (options.InitialTheta, true, 'InitialTheta');
+                       
+            self.lastTime = time;
+            self.lastTheta = self.referenceTheta;
+            self.omegaIntegral = self.lastTheta;
+            
+            [~, relomega] = displacements (self, time);
+            
+            self.lastOmega = relomega;
+            
+        end
+        
+        function advance (self, time)
+            
+            self.lastTime = time;
+            self.omegaIntegral = self.lastTheta;
             
         end
         
@@ -377,9 +414,10 @@ classdef twoNodeTorque < mbdyn.mint.base
                     maxcol = 3;
                 end
                 
+                % unit = (  eet.GetVec (maxcol) / sqrt (eet(maxcol, maxcol) * (1. - cosphi) ) );
                 unit = eet(:,maxcol) ./ sqrt (eet(maxcol, maxcol) * (1. - cosphi));
                 
-                % sinphi = -(Mat3x3(unit)*Phi).Trace()/2.;
+                % sinphi = -(unit.Cross(Phi)).Trace()/2.;
                 sinphi = -(trace (cross (diag(unit),Phi)) ) ./ 2;
                 
                 unit = unit * atan2 (sinphi, cosphi);
