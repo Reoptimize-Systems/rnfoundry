@@ -155,7 +155,11 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
                               
             info.Sizes = { [1,1], [1,1], [1,1] };
             
-            info.Descriptions = {'', '', ''};
+            info.Descriptions = { 'Force applied between the two PTO nodes', ...
+                                  'Relative displacement of the two PTO nodes in a direction parallel to the reference node''s chosen axis', ...
+                                  'Relative velocity of the two PTO nodes in a direction parallel to the reference node''s chosen axis' };
+                              
+            info.AxisLabels = { 'Force [N]', 'Displacement [m]', 'Velocity [ms^{-1}]' };
             
             info.NAvailable = numel(info.AvailableNames);
             
