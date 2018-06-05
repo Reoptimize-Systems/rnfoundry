@@ -125,7 +125,8 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
         end
         
         function [ref_pos, ref_orient] = reference (self)
-            % returns a reference object for the joint position
+            % returns reference objects for the joint position and orientation
+            %
             
             switch self.offset1Reference
                 
