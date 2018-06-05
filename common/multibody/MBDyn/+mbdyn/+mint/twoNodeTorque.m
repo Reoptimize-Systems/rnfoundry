@@ -54,7 +54,6 @@ classdef twoNodeTorque < mbdyn.mint.base
         function self = twoNodeTorque (revolute_hinge, varargin)
             % mbdyn.mint.twoNodeTorque constructor
             %
-            %
             % Syntax
             %
             % tnt = twoNodeTorque (revolute_hinge)
@@ -76,14 +75,10 @@ classdef twoNodeTorque < mbdyn.mint.base
             % Additional arguments may be supplied using parameter-value
             % pairs. The available  options are:
             %
-            %  'InitialThetaZero' - optional scalar true/false flag
-            %    indicating whether the initial relative angular position
-            %    of the two nodes should be considered an angular
-            %    displacement of zero, and all subsequent displacements
-            %    considered relative to this initial position. If false,
-            %    the actual initial and subsequent displacement
-            %    'displacements' method (and used in the torqueFromFcn
-            %    method to evaluate the force function). Default is true.
+            %  'InitialTheta' - optional scalar value which is the
+            %    initial relative angular position in radians of the two
+            %    nodes, all subsequent displacements considered relative to
+            %    this initial position. Default is zero.
             %
             %  'TorqueFcn' - handle to matlab function which returns a
             %    scalar value, the torque on the reference node about axis
@@ -343,13 +338,29 @@ classdef twoNodeTorque < mbdyn.mint.base
         
         function initialise (self, time)
             % intialise the twoNodeTorque object
-           
-%             options.InitialTheta = 0;
-%             
-%             options = parse_pv_pairs (options, varargin);
-%             
+            %
+            % Syntax
+            %
+            % initialise (obj)
+            %
+            % Description
+            %
+            % intialise the twoNodeTorque object in preparation for a
+            % simulation. This initialises the integral of omega, the
+            % relative angular velocity to obtain theta, the relative
+            % angular displacement.
+            %
+            % Input
+            %
+            %  obj - mbdyn.mit.twoNodeTorque object
+            %
+            %  time - the intial simulation time
+            %
+            %
+            % See Also: 
+            %
+
             mbdyn.pre.base.checkNumericScalar (time, true, 'time');
-%             mbdyn.pre.base.checkNumericScalar (options.InitialTheta, true, 'InitialTheta');
                        
             self.lastTime = time;
             self.lastTheta = self.referenceTheta;
@@ -362,6 +373,28 @@ classdef twoNodeTorque < mbdyn.mint.base
         end
         
         function advance (self, time)
+            % advance the twoNodeTorque calculation
+            %
+            % Syntax
+            %
+            % advance (obj, time)
+            %
+            % Description
+            %
+            % advance the twoNodeTorque calculation, accepting the last
+            % clculated integral of omega, and the last simulation time
+            % into the simulation history.
+            %
+            % Input
+            %
+            %  obj - mbdyn.mit.twoNodeTorque object
+            %
+            %  time - the current simulation time (used to calculate the
+            %   last value of theta in a call to the displacements method
+            %
+            %
+            % See Also: 
+            %
             
             self.lastTime = time;
             self.omegaIntegral = self.lastTheta;
@@ -372,65 +405,65 @@ classdef twoNodeTorque < mbdyn.mint.base
     
     methods (Access=protected)
         
-        function unit = vecRot (self, Phi)
-            
-%         Vec3 RotManip::VecRot(const Mat3x3 & Phi) 
-
-            % Modified from Appendix 2.4 of
-            %
-            % author = {Marco Borri and Lorenzo Trainelli and Carlo L. Bottasso},
-            % title = {On Representations and Parameterizations of Motion},
-            % journal = {Multibody System Dynamics},
-            % volume = {4},
-            % pages = {129--193},
-            % year = {2000}
-            
-            cosphi = (trace(Phi) - 1) / 2;
-            
-            if (cosphi > 0)
-                
-                unit = self.ax (Phi);
-                sinphi = norm (unit);
-                phi = atan2 (sinphi, cosphi);
-                absphi = abs(phi);
-                a = sin (absphi) / absphi;
-                unit = unit ./ a;
-                
-            else
-                % -1 <= cosphi <= 0
-                eet = (Phi + Phi.')/2; % ensure matrix is symmetric
-                eet(1, 1) = eet(1, 1) - cosphi;
-                eet(2, 2) = eet(2, 2) - cosphi;
-                eet(3, 3) = eet(3, 3) - cosphi;
-                
-                % largest (abs) component of unit vector phi/|phi|
-                maxcol = 1;
-                
-                if (eet(2, 2) > eet(1, 1))
-                    maxcol = 2;
-                end
-                
-                if (eet(3, 3) > eet(maxcol, maxcol))
-                    maxcol = 3;
-                end
-                
-                % unit = (  eet.GetVec (maxcol) / sqrt (eet(maxcol, maxcol) * (1. - cosphi) ) );
-                unit = eet(:,maxcol) ./ sqrt (eet(maxcol, maxcol) * (1. - cosphi));
-                
-                % sinphi = -(unit.Cross(Phi)).Trace()/2.;
-                sinphi = -(trace (cross (diag(unit),Phi)) ) ./ 2;
-                
-                unit = unit * atan2 (sinphi, cosphi);
-                
-            end
-            
-            function v = ax (self, M)
-                
-                v = 0.5 .* [ M(3,2)-M(2,3), ...
-                             M(1,3)-M(3,1), ...
-                             M(2,1)-M(1,2) ];
-                
-            end
+%         function unit = vecRot (self, Phi)
+%             
+% %         Vec3 RotManip::VecRot(const Mat3x3 & Phi) 
+% 
+%             % Modified from Appendix 2.4 of
+%             %
+%             % author = {Marco Borri and Lorenzo Trainelli and Carlo L. Bottasso},
+%             % title = {On Representations and Parameterizations of Motion},
+%             % journal = {Multibody System Dynamics},
+%             % volume = {4},
+%             % pages = {129--193},
+%             % year = {2000}
+%             
+%             cosphi = (trace(Phi) - 1) / 2;
+%             
+%             if (cosphi > 0)
+%                 
+%                 unit = self.ax (Phi);
+%                 sinphi = norm (unit);
+%                 phi = atan2 (sinphi, cosphi);
+%                 absphi = abs(phi);
+%                 a = sin (absphi) / absphi;
+%                 unit = unit ./ a;
+%                 
+%             else
+%                 % -1 <= cosphi <= 0
+%                 eet = (Phi + Phi.')/2; % ensure matrix is symmetric
+%                 eet(1, 1) = eet(1, 1) - cosphi;
+%                 eet(2, 2) = eet(2, 2) - cosphi;
+%                 eet(3, 3) = eet(3, 3) - cosphi;
+%                 
+%                 % largest (abs) component of unit vector phi/|phi|
+%                 maxcol = 1;
+%                 
+%                 if (eet(2, 2) > eet(1, 1))
+%                     maxcol = 2;
+%                 end
+%                 
+%                 if (eet(3, 3) > eet(maxcol, maxcol))
+%                     maxcol = 3;
+%                 end
+%                 
+%                 % unit = (  eet.GetVec (maxcol) / sqrt (eet(maxcol, maxcol) * (1. - cosphi) ) );
+%                 unit = eet(:,maxcol) ./ sqrt (eet(maxcol, maxcol) * (1. - cosphi));
+%                 
+%                 % sinphi = -(unit.Cross(Phi)).Trace()/2.;
+%                 sinphi = -(trace (cross (diag(unit),Phi)) ) ./ 2;
+%                 
+%                 unit = unit * atan2 (sinphi, cosphi);
+%                 
+%             end
+%             
+%             function v = ax (self, M)
+%                 
+%                 v = 0.5 .* [ M(3,2)-M(2,3), ...
+%                              M(1,3)-M(3,1), ...
+%                              M(2,1)-M(1,2) ];
+%                 
+%             end
             
         end
     end
