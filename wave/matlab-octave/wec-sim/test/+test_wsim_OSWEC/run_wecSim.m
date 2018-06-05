@@ -72,7 +72,9 @@ mbdpath = fullfile (simu.caseDir, 'OSWEC.mbd');
 %% Set up PTO
 
 k = 0;
-c = 6.2e6 / 0.3;
+% c = 6.2e6 / 0.2;
+
+c = 1;
 
 torquefcn = @(time, thetaRpto, omegaRpto) -k*thetaRpto -c*omegaRpto;
 
@@ -129,11 +131,15 @@ wsobj.prepare ();
 % figure;
 datalog.plotVar ('PTO_1_InternalTorque');
 
+datalog.plotVar ('PTO_1_RelativeAngularDisplacement');
+
+datalog.plotVar ('PTO_1_RelativeAngularVelocity');
+
 %% animate the sim
-wsobj.animate ( 'DrawMode', 'solid', ...
-                'Light', true, ...
-                'skip', 5, ...
-                'AxLims', [-5, 5; -15, 15; -12, 5])
+% wsobj.animate ( 'DrawMode', 'solid', ...
+%                 'Light', true, ...
+%                 'skip', 5, ...
+%                 'AxLims', [-5, 5; -15, 15; -12, 5])
 
 %%
 % figure;
