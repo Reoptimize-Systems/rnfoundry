@@ -77,11 +77,11 @@ waves.T = 8;                            %Wave Period [s]
 
 % Float
 float_hbody = wsim.hydroBody('float.mat');      
-    %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
-    %and Body Number Within this File.   
+% Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
+% and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
-    %Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
-    %Weight.
+%Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
+%Weight.
 float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Inertia [kg*m^2]     
 float_hbody.geometryFile = 'float.stl';    %Location of Geomtry File
 
