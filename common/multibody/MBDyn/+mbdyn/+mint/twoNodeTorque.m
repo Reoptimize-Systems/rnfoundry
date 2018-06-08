@@ -296,26 +296,6 @@ classdef twoNodeTorque < mbdyn.mint.base
             %
             %
             
-            % get the relative position and velocity of the other node
-            % relative to the reference node in the 
-%             [joint_ref_pos, joint_ref_orient] = self.joint.reference ();
-            
-            % 	Vec3 v(RotManip::VecRot((pNode1->GetRCurr()*R1h).MulTM(pNode2->GetRCurr()*R2h)));
-            % 	doublereal dThetaTmp(v(3));
-            % 
-            % 
-            % pNode2->GetRCurr()*tilde_R2h
-%             R1h = self.nodes(1).absoluteOrientation.orientationMatrix * self.joint.relativeOrientation1.orientationMatrix;
-%             R2h = self.nodes(2).absoluteOrientation.orientationMatrix * self.joint.relativeOrientation2.orientationMatrix;
-%             v = self.vecRot (R1h * R2h);
-            
-% orig
-%             v = self.vecRot ( ...
-%                 ( self.nodes(1).absoluteOrientation.orientationMatrix * self.joint.node1FrameRelativeOrientation.orientationMatrix ) ...
-%                 * ( self.nodes(2).absoluteOrientation.orientationMatrix * self.joint.node2FrameRelativeOrientation.orientationMatrix ) ...
-%                             );
-%                      
-%             reltheta = v(3) - self.referenceTheta;
     
             % relative angular velocity
 
@@ -329,8 +309,10 @@ classdef twoNodeTorque < mbdyn.mint.base
             
             relomega = omegas(3);
             
+            % get theta by integrating omega
             reltheta = self.omegaIntegral + ( relomega * (time - self.lastTime) );
             
+            % update the last calculated values of omega and theta
             self.lastOmega = relomega;
             self.lastTheta = reltheta;
             
@@ -352,7 +334,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             %
             % Input
             %
-            %  obj - mbdyn.mit.twoNodeTorque object
+            %  obj - mbdyn.mint.twoNodeTorque object
             %
             %  time - the intial simulation time
             %
@@ -387,7 +369,7 @@ classdef twoNodeTorque < mbdyn.mint.base
             %
             % Input
             %
-            %  obj - mbdyn.mit.twoNodeTorque object
+            %  obj - mbdyn.mint.twoNodeTorque object
             %
             %  time - the current simulation time (used to calculate the
             %   last value of theta in a call to the displacements method
@@ -401,71 +383,6 @@ classdef twoNodeTorque < mbdyn.mint.base
             
         end
         
-    end
-    
-    methods (Access=protected)
-        
-%         function unit = vecRot (self, Phi)
-%             
-% %         Vec3 RotManip::VecRot(const Mat3x3 & Phi) 
-% 
-%             % Modified from Appendix 2.4 of
-%             %
-%             % author = {Marco Borri and Lorenzo Trainelli and Carlo L. Bottasso},
-%             % title = {On Representations and Parameterizations of Motion},
-%             % journal = {Multibody System Dynamics},
-%             % volume = {4},
-%             % pages = {129--193},
-%             % year = {2000}
-%             
-%             cosphi = (trace(Phi) - 1) / 2;
-%             
-%             if (cosphi > 0)
-%                 
-%                 unit = self.ax (Phi);
-%                 sinphi = norm (unit);
-%                 phi = atan2 (sinphi, cosphi);
-%                 absphi = abs(phi);
-%                 a = sin (absphi) / absphi;
-%                 unit = unit ./ a;
-%                 
-%             else
-%                 % -1 <= cosphi <= 0
-%                 eet = (Phi + Phi.')/2; % ensure matrix is symmetric
-%                 eet(1, 1) = eet(1, 1) - cosphi;
-%                 eet(2, 2) = eet(2, 2) - cosphi;
-%                 eet(3, 3) = eet(3, 3) - cosphi;
-%                 
-%                 % largest (abs) component of unit vector phi/|phi|
-%                 maxcol = 1;
-%                 
-%                 if (eet(2, 2) > eet(1, 1))
-%                     maxcol = 2;
-%                 end
-%                 
-%                 if (eet(3, 3) > eet(maxcol, maxcol))
-%                     maxcol = 3;
-%                 end
-%                 
-%                 % unit = (  eet.GetVec (maxcol) / sqrt (eet(maxcol, maxcol) * (1. - cosphi) ) );
-%                 unit = eet(:,maxcol) ./ sqrt (eet(maxcol, maxcol) * (1. - cosphi));
-%                 
-%                 % sinphi = -(unit.Cross(Phi)).Trace()/2.;
-%                 sinphi = -(trace (cross (diag(unit),Phi)) ) ./ 2;
-%                 
-%                 unit = unit * atan2 (sinphi, cosphi);
-%                 
-%             end
-%             
-%             function v = ax (self, M)
-%                 
-%                 v = 0.5 .* [ M(3,2)-M(2,3), ...
-%                              M(1,3)-M(3,1), ...
-%                              M(2,1)-M(1,2) ];
-%                 
-%             end
-            
-        end
     end
     
 end
