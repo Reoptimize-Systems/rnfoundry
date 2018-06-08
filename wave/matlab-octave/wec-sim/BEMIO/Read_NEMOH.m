@@ -44,6 +44,10 @@ function hydro = Read_NEMOH (filedir, varargin)
     
     hydro = options.HydroStructure;
     
+    
+    assert (exist (filedir, 'dir') == 7, 'filedir does not appear to exist.');
+    
+    
     % Check if we need to expand or replace the hydro structure array
     nhydro = numel (hydro);  
     
@@ -75,8 +79,11 @@ function hydro = Read_NEMOH (filedir, varargin)
 %     p = waitbar(0,'Reading NEMOH output file...');  % Progress bar
 
     hydro(hydroind).code = 'NEMOH';
-
-    [hydro(hydroind).filedir, hydro(hydroind).file, ~] = fileparts (filedir); % Base name
+    
+    hydro(hydroind).filedir = filedir;
+    
+    dirs = strsplit (filedir, filesep ());    
+    hydro(hydroind).file = dirs{end}; % Base name
     
     if exist ( fullfile (filedir, 'mesh'), 'dir') == 7
         
