@@ -92,6 +92,7 @@ And the optional arguments may be supplied in any order::
 
     x = examplefcn (y, 'OtherOption', other_variable, 'SomeOption', some_variable)
 
+.. _required-knowledge-matlab-path:
 
 The Matlab Path
 ===============
