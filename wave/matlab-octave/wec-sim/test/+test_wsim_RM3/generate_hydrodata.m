@@ -2,6 +2,7 @@ function hydro = generate_hydrodata (varargin)
 
     options.PlotBEM = true;
     options.WriteH5 = true;
+    options.WriteHydroDataMatFiles = true;
     options.SkipIfExisting = false;
     
     options = parse_pv_pairs (options, varargin);
@@ -120,6 +121,10 @@ function hydro = generate_hydrodata (varargin)
     
     if options.WriteH5
         Write_H5 (hydro, fullfile (inputdir, 'hydroData'))
+    end
+    
+    if options.WriteHydroDataMatFiles
+        wsim.bemio.write_hydrobody_mat_files (hydro, fullfile (inputdir, 'hydroData'));
     end
     
     if options.PlotBEM
