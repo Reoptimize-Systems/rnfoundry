@@ -1019,8 +1019,8 @@ classdef wecSim < handle
             %    supplied, the nodes are drawn with a size based on the
             %    axes limits.
             %
-            %  'ExternalDrawFcn' - function handle or string to function
-            %    which  will be called after drawing the scene is complete.
+            %  'ExternalDrawFcn' - function handle or string with function
+            %    which will be called after drawing the scene is complete.
             %    Intended to be used by external programs to add their own
             %    features to the scene. The funciton must take two
             %    arguments, the first is the handle to the axes contining
