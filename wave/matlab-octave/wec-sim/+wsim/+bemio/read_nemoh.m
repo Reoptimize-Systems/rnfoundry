@@ -1,0 +1,361 @@
+function hydro = read_nemoh (filedir, varargin)
+% Reads data from a NEMOH working folder.
+%
+% Syntax
+%
+% hydro = wsim.bemio.read_nemoh (filedir)
+%
+% Input
+% 
+%  filedir - NEMOH working folder, must include:
+%   - Nemoh.cal
+%   - Mesh/Hydrostatics.dat (or Hydrostatiscs_0.dat, Hydrostatics_1.dat,
+%     etc. for multiple bodies)
+%   - Mesh/KH.dat (or KH_0.dat, KH_1.dat, etc. for multiple bodies)
+%   - Results/RadiationCoefficients.tec
+%   - Results/ExcitationForce.tec
+%   - Results/DiffractionForce.tec - If simu.nlHydro = 3 will be used
+%   - Results/FKForce.tec - If simu.nlHydro = 3 will be used
+%
+% Additional arguments may be supplied using parameter-value pairs. The
+% available options are:
+%
+% 'HydroStructure' - An empty structure, or an array of one or more
+%   structures containing existing hydro data loaded from BEM simulation
+%   results. The structure must have the following fields: rho, g, h, Nf,
+%   w, T, body, Nh, beta, dof, cg, cb, Vo, C, A, B, ex_ma, ex_ph, ex_re,
+%   ex_im, sc_ma, sc_ph, sc_re, sc_im, fk_ma, fk_ph, fk_re, fk_im. It may
+%   also optionally have the field Nb, which is the number of bodies
+%
+%   It may also be an empty structure, in which case it has the new data
+%   fields added. If the option is not supplied, this is the default value
+%   of the option.
+%
+% Output
+%
+%  hydro - 
+%
+% See ‘..\WEC-Sim\tutorials\BEMIO\NEMOH\...’ for examples of usage.
+%
+
+    options.HydroStructure = struct ();
+    
+    options = parse_pv_pairs (options, varargin);
+    
+    hydro = options.HydroStructure;
+
+    assert (exist (filedir, 'dir') == 7, 'filedir does not appear to exist.');
+    
+    % Check if we need to expand or replace the hydro structure array
+    nhydro = numel (hydro);  
+    
+    if nhydro == 1
+
+        if isfield (hydro(nhydro), 'Nb')
+            if hydro(nhydro).Nb == 1
+                % there's only one body, we replace the data in the
+                % structure
+                hydroind = 1;
+            else
+                % there are multiple bodies, so we're not replacing
+                % existing data in a single structure, but are appending a
+                % new structure to an array of hydro structures
+                hydroind = 2;
+            end
+        else
+            % there's only one body, we replace the data in the structure
+            hydroind = 1;
+        end
+
+    elseif nhydro > 1  
+        % there are multiple bodies already loaded, so we're not replacing
+        % existing data, but are appending a new structure to the array
+        hydroind = nhydro + 1;
+
+    end
+
+%     p = waitbar(0,'Reading NEMOH output file...');  % Progress bar
+
+    hydro(hydroind).code = 'NEMOH';
+    
+    hydro(hydroind).filedir = filedir;
+    
+    dirs = strsplit (filedir, filesep ());    
+    hydro(hydroind).file = dirs{end}; % Base name
+    
+    if exist ( fullfile (filedir, 'mesh'), 'dir') == 7
+        
+        meshdir = fullfile (filedir, 'mesh');
+        
+    elseif exist ( fullfile (filedir, 'Mesh'), 'dir') == 7
+        
+        meshdir = fullfile (filedir, 'Mesh');
+        
+    else
+        error ('mesh (or Mesh) directory not found in working folder');
+    end
+    
+    if exist ( fullfile (filedir, 'results'), 'dir') == 7
+        
+        resultsdir = fullfile (filedir, 'results');
+        
+    elseif exist ( fullfile (filedir, 'Results'), 'dir') == 7
+        
+        resultsdir = fullfile (filedir, 'Results');
+        
+    else
+        error ('results (or Results) directory not found in working folder');
+    end
+
+    %% nemoh.cal file
+    
+    if exist (fullfile (filedir, 'nemoh.cal'), 'file')
+        nemohfile = fullfile (filedir, 'nemoh.cal');
+    elseif exist (fullfile (filedir, 'Nemoh.cal'), 'file')
+        nemohfile = fullfile (filedir, 'Nemoh.cal');
+    else
+        error ('Nemoh.cal (or nemoh.cal) file was not found in the working folder')
+    end
+
+    fileID = fopen (nemohfile);
+    
+    raw = textscan (fileID, '%[^\n\r]');  %Read nemoh.cal
+    
+    raw = raw{:};
+    
+    fclose(fileID);
+
+    bodyind = 0;
+    for n = 1:numel (raw)
+
+        if isempty ( strfind (raw{n}, 'Fluid specific volume')) == false
+            tmp = textscan(raw{n},'%f');
+            hydro(hydroind).rho = tmp{1};  % Density
+        end
+
+        if isempty ( strfind (raw{n}, 'Gravity')) == false
+            tmp = textscan(raw{n},'%f');
+            hydro(hydroind).g = tmp{1};  % Gravity
+        end
+
+        if isempty ( strfind (raw{n}, 'Water depth')) == false
+            tmp = textscan(raw{n},'%f');
+            if tmp{1} == 0 
+                hydro(hydroind).h = Inf;
+            else
+                hydro(hydroind).h = tmp{1};  % Water depth
+            end
+        end
+
+        if isempty ( strfind (raw{n}, 'Number of bodies')) == false
+            tmp = textscan(raw{n},'%f');
+            hydro(hydroind).Nb = tmp{1};  % Number of bodies
+        end
+
+        if isempty ( strfind (raw{n}, 'Name of mesh file')) == false
+            bodyind = bodyind + 1; % increment the body index
+            tmp = strsplit (raw{n},{'.', filesep()});
+            hydro(hydroind).body{bodyind} = tmp{length(tmp) - 1};  % Body names
+        end
+
+        if isempty(strfind(raw{n}, 'Number of wave frequencies')) == false
+            tmp = textscan(raw{n},'%f %f %f');
+            hydro(hydroind).Nf = tmp{1};  % Number of wave frequencies
+            hydro(hydroind).w = linspace (tmp{2}, tmp{3}, tmp{1});  % Wave frequencies
+            hydro(hydroind).T = 2*pi./hydro(hydroind).w;  % Wave periods
+        end
+
+        if isempty(strfind(raw{n}, 'Number of wave directions')) == false
+            tmp = textscan (raw{n},'%f %f %f');
+            hydro(hydroind).Nh = tmp{1};  % Number of wave headings
+            hydro(hydroind).beta = linspace (tmp{2}, tmp{3}, tmp{1});  % Wave headings
+        end
+
+    end
+    % waitbar(1/7);
+
+    %% Hydrostatics file(s)
+    for bodyind = 1:hydro(hydroind).Nb
+
+        hydro(hydroind).dof(bodyind) = 6;  % Default degrees of freedom for each body is 6
+
+        if hydro(hydroind).Nb == 1
+            fileID = fopen(fullfile (meshdir, 'Hydrostatics.dat'));
+        else
+            fileID = fopen(fullfile (meshdir, sprintf ('Hydrostatics_%d.dat', bodyind-1)));
+        end
+
+        raw = textscan(fileID,'%[^\n\r]');  % Read Hydrostatics.dat
+
+        raw = raw{:};
+
+        fclose(fileID);
+
+        for i = 1:3
+            tmp = textscan (raw{i},'%s %s %f %s %s %s %f');
+            hydro(hydroind).cg(i,bodyind) = tmp{7};  % Center of gravity
+            hydro(hydroind).cb(i,bodyind) = tmp{3};  % Center of buoyancy
+        end
+
+        tmp = textscan(raw{4},'%s %s %f');
+
+        hydro(hydroind).Vo(bodyind) = tmp{3};  % Displacement volume
+
+    end
+    % waitbar(2/7);
+
+    %% KH file(s)
+    for bodyind = 1:hydro(hydroind).Nb
+
+        if hydro(hydroind).Nb == 1
+            fileID = fopen (fullfile (meshdir, 'KH.dat'));
+        else
+            fileID = fopen ( fullfile (meshdir, sprintf ('KH_%d.dat', bodyind-1)) );
+        end
+
+        raw = textscan(fileID,'%[^\n\r]');
+
+        raw = raw{:};
+
+        fclose(fileID);
+
+        for i = 1:6
+            tmp = textscan(raw{i},'%f');
+            hydro(hydroind).C(i,:,bodyind) = tmp{1,1}(1:6);  % Linear restoring stiffness
+        end
+
+    end
+    % waitbar(3/7);
+
+    %% Radiation Coefficient file
+    fileID = fopen (fullfile (resultsdir, 'RadiationCoefficients.tec'));
+
+    raw = textscan(fileID,'%[^\n\r]');
+    raw = raw{:};
+    fclose(fileID);
+
+    i = 0;
+
+    for n = 1:numel (raw)
+
+        if isempty(strfind(raw{n},'Motion of body')) == false
+
+            i = i+1;
+
+            for k = 1:hydro(hydroind).Nf
+                tmp = textscan(raw{n+k},'%f');
+                hydro(hydroind).A(i,:,k) = tmp{1,1}(2:2:end);  % Added mass
+                hydro(hydroind).B(i,:,k) = tmp{1,1}(3:2:end);  % Radiation damping
+            end
+
+        end
+
+    end
+    % waitbar(4/7);
+
+    %% Excitation Force file
+
+    fileID = fopen (fullfile (resultsdir, 'ExcitationForce.tec'));
+
+    raw = textscan (fileID, '%[^\n\r]');
+    raw = raw{:};
+    fclose (fileID);
+
+    i = 0;
+    for n = 1:numel (raw)
+
+        if isempty (strfind (raw{n}, 'Diffraction force')) == false
+
+            i = i+1;
+
+            for k = 1:hydro(hydroind).Nf
+                tmp = textscan (raw{n+k}, '%f');
+                hydro(hydroind).ex_ma(:,i,k) = tmp{1,1}(2:2:end);  % Magnitude of exciting force
+                hydro(hydroind).ex_ph(:,i,k) = -tmp{1,1}(3:2:end);  % Phase of exciting force (-ph, since NEMOH's x-dir is flipped)
+            end
+
+        end
+
+    end
+
+    hydro(hydroind).ex_re = hydro(hydroind).ex_ma .* cos(hydro(hydroind).ex_ph);  % Real part of exciting force
+    hydro(hydroind).ex_im = hydro(hydroind).ex_ma .* sin(hydro(hydroind).ex_ph);  % Imaginary part of exciting force
+
+    % waitbar(5/7);
+
+    %% Diffraction Force file (scattering)
+
+    DiffractionForceFile = fullfile (resultsdir, 'DiffractionForce.tec');
+
+    if exist (DiffractionForceFile, 'file') == 2
+
+        fileID = fopen (DiffractionForceFile);
+
+        raw = textscan (fileID, '%[^\n\r]');
+        raw = raw{:};
+        fclose (fileID);
+
+        i = 0;
+
+        for n = 1:numel (raw)
+
+            if isempty (strfind (raw{n}, 'Diffraction force')) == false
+
+                i = i+1;
+
+                for k = 1:hydro(hydroind).Nf
+                    tmp = textscan (raw{n+k}, '%f');
+                    hydro(hydroind).sc_ma(:,i,k) = tmp{1,1}(2:2:end);  % Magnitude of diffraction force
+                    hydro(hydroind).sc_ph(:,i,k) = -tmp{1,1}(3:2:end);  % Phase of diffraction force 
+                end
+
+            end
+
+        end
+
+        hydro(hydroind).sc_re = hydro(hydroind).sc_ma .* cos(hydro(hydroind).sc_ph);  % Real part of diffraction force
+        hydro(hydroind).sc_im = hydro(hydroind).sc_ma .* sin(hydro(hydroind).sc_ph);  % Imaginary part of diffraction force
+
+    end
+    % waitbar(6/7);
+
+    %% Froude-Krylov force file
+
+    FKForceFile = fullfile (resultsdir, 'FKForce.tec');
+
+    if exist (FKForceFile, 'file') == 2
+
+        fileID = fopen (FKForceFile);
+
+        raw = textscan (fileID, '%[^\n\r]');
+        raw = raw{:};
+        fclose(fileID);
+
+        i = 0;
+        for n = 1:numel (raw)
+
+            if isempty (strfind (raw{n}, 'FKforce')) == false
+
+                i = i+1;
+
+                for k = 1:hydro(hydroind).Nf
+                    tmp = textscan(raw{n+k},'%f');
+                    hydro(hydroind).fk_ma(:,i,k) = tmp{1,1}(2:2:end);  % Magnitude of Froude-Krylov force
+                    hydro(hydroind).fk_ph(:,i,k) = -tmp{1,1}(3:2:end);  % Phase of Froude-Krylov force 
+                end
+
+            end
+
+        end
+
+        hydro(hydroind).fk_re = hydro(hydroind).fk_ma .* cos(hydro(hydroind).fk_ph);  % Real part of Froude-Krylov force
+        hydro(hydroind).fk_im = hydro(hydroind).fk_ma .* sin(hydro(hydroind).fk_ph);  % Imaginary part of Froude-Krylov force
+
+    end
+    % waitbar(7/7);
+
+    hydro = Normalize (hydro);  % Normalize the data according the WAMIT convention
+
+%     close(p); % close the waitbar
+
+end
