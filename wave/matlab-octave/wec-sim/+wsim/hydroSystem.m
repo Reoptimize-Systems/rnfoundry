@@ -103,7 +103,7 @@ classdef hydroSystem < handle
             
             if self.odeSimInitialised
                 
-                error ('An ode simulation has already been initialised so you cannot add new bodies. To add new bodies first call the odeSimReset method.')
+                error ('An ode simulation has already been initialised so you cannot add new bodies. To add new bodies first call the timeDomainSimReset method.')
                 
             else
                 
@@ -645,21 +645,21 @@ classdef hydroSystem < handle
             
         end
         
-        function odeSimReset (self)
+        function timeDomainSimReset (self)
             % reset the hydrodynamic system for transient simulation
             %
             % Syntax
             %
-            %  odeSimReset (hsys)
+            %  timeDomainSimReset (hsys)
             %
             % Input
             %
             %  hsys - hydroSystem object
             %
             
-            % call each body's odeSimReset method
+            % call each body's timeDomainSimReset method
             for ind = 1:numel(self.hydroBodies)
-                self.hydroBodies(ind).odeSimReset ();
+                self.hydroBodies(ind).timeDomainSimReset ();
             end
             
             self.odeSimInitialised = false;

@@ -253,21 +253,21 @@ classdef hydroBody < handle
             obj.hydroData.properties.body_number = h5read(filename,[name '/properties/body_number']);
             obj.hydroData.properties.cg = h5read(filename,[name '/properties/cg']);
             obj.hydroData.properties.disp_vol = h5read(filename,[name '/properties/disp_vol']);
-            obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.h5load(filename, [name '/hydro_coeffs/linear_restoring_stiffness']);
-            obj.hydroData.hydro_coeffs.excitation.re = wsim.h5load(filename, [name '/hydro_coeffs/excitation/re']);
-            obj.hydroData.hydro_coeffs.excitation.im = wsim.h5load(filename, [name '/hydro_coeffs/excitation/im']);
-            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f = wsim.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/f']); end
-            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t = wsim.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/t']); end
-            obj.hydroData.hydro_coeffs.added_mass.all = wsim.h5load(filename, [name '/hydro_coeffs/added_mass/all']);
-            obj.hydroData.hydro_coeffs.added_mass.inf_freq = wsim.h5load(filename, [name '/hydro_coeffs/added_mass/inf_freq']);
-            obj.hydroData.hydro_coeffs.radiation_damping.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/all']);
-            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/K']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/t']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.it = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/it']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/A/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/B/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
+            obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.bemio.h5load(filename, [name '/hydro_coeffs/linear_restoring_stiffness']);
+            obj.hydroData.hydro_coeffs.excitation.re = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/re']);
+            obj.hydroData.hydro_coeffs.excitation.im = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/im']);
+            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/f']); end
+            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/t']); end
+            obj.hydroData.hydro_coeffs.added_mass.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/added_mass/all']);
+            obj.hydroData.hydro_coeffs.added_mass.inf_freq = wsim.bemio.h5load(filename, [name '/hydro_coeffs/added_mass/inf_freq']);
+            obj.hydroData.hydro_coeffs.radiation_damping.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/all']);
+            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/K']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/t']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.it = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/it']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/A/all']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/B/all']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
         end
 
         function loadHydroData (obj, hydroData)
@@ -1049,7 +1049,7 @@ classdef hydroBody < handle
             end
 
             % first reset everything
-            odeSimReset (obj);
+            timeDomainSimReset (obj);
 
             % then do the setup again
             obj.hydroForcePre ();
@@ -1097,16 +1097,16 @@ classdef hydroBody < handle
         end
         
         
-        function odeSimReset (obj)
+        function timeDomainSimReset (obj)
             % resets the body in readiness for a transient simulation
             %
             % Syntax
             %
-            % odeSimReset (hb)
+            % timeDomainSimReset (hb)
             %
             % Desciription
             %
-            % odeSimReset resets various internal storeage parameters and
+            % timeDomainSimReset resets various internal storeage parameters and
             % settings in preparation for performing a transient simulation
             % based on the ODE solver routines, returning the hydroBody to
             % the state it is in just after calling timeDomainSimSetup. This
