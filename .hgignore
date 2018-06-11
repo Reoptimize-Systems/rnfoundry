@@ -9,14 +9,23 @@ dlsei.c
 # wave docs files
 example_nemoh_cylinder_output/**
 sphinx/generated/**
+wave-sim-toolbox.geany
 
 # mbdyn related generated files
 +test_wsim_RM3/*.mbd
 sphinx/api_reference/**
 images/example_basic_cosimulation_*
+mbdyn_interface.geany
 
 # NEMOH generated files
 RM3_NEMOH_output/**
+wave/matlab-octave/nemoh_preprocessor/test/Cylinder/*
+
+# wave sim outputs
+*.h5
+wave/doc/sphinx/examples/+example_rm3/output_*
+wave/matlab-octave/wec-sim/test/+test_wsim_OSWEC/output_*
+wave/matlab-octave/wec-sim/test/+test_wsim_RM3/output_*
 
 common/matlab-octave/tb-ezyfit/html/
 
