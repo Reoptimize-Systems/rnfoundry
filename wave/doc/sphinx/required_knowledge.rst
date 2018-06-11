@@ -8,6 +8,7 @@ which is required to use the software, and common coding idioms
 which occur frequently and which novice Matlab users may not have
 encountered.
 
+
 .. _required-knowledge-pv-pairs:
 
 Parameter-Value Pairs
@@ -142,3 +143,41 @@ using the ``classdef`` syntax. See the official Matlab documentation for this
 style of programming `here`__.
 
 .. __: https://uk.mathworks.com/help/matlab/object-oriented-programming.html
+
+.. _required-knowledge-help-system:
+
+The Matlab Help System
+======================
+
+The functions and help systems are generally well documented and 
+have detailed help which can be accessed using the normal 
+Matlab/Octave help system. To display help for a function of the 
+command line, you must run something like::
+
+   help function_name
+   
+Where ``function_name`` is the name of the function from which help is 
+to be displayed, without the *.m* extension. Similarly, one can open 
+an html version of the help in the Matlab help browser with the command::
+
+   doc function_name
+   
+Help for classes and class methods works similarly::
+
+   help class_name
+   
+And help for class methods and properties can be accessed the same 
+way, e.g.::
+
+   help class_name.method_name
+   
+   help class_name.property_name
+   
+Also functions and classes in packages can be accessed the same way::
+
+   help package_name.class_name.method_name
+   
+   help package_name.class_name.property_name
+   
+Generally detailed help on classes and their options is found in the 
+class constructor method. 

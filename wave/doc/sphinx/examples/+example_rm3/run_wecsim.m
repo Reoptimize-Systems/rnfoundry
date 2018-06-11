@@ -18,7 +18,7 @@ simu.startTime = 0;                   % Simulation Start Time [s]
 simu.endTime=400;                     % Simulation End Time [s]
 simu.dt = 0.1;                        % Simulation time-step [s]
 simu.rampT = 100;                     % Wave Ramp Time Length [s]
-simu.b2b = true;                      % BOdy-to-body interaction
+simu.b2b = true;                      % Body-to-body interaction
 
 %% Wave Information 
 
@@ -79,20 +79,21 @@ waves.T = 8;                            %Wave Period [s]
 %
 
 % Float
-float_hbody = wsim.hydroBody('rm3.h5');      
-    %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
-    %and Body Number Within this File.   
+
+% Create the float_hbody object, Set the location of the hydrodynamic
+% data file which must be in the case_directory/hydroData directory 
+float_hbody = wsim.hydroBody('rm3.h5');
+% Body Mass. The 'equilibrium' option oets it to the displaced water weight.
 float_hbody.mass = 'equilibrium';                   
-    %Body Mass. The 'equilibrium' Option Sets it to the Displaced Water 
-    %Weight.
-float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Inertia [kg*m^2]     
+% Moment of Inertia matrix [kg*m^2]   
+float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];
 float_hbody.geometryFile = 'float.stl';    %Location of Geomtry File
 
 % Spar/Plate
-spar_hbody = wsim.hydroBody('rm3.h5'); 
-spar_hbody.mass = 'equilibrium';                   
+spar_hbody = wsim.hydroBody('rm3.h5');
+spar_hbody.mass = 'equilibrium';
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
-spar_hbody.geometryFile = 'plate.stl'; 
+spar_hbody.geometryFile = 'plate.stl';
 
 % make a hydrosys object for simulation
 hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
@@ -101,13 +102,13 @@ hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
 hsys.initialiseHydrobodies ();
 hsys.timeDomainSimSetup ();
 
+%% Multibody dynamics system specification (mbdyn)
+
 % generate the nodes and elements for simulation of the hydrodynamic system
 % in MBDyn. One node and one body element are created for each hydrodynamic
 % body interacting with the waves. These are then used in the larger
 % multibody system with other joints, constraints and bodies
 [hydro_mbnodes, hydro_mbbodies, hydro_mbelements] = hsys.makeMBDynComponents ();
-
-%% Multibody dynamics system specification (mbdyn)
 
 problem_options.ResidualTol = 1e-5;
 problem_options.MaxIterations = 200;
@@ -117,6 +118,7 @@ problem_options.NonLinearSolver = [];
 % problem_options.LinearSolver = mbdyn.pre.linearSolver ('naive');
 problem_options.LinearSolver = [];
 
+% make the rest of the multibody system
 [mbsys, initptodpos] = example_rm3.make_multibody_system ( waves, ...
                                                            simu, ...
                                                            hydro_mbnodes, ...
@@ -125,11 +127,11 @@ problem_options.LinearSolver = [];
                                                            problem_options );
                      
 % draw it in a figure
-mbsys.draw ( 'Mode', 'solid', ...
+mbsys.draw ( 'Mode', 'ghost', ...
              'Light', true, ...
              'AxLims', [-30, 30; -30, 30; -35, 35], ...
              'Joints', false, ...
-             'StructuralNodes', false);
+             'StructuralNodes', true);
 
 %% Set up Power Take-Off (PTO)
 

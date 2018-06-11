@@ -1,13 +1,21 @@
 Getting Started
 ***************
 
-As sated previously, |TNshort| is is based in Matlab code [#f1]_, 
-which can also run in Octave. |TNshort| requires the free MBDyn 
+As stated previously, |TNshort| is is based in Matlab code [#f1]_, 
+which can also run in Octave. |TNshort| also requires the free MBDyn 
 multibody modelling package to describe and simulate the motion of 
-the system. To understand what background knowledge is required to 
-use the toolbox see the Section :ref:`required-knowledge`.
+the system (it is likely you will have received this alongside 
+|TNShort|). The MBDyn Matlab Toolbox also has its own manual with 
+simple examples demonstrating the toolbox's capabilities. As 
+|TNShort| makes heavy use of this toolbox, it is advisable to first 
+examine some of the examples in this manual to get a better 
+understanding of how the pre-processor works before attempting to 
+develop a system for |TNShort| as an in-depth discussion of the 
+operation and organisation of the MBDyn preprocessor will not be 
+provided here.
 
-
+To understand what other background knowledge is required to 
+use |TNshort| see the Section :ref:`required-knowledge`.
 
 The general workflow of |TNShort| is to first obtain the geometry of 
 the device to be simulated and to use this to generate hydrodynamic 
@@ -86,7 +94,7 @@ geometry
    Contains `STL`_ files for each of the (hydrodynamically 
    interacting) bodies in the system. STL is a mesh format. These 
    files are used for visualisation and some hydrodynamic 
-   calculations during a simulation, e.g. nonlinear buoyancy forces.
+   calculations during a simulation, e.g. non-linear buoyancy forces.
 
 .. _STL: https://en.wikipedia.org/wiki/STL_(file_format)
 
@@ -131,9 +139,10 @@ Example 1: The RM3 Two Body Point Absorber
 
 This section describes the application of the WEC-Sim code to model 
 the Reference Model 3 (RM3) two-body point absorber WEC. This 
-example application can be found in the |TNshort| examples 
-directory. In this example, we will start from having only an 
-existing geometry file, to simulating the entire system.
+example application can be found in the |TNshort| examples directory 
+in the +example_rm3 subdirectory. In this example, we will start 
+from having only an existing geometry file, to simulating the entire 
+system.
 
 Device Geometry
 ---------------
@@ -185,8 +194,434 @@ The first step in modelling the system is to generate the
 hydrodynamic data files using a BEM solver such as Nemoh, WAMIT or 
 AQUA. This will be demonstrated in this example using Nemoh. At this 
 point it may be worth reading the section :ref:`nemoh-interface` 
-which intrduces the Matlab based preprocessor which has been 
+which introduces the Matlab based preprocessor which has been 
 developed to help with this with simple examples.
 
 To use Nemoh, you must first generate surface meshes of the bodies 
-you wish to simulate. 
+you wish to simulate. Ideally these must be quadrilateral meshes, 
+although triangular meshes can be treated as degenerate 
+quadrilaterals. These meshes must be cut off at the mean free 
+surface level of the water, so they will likely be different from 
+the STL meshes used for visualisation (unless all bodies are not 
+surface piercing). The mesh for the RM3 system for Nemoh is shown in 
+:numref:`nemoh_rm3_mesh` and the mesh files are provided in the 
+geometry subdirectory. The Nemoh mesh input is defined using two 
+files, a .nmi and a .cal file. 
+
+.. _nemoh_rm3_mesh:
+.. figure:: /images/nemoh_rm3_mesh.png
+   :align: center
+   
+   Plot of both Nemoh input meshes for the RM3 example.
+   
+In this example, generating the hydrodynamic data is performed by 
+the ``example_rm3.generate_hydrodata`` function. We will now work 
+our way through this function to show how the process works (but 
+remember you should first read the section 
+:ref:`nemoh-interface` to make understanding this easier).
+
+The start of this function just sets up from option parsing and 
+directories etc. which aren't important for understanding it's 
+actual operation:
+
+.. literalinclude:: /examples/+example_rm3/generate_hydrodata.m
+   :end-before: %% create the float
+
+See the help for the ``parse_pv_pairs`` function to understand this 
+option parsing.
+
+The next step is to create the Nemoh body objects for the float and 
+spar, using as input the mesh files for each:
+
+.. literalinclude:: /examples/+example_rm3/generate_hydrodata.m
+   :start-at: %% create the float
+   :end-before: %% Create the nemoh simulation
+
+The Nemoh bodies are now ready to be inserted into a Nemoh system 
+which will process their meshes and run the Nemoh calculations.
+
+.. literalinclude:: /examples/+example_rm3/generate_hydrodata.m
+   :start-at: %% Create the nemoh simulation
+   :end-before: %% draw the course body mesh (this will be refined later)
+   
+The mesh can then be plotted, and it is this plot which was shown in 
+:numref:`nemoh_rm3_mesh`. 
+   
+.. literalinclude:: /examples/+example_rm3/generate_hydrodata.m
+   :start-at: %% draw the course body mesh (this will be refined later)
+   :end-before: % write out the course mesh files for all bodies 
+   
+Now the meshes can be processed. This involves writing out the Nemoh 
+mesher input files and calling ``processMeshes`` which runs the 
+Nemoh mesher on the the course mesh input files to produced a 
+refined mesh, and also performs some basic hydrodynamic and 
+geometrical calculations, with the results being put in the 
+hydroData directory.
+
+.. literalinclude:: /examples/+example_rm3/generate_hydrodata.m
+   :start-at: % write out the course mesh files for all bodies 
+   :end-before: %% Create hydro structure
+   
+In this case we have chosen to obtain results for 260 wave 
+frequencies. This will take quite a long time to run on a typical 
+desktop PC or laptop, on the order of several hours, and produce 
+several hundred MB of data in the form of text files. Generally you 
+only want to produce these results once.
+
+The final part of the function deals with converting the output from 
+Nemoh into a form suitable for use in |TNShort|. 
+
+.. literalinclude:: /examples/+example_rm3/generate_hydrodata.m
+   :start-at: %% Create hydro structure
+   
+The first step is to load the Nemo data files and convert them to a 
+standard format. This is achieved with the 
+``wsim.bemio.processnemoh`` function. This function is part of a 
+package called bemio, which is within the wsim package. Note that 
+this is separate from the standard `BEMIO`_ functions from the 
+original WEC-Sim project. Copies of these are provided with 
+|TNShort| for convenience, any new function made specifically for 
+|TNShort| can be found in this ``wsim.bemio`` package.
+
+.. _BEMIO: http://wec-sim.github.io/WEC-Sim/advanced_features.html#bemio
+
+The output of ``wsim.bemio.processnemoh`` is a Matlab structure 
+containing hydrodynamic data for all the bodies in the Nemoh system. 
+This hydro structure can then undergo further processing as shown in 
+the function, depending on what types of simulation are desired to 
+be run in |TNShort|. Here we generate the wave radiation impulse 
+response functions for both the convolution integral calculation 
+method and the state-space form, and also the wave excitation 
+impulse response function. 
+
+Once all processing of the hydrodynamic data is complete, the data 
+must be converted to a form with can be used within |TNShort|, i.e., 
+which can be used by the ``wsim.hydroBody`` class. This class will 
+be discussed in more detail in the following section, but for now it 
+is sufficient to know that the data must either be converted to on 
+HDF5 format file, or a set of .mat files, one for each 
+hydrodynamically interacting body. The first format is the same as 
+used by the original WEC-Sim project. The ability to use normal .mat 
+files directly has been added to |TNShort|, therefore only the .h5 
+file can be used with both tools. Compared to the output of Nemoh, 
+the .h5 and .mat files are quite small. The .h5 file will be on the 
+order of tens of MB (7.4MB in this case), while the .mat files will 
+be smaller still (two 1MB files in this case). 
+
+System Simulation
+=================
+
+Having generated the required hydrodynamic data to calculate the 
+wave interaction forces we are now ready to use this data in a time 
+domain simulation of the RM3 device. The time domain simulation and 
+system is defined in this case in one function, 
+``example_rm3.make_multibody_system`` and a script 
+``example_rm3.run_wecsim``. Note that there is nothing special about 
+the names of these functions, you are free to organise the code in 
+any way you like, and name the scripts and functions any way you like.
+
+Initial Simulation Setup
+------------------------
+
+We will start by examining ``example_rm3.run_wecsim``, which in this 
+case is the main script which sets up and runs the simulation. The 
+first section of this script sets the general simulation and wave 
+parameters. 
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :end-before: %% Hydrodynamic body system
+   
+The simulation and wave settings are each stored using classes, 
+``wsim.simSettings`` and ``wsim.waveSettings``, where the settings 
+are the class properties. Most of the settings in this example are 
+self-explanatory, but more settings are available which may not be 
+as obvious. A full list of the possible simulation settings and 
+their descriptions are shown below:
+
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| Property/Setting | Description                                                                                                               |
++==================+===========================================================================================================================+
+| startTime        | Simulation start time (default = 0 s)                                                                                     |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| endTime          | Simulation end time (default = 500 s)                                                                                     |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| dt               | Simulation time step (default = 0.1 s)                                                                                    |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| dtFeNonlin       | Sample time at which to calculate nonlinear forces (default = dt)                                                         |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| dtCITime         | Sample time at which to calculate Convolution Integral (default = dt)                                                     |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| rampT            | Ramp time for wave forcing (default = 100 s)                                                                              |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| domainSize       | Size of free surface and seabed. This variable is only used for visualization (default = 200 m)                           |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| CITime           | Convolution integral time span (default = 60 s)                                                                           |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| ssCalc           | Option for convolution integral or state-space calculation: convolution integral->0, state-space->1, (default = 0)        |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| nlHydro          | Option for nonlinear hydrodynamics calculation: linear->'0', nonlinear->'1', (default = 0)                                |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| b2b              | Option for body-to-body interactions: off->false, on->true, (default = false)                                             |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| paraview         | Option for writing vtp files for paraview visualization.                                                                  |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| adjMassWeightFun | Weighting function for adjusting added mass term in the translational direction (default = 2)                             |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| mcrCaseFile      | mat file that contain a list of the multiple conditions runs with given conditions                                        |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| morrisonElement  | Option for Morrison Element calculation: Off->'0', On->'1', (default = 0)                                                 |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| rho              | Density of water (default = 1000 kg/m^3)                                                                                  |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+| g                | Acceleration due to gravity (default = 9.81 m/s)                                                                          |
++------------------+---------------------------------------------------------------------------------------------------------------------------+
+
+For the wave settings, examples of the different types of settings 
+are shown in the comments in this section of the script. 
+
+
+Creating the Hydrodynamic System
+--------------------------------
+
+The next step is to define the system of hydrodynamically 
+interacting bodies. This is done using the ``wsim.hydroBody`` class 
+and the ``wsim.hydroSystem`` class. The ``wsim.hydroSystem`` class 
+is essentially a container for a collection of hydroBody objects, 
+with one hydroBody object for each hydrodynamic body in the system. 
+We specifically refer to hydrodynamically interacting bodies a other 
+bodies in the system are defined elsewhere, as part of the multibody 
+system dynamics system. This will be explained in a later section.
+
+The ``wsim.hydroBody`` class does all processing of the hydrodynamic 
+forces on a body. The ``wsim.hydroSystem`` organises these bodies, 
+inserts the correct position, velocity and acceleration information 
+into each body, and gets all of the forces applied to the bodies by 
+the wave action as the simulation proceeds. The motion of the system 
+is not calculated by the hydrodynamic system, which is only 
+concerned with the calculation of the forces.
+
+So to define the hydrodynamic system for the RM3 example, the first 
+step is to create two hydroBody objects:
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: %% Hydrodynamic body system
+   :end-before: % set up transient simulation
+   
+The hydroBody objects take as input a file name which is either .h5 
+file for the whole hydrodynamic system, or a .mat file specific to 
+that body. The file is always searched for in the hydroData 
+subdirectory of the case directory, so only the file name is 
+required, not the full path.
+
+Having created all the required hydroBody objects, we can put them 
+into a hydroSystem [#f2]_ and tell it to prepare them for a time domain 
+simulation. You must always call ``initialiseHydrobodies`` and 
+``timeDomainSimSetup`` before a simulation.
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: % make a hydrosys object for simulation
+   :end-before: %% Multibody dynamics system specification
+
+Our hydrodynamic system is now defined, and ready to be simulated, 
+the next step is then to create the overall multibody dynamics 
+system which constrains the motion of the bodies in the appropriate 
+ways. The hydroSystem also takes as input the waveSettings and 
+simSettings objects, from which it knows the location of the case 
+directory etc.
+
+.. [#f2] In Matlab we can put the hydroBody objects into the 
+   hydroSystem simply by placing them in square brackets to make an 
+   array of hydroBody objects (which is what hydroSystem expects), 
+   i.e. ``[float_hbody, spar_hbody]``. However, at the time of 
+   writing, Octave does not yet support this syntax and some small 
+   modifications are necessary. It simply requires that you instead do::
+   
+      obj_array(1) = float_hbody;
+      obj_array(2) = spar_hbody;
+      hsys = wsim.hydroSystem (waves, simu, obj_array);
+
+   See the file *+example_rm3/run_wecsim_in_octave.m* for an example of 
+   how the run the same system in Octave. The changes are small, but 
+   important. This file also demonstrates the use of the .mat file 
+   hydroData format. This version of the file also runs in Matlab, 
+   so it is possible to create files which run under both platforms.
+   
+   
+Creating the MultiBody System
+--------------------------------
+
+Having set up the hydrodynamic system, the next step is to define 
+the constraints that determine the motion of that system under the 
+applied forces and moments. These constrained multibody system 
+dynamics are solved by `MBDyn`_. MBDyn is a separate program, and 
+forces and motion are communicated between the two programs 
+throughout the simulation via one of several available 
+communication methods. 
+
+.. _MBDyn: https://www.mbdyn.org/
+
+MBdyn normally takes as input a special data file format which 
+defines all of the bodies and joints etc. in the system. To make the 
+creation of systems simpler and allow systems to be completely 
+defined using Matlab code, an advanced pre-processing tool has been 
+developed as a part of a suite of tools in the MBDyn Matlab Toolbox, 
+which is available as a separate standalone tool (and most likely 
+you will have received it alongside |TNShort|). The MBDyn Matlab 
+Toolbox also has its own manual with simple examples demonstrating 
+the toolbox's capabilities. It is advisable to first examine some of 
+the examples in this manual to get a better understanding of how the 
+pre-processor works before attempting to develop a system for 
+|TNShort|, or even understand the example which is about to be 
+described, as an in-depth discussion of the operation and 
+organisation of MBDyn and the MBDyn preprocessor will not be 
+repeated here.
+
+The first step in creating the multibody system is to get the 
+multibody elements corresponding to the hydrodynamic bodies. This 
+task can be done automatically by ``wsim.hydroSystem`` using the 
+``makeMBDynComponents`` method.
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: %% Multibody dynamics system specification (mbdyn)
+   :end-at: hsys.makeMBDynComponents ();
+   
+This method returns three cell arrays containing the structural 
+nodes, bodies and other elements which define the parts of the 
+system corresponding to the hydrodynamic bodies. These components 
+can then be linked with other components in the system. As the 
+system requires more than a few lines of code to specify, it has 
+been specified in a separate (heavily commented) function file in 
+*+example_rm3/make_multibody_system.m*. A section of the file is 
+shown below:
+
+.. literalinclude:: /examples/+example_rm3/make_multibody_system.m
+   :start-at: % create a node to clamp
+   :end-at: % create an orientation with axis 3 pointing along the global axis 2
+
+The full system requires the creation of five joint elements and 
+another node to act as a reference so the motion can be restricted 
+to being only in the X-Z plane. This function assembles all of the 
+multibody dynamics elements into a ``mbdyn.pre.system`` object which 
+organises and controls them in a similar way to the 
+``wsim.hydroSystem`` class.
+
+.. literalinclude:: /examples/+example_rm3/make_multibody_system.m
+   :start-at: % assemble the system
+   :end-before: initptodpos
+
+In the run_wecsim script, it is this system with is returned by the 
+call to ``example_rm3.make_multibody_system``. The resulting system 
+can be plotted in a figure:
+
+.. literalinclude:: /examples/+example_rm3/make_multibody_system.m
+   :start-at: % draw it in a figure
+   :end-before: %% Set up Power Take-Off
+
+The result of the call to ``draw`` above is shown in 
+:numref:`example_rm3_mbsys_draw_1`
+
+.. _example_rm3_mbsys_draw_1:
+.. figure:: /images/example_rm3_mbsys_draw_1.svg
+   :align: center
+
+Many options are possible with the draw option, for example, a 
+prettier output (but less useful for checking the locations of nodes 
+etc.) can be produced with the 'solid' mode::
+
+   mbsys.draw ( 'Mode', 'solid', ...
+                'Light', true, ...
+                'AxLims', [-30, 30; -30, 30; -35, 35], ...
+                'Joints', false, ...
+                'StructuralNodes', false);
+                
+The result of this is shown in :numref:`example_rm3_mbsys_draw_2`
+
+.. _example_rm3_mbsys_draw_2:
+.. figure:: /images/example_rm3_mbsys_draw_2.svg
+   :align: center
+   
+   
+Adding a Power Take-Off
+-----------------------
+
+The next step is to add a power take-off to the simulation. For this 
+example we want to add simple damper, i.e. a force which is linearly 
+related to the relative velocity of the two parts of the RM3 device. 
+We will calculate this force in Matlab, base on the motion of the 
+WEC, and send it to MBDyn during the simulation. To implement this, 
+it is necessary to first get the motion in 3D space of float and 
+spar and determine their relative velocity in a direction parallel 
+to the orientation of the spar. Then the damping force must be 
+calculated, and converted to a 3D force vector to be applied  to the 
+nodes attached to each body in MBDyn.
+
+|TNShort| makes the process of calculating and applying power 
+take-off forces easy by providing a set of power take-off classes 
+(for different types of motion) which perform most of this work, 
+leaving only the calculation of scalar force value to the user. 
+These classes are the ``wsim.linearPowerTakeOff`` and 
+``wsim.rotaryPowerTakeOff`` classes, and their main function is to 
+automate getting the correct nodal motion from MBDyn during the 
+simulation, and from this motion determine the relative velocity and 
+position of two components in a simulation (or the relative angular 
+velocity and position in the case of ``wsim.rotaryPowerTakeOff``), 
+and then calculate the force vector on the nodes. Both of these 
+classes come with extensive help which can be accessed using the 
+normal Matlab help systems, e.g. run ``doc wsim.linearPowerTakeOff`` 
+to open the help for this class in the help browser, or ``help 
+wsim.linearPowerTakeOff`` to view text help in the command line. See 
+:ref:`required-knowledge-help-system` for more information on the 
+Matlab and Octave help systems.
+
+For this RM3 example we will use the `wsim.linearPowerTakeOff`` 
+class. This class allows you to apply a force which is calculated by 
+a function with the syntax:
+
+::
+
+   force = force_function (time, displacement, velocity)
+   
+You are free to create and use any Matlab function with this syntax 
+as the calculation of the power take-off force. For the RM3 example, 
+the supplied function is a spring-damper function, although in this 
+case, the spring constant is set to zero. In the example, the 
+function is defined in the body of the script as an `anonymous 
+function`_, but it can also be any other function on the Matlab 
+path. In this case the function accepts the time variable as an 
+input, but just ignores it.
+
+.. _anonymous function: https://uk.mathworks.com/help/matlab/matlab_prog/anonymous-functions.html
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: %% Set up Power Take-Off
+   :end-before: %% Run the simulation
+
+It can be seen that setting up of the PTO is made very simple by the 
+`wsim.linearPowerTakeOff`. It simply requires the two nodes attached 
+to each part of the PTO, an axis number, and the force function. The 
+PTO class then does all the work of applying the correct forces to 
+the nodes. The PTO calculates the forces based on the relative 
+displacement and velocity of the two nodes in a direction parallel 
+to the specified axis number in the reference frame of the first node. 
+
+
+Running the Simulation
+----------------------
+
+With all of the possible components describing the system now 
+assembled it would now be possible to start manually stepping 
+through the system, and indeed this is possible (in case total 
+control is needed). However, to make running and managing the 
+simulation easy, the `wsim.wecSim` class has been provided. This 
+class takes in all the previously define components and runs the 
+simulation. One of the most useful aspects of `wsim.wecSim` is that 
+is ensures the correct hydrodynamic and PTO force are applied to the 
+correct nodes. The `wsim.wecSim` also does extensive logging of 
+simulation data or examination afterwards.
+
+
+Examining The Results
+---------------------
+
+
+

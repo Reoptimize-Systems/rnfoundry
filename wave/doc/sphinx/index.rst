@@ -20,10 +20,12 @@ an alternative system able to process much of the standard Matlab code base.
 The hydrodynamic data format for both is identical, so hydrodynamic data can
 be easily ported between systems.
 
-|TNShort| replaces the mutlibody modelling parts of the code with the `MBDyn`_.
-An advanced Matlab code based MBDyn preprocessor is available to ease the creation
-of MBDyn model input files in Matlab. Detailed documentation of thie preprocesing
-tool may be found in it's own dedicated document.
+|TNShort| replaces the mutlibody modelling parts of the code with 
+`MBDyn`_, an advanced multiboy dynamics simulator. An advanced 
+Matlab code based MBDyn preprocessor is available to allow the 
+creation of MBDyn model input files directly from Matlab. Detailed 
+documentation of the preprocesing tool may be found in it's own 
+dedicated manual.
 
 .. _WEC-Sim: http://wec-sim.github.io/WEC-Sim/index.html
 .. _Octave: https://www.gnu.org/software/octave/
