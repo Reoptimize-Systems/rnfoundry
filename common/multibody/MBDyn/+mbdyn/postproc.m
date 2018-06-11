@@ -335,6 +335,8 @@ classdef postproc < handle
                 
                 self.time = self.netcdf_getVar (ncid,varid);
                 
+                self.simInfo.InitialTime = self.time(1);
+                
                 self.simInfo.FinalTime = self.time(end);
                 
                 self.simInfo.DefaultOrientation = [];
@@ -942,6 +944,9 @@ classdef postproc < handle
         
         
         function var = getNetCDFVariable (self, component, quantity)
+            % gets the contents of a variable from the mbdyn netcdf output file
+            %
+            % 
             
             if ~self.haveNetCDF
                 error ('No netcdf file is available for plotting')
@@ -972,7 +977,7 @@ classdef postproc < handle
         end
         
         
-        function animate (self, varargin)
+        function mov = animate (self, varargin)
             % animate the nodes and bodies of the system
             %
             % Syntax
@@ -1044,11 +1049,55 @@ classdef postproc < handle
             %    coordinates of the lower left corner of the figure and w
             %    and h are the height and width respectively.
             %
+            %  'VideoFile' - optional file name into which the aimation
+            %    will be saved as a video. Default is empty, in which case
+            %    no video file will be produced unless a VideoWriter object
+            %    is supplied instead through the 'VideoWriter' option (see
+            %    below).
+            %
+            %  'VideoWriter' - optional VideoWriter object which will be
+            %    used to create a video instead of creating one internally.
+            %    This option cannot be used at the same time as the
+            %    'VideoFile' option. If this option is used, the
+            %    VideoProfile option (see below) is ignored. However,
+            %    animate will still modify the FrameRate property orf the
+            %    supplied VideoWriter object internally, and the VideoSpeed
+            %    option (see below) will also be applied. Default is empty,
+            %    in which case no video file will be produced unless a
+            %    video file path is supplied instead through the
+            %    'VideoFile' option (see above).
+            %
+            %  'VideoSpeed' - optional speed multiplier for the video when 
+            %    using the 'VideoFile'or 'VideoWriter' option. It must be a
+            %    scalar value greater than 0. The animation will play a
+            %    speed multiplied by this factor (by changing the video
+            %    frame rate) rather than real time. Default is 1 (no
+            %    speedup).
+            %
+            %  'VideoProfile' - optional character vector indicating what
+            %    type of video compression to use when using the
+            %    'VideoFile' option. This option coresponds to the profile
+            %    option for the VideoWrite class, soo see the help for
+            %    VideoWriter to see what the possible options are. Default
+            %    is 'Motion JPEG AVI'.
+            %
+            % Output
+            %
+            %  mov - if a video file is produced, this is VideoWriter
+            %   object used to create it. If no video file was
+            %   created/requested, it is an empty matrix.
+            %
+            % See also:  mbdyn.postproc.drawStep
+            %
+            %
+            
             
             if ~self.resultsLoaded
                 error ('No results have been loaded yet for plotting')
             end
             
+            % the following options will be passed directly to drawStep,
+            % and checked there
             options.PlotAxes = [];
             options.DrawLabels = false;
             options.AxLims = [];
@@ -1059,18 +1108,47 @@ classdef postproc < handle
             options.DrawBodies = true;
             options.Skip = 1;
             options.Light = false;
-            options.VideoFile = [];
-            options.VideoSpeed = 1;
             options.OnlyNodes = 1:self.nNodes;
             options.ExternalDrawFcn = [];
             options.View = [];
             options.FigPositionAndSize = [];
             
+            % the following options are specific to animate and must be
+            % checked here
+            options.VideoFile = [];
+            options.VideoSpeed = 1;
+            options.VideoProfile = 'Motion JPEG AVI';
+            options.VideoWriter = [];
+            options.VideoQuality = 75;
+            
             options = parse_pv_pairs (options, varargin);
+            
+            mbdyn.pre.base.checkNumericScalar (options.VideoSpeed, true, 'VideoSpeed');
+            if ~isempty (options.VideoFile)
+                assert (ischar (options.VideoFile), ...
+                    'VideoFile must be a character vector containing a valid file name for the video.');
+            end
+            if ~isempty (options.VideoProfile)
+                assert (ischar (options.VideoProfile), ...
+                    'VideoProfile must be a character vector containing a valid file video profile.');
+            end
+            if ~isempty (options.VideoWriter)
+                assert (isa (options.VideoWriter, 'VideoWriter'), ...
+                    'VideoWriter must be a VideoWriter object' );
+            end
+            if ~isempty (options.VideoFile) && ~isempty (options.VideoWriter)
+                error ('The VideoFile and VideoWriter options cannot both be used at the same time');
+            end
+            mbdyn.pre.base.checkNumericScalar (options.VideoQuality, true, 'VideoQuality');
+            assert (options.VideoQuality > 0 && options.VideoQuality <= 100, ...
+                'VideoQuality msut be > 0 and <= 100' );
             
             if self.resultsLoaded == false
                 error ('No results have been loaded yet');
             end
+            
+            
+            make_video = ~isempty (options.VideoFile) || ~isempty (options.VideoWriter);
             
             plotdata.HAx = [];
             plotdata.htraj = [];
@@ -1229,25 +1307,36 @@ classdef postproc < handle
                 
 %                 drawnow;
                 
-                if ~isempty(options.VideoFile)
+                if make_video
 
                     if tind == 1
-                        FPS = options.VideoSpeed ...
-                               * numel (1:options.Skip:size(self.nodes.(self.nodeNames{1}).Position,1)) ...
-                                        / (self.simInfo.FinalTime - self.simInfo.InitialTime);
                         
-                        mov = VideoWriter(options.VideoFile); %#ok<TNMLP>
+                        if isempty (options.VideoWriter)
+                            
+                            mov = VideoWriter(options.VideoFile, options.VideoProfile); %#ok<TNMLP>
+                            
+                            mov.Quality = options.VideoQuality;
+                            
+                        else
+                            mov = options.VideoWriter;
+                        end
+                        
+                        FPS = options.VideoSpeed ...
+                                   * numel (1:options.Skip:size(self.nodes.(self.nodeNames{1}).Position,1)) ...
+                                            / (self.simInfo.FinalTime - self.simInfo.InitialTime);
+                                        
                         mov.FrameRate = FPS;
-                        mov.Quality = 100;
-
-                        F = getframe(plotdata.HFig);
-                        open(mov);
-                        writeVideo(mov,F);
+                        
+                        F = getframe (plotdata.HFig);
+                        open (mov);
+                        writeVideo (mov,F);
                     else
-                        F = getframe(plotdata.HFig);
-                        writeVideo(mov,F);
+                        F = getframe (plotdata.HFig);
+                        writeVideo (mov,F);
                     end
                     
+                else
+                    mov = [];
                 end
             
             end
