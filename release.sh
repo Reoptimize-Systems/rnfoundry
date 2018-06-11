@@ -75,6 +75,11 @@ rm $release_dir/.hgignore
 # remove the release scripts
 rm $release_dir/release.sh
 rm $release_dir/test_release.sh
+# remove test scripts
+rm $release_dir/test_hg.sh
+
+# create version.txt
+echo ${version} > $release_dir/version.txt
 
 if [ "$copy_win_libs" = true ]; then
 
