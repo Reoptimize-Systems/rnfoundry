@@ -16,33 +16,22 @@ function hydro = generate_hydrodata (varargin)
     % create a body object which will be the cylinder
     float = nemoh.body (inputdir, 'Name', 'float');
 
-    % define the body shape using a 2D profile rotated around the z axis
+    % define the body shape using previously generated input mesh
     float.loadNemohMesherInputFile ( fullfile (dir, 'geometry', 'float.nmi'), ...
                                      fullfile (dir, 'geometry', 'float_Mesh.cal') ...
                                      ... 'CentreOfGravity', [0,0,-0.72] 
                                     );
 
-    %% draw body mesh 
-
-%     float.drawMesh ();
-%     axis equal;
-
-    %% create the Nemoh sphere
+    %% create the spar
 
     spar = nemoh.body (inputdir, 'Name', 'spar');
 
-    % define the body shape using a 2D profile rotated around the z axis
+    % define the body shape using previously generated input mesh
     spar.loadNemohMesherInputFile ( fullfile (dir, 'geometry', 'spar.nmi'), ...
                                     fullfile (dir, 'geometry', 'spar_Mesh.cal') ...
                                     ... 'Draft', 28.8999996, ... % got from reading example mesh file in WEC-Sim 
                                     ... 'CentreOfGravity', [ 0, 0, -21.29 + 28.8999996 - 8.71 ] 
                                     );
-
-
-    %% draw the course body mesh (will be refined later)
-
-%     spar.drawMesh ();
-%     axis equal;
 
     %% Create the nemoh simulation
 
@@ -51,21 +40,17 @@ function hydro = generate_hydrodata (varargin)
     sim = nemoh.simulation ( inputdir, ...
                              'Bodies', [ float, spar ] );
 
-
+    %% draw the course body mesh (this will be refined later)
     sim.drawMesh ();
     axis equal
 
-    %% write mesh files
-
-    % write mesh file for all bodies 
+    % write out the course mesh files for all bodies 
     sim.writeMesherInputFiles ();
-
-    %% process mesh files
 
     % process mesh files for all bodies to make ready for Nemoh
     sim.processMeshes ();
 
-    %% Draw all meshes in one figure
+    %% Draw all the now processed meshes in one figure
 
     sim.drawMesh ();
     axis equal;
@@ -108,7 +93,7 @@ function hydro = generate_hydrodata (varargin)
     
     hydro = struct();
 
-    hydro = wsim.processnemoh (inputdir);
+    hydro = wsim.bemio.processnemoh (inputdir);
     
     % hydro = Read_WAMIT(hydro,'..\..\WAMIT\RM3\rm3.out',[]);
     % hydro = Combine_BEM(hydro); % Compare WAMIT
@@ -120,6 +105,10 @@ function hydro = generate_hydrodata (varargin)
     
     if options.WriteH5
         Write_H5 (hydro, fullfile (inputdir, 'hydroData'))
+    end
+    
+    if options.WriteH5
+        wsim.bemio.write_hydrobody_mat_files (hydro, fullfile (inputdir, 'hydroData'))
     end
     
     if options.PlotBEM

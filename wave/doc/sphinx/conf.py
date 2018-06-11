@@ -40,7 +40,7 @@ numfig = True
 rst_prolog ="""
 .. highlight:: matlab
 .. |TNShort| replace:: EWST
-.. |TNFull| replace:: Edinburgh Wave Simulation Toolbox
+.. |TNFull| replace:: Edinburgh Wave Systems Toolbox
 .. role:: mcode(code)
    :language: matlab
 """
