@@ -128,13 +128,26 @@ that you end up with a directory tree something like:
 | ├── run.m
 | ├── make_multibody_system.m
 
-Where ``project_name`` is the Matlab packge name, so the functions 
-within it are called like ``project_name.generate_hydrodata``, 
-``project_name.run`` and ``project_name.make_multibody_system`` 
+Where `project_name` is the Matlab packge name, so the functions 
+within it are called like 
+
+::
+   project_name.generate_hydrodata
+   
+and
+
+::
+   project_name.run
+   
+and
+
+::
+   project_name.make_multibody_system
+   
 within Matlab.
 
 
-Example 1: The RM3 Two Body Point Absorber
+Example: The RM3 Two Body Point Absorber
 ==========================================
 
 This section describes the application of the WEC-Sim code to model 
@@ -215,7 +228,7 @@ files, a .nmi and a .cal file.
    Plot of both Nemoh input meshes for the RM3 example.
    
 In this example, generating the hydrodynamic data is performed by 
-the ``example_rm3.generate_hydrodata`` function. We will now work 
+the `example_rm3.generate_hydrodata` function. We will now work 
 our way through this function to show how the process works (but 
 remember you should first read the section 
 :ref:`nemoh-interface` to make understanding this easier).
@@ -227,7 +240,7 @@ actual operation:
 .. literalinclude:: /examples/+example_rm3/generate_hydrodata.m
    :end-before: %% create the float
 
-See the help for the ``parse_pv_pairs`` function to understand this 
+See the help for the `parse_pv_pairs` function to understand this 
 option parsing.
 
 The next step is to create the Nemoh body objects for the float and 
@@ -252,7 +265,7 @@ The mesh can then be plotted, and it is this plot which was shown in
    :end-before: % write out the course mesh files for all bodies 
    
 Now the meshes can be processed. This involves writing out the Nemoh 
-mesher input files and calling ``processMeshes`` which runs the 
+mesher input files and calling `processMeshes` which runs the 
 Nemoh mesher on the the course mesh input files to produced a 
 refined mesh, and also performs some basic hydrodynamic and 
 geometrical calculations, with the results being put in the 
@@ -276,16 +289,16 @@ Nemoh into a form suitable for use in |TNShort|.
    
 The first step is to load the Nemo data files and convert them to a 
 standard format. This is achieved with the 
-``wsim.bemio.processnemoh`` function. This function is part of a 
+`wsim.bemio.processnemoh` function. This function is part of a 
 package called bemio, which is within the wsim package. Note that 
 this is separate from the standard `BEMIO`_ functions from the 
 original WEC-Sim project. Copies of these are provided with 
 |TNShort| for convenience, any new function made specifically for 
-|TNShort| can be found in this ``wsim.bemio`` package.
+|TNShort| can be found in this `wsim.bemio` package.
 
 .. _BEMIO: http://wec-sim.github.io/WEC-Sim/advanced_features.html#bemio
 
-The output of ``wsim.bemio.processnemoh`` is a Matlab structure 
+The output of `wsim.bemio.processnemoh` is a Matlab structure 
 containing hydrodynamic data for all the bodies in the Nemoh system. 
 This hydro structure can then undergo further processing as shown in 
 the function, depending on what types of simulation are desired to 
@@ -296,7 +309,7 @@ impulse response function.
 
 Once all processing of the hydrodynamic data is complete, the data 
 must be converted to a form with can be used within |TNShort|, i.e., 
-which can be used by the ``wsim.hydroBody`` class. This class will 
+which can be used by the `wsim.hydroBody` class. This class will 
 be discussed in more detail in the following section, but for now it 
 is sufficient to know that the data must either be converted to on 
 HDF5 format file, or a set of .mat files, one for each 
@@ -315,15 +328,15 @@ Having generated the required hydrodynamic data to calculate the
 wave interaction forces we are now ready to use this data in a time 
 domain simulation of the RM3 device. The time domain simulation and 
 system is defined in this case in one function, 
-``example_rm3.make_multibody_system`` and a script 
-``example_rm3.run_wecsim``. Note that there is nothing special about 
+`example_rm3.make_multibody_system` and a script 
+`example_rm3.run_wecsim`. Note that there is nothing special about 
 the names of these functions, you are free to organise the code in 
 any way you like, and name the scripts and functions any way you like.
 
 Initial Simulation Setup
 ------------------------
 
-We will start by examining ``example_rm3.run_wecsim``, which in this 
+We will start by examining `example_rm3.run_wecsim`, which in this 
 case is the main script which sets up and runs the simulation. The 
 first section of this script sets the general simulation and wave 
 parameters. 
@@ -332,7 +345,7 @@ parameters.
    :end-before: %% Hydrodynamic body system
    
 The simulation and wave settings are each stored using classes, 
-``wsim.simSettings`` and ``wsim.waveSettings``, where the settings 
+`wsim.simSettings` and `wsim.waveSettings`, where the settings 
 are the class properties. Most of the settings in this example are 
 self-explanatory, but more settings are available which may not be 
 as obvious. A full list of the possible simulation settings and 
@@ -392,8 +405,8 @@ We specifically refer to hydrodynamically interacting bodies a other
 bodies in the system are defined elsewhere, as part of the multibody 
 system dynamics system. This will be explained in a later section.
 
-The ``wsim.hydroBody`` class does all processing of the hydrodynamic 
-forces on a body. The ``wsim.hydroSystem`` organises these bodies, 
+The `wsim.hydroBody` class does all processing of the hydrodynamic 
+forces on a body. The `wsim.hydroSystem` organises these bodies, 
 inserts the correct position, velocity and acceleration information 
 into each body, and gets all of the forces applied to the bodies by 
 the wave action as the simulation proceeds. The motion of the system 
@@ -415,8 +428,8 @@ required, not the full path.
 
 Having created all the required hydroBody objects, we can put them 
 into a hydroSystem [#f2]_ and tell it to prepare them for a time domain 
-simulation. You must always call ``initialiseHydrobodies`` and 
-``timeDomainSimSetup`` before a simulation.
+simulation. You must always call `initialiseHydrobodies` and 
+`timeDomainSimSetup` before a simulation.
 
 .. literalinclude:: /examples/+example_rm3/run_wecsim.m
    :start-at: % make a hydrosys object for simulation
@@ -440,7 +453,7 @@ directory etc.
       obj_array(2) = spar_hbody;
       hsys = wsim.hydroSystem (waves, simu, obj_array);
 
-   See the file *+example_rm3/run_wecsim_in_octave.m* for an example of 
+   See the file `+example_rm3/run_wecsim_in_octave.m` for an example of 
    how the run the same system in Octave. The changes are small, but 
    important. This file also demonstrates the use of the .mat file 
    hydroData format. This version of the file also runs in Matlab, 
@@ -448,7 +461,7 @@ directory etc.
    
    
 Creating the MultiBody System
---------------------------------
+-----------------------------
 
 Having set up the hydrodynamic system, the next step is to define 
 the constraints that determine the motion of that system under the 
@@ -478,8 +491,8 @@ repeated here.
 
 The first step in creating the multibody system is to get the 
 multibody elements corresponding to the hydrodynamic bodies. This 
-task can be done automatically by ``wsim.hydroSystem`` using the 
-``makeMBDynComponents`` method.
+task can be done automatically by `wsim.hydroSystem` using the 
+`makeMBDynComponents` method.
 
 .. literalinclude:: /examples/+example_rm3/run_wecsim.m
    :start-at: %% Multibody dynamics system specification (mbdyn)
@@ -491,7 +504,7 @@ system corresponding to the hydrodynamic bodies. These components
 can then be linked with other components in the system. As the 
 system requires more than a few lines of code to specify, it has 
 been specified in a separate (heavily commented) function file in 
-*+example_rm3/make_multibody_system.m*. A section of the file is 
+`+example_rm3/make_multibody_system.m`. A section of the file is 
 shown below:
 
 .. literalinclude:: /examples/+example_rm3/make_multibody_system.m
@@ -567,13 +580,21 @@ position of two components in a simulation (or the relative angular
 velocity and position in the case of ``wsim.rotaryPowerTakeOff``), 
 and then calculate the force vector on the nodes. Both of these 
 classes come with extensive help which can be accessed using the 
-normal Matlab help systems, e.g. run ``doc wsim.linearPowerTakeOff`` 
-to open the help for this class in the help browser, or ``help 
-wsim.linearPowerTakeOff`` to view text help in the command line. See 
+normal Matlab help systems, e.g. run
+
+::
+   doc wsim.linearPowerTakeOff
+   
+to open the help for this class in the help browser, or 
+
+::
+   help wsim.linearPowerTakeOff 
+   
+to view text help in the command line. See 
 :ref:`required-knowledge-help-system` for more information on the 
 Matlab and Octave help systems.
 
-For this RM3 example we will use the `wsim.linearPowerTakeOff`` 
+For this RM3 example we will use the `wsim.linearPowerTakeOff` 
 class. This class allows you to apply a force which is calculated by 
 a function with the syntax:
 
@@ -596,8 +617,8 @@ input, but just ignores it.
    :start-at: %% Set up Power Take-Off
    :end-before: %% Run the simulation
 
-It can be seen that setting up of the PTO is made very simple by the 
-`wsim.linearPowerTakeOff`. It simply requires the two nodes attached 
+It can be seen that setting up of the PTO is made very simple by 
+``wsim.linearPowerTakeOff``. It simply requires the two nodes attached 
 to each part of the PTO, an axis number, and the force function. The 
 PTO class then does all the work of applying the correct forces to 
 the nodes. The PTO calculates the forces based on the relative 
@@ -616,12 +637,292 @@ simulation easy, the `wsim.wecSim` class has been provided. This
 class takes in all the previously define components and runs the 
 simulation. One of the most useful aspects of `wsim.wecSim` is that 
 is ensures the correct hydrodynamic and PTO force are applied to the 
-correct nodes. The `wsim.wecSim` also does extensive logging of 
-simulation data or examination afterwards.
+correct nodes. The `wsim.wecSim` class also does extensive logging 
+of simulation data for examination afterwards. This logging is also 
+highly configurable so it can be selectively deactivated to improve 
+simulation speed. [#fsimlogspeed]_. The logging during a simulation 
+is performed by another class, the `wsim.logger` class. A logger 
+object is created inside `wsim.wecSim` and returned at the end of a 
+simulation. The settings controlling the logging, are themselves 
+contained in *another* class, `wsim.loggingSettings`. It is the 
+`loggingSettings` class which is created next in the example script.
 
+.. [#fsimlogspeed] Logging of data usually requires some reallocation 
+   of memory. ``The wsim.logger`` class used in |TNShort| attempts 
+   to do this in an efficient way (one can preallocate the size of 
+   the memory required to log the data, and memory is automatically 
+   grown in blocks when the preallocated limit is reached). However, 
+   the time spent doing this is still non-negligible. If efficiency 
+   is crucial, e.g. within an optimisation procedure, one should 
+   only log what is really necessary for optimum simulation speed.
 
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: %% Run the simulation
+   :end-before: % create the wecSim object
+   
+It can be seen that there is quite fine grained control over what is 
+logged. It is not necessary to set every setting as shown in the 
+script, this is just provided to demonstrate what settings are 
+available. By default, all logging is active (everything will be 
+logged). One can then selectively deactivate components by setting 
+them to `false`. Alternatively, the `loggingSettings` class has a 
+method `allOff`, which deactivates all logging (sets all logging 
+settings to `false`). One can then selectively reactivate only those 
+variables which are to be logged during the simulation by setting 
+them to `true` [#floggingindirect]_. 
+
+Having chosen the desired logging settings, the simulation is ready 
+to be run. The next step is then to create the `wsim.wecSim` object 
+discussed previously.
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: % create the wecSim object
+   :end-before: % initialise the simulation
+   
+The `wsim.wecSim` object must take as input the `wsim.hydroSystem` 
+and `mbdyn.pre.system` objects on creation. The supply of one or 
+more PTO objects is optional (and they can also be added later using 
+the `addPTO` method), as is the supply of a `wsim.loggingSettings` 
+object. If no `loggingSettings` onject is supplied, one is created 
+internally by `wsim.wecSim` with all default settings, so everything 
+will be logged. See the help for `wsim.wecSim` for more detail on 
+how to create the object and what options are available.
+
+Having created the `wecSim` management object we can then prepare 
+and run the simulation. The `prepare` method must always be called 
+before a simulation can be run.
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: % initialise the simulation
+   :end-before: %% Plot some results
+   
+The `run` method then does several things. It creates an input file 
+for MBDyn and writes it to disk [#foutpuloc]_, it then launches the 
+MBDyn program and sets up communication with it, and it then steps 
+though the simulation and returns two outputs. The first output is 
+the `wsim.logger` object discussed previously which contains the 
+logged data from the simulation. The second output is an object of 
+the class `mbdyn.postproc`. Both of these outputs will be discussed 
+in more detail in the next section.
+
+There are many options available for the `run` method which are 
+documented in it's help. In this case we used only one, the 
+``'TimeExecution'`` option, which prints the wall-clock time taken 
+to perform the simulation.
+
+.. [#floggingindirect] It should also be noted that setting some 
+   logging settings to `true` indirectly causes some other variables 
+   to also be logged. For example, setting `forceAddedMass` to 
+   `true` will also cause `forceAddedMassUncorrected` to become 
+   `true` as this is required to calculate the final added mass force.
+   
+.. [#foutpuloc] By default these files are written to a subdirectory 
+   of the case directory named `output_<date_and_time>` where 
+   `<date_and_time>` is replaced by the date and time the run method 
+   was started. The output from MBDyn is also placed in this directory.
+   
+   
 Examining The Results
 ---------------------
 
+Having run the simulation, it is now possible to use the returned 
+`wsim.logger` object and `mbdyn.postproc` object to examine what 
+occurred during the simulation. The `wsim.logger` object generally 
+contains data which was created on the Matlab side of the 
+simulation, i.e. the hydrodynamic and PTO forces, but also data 
+which was sent by MBDyn during the simulation such as node positions 
+etc. The `mbdyn.postproc` method in contrast can be used to access 
+other more detailed data calculated by MBDyn during the simulation 
+and written to disk once the simulation was complete. This includes 
+data on all the internally calculated forces etc.
+
+The data in `wsim.logger` object is stored in a public property, 
+`data`, which is a Matlab structure with field names corresponding 
+to each logged data item. For example, the contents of `data` in the 
+`datalog` output of the RM3 example is the following::
+
+   >> datalog.data
+   
+   ans = 
+   
+     struct with fields:
+   
+                             Time: [4001×1 double]
+                        Positions: [3×2×4001 double]
+                 AngularPositions: [3×2×4001 double]
+                       Velocities: [3×2×4001 double]
+                AngularVelocities: [3×2×4001 double]
+                    Accelerations: [3×2×4001 double]
+             AngularAccelerations: [3×2×4001 double]
+                       NodeForces: [3×2×4001 double]
+            NodeForcesUncorrected: [3×2×4001 double]
+                       ForceHydro: [3×2×4001 double]
+                  ForceExcitation: [3×2×4001 double]
+              ForceExcitationRamp: [3×2×4001 double]
+               ForceExcitationLin: [3×2×4001 double]
+            ForceExcitationNonLin: [3×2×4001 double]
+            ForceRadiationDamping: [3×2×4001 double]
+                   ForceRestoring: [3×2×4001 double]
+                    ForceMorrison: [3×2×4001 double]
+              ForceViscousDamping: [3×2×4001 double]
+                   ForceAddedMass: [3×2×4001 double]
+        ForceAddedMassUncorrected: [3×2×4001 double]
+                      NodeMoments: [3×2×4001 double]
+           NodeMomentsUncorrected: [3×2×4001 double]
+                      MomentHydro: [3×2×4001 double]
+                 MomentExcitation: [3×2×4001 double]
+             MomentExcitationRamp: [3×2×4001 double]
+              MomentExcitationLin: [3×2×4001 double]
+           MomentExcitationNonLin: [3×2×4001 double]
+           MomentRadiationDamping: [3×2×4001 double]
+                  MomentRestoring: [3×2×4001 double]
+                   MomentMorrison: [3×2×4001 double]
+             MomentViscousDamping: [3×2×4001 double]
+                  MomentAddedMass: [3×2×4001 double]
+       MomentAddedMassUncorrected: [3×2×4001 double]
+              PTO_1_InternalForce: [4001×1 double]
+       PTO_1_RelativeDisplacement: [4001×1 double]
+           PTO_1_RelativeVelocity: [4001×1 double]
+
+This can be accessed an processed or plotted like any normal Matlab 
+variable. However, for convenience, the `wsim.logger` class provides 
+methods to plot the outputs directly. The main method for this is 
+`plotVar`. The `plotVar` method is called with the name of the 
+variable to be plotted and plots it against it's independent 
+variable, which in most cases is the *Time* variable. This is shown 
+for several variables in the example:
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: %% Plot some results
+   :end-before: % we can also plot the motion
+   
+The plots produced by these calls to `plotVar` are shown in 
+:numref:`rm3_positions`, :numref:`rm3_velocities` and 
+:numref:`rm3_pto_force`. 
+   
+.. _rm3_positions:
+.. figure:: /images/rm3_positions_output.png
+   :align: center
+   
+.. _rm3_velocities:
+.. figure:: /images/rm3_velocities_output.png
+   :align: center
+   
+.. _rm3_pto_force:
+.. figure:: /images/rm3_pto_force_output.png
+   :align: center
+
+The log returned by the `wecSim` object only contains motion data 
+for the nodes which are accessed through the external structural 
+force, there may be other nodes in the simulation, and data on the 
+other nodes in the simulation must be obtained from the output of 
+MBDyn. As mentioned previously, the second output of the `run` 
+method, is the `mbdyn.postproc` object. This object loads data from 
+a netcdf format data file produced by MBDyn at the end of the 
+simulation. A list of all the variables which can then be examined 
+using this object is produced using the `displayNetCDFVarNames` 
+method, e.g. for the RM3 example, this produces the following::
+
+   >> mbdyn_pproc.displayNetCDFVarNames ()
+   run.step : time step index
+   time : simulation time
+   run.timestep : integration time step
+   node.struct : Structural nodes labels
+   node.struct.1 : no description
+   node.struct.1.X : global position vector (X, Y, Z)
+   node.struct.1.R : global orientation matrix (R11, R21, R31, R12, R22, R32, R13, R23, R33)
+   node.struct.1.XP : global velocity vector (v_X, v_Y, v_Z)
+   node.struct.1.Omega : global angular velocity vector (omega_X, omega_Y, omega_Z)
+   node.struct.2 : no description
+   node.struct.2.X : global position vector (X, Y, Z)
+   node.struct.2.R : global orientation matrix (R11, R21, R31, R12, R22, R32, R13, R23, R33)
+   node.struct.2.XP : global velocity vector (v_X, v_Y, v_Z)
+   node.struct.2.Omega : global angular velocity vector (omega_X, omega_Y, omega_Z)
+   node.struct.3 : no description
+   node.struct.3.X : global position vector (X, Y, Z)
+   node.struct.3.R : global orientation matrix (R11, R21, R31, R12, R22, R32, R13, R23, R33)
+   node.struct.3.XP : global velocity vector (v_X, v_Y, v_Z)
+   node.struct.3.Omega : global angular velocity vector (omega_X, omega_Y, omega_Z)
+   elem.autostruct : AutomaticStructural elements labels
+   elem.joint : Joint elements labels
+   elem.force : Force elements labels
+   node.struct.1.B : momentum (X, Y, Z)
+   node.struct.1.G : momenta moment (X, Y, Z)
+   node.struct.1.BP : momentum derivative (X, Y, Z)
+   node.struct.1.GP : momenta moment derivative (X, Y, Z)
+   node.struct.2.B : momentum (X, Y, Z)
+   node.struct.2.G : momenta moment (X, Y, Z)
+   node.struct.2.BP : momentum derivative (X, Y, Z)
+   node.struct.2.GP : momenta moment derivative (X, Y, Z)
+   elem.joint.7 : no description
+   elem.joint.7.f : local reaction force (Fx, Fy, Fz)
+   elem.joint.7.m : local reaction moment (Mx, My, Mz)
+   elem.joint.7.F : global reaction force (FX, FY, FZ)
+   elem.joint.7.M : global reaction moment (MX, MY, MZ)
+   elem.joint.8 : no description
+   elem.joint.8.f : local reaction force (Fx, Fy, Fz)
+   elem.joint.8.m : local reaction moment (Mx, My, Mz)
+   elem.joint.8.F : global reaction force (FX, FY, FZ)
+   elem.joint.8.M : global reaction moment (MX, MY, MZ)
+   elem.joint.10 : no description
+   elem.joint.10.f : local reaction force (Fx, Fy, Fz)
+   elem.joint.10.m : local reaction moment (Mx, My, Mz)
+   elem.joint.10.F : global reaction force (FX, FY, FZ)
+   elem.joint.10.M : global reaction moment (MX, MY, MZ)
+   elem.joint.10.R : global orientation matrix (R11, R21, R31, R12, R22, R32, R13, R23, R33)
+   elem.joint.10.Omega : local relative angular velocity (x, y, z)
 
 
+This shows the list of available variables and a short description 
+of each. The contents of these can then be accessed using the 
+`getNetCDFVariable` method. When it is created, the `mbdyn.postproc` 
+class also immediately loads the motion data from the MBDyn output 
+file for all the nodes in the simulation. Some methods for plotting 
+this motion data are then provided, such as the 
+`plotNodeTrajectories` method demonstrated in the script:
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: %% Plot some results
+   :end-before: % we can also plot the motion
+   
+The output of this command is shown in :numref:`rm3_postproc_traj`. 
+As usual you can learn about the full range of post-processing 
+methods available from the `mbdyn.postproc` object by examining the 
+help for the class, but also through the documentation for the 
+Matlab NBDyn Toolbox.
+
+.. _rm3_postproc_traj:
+.. figure:: /images/postproc_node_trajectories.png
+   :align: center 
+   
+Finally, it can also be extremely helpful to visualise the motion of 
+the system during the simulation. This can be done using the 
+`animate` method of the `wsim.wecSim` class. An example of this is 
+shown at the end of the script.
+
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
+   :start-at: %% Animate the system
+
+A still image from the resulting animation is shown in 
+:numref:`rm3_animate`. It can be seen that the wave surface is 
+plotted in addition to the device. This animation by defuat is just 
+played in a Matlab figure window, however, if desired, it can also 
+be written to disk as an avi file. See the help for the 
+`wsim.wecSim.animate` for more information. 
+
+.. _rm3_animate:
+.. figure:: /images/rm3_animation_still.png
+   :align: center 
+   
+Conclusions
+===========
+
+This example gives a good introduction to the capabilities of 
+|TNShort|, but is not exhaustive. Topics which of interest which 
+have not been explored include multi-rate simulation techniques, 
+creating your own power take-off classes derived from the built-in 
+power take-off classes, and advanced features of MBDyn that may be 
+useful for system simulation.
+
+Note also that further examples are provided in the same location as 
+the example described in this document.
