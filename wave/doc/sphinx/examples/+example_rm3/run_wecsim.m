@@ -202,9 +202,14 @@ datalog.plotVar ('Positions');
 datalog.plotVar ('Velocities');
 
 % plot the force from the PTO (note the 'PTO_1_' prefix added by
-% wsim.wecSim, this allows mustliple PTO objects of the same type to by
+% wsim.wecSim, this allows multiple PTO objects of the same type to by
 % used in one system)
 datalog.plotVar ('PTO_1_InternalForce');
+
+% we can also plot the motion of nodes using the mbdyn.postproc object,
+% this has access to data on all nodes, not just those associated with the
+% external structural forces
+mbdyn_pproc.plotNodeTrajectories ('OnlyNodes', 1:2, 'Title', false);
 
 %% Animate the system
 
