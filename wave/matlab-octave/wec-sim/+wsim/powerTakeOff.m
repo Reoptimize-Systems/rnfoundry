@@ -15,8 +15,11 @@ classdef powerTakeOff < handle
 % wsim.powerTakeOff Methods:
 %
 %   powerTakeOff - wsim.powerTakeOff constructor
+%   start - start the simulation
 %   advanceStep - advance to the next simulation time step
-%   forceAndMoment - 
+%   finish - end the simulation
+%   forceAndMoment - calculate the forceAndMoment from the power take-off
+%    (intended to be reimplemented by child classes).
 %   logData - appends the internal variable data to the log
 %   loggingSetup - sets up data logging for a wsim.linearPowerTakeOff object
 %
@@ -31,10 +34,10 @@ classdef powerTakeOff < handle
     end
     
     properties (GetAccess=public, SetAccess=private)
-        uniqueLoggingNames;
-        referenceNode;
-        otherNode;
-        loggingInfo;
+        uniqueLoggingNames; % the logged variable names with a unique prefix for the object
+        referenceNode; % the reference node of the PTO, forces motion is relative to this node
+        otherNode; % the other (non-reference node)
+        loggingInfo; % structure containing information on the variables which will be logged by the PTO
     end
     
     properties (GetAccess=protected, SetAccess=protected)
@@ -42,12 +45,6 @@ classdef powerTakeOff < handle
         loggerReady;
         internalVariables;
         simulationInfo;
-    end
-    
-    methods (Abstract)
-        
-        
-        
     end
     
     methods
@@ -288,6 +285,25 @@ classdef powerTakeOff < handle
         end
         
         function forceAndMoment (self)
+            % forceAndMoment should return the force and moment from a PTO
+            %
+            % Syntax
+            %
+            % forceAndMoment (pto)
+            %
+            % Description
+            %
+            % forceAndMoment is intended to be reimplemented by child
+            % classes and should return the forces and moments from the PTO
+            % on the two attached nodes as a (6 x 2) matrix. The
+            % implemetation here in wsim.powerTakeOff does nothing.
+            %
+            % Input
+            %
+            %  pto - wsim.powerTakeOff object
+            %
+            %
+            
             
         end
         
@@ -373,6 +389,26 @@ classdef powerTakeOff < handle
         
         function finish (self, varargin)
             % method called at end of wecSim simulation 
+            %
+            % Syntax
+            %
+            % finish (pto)
+            %
+            % Description
+            %
+            % finish will be called by the wsim.wecSim class at the end of
+            % a simulation. It is intended to be reimplemented by child
+            % classes which need to perform tasks (e.g. closing
+            % communications, destroying emeory etc.) after the main
+            % simulation has completed. The implemetation here in
+            % wsim.powerTakeOff does nothing.
+            %
+            % Input
+            %
+            %  pto - wsim.powerTakeOff object
+            %
+            %
+            
             
         end
         
