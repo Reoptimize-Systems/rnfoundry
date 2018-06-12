@@ -2,6 +2,8 @@
 %
 % Script to generate files for mbdyn docs and build the docs
 
+TNShort = 'EWST';
+
 % files required for embedding in docs
 thisfiledir = getmfilepath ('wsim.makedocs');
 
@@ -15,26 +17,23 @@ imagedir = fullfile (thisfiledir, '..', 'images');
 
 
 %% Make API reference
-apidir = fullfile (thisfiledir, '..', 'api_reference');
+wsim_apidir = fullfile (thisfiledir, '..', 'api_reference');
 
-mkdir (apidir);
-
-wsim_apidir = fullfile (apidir, 'pre');
 mkdir (wsim_apidir);
 
 % generated docs from class file help
-wsim_class_list = dir (fullfile (getmfilepath ('mbdyn.pre.element'), '*.m'));
+wsim_class_list = dir (fullfile (getmfilepath ('wsim.wecSim'), '*.m'));
 
 % exclude_list = { 'baseSystem.m', ...
 %                  'subsystem.m' };
-
+exclude_list = { 'mooring.m' };
 
 for ind = 1:numel(wsim_class_list)
     
     if ~any (strcmp (wsim_class_list(ind).name, exclude_list )) 
     
         rst = help2rst (['wsim.', wsim_class_list(ind).name(1:end-2)], ...
-                        'SectionChars', '=-^"+');
+                         'SectionChars', '=-^"+');
 
         outputfile = fullfile (wsim_apidir, [wsim_class_list(ind).name(1:end-2), '.rst']);
 
@@ -46,9 +45,13 @@ end
         
         
 %% build the docs
-cd (fullfile (apidir, '..'));
+cd (fullfile (wsim_apidir, '..'));
 
 [status, out] = cleansystem ('make html');
+
+%% export docs to a zip file
+
+% [status, out] = cleansystem ('make html');
 
 %% functions
 % 
