@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# EMST documentation build configuration file, created by
+# MBDYN documentation build configuration file, created by
 # sphinx-quickstart on Fri May  5 14:45:20 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -41,8 +41,8 @@ numfig = True
 
 rst_prolog ="""
 .. highlight:: matlab
-.. |TNShort| replace:: EWST
-.. |TNFull| replace:: Edinburgh Wave Simulation Toolbox
+.. |TNShort| replace:: MBDYN
+.. |TNFull| replace:: MBDyn Matlab Toolbox
 """
 
 # Add any paths that contain templates here, relative to this directory.
@@ -58,7 +58,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'EMST'
+project = u'MBDYN'
 copyright = u'2017, Richard Crozier'
 author = u'Richard Crozier'
 
@@ -112,7 +112,7 @@ html_theme = 'alabaster'
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'EMSTdoc'
+htmlhelp_basename = 'MBDYNdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -139,7 +139,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'EMST.tex', u'EMST Documentation',
+    (master_doc, 'MBDYN.tex', u'MBDYN Documentation',
      u'Richard Crozier', 'manual'),
 ]
 
@@ -149,7 +149,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'emst', u'EMST Documentation',
+    (master_doc, 'MBDYN', u'MBDYN Documentation',
      [author], 1)
 ]
 
@@ -160,8 +160,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'EMST', u'EMST Documentation',
-     author, 'EMST', 'One line description of project.',
+    (master_doc, 'MBDYN', u'MBDYN Documentation',
+     author, 'MBDYN', 'One line description of project.',
      'Miscellaneous'),
 ]
 
