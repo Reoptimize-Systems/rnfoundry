@@ -55,8 +55,8 @@ organising code, you should first read the section
 :ref:`required-knowledge-matlab-packages`.
 
 However, in summary, packages are created by placing files in a 
-directory whose name begins with a ``+`` character. For example, one 
-might create a directory named ``+mypackage``. Any script functions 
+directory whose name begins with a `+` character. For example, one 
+might create a directory named `+mypackage`. Any script functions 
 put in this directory can be used from the Matlab prompt using the 
 syntax::
 
@@ -68,7 +68,7 @@ and script names within different packages without clashing (also
 called shadowing). Organising things this way makes it easier to 
 make new designs/packages of scripts and functions from existing 
 ones by just copying the package directory to a new directory (also 
-starting with a ``+`` symbol). We will use this method of 
+starting with a `+` symbol). We will use this method of 
 organisation in all subsequent examples.
 
 The package, or function files used to create the model can reside 
@@ -132,16 +132,19 @@ Where `project_name` is the Matlab packge name, so the functions
 within it are called like 
 
 ::
+
    project_name.generate_hydrodata
    
 and
 
 ::
+
    project_name.run
    
 and
 
 ::
+
    project_name.make_multibody_system
    
 within Matlab.
@@ -583,11 +586,13 @@ classes come with extensive help which can be accessed using the
 normal Matlab help systems, e.g. run
 
 ::
+
    doc wsim.linearPowerTakeOff
    
 to open the help for this class in the help browser, or 
 
 ::
+
    help wsim.linearPowerTakeOff 
    
 to view text help in the command line. See 
@@ -739,7 +744,9 @@ data on all the internally calculated forces etc.
 The data in `wsim.logger` object is stored in a public property, 
 `data`, which is a Matlab structure with field names corresponding 
 to each logged data item. For example, the contents of `data` in the 
-`datalog` output of the RM3 example is the following::
+`datalog` output of the RM3 example is the following:
+
+.. highlight:: none
 
    >> datalog.data
    
@@ -922,7 +929,7 @@ This example gives a good introduction to the capabilities of
 have not been explored include multi-rate simulation techniques, 
 creating your own power take-off classes derived from the built-in 
 power take-off classes, and advanced features of MBDyn that may be 
-useful for system simulation.
+useful for system simulation. 
 
 Note also that further examples are provided in the same location as 
 the example described in this document.
