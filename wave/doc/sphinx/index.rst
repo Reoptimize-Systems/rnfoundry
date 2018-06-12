@@ -88,6 +88,7 @@ is Dr. Richard Crozier.
    required_knowledge
    nemoh
    hydrodata_files
+   api_reference
 
 
 
