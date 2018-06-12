@@ -219,6 +219,48 @@ classdef loggingSettings
             self.powerTakeOffInternal = val;
         end
         
+        
+        function self = allOff (self)
+            % makes all logging settings false (so nothing will be logged)
+            
+            self.positions = false;
+            self.velocities = false;
+            self.accelerations = false;
+            self.angularPositions = false;
+            self.angularVelocities = false;
+            self.angularAccelerations = false;
+
+            self.nodeForces = false;
+            self.nodeForcesUncorrected = false;
+            self.forceHydro = false;
+            self.forceExcitation = false;
+            self.forceExcitationRamp = false;
+            self.forceExcitationLin = false;
+            self.forceExcitationNonLin = false;
+            self.forceRadiationDamping = false;
+            self.forceRestoring = false;
+            self.forceMorrison = false;
+            self.forceViscousDamping = false;
+            self.forceAddedMassUncorrected = false;
+            self.forceAddedMass = false;
+
+            self.nodeMoments = false;
+            self.nodeMomentsUncorrected = false;
+            self.momentHydro = false;
+            self.momentExcitation = false;
+            self.momentExcitationRamp = false;
+            self.momentExcitationLin = false;
+            self.momentExcitationNonLin = false;
+            self.momentRadiationDamping = false;
+            self.momentRestoring = false;
+            self.momentMorrison = false;
+            self.momentViscousDamping = false;
+            self.momentAddedMassUncorrected = false;
+            self.momentAddedMass = false;
+
+            self.powerTakeOffInternal = false;
+            
+        end
     end
     
     methods (Access=private)
