@@ -1,20 +1,20 @@
 classdef hydroSystem < handle
-    % class representing a collection of hydrodynamically interacting bodies
-    %
-    % Description
-    %
-    % wsim.hydroSystem is a class used to simulate a one or more bodies
-    % interaction with fluid waves and also, optionally, body-to-body
-    % interaction. 
-    %
-    % Methods:
-    %
-    %  addHydroBodies
-    %  initialiseHydrobodies
-    %
-    % 
-    % See also: wsim.hydroBody, wsim.wecSim
-    %
+% class representing a collection of hydrodynamically interacting bodies
+%
+% Description
+%
+% wsim.hydroSystem is a class used to simulate a one or more bodies
+% interaction with fluid waves and also, optionally, body-to-body
+% interaction.
+%
+% Methods:
+%
+%  addHydroBodies
+%  initialiseHydrobodies
+%
+% 
+% See also: wsim.hydroBody, wsim.wecSim
+%
     
     properties (GetAccess = public, SetAccess = private)
         
@@ -40,13 +40,18 @@ classdef hydroSystem < handle
     methods
         
         function self = hydroSystem (waves, simu, hydrobodies)
-            % hydroSystem class constructor
+            % wsim.hydroSystem class constructor
             %
             % Syntax
             %
             % hsys = hydroSystem (waves, simu)
             % hsys = hydroSystem (..., hydrobodyfiles)
             % 
+            % Description
+            %
+            % wsim.hydroSystem is a class used to simulate a one or more
+            % bodies interaction with fluid waves and also, optionally,
+            % body-to-body interaction.
             %
             % Input
             %
@@ -94,7 +99,7 @@ classdef hydroSystem < handle
             %
             % Input
             %
-            %  hsys - hydroSystem object
+            %  hsys - wsim.hydroSystem object
             %
             %  hydrobodies - array of one or more hydrobody objects to be
             %    added to the system
@@ -148,6 +153,37 @@ classdef hydroSystem < handle
         end
         
         function initialiseHydrobodies (self, varargin)
+            % performs some organisation tasks for the system
+            %
+            % Syntax
+            %
+            % initialiseHydrobodies (hsys)
+            % initialiseHydrobodies (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % initialiseHydrobodies performs some preprocessing task to
+            % organise the system which are necessary before proceeding to
+            % set up a tme domain system. It should be called before
+            % calling the timeDomainSimSetup method.
+            %
+            % Input
+            %
+            %  hsys - wsim.hydroSystem object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'MultiConditionRun' - 
+            %
+            %  'MultiConditionRunIndex' - 
+            %
+            % Output
+            %
+            %
+            %
+            % See Also: wsim.hydroSystem.timeDomainSimSetup
+            %
             
             options.MultiConditionRun = false;
             options.MultiConditionRunIndex = 1;
@@ -233,16 +269,21 @@ classdef hydroSystem < handle
         end
         
         function timeDomainSimSetup (self)
-            % set up the hydrodynamic system in preparation for performaing
-            % a transient ode solution
+            % prepare wsim.hydroSystem for a time domain simulation
             %
             % Syntax
             %
             %  timeDomainSimSetup (hsys)
             %
+            % Description
+            %
+            % timeDomainSimSetup prepares the hydrodynamic system to
+            % perform a time domain simulation of the system.
+            %
             % Input
             %
-            %  hsys - hydroSystem object
+            %  hsys - wsim.hydroSystem object
+            %
             
             % simulation setup
             self.simu.checkInputs ();
@@ -280,6 +321,33 @@ classdef hydroSystem < handle
         end
         
         function [mbnodes, mbbodies, mbelements] = makeMBDynComponents (self)
+            % generates mbdyn preprocessor objects for the system
+            %
+            % Syntax
+            %
+            % [mbnodes, mbbodies, mbelements] = makeMBDynComponents (hsys)
+            %
+            % Description
+            %
+            % Generates mbdyn preprocessor objects for the system
+            %
+            % Input
+            %
+            %  hsys - wsim.hydroSystem object
+            %
+            % Output
+            %
+            %  mbnodes - cell array of mbdyn.pre.structuralNode6dof
+            %   objects, one for each body in the system
+            %
+            %  mbbodies - cell array of mbdyn.pre.body objects, one for
+            %   each body in the system
+            %
+            %  mbelements - cell array of other mbdyn preprocessor objects
+            %   required for the system. The exact contents of this depends
+            %   on the simulation settings
+            %
+            %
             
             if self.hydroBodiesInitialised
                             
@@ -447,10 +515,14 @@ classdef hydroSystem < handle
         end
         
         function [forces, breakdown] = hydroForces (self, t, pos, vel, accel)
-            % calculates hydrodynamic forces acting on all bodies in a
-            % hydrodynamic system
+            % calculates forces acting on all bodies in a hydrodynamic system
             %
             % [forces, breakdown] = hydroForces (hsys, t, x, vel, accel)
+            %
+            % Description
+            %
+            % hydroForces calculates the hydrodynamic forces acting on all
+            % bodies in a hydrodynamic system.
             %
             % Input
             %
@@ -521,7 +593,7 @@ classdef hydroSystem < handle
             %
             %    BodyHSPressure : 
             %
-            %    WaveNonLinearPressure : The Froude–Krylov
+            %    WaveNonLinearPressure : The Froude–Krylov pressure
             %
             %    WaveLinearPressure : 
             %
@@ -558,7 +630,7 @@ classdef hydroSystem < handle
             %
             % Syntax
             %
-            %
+            % advanceStep (hsys, t, vel, accel)
             %
             % Description
             %
@@ -568,7 +640,7 @@ classdef hydroSystem < handle
             %
             % Input
             %
-            %  hs - wsim.hydroSystem object
+            %  hsys - wsim.hydroSystem object
             %
             %  t - the current simulation time
             %
@@ -601,6 +673,10 @@ classdef hydroSystem < handle
             %
             % [F_Total, F_AddedMass] = correctAddedMassForce (hsys, forceTotal, forceAddedMass, accel)
             %
+            % Description
+            %
+            % 
+            %
             % Input
             %
             %  hsys - hydroSystem object
@@ -618,9 +694,10 @@ classdef hydroSystem < handle
             %
             % Output
             %
-            %  F_Total - 
+            %  F_Total - the corrected total forces for each node (taking
+            %   account the corected 
             %
-            %  F_AddedMass - 
+            %  F_AddedMass - the corected added mass forces
             %
             %
             
