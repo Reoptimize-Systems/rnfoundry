@@ -1,7 +1,27 @@
 classdef externalFileCommunicator < mbdyn.pre.base
 % base class of the external file communicator classes
 %
-% See also: 
+% Syntax
+%
+% efc = mbdyn.pre.externalFileCommunicator ()
+% efc = mbdyn.pre.externalFileCommunicator ('Parameter', Value)
+%
+% Description
+%
+% mbdyn.pre.externalFileCommunicator is a base class for the
+% comunicator classes used for e.g. external structural forces.
+% COmmunicators define how the passing of data between
+% Matlab/Octave and MBDyn is achieved.
+%
+% mbdyn.pre.externalFileCommunicator Methods:
+%
+%   externalFileCommunicator - construct an mbdyn.pre.externalFileCommunicator object
+%   generateMBDynInputString - generates MBDyn input string for external file communicators
+%
+%
+% See also: mbdyn.pre.socketCommunicator, 
+%           mbdyn.pre.sharedMemoryCommunicator
+%
     
     properties (GetAccess = public, SetAccess = protected)
         sleepTime;
@@ -16,7 +36,51 @@ classdef externalFileCommunicator < mbdyn.pre.base
         function self = externalFileCommunicator (varargin)
             % construct an mbdyn.pre.externalFileCommunicator object
             %
-            
+            %
+            % Syntax
+            %
+            % efc = mbdyn.pre.externalFileCommunicator ()
+            % efc = mbdyn.pre.externalFileCommunicator ('Parameter', Value)
+            %
+            % Description
+            %
+            % mbdyn.pre.externalFileCommunicator is a base class for the
+            % comunicator classes used for e.g. external structural forces.
+            % COmmunicators define how the passing of data between
+            % Matlab/Octave and MBDyn is achieved.
+            %
+            % Input
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'SleepTime' - determines how long MBDyn is supposed to sleep
+            %    while waiting for a new input file to appear or for an old
+            %    output file to disappear.
+            %
+            %  'Coupling' - character vector determining the type of
+            %    coupling with the external software. Can be one of
+            %    'staggered', 'tight' or 'loose'. For details on the
+            %    implications of each of these, see the section on External
+            %    Force in the official MBDyn manual.
+            %
+            %  'SendAfterPredict' - character vector which can be 'yes' or
+            %    'no'. This indicates whether MBDyn must send the predicted
+            %    motion or not when playing a tight coupling loop.
+            %
+            %  'Precision' - only relevant for some communicators. Defines
+            %    precision with which data will be passed.
+            %
+            % Output
+            %
+            %  efc - mbdyn.pre.externalFileCommunicator
+            %
+            %
+            %
+            % See Also: mbdyn.pre.socketCommunicator, 
+            %           mbdyn.pre.sharedMemoryCommunicator
+            %
+
             options.SleepTime = [];
             options.Precision = [];
             options.Coupling = 'loose';
