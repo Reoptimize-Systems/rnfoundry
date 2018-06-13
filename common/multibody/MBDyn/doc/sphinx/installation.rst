@@ -21,6 +21,16 @@ Alternatively you can add the paths using the Matlab ``addpath`` and
 
 See the help for ``addpath`` and ``genpath`` for more information.
 
+RenewNet Foundry
+================
+
+You may also have received the MBDyn Toolbox as part of the RenewNet 
+Foundry package, in this case you should first refer to the README 
+file in the top level of the RenewNet Foundry package and follow the 
+instructions there. The RenewNet Foundry installation is automated 
+through the `rnfoundry_setup.m` function, and the MBDyn Toolbox is 
+installed automatically by this.
+
 MBDyn
 =====
 
@@ -28,8 +38,12 @@ The MBDyn toolbox naturally requires a copy of MBDyn. Releases of
 the toolbox include a copy of MBDyn, but the official version may 
 also be used. However, building MBDyn for Windows is not trivial, 
 and official Windows releases are not available, so the bundled 
-version is recommended for Windows. The MBDyn toolbox will locate
-the bundled version without help.
+version is recommended for Windows. The MBDyn toolbox will locate 
+the bundled version without help. On linux or unix systems you 
+should follow the normal installation instructions for MBDyn. You 
+can obtain the latest version of MBDyn from `the MBDyn website`_.
+
+.. _the MBDyn website: https://www.mbdyn.org/?Software_Download
 
 Compiling the mex interface file
 ================================
