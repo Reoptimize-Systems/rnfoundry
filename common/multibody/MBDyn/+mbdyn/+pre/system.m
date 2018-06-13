@@ -204,8 +204,9 @@ classdef system < mbdyn.pre.base
             %    { 'netcdf', 'sync' }
             %    { 'netcdf', 'sync', 'no text' }
             %
-            %    By default OutputResults is empty, meaning only the
-            %    default text format output is produced by MBDyn. 
+            %    By default OutputResults is { 'netcdf', 'no text' },
+            %    meaning only the netcdf format output is produced by
+            %    MBDyn.
             %
             %  'References' - optional cell array of mbdyn.pre.reference
             %    objects. If supplied, these are used purely for
@@ -228,7 +229,7 @@ classdef system < mbdyn.pre.base
             options.DefaultOrientation = '';
             options.References = {};
             options.DefaultScales = [];
-            options.OutputResults = [];
+            options.OutputResults = { 'netcdf', 'no text' };
             
             options = parse_pv_pairs (options, varargin);
             
