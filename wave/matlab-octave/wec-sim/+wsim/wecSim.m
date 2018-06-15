@@ -14,6 +14,7 @@ classdef wecSim < handle
         mBDynOutputFile;
         mBDynInputFile;
         caseDirectory;
+        simInfo;
 
         loggingSettings;
         
@@ -21,15 +22,25 @@ classdef wecSim < handle
     
     properties (GetAccess = private, SetAccess = private)
         
+        % sim control variables
+        readyToRun;
+        simStarted;
+        simComplete;
+        
+        
         ptoIndexMap;
         hydroNodeIndexMap;
         mBDynSystem;
         hydroSystem;
-        readyToRun;
-        simComplete;
         hydroMotionSyncStep = 1;
         hydroMotionSyncStepCount = 1;
-        
+        simStepCount;
+        mBDynMBCNodal;
+        minForceIterations;
+        absForceTolerance;
+        relForceTolerance;
+        maxForceIterations;
+        outputFilePrefix;
         
         logger; % wsim.logger object containing the logged simulation data from the last sim
         nMBDynNodes; 
@@ -130,11 +141,8 @@ classdef wecSim < handle
             %
 
             options.PTOs = {};
-%             options.StartTime = [];
-%             options.EndTime = [];
             options.NEMOHSim = [];
             options.LoggingSettings = wsim.loggingSettings ();
-%             options.MBDynVerbosity = 0;
             options.OutputDir = '';
             
             options = parse_pv_pairs (options, varargin);
@@ -424,6 +432,7 @@ classdef wecSim < handle
             % See Also: wsim.logger, mbdyn.postproc
             %
             
+            % options passed to simStart
             options.MBDynInputFile = '';
             thedate = datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF');
             options.OutputFilePrefix = fullfile (self.caseDirectory, ['output_', thedate], ['mbdyn_sim_results_', thedate]);
@@ -432,9 +441,59 @@ classdef wecSim < handle
             options.RelForceTolerance = 1e-5;
             options.MinIterations = 0;
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
-            options.TimeExecution = false;
             options.HydroMotionSyncSteps = 1;
             options.ForceMBDynNetCDF = true;
+            
+            % specific to run
+            options.TimeExecution = false;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            check.isLogicalScalar (options.TimeExecution, true, 'TimeExecution');
+            
+            [status, datalog] = self.simStart ( 'MBDynInputFile', options.MBDynInputFile, ...
+                            'OutputFilePrefix', options.OutputFilePrefix, ...
+                            'Verbosity', options.Verbosity, ...
+                            'AbsForceTolerance', options.AbsForceTolerance, ...
+                            'RelForceTolerance', options.RelForceTolerance, ...
+                            'MinIterations', options.MinIterations, ...
+                            'MaxIterations', options.MaxIterations, ...
+                            'HydroMotionSyncSteps', options.HydroMotionSyncSteps, ...
+                            'ForceMBDynNetCDF', options.ForceMBDynNetCDF );
+            
+            if options.TimeExecution, tic; end
+            
+            while status == 0
+                
+                % step through the simulation
+                status = self.simStep ();
+                
+            end
+            
+            if nargout > 0
+                mbdyn_postproc = self.simFinish ();
+            else
+                self.simFinish ();
+            end
+            
+            if options.TimeExecution, toc; end
+            
+        end
+        
+        function [status, datalog] = simStart (self, varargin)
+            
+            options.MBDynInputFile = '';
+            thedate = datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF');
+            options.OutputFilePrefix = fullfile (self.caseDirectory, ['output_', thedate], ['mbdyn_sim_results_', thedate]);
+            options.Verbosity = 0;
+            options.AbsForceTolerance = 100;
+            options.RelForceTolerance = 1e-5;
+            options.MinIterations = 0;
+            options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
+            options.HydroMotionSyncSteps = 1;
+            options.ForceMBDynNetCDF = true;
+            
+            options = parse_pv_pairs (options, varargin);
             
             if isempty (options.MBDynInputFile)
                 [ pathstr, ~ ] = fileparts (options.OutputFilePrefix);
@@ -443,8 +502,6 @@ classdef wecSim < handle
                 assert (ischar (options.MBDynInputFile), ...
                     'MBDynInputFile must be string containing the file path where the MBDyn input file should be generated');
             end
-            
-            options = parse_pv_pairs (options, varargin);
             
             check.isPositiveScalarInteger (options.Verbosity, true, 'Verbosity', true);
             
@@ -466,13 +523,17 @@ classdef wecSim < handle
                 'MinIterations (%d) is not less than or equal to MaxIterations (%d)', ...
                 options.MinIterations,  options.MaxIterations)
             
-            check.isLogicalScalar (options.TimeExecution, true, 'TimeExecution');
-            
             check.isPositiveScalarInteger (options.HydroMotionSyncSteps, true, 'HydroMotionSyncSteps');
             
             check.isLogicalScalar (options.ForceMBDynNetCDF, true, 'ForceMBDynNetCDF');
             
             % -----------------   input checking finished
+            
+            self.minForceIterations = options.MinIterations;
+            self.absForceTolerance = options.AbsForceTolerance;
+            self.relForceTolerance = options.RelForceTolerance;
+            self.maxForceIterations = options.MaxIterations;
+            self.outputFilePrefix = options.OutputFilePrefix;
             
             if self.readyToRun == false
                 error ('Simulation is not ready to run, have you run ''prepare'' yet?');
@@ -493,34 +554,34 @@ classdef wecSim < handle
             % is used)
             self.hydroMotionSyncStepCount = self.hydroMotionSyncStep;
             
-            siminfo.TStart = self.mBDynSystem.problems{1}.initialTime;
-            siminfo.TEnd = self.mBDynSystem.problems{1}.finalTime;
-            siminfo.TStep = self.mBDynSystem.problems{1}.timeStep;
-            siminfo.MBDynSystem = self.mBDynSystem;
-            siminfo.HydroSystem = self.hydroSystem;
-            siminfo.HydroMotionSyncSteps = options.HydroMotionSyncSteps;
-            siminfo.OutputDirectory = options.OutputFilePrefix;
-            siminfo.CaseDirectory = self.caseDirectory;
+            self.simInfo.TStart = self.mBDynSystem.problems{1}.initialTime;
+            self.simInfo.TEnd = self.mBDynSystem.problems{1}.finalTime;
+            self.simInfo.TStep = self.mBDynSystem.problems{1}.timeStep;
+            self.simInfo.MBDynSystem = self.mBDynSystem;
+            self.simInfo.HydroSystem = self.hydroSystem;
+            self.simInfo.HydroMotionSyncSteps = options.HydroMotionSyncSteps;
+            self.simInfo.OutputDirectory = fileparts (self.outputFilePrefix);
+            self.simInfo.CaseDirectory = self.caseDirectory;
             
             % start the PTO components
-            self.startPTOs (siminfo);
+            self.startPTOs ();
             
             % generate input file and start mbdyn
 
             % create the communicator object. As an mbdyn system object is
             % supplied, the mbdyn input file will be generated
             % automatically
-            mb = mbdyn.mint.MBCNodal ('MBDynPreProc', self.mBDynSystem, ...
+            self.mBDynMBCNodal = mbdyn.mint.MBCNodal ('MBDynPreProc', self.mBDynSystem, ...
                 'UseMoments', true, ...
                 'MBDynInputFile', self.mBDynInputFile, ...
                 'OverwriteInputFile', true, ...
-                'OutputPrefix', options.OutputFilePrefix, ...
+                'OutputPrefix', self.outputFilePrefix, ...
                 'NodeOrientationType', 'euler 123' ...
                 );
             
             % copy over the input file location to make it easier to
             % examine later if required
-            self.mBDynOutputFile = mb.MBDynOutputFile;
+            self.mBDynOutputFile = self.mBDynMBCNodal.MBDynOutputFile;
             
             % ensure MBCNodal is destroyed in the event of a problem
             % (closes communication to MBDyn and tells it to quit so
@@ -531,24 +592,24 @@ classdef wecSim < handle
 %                 % so we make sure it is called for the MBCNodal when wecSim
 %                 % finishes. This makes sure the sockets are closed and
 %                 % memory is freed. See Octave bug #46497
-%                 CC = onCleanup (@() mb.delete ());
+%                 CC = onCleanup (@() self.mBDynMBCNodal.delete ());
 %             end
             
-            mb.start ('Verbosity', options.Verbosity);
+            self.mBDynMBCNodal.start ('Verbosity', options.Verbosity);
             
             % get the number of nodes in the problem
-            self.nMBDynNodes = mb.GetNodes ();
+            self.nMBDynNodes = self.mBDynMBCNodal.GetNodes ();
             
             % preallocate variables to hold total forces and moments at
             % each time step
             forces_and_moments = zeros (6, self.nMBDynNodes);
             
             % take initial time from the MBDyn system problem
-            self.lastTime = siminfo.TStart;
+            self.lastTime = self.simInfo.TStart;
             
             % fetch the initial configuration of the nodes from MBDyn and
             % check for errors
-            status = mb.GetMotion ();
+            status = self.mBDynMBCNodal.GetMotion ();
             
             if status ~= 0
                 self.readyToRun = false;
@@ -556,12 +617,12 @@ classdef wecSim < handle
                     self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
                 end
                 error ('mbdyn returned %d, aborting sim, check output file:\n%s\nfor clues at to why this happened.', ...
-                        status, mb.MBDynOutputFile)
+                        status, self.mBDynMBCNodal.MBDynOutputFile)
             end
             
             % get the current motion of the multibody system which was sent
             % by MBDyn
-            [pos, vel, accel] = self.getMotion (mb);
+            [pos, vel, accel] = self.getMotion (self.mBDynMBCNodal);
                   
             % calculate and apply hydrodynamic forces based on the motion
             forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
@@ -575,13 +636,13 @@ classdef wecSim < handle
             forces_and_moments = self.applyPTOForces (forces_and_moments);
 
             % set the new forces an moments ready to be sent to MBDyn
-            mb.F (forces_and_moments(1:3,:));
-            mb.M (forces_and_moments(4:6,:));
+            self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
+            self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
             
             % send the forces and moments to MBDyn, but noting that we have
             % not yet converged (so MBDyn will send new motion based on
             % these forces, and not advance the self.lastTime step)
-            mbconv = mb.applyForcesAndMoments (false);
+            mbconv = self.mBDynMBCNodal.applyForcesAndMoments (false);
             
             % store most recently calculated motion so it can be logged
             self.lastPositions = pos(1:3,:);
@@ -597,55 +658,109 @@ classdef wecSim < handle
             
             % now begin the simulation loop, beginning from the next time
             % index
-            ind = 2;
-            if options.TimeExecution, tic; end
-            while status == 0
+            self.simStepCount = 2;
+            
+            if nargout > 1
+                datalog = self.logger;
+            end
+            
+            self.simStarted = true;
+            
+        end
+        
+        
+        function status = simStep (self)
+            % performs one simulation time step
+            
+            assert (self.simStarted, 'simStart must be called before calling simStep');
+            
+            status = self.mBDynMBCNodal.GetMotion ();
                 
-                status = mb.GetMotion ();
-                
+            if status ~= 0
+                self.readyToRun = false;
+                return;
+            end
+
+            self.lastTime = self.lastTime + self.mBDynSystem.problems{1}.timeStep;
+
+            % get the current motion of the multibody system
+            [pos, vel, accel] = self.getMotion (self.mBDynMBCNodal);
+            
+            forces_and_moments = zeros (6, self.nMBDynNodes);
+
+            % calculate new hydrodynamic interaction forces (also
+            % updates self.lastForceHydro with new values)
+            forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
+
+            % Add PTO forces
+            forces_and_moments = self.applyPTOForces (forces_and_moments);
+
+            self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
+            self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
+
+            mbconv = self.mBDynMBCNodal.applyForcesAndMoments (false);
+
+            status = self.mBDynMBCNodal.GetMotion ();
+
+            if status ~= 0
+                % quit, MBDyn has finished simulation (or some error
+                % occured)
+                self.readyToRun = false;
+                self.simStepCount = self.simStepCount + 1;
+
+                return;
+            end
+
+            % repeat the force calulation to test convergence
+
+            % clear out the previous forces and moments
+            forces_and_moments = zeros (6, self.nMBDynNodes);
+
+            % get the current motion of the multibody system
+            [pos, vel, accel] = self.getMotion (self.mBDynMBCNodal);
+
+            % get the previous calculated values of hydrodynamic forces
+            hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
+
+            % calculate new hydrodynamic interaction forces (also
+            % updates self.lastForceHydro with new values)
+            forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
+
+            % PTO forces
+            forces_and_moments = self.applyPTOForces (forces_and_moments);
+
+            self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
+            self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
+
+            mbconv = self.mBDynMBCNodal.applyForcesAndMoments (false);
+
+            % check for force convergence
+            forcediff = abs (hydro_forces_and_moments - [ self.lastForceHydro; self.lastMomentHydro ]);
+
+            maxforces = max(hydro_forces_and_moments, [ self.lastForceHydro; self.lastMomentHydro ]);
+            relforcediff = abs(forcediff) ./ abs(maxforces);
+            relforcediff(maxforces == 0) = 0;
+            itercount = 1;
+
+            % iterate until force/motion convergence (or max
+            % iterations)
+            while mbconv ~= 0 ...
+                    || itercount < self.minForceIterations ...
+                    || (max (forcediff(:)) > self.absForceTolerance) ...
+                    || (self.simStepCount > 3 && (max (relforcediff(:)) > self.relForceTolerance))
+
+                status = self.mBDynMBCNodal.GetMotion ();
+
                 if status ~= 0
                     self.readyToRun = false;
-                    continue;
+                    break;
                 end
-                
-                self.lastTime = self.lastTime + self.mBDynSystem.problems{1}.timeStep;
 
-                % get the current motion of the multibody system
-                [pos, vel, accel] = self.getMotion (mb);
-                    
                 % clear out the previous forces and moments
                 forces_and_moments = zeros (6, self.nMBDynNodes);
 
-                % calculate new hydrodynamic interaction forces (also
-                % updates self.lastForceHydro with new values)
-                forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
-
-                % PTO forces
-                forces_and_moments = self.applyPTOForces (forces_and_moments);
-
-                mb.F (forces_and_moments(1:3,:));
-                mb.M (forces_and_moments(4:6,:));
-
-                mbconv = mb.applyForcesAndMoments (false);
-
-                status = mb.GetMotion ();
-
-                if status ~= 0
-                    % quit, MBDyn has finished simulation (or some error
-                    % occured)
-                    self.readyToRun = false;
-                    ind = ind + 1;
-
-                    continue;
-                end
-
-                % repeat the force calulation to test convergence
-
-                % clear out the previous forces and moments
-                forces_and_moments = zeros (6, self.nMBDynNodes);
-
                 % get the current motion of the multibody system
-                [pos, vel, accel] = self.getMotion (mb);
+                [pos, vel, accel] = self.getMotion (self.mBDynMBCNodal);
 
                 % get the previous calculated values of hydrodynamic forces
                 hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
@@ -657,110 +772,78 @@ classdef wecSim < handle
                 % PTO forces
                 forces_and_moments = self.applyPTOForces (forces_and_moments);
 
-                mb.F (forces_and_moments(1:3,:));
-                mb.M (forces_and_moments(4:6,:));
+                self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
+                self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
 
-                mbconv = mb.applyForcesAndMoments (false);
+                mbconv = self.mBDynMBCNodal.applyForcesAndMoments (false);
 
-                % check for force convergence
+                itercount = itercount + 1;
+
+                if itercount > self.maxForceIterations
+                    warning ('mbdyn force iterations exceeded max allowed');
+                    self.readyToRun = false;
+                    status = -2;
+                    return;
+                end
+
                 forcediff = abs (hydro_forces_and_moments - [ self.lastForceHydro; self.lastMomentHydro ]);
-
                 maxforces = max(hydro_forces_and_moments, [ self.lastForceHydro; self.lastMomentHydro ]);
                 relforcediff = abs(forcediff) ./ abs(maxforces);
                 relforcediff(maxforces == 0) = 0;
-                itercount = 1;
 
-                % iterate until force/motion convergence (or max
-                % iterations)
-                while mbconv ~= 0 ...
-                        || itercount < options.MinIterations ...
-                        || (max (forcediff(:)) > options.AbsForceTolerance) ...
-                        || (ind > 3 && (max (relforcediff(:)) > options.RelForceTolerance))
-
-                    status = mb.GetMotion ();
-
-                    if status ~= 0
-                        self.readyToRun = false;
-                        break;
-                    end
-
-                    % clear out the previous forces and moments
-                    forces_and_moments = zeros (6, self.nMBDynNodes);
-
-                    % get the current motion of the multibody system
-                    [pos, vel, accel] = self.getMotion (mb);
-
-                    % get the previous calculated values of hydrodynamic forces
-                    hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
-
-                    % calculate new hydrodynamic interaction forces (also
-                    % updates self.lastForceHydro with new values)
-                    forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
-
-                    % PTO forces
-                    forces_and_moments = self.applyPTOForces (forces_and_moments);
-
-                    mb.F (forces_and_moments(1:3,:));
-                    mb.M (forces_and_moments(4:6,:));
-
-                    mbconv = mb.applyForcesAndMoments (false);
-
-                    itercount = itercount + 1;
-
-                    if itercount > options.MaxIterations
-                        % TODO: exit gracefully if max iterations exceeded
-                        error ('mbdyn iterations exceeded max allowed');
-                    end
-
-                    forcediff = abs (hydro_forces_and_moments - [ self.lastForceHydro; self.lastMomentHydro ]);
-                    maxforces = max(hydro_forces_and_moments, [ self.lastForceHydro; self.lastMomentHydro ]);
-                    relforcediff = abs(forcediff) ./ abs(maxforces);
-                    relforcediff(maxforces == 0) = 0;
-
-                end
-
-
-                % get latest motion from MBDyn
-                status = mb.GetMotion ();
-                
-                if status ~= 0
-                    
-                    % quit, MBDyn sim is finished or there's an error
-                    self.readyToRun = false;
-                    
-                    ind = ind + 1;
-                    
-                    break;
-                end
-                
-                % apply the last calculated forces from the iteration to
-                % the system
-                mb.F (forces_and_moments(1:3,:));
-                mb.M (forces_and_moments(4:6,:));
-                
-                mbconv = mb.applyForcesAndMoments (true);
-                
-                % store most recently calculated motion so it can be logged
-                self.lastPositions = pos(1:3,:);
-                self.lastAngularPositions = pos(4:6,:);
-                self.lastVelocities = vel(1:3,:);
-                self.lastAngularVelocities = vel(4:6,:);
-                self.lastAccelerations = accel(1:3,:);
-                self.lastAngularAccelerations = accel(4:6,:);
-                self.lastNodeForcesUncorrected = forces_and_moments(1:3,:);
-                self.lastNodeMomentsUncorrected = forces_and_moments(4:6,:);
-                
-                self.advanceStep ();
-                
-                ind = ind + 1;
-                
             end
+
+            % get latest motion from MBDyn
+            status = self.mBDynMBCNodal.GetMotion ();
+
+            if status ~= 0
+
+                % quit, MBDyn sim is finished or there's an error
+                self.readyToRun = false;
+
+                self.simStepCount = self.simStepCount + 1;
+
+                return;
+            end
+
+            % apply the last calculated forces from the iteration to
+            % the system
+            self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
+            self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
+
+            mbconv = self.mBDynMBCNodal.applyForcesAndMoments (true);
+
+            % store most recently calculated motion so it can be logged
+            self.lastPositions = pos(1:3,:);
+            self.lastAngularPositions = pos(4:6,:);
+            self.lastVelocities = vel(1:3,:);
+            self.lastAngularVelocities = vel(4:6,:);
+            self.lastAccelerations = accel(1:3,:);
+            self.lastAngularAccelerations = accel(4:6,:);
+            self.lastNodeForcesUncorrected = forces_and_moments(1:3,:);
+            self.lastNodeMomentsUncorrected = forces_and_moments(4:6,:);
+
+            self.advanceStep ();
+
+            self.simStepCount = self.simStepCount + 1;
+                
+        end
+        
+        
+        function mbdyn_postproc = simFinish (self)
             
+            assert ( self.simStarted, 'You must call simStart before calling simFinish' );
+            
+            % clear the MBCNodal object, hich should trigger its delete
+            % method
+            self.mBDynMBCNodal = [];
+           
+            % finish off
             fprintf ( 1, 'Reached time %fs (%fs of an intended %fs), in %d steps, postprocessing ...\n', ...
                       self.lastTime, ...
-                      self.lastTime - siminfo.TStart, ...
-                      siminfo.TEnd - siminfo.TStart, ...
-                      ind-1 );
+                      self.lastTime - self.simInfo.TStart, ...
+                      self.simInfo.TEnd - self.simInfo.TStart, ...
+                      self.simStepCount-1 );
             
             if self.loggingSettings.nodeForces ...
                     || self.loggingSettings.forceAddedMass ...
@@ -792,26 +875,22 @@ classdef wecSim < handle
                 if self.loggingSettings.momentAddedMass
                     self.logger.setSeries ('MomentAddedMass', F_and_M_added_mass(4:6,:,:));
                 end
-            
+                
             end
             
             % tell the PTOs we are done
             self.finishPTOs ();
             
-            if options.TimeExecution, toc; end
-            
             fprintf (1, 'Simulation complete\n');
-            
-            self.readyToRun = false;
             
             self.logger.truncateAllVariables ();
             
-            datalog = self.logger;
-            
             self.simComplete = true;
+            self.simStarted = false;
+            self.readyToRun = false;
             
-            if nargout > 1
-                mbdyn_postproc = mbdyn.postproc (options.OutputFilePrefix, self.mBDynSystem);
+            if nargout > 0
+                mbdyn_postproc = mbdyn.postproc (self.outputFilePrefix, self.mBDynSystem);
                 self.mBDynPostProc = mbdyn_postproc;
             end
             
@@ -1347,11 +1426,11 @@ classdef wecSim < handle
             
         end
         
-        function startPTOs (self, siminfo)
+        function startPTOs (self)
             
             for ptoind = 1:size (self.ptoIndexMap, 1)
                 
-                self.powerTakeOffs{ptoind}.start (siminfo);
+                self.powerTakeOffs{ptoind}.start (self.simInfo);
                 
             end 
             
