@@ -8,6 +8,11 @@ classdef wecSim < handle
     
     properties (GetAccess = public, SetAccess = private)
         
+        % sim control variables
+        readyToRun;
+        simStarted;
+        simComplete;
+        
         powerTakeOffs;
         forceRelTol;
         forceAbsTol;
@@ -21,12 +26,6 @@ classdef wecSim < handle
     end
     
     properties (GetAccess = private, SetAccess = private)
-        
-        % sim control variables
-        readyToRun;
-        simStarted;
-        simComplete;
-        
         
         ptoIndexMap;
         hydroNodeIndexMap;
@@ -670,7 +669,7 @@ classdef wecSim < handle
         
         
         function status = simStep (self)
-            % performs one simulation time step
+            % performs one or more simulation time steps
             
             assert (self.simStarted, 'simStart must be called before calling simStep');
             
