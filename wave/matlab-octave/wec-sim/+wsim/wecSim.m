@@ -669,7 +669,7 @@ classdef wecSim < handle
         
         
         function status = simStep (self)
-            % performs one or more simulation time steps
+            % manually advance one simulation step
             
             assert (self.simStarted, 'simStart must be called before calling simStep');
             
@@ -828,8 +828,23 @@ classdef wecSim < handle
                 
         end
         
+        function [status, stepcount] = simSteps (self, nsteps)
+            % manually advance multiple simulation steps
+            
+            status = 0;
+            stepcount = 0;
+            
+            while status == 0 && stepcount < nsteps
+                
+                status = simStep (self);
+                
+            end
+            
+        end
+        
         
         function mbdyn_postproc = simFinish (self)
+            % finalaise a simulation and clean up
             
             assert ( self.simStarted, 'You must call simStart before calling simFinish' );
             
