@@ -280,6 +280,19 @@ classdef postproc < handle
                                                    'Velocity', movdata(ind,velinds), ...
                                                    'AngularVelocity', movdata(ind,omegainds) ...
                                                   );
+                                              
+                        switch self.simInfo.DefaultOrientation
+
+                            case {'euler123', 'euler313', 'euler321', 'orientation vector'}
+
+                                self.nodes.(nodename).Orientation = deg2rad (self.nodes.(nodename).Orientation);
+
+                            case 'orientation matrix'
+
+                                self.nodes.(nodename).Orientation = reshape(self.nodes.(nodename).Orientation, 3, 3)';
+
+                        end
+
 
                         self.nNodes = self.nNodes + 1;
 
@@ -309,9 +322,11 @@ classdef postproc < handle
                  
 
                 % determine the final time
-                self.simInfo.FinalTime = self.simInfo.InitialTime + (size(movdata,1)/self.nNodes-1)*self.simInfo.TimeStep;
+                nsteps = size(movdata,1)/self.nNodes-1;
                 
                 self.time = (1:nsteps)*self.simInfo.TimeStep;
+                
+                self.simInfo.FinalTime = self.time(end);
 
             else
                 % there was a netcdf format file to load
@@ -482,7 +497,6 @@ classdef postproc < handle
             self.movFile = '';
             self.ncFile = '';
             self.haveNetCDF = false;
-            self.simInfo = [];
             
             self.resultsLoaded = false;
             
