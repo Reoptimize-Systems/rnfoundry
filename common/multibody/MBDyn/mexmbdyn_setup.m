@@ -144,10 +144,6 @@ function mexmbdyn_setup (varargin)
         mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'CXXFLAGS="$CXXFLAGS -std=c++11"'}];
     end
     
-    if ispc
-        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lws2_32'}];
-    end
-    
     if ~isempty (options.MBCIncludeDir)
         mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {['-I"', options.MBCIncludeDir, '"']}];
         mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {['-I"', options.MBCIncludeDir, '"']}];
@@ -171,6 +167,12 @@ function mexmbdyn_setup (varargin)
     mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lmbc'}];
     mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc'}];
     %mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc', 'LDFLAGS="$LDFLAGS -Wl,-rpath,"/opt/lib""'}];
+    
+    if ispc
+        % note that this library *must* appear after -lmbc or there will be
+        % linking errors on windows
+        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lws2_32'}];
+    end
     
     % compiling mexMBCNodal
     success = false;
