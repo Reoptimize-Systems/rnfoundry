@@ -100,7 +100,7 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             options.Coupling = [];
             options.SendAfterPredict = 'yes';
             options.Create = [];
-            options.Host = [];
+            options.Host = 'localhost';
             options.Port = [];
             options.Path = [];
             
@@ -124,6 +124,10 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             
             if isempty (options.Path) && isempty (options.Port)
                 error ('You must specify either Path or Port option for the socket');
+            end
+            
+            if ~isempty (options.Port)
+                assert (ischar (options.Host), 'Host must be a character vector');
             end
             
             self.create = options.Create;
@@ -179,11 +183,8 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
                                 isempty(self.sendAfterPredict) ] );
                             
             if isempty (self.path)
-                % use port
-                strline = self.commaSepList ('port', self.port);
-                if ~isempty (self.host)
-                    strline = [strline, self.commaSepList('host', self.host)];
-                end
+                % use host and port
+                strline = self.commaSepList ('port', self.formatInteger (self.port), 'host', ['"', self.host, '"']); 
                 str = self.addOutputLine (str, strline, 1, addcomma);
             else
                 % use path
