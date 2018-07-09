@@ -65,8 +65,11 @@ echo "Releasing with version string: ${version}"
 release_name="RenewNet_${version}"
 
 # create release directory
-release_dir="${working_copy_dir}/${release_name}"
-mkdir ${release_dir}
+release_dir="/tmp/${release_name}"
+
+mkdir -p ${release_dir}
+
+rm -rf ${release_dir}/*
 
 echo "Creating release ${release_name} in directory ${release_dir}"
 
@@ -88,6 +91,9 @@ echo ${version} > ${release_dir}/version.txt
 if [ "$copy_win_libs" = true ]; then
 
     mxedir=/opt/mxe
+
+    cd ${mxedir}
+    make gsl libf2c
 
     # we need to copy a bunch of files cross-compiled using MXE to the
     # release so it can be built on windows machines
@@ -116,6 +122,11 @@ if [ "$copy_win_libs" = true ]; then
     # matlab needs libraries to have a different name (.lib)
     cp ~/build/mbdyn/x86_64-w64-mingw32_shared/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/ws2_32.lib
+
+    # boost (for shared memory communication)
+    #mkdir -p ${release_dir}/x86_64-w64-mingw32/include/boost
+    #cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/boost/interprocess ${release_dir}/x86_64-w64-mingw32/include/boost/interprocess
+    #cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/boost/date_time ${release_dir}/x86_64-w64-mingw32/include/boost/date_time
 
 else
   echo "Not copying gsl gslcblas and f2c libraries, or mbdyn program"
