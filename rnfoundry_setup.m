@@ -33,75 +33,80 @@ function rnfoundry_setup (varargin)
 % over the install process, it can be called with additional optional
 % arguemtns supplied as Parameter-Value pairs. The avaialble options are:
 %
-%  'RunTests' : Flag determining whether tor runs some scripts to test the 
+%  'RunTests' - Flag determining whether tor runs some scripts to test the 
 %    setup after installation is complete. Default is false.
 %
-%  'ForceExistfileSetup' : Forces the recompilation of the existfile mex
+%  'ForceExistfileSetup' - Forces the recompilation of the existfile mex
 %    function. A non-mex version will be used if not present. Default is
 %    false.
 %
-%  'SkipExistfileSetup' : Skips compilation of the existfile mex
+%  'SkipExistfileSetup' - Skips compilation of the existfile mex
 %    function, even if it is not on the path. A slower non-mex version will
 %    be used if not present. Default is false.
 %
-%  'ForceMexLseiSetup' : Forces the recompilation of the mexlsei mex 
+%  'ForceMexLseiSetup' - Forces the recompilation of the mexlsei mex 
 %    function even if it already on the path. mexlsei is not required if
 %    your system has the 'quadprog' function. Default is false.
 %
-%  'SkipMexLseiSetup' : Skips the compilation of the mexlsei mex function.
+%  'SkipMexLseiSetup' - Skips the compilation of the mexlsei mex function.
 %    Features requiring this will not be available. mexlsei is not required
 %    if your system has the 'quadprog' function.
 %
-%  'ForceMexLseiF2cLibRecompile' : Forces the recompilation of the f2c
+%  'ForceMexLseiF2cLibRecompile' - Forces the recompilation of the f2c
 %    library which must be linked to by the mexlsei mex function. Default
 %    is false.
 %
-%  'ForceMexLseiCFileCreation' : Forces the creation of the C language file
+%  'ForceMexLseiCFileCreation' - Forces the creation of the C language file
 %    dlsei from the original fortran sources of dlsei using f2c. Default is
 %    false in which case a presupplied version is used.
 %
-%  'ForceMexSLMSetup' : Forces the recompilation of the mexslmeval mex 
+%  'ForceMexSLMSetup' - Forces the recompilation of the mexslmeval mex 
 %    function even if it already on the path. Compilation of this function
 %    requires the GNU scientific library (libgsl and libgslblas). Default
 %    is false.
 %
-%  'SkipMexSLMSetup' : Skips the recompilation of the mexslmeval mex 
+%  'SkipMexSLMSetup' - Skips the recompilation of the mexslmeval mex 
 %    function even if it is not on the path. A slower non-compiled version
 %    will be used if the compiled version is not present. Default is false.
 %
-%  'ForceMexPPValSetup' : Forces the recompilation of the mexppval mex 
+%  'ForceMexPPValSetup' - Forces the recompilation of the mexppval mex 
 %    function even if it already on the path. Default is false.
 %
-%  'SkipMexPPValSetup' : Skips compilation of the mexppval mex function
+%  'SkipMexPPValSetup' - Skips compilation of the mexppval mex function
 %    even if it is not on the path. Default is false.
 %
-%  'ForceMexmPhaseWLSetup' : Forces the recompilation of the mexmPhaseWL
+%  'ForceMexmPhaseWLSetup' - Forces the recompilation of the mexmPhaseWL
 %    mex function even if it already on the path. Default is false.
 %
-%  'SkipMexmPhaseWLSetup' : Skips the recompilation of the mexmPhaseWL
+%  'SkipMexmPhaseWLSetup' - Skips the recompilation of the mexmPhaseWL
 %    mex function even if it is not on the path. There is no non-mex
 %    alternative so winding design funcitons will not work. Default is
 %    false.
 %
-%  'ForceMBDynSetup' : Forces the recompilation of the mbdyn related
+%  'ForceMBDynSetup' - Forces the recompilation of the mbdyn related
 %    mex functions even if they are already on the path. Default is false.
 %
-%  'SkipMBDynSetup' : Skips the recompilation of the mbdyn related
+%  'SkipMBDynSetup' - Skips the recompilation of the mbdyn related
 %    mex functions even if it they are not on the path. There is no non-mex
 %    alternative multibody dynamics modelling functions will not work.
 %    Default is false.
 %
-%  'PreventMBDynCheck' :  Some functions in the renewnet foundry require 
+%  'PreventMBDynCheck' -  Some functions in the renewnet foundry require 
 %    the 'MBDyn' multibody dynamics package. This option determines whether
 %    rnfoundry_setup checks to see if MBDyn is already installed (by
 %    looking for MBDyn libraries and header files in standard or specified
 %    directories). Default is false, so rnfoundry_setup WILL check to see
 %    if MBDyn is installed and display a notice if it is not.
 %
-%  'ForceAllMex' : Equivalent to setting all the Force* options above to
+%  'ForceAllMex' - Equivalent to setting all the Force* options above to
 %    true. Default is false.
 %
-%  'PreventXFemmCheck' :  Many functions in the renewnet foundry require 
+%  'ForceMexMBCNodalSharedMem' - Force building of the shared memory
+%    communication method version of the MBDyn interface. By default this
+%    is not built on Windows (but *is* built on other systems). Requires
+%    the BOOST C++ library to be available. Default is false. 
+%
+%  'PreventXFemmCheck' -  Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. This option determines
 %    whether rnfoundry_setup checks to see if xfemm is already installed
 %    (by looking for xfemm functions in the path). Default is false, so
@@ -113,14 +118,14 @@ function rnfoundry_setup (varargin)
 % the following options no longer apply as https breaks the sourceforge
 % download process, might restore some day
 %
-%  'XFemmInstallPrefix' : Many functions in the renewnet foundry require 
+%  'XFemmInstallPrefix' - Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. rnfoundry_setup can 
 %    download and install this package if desired. By defualt the package
 %    will be installed in the same directory as the one containing
 %    rnfoundry_setup.m, you can use this option to set this to a different
 %    directory.
 %
-%  'XFemmDownloadSource' : Many functions in the renewnet foundry require 
+%  'XFemmDownloadSource' - Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. rnfoundry_setup can
 %    download and install this package if desired. To change the default
 %    download location (i.e. the remote url pointing to the package on the
@@ -156,6 +161,7 @@ function rnfoundry_setup (varargin)
     Inputs.SkipMBDynSetup = false;
     Inputs.PreventMBDynCheck = false;
     [Inputs.MBCLibDir, Inputs.MBCIncludeDir] = mbdyn.mint.find_libmbc ();
+    Inputs.ForceMexMBCNodalSharedMem = false;
     if isunix
         Inputs.GSLLibDir = ''; % for mexslmeval
         Inputs.GSLIncludeDir = ''; % for mexslmeval
@@ -281,7 +287,8 @@ function rnfoundry_setup (varargin)
             mexmbdyn_setup ( 'Verbose', Inputs.Verbose, ...
                              'MBCLibDir', Inputs.MBCLibDir, ...
                              'MBCIncludeDir', Inputs.MBCIncludeDir, ...
-                             'PreventMBDynCheck', Inputs.PreventMBDynCheck );
+                             'PreventMBDynCheck', Inputs.PreventMBDynCheck, ...
+                             'ForceMexMBCNodalSharedMem', Inputs.ForceMexMBCNodalSharedMem );
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'mbdyn')
