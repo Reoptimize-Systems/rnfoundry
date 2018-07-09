@@ -87,6 +87,7 @@ rm ${release_dir}/test_hg.sh
 
 # create version.txt
 echo ${version} > ${release_dir}/version.txt
+echo ${version} > ${release_dir}/wave/matlab-octave/wec-sim/version.txt
 
 if [ "$copy_win_libs" = true ]; then
 
