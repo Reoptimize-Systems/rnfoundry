@@ -1,11 +1,11 @@
 RENEWNET FOUNRDY
 ****************
 
-The renewnet foundry is a set of matlab codes and other software 
-aimed at the simulation of renewable energy systems, including 
-development of the power take-off components. The most well 
-developed parts of the foundry are the multibody dynamics tools, 
-wave systems tools and the permanent magnet machine design and 
+The renewnet foundry is a set of matlab codes and other software
+aimed at the simulation of renewable energy systems, including
+development of the power take-off components. The most well
+developed parts of the foundry are the multibody dynamics tools,
+wave systems tools and the permanent magnet machine design and
 simulation tools.
 
 Most code in the foundry is also compatible with Octave, the free
@@ -33,11 +33,11 @@ You can find some example scripts in the following directories:
 Edinburgh Wave Systems Toolbox
 ------------------------------
 
-rnfoundry-hg/rnfoundry-hg/wave/doc/sphinx/examples
+rnfoundry/wave/doc/sphinx/examples
 
-This contains examples of using the Edinburgh Wave Systems Toolbox. 
-Further (less refined and well commented) examples of using this may 
-be found in 
+This contains examples of using the Edinburgh Wave Systems Toolbox.
+Further (less refined and well commented) examples of using this may
+be found in
 
 rnfoundry-hg/wave/matlab-octave/wec-sim/test
 
@@ -45,18 +45,18 @@ rnfoundry-hg/wave/matlab-octave/wec-sim/test
 MBdyn Multibody Dynamics Toolbox
 --------------------------------
 
-rnfoundry-hg/common/multibody/MBDyn/doc/sphinx/examples
+rnfoundry/common/multibody/MBDyn/doc/sphinx/examples
 
-Further (less refined and commented) examples can be found in the 
+Further (less refined and commented) examples can be found in the
 testing code in
 
-rnfoundry-hg/common/multibody/MBDyn/test
+rnfoundry/common/multibody/MBDyn/test
 
 
 Permanent Magnet Machines Toolbox
 ---------------------------------
 
-rnfoundry-hg/common/electrical/matlab-octave/permanent_magnet_machines_tools/examples_and_tutorials
+rnfoundry/common/electrical/matlab-octave/permanent_magnet_machines_tools/examples_and_tutorials
 
-Contains examples of using the permanent magnet machine simulation 
+Contains examples of using the permanent magnet machine simulation
 tools
