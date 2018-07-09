@@ -44,28 +44,76 @@ classdef logger < handle
 % 
 % Examples
 %
+%
 % Example 1
 %
-% 	l = wsim.logger;
 %
-% 	for i = 1:100,
-% 		my_output_1 = 10*rand;
-% 		height = 1.5*my_output_1 + 5*rand;
-% 	
-% 		l.logVal('weight', my_output_1);
-% 		l.logIt(height);
-% 	end
-% 	
-% 	l.setDesc('weight','Weight of Subjects');
-% 	l.setDesc('height','Height of Subjects');
-% 	l.setDefaultDesc('Subject ID');
-% 	
-% 	figure; l.plot2Vars('weight','height','LineWidth', 2, 'Color','r'); 
-% 	figure; l.plotVar('weight','LineWidth', 2, 'Color','r'); 
-% 	figure; l.plotVar('height','LineWidth', 2, 'Color','r'); 
-% 	figure; l.plotFofVar('height',@log, 'LineWidth', 2, 'Color','r'); 
+% lg = wsim.logger;
 % 
-% Also see logger_demo.m for example usage.
+% lg.addVariable ( 'weight', [1,1], ...
+%                  'Description', 'Weight of Subjects', ...
+%                  'AxisLabel', 'kg' );
+%              
+% lg.addVariable ( 'height', [1,1], ...
+%                  'Description', 'Weight of Subjects', ...
+%                  'AxisLabel', 'm' );
+%              
+% 
+% for i = 1:100
+%     
+%     my_output_1 = 10*rand;
+%     height = 1.5*my_output_1 + 5*rand;
+%     
+%     lg.logVal('weight', my_output_1);
+%     lg.logVal('height', height);
+%     
+% end
+% 
+% 
+% lg.plotVar('weight',  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% lg.plotVar('height',  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% lg.plot2Vars('weight', 'height', 'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% lg.plotFofVar('height', @log,  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% 
+% vals = lg.lastLoggedVals ('weight', 5)
+%
+%
+% Example 2
+%
+%
+% lg = wsim.logger;
+% 
+% lg.addVariable ( 'weight', [1,1], ...
+%                  'Description', 'Weight of Subjects', ...
+%                  'AxisLabel', 'kg', ...
+%                  'Windowed', true, ...
+%                  'PreallocateStorage', 20 );
+%              
+% lg.addVariable ( 'height', [1,1], ...
+%                  'Description', 'Weight of Subjects', ...
+%                  'AxisLabel', 'm', ...
+%                  'Windowed', true, ...
+%                  'PreallocateStorage', 20  );
+%              
+% 
+% for i = 1:100
+%     
+%     my_output_1 = 10*rand;
+%     height = 1.5*my_output_1 + 5*rand;
+%     
+%     lg.logVal('weight', my_output_1);
+%     lg.logVal('height', height);
+%     
+% end
+% 
+% lg.plot2Vars('weight','height', 'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% lg.plotVar('weight',  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% lg.plotVar('height',  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% lg.plotFofVar('height',@log,  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+% 
+% % this will return only 20 values, because that's all there is
+% vals = lg.lastLoggedVals ('weight', 25)
+% 
 %
 % Author: Richard Crozier
 %
@@ -257,7 +305,9 @@ classdef logger < handle
             %
             %  'PreallocateStorage' - optional scalar integer giving the
             %    number of samples for which to preallocate storage in
-            %    advance. 
+            %    advance. When this limit is reached, the storage space is
+            %    expanded, unless the 'Windowed' option is used (see
+            %    below).
             %
             %  'IndependentVariable' - string containing the name of
             %    another variable, already added to the logger, which is
@@ -266,6 +316,22 @@ classdef logger < handle
             %    PreallocateStorage option is not specified, the new
             %    variable is by default preallocated the same storage as
             %    the independant variable.
+            %
+            %  'AxisLabel' - optional charachter vector which will be used
+            %    as the axis label for this variable when plotting it. Will
+            %    appear on the axis against which this variable is plotted,
+            %    which could be either X or Y.
+            %
+            %  'Windowed' - optional true/false flag indicating whether the
+            %    data should be 'windowed' i.e. once the number of values
+            %    logged equals the value in PreallocateStorage (see above),
+            %    instead of increasing storage space, the earlier values
+            %    will be overwritten with new data, where the earliest
+            %    logged value is lost with each new value, and all current
+            %    values are shifted earlier in the log. Default is false,
+            %    meaning the storage space will increase once the
+            %    preallocated space is reached.
+            %
             %
 
             
@@ -1214,6 +1280,75 @@ classdef logger < handle
             obj.info.(varname).LastLogIndex = obj.info.(varname).LastLogIndex + 1;
 
         end
+        
+        
+        function vals = lastLoggedVals(obj, varname, n)
+            % get last 'n' logged values of a variable
+            %
+            % Syntax
+            %
+            % val = lastLoggedVal(obj, varname, n)
+            %
+            % Description
+            %
+            % If a variable exists, the last 'n' values logged to that
+            % variable are returned. If the number of logged variables is
+            % less than this, all available data will be returned.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  varname - name of the variable to be for which to obtain the
+            %    last logged value
+            %
+            %  n - (optional) the number of logged variables to return.
+            %    This will be the last 'n' logged variables to return. If
+            %    the number of logged variables is less than this, all
+            %    available data will be returned. Default is 1 if not
+            %    supplied.
+            %
+            % Output
+            %
+            %  vals - The last 'n' logged values for the supplied variable,
+            %    in the same shape as in the corresponding stored data
+            %    field.
+            %
+            %
+            % See Also: wsim.logger.logVal, wsim.logger.addVariable
+            %
+            
+            if nargin < 3
+                n = 1;
+            end
+
+            if ~isfield (obj.data, varname)
+                error ('data logging field: %s does not exist', varname);
+            end
+            
+            if obj.info.(varname).LastLogIndex < 1
+                error ('No data has been logged for the variable %s yet.', varname);
+            end
+            
+            % copy the pre-constructed indexing structure (created when
+            % adding the variable)
+            S = obj.info.(varname).IndexAssignment;
+            
+            % build the correct index into the logged variable by replacing
+            % the appropriate index with the new log index
+            if obj.info.(varname).LastLogIndex > n
+                startindex = obj.info.(varname).LastLogIndex - n + 1;
+            else
+                startindex = 1;
+            end
+            
+            S.subs{obj.info.(varname).IndexDimension} = startindex : obj.info.(varname).LastLogIndex;
+            
+            % assign the new value
+            vals = subsref (obj.data.(varname), S);
+
+        end
+        
         
         function setSeries (obj, varname, newdata)
             % set values for an entire data series directly
