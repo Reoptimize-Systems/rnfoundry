@@ -25,6 +25,15 @@ function mexmbdyn_setup (varargin)
 % 'MBCIncludeDir' -  directory in which to look for the MBDyn mbc library 
 %   file. The default value of this arguement is platform-dependant.
 %
+% 'PreventMBDynCheck' - Prevent checking for the existance of MBDyn on the
+%   system and attempt to build the interface regardless. Default is false
+%   if not supplied.
+%
+% 'ForceMexMBCNodalSharedMem' - Force building of the shared memory
+%   communication method version of the MBDyn interface. By default this is
+%   not built on Windows (but *is* built on other systems). Requires the
+%   BOOST C++ library to be available. Default is false if not supplied.
+%
 % Example
 %
 %  mexmbdyn_setup ('Verbose', true)
@@ -42,6 +51,7 @@ function mexmbdyn_setup (varargin)
     options.Debug = false;
     options.ThrowErrors = false;
     options.PreventMBDynCheck = false;
+    options.ForceMexMBCNodalSharedMem = false;
 
     [options.MBCLibDir, options.MBCIncludeDir, libwasfound, headerwasfound] = mbdyn.mint.find_libmbc ();
     
@@ -56,7 +66,7 @@ function mexmbdyn_setup (varargin)
         mbdyn_download_page_url_with_link = sprintf ('<a href="%s">%s</a>', mbdyn_download_page_url, mbdyn_download_page_url);
     end
     
-    % check for the existence of xfemm package
+    % check for the existence of MBDyn package
     if ~options.PreventMBDynCheck
         
         if ~(libwasfound || headerwasfound)
@@ -195,25 +205,30 @@ function mexmbdyn_setup (varargin)
         fprintf (1, 'mexMBCNodal was not able to be compiled.\n');
     end
     
-    % compiling mexMBCNodalSharedMem
-    success = false;
-    try
-        mex (mexMBCNodalSharedMem_mexargs{:});
-        success = true;
-    catch err
-        if options.ThrowErrors
-            rethrow (err);
-        else
-            warning ('MEXMBDYN:compilefailed', ...
-                'Unable to compile mex function mexMBCNodalSharedMem. Error reported was:\n%s', ...
-                err.message);
-        end
-    end
-    
-    if success
-        fprintf (1, 'Successfully compiled mexMBCNodalSharedMem.\n');
+    if ispc &&  ~options.ForceMexMBCNodalSharedMem
+         fprintf (1, 'Not compiling mexMBCNodalSharedMem as we are on Windows.\n');
     else
-        fprintf (1, 'mexMBCNodalSharedMem was not able to be compiled.\n');
+        % compiling mexMBCNodalSharedMem
+        success = false;
+        try
+            mex (mexMBCNodalSharedMem_mexargs{:});
+            success = true;
+        catch err
+            if options.ThrowErrors
+                rethrow (err);
+            else
+                warning ('MEXMBDYN:compilefailed', ...
+                    'Unable to compile mex function mexMBCNodalSharedMem. Error reported was:\n%s', ...
+                    err.message);
+            end
+        end
+
+        if success
+            fprintf (1, 'Successfully compiled mexMBCNodalSharedMem.\n');
+        else
+            fprintf (1, 'mexMBCNodalSharedMem was not able to be compiled.\n');
+        end
+    
     end
     
     fprintf (1, 'Exiting MBDyn setup.\n');
