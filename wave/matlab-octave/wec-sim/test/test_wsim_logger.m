@@ -120,3 +120,42 @@ end
 % figure; lgr.plotFofVar('weight',@sin, 'LineWidth', 2, 'Color','r'); 
 % figure; lgr.plotFofVar('height',@log, 'LineWidth', 2, 'Color','r'); 
 % figure; lgr.plotFofVar('time',@cumsum, 'LineWidth', 2, 'Color','r'); 
+
+
+%% Windowing
+
+lg = wsim.logger;
+
+lg.addVariable ( 'weight', [1,1], ...
+                 'Description', 'Weight of Subjects', ...
+                 'AxisLabel', 'kg', ...
+                 'Windowed', true, ...
+                 'PreallocateStorage', 20 );
+             
+lg.addVariable ( 'height', [1,1], ...
+                 'Description', 'Weight of Subjects', ...
+                 'AxisLabel', 'm', ...
+                 'Windowed', true, ...
+                 'PreallocateStorage', 20  );
+             
+
+for i = 1:100
+    
+    my_output_1 = 10*rand;
+    height = 1.5*my_output_1 + 5*rand;
+    
+    lg.logVal('weight', my_output_1);
+    lg.logVal('height', height);
+    
+end
+
+lg.plot2Vars('weight','height', 'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+lg.plotVar('weight',  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+lg.plotVar('height',  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+lg.plotFofVar('height',@log,  'PlotFcnArgs', {'LineWidth', 2, 'Color','r'});
+
+% this will return only 20 values, because that's all there is
+vals = lg.lastLoggedVals ('weight', 25)
+
+
+
