@@ -14,6 +14,7 @@ classdef wecSim < handle
         simComplete;
         
         powerTakeOffs;
+        wecController;
         forceRelTol;
         forceAbsTol;
         mBDynOutputFile;
@@ -22,28 +23,6 @@ classdef wecSim < handle
         simInfo;
 
         loggingSettings;
-        
-    end
-    
-    properties (GetAccess = private, SetAccess = private)
-        
-        ptoIndexMap;
-        hydroNodeIndexMap;
-        mBDynSystem;
-        hydroSystem;
-        hydroMotionSyncStep = 1;
-        hydroMotionSyncStepCount = 1;
-        simStepCount;
-        mBDynMBCNodal;
-        minForceIterations;
-        absForceTolerance;
-        relForceTolerance;
-        maxForceIterations;
-        outputFilePrefix;
-        
-        logger; % wsim.logger object containing the logged simulation data from the last sim
-        nMBDynNodes; 
-        mBDynPostProc;
         
         % logging variables
         lastTime;                   % last value of simulation time
@@ -75,6 +54,30 @@ classdef wecSim < handle
         lastMomentViscousDamping;    % last calculated value of hydrodynamic viscous damping forces
         lastMomentAddedMassUncorrected; % last calculated value of hydrodynamic forces due to added mass (uncorrected)
         lastNodeMomentsUncorrected; % last calculated value ofcombined moments but with uncorrected added mass forces
+        
+        logger; % wsim.logger object containing the logged simulation data from the last sim
+        
+    end
+    
+    properties (GetAccess = private, SetAccess = private)
+        
+        ptoIndexMap;
+        hydroNodeIndexMap;
+        mBDynSystem;
+        hydroSystem;
+        hydroMotionSyncStep = 1;
+        hydroMotionSyncStepCount = 1;
+        simStepCount;
+        mBDynMBCNodal;
+        minForceIterations;
+        absForceTolerance;
+        relForceTolerance;
+        maxForceIterations;
+        outputFilePrefix;
+        
+        
+        nMBDynNodes; 
+        mBDynPostProc;
         
         wavePlotX;
         wavePlotY;
@@ -143,6 +146,7 @@ classdef wecSim < handle
             options.NEMOHSim = [];
             options.LoggingSettings = wsim.loggingSettings ();
             options.OutputDir = '';
+            options.Controller = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -157,6 +161,11 @@ classdef wecSim < handle
                     'NEMOHSim must be a nemoh.simulation object' ); 
             end
             
+            if ~isempty (options.Controller)
+                assert (isa (options.Controller, 'wsim.wecController'), ...
+                    'Controller must be a wsim.wecController object' ); 
+            end
+            
             self.caseDirectory = hsys.simu.caseDir;
             self.loggingSettings = options.LoggingSettings;
             self.mBDynSystem = mbsys;
@@ -164,8 +173,9 @@ classdef wecSim < handle
             self.readyToRun = false;
             self.simComplete = false;
             self.nMBDynNodes = nan;
+            self.wecController = options.Controller;
             
-            % add the spplies PTOs
+            % add the spplied PTOs
             if ~isempty (options.PTOs)
                 if ~iscell (options.PTOs)
                     options.PTOs = {options.PTOs};
@@ -290,6 +300,12 @@ classdef wecSim < handle
             self.mapPTOForceInds ();
             self.mapHydroForceInds ();
             self.initDataStructures ();
+            
+            if ~isempty (self.wecController)
+                % give the controller access to this object so it can get
+                % the data 
+                self.wecController.wecSimObj = self;
+            end
             
             % TODO: check if NEMOH data needs updated
             
@@ -570,6 +586,11 @@ classdef wecSim < handle
             self.simInfo.OutputDirectory = fileparts (self.outputFilePrefix);
             self.simInfo.CaseDirectory = self.caseDirectory;
             
+            % start the controller is there is one
+            if ~isempty (self.wecController)
+                self.wecController.start ();
+            end
+            
             % start the PTO components
             self.startPTOs ();
             
@@ -846,6 +867,8 @@ classdef wecSim < handle
                 
                 status = simStep (self);
                 
+                stepcount = stepcount + 1;
+                
             end
             
         end
@@ -902,6 +925,11 @@ classdef wecSim < handle
             
             % tell the PTOs we are done
             self.finishPTOs ();
+            
+            % tell the controller we are done (if there is one)
+            if ~isempty (self.wecController)
+                self.wecController.start ();
+            end
             
             fprintf (1, 'Simulation complete\n');
             
@@ -2115,6 +2143,11 @@ classdef wecSim < handle
                 % calling advanceStep on each PTO object
                 self.powerTakeOffs{ptoind}.advanceStep (self.lastTime);
                     
+            end
+            
+            % advance the controller if there is one
+            if ~isempty (self.wecController)
+                self.wecController.advanceStep ();
             end
             
         end
