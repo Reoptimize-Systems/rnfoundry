@@ -1,5 +1,5 @@
 classdef twoNodeTranslationalForce < mbdyn.mint.twoNodeForce
-% replace h1 line
+% apply equal an opposite forces to two nodes along a chosen axis of one node
 %
 % Syntax
 %
