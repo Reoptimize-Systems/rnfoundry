@@ -90,16 +90,14 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             %
             %
             
-            options.PinOrientation =  [];
-            options.NodeRelativeOrientation = [];
-            options.InitialTheta = [];
-            options.NodeOffsetReference = 'global';
-            options.NodeRelativeOrientationReference = 'global';
+            [ options, nopass_list ] = mbdyn.pre.revolutePin.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs ( options, nopass_list);
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.singleNodeJoint (node);
+            self = self@mbdyn.pre.singleNodeJoint (node, 'DefaultShape', 'none', pvpairs{:});
             
             self.type = 'revolute pin';
             
@@ -120,6 +118,8 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             self.absolutePinOrientation = options.PinOrientation;
             
             self.initialTheta = options.InitialTheta;
+            
+            self.setSize (1);
             
         end
         
@@ -224,6 +224,54 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
                                     
         end
         
+        function setSize (self, varargin)
+            % set the size of the revolutePin in plots
+            %
+            % Syntax
+            %
+            % setSize (obj, radius)
+            %
+            % Description
+            %
+            % setSize is used to set the size of the default revolutePin
+            % shape for plotting the revolutePin in a figure. This is used
+            % when no STL file is available. The revolute pi in represented
+            % as a dashed line parallel to the pin rotation axis passing
+            % through the pin joint location, and a line linking the pin
+            % joint location and attached node.
+            %
+            % Input
+            %
+            %  obj - mbdyn.pre.revolutePin object
+            %
+            %  pinlinelen - length of dashed pin axis line.
+            %
+            %
+            % See Also: 
+            %
+
+            if self.stlLoaded
+                
+                setSize@mbdyn.pre.singleNodeJoint (varargin{:});
+                
+            else
+                % cuboid, 3 arguments expected, x, y and z dimensions
+                assert ( numel (varargin) == 1, ...
+                         [ 'setSize requires one size input arguments when ', ...
+                           'the shape is not from an STL file, the pin line length, ', ...
+                           'which represent the bounding box of the shape' ] );
+
+                self.checkNumericScalar (varargin{1}, true, 'pin line length');
+
+                assert (varargin{1} > 0, 'pin line length must be greater than zero');
+
+                self.shapeParameters(1) = varargin{1};
+            end
+        
+            
+        end
+        
+        
         function draw (self, varargin)
             
             options.AxesHandle = self.drawAxesH;
@@ -276,7 +324,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
                                       line( self.drawAxesH, ...
                                             [ 0, 0 ], ...
                                             [ 0, 0 ], ...
-                                            [ -self.sz/2, self.sz/2 ], ...
+                                            [ -self.shapeParameters(1)/2, self.shapeParameters(1)/2 ], ...
                                             'Parent', self.transformObject, ...
                                             'Color', self.drawColour, ...
                                             'LineStyle', '--' )
@@ -315,6 +363,34 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
         
     end
     
-    
+    methods (Static)
+        
+        function [ options, nopass_list ] = defaultConstructorOptions ()
+            
+            % get the parent class's default options 
+            options = mbdyn.pre.singleNodeJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            % add default options for revolutePin
+            options.PinOrientation =  [];
+            options.NodeRelativeOrientation = [];
+            options.InitialTheta = [];
+            options.NodeOffsetReference = 'global';
+            options.NodeRelativeOrientationReference = 'global';
+            
+            allfnames = fieldnames (options);
+            
+            % get just the new option names
+            C = setdiff (allfnames, parentfnames, 'stable');
+            
+            % don't pass the new options to the parent, or the
+            % 'DefaultShape' option ( we set this to another value)
+            nopass_list = [ { 'DefaultShape'; }; ...
+                            C ];
+            
+        end
+        
+    end
     
 end
