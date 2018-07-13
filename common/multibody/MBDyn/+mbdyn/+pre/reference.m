@@ -1,4 +1,4 @@
-classdef reference < handle
+classdef reference < mbdyn.pre.base
 % class representing a reference frame, which can be relative to another frame
 %
 % Syntax

@@ -1,9 +1,9 @@
-function filepath = getmfilepath(mfile)
+function filepath = getmfilepath (mfile)
 % getmfilepath: gets the directory containing an mfile function
 %
 % Syntax
 %
-% filepath = getmfilepath(mfile)
+% filepath = getmfilepath (mfile)
 %
 % Description
 %
@@ -25,12 +25,12 @@ function filepath = getmfilepath(mfile)
 % See also: which.m
 %
  
-    loc = which(mfile);
+    loc = which (mfile);
 
-    if isempty(loc)
-        error('UTILS:nofile', 'm-file or class does not appear to exist')
+    if isempty (loc)
+        error ('UTILS:nofile', 'm-file or class does not appear to exist')
     else
-        filepath = fileparts(loc);
+        filepath = fileparts (loc);
     end
     
 end

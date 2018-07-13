@@ -67,6 +67,16 @@ classdef element < mbdyn.pre.base
             %    element, in which case it will be used in the 'name'
             %    property of the element.
             %
+            %  'DefaultShape' - optional string which chooses the shape to
+            %    use to represent the element in a plot when an STL file is
+            %    not avaialable. Possible values are 'none', 'cuboid',
+            %    'box', 'cylinder', 'tube', 'pipe', or 'annularcylinder'.
+            %    Default is cuboid.
+            % 
+            %  'DefaultShapeOrientation' - optional mbdyn.pre.orientmat
+            %    object which sets theorientation of the default shape (see
+            %    above). 
+            %
             % Output
             %
             %  el - mbdyn.pre.element
