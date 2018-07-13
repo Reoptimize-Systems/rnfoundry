@@ -8,8 +8,17 @@ classdef singleNodeJoint < mbdyn.pre.joint
     end
     
     methods
-        function self = singleNodeJoint (node)
+        function self = singleNodeJoint (node, varargin)
             % generic base class for joints which constrain a single node
+            
+            [options, nopass_list] = mbdyn.pre.singleNodeJoint.defaultConstructorOptions ();
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
+            % call the superclass constructor
+            self = self@mbdyn.pre.joint ( pvpairs{:} );
         
             self.checkIsStructuralNode (node, true);
             
@@ -58,6 +67,18 @@ classdef singleNodeJoint < mbdyn.pre.joint
             allowedstrs = {'node', 'local', 'global'};
             
             ok = self.checkAllowedStringInputs (ref, allowedstrs, throw, name);
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.joint.defaultConstructorOptions ();
+            
+            nopass_list = {};
             
         end
         
