@@ -11,6 +11,7 @@ while standalone, are closely related and developed in tandem.
 
 .. _Matlab path: https://uk.mathworks.com/help/matlab/matlab_env/what-is-the-matlab-search-path.html
 
+
 RenewNet Foundry
 ================
 
@@ -21,5 +22,19 @@ instructions there. The RenewNet Foundry installation is automated
 through the `rnfoundry_setup.m` function, and |TNShort| is installed 
 automatically by this.
 
+Nemoh
+=====
 
+The toolbox provides an interface to the Nemoh hydrodynamics BEM 
+solver used for calculating wave loads on offshore structures. A 
+copy of the Nemoh solver is not provided with the toolbox. You must 
+obtain this software separately. Further information on where Nemoh 
+should be installed is available in the section 
+_nemoh-interface-exec-loc. For convenience, a copy of Nemoh 2.03 
+(the latest stable release) may be downloaded from the following 
+location: `RenewNet Foundry Nemoh Downloads`_. 
 
+.. _RenewNet Foundry Nemoh Downloads : https://sourceforge.net/projects/rnfoundry/files/Nemoh/
+
+Instruction and information about the Nemoh download are provided on 
+this page.
