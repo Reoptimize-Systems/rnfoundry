@@ -22,6 +22,8 @@ instructions there. The RenewNet Foundry installation is automated
 through the `rnfoundry_setup.m` function, and |TNShort| is installed 
 automatically by this.
 
+.. _install-nemoh:
+
 Nemoh
 =====
 
