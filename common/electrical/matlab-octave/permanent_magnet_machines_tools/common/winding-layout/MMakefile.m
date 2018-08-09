@@ -31,8 +31,9 @@ function [rules,vars] = MMakefile (varargin)
                  'One of libmex.a, libmx.a or libmat.a was not found in %s', ...
                  options.W64CrossBuildMexLibsDir );
 
-             
-        vars.COMPILER = mmake.cross.w64.gccmexarg();
+        cross_full_path = mmake.cross.cross_prefix_full_path (cross_prefix);
+        
+        vars.COMPILER = ['"', cross_full_path, '-gcc"'];
         
         extra_mex_args = ['-L"', options.W64CrossBuildMexLibsDir, '"'];
     end
