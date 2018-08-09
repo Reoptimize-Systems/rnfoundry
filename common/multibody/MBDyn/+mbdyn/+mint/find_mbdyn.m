@@ -3,7 +3,7 @@ function [ path, found ] = find_mbdyn (throw)
 %
 % Syntax
 %
-% path = find_mbdyn ()
+% [ path, found ] = find_mbdyn ()
 %
 % Description
 %

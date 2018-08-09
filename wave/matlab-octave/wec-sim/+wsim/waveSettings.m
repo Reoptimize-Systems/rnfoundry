@@ -424,25 +424,30 @@ classdef waveSettings < handle
         function waveElevReg (obj, rampT,dt,maxIt)
             % Calculate regular wave elevation time history
             % Used by waveSetup
+            
             obj.waveAmpTime = zeros(maxIt+1,2);
-            maxRampIT=round(rampT/dt);
-            if rampT==0
-                for i=1:maxIt+1
-                    t = (i-1)*dt;
-                    obj.waveAmpTime(i,1) = t;
-                    obj.waveAmpTime(i,2) = obj.A*cos(obj.w*t);
-                end
+            
+            maxRampIT = round(rampT/dt);
+            
+            if rampT == 0
+                
+                t = (1:maxIt+1)' .* dt;
+                obj.waveAmpTime(:,1) = t;
+                obj.waveAmpTime(:,2) = obj.A .* cos (obj.w .* t);
+                
             else
-                for i=1:maxRampIT
-                    t = (i-1)*dt;
-                    obj.waveAmpTime(i,1) = t;
-                    obj.waveAmpTime(i,2) = obj.A*cos(obj.w*t)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
-                end
-                for i=maxRampIT+1:maxIt+1;
-                    t = (i-1)*dt;
-                    obj.waveAmpTime(i,1) = t;
-                    obj.waveAmpTime(i,2) = obj.A*cos(obj.w*t);
-                end
+                inds = (1:maxRampIT)';
+                
+                t = inds .* dt;
+                obj.waveAmpTime(inds,1) = t;
+                obj.waveAmpTime(inds,2) = obj.A .* cos (obj.w .* t) ...
+                                        .* ( 1 + cos (pi + pi .* (inds-1) ./ maxRampIT ) ) ./ 2;
+                
+                inds = (maxRampIT+1:maxIt+1)';
+                t = inds .* dt;
+                obj.waveAmpTime(inds,1) = t;
+                obj.waveAmpTime(inds,2) = obj.A .* cos (obj.w .* t);
+                
             end
             
         end
