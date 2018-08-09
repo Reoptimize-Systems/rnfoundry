@@ -38,7 +38,6 @@ function mexmbdyn_setup (varargin)
 %
 %  mexmbdyn_setup ('Verbose', true)
 %
-% 
 %
 %
 
@@ -49,7 +48,7 @@ function mexmbdyn_setup (varargin)
     
     options.Verbose = false;
     options.Debug = false;
-    options.ThrowErrors = false;
+    options.ThrowBuildErrors = false;
     options.PreventMBDynCheck = false;
     options.ForceMexMBCNodalSharedMem = false;
     options.MBCNodalExtraMexArgs = {};
@@ -193,7 +192,7 @@ function mexmbdyn_setup (varargin)
         mex (mexMBCNodal_mexargs{:}, options.MBCNodalExtraMexArgs{:});
         success = true; 
     catch err
-        if options.ThrowErrors
+        if options.ThrowBuildErrors
             rethrow (err);
         else
             warning ('MEXMBDYN:compilefailed', ...
@@ -217,7 +216,7 @@ function mexmbdyn_setup (varargin)
             mex (mexMBCNodalSharedMem_mexargs{:}, options.MBCNodalSharedMemExtraMexArgs{:});
             success = true;
         catch err
-            if options.ThrowErrors
+            if options.ThrowBuildErrors
                 rethrow (err);
             else
                 warning ('MEXMBDYN:compilefailed', ...

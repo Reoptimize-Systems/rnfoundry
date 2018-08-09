@@ -4,6 +4,7 @@ function mexcompile_existfile (varargin)
     options.Verbose = false;
     options.ExtraMexArgs = {};
     options.MexExtension = mexext ();
+    options.ThrowBuildErrors = false;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -24,7 +25,11 @@ function mexcompile_existfile (varargin)
     try
         mex (mexargs{:}, options.ExtraMexArgs{:});
     catch err
-        warning ('existfile mex compilation falied with message:\n%s', err.message);
+        if options.ThrowBuildErrors == true
+            rethrow (err);
+        else
+            warning ('existfile mex compilation falied with message:\n%s', err.message);
+        end
     end
 
 end

@@ -22,6 +22,7 @@ function mexppval_setup (varargin)
     options.Verbose = false;
     options.ExtraMexArgs = {};
     options.MexExtension = mexext ();
+    options.ThrowBuildErrors = false;
     
     options = parse_pv_pairs (options, varargin);
 
@@ -45,8 +46,12 @@ function mexppval_setup (varargin)
         mex (ppmval_mexargs{:}, options.ExtraMexArgs{:});
         % compiling ppuval
         mex (ppuval_mexargs{:}, options.ExtraMexArgs{:});
-    catch
-        warning ('Unable to compile mex functions ppmval and ppuval. Do you have a compiler setup?');
+    catch err
+        if options.ThrowBuildErrors
+            rethrow (err);
+        else
+            warning ('Unable to compile mex functions ppmval and ppuval. Do you have a compiler setup?');
+        end
     end
     
     fprintf (1, 'Exiting mex ppval and ppuval setup.\n');

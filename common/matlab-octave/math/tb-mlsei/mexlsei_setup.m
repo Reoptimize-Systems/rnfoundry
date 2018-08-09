@@ -15,6 +15,7 @@ function mexlsei_setup(varargin)
     options.ExtraMexArgs = {};
     options.MexExtension = mexext ();
     options.W64CrossBuild = false;
+    options.ThrowBuildErrors = false;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -269,8 +270,12 @@ function mexlsei_setup(varargin)
         
         fprintf (1, 'Finished setting up mexlsei\n');
     catch err
-        warning ('mexlsei compilation falied, error message was:\n%s', ...
-            err.message);
+        if options.ThrowBuildErrors == true
+            rethrow (err);
+        else
+            warning ( 'mexlsei compilation falied, error message was:\n%s', ...
+                      err.message );
+        end
     end
     
 end
