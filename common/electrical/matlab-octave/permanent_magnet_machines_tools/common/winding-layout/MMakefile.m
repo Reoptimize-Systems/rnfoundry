@@ -46,11 +46,13 @@ function [rules,vars] = MMakefile (varargin)
     %     mex $^ -output $@
     if options.DoCrossBuildWin64
         rules(1).target = {'mexmPhaseWL.mexw64'};
+        rules(1).commands = sprintf ('mex ${MEXFLAGS} ${COMPILERKEY}="${COMPILER}" ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" %s $^ EXE="mexmPhaseWL.mexw64"', extra_mex_args);
     else
         rules(1).target = {'mexmPhaseWL.${MEX_EXT}'};
+        rules(1).commands = sprintf ('mex ${MEXFLAGS} ${COMPILERKEY}="${COMPILER}" ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" %s $^ -output $@', extra_mex_args);
     end
     rules(1).deps = vars.OBJS;
-    rules(1).commands = sprintf ('mex ${MEXFLAGS} ${COMPILERKEY}="${COMPILER}" ${OPTIMFLAGSKEY}="${OPTIMFLAGS}" ${CXXFLAGSKEY}="${CXXFLAGS}" ${LDFLAGSKEY}="${LDFLAGS}" %s $^ -output $@', extra_mex_args);
+    
     
     % created the following using:
     % clc
