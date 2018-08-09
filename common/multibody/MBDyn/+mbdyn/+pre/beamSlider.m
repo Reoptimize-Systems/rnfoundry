@@ -4,8 +4,8 @@ classdef beamSlider < mbdyn.pre.singleNodeJoint
         
         beams;
         
+        sliderType;
         relativeOffset;
-        type;
         relativeOrientation;
         offsetReference;
         orientationReference;
@@ -168,8 +168,8 @@ classdef beamSlider < mbdyn.pre.singleNodeJoint
             
             
             
-            if ~isempty (options.Type)
-                self.checkAllowedStringInputs ( options.Type, {'spherical', 'classic', 'spline'}, true, 'type');
+            if ~isempty (options.SliderType)
+                self.checkAllowedStringInputs ( options.SliderType, {'spherical', 'classic', 'spline'}, true, 'type');
             end
 
             if ~isempty (options.RelativeOrientation)
@@ -193,7 +193,7 @@ classdef beamSlider < mbdyn.pre.singleNodeJoint
             
             self.relativeOffset = rel_offset;
             self.beams = beams;
-            self.type = options.Type;
+            self.sliderType = options.SliderType;
             self.relativeOrientation = options.RelativeOrientation;
             self.offsetReference = options.OffsetReference;
             self.orientationReference = options.OrientationReference;
@@ -253,7 +253,7 @@ classdef beamSlider < mbdyn.pre.singleNodeJoint
             if ~isempty (self.type)
                 
                 str = self.addOutputLine ( str, ...
-                                           self.commaSepList ('type', self.type), ...
+                                           self.commaSepList ('type', self.sliderType), ...
                                            2, ...
                                            true, ...
                                            'type' );
@@ -443,7 +443,7 @@ classdef beamSlider < mbdyn.pre.singleNodeJoint
             
             parentfnames = fieldnames (options);
             
-            options.Type = [];
+            options.SliderType = [];
             options.RelativeOrientation = [];
             options.OffsetReference = 'node';
             options.OrientationReference = 'node';
