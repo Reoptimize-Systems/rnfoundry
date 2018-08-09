@@ -85,7 +85,7 @@ function [docrootdir, zipfilename] = makedocs (varargin)
     temp_docs_dir = fullfile (tempdir (), outfilename);
     
     % make sure this doesn't exist already
-    rmdir (temp_docs_dir);
+    status = rmdir (temp_docs_dir);
     
     copyfile (html_dir, temp_docs_dir);
     
