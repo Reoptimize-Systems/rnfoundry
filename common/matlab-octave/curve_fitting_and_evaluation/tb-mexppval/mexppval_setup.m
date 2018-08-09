@@ -20,6 +20,8 @@ function mexppval_setup (varargin)
 %
 
     options.Verbose = false;
+    options.ExtraMexArgs = {};
+    options.MexExtension = mexext ();
     
     options = parse_pv_pairs (options, varargin);
 
@@ -29,9 +31,9 @@ function mexppval_setup (varargin)
     
     cd(getmfilepath (mfilename));
 
-    ppmval_mexargs = {'ppmval.cpp', 'interpUtil.cpp'};
+    ppmval_mexargs = {'ppmval.cpp', 'interpUtil.cpp', ['EXE="ppmval.', options.MexExtension, '"'] };
     
-    ppuval_mexargs = {'ppuval.cpp', 'interpUtil.cpp'};
+    ppuval_mexargs = {'ppuval.cpp', 'interpUtil.cpp', ['EXE="ppuval.', options.MexExtension, '"']};
     
     if options.Verbose
         ppmval_mexargs = [ppmval_mexargs, {'-v'}];
@@ -40,9 +42,9 @@ function mexppval_setup (varargin)
     
     % compiling ppmval
     try
-        mex (ppmval_mexargs{:});
+        mex (ppmval_mexargs{:}, options.ExtraMexArgs{:});
         % compiling ppuval
-        mex (ppuval_mexargs{:});
+        mex (ppuval_mexargs{:}, options.ExtraMexArgs{:});
     catch
         warning ('Unable to compile mex functions ppmval and ppuval. Do you have a compiler setup?');
     end

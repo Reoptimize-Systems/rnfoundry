@@ -16,11 +16,11 @@ function mexslmeval_setup (varargin)
 %
 % See also: slmeval, slmengine
 
-    options.MexOpts = '';
-    options.DoCrossBuildWin64 = false;
     options.Verbose = false;
     options.GSLLibDir = '';
     options.GSLIncludeDir = '';
+    options.ExtraMexArgs = {};
+    options.MexExtension = mexext ();
     
     options = parse_pv_pairs (options, varargin);
     
@@ -30,7 +30,7 @@ function mexslmeval_setup (varargin)
     
     cd(getmfilepath (mfilename));
     
-    mexargs = {'mexslmeval.cpp', '-lgsl', '-lgslcblas'};
+    mexargs = {'mexslmeval.cpp', '-lgsl', '-lgslcblas', ['EXE="mexslmeval.', options.MexExtension, '"']};
     
     if options.Verbose
         mexargs = [ mexargs, {'-v'}];
@@ -47,18 +47,10 @@ function mexslmeval_setup (varargin)
         mexargs = [ mexargs, ...
             { ['-I"' options.GSLIncludeDir, '"']} ];
     end
-    
-    if ~isempty(options.MexOpts)
-        if exist (options.MexOpts, 'file')
-            mexargs = [mexargs, {['-f "', options.MexOpts, '"']}];
-        else
-            error ('Specified alternative mex options file does not exist.')
-        end
-    end
 
     try
         % note the order of the linking commands seams to matter here
-        mex(mexargs{:})
+        mex(mexargs{:}, options.ExtraMexArgs{:})
     catch
         warning ('mexslmeval compilation failed, you may be missing required libraries, gsl and gslcblas');
     end
