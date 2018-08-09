@@ -2,6 +2,8 @@ function mexcompile_existfile (varargin)
 % compile the existfile mex function
 
     options.Verbose = false;
+    options.ExtraMexArgs = {};
+    options.MexExtension = mexext ();
     
     options = parse_pv_pairs (options, varargin);
     
@@ -13,16 +15,16 @@ function mexcompile_existfile (varargin)
     
     cd (filepath)
     
-    mexargs = {'existfile.c'};
+    mexargs = {'existfile.c', ['EXE="existfile.', options.MexExtension, '"']};
     
     if options.Verbose
         mexargs = [mexargs, {'-v'}];
     end
     
     try
-        mex (mexargs{:});
-    catch
-        warning ('existfile mex compilation falied');
+        mex (mexargs{:}, options.ExtraMexArgs{:});
+    catch err
+        warning ('existfile mex compilation falied with message:\n%s', err.message);
     end
 
 end

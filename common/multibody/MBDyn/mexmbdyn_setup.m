@@ -52,6 +52,9 @@ function mexmbdyn_setup (varargin)
     options.ThrowErrors = false;
     options.PreventMBDynCheck = false;
     options.ForceMexMBCNodalSharedMem = false;
+    options.MBCNodalExtraMexArgs = {};
+    options.MBCNodalSharedMemExtraMexArgs = {};
+    options.MexExtension = mexext ();
 
     [options.MBCLibDir, options.MBCIncludeDir, libwasfound, headerwasfound] = mbdyn.mint.find_libmbc ();
     
@@ -146,8 +149,8 @@ function mexmbdyn_setup (varargin)
     
     cd(fullfile(getmfilepath (mfilename), '+mbdyn', '+mint'));
 
-    mexMBCNodal_mexargs = {'mexMBCNodal.cpp'};
-    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp'};
+    mexMBCNodal_mexargs = {'mexMBCNodal.cpp', ['EXE="mexMBCNodal.', options.MexExtension, '"']};
+    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp', ['EXE="mexMBCNodalSharedMem.', options.MexExtension, '"']};
     
     if ~isoctave
         mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'CXXFLAGS="$CXXFLAGS -std=c++11"'}];
@@ -187,7 +190,7 @@ function mexmbdyn_setup (varargin)
     % compiling mexMBCNodal
     success = false;
     try
-        mex (mexMBCNodal_mexargs{:});
+        mex (mexMBCNodal_mexargs{:}, options.MBCNodalExtraMexArgs{:});
         success = true; 
     catch err
         if options.ThrowErrors
@@ -211,7 +214,7 @@ function mexmbdyn_setup (varargin)
         % compiling mexMBCNodalSharedMem
         success = false;
         try
-            mex (mexMBCNodalSharedMem_mexargs{:});
+            mex (mexMBCNodalSharedMem_mexargs{:}, options.MBCNodalSharedMemExtraMexArgs{:});
             success = true;
         catch err
             if options.ThrowErrors
