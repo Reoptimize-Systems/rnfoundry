@@ -38,7 +38,6 @@ function mexmbdyn_setup (varargin)
 %
 %  mexmbdyn_setup ('Verbose', true)
 %
-% 
 %
 %
 
@@ -49,9 +48,13 @@ function mexmbdyn_setup (varargin)
     
     options.Verbose = false;
     options.Debug = false;
-    options.ThrowErrors = false;
+    options.ThrowBuildErrors = false;
     options.PreventMBDynCheck = false;
     options.ForceMexMBCNodalSharedMem = false;
+    options.MBCNodalExtraMexArgs = {};
+    options.MBCNodalSharedMemExtraMexArgs = {};
+    options.MexExtension = mexext ();
+    options.W64CrossBuild = false;
 
     [options.MBCLibDir, options.MBCIncludeDir, libwasfound, headerwasfound] = mbdyn.mint.find_libmbc ();
     
@@ -146,8 +149,8 @@ function mexmbdyn_setup (varargin)
     
     cd(fullfile(getmfilepath (mfilename), '+mbdyn', '+mint'));
 
-    mexMBCNodal_mexargs = {'mexMBCNodal.cpp'};
-    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp'};
+    mexMBCNodal_mexargs = {'mexMBCNodal.cpp', ['EXE="mexMBCNodal.', options.MexExtension, '"']};
+    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp', ['EXE="mexMBCNodalSharedMem.', options.MexExtension, '"']};
     
     if ~isoctave
         mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'CXXFLAGS="$CXXFLAGS -std=c++11"'}];
@@ -178,7 +181,7 @@ function mexmbdyn_setup (varargin)
     mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc'}];
     %mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc', 'LDFLAGS="$LDFLAGS -Wl,-rpath,"/opt/lib""'}];
     
-    if ispc
+    if ispc () || options.W64CrossBuild
         % note that this library *must* appear after -lmbc or there will be
         % linking errors on windows
         mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lws2_32'}];
@@ -187,10 +190,10 @@ function mexmbdyn_setup (varargin)
     % compiling mexMBCNodal
     success = false;
     try
-        mex (mexMBCNodal_mexargs{:});
+        mex (mexMBCNodal_mexargs{:}, options.MBCNodalExtraMexArgs{:});
         success = true; 
     catch err
-        if options.ThrowErrors
+        if options.ThrowBuildErrors
             rethrow (err);
         else
             warning ('MEXMBDYN:compilefailed', ...
@@ -211,10 +214,10 @@ function mexmbdyn_setup (varargin)
         % compiling mexMBCNodalSharedMem
         success = false;
         try
-            mex (mexMBCNodalSharedMem_mexargs{:});
+            mex (mexMBCNodalSharedMem_mexargs{:}, options.MBCNodalSharedMemExtraMexArgs{:});
             success = true;
         catch err
-            if options.ThrowErrors
+            if options.ThrowBuildErrors
                 rethrow (err);
             else
                 warning ('MEXMBDYN:compilefailed', ...

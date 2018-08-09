@@ -12,6 +12,10 @@ function mexlsei_setup(varargin)
     options.ForceF2CLibRecompile = false;
     options.ForceLSEIWrite = false;
     options.Verbose = false;
+    options.ExtraMexArgs = {};
+    options.MexExtension = mexext ();
+    options.W64CrossBuild = false;
+    options.ThrowBuildErrors = false;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -25,19 +29,26 @@ function mexlsei_setup(varargin)
     %% 1. Change to the installation directory (where this file is)
     % you may need to do this manually if mexlsei_setup is not on the path
 
-    cd(rootdir);
+    cd (rootdir);
 
     %% 2. Build the f2c lib which must be included if necessary
 
     % get the local machine architecture
-    machine = computer('arch');
+    machine = computer ('arch');
     
+
     if isempty (options.F2CLibFilePath)
     
         % Put the library file to the directory above
         libfiledir = fullfile(rootdir, 'c');
+        
+        if options.W64CrossBuild
 
-        if strcmp(machine,'win32')
+                % will be using mxe to cross-compile from linux
+                libfilename = 'libf2c';
+                libfiledir = '';
+                
+        elseif strcmp(machine,'win32')
 
             % To compile use Visual C++ Express Edition 2008
             % Open the visual studio 2008 Command prompt and run the
@@ -229,7 +240,8 @@ function mexlsei_setup(varargin)
                   './c/dlsei.c', ...
                   './c/i1mach.c', ...
                   './c/d1mach.c', ...
-                  sprintf('-l%s', libfilemexcallname) };
+                  sprintf('-l%s', libfilemexcallname), ...
+                  ['EXE="existfile.', options.MexExtension, '"'] };
               
     if ~isempty (includepath)
         mexinputs = [mexinputs, { sprintf('-I"%s"', includepath) }];
@@ -254,12 +266,16 @@ function mexlsei_setup(varargin)
     
     % call mex
     try
-        mex(mexinputs{:});
+        mex(mexinputs{:}, options.ExtraMexArgs{:});
         
         fprintf (1, 'Finished setting up mexlsei\n');
     catch err
-        warning ('mexlsei compilation falied, error message was:\n%s', ...
-            err.message);
+        if options.ThrowBuildErrors == true
+            rethrow (err);
+        else
+            warning ( 'mexlsei compilation falied, error message was:\n%s', ...
+                      err.message );
+        end
     end
     
 end

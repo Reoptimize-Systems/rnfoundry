@@ -20,8 +20,10 @@ copy_win_libs=true
 skip_mex=false
 make_zip=false
 make_docs=true
+matlab_cmds=""
+verbose=false
 
-usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z]  -- creates Renewnet Foundry release
+usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] -- creates Renewnet Foundry release
 
 where:
     -h  show this help text
@@ -29,9 +31,11 @@ where:
     -t  run tests
     -w  copy windows libraries etc
     -m  skip building mex files (requires matlab)
-    -z  create zip file"
+    -z  create zip file
+    -c  additional matlab commands to run before running rnfoundry_release
+    -o  verbose output (default: false)"
 
-while getopts "h?v:twmz" opt; do
+while getopts "h?v:twmzc:o" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -52,8 +56,11 @@ while getopts "h?v:twmz" opt; do
     z)  make_zip=true
         echo "make_zip: $make_zip"
         ;;
-    d)  make_docs=false
-        echo "make_zip: $make_zip"
+    c)  matlab_cmds=$OPTARG
+        echo "matlab_cmds : $matlab_cmds"
+        ;;
+    o)  verbose=true
+        echo "verbose: $verbose"
         ;;
     esac
 done
@@ -121,7 +128,7 @@ if [ "$copy_win_libs" = true ]; then
     cp -r ~/build/mbdyn/x86_64-w64-mingw32_static/* ${release_dir}/x86_64-w64-mingw32/
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/
     # matlab needs libraries to have a different name (.lib)
-    cp ~/build/mbdyn/x86_64-w64-mingw32_shared/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
+    cp ~/build/mbdyn/x86_64-w64-mingw32_static/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/ws2_32.lib
 
     # boost (for shared memory communication)
@@ -138,8 +145,7 @@ if [ "$skip_mex" = false ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
   else
     # buld the mex files using (oldish) version of matlab
-    /usr/local/MATLAB/R2016b/bin/matlab -nodesktop -r "restoredefaultpath; cd('${release_dir}'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true); quit"
-    #matlab -nodesktop -r "restoredefaultpath; cd('${release_dir}'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true, 'CrossBuildW64', true); quit"
+    /usr/local/MATLAB/R2016b/bin/matlab -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}); quit"
   fi
 fi
 

@@ -21,6 +21,14 @@ homepage. This document focusses on the use of a Matlab preprocessor
 which has been developed as part of the |TNShort| to ease the creation of
 this data for WECs, rather than the details of what NEMOH produces.
 
+Getting Nemoh
+=============
+
+For information and instructions on obtaining and installing Nemoh, 
+see _install-nemoh. Note also the section _nemoh-interface-exec-loc 
+below.
+
+
 NEMOH Preprocessor
 ==================
 
@@ -164,22 +172,25 @@ Output of ``help nemoh.simulation/run``
    :language: none
 
 
+.. _nemoh-interface-exec-loc:
+
+
 The NEMOH Executables Location
 ==============================
 
-It is worth noting that by default, the NEMOH interface described here assumes
-that the NEMOH program files (called Mesh.exe, preProcessor.exe, Solver.exe and
-postProcessor.exe on windows, and mesh, preProcessor, solver and postProcessor)
-are installed somewhere on you computer such that you can run them just by typing
-their name on the command line without giving their full path (i.e. they are on
-the `program path`_). If this is not the case, e.g. you haven't installed them,
-or you are testing more than one version of NEMOH installed in different
-directories, you can specify the NEMOH install location when creating the
-``nemoh.simulation`` object by using the optional ``'InstallDir'`` option. See
-the help for the simulation constructor (``help nemoh.simulation/simulation``
-for more details).
+It is worth noting that by default, the NEMOH interface described 
+here assumes that the NEMOH program files (called Mesh.exe, 
+preProcessor.exe, Solver.exe and postProcessor.exe on windows, and 
+mesh, preProcessor, solver and postProcessor on Linux/Mac) are 
+installed somewhere on you computer such that you can run them just 
+by typing their name on the command line without giving their full 
+path (i.e. they are on the `program path`_). If this is not the 
+case, e.g. you haven't installed them, or you are testing more than 
+one version of NEMOH installed in different directories, you can 
+specify the NEMOH install location when creating the 
+``nemoh.simulation`` object by using the optional ``'InstallDir'`` 
+option. See the help for the simulation constructor (``help 
+nemoh.simulation/simulation`` for more details).
 
 .. _namespace: https://uk.mathworks.com/help/matlab/matlab_oop/scoping-classes-with-packages.html
 .. _program path: https://en.wikipedia.org/wiki/PATH_(variable)
-
-

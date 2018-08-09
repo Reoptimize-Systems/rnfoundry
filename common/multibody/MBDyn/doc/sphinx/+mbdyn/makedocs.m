@@ -1,4 +1,4 @@
-function makedocs (varargin)
+function [ docrootdir, zipfilename ] = makedocs (varargin)
 % makedocs.m
 %
 % function to generate files for mbdyn docs and build the docs
@@ -113,7 +113,7 @@ function makedocs (varargin)
     temp_docs_dir = fullfile (tempdir (), outfilename);
     
     % make sure this doesn't exist already
-    delete (temp_docs_dir);
+    status = rmdir (temp_docs_dir);
     
     copyfile (html_dir, temp_docs_dir);
     
@@ -123,8 +123,10 @@ function makedocs (varargin)
     
     disp (out);
     
+    zipfilename = [outfilename, '.zip'];
+    
     if status == 0
-        copyfile (fullfile (tempdir (), [outfilename, '.zip']), fullfile (docrootdir, '..'));
+        copyfile (fullfile (tempdir (), zipfilename), fullfile (docrootdir, '..'));
     else
         error ('Making zip failed');
     end

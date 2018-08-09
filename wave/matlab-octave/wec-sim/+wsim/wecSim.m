@@ -9,9 +9,9 @@ classdef wecSim < handle
     properties (GetAccess = public, SetAccess = private)
         
         % sim control variables
-        readyToRun;
-        simStarted;
-        simComplete;
+        readyToRun; % true/false flag indicating whether the simulation is ready to be run
+        simStarted; % true/false flag indicating whether the simulation has started (i.e. simStart had been called)
+        simComplete; % true/false flag indicating whether the simulation is finished (i.e. simFinish has been called)
         
         powerTakeOffs;
         wecController;
@@ -55,7 +55,7 @@ classdef wecSim < handle
         lastMomentAddedMassUncorrected; % last calculated value of hydrodynamic forces due to added mass (uncorrected)
         lastNodeMomentsUncorrected; % last calculated value ofcombined moments but with uncorrected added mass forces
         
-        logger; % wsim.logger object containing the logged simulation data from the last sim
+        logger; % wsim.logger object containing the logged simulation data from the current or most recent sim
         
     end
     
@@ -122,7 +122,7 @@ classdef wecSim < handle
             %    wsim.linearPowerTakeOff is used. See the help for these
             %    classes for more information.
             %
-            %  'LoggingSettings' - wsim.loggingSettings object. 
+            %  'LoggingSettings' - optional wsim.loggingSettings object. 
             %    wsim.loggingSetting is a small class which holds the
             %    settings determining what is logged during the simulation.
             %    The simulation data is stored in a wsim.logger object. The
@@ -131,6 +131,17 @@ classdef wecSim < handle
             %    wsim.logger for more information. If the LoggingSettings
             %    option is not used a new loggingSettings object is created
             %    internally with all logging turned off.
+            %
+            %  'Controller' - optional wsim.wecController or derived
+            %    object. This is a controller, usually also used in
+            %    conjuction with a PTO which also accepts a controller
+            %    object as input (e.g. wsim.linearPTOWithController). The
+            %    same controller must be given to both the PTO and the
+            %    wsim.wecSim object. The controller will be given access to
+            %    the wsim.wecSim object in which is resides, so it will
+            %    have access to the data log via the logger property of the
+            %    wsim.wecSim object.
+            %
             %
             % Output
             %
@@ -145,7 +156,6 @@ classdef wecSim < handle
             options.PTOs = {};
             options.NEMOHSim = [];
             options.LoggingSettings = wsim.loggingSettings ();
-            options.OutputDir = '';
             options.Controller = [];
             
             options = parse_pv_pairs (options, varargin);
@@ -321,7 +331,7 @@ classdef wecSim < handle
         end
         
         function [ datalog, mbdyn_postproc ] = run (self, varargin)
-            % Run the WEC simulation
+            % Run entire the WEC simulation
             %
             % Syntax
             %
@@ -330,7 +340,13 @@ classdef wecSim < handle
             %
             % Description
             %
-            % run runs the wsim.wecSim simulation
+            % run runs the wsim.wecSim simulation without stopping. 
+            %
+            % This is a shortcut for calling simStart, then calling simStep
+            % or simSteps until the simulation is finished and then calling
+            % simFinish. The run method is used when no interaction is
+            % required during the simulation, and is the most common way of
+            % running a simulation. 
             %
             % Input
             %
@@ -424,7 +440,7 @@ classdef wecSim < handle
             %    wsim.wecSim will force the output of a netcdf format file
             %    (see the ForceMBDynNetCDF output above).
             %
-            %  'MaxIterations' - optiona scalar integer indicating the
+            %  'MaxIterations' - optionaL scalar integer indicating the
             %    maximum number of interations which should be performed in
             %    any simulation step. If this number of iterations is
             %    exceeded, the simulation will simply advance anyway using
@@ -432,6 +448,10 @@ classdef wecSim < handle
             %    tolerances etc. so this option should be used with care.
             %    Default is Inf, so there is no limit to the number of
             %    iterations that will be performed.
+            %
+            %  'TimeExecution' - optional true/false flag indicating
+            %    whether to time the execution of the simulation. Default
+            %    is false.
             %
             % Output
             %
@@ -496,6 +516,120 @@ classdef wecSim < handle
         end
         
         function [status, datalog] = simStart (self, varargin)
+            % Start a WEC simulation
+            %
+            % Syntax
+            %
+            % [datalog, mbdyn_postproc] = simStart (wsobj)
+            % [datalog, mbdyn_postproc] = simStart (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % simStart starts wsim.wecSim simulation, performing the
+            % initial time step.
+            %
+            % Input
+            %
+            %  wsobj - wsim.wecSim object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'MBDynInputFile' - optional character vector containing the
+            %    full path which should be used for the MBDyn input file.
+            %    If not supplied, a default file name will generated with
+            %    the extension '.mbd' and placed in the outut directory.
+            %
+            %  'Verbosity' - flag controlling how much text output is
+            %    produced at the command line during simulation, and in the
+            %    MBDyn output file during the simulation. Verbosity should
+            %    be a scalar integer. The higher the value, the more output
+            %    will be produced. Default is 0, indicating the minimum
+            %    amount of output. The value of verbosity adds that umber
+            %    of -p input arguments to the command line used to launch
+            %    MBDyn (more -p inputs means more verbose output, see the
+            %    documentation for MBDYn for more information).
+            %
+            %  'AbsForceTolerance' - positive scalar value representing the
+            %    absolute tolerance on the forces applied. The system is
+            %    solved iteratively with forces and motion being
+            %    recalculated repeatedly until convergence is achieved.
+            %    This is the smallest absolute change possible before the
+            %    force calculation is considered to be converged. Default
+            %    is 100N if not supplied.
+            %
+            %  'RelForceTolerance' - positive scalar value representing the
+            %    relative tolerance on the forces applied. The system is
+            %    solved iteratively with forces and motion being
+            %    recalculated repeatedly until convergence is achieved.
+            %    This is the smallest change possible in the force relative
+            %    to it's absolute value before the force calculation is
+            %    considered to be converged. Default is 1e-5 if not
+            %    supplied.
+            %
+            %  'MinIterations' - scalar integer indicating the minimum
+            %    number of iterations of the force/motion calculation which
+            %    should be performed. Default is 0.
+            %
+            %  'TimeExecution' - true/false flag indicating whether to time
+            %    the execution of the simulation and report it at the end
+            %    of the sim.
+            %
+            %  'HydroMotionSyncSteps' - 
+            %
+            %  'ForceMBDynNetCDF' - true/false flag indicating whether to
+            %    ensure MBDyn will generate a netcdf format output file by
+            %    modifying the supplied mbdyn.pre.system object
+            %    OutputResults setting in the control data (if necessary).
+            %    Default is true.
+            %
+            %  'OutputFilePrefix' - character vector containing the output
+            %    path prefix. This
+            %    is the name of output files, but without their file
+            %    extension. e.g. /home/jbloggs/my_mbdyn_sim will create the
+            %    files:
+            %
+            %    /home/jbloggs/my_mbdyn_sim.frc
+            %    /home/jbloggs/my_mbdyn_sim.ine
+            %    /home/jbloggs/my_mbdyn_sim.out
+            %    /home/jbloggs/my_mbdyn_sim.mov
+            %    /home/jbloggs/my_mbdyn_sim.jnt
+            %    /home/jbloggs/my_mbdyn_sim.log
+            %
+            %    and/or possibly a netcdf format file:
+            %
+            %    /home/jbloggs/my_mbdyn_sim.nc
+            %
+            %    A windows example might look like
+            %    C:\Users\IEUser\Documents\my_mbdyn_sim 
+            %    producing the files:
+            %
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.frc
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.ine
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.out
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.mov
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.jnt
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.log
+            %
+            %    and/or:
+            %
+            %    C:\Users\JBloggs\Documents\my_mbdyn_sim.nc
+            %
+            %    The netcdf format is preferred for the mbdyn.postproc
+            %    class output in the mbdy_postproc variable. By default
+            %    wsim.wecSim will force the output of a netcdf format file
+            %    (see the ForceMBDynNetCDF output above).
+            %
+            %  'MaxIterations' - optionaL scalar integer indicating the
+            %    maximum number of interations which should be performed in
+            %    any simulation step. If this number of iterations is
+            %    exceeded, the simulation will simply advance anyway using
+            %    the last set of forces calculated, regardless of meeting
+            %    tolerances etc. so this option should be used with care.
+            %    Default is Inf, so there is no limit to the number of
+            %    iterations that will be performed.
+            %
+            
             
             options.MBDynInputFile = '';
             thedate = datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF');
@@ -1721,7 +1855,8 @@ classdef wecSim < handle
                                           'Desc', 'cartesian positions of all structural external nodes', ...
                                           'AxisLabel', 'External Struct Nodes Positions [m]', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.angularPositions
@@ -1729,7 +1864,8 @@ classdef wecSim < handle
                                           'Desc', 'angular positions of all structural external nodes', ...
                                           'AxisLabel', 'External Struct Nodes Euler Angles [rad]', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.velocities
@@ -1737,7 +1873,8 @@ classdef wecSim < handle
                                           'Desc', 'cartesian velocities of all structural external nodes', ...
                                           'AxisLabel', 'External Struct Nodes Velocities [ms^{-1}]', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.angularVelocities
@@ -1745,7 +1882,8 @@ classdef wecSim < handle
                                           'Desc', 'angular velocities of all structural external nodes', ...
                                           'AxisLabel', 'External Struct Nodes Angular Velocities [rads^{-1}]', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.accelerations
@@ -1753,7 +1891,8 @@ classdef wecSim < handle
                                           'Desc', 'cartesian accelerations of all structural external nodes', ...
                                           'AxisLabel', 'External Struct Nodes Accelerations [ms^{-2}]', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.angularAccelerations
@@ -1761,7 +1900,8 @@ classdef wecSim < handle
                                           'Desc', 'angular accelerations of all structural external nodes', ...
                                           'AxisLabel', 'External Struct Nodes Angular Accelerations [rad s^{-2}]', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             
@@ -1773,7 +1913,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of all forces for all nodes with external forces', ...
                                           'AxisLabel', 'Total Forces [N] on External Struct Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.nodeForcesUncorrected || self.loggingSettings.forceAddedMass
@@ -1781,7 +1922,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of all forces (with uncorrected added mass forces) for all external structural nodes with external forces', ...
                                           'AxisLabel', 'Uncorrected Added Mass Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             
@@ -1790,7 +1932,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of all hydrodynamic forces for all hydro nodes', ...
                                           'AxisLabel', 'Total Hydro Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceExcitation
@@ -1798,7 +1941,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of linear and nonlinear hydrodynamic excitation force for all hydro nodes', ...
                                           'AxisLabel', 'Total Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceExcitationRamp
@@ -1806,7 +1950,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of linear and nonlinear hydrodynamic excitation force for all hydro nodes, but with a ramp function applied', ...
                                           'AxisLabel', 'Ramped Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceExcitationLin
@@ -1814,7 +1959,8 @@ classdef wecSim < handle
                                           'Desc', 'linear hydrodynamic excitation forces for all hydro nodes', ...
                                           'AxisLabel', 'Linear Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceExcitationNonLin
@@ -1822,7 +1968,8 @@ classdef wecSim < handle
                                           'Desc', 'nonlinear hydrodynamic excitation forces for all hydro nodes', ...
                                           'AxisLabel', 'Nonlinear Hydro Excitation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceRadiationDamping
@@ -1830,7 +1977,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic radiation and damping forces for all hydro nodes', ...
                                           'AxisLabel', 'Hydro Radiation Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceRestoring
@@ -1838,7 +1986,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic restoring forces for all hydro nodes', ...
                                           'AxisLabel', 'Hydro Restoring Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceMorrison
@@ -1846,7 +1995,8 @@ classdef wecSim < handle
                                           'Desc', 'morrison forces for all hydro nodes', ...
                                           'AxisLabel', 'Morrison Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceViscousDamping
@@ -1854,7 +2004,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic viscous damping forces for all hydro nodes', ...
                                           'AxisLabel', 'Viscous Damping Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceAddedMass
@@ -1862,7 +2013,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic added mass forces for all hydro nodes', ...
                                           'AxisLabel', 'Added Mass Forces [N] on Nodes ', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.forceAddedMassUncorrected
@@ -1870,7 +2022,8 @@ classdef wecSim < handle
                                           'Desc', 'uncorrected hydrodynamic added mass forces for all hydro nodes', ...
                                           'AxisLabel', 'Uncorrected Added Mass Forces [N] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             
@@ -1883,7 +2036,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of all moments for all nodes with external moments', ...
                                           'AxisLabel', 'Total Moments [Nm] on External Struct Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.nodeMomentsUncorrected || self.loggingSettings.momentAddedMass
@@ -1891,7 +2045,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of all moments (with uncorrected added mass moments) for all external structural nodes with external moments', ...
                                           'AxisLabel', 'Uncorrected Added Mass Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             
@@ -1900,7 +2055,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of all hydrodynamic moments for all hydro nodes', ...
                                           'AxisLabel', 'Total Hydro Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentExcitation
@@ -1908,7 +2064,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of linear and nonlinear hydrodynamic excitation moments for all hydro nodes', ...
                                           'AxisLabel', 'Total Hydro Excitation Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentExcitationRamp
@@ -1916,7 +2073,8 @@ classdef wecSim < handle
                                           'Desc', 'sum of linear and nonlinear hydrodynamic excitation moments for all hydro nodes, but with a ramp function applied', ...
                                           'AxisLabel', 'Ramped Hydro Excitation Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentExcitationLin
@@ -1924,7 +2082,8 @@ classdef wecSim < handle
                                           'Desc', 'linear hydrodynamic excitation moments for all hydro nodes', ...
                                           'AxisLabel', 'Linear Hydro Excitation Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentExcitationNonLin
@@ -1932,7 +2091,8 @@ classdef wecSim < handle
                                           'Desc', 'nonlinear hydrodynamic excitation moments for all hydro nodes', ...
                                           'AxisLabel', 'Nonlinear Hydro Excitation Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentRadiationDamping
@@ -1940,7 +2100,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic radiation and damping moments for all hydro nodes', ...
                                           'AxisLabel', 'Hydro Radiation Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentRestoring
@@ -1948,7 +2109,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic restoring moments for all hydro nodes', ...
                                           'AxisLabel', 'Hydro Restoring Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentMorrison
@@ -1956,7 +2118,8 @@ classdef wecSim < handle
                                           'Desc', 'morrison moments for all hydro nodes', ...
                                           'AxisLabel', 'Morrison Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentViscousDamping
@@ -1964,7 +2127,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic viscous damping moments for all hydro nodes', ...
                                           'AxisLabel', 'Viscous Damping Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentAddedMass
@@ -1972,7 +2136,8 @@ classdef wecSim < handle
                                           'Desc', 'hydrodynamic added mass moments for all hydro nodes', ...
                                           'AxisLabel', 'Added Mass Moments [Nm] on Nodes ', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             if self.loggingSettings.momentAddedMassUncorrected
@@ -1980,7 +2145,8 @@ classdef wecSim < handle
                                           'Desc', 'uncorrected hydrodynamic added mass moments for all hydro nodes', ...
                                           'AxisLabel', 'Uncorrected Added Mass Moments [Nm] on Nodes', ...
                                           'Pre', nsteps, ...
-                                          'Indep', 'Time' );
+                                          'Indep', 'Time', ...
+                                          'ForceLogDimension', 3 );
             end
             
             % initialise PTO internal logging

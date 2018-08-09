@@ -1,4 +1,6 @@
 classdef wecController < handle
+% base class for WEC controllers
+%
     
     properties
         
