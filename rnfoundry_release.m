@@ -8,6 +8,7 @@ function rnfoundry_release (varargin)
     options.MBDynVersion = 'devel';
     options.EWSTVersion = 'devel';
     options.ThrowBuildErrors = true;
+    options.Verbose = false;
                                            
 	options = parse_pv_pairs (options, varargin);
     
@@ -20,7 +21,8 @@ function rnfoundry_release (varargin)
                       'Verbose', true, ...
                       'RunTests', options.RunTests, ...
                       'PreventXFemmCheck', true, ...
-                      'ThrowBuildErrors', true );
+                      'ThrowBuildErrors', true, ...
+                      'Verbose', options.Verbose );
     
 	
     % now build the windows mex fles etc.
@@ -32,7 +34,8 @@ function rnfoundry_release (varargin)
                       'MBCLibDir', MBCLibDir, ...
                       'MBCIncludeDir', MBCIncludeDir, ...
                       'PreventXFemmCheck', true, ...
-                      'ThrowBuildErrors', true  );
+                      'ThrowBuildErrors', true, ...
+                      'Verbose', options.Verbose );
                   
 	exampledirs = {};
     
