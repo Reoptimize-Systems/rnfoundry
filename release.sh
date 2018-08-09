@@ -138,7 +138,7 @@ if [ "$skip_mex" = false ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
   else
     # buld the mex files using (oldish) version of matlab
-    /usr/local/MATLAB/R2016b/bin/matlab -nodesktop -r "restoredefaultpath; cd('${release_dir}'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true); quit"
+    /usr/local/MATLAB/R2016b/bin/matlab -nodesktop -r "restoredefaultpath; cd('${release_dir}'); rnfoundry_release ('Runtests', false, 'PreventXFemmCheck', true); quit"
     #matlab -nodesktop -r "restoredefaultpath; cd('${release_dir}'); rnfoundry_setup('Runtests', false, 'PreventXFemmCheck', true, 'CrossBuildW64', true); quit"
   fi
 fi
