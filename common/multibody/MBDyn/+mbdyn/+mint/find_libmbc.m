@@ -34,7 +34,9 @@ function [libdir, includedir, libwasfound, headerwasfound] = find_libmbc (vararg
     options = parse_pv_pairs (options, varargin);
     
     mbdyn.pre.base.checkLogicalScalar (options.Throw, true, 'throw');
-    mbdyn.pre.base.checkAllowedStringInputs (options.ForceLocalDirsOnlyForArch, {'win64', 'win32', 'glnxa64', 'glnxa32'} , true, 'ForceLocalDirsOnlyForArch');
+    if ~isempty (options.ForceLocalDirsOnlyForArch)
+        mbdyn.pre.base.checkAllowedStringInputs (options.ForceLocalDirsOnlyForArch, {'win64', 'win32', 'glnxa64', 'glnxa32'} , true, 'ForceLocalDirsOnlyForArch');
+    end
     
     if isempty (options.ForceLocalDirsOnlyForArch)
 
