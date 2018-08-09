@@ -4,6 +4,9 @@ function rnfoundry_release (varargin)
                                                [ 'r', version('-release') ], ...
                                                'extern', 'lib', 'win64', 'mingw64');
 	options.RunTests = false;
+    options.Version = 'devel';
+    options.MBDynVersion = 'devel';
+    options.EWSTVersion = 'devel';
                                            
 	options = parse_pv_pairs (options, varargin);
     
@@ -36,12 +39,12 @@ function rnfoundry_release (varargin)
     
     mkdir (rndocdir);
     
-    [ mbdyndocrootdir, mbdyndoczipfilename ] = mbdyn.makedocs ();
+    [ mbdyndocrootdir, mbdyndoczipfilename ] = mbdyn.makedocs ('Version', options.MBDynVersion);
     
     movefile ( fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), ...
                rndocdir );
            
-	[ ewstdocrootdir, ewstdoczipfilename ] = wsim.makedocs ();
+	[ ewstdocrootdir, ewstdoczipfilename ] = wsim.makedocs ('Version', options.EWSTVersion);
     
     movefile ( fullfile (ewstdocrootdir, '..', ewstdoczipfilename), ...
                rndocdir );
