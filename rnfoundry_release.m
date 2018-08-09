@@ -1,4 +1,5 @@
 function rnfoundry_release (varargin)
+% perform tasks necessary for a release of the renewnet foundry
 
     options.W64CrossBuildMexLibsDir = fullfile ('/home', 'rcrozier', 'Sync', 'work', 'matlab_windows_libs', ...
                                                [ 'r', version('-release') ], ...
@@ -56,7 +57,7 @@ function rnfoundry_release (varargin)
                rndocdir );
     
     % create the readme files
-    readme_txt = help ('readme');
+    readme_txt = help ('rnfoundry_release>readme');
     
     str2txtfile (fullfile (thisfilepath, 'README.txt'), readme_txt);
     str2txtfile (fullfile (thisfilepath, 'README.rst'), readme_txt);
