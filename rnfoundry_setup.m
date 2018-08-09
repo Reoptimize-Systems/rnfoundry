@@ -194,6 +194,9 @@ function rnfoundry_setup (varargin)
     Inputs.ForceExistfileSetup = false;
     Inputs.SkipExistfileSetup = false;
     
+    Inputs.W64CrossBuild = false;
+    Inputs.W64CrossBuildMexLibsDir = '';
+    
     % now parse the pv pairs
     Inputs = parse_pv_pairs (Inputs, varargin);
     
@@ -206,16 +209,55 @@ function rnfoundry_setup (varargin)
     
     didcompwarn = false;
     
+    mex_ext = mexext ();
+    
+    if Inputs.W64CrossBuild
+        
+        if ispc
+            error ('W64CrossBuild is true, but we are on a windows system.');
+        end
+        
+        assert ( isempty (Inputs.W64CrossBuildMexLibsDir), ...
+                 TextWrapper.wraplines ( ['W64CrossBuild is true, but W64CrossBuildMexLibsDir is empty. ', ...
+                                          'You must supply the location of the windows mingw64 windows libraries'] ) ...
+               );
+           
+        assert ( all ( [ exist(fullfile (Inputs.W64CrossBuildMexLibsDir, 'libmex.a'), 'file'), ...
+                         exist(fullfile (Inputs.W64CrossBuildMexLibsDir, 'libmx.a'), 'file'), ...
+                         exist(fullfile (Inputs.W64CrossBuildMexLibsDir, 'libmat.a'), 'file') ] ), ...
+                 'One of libmex.a, libmx.a or libmat.a was not found in %s', ...
+                 Inputs.W64CrossBuildMexLibsDir );
+
+
+        common_extra_mex_args = { mmake.cross.w64.gccmexarg(), ...Wra
+                                  ['-L"', Inputs.W64CrossBuildMexLibsDir, '"'] };
+                              
+        mex_ext = 'mexw64';
+        
+        Inputs.GSLLibDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'lib'); % for mexslmeval
+        Inputs.GSLIncludeDir = fullfile (thisfilepath, 'x86_64-w64-mingw32', 'include'); % for mexslmeval
+        
+    end
+    
     %% existfile
     if Inputs.ForceExistfileSetup && Inputs.SkipExistfileSetup
         error ('The options ForceExistfileSetup and SkipExistfileSetup are both set to true');
     end
     
     if ~Inputs.SkipExistfileSetup
-        if Inputs.ForceExistfileSetup || (exist (['existfile.', mexext], 'file') ~= 3)
+        if Inputs.ForceExistfileSetup || (exist (['existfile.', mex_ext], 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
+            
+            if Inputs.W64CrossBuild
+                extra_mex_args = common_extra_mex_args;
+            else
+                extra_mex_args = {};
+            end
+            
             % set up existfile mex function
-            mexcompile_existfile ('Verbose', Inputs.Verbose);
+            mexcompile_existfile ( 'Verbose', Inputs.Verbose, ...
+                                   'ExtraMexArgs', extra_mex_args, ...
+                                   'MexExt', mex_ext );
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'existfile')
@@ -229,12 +271,23 @@ function rnfoundry_setup (varargin)
     end
     
     if ~Inputs.SkipMexLseiSetup
-        if Inputs.ForceMexLseiSetup || (exist (['mexlsei.', mexext], 'file') ~= 3)
+        if Inputs.ForceMexLseiSetup || (exist (['mexlsei.', mex_ext], 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
+            
+            if Inputs.W64CrossBuild
+                extra_mex_args = common_extra_mex_args;
+            else
+                extra_mex_args = {};
+            end
+            
             mexlsei_setup ( 'ForceF2CLibRecompile', Inputs.ForceMexLseiF2cLibRecompile, ...
                             'ForceLSEIWrite', Inputs.ForceMexLseiCFileCreation, ...
                             'F2CLibFilePath', Inputs.F2CLibPath, ...
-                            'Verbose', Inputs.Verbose );
+                            'Verbose', Inputs.Verbose, ...
+                            'W64CrossBuild', Inputs.W64CrossBuild, ...
+                            'ExtraMexArgs', extra_mex_args, ...
+                            'MexExt', mex_ext );
+                        
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'lsei')
@@ -248,11 +301,20 @@ function rnfoundry_setup (varargin)
     end
     
     if ~Inputs.SkipMexSLMSetup
-        if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mexext], 'file') ~= 3)
+        if Inputs.ForceMexSLMSetup || (exist (['mexslmeval.', mex_ext], 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
+            
+            if Inputs.W64CrossBuild
+                extra_mex_args = common_extra_mex_args;
+            else
+                extra_mex_args = {};
+            end
+            
             mexslmeval_setup ( 'Verbose', Inputs.Verbose, ...
                                'GSLLibDir', Inputs.GSLLibDir, ...
-                               'GSLIncludeDir', Inputs.GSLIncludeDir);
+                               'GSLIncludeDir', Inputs.GSLIncludeDir, ...
+                               'ExtraMexArgs', extra_mex_args, ...
+                               'MexExt', mex_ext );
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'slmeval')
@@ -270,7 +332,7 @@ function rnfoundry_setup (varargin)
     % with a fallback. If Octave is fixed this will then start working
     % again
     try
-        mexMBCNodalexists = exist (fullfile (getmfilepath ('mbdyn.mint.MBCNodal'), ['mexMBCNodal.', mexext()]), 'file') == 3;
+        mexMBCNodalexists = exist (fullfile (getmfilepath ('mbdyn.mint.MBCNodal'), ['mexMBCNodal.', mex_ext]), 'file') == 3;
     catch
         % this version is more fragile to files/directories being moved
         % around
@@ -280,18 +342,29 @@ function rnfoundry_setup (varargin)
                  'The MBDyn code directory:\n\n\t%s\n\ndoes not appear to exist.', ...
                  mbdynmexdir );
         % now check if the mex file already exists
-        mexMBCNodalexists = exist ( fullfile ( mbdynmexdir, ['mexMBCNodal.', mexext()]), ...
+        mexMBCNodalexists = exist ( fullfile ( mbdynmexdir, ['mexMBCNodal.', mex_ext]), ...
                                     'file' ) == 3;
     end
     
     if ~Inputs.SkipMBDynSetup
         if Inputs.ForceMBDynSetup || ~mexMBCNodalexists
             didcompwarn = compilerwarning (didcompwarn);
+            
+            if Inputs.W64CrossBuild
+                extra_mex_args = common_extra_mex_args;
+            else
+                extra_mex_args = {};
+            end
+            
             mexmbdyn_setup ( 'Verbose', Inputs.Verbose, ...
                              'MBCLibDir', Inputs.MBCLibDir, ...
                              'MBCIncludeDir', Inputs.MBCIncludeDir, ...
                              'PreventMBDynCheck', Inputs.PreventMBDynCheck, ...
-                             'ForceMexMBCNodalSharedMem', Inputs.ForceMexMBCNodalSharedMem );
+                             'ForceMexMBCNodalSharedMem', Inputs.ForceMexMBCNodalSharedMem, ...
+                             'MBCNodalExtraMexArgs',  extra_mex_args, ...
+                             'MBCNodalSharedMemExtraMexArgs', extra_mex_args, ...
+                             'MexExtension', mex_ext );
+
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'mbdyn')
@@ -306,10 +379,19 @@ function rnfoundry_setup (varargin)
     
     if ~Inputs.SkipMexPPValSetup
         if Inputs.ForceMexPPValSetup ...
-                || (exist (['ppmval.', mexext], 'file') ~= 3)...
-                || (exist (['ppuval.', mexext], 'file') ~= 3)
+                || (exist (['ppmval.', mex_ext], 'file') ~= 3)...
+                || (exist (['ppuval.', mex_ext], 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
-            mexppval_setup ('Verbose', Inputs.Verbose);
+            
+            if Inputs.W64CrossBuild
+                extra_mex_args = common_extra_mex_args;
+            else
+                extra_mex_args = {};
+            end
+            
+            mexppval_setup ( 'Verbose', Inputs.Verbose, ...
+                             'ExtraMexArgs', extra_mex_args, ...
+                             'MexExt', mex_ext );
         else
             if Inputs.Verbose
                 fprintf (1, 'Not compiling %s mex as they already exists', 'ppmval and ppuval')
@@ -323,7 +405,7 @@ function rnfoundry_setup (varargin)
     end
     
     if ~Inputs.SkipMexmPhaseWLSetup
-        if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mexext], 'file') ~= 3)
+        if Inputs.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mex_ext], 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
             mmake.make ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
             mmake.make ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
