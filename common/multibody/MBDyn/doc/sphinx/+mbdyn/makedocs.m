@@ -113,7 +113,7 @@ function [ docrootdir, zipfilename ] = makedocs (varargin)
     temp_docs_dir = fullfile (tempdir (), outfilename);
     
     % make sure this doesn't exist already
-    delete (temp_docs_dir);
+    rmdir (temp_docs_dir);
     
     copyfile (html_dir, temp_docs_dir);
     
