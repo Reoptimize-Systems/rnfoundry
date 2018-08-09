@@ -655,10 +655,10 @@ classdef TextWrapper
             %
             % Reformat the single paragraph in 'text' so it fits in lines
             % of no more than the number of columns specified in the
-            % 'width' property, and return a cell array of wrapped lines.
-            % By default Tabs in 'text' are expanded, and all other
-            % whitespace characters (including newline) are converted to
-            % space.
+            % 'width' property, and return a character vector containing
+            % the wrapped text. By default Tabs in 'text' are expanded, and
+            % all other whitespace characters (including newline) are
+            % converted to space.
             %
             % This is a static method of the TextWrapper class provided as
             % a convenience function.
