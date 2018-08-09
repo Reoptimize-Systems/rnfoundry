@@ -3,6 +3,7 @@ function rnfoundry_release (varargin)
     options.W64CrossBuildMexLibsDir = fullfile ('/home', 'rcrozier', 'Sync', 'work', 'matlab_windows_libs', ...
                                                [ 'r', version('-release') ], ...
                                                'extern', 'lib', 'win64', 'mingw64');
+	options.RunTests = false;
                                            
 	options = parse_pv_pairs (options, varargin);
     
@@ -12,7 +13,9 @@ function rnfoundry_release (varargin)
     
     % first build the linux mex fles etc.
     rnfoundry_setup ( 'ForceAllMex', true, ...
-                      'Verbose', true );
+                      'Verbose', true, ...
+                      'RunTests', options.RunTests, ...
+                      'PreventXFemmCheck', true );
     
 	
     % now build the windows mex fles etc.
@@ -22,7 +25,8 @@ function rnfoundry_release (varargin)
                       'W64CrossBuild', true, ...
                       'W64CrossBuildMexLibsDir', options.W64CrossBuildMexLibsDir, ...
                       'MBCLibDir', MBCLibDir, ...
-                      'MBCIncludeDir', MBCIncludeDir );
+                      'MBCIncludeDir', MBCIncludeDir, ...
+                      'PreventXFemmCheck', true );
                   
 	exampledirs = {};
     
@@ -32,17 +36,14 @@ function rnfoundry_release (varargin)
     
     mkdir (rndocdir);
     
-    
     [ mbdyndocrootdir, mbdyndoczipfilename ] = mbdyn.makedocs ();
     
-    
-    
-    movefile ( fullfile (mbdyndocrootdir, mbdyndoczipfilename), ...
+    movefile ( fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), ...
                rndocdir );
            
 	[ ewstdocrootdir, ewstdoczipfilename ] = wsim.makedocs ();
     
-    movefile ( fullfile (ewstdocrootdir, ewstdoczipfilename), ...
+    movefile ( fullfile (ewstdocrootdir, '..', ewstdoczipfilename), ...
                rndocdir );
     
     % create the readme files
