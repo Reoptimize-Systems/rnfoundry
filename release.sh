@@ -149,6 +149,8 @@ if [ "$skip_mex" = false ]; then
   fi
 fi
 
+rm ${release_dir}/rnfoundry_release.m
+
 if [ "$make_zip" = true ]; then
   # zip up the result
   cd ${working_copy_dir}
@@ -168,5 +170,7 @@ if [ "$run_tests" = true ]; then
 else
   echo "Skipping Tests"
 fi
+
+
 
 
