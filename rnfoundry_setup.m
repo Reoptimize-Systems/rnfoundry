@@ -207,6 +207,7 @@ function rnfoundry_setup (varargin)
         options.ForceMexSLMSetup = true;
         options.ForceMBDynSetup = true;
         options.ForceMexPPValSetup = true;
+        options.ForceExistfileSetup = true;
     end
     
     didcompwarn = false;
@@ -415,8 +416,16 @@ function rnfoundry_setup (varargin)
     if ~options.SkipMexmPhaseWLSetup
         if options.ForceMexmPhaseWLSetup || (exist (['mexmPhaseWL.', mex_ext], 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
-            mmake.make ('', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
-            mmake.make ('tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'));
+            
+            mmake.make ( '', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'), ...
+                         'FcnMakeFileArgs', {'DoCrossBuildWin64', options.W64CrossBuild, ...
+                                             'W64CrossBuildMexLibsDir', options.W64CrossBuildMexLibsDir }, ...
+                         'DoCrossBuildWin64', options.W64CrossBuild );
+                    
+            mmake.make ( 'tidy', fullfile (pm_machines_tools_rootdir (), 'common', 'winding-layout', 'MMakefile.m'), ...
+                         'FcnMakeFileArgs', {'DoCrossBuildWin64', options.W64CrossBuild, ...
+                                             'W64CrossBuildMexLibsDir', options.W64CrossBuildMexLibsDir}, ...
+                         'DoCrossBuildWin64', options.W64CrossBuild );
         else
             if options.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'mPhaseWL')
