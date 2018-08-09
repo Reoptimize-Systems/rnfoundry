@@ -54,6 +54,7 @@ function mexmbdyn_setup (varargin)
     options.MBCNodalExtraMexArgs = {};
     options.MBCNodalSharedMemExtraMexArgs = {};
     options.MexExtension = mexext ();
+    options.W64CrossBuild = false;
 
     [options.MBCLibDir, options.MBCIncludeDir, libwasfound, headerwasfound] = mbdyn.mint.find_libmbc ();
     
@@ -180,7 +181,7 @@ function mexmbdyn_setup (varargin)
     mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc'}];
     %mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-lmbc', 'LDFLAGS="$LDFLAGS -Wl,-rpath,"/opt/lib""'}];
     
-    if ispc
+    if ispc () || options.W64CrossBuild
         % note that this library *must* appear after -lmbc or there will be
         % linking errors on windows
         mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lws2_32'}];
