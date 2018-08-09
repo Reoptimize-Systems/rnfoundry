@@ -21,6 +21,7 @@ function mexslmeval_setup (varargin)
     options.GSLIncludeDir = '';
     options.ExtraMexArgs = {};
     options.MexExtension = mexext ();
+    options.ThrowBuildErrors = false;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -51,8 +52,12 @@ function mexslmeval_setup (varargin)
     try
         % note the order of the linking commands seams to matter here
         mex(mexargs{:}, options.ExtraMexArgs{:})
-    catch
-        warning ('mexslmeval compilation failed, you may be missing required libraries, gsl and gslcblas');
+    catch err
+        if options.ThrowBuildErrors
+            rethrow (err);
+        else
+            warning ('mexslmeval compilation failed, you may be missing required libraries, gsl and gslcblas');
+        end
     end
     
     fprintf (1, 'Finished building mexslmeval.\n');
