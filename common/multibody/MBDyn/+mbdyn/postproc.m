@@ -322,7 +322,7 @@ classdef postproc < handle
                  
 
                 % determine the final time
-                nsteps = size(movdata,1)/self.nNodes-1;
+                nsteps = size(movdata,1)/self.nNodes;
                 
                 self.time = (1:nsteps)*self.simInfo.TimeStep;
                 
