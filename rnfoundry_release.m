@@ -57,10 +57,8 @@ function rnfoundry_release (varargin)
                rndocdir );
     
     % create the readme files
-    readme_txt = help ('rnfoundry_release>readme');
-    
-    str2txtfile (fullfile (thisfilepath, 'README.txt'), readme_txt);
-    str2txtfile (fullfile (thisfilepath, 'README.rst'), readme_txt);
+    help2txtfile (fullfile (thisfilepath, 'README.txt'), 'rnfoundry_release>readme');
+    help2txtfile (fullfile (thisfilepath, 'README.rst'), 'rnfoundry_release>readme');
 
 end
 
