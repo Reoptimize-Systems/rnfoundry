@@ -229,7 +229,11 @@ classdef system < mbdyn.pre.base
             options.DefaultOrientation = '';
             options.References = {};
             options.DefaultScales = [];
-            options.OutputResults = { 'netcdf', 'no text' };
+            if ispc
+                options.OutputResults = {};
+            else
+                options.OutputResults = { 'netcdf', 'no text' };
+            end
             
             options = parse_pv_pairs (options, varargin);
             
