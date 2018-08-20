@@ -27,6 +27,85 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
     methods
         
         function self = totalJoint (node1, node2, varargin)
+            % totalJoint constructor
+            %
+            % Syntax
+            %
+            % tj = totalJoint (node1, node2)
+            % tj = totalJoint (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % totalJoint creates a total joint which allows the arbitrary
+            % constraint of specific components of the relative position
+            % and orientation of two nodes. The value of the constrained
+            % components of the relative position and orientation can be a
+            % simple fixed constraint (i.e. the relative position or
+            % orientation of each compnent of the two nodes can be set to
+            % be fixed) or optionally be imposed by using an
+            % mbdyn.pre.drive object. As such, this element allows to mimic
+            % the behavior of most ideal constraints that connect two
+            % nodes.
+            %
+            % The relative position imposed by the position constraint is
+            % imposed in a reference frame rigidly attached to the first
+            % node, in the optional offset relative_offset_1, and
+            % optionally further oriented by the rel_pos_orientation_1
+            % matrix. The relative orientation imposed by the orientation
+            % constraint is imposed in a reference frame rigidly attached
+            % to the first node, optionally further oriented by the
+            % rel_rot_orientation_1 matrix. It consists in the Euler vector
+            % that expresses the imposed relative orientation, in radian.
+            %
+            % Input
+            %
+            %  node1 - mbdyn.pre.structuralNode object
+            %
+            %  node2 - mbdyn.pre.structuralNode object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'PositionStatus' - 
+            %
+            %  'OrientationStatus' - 
+            %
+            %  'ImposedRelativePosition' - 
+            %
+            %  'ImposedRelativeOrientation' - 
+            %
+            %  'RelativeOffset1' - 
+            %
+            %  'RelativeOffset1Reference' - 
+            %
+            %  'RelativePositionOrientation1' - 
+            %
+            %  'RelativePositionOrientation1Reference' - 
+            %
+            %  'RelativeRotOrientation1' - 
+            %
+            %  'RelativeRotOrientation1Reference' - 
+            %
+            %  'RelativeOffset2' - 
+            %
+            %  'RelativeOffset2Reference' - 
+            %
+            %  'RelativePositionOrientation2' - 
+            %
+            %  'RelativePositionOrientation2Reference' - 
+            %
+            %  'RelativeRotOrientation2' - 
+            %
+            %  'RelativeRotOrientation2Reference' - 
+            %
+            % Output
+            %
+            %  tj - mbdyn.pre.totalJoint object
+            %
+            %
+            %
+            % See Also: mbdyn.pre.totalPin
+            %
             
             options.PositionStatus = {};
             options.OrientationStatus = {};
