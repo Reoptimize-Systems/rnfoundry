@@ -11,6 +11,9 @@ classdef singleTplDriveCaller < mbdyn.pre.driveCaller
     methods
         
         function self = singleTplDriveCaller (entity, drivecaller, varargin)
+            % mbdyn.pre.singleTplDriveCaller constructor
+            %
+
             
             options.Reference = '';
             
