@@ -193,7 +193,7 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
             
         end
         
-        function str = generateMBDynInputString (self)
+        function str = generateMBDynInputString (self, finalcomma)
             % generates MBDyn input string for twoNodeOffsetJoint joint
             % 
             % Syntax
@@ -216,7 +216,34 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
             %   file.
             %
             
-            str = generateMBDynInputString@mbdyn.pre.joint(self);
+            str = generateMBDynInputString@mbdyn.pre.twoNodeJoint (self);
+
+            str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, self.nodeLabelComment (self.node1));
+            
+            if ~isempty (self.relativeOffset1)
+                str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset1Reference, self.relativeOffset1), 3, true);
+            end
+            
+            if ~isempty (self.relativeOrientation1)
+                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation1Reference, self.relativeOrientation1), 3, true);
+            end
+            
+            addcomma = ~isempty (self.relativeOrientation2) ...
+                        || ~isempty (self.relativeOrientation2) ...
+                        || finalcomma;
+
+            str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, addcomma, self.nodeLabelComment (self.node2));
+            
+            if ~isempty (self.relativeOffset2)
+                addcomma = ~isempty (self.relativeOrientation2) ...
+                            || finalcomma;
+                str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset2Reference, self.relativeOffset2), 3, addcomma);
+            end
+            
+            if ~isempty (self.relativeOrientation2)
+                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation2Reference, self.relativeOrientation2), 3, finalcomma);
+            end
+
         end
         
     end
