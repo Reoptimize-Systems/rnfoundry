@@ -79,8 +79,8 @@ classdef inline < mbdyn.pre.twoNodeJoint
             % See Also: 
             %
             
-            options.RelativeLinePosition =  [];
-            options.RelativeOrientation =  [];
+            options.RelativeLinePosition =  'null';
+            options.RelativeOrientation = mbdyn.pre.orientmat ('eye');
             options.RelativeOffset = [];
             options.LinePositionReference = 'node';
             options.OrientationReference = 'node';
