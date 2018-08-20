@@ -1,4 +1,5 @@
 classdef driveCaller < mbdyn.pre.base
+% common base class for drive callers 
     
     properties
         
