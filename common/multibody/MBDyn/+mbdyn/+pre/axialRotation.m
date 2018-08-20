@@ -27,10 +27,10 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             % Input
             %
             %  node1 - mbdyn.pre.structuralNode (or derived class) object
-            %    representing to first node the joint connects
+            %    representing the first node the joint connects
             %
             %  node2 - mbdyn.pre.structuralNode (or derived class) object
-            %    representing to second node the joint connects
+            %    representing the second node the joint connects
             %
             %  omega_drive - mbdyn.pre.drive object, the driver which sets
             %    the angular velocity.
@@ -145,27 +145,7 @@ classdef axialRotation < mbdyn.pre.twoNodeOffsetJoint
             %   file.
             %
             
-            str = generateMBDynInputString@mbdyn.pre.twoNodeJoint(self);
-            
-            str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
-            
-            if ~isempty (self.relativeOffset1)
-                str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset1Reference, self.relativeOffset1), 3, true);
-            end
-            
-            if ~isempty (self.relativeOrientation1)
-                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation1Reference, self.relativeOrientation1), 3, true);
-            end
-            
-            str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, true, 'node 2 label');
-            
-            if ~isempty (self.relativeOffset2)
-                str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset2Reference, self.relativeOffset2), 3, true);
-            end
-            
-            if ~isempty (self.relativeOrientation2)
-                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation2Reference, self.relativeOrientation2), 3, true);
-            end
+            str = generateMBDynInputString@mbdyn.pre.twoNodeOffsetJoint (self, true);
             
             str = self.addOutputLine (str, self.angularVelocity.generateMBDynInputString (), 2, false);
             
