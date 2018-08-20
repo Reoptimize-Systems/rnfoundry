@@ -820,6 +820,14 @@ classdef base < handle
                     % of comma separated list continues on next line
                     str = [ str, sprintf(',\n') ];
                     
+                elseif isa (varargin{ind}, 'mbdyn.pre.base')
+                    
+                    str = [ str, varargin{ind}.generateMBDynInputString() ];
+                        
+                    % add a comma and newline to end of matrix so rest
+                    % of comma separated list continues on next line
+                    str = [ str, sprintf(',\n') ];
+                    
                 end
                 
             end
@@ -935,6 +943,10 @@ classdef base < handle
             %
             %  comment - (optional) string which will be inserted as a
             %    comment after newstring.
+            %
+            %  startnewline - (optional) true/false flag indicating whether
+            %    to insert a newline character at the start when adding the
+            %    line. Default is true.
             %
             % Output
             %
