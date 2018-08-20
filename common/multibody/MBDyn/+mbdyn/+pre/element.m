@@ -725,6 +725,7 @@ classdef element < mbdyn.pre.base
     methods (Static)
                 
         function comment = nodeLabelComment (node)
+            % generate a comment describing a node (uses label or name if present)
             
             if isempty (node.name)
                 comment = sprintf ('node label');
