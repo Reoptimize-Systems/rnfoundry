@@ -53,7 +53,8 @@ classdef twoNodeJoint < mbdyn.pre.joint
             %   file.
             %
             
-            str = generateMBDynInputString@mbdyn.pre.joint(self);
+            str = generateMBDynInputString@mbdyn.pre.joint (self);
+
         end
     end
     
