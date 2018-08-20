@@ -35,6 +35,15 @@ classdef linearViscousIsotropicConstituativeLaw < mbdyn.pre.constituativeLaw
             % See Also:
             %
             
+            [options, nopass_list] = mbdyn.pre.linearViscousIsotropicConstituativeLaw.defaultConstructorOptions ();
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
+            self = self@mbdyn.pre.constituativeLaw (pvpairs{:});
+            
+            
             self.checkNumericScalar (viscosity, true, 'viscosity');
             
             self.type = 'linear viscous isotropic';
@@ -66,7 +75,21 @@ classdef linearViscousIsotropicConstituativeLaw < mbdyn.pre.constituativeLaw
             %   file.
             %
             
-            str = self.commaSepList (self.type, self.viscosity);
+            specific_law_str = self.commaSepList (self.type, self.viscosity);
+            
+            str = generateMBDynInputString@mbdyn.pre.constituativeLaw (self, specific_law_str);
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.constituativeLaw.defaultConstructorOptions ();
+            
+            nopass_list = {};
             
         end
         
