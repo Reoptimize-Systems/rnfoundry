@@ -165,11 +165,16 @@ classdef reference < mbdyn.pre.base
             
             if isempty (dorientm) || strcmp (dorientm, 'null')
                 this.dorientm = mbdyn.pre.orientmat ('orientation', eye (3));
-            elseif ~isa (dorientm, 'mbdyn.pre.orientmat')
+            
+            elseif ~mbdyn.pre.base.checkOrientationMatrix (dorientm, false)
                 error ('RENEWNET:mbdyn:badreforientation', ...
                     'dorientm should be a mbdyn.pre.orientmat  object or empty' );
             else
-                this.dorientm = dorientm;
+                if isa (dorientm, 'mbdyn.pre.orientmat')
+                    this.dorientm = dorientm;
+                else
+                    this.dorientm = mbdyn.pre.orientmat ('matrix', dorientm);
+                end
             end
             
             if isempty (dv) || strcmp (dv, 'null')
