@@ -96,6 +96,8 @@ classdef element < mbdyn.pre.base
             self.checkOrientationMatrix ( options.DefaultShapeOrientation, ...
                                           true, ...
                                           'DefaultShapeOrientation' );
+                                      
+            assert (ischar (options.Name), 'Name must be a character vector');
             
             self.stlLoaded = false;
             self.drawColour = [0.8, 0.8, 1.0];
@@ -104,6 +106,7 @@ classdef element < mbdyn.pre.base
             self.drawAxesH = [];
             self.defaultShape = options.DefaultShape;
             self.defaultShapeOrientation = options.DefaultShapeOrientation;
+            self.name = options.Name;
             
             switch self.defaultShape
                 
@@ -231,7 +234,7 @@ classdef element < mbdyn.pre.base
             %  router - used when the shape is a tube/pipe/annularcylinder,
             %   this is the outer radius of the tube.
             %
-            %  rinne - used when the shape is a tube/pipe/annularcylinder,
+            %  rinner - used when the shape is a tube/pipe/annularcylinder,
             %   this is the inner radius of the tube.
             %
             %  axiallength - used when the shape is a tube/pipe/annularcylinder,
@@ -439,154 +442,34 @@ classdef element < mbdyn.pre.base
                     
                     case {'cuboid', 'box'}
                         
-                        self.shapeData{1} = struct ();
+                        lx = self.shapeParameters(1);
+                        ly = self.shapeParameters(2);
+                        lz = self.shapeParameters(3);
                         
-                        % make a unit box by default for drawing
-                        self.shapeData{1}.Vertices = [ -self.shapeParameters(1)/2, -self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
-                                                        self.shapeParameters(1)/2, -self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
-                                                        self.shapeParameters(1)/2,  self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
-                                                       -self.shapeParameters(1)/2,  self.shapeParameters(2)/2, -self.shapeParameters(3)/2;
-                                                       -self.shapeParameters(1)/2, -self.shapeParameters(2)/2,  self.shapeParameters(3)/2;
-                                                        self.shapeParameters(1)/2, -self.shapeParameters(2)/2,  self.shapeParameters(3)/2;
-                                                        self.shapeParameters(1)/2,  self.shapeParameters(2)/2,  self.shapeParameters(3)/2;
-                                                       -self.shapeParameters(1)/2,  self.shapeParameters(2)/2,  self.shapeParameters(3)/2; ];
-
-                        self.shapeData{1}.Faces = [ 1, 4, 3, 2;
-                                                    1, 5, 6, 2;
-                                                    2, 6, 7, 3;
-                                                    7, 8, 4, 3;
-                                                    8, 5, 1, 4;
-                                                    8, 7, 6, 5 ];
+                        orientation = self.defaultShapeOrientation.orientationMatrix;
+                        
+                        self.shapeData = self.makeCuboidShape (lx, ly, lz, orientation);
+                        
                                      
                     case 'cylinder'
                         
+                        radius = self.shapeParameters(1);
+                        axiallength = self.shapeParameters(2);
+                        orientation = self.defaultShapeOrientation.orientationMatrix;
                         npnts = 30;
-                        [X,Y,Z] = cylinder (self.shapeParameters(1), npnts-1);
-                        Z = Z .* self.shapeParameters(2);
-                        Z = Z - self.shapeParameters(3)/2;
                         
-                        % rotate
-                        XYZtemp = [ X(1,:);
-                                    Y(1,:)
-                                    Z(1,:) ];
-                                
-                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
+                        self.shapeData = self.makeCylinderShape (radius, axiallength, orientation, npnts);
                         
-                        X(1,:) = XYZtemp(1,:);
-                        Y(1,:) = XYZtemp(2,:);
-                        Z(1,:) = XYZtemp(3,:);
-                        
-                        XYZtemp = [ Xo(2,:);
-                                    Yo(2,:)
-                                    Zo(2,:) ];
-                                
-                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
-                        
-                        X(2,:) = XYZtemp(1,:);
-                        Y(2,:) = XYZtemp(2,:);
-                        Z(2,:) = XYZtemp(3,:);
-                        
-                        
-                        self.shapeData{1} = struct ();
-                        self.shapeData{1}.Vertices = [];
-                        self.shapeData{1}.Faces = [];
-                        
-                        self.shapeData{1}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)';
-                                                       X(2,:)', Y(2,:)', Z(2,:)'; ];
-                                                   
-                        self.shapeData{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
-                        self.shapeData{1}.Faces (end, 2) = 1;
-                        self.shapeData{1}.Faces (end, 3) = 1 + npnts;
-                        
-                        self.shapeData{2} = struct ();
-                        self.shapeData{2}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)' ];
-                        self.shapeData{2}.Faces = 1:npnts;
-                        
-                        self.shapeData{3} = struct ();
-                        self.shapeData{3}.Vertices = [ X(2,:)', Y(2,:)', Z(2,:)' ];
-                        self.shapeData{3}.Faces = 1:npnts;
                         
                     case {'tube', 'pipe', 'annularcylinder'}
                         
+                        router = self.shapeParameters(1);
+                        rinner = self.shapeParameters(2);
+                        axiallength = self.shapeParameters(3);
+                        orientation = self.defaultShapeOrientation.orientationMatrix;
                         npnts = 20;
-                        [Xo,Yo,Zo] = cylinder (self.shapeParameters(1), npnts-1);
-                        Zo = Zo .* self.shapeParameters(3);
                         
-                        [Xi,Yi,Zi] = cylinder (self.shapeParameters(2), npnts-1);
-                        Zi = Zi .* self.shapeParameters(3);
-                        
-                        Zo = Zo - self.shapeParameters(3)/2;
-                        Zi = Zi - self.shapeParameters(3)/2;
-                        
-                        % rotate
-                        XYZtemp = [ Xo(1,:);
-                                    Yo(1,:)
-                                    Zo(1,:) ];
-                                
-                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
-                        
-                        Xo(1,:) = XYZtemp(1,:);
-                        Yo(1,:) = XYZtemp(2,:);
-                        Zo(1,:) = XYZtemp(3,:);
-                        
-                        XYZtemp = [ Xo(2,:);
-                                    Yo(2,:)
-                                    Zo(2,:) ];
-                                
-                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
-                        
-                        Xo(2,:) = XYZtemp(1,:);
-                        Yo(2,:) = XYZtemp(2,:);
-                        Zo(2,:) = XYZtemp(3,:);
-                        
-                        XYZtemp = [ Xi(1,:);
-                                    Yi(1,:)
-                                    Zi(1,:) ];
-                                
-                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
-                        
-                        Xi(1,:) = XYZtemp(1,:);
-                        Yi(1,:) = XYZtemp(2,:);
-                        Zi(1,:) = XYZtemp(3,:);
-                        
-                        XYZtemp = [ Xi(2,:);
-                                    Yi(2,:)
-                                    Zi(2,:) ];
-                                
-                        XYZtemp = self.defaultShapeOrientation.orientationMatrix * XYZtemp;
-                        
-                        Xi(2,:) = XYZtemp(1,:);
-                        Yi(2,:) = XYZtemp(2,:);
-                        Zi(2,:) = XYZtemp(3,:);
-                        
-                        
-                        self.shapeData{1} = struct ();
-                        self.shapeData{1}.Vertices = [];
-                        self.shapeData{1}.Faces = [];
-                        
-                        self.shapeData{1}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
-                                                       Xo(2,:)', Yo(2,:)', Zo(2,:)'; ];
-                                                   
-                        self.shapeData{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
-                        self.shapeData{1}.Faces (end, 2) = 1;
-                        self.shapeData{1}.Faces (end, 3) = 1 + npnts;
-                        
-                        self.shapeData{2}.Vertices = [ Xi(1,:)', Yi(1,:)', Zi(1,:)';
-                                                       Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
-                                                   
-                        self.shapeData{2}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
-                        self.shapeData{2}.Faces (end, 2) = 1;
-                        self.shapeData{2}.Faces (end, 3) = 1 + npnts;
-                        
-                        self.shapeData{3} = struct ();
-                        self.shapeData{3}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
-                                                       Xi(1,:)', Yi(1,:)', Zi(1,:)'; ];
-                        self.shapeData{3}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
-                        
-                        self.shapeData{4} = struct ();
-                        self.shapeData{4}.Vertices = [ Xo(2,:)', Yo(2,:)', Zo(2,:)';
-                                                       Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
-                        self.shapeData{4}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
+                        self.shapeData = self.makeAnnularCylinderShape (router, rinner, axiallength, orientation, npnts);
                         
                         
                     case 'sphere'
@@ -739,11 +622,194 @@ classdef element < mbdyn.pre.base
             
             options.STLFile = '';
             options.UseSTLName = false;
+            options.Name = '';
             options.DefaultShape = 'cuboid';
             options.DefaultShapeOrientation = mbdyn.pre.orientmat ('eye');
             
             nopass_list = {};
             
+        end
+        
+        function shapedata = makeCylinderShape (radius, axiallength, orientation, npnts)
+            % generate shape data for a closed cylinder
+            
+            if nargin < 4
+                npnts = 30;
+            end
+            
+            if nargin < 4
+                orientation = eye (3);
+            end
+            
+            % make a unit length cylinder
+            [X,Y,Z] = cylinder (radius, npnts-1);
+            % scale the Z coordinates to give the desired axial length
+            Z = Z .* axiallength;
+            % shift it down so centre is at origin
+            Z = Z - axiallength/2;
+
+            % rotate
+            XYZtemp = [ X(1,:);
+                        Y(1,:)
+                        Z(1,:) ];
+
+            XYZtemp = orientation * XYZtemp;
+
+            X(1,:) = XYZtemp(1,:);
+            Y(1,:) = XYZtemp(2,:);
+            Z(1,:) = XYZtemp(3,:);
+
+            XYZtemp = [ X(2,:);
+                        Y(2,:)
+                        Z(2,:) ];
+
+            XYZtemp = orientation * XYZtemp;
+
+            X(2,:) = XYZtemp(1,:);
+            Y(2,:) = XYZtemp(2,:);
+            Z(2,:) = XYZtemp(3,:);
+
+
+            shapedata{1} = struct ();
+            shapedata{1}.Vertices = [];
+            shapedata{1}.Faces = [];
+
+            shapedata{1}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)';
+                                      X(2,:)', Y(2,:)', Z(2,:)'; ];
+
+            shapedata{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
+            shapedata{1}.Faces (end, 2) = 1;
+            shapedata{1}.Faces (end, 3) = 1 + npnts;
+
+            shapedata{2} = struct ();
+            shapedata{2}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)' ];
+            shapedata{2}.Faces = 1:npnts;
+
+            shapedata{3} = struct ();
+            shapedata{3}.Vertices = [ X(2,:)', Y(2,:)', Z(2,:)' ];
+            shapedata{3}.Faces = 1:npnts;     
+            
+        end
+        
+        
+        function shapedata = makeAnnularCylinderShape (router, rinner, axiallength, orientation, npnts)
+            
+            if nargin < 5
+                npnts = 20;
+            end
+            
+            if nargin < 4
+                orientation = eye (3);
+            end
+            
+            [Xo,Yo,Zo] = cylinder (router, npnts-1);
+            Zo = Zo .* axiallength;
+
+            [Xi,Yi,Zi] = cylinder (rinner, npnts-1);
+            Zi = Zi .* axiallength;
+
+            Zo = Zo - axiallength/2;
+            Zi = Zi - axiallength/2;
+
+            % rotate
+            XYZtemp = [ Xo(1,:);
+                        Yo(1,:)
+                        Zo(1,:) ];
+
+            XYZtemp = orientation * XYZtemp;
+
+            Xo(1,:) = XYZtemp(1,:);
+            Yo(1,:) = XYZtemp(2,:);
+            Zo(1,:) = XYZtemp(3,:);
+
+            XYZtemp = [ Xo(2,:);
+                        Yo(2,:)
+                        Zo(2,:) ];
+
+            XYZtemp = orientation * XYZtemp;
+
+            Xo(2,:) = XYZtemp(1,:);
+            Yo(2,:) = XYZtemp(2,:);
+            Zo(2,:) = XYZtemp(3,:);
+
+            XYZtemp = [ Xi(1,:);
+                        Yi(1,:)
+                        Zi(1,:) ];
+
+            XYZtemp = orientation * XYZtemp;
+
+            Xi(1,:) = XYZtemp(1,:);
+            Yi(1,:) = XYZtemp(2,:);
+            Zi(1,:) = XYZtemp(3,:);
+
+            XYZtemp = [ Xi(2,:);
+                        Yi(2,:)
+                        Zi(2,:) ];
+
+            XYZtemp = orientation * XYZtemp;
+
+            Xi(2,:) = XYZtemp(1,:);
+            Yi(2,:) = XYZtemp(2,:);
+            Zi(2,:) = XYZtemp(3,:);
+
+
+            shapedata{1} = struct ();
+            shapedata{1}.Vertices = [];
+            shapedata{1}.Faces = [];
+
+            shapedata{1}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
+                                      Xo(2,:)', Yo(2,:)', Zo(2,:)'; ];
+
+            shapedata{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
+            shapedata{1}.Faces (end, 2) = 1;
+            shapedata{1}.Faces (end, 3) = 1 + npnts;
+
+            shapedata{2}.Vertices = [ Xi(1,:)', Yi(1,:)', Zi(1,:)';
+                                      Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
+
+            shapedata{2}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
+            shapedata{2}.Faces (end, 2) = 1;
+            shapedata{2}.Faces (end, 3) = 1 + npnts;
+
+            shapedata{3} = struct ();
+            shapedata{3}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
+                                      Xi(1,:)', Yi(1,:)', Zi(1,:)'; ];
+            shapedata{3}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
+
+            shapedata{4} = struct ();
+            shapedata{4}.Vertices = [ Xo(2,:)', Yo(2,:)', Zo(2,:)';
+                                      Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
+            shapedata{4}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
+                        
+        end
+        
+        function shapedata = makeCuboidShape (lx, ly, lz, orientation)
+            
+            if nargin < 4
+                orientation = eye (3);
+            end
+            
+            shapedata{1} = struct ();
+            
+            % make a unit box by default for drawing
+            shapedata{1}.Vertices = [ -lx/2, -ly/2, -lz/2;
+                                       lx/2, -ly/2, -lz/2;
+                                       lx/2,  ly/2, -lz/2;
+                                      -lx/2,  ly/2, -lz/2;
+                                      -lx/2, -ly/2,  lz/2;
+                                       lx/2, -ly/2,  lz/2;
+                                       lx/2,  ly/2,  lz/2;
+                                      -lx/2,  ly/2,  lz/2; ];
+                                  
+            shapedata{1}.Vertices = (orientation * shapedata{1}.Vertices.').';
+
+            shapedata{1}.Faces = [ 1, 4, 3, 2;
+                                   1, 5, 6, 2;
+                                   2, 6, 7, 3;
+                                   7, 8, 4, 3;
+                                   8, 5, 1, 4;
+                                   8, 7, 6, 5 ];
+                               
         end
 
     end
