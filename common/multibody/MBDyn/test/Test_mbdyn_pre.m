@@ -311,18 +311,18 @@ bd.draw ()
 sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 
-posstatus = 'active';
-orientstatus = true;
+posstatus = {'active', 'active', 'active'};
+orientstatus = [true, false, true];
 
-jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus);
+jnt = mbdyn.pre.totalJoint (sn1, sn2, 'PositionStatus', posstatus, 'OrientationStatus', orientstatus);
 jnt.generateMBDynInputString ()
 
 
-jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
+jnt = mbdyn.pre.totalJoint (sn1, sn2, 'PositionStatus', posstatus, 'OrientationStatus', orientstatus, ...
     'RelativeOffset1', [1; 2; 3]);
 jnt.generateMBDynInputString ()
 
-jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
+jnt = mbdyn.pre.totalJoint (sn1, sn2, 'PositionStatus', posstatus, 'OrientationStatus', orientstatus, ...
     'RelativeOffset1', [1; 2; 3], ...
     'RelativeOffset1Reference', 'other node');
 jnt.generateMBDynInputString ()
@@ -517,10 +517,18 @@ mbdynpost.animate ( 'PlotTrajectories', true, ...
                     'AxLims', [-3.1, 3.1; -1.5, 1.5;  -3, 3], ...
                     'VideoFile', 'double_pendulum.avi');
 
-%% Drawing
+%% Element Drawing
 
 el = mbdyn.pre.element ();
 % 
+el.draw ()
+el.draw('Mode', 'wireframe');
+
+%% 
+
+om = mbdyn.pre.orientmat ('euler', [0,pi/4,0]); % rotate 45 degrees around y axis
+el = mbdyn.pre.element ('DefaultShapeOrientation', om);
+
 el.draw ()
 el.draw('Mode', 'wireframe');
 
