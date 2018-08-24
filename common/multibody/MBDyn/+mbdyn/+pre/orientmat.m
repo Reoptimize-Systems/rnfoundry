@@ -765,13 +765,17 @@ classdef orientmat
             
         end
         
-        function om = mtimes (om1, om2)
+        function out = mtimes (arg1, arg2)
             % matrix multiplication of orientation matrices
             %
             % Syntax
             %
             % om = mtimes (om1, om2)
             % om = om1 * om2
+            % om = mtimes (vec, om)
+            % om = vec * om
+            % om = mtimes (om, vec)
+            % om = om * vec
             %
             % Description
             %
@@ -794,7 +798,21 @@ classdef orientmat
             %   matrix = om1.orientationMatrix * om2.orientationMatrix
             %
         
-            om = mbdyn.pre.orientmat ('orientation', om1.orientationMatrix * om2.orientationMatrix);
+            if isa (arg1, 'mbdyn.pre.orientmat') && isa (arg2, 'mbdyn.pre.orientmat')
+                
+                out = mbdyn.pre.orientmat ('orientation', arg1.orientationMatrix * arg2.orientationMatrix);
+                
+            elseif isa (arg1, 'mbdyn.pre.orientmat') && isvector (arg2) && numel (arg2) == 3
+                
+                out = arg1.orientationMatrix * arg2;
+                
+            elseif isvector (arg1) && isa (arg2, 'mbdyn.pre.orientmat') && numel (arg1) == 3
+                
+                out = arg1 * arg2.orientationMatrix;
+                
+            else
+                error ('matrix multiplication only defined for other orientation matrices and 3 element vectors')
+            end
             
         end
         
