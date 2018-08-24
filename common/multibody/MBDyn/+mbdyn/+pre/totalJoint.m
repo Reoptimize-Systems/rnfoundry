@@ -107,29 +107,14 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             % See Also: mbdyn.pre.totalPin
             %
             
-            options.PositionStatus = {};
-            options.OrientationStatus = {};
-            options.ImposedRelativePosition = 'null';
-            options.ImposedRelativeOrientation = 'null';
-            
-            options.RelativeOffset1 = [];
-            options.RelativeOffset1Reference = 'node';
-            options.RelativePositionOrientation1 =  [];
-            options.RelativePositionOrientation1Reference = 'node';
-            options.RelativeRotOrientation1 =  [];
-            options.RelativeRotOrientation1Reference = 'node';
-            
-            options.RelativeOffset2 =  [];
-            options.RelativeOffset2Reference = 'node';
-            options.RelativePositionOrientation2 =  [];
-            options.RelativePositionOrientation2Reference = 'node';
-            options.RelativeRotOrientation2 =  [];
-            options.RelativeRotOrientation2Reference = 'node';
+            [options, nopass_list] = mbdyn.pre.totalJoint.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.twoNodeJoint (node1, node2);
+            self = self@mbdyn.pre.twoNodeJoint (node1, node2, pvpairs{:});
             
             self.type = 'total joint';
             
@@ -445,6 +430,40 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
         
     end
     
-    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.twoNodeJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            % add default options common to all inline objects
+            options.PositionStatus = {};
+            options.OrientationStatus = {};
+            options.ImposedRelativePosition = 'null';
+            options.ImposedRelativeOrientation = 'null';
+            
+            options.RelativeOffset1 = [];
+            options.RelativeOffset1Reference = 'node';
+            options.RelativePositionOrientation1 =  [];
+            options.RelativePositionOrientation1Reference = 'node';
+            options.RelativeRotOrientation1 =  [];
+            options.RelativeRotOrientation1Reference = 'node';
+            
+            options.RelativeOffset2 =  [];
+            options.RelativeOffset2Reference = 'node';
+            options.RelativePositionOrientation2 =  [];
+            options.RelativePositionOrientation2Reference = 'node';
+            options.RelativeRotOrientation2 =  [];
+            options.RelativeRotOrientation2Reference = 'node';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff(allfnames, parentfnames);
+            
+        end
+        
+    end
     
 end
