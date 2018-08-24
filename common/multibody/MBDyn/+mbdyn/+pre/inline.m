@@ -11,6 +11,12 @@ classdef inline < mbdyn.pre.twoNodeJoint
         
     end
     
+    properties (GetAccess = public, SetAccess = protected)
+        
+        lineTransformObj;
+        
+    end
+    
     methods
         
         function self = inline (node1, node2, varargin)
@@ -79,40 +85,41 @@ classdef inline < mbdyn.pre.twoNodeJoint
             % See Also: 
             %
             
-            options.RelativeLinePosition =  'null';
-            options.RelativeOrientation = mbdyn.pre.orientmat ('eye');
-            options.RelativeOffset = [];
-            options.LinePositionReference = 'node';
-            options.OrientationReference = 'node';
-            options.OffsetReference = 'node';
+            [options, nopass_list] = mbdyn.pre.inline.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.twoNodeJoint (node1, node2);
+            self = self@mbdyn.pre.twoNodeJoint (node1, node2, pvpairs{:}, 'DefaultShape', 'none');
             
             self.type = 'in line';
             
             if ~isempty (options.RelativeLinePosition)
                 self.relativeLinePosition = self.checkJointPositionOffset ({options.LinePositionReference, options.RelativeLinePosition});
-                self.linePositionReference = options.LinePositionReference;
             else
                 self.relativeLinePosition = options.RelativeLinePosition;
             end
             
             if ~isempty (options.RelativeOrientation)
                 self.relativeOrientation = self.checkJointOrientationOffset ({options.OrientationReference, options.RelativeOrientation});
-                self.orientationReference = options.OrientationReference;
             else
                 self.relativeOrientation = options.RelativeOrientation;
             end
             
             if ~isempty (options.RelativeOffset)
                 self.relativeOffset = self.checkJointPositionOffset ({options.OffsetReference, options.RelativeOffset});
-                self.offsetReference = options.OffsetReference;
             else
                 self.relativeOffset = options.RelativeOffset;
             end
+            
+            self.linePositionReference = options.LinePositionReference;
+            self.orientationReference = options.OrientationReference;
+            self.offsetReference = options.OffsetReference;
+            
+            self.setSize ();
             
         end
         
@@ -147,22 +154,181 @@ classdef inline < mbdyn.pre.twoNodeJoint
             
         end
         
-        function draw (self, varargin)
-            
-%             options.AxesHandle = [];
-%             options.ForceRedraw = false;
-%             options.Mode = 'solid';
-%             
-%             options = parse_pv_pairs (options, varargin);
-%             
-%             draw@mbdyn.pre.element ( self, ...
-%                 'AxesHandle', options.AxesHandle, ...
-%                 'ForceRedraw', options.ForceRedraw, ...
-%                 'Mode', options.Mode );
-% 
-%             self.setTransform ();
+        
+        function setSize (self, varargin)
+            % set the size of the element in plots
+            %
+            % Syntax
+            %
+            % setSize (el)
+            % setSize (..., 'Parameter', value)
+            %
+            % Description
+            %
+            % setSize is used to set the sizes of the inline joint shapes
+            % for plotting the element in a figure.
+            %
+            % Input
+            %
+            %  el - mbdyn.pre.element object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'LineLength' - length of the line the point slides on in the
+            %    plot
+            %
+            %  'CylinderRadius' - radius of the cylinder representing the
+            %    point on the line
+            %
+            %  'CylinderLength' - axial length of the cylinder representing
+            %    the point on the line
+            %
+            % See Also: 
+            %
+
+            options.LineLength = 1;
+            options.CylinderRadius = [];
+            options.CylinderLength = [];
+
+            options = parse_pv_pairs (options, varargin);
+
+            self.checkNumericScalar (options.LineLength, true, 'LineLength');
+
+            if isempty (options.CylinderRadius)
+                options.CylinderRadius = 0.05 * options.LineLength;
+            end
+            if isempty (options.CylinderLength)
+                options.CylinderLength = 0.1 * options.LineLength;
+            end
+
+            self.checkNumericScalar (options.CylinderRadius, true, 'CylinderRadius');
+            self.checkNumericScalar (options.CylinderLength, true, 'CylinderLength');
+
+            assert (options.LineLength > 0, 'LineLength must be greater than zero');
+            assert (options.CylinderRadius > 0, 'CylinderRadius must be greater than zero');
+            assert (options.CylinderLength > 0, 'CylinderLength must be greater than zero');
+
+            self.shapeParameters(1) = options.LineLength;
+            self.shapeParameters(2) = options.CylinderRadius;
+            self.shapeParameters(3) = options.CylinderLength;
+
+            % set the shapedata to empty so it is recreated with the new
+            % sizes when draw is next called
+            self.shapeData = [];
+            self.needsRedraw = true;
             
         end
+        
+        
+        function draw (self, varargin)
+            
+            options.AxesHandle = [];
+            options.ForceRedraw = false;
+            options.Mode = [];
+            
+            options = parse_pv_pairs (options, varargin);
+              
+            if options.ForceRedraw
+                self.needsRedraw = true;
+            end
+            
+            self.checkAxes (options.AxesHandle);
+            
+            if isempty (self.shapeObjects) ...
+                    || self.needsRedraw
+                % a full redraw is needed (and not just a modification of
+                % transform matrices for the objects).
+                
+                if isempty (self.lineTransformObj) || ~ishghandle (self.lineTransformObj)
+                    self.lineTransformObj = hgtransform (self.drawAxesH);
+                end
+                
+                self.shapeData = self.makeAnnularCylinderShape ( self.shapeParameters(2), ...
+                                                                 self.shapeParameters(2)/2, ...
+                                                                 self.shapeParameters(3) );
+                
+                
+                
+                % delete the objects
+                self.deleteAllDrawnObjects ();
+                
+                % make the line
+                self.shapeObjects = { line( self.drawAxesH, ...
+                                            [ 0, 0 ], ...
+                                            [ 0, 0 ], ...
+                                            [ -self.shapeParameters(1)/2, self.shapeParameters(1)/2 ], ...
+                                            'Color', self.drawColour, ...
+                                            'LineStyle', '--', ...
+                                            'Parent', self.lineTransformObj ), ...
+                                    };
+                                
+
+                
+                % the point 
+                for ind = 1:numel (self.shapeData)
+                    
+                    self.shapeData{ind}.FaceColor = self.drawColour;
+                    self.shapeData{ind}.FaceAlpha = 0.5;
+                    self.shapeData{ind}.EdgeColor = self.drawColour;
+                    self.shapeData{ind}.FaceLighting = 'Gouraud';
+                    self.shapeData{ind}.AmbientStrength = 0.15;
+                    self.shapeData{ind}.Parent = self.transformObject;
+                    
+                    self.shapeObjects = [ self.shapeObjects, ...
+                                          { patch( self.drawAxesH, ...
+                                                   self.shapeData{ind} ) } ...
+                                        ];
+                end
+
+                                     
+                self.needsRedraw = false;
+
+                
+            end
+            
+            self.setTransform ();
+
+
+        end
+        
+        function abspos = lineAbsolutePosition (self)
+            % gets the position of the clamp in the global frame
+
+            abspos = offset2AbsolutePosition ( self, ...
+                                               self.relativeLinePosition{3}, ...
+                                               self.linePositionReference, ...
+                                               1 );
+            
+        end
+        
+        function absorientm = lineAbsoluteOrientation (self)
+            % gets the orientation of the clamp in the global frame
+            
+            absorientm = orient2AbsoluteOrientation ( ...
+                                               self, ...
+                                               self.relativeOrientation{3}, ...
+                                               self.orientationReference, ...
+                                               1 );
+            
+        end
+        
+        function abspos = pointAbsolutePosition (self)
+            % gets the position of the clamp in the global frame
+            
+            if isempty (self.relativeOffset)
+                offset = [0;0;0];
+            else
+                offset = self.relativeOffset;
+            end
+            
+            abspos = offset2AbsolutePosition ( self, ...
+                                               offset , ...
+                                               self.offsetReference, ...
+                                               2 );
+            
+        end
+        
         
     end
     
@@ -170,34 +336,56 @@ classdef inline < mbdyn.pre.twoNodeJoint
         
         function setTransform (self)
             
-%             switch self.orientation1Reference
-%                 
-%                 case 'node'
-%                     ref_orient_base = mbdyn.pre.reference (self.node1.absolutePosition, ...
-%                                                            self.node1.absoluteOrientation, ...
-%                                                            self.node1.absoluteVelocity, ...
-%                                                            self.node1.absoluteAngularVelocity);
-%                 case 'global'
-%                     ref_orient_base = mbdyn.pre.globalref;
-%                     
-%             end
-% 
-% %                                         
-%             ref_joint = mbdyn.pre.reference (self.relativeOffset1{end}, ...
-%                             mbdyn.pre.orientmat ('orientation', self.relativeOrientation1{end}), ...
-%                             [], ...
-%                             [], ...
-%                             'PositionParent', ref_pos_base, ...
-%                             'OrientParent', ref_orient_base);
-%             
-%             M = [ ref_joint.orientm.orientationMatrix , ref_joint.pos; ...
-%                   0, 0, 0, 1 ];
-%             
-%             % matlab uses different convention to mbdyn for rotation
-%             % matrix
-%             M = self.mbdynOrient2Matlab (M);
-%                   
-%             set ( self.transformObject, 'Matrix', M );
+            linepos = lineAbsolutePosition (self);
+
+            lineorientm = lineAbsoluteOrientation (self);
+
+            pointpos = pointAbsolutePosition (self);
+                     
+%             % modify the line data
+%             set ( self.shapeObjects{1}, ...
+%                   'XData', [ lineends(1,1), lineends(1,2) ], ...
+%                   'YData', [ lineends(2,1), lineends(2,2) ], ...
+%                   'ZData', [ lineends(3,1), lineends(3,2) ] );
+              
+            % set the transform object which controls the line
+            % location and orientation
+            M = [ lineorientm.orientationMatrix, linepos; ...
+                  0, 0, 0, 1 ];
+                  
+            set ( self.lineTransformObj, 'Matrix', M );
+            
+            % set the transform object which controls the point cylinder
+            % location and orientation
+            M = [ lineorientm.orientationMatrix, pointpos; ...
+                  0, 0, 0, 1 ];
+                  
+            set ( self.transformObject, 'Matrix', M );
+            
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.twoNodeJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            % add default options common to all inline objects
+            options.RelativeLinePosition =  'null';
+            options.RelativeOrientation = mbdyn.pre.orientmat ('eye');
+            options.RelativeOffset = [];
+            options.LinePositionReference = 'node';
+            options.OrientationReference = 'node';
+            options.OffsetReference = 'node';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = [ setdiff(allfnames, parentfnames); {'DefaultShape'}];
             
         end
         
