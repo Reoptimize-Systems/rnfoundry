@@ -104,7 +104,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             %
             % The modal node is basically a regular dynamic node that must
             % be used to describe the rigid reference motion of a modal
-            % joint. See the MBDyn manual for detailsfor further details.
+            % joint. See the MBDyn manual for details for further details.
             %
             % Input
             %
@@ -167,6 +167,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             options.AbsoluteOrientation = mbdyn.pre.orientmat ('orientation', eye (3));
             options.AbsoluteVelocity = [0;0;0];
             options.AbsoluteAngularVelocity = [0;0;0];
+            options.InitialiseFromReference = [];
             options.Accelerations = [];
             options.HumanReadableLabel = '';
             options.Scale = [];
@@ -185,6 +186,18 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                     
                 otherwise
                     error ('Unrecognised structural node type');
+            end
+            
+            if ~isempty (options.InitialiseFromReference)
+                if ~isa (options.InitialiseFromReference, 'mbdyn.pre.reference')
+                    error ('InitialiseFromReference has been supplied but is not an mbdyn.pre.reference object')
+                else
+                    ref = options.InitialiseFromReference;
+                    options.AbsolutePosition = ref.pos;
+                    options.AbsoluteOrientation = ref.orientm;
+                    options.AbsoluteVelocity = ref.v;
+                    options.AbsoluteAngularVelocity = ref.omega;
+                end
             end
             
             self = self@mbdyn.pre.structuralNode ( ...
@@ -309,9 +322,9 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                                             [], ...
                                             [], ...
                                             [], ...
-                                            ref_node );
+                                            'Parent', ref_node );
                                         
-            abspos = ref_out.position;
+            abspos = ref_out.pos;
             
         end
         
@@ -326,7 +339,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                                             orientation, ...
                                             [], ...
                                             [], ...
-                                            ref_node );
+                                            'Parent', ref_node );
                                         
             absorienm = ref_out.orientm;
             
