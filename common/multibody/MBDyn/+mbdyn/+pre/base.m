@@ -461,9 +461,17 @@ classdef base < handle
             %  ok = checkOrientationMatrix (mat, throw)
             %  ok = checkOrientationMatrix (..., name)
             %
+            % Description
+            %
+            % checkOrientationMatrix tests if the input is a valid
+            % orientiation matrix. checkOrientationMatrix returns true is
+            % the input to be tested is a (3 x 3) matrix or an
+            % mbdyn.pre.orientmat object.
+            %
             % Input
             %
-            %  mat - value to be tested if it is a valid orientation matrix
+            %  mat - value to be tested if it is a valid orientation
+            %   matrix.
             %
             %  throw - logical flag determining whether an error is thrown
             %   by checkOrientationMatrix if mat fails check
