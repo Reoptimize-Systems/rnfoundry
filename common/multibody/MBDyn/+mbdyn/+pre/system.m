@@ -718,21 +718,74 @@ classdef system < mbdyn.pre.base
             %  'ForceRedraw' - true/false flag indicating whether to force
             %    a full redraw of the system (rather than just update the
             %    transform matrices of the elements), even if the system
-            %    does not think it needs it.
+            %    itself does not think a redraw is required.
             %
-            %  'Bodies' - true/false flag determining whether to draw the
-            %    system bodies. Default is true.
+            %  'Bodies' - provides methods of indicating which bodies to 
+            %    draw, can be one of:
             %
-            %  'StructuralNodes' - true/false flag determining whether to
-            %    draw the system structural nodes. Default is true.
+            %    1. a logical true/false flag determining whether to draw
+            %       the system bodies. If true, all bodies are drawn. If
+            %       false, no bodies are drawn.
+            %    
+            %    2. A vector of body indices, i.e. the number of the body
+            %       in the order in which all bodies were added to the
+            %       system (starting from 1). Only the bodies with these
+            %       indices will be drawn.
             %
-            %  'Joints' - true/false flag determining whether to draw the
-            %    system joints. Default is true.
+            %    3. A character vector containing the name of the body to
+            %       be drawn. The first body with the same name in its
+            %       'name' property will be drawn
+            %
+            %    4. A cell array of character vectors, each with a name of
+            %       a body, as described in 3 above. only the bodies with
+            %       these names will be drawn. For each cell the first
+            %       body with that name will be drawn.
+            %
+            %    Default value of the 'Bodies' option is logical true,
+            %    so all bodies will be drawn.
+            %
+            %  'StructuralNodes' - provides methods of indicating which 
+            %    structural nodes to draw, can be one of:
+            %
+            %    1. a logical true/false flag determining whether to draw
+            %       the system structural nodes. If true, all structural
+            %       nodes are drawn. If false, no structural nodes are
+            %       drawn.
+            %    
+            %    2. A vector of structural nodes indices, i.e. the number
+            %       of the structural nodes in the order in which all
+            %       bodies were added to the system (starting from 1). Only
+            %       the structural nodes with these indices will be drawn.
+            %
+            %  'Joints' - provides methods of indicating which joints to 
+            %    draw, can be one of:
+            %
+            %    1. a logical true/false flag determining whether to draw
+            %       the system joints. If true, all joints are drawn. If
+            %       false, no joints are drawn.
+            %    
+            %    2. A vector of joint indices, i.e. the number of the joint
+            %       in the order in which all joints were added to the
+            %       system (starting from 1). Only the joints with these
+            %       indices will be drawn.
+            %
+            %    3. A character vector containing the name of the joint to
+            %       be drawn. The first joint with the same name in its
+            %       'name' property will be drawn
+            %
+            %    4. A cell array of character vectors, each with a name of
+            %       a joint, as described in 3 above. only the joints with
+            %       these names will be drawn. For each cell the first
+            %       joint with that name will be drawn.
+            %
+            %    Default value of the 'Joints' option is logical true,
+            %    so all joints will be drawn.
             %
             %  'Mode' - character vector determining the style in which the
-            %    element will be plotted. Can be one of 'solid',
+            %    elements will be plotted. Can be one of 'solid',
             %    'wiresolid', 'ghost', 'wireframe', 'wireghost'. Default is
-            %    'solid'.
+            %    'solid'. This option mainly effects only bodies, and
+            %    joints with only a default shape.
             %
             %  'Light' - deterined whether the scene should have light
             %    source
@@ -745,6 +798,15 @@ classdef system < mbdyn.pre.base
             %
             %  'References' - logical flag determining whether to draw the
             %    references (if there are any present in the system object).
+            %
+            %  'ReferenceScale' - scalar value. The length of the arrows
+            %    representing the axes of the plotted reference objects
+            %    will be scaled by this value. Default is 1 if not
+            %    supplied.
+            %
+            %  'GlobalReference' - logical flag determining whether to draw 
+            %    the global reference, when the 'References' option is set
+            %    to true. Default is true.
             %
             % Output
             %
@@ -774,12 +836,24 @@ classdef system < mbdyn.pre.base
             options = parse_pv_pairs (options, varargin);
             
             self.checkLogicalScalar (options.ForceRedraw, true, 'ForceRedraw');
-            self.checkLogicalScalar (options.Bodies, true, 'Bodies');
-            self.checkLogicalScalar (options.Joints, true, 'Joints');
             self.checkLogicalScalar (options.Light, true, 'Light');
             self.checkLogicalScalar (options.References, true, 'References');
             self.checkNumericScalar (options.ReferenceScale, true, 'ReferenceScale');
             self.checkLogicalScalar (options.GlobalReference, true, 'GlobalReference');
+            
+            elcount = self.countControlElements ();
+
+            options.Bodies = processDrawInds ( self, ...
+                                               options.Bodies, ...
+                                               'body', ...
+                                               'Bodies', ...
+                                               1:elcount.RigidBodies );
+            
+            options.Joints = processDrawInds ( self, ...
+                                               options.Joints, ...
+                                               'joint', ...
+                                               'Joints', ...
+                                               1:elcount.Joints );
             
             % make figure and axes if necessary
             if isempty (options.AxesHandle)
@@ -820,18 +894,45 @@ classdef system < mbdyn.pre.base
                 end
             end
             
+            joint_ind = 1;
+            joint_draw_ind = 1;
+            body_ind = 1;
+            body_draw_ind = 1;
             for ind = 1:numel (self.elements)
-                if isa (self.elements{ind}, 'mbdyn.pre.body') && options.Bodies
-                    draw (self.elements{ind}, ...
-                        'AxesHandle', self.drawAxesH, ...
-                        'ForceRedraw', options.ForceRedraw, ...
-                        'Mode', options.Mode );
-                elseif isa (self.elements{ind}, 'mbdyn.pre.joint') && options.Joints
-                    draw (self.elements{ind}, ...
-                        'AxesHandle', self.drawAxesH, ...
-                        'ForceRedraw', options.ForceRedraw, ...
-                        'Mode', options.Mode );
+                
+                if isa (self.elements{ind}, 'mbdyn.pre.body') && ~isempty (options.Bodies)
+                    
+                    if body_draw_ind <= numel (options.Bodies) ...
+                            && body_ind == options.Bodies(body_draw_ind)
+                        
+                        draw (self.elements{ind}, ...
+                            'AxesHandle', self.drawAxesH, ...
+                            'ForceRedraw', options.ForceRedraw, ...
+                            'Mode', options.Mode );
+                        
+                        body_draw_ind = body_draw_ind + 1;
+                        
+                    end
+                    
+                    body_ind = body_ind + 1;
+                    
+                elseif isa (self.elements{ind}, 'mbdyn.pre.joint') && ~isempty (options.Joints)
+                    
+                    if joint_draw_ind <= numel (options.Joints) ...
+                            && joint_ind == options.Joints(joint_draw_ind)
+                        
+                        draw (self.elements{ind}, ...
+                            'AxesHandle', self.drawAxesH, ...
+                            'ForceRedraw', options.ForceRedraw, ...
+                            'Mode', options.Mode );
+                        
+                        joint_draw_ind = joint_draw_ind + 1;
+                        
+                    end
+                    
+                    joint_ind = joint_ind + 1;
                 end
+                
             end
             
             if options.Light
@@ -859,6 +960,11 @@ classdef system < mbdyn.pre.base
         
         function setStructuralNodeSize (self, sx, sy, sz)
             % set the size of all nodes for drawing
+            
+            if nargin == 2
+                sy = sx;
+                sz = sx;
+            end
             
             for ind = 1:numel (self.nodes)
                 if isa (self.nodes{ind}, 'mbdyn.pre.structuralNode')
@@ -1230,6 +1336,87 @@ classdef system < mbdyn.pre.base
             else
                 [~,ia,~] = unique (uids, 'stable');
             end
+            
+        end
+        
+        function elinds = processDrawInds (self, elspec, eltype, optname, allelinds)
+            
+            if ischar (elspec)
+                elspec = {elspec};
+            end
+            
+            if islogical (elspec)
+                
+                self.checkLogicalScalar (elspec, true, optname);
+                if elspec
+                    elinds = allelinds;
+                else
+                    elinds = [];
+                end
+                
+            elseif isnumeric (elspec) && isvector (elspec)
+                
+                elinds = elspec;
+                
+            elseif iscellstr (elspec)
+                
+                elinds = [];
+                
+                for joptind = 1:numel (elspec)
+                    % loop through the cell array of joint names. For each
+                    % name, check all joints to see if the name matches
+                    foundjointname = false;
+                    
+                    thisjointind = 0;
+                    
+                    for elind = 1:numel (self.elements)
+                        
+                        if isa (self.elements{elind}, sprintf ('mbdyn.pre.%s', eltype))
+                            
+                            thisjointind = thisjointind + 1;
+                            fprintf (1, 'joint name: %s\n', self.elements{elind}.name)
+                            if strcmp (self.elements{elind}.name, elspec{joptind})
+                                
+                                % note that we matched up the joint name
+                                % this time
+                                foundjointname = true;
+                                
+                                % add the joint index to the list of joints
+                                % to plot
+                                elinds = [elinds, allelinds(thisjointind)];
+                                
+                                % exit the inner element loop
+                                break;
+                                
+                            end  
+                            
+                        end
+                        
+                    end
+                    
+                    if foundjointname == false
+                        error ('Joint name %s was not found', elspec{joptind});
+                    end
+                    
+                end
+            else
+                error ('Joints must be a logical scalar value or a vector of joint indices to plot');
+            end
+            
+            if isvector (elinds)
+                
+                for ind = 1:numel (elinds)
+                    self.checkScalarInteger (elinds(ind), true, sprintf ('%s(%d)', optname, ind));
+                    assert (elinds(ind) >=1, sprintf ('%s(%d) is < 1', optname, ind));
+                    assert (elinds(ind) <= numel (allelinds), sprintf ('%s(%d) is < 1', optname, ind));
+                end
+                
+                % get the unique entries
+                elinds = unique(elinds);
+                
+            end
+                
+            elinds = sort (elinds);
             
         end
         

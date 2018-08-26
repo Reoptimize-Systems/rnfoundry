@@ -461,9 +461,17 @@ classdef base < handle
             %  ok = checkOrientationMatrix (mat, throw)
             %  ok = checkOrientationMatrix (..., name)
             %
+            % Description
+            %
+            % checkOrientationMatrix tests if the input is a valid
+            % orientiation matrix. checkOrientationMatrix returns true is
+            % the input to be tested is a (3 x 3) matrix or an
+            % mbdyn.pre.orientmat object.
+            %
             % Input
             %
-            %  mat - value to be tested if it is a valid orientation matrix
+            %  mat - value to be tested if it is a valid orientation
+            %   matrix.
             %
             %  throw - logical flag determining whether an error is thrown
             %   by checkOrientationMatrix if mat fails check
@@ -820,6 +828,14 @@ classdef base < handle
                     % of comma separated list continues on next line
                     str = [ str, sprintf(',\n') ];
                     
+                elseif isa (varargin{ind}, 'mbdyn.pre.base')
+                    
+                    str = [ str, varargin{ind}.generateMBDynInputString() ];
+                        
+                    % add a comma and newline to end of matrix so rest
+                    % of comma separated list continues on next line
+                    str = [ str, sprintf(',\n') ];
+                    
                 end
                 
             end
@@ -935,6 +951,10 @@ classdef base < handle
             %
             %  comment - (optional) string which will be inserted as a
             %    comment after newstring.
+            %
+            %  startnewline - (optional) true/false flag indicating whether
+            %    to insert a newline character at the start when adding the
+            %    line. Default is true.
             %
             % Output
             %

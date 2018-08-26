@@ -66,7 +66,7 @@ classdef clamp < mbdyn.pre.singleNodeJoint
             %    are: 'node', 'local' and 'global'.
             %
             %  'OrientationReference' - optional string containing an
-            %    alternative reference for te clamp orientation. Valid
+            %    alternative reference for the clamp orientation. Valid
             %    strings are: 'node', 'local' and 'global'.
             %
             % Output

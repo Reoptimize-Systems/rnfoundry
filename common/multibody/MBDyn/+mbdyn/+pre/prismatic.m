@@ -277,7 +277,7 @@ classdef prismatic < mbdyn.pre.twoNodeJoint
             
             parentfnames = fieldnames (options);
             
-            % add default options common to all twoNodeOffsetJoint objects
+            % add default options common to all prismatic objects
             options.RelativeOrientation1 =  [];
             options.RelativeOrientation2 =  [];
             options.Orientation1Reference = 'node';

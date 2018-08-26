@@ -6,12 +6,19 @@ function rnfoundry_release (varargin)
                                                'extern', 'lib', 'win64', 'mingw64');
 	options.RunTests = false;
     options.Version = 'devel';
-    options.MBDynVersion = 'devel';
-    options.EWSTVersion = 'devel';
+    options.MBDynVersion = '';
+    options.EWSTVersion = '';
     options.ThrowBuildErrors = true;
     options.Verbose = false;
                                            
 	options = parse_pv_pairs (options, varargin);
+    
+    if isempty (options.MBDynVersion)
+        options.MBDynVersion = options.Version;
+    end
+    if isempty (options.EWSTVersion)
+        options.EWSTVersion = options.Version;
+    end
     
     thisfilepath = fileparts (which ('rnfoundry_setup'));
     

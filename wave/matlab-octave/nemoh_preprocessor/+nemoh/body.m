@@ -145,7 +145,7 @@ classdef body < nemoh.base
             
             if isempty (options.MeshProgPath)
                 if ispc
-                    options.MeshProgPath = 'Mesh.exe';
+                    options.MeshProgPath = 'Mesh';
                 else
                     options.MeshProgPath = 'mesh';
                 end
@@ -155,8 +155,8 @@ classdef body < nemoh.base
                 error ('Name must be a string of length greater than 1')
             end
 
-            if ~exist (inputdir, 'file')
-                [status, msg] = mkdir (options.MeshProgPath);
+            if ~exist (inputdir, 'dir')
+                [status, msg] = mkdir (inputdir);
                 if status == false
                     error ('inputdir does not exist and creation failed with the following message:\n%s', ...
                         msg);
@@ -235,13 +235,20 @@ classdef body < nemoh.base
             
             if ~isempty (meshprogpath)
                 
-                if ~exist (meshprogpath, 'file')
-                    error ('MeshProgPath does not exist');
+                if ~strcmp (meshprogpath, 'Mesh')
+                    
+                    if ~exist (meshprogpath, 'file')
+                        
+                        error ('MeshProgPath does not exist');
+                        
+                    end
+                    
                 end
                 
             end
             
             self.meshProgPath = meshprogpath;
+            
         end
         
         function setRho (self, rho)

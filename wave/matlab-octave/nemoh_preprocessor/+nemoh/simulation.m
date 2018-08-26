@@ -90,7 +90,7 @@ classdef simulation < nemoh.base
             options = parse_pv_pairs (options, varargin);
             
             if ispc
-                prognames = {'Mesh.exe', 'preProc.exe', 'solver.exe', 'postProc.exe'};
+                prognames = {'Mesh', 'preProcessor', 'Solver', 'postProcessor'};
                 meshdir = 'Mesh';
             else
                 prognames = {'mesh', 'preProc', 'solver', 'postProc'};
@@ -212,7 +212,7 @@ classdef simulation < nemoh.base
             if self.simReady
                 
                 % make the results directory if it does not exist
-%                 mkdir ( fullfile (self.inputDataDirectory, 'Results'));
+                mkdir ( fullfile (self.inputDataDirectory, 'results'));
                 
                 CC = onCleanup (@() cd (pwd));
                 cd (self.inputDataDirectory);
