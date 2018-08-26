@@ -1,5 +1,5 @@
 function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, colsep, rowending)
-% Prints formatted matrix of numerical data with headings
+% makes a char vector with formatted matrix of numerical data with headings
 % 
 % Syntax
 % 
@@ -37,9 +37,6 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 %   headings are supplied, the first column will be made wide enough to
 %   accomodate all the headings.
 % 
-%  fid - (optional) the file id to print to. Use 1 for stdout (to print to
-%   the command line).
-% 
 %  colsep - (optional) A string or character to insert between every column.
 %   The default separation string is ' | ', i.e. a space followed by a
 %   vertical bar, followed by a space. A table suitible for inclusion in a
@@ -47,6 +44,10 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 % 
 %  rowending - (optional) An optional string or character to be appended at
 %   the end of every row. Default is an empty string.
+%
+% Outut
+%
+%  tablestr - character vector containing the generated text table
 %
 % Examples
 %
