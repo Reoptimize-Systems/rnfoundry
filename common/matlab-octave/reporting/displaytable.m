@@ -7,46 +7,47 @@ function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, row
 % 
 % Input
 % 
-% data: a matrix or cell array, containing the data to be put in the table.
-% If a matrix the numbers in the table will be printed using the default
-% format specifier (f), or the specifier(s) supplied in fms. data can also
-% be a cell array containing a mixture of strings and numbers. each cell in
-% this case can contain only a single scalar value. In this case numbers
-% are printed as in the matrix case, while strings are printed up to the
-% maximum width of the column.
+%  data - a matrix or cell array, containing the data to be put in the
+%   table. If a matrix the numbers in the table will be printed using the
+%   default format specifier (f), or the specifier(s) supplied in fms. data
+%   can also be a cell array containing a mixture of strings and numbers.
+%   each cell in this case can contain only a single scalar value. In this
+%   case numbers are printed as in the matrix case, while strings are
+%   printed up to the maximum width of the column.
 % 
-% colheadings: a cell array of strings for the headings of each column. Can
-% be an empty cell array if no headings are required. If no column widths
-% are supplied (see below), the columns will be made wide enough to
-% accomdate the headings.
+%  colheadings - a cell array of strings for the headings of each column.
+%   Can be an empty cell array if no headings are required. If no column
+%   widths are supplied (see below), the columns will be made wide enough
+%   to accomdate the headings.
 % 
-% wid: (optional) scalar or vector of column widths to use for the table.
-% If scalar, every column will have the same width. If a vector it must be
-% of the same length as the number of columns of data. If not supplied, and
-% column headers are supplied, the width of the widest column header will
-% be used. If not supplied and column headers are not supplied, a default
-% with of 16 characters is used.
+%  wid - (optional) scalar or vector of column widths to use for the table.
+%   If scalar, every column will have the same width. If a vector it must
+%   be of the same length as the number of columns of data. If not
+%   supplied, and column headers are supplied, the width of the widest
+%   column header will be used. If not supplied and column headers are not
+%   supplied, a default with of 16 characters is used.
 % 
-% fms: (optional) a string, or cell array of strings containing format
-% specifiers for formatting the numerical output in each column. If a
-% single string, the same specifier is used for every column. If not
-% supplied, the 'g' specifier is used for every column.
+%  fms - (optional) a string, or cell array of strings containing format
+%   specifiers for formatting the numerical output in each column. If a
+%   single string, the same specifier is used for every column. If not
+%   supplied, the 'g' specifier is used for every column.
 % 
-% rowheadings: (optional) a cell array of strings for the start of each
-% row. Can be an empty cell array if no row headings are required. If row
-% headings are supplied, the first column will be made wide enough to
-% accomodate all the headings.
+%  rowheadings - (optional) a cell array of strings for the start of each
+%   row. Can be an empty cell array if no row headings are required. If row
+%   headings are supplied, the first column will be made wide enough to
+%   accomodate all the headings.
 % 
-% fid: (optional) the file id to print to. Use 1 for stdout (to print to
-% the command line). 
+%  fid - (optional) the file id to print to. Use 1 for stdout (to print to
+%   the command line).
 % 
-% colsep: (optional) A string or character to insert between every column.
-% The default separation string is ' | ', i.e. a space followed by a
-% vertical bar, followed by a space. A table suitible for inclusion in a
-% LaTeX document can be created using the ' & ' string, for example.
+%  colsep - (optional) A string or character to insert between every column.
+%   The default separation string is ' | ', i.e. a space followed by a
+%   vertical bar, followed by a space. A table suitible for inclusion in a
+%   LaTeX document can be created using the ' & ' string, for example.
 % 
-% rowending: (optional) An optional string or character to be appended at
-% the end of every row. Default is an empty string.
+%  rowending - (optional) An optional string or character to be appended at
+%   the end of every row. Default is an empty string.
+%
 % 
 % Examples
 %
