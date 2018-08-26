@@ -311,18 +311,18 @@ bd.draw ()
 sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 
-posstatus = 'active';
-orientstatus = true;
+posstatus = {'active', 'active', 'active'};
+orientstatus = [true, false, true];
 
-jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus);
+jnt = mbdyn.pre.totalJoint (sn1, sn2, 'PositionStatus', posstatus, 'OrientationStatus', orientstatus);
 jnt.generateMBDynInputString ()
 
 
-jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
+jnt = mbdyn.pre.totalJoint (sn1, sn2, 'PositionStatus', posstatus, 'OrientationStatus', orientstatus, ...
     'RelativeOffset1', [1; 2; 3]);
 jnt.generateMBDynInputString ()
 
-jnt = mbdyn.pre.totalJoint (sn1, sn2, posstatus, orientstatus, ...
+jnt = mbdyn.pre.totalJoint (sn1, sn2, 'PositionStatus', posstatus, 'OrientationStatus', orientstatus, ...
     'RelativeOffset1', [1; 2; 3], ...
     'RelativeOffset1Reference', 'other node');
 jnt.generateMBDynInputString ()
@@ -363,6 +363,7 @@ revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
 revhinge.generateMBDynInputString ()
 
 %%
+
 preload = 1;
 revhinge = mbdyn.pre.revoluteHinge ( sn1, sn2, ...
                                      [0;0;0], [0;0;0], ...
@@ -516,10 +517,18 @@ mbdynpost.animate ( 'PlotTrajectories', true, ...
                     'AxLims', [-3.1, 3.1; -1.5, 1.5;  -3, 3], ...
                     'VideoFile', 'double_pendulum.avi');
 
-%% Drawing
+%% Element Drawing
 
 el = mbdyn.pre.element ();
 % 
+el.draw ()
+el.draw('Mode', 'wireframe');
+
+%% 
+
+om = mbdyn.pre.orientmat ('euler', [0,pi/4,0]); % rotate 45 degrees around y axis
+el = mbdyn.pre.element ('DefaultShapeOrientation', om);
+
 el.draw ()
 el.draw('Mode', 'wireframe');
 
@@ -1027,3 +1036,60 @@ obj = mbdyn.pre.gearJoint (sn1, sn2, sn3, 'Ratio', 10);
 
 obj.generateMBDynInputString ()
 
+%% deformableDisplacementJoint
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+law = mbdyn.pre.linearElasticIsotropicConstituativeLaw (1);
+
+offset1 = 'null';
+offset2 = 'null';
+
+obj = mbdyn.pre.deformableDisplacementJoint (sn1, sn2, law, offset1, offset2);
+
+obj.generateMBDynInputString ()
+
+%% beam3
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn3 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+
+law = mbdyn.pre.linearElasticIsotropicConstituativeLaw (1);
+
+obj = mbdyn.pre.beam3 ( sn1, sn2, sn3, 'from nodes', law, 'same', 'same', ...
+                         'Offset1', [0;0;0], ...
+                         'Offset2', [1;0;0], ...
+                         'Offset2', [2;0;0], ...
+                         'Offset1Reference', 'node', ...
+                         'Offset2Reference', 'node', ...
+                         'RelativeOrientation1', mbdyn.pre.orientmat ('eye'), ...
+                         'Orientation1Reference', 'node', ...
+                         'RelativeOrientation2', mbdyn.pre.orientmat ('eye'), ...
+                         'Orientation2Reference', 'node' ...
+                                   );
+
+obj.generateMBDynInputString ()
+
+%% beamSlider
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [0;0;0]);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [1;0;0]);
+sn3 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [2;0;0]);
+sn4 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [2;0;0]);
+sn5 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [3;0;0]);
+sn6 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true, 'AbsolutePosition', [4;0;0]);
+
+sn7 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+beam1 = mbdyn.pre.beam3 ( sn1, sn2, sn3, 'from nodes', law, 'same', 'same' );
+                               
+beam2 = mbdyn.pre.beam3 ( sn3, sn4, sn5, 'from nodes', law, 'same', 'same' );
+
+beams = mbdyn.pre.beamSl
+
+obj = beamSlider (sn7, 'null', beams);
+
+obj.generateMBDynInputString ()

@@ -167,26 +167,10 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             %  str - character vector for insertion into an MBDyn input
             %   file.
             %
-            
-            str = generateMBDynInputString@mbdyn.pre.twoNodeJoint(self);
-            
-            str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
-            
-            str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset1Reference, self.relativeOffset1), 3, true);
-            
-            if ~isempty (self.relativeOrientation1)
-                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation1Reference, self.relativeOrientation1), 3, true);
-            end
-            
-            str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, true, 'node 2 label');
-            
-            addcomma = ~isempty (self.relativeOrientation2);
-            str = self.addOutputLine (str, self.commaSepList ('position', 'reference', self.offset2Reference, self.relativeOffset2), 3, addcomma);
-            
+
             addcomma = ~isempty (self.frictionRadius);
-            if ~isempty (self.relativeOrientation2)
-                str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation2Reference, self.relativeOrientation2), 3, addcomma);
-            end
+
+            str = generateMBDynInputString@mbdyn.pre.twoNodeOffsetJoint (self, addcomma);
             
             if ~isempty (self.frictionRadius)
                 str = self.addOutputLine (str, self.commaSepList ('friction', self.frictionRadius), 3, true, 'friction radius');

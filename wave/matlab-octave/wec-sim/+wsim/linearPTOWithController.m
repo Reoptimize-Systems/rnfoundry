@@ -202,7 +202,7 @@ classdef linearPTOWithController < wsim.powerTakeOff
             %
             
             [reldisp, relvel] = self.mbdynForceObj.displacements ();
-            
+
             self.internalVariables.RelativeDisplacement = reldisp;
             self.internalVariables.RelativeVelocity = relvel;
             

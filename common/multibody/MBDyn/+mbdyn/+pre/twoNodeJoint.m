@@ -53,8 +53,68 @@ classdef twoNodeJoint < mbdyn.pre.joint
             %   file.
             %
             
-            str = generateMBDynInputString@mbdyn.pre.joint(self);
+            str = generateMBDynInputString@mbdyn.pre.joint (self);
+
         end
+        
+        function abspos = offset2AbsolutePosition (self, offset, refstr, localnodenum)
+            % gets an offset in global frame
+            
+            switch refstr
+
+                case 'global'
+
+                    abspos = offset;
+
+                case {'node', 'local'}
+
+                    if localnodenum == 1
+                        abspos = self.node1.relativeToAbsolutePosition (offset);
+                    else
+                        abspos = self.node2.relativeToAbsolutePosition (offset);
+                    end
+                    
+                case 'other node'
+                    
+                    if localnodenum == 2
+                        abspos = self.node1.relativeToAbsolutePosition (offset);
+                    else
+                        abspos = self.node2.relativeToAbsolutePosition (offset);
+                    end
+
+            end
+            
+        end
+        
+        function absorientm = orient2AbsoluteOrientation (self, dorient, refstr, localnodenum)
+            % gets an orientation in global frame
+            
+            switch refstr
+
+                case 'global'
+
+                    absorientm = dorient;
+
+                case {'node', 'local'}
+
+                    if localnodenum == 1
+                        absorientm = self.node1.relativeToAbsoluteOrientation (dorient);
+                    else
+                        absorientm = self.node2.relativeToAbsoluteOrientation (dorient);
+                    end
+                    
+                case 'other node'
+                    
+                    if localnodenum == 2
+                        absorientm = self.node1.relativeToAbsoluteOrientation (dorient);
+                    else
+                        absorientm = self.node2.relativeToAbsoluteOrientation (dorient);
+                    end
+
+            end
+            
+        end
+        
     end
     
     methods (Access = protected)
