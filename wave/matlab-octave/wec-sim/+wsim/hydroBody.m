@@ -1,5 +1,9 @@
+classdef hydroBody < handle
+
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copyright 2014 the National Renewable Energy Laboratory and Sandia Corporation
+% Modified 2017 by The University of Edinburgh
 %
 % Licensed under the Apache License, Version 2.0 (the "License");
 % you may not use this file except in compliance with the License.
@@ -14,77 +18,202 @@
 % limitations under the License.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-classdef hydroBody < handle
 
-    properties (SetAccess = 'private', GetAccess = 'public') % hdf5 file
-        hydroData         = struct()                                            % Hydrodynamic data from BEM or user defined.
+    properties (SetAccess = protected, GetAccess = public) % hydroData h5 or mat file related
+        
+        % Hydrodynamic data from BEM or user defined.
+        hydroData = struct();
+        
+        % Body name. This is obtained from the h5 or mat file.
+        name = [];  
+        
+        % Center of gravity [x y z] in meters. This is obtained from the h5 or mat file.
+        cg = [];
+        
+        % Displaced volume at equilibrium position in m^3. This is obtained from the h5 or mat file.
+        dispVol = [];
+        
     end
 
-    properties (SetAccess = 'public', GetAccess = 'public') % input file
-        name              = []                                                  % Body name. For WEC bodies this is given in the h5 file.
-        mass              = []                                                  % Mass in kg or specify 'equilibrium' to have mass= dis vol * density
-        momOfInertia      = []                                                  % Moment of inertia [Ixx Iyy Izz] in kg*m^2
-        cg                = []                                                  % Center of gravity [x y z] in meters. For WEC bodies this is given in the h5 file.
-        dispVol           = []                                                  % Displaced volume at equilibrium position in meters cubed. For WEC bodies this is given in the h5 file.
-        geometryFile      = 'NONE'                                              % Names of geomtry stl files in geometry subfolder
-        viscDrag          = struct(...                                          % Structure defining the viscous (quadratic) drag
-                                   'cd',                   [0 0 0 0 0 0], ...       % Viscous (quadratic) drag cd, vector length 6
-                                   'characteristicArea',   [0 0 0 0 0 0])           % Characteristic area for viscous drag, vector length 6
-        initDisp          = struct(...                                          % Structure defining the initial displacement
-                                   'initLinDisp',          [0 0 0], ...             % Initial displacement of center fo gravity - used for decay tests (format: [displacment in m], default = [0 0 0])
-                                   'initAngularDispAxis',  [0 1 0], ...             % Initial displacement of cog - axis of rotation - used for decay tests (format: [x y z], default = [1 0 0])
-                                   'initAngularDispAngle', 0)                       % Initial displacement of cog - Angle of rotation - used for decay tests (format: [radians], default = 0)
-        linearDamping     = [0 0 0 0 0 0]                                       % Linear drag coefficient, vector length 6
-        userDefinedExcIRF = []                                                  % Excitation IRF from BEMIO used for User-Defined Time-Series
-        viz               = struct(...                                          % Structur defining visualization properties
-                                   'color', [1 1 0], ...                            % Visualization color for either SimMechanics Explorer or Paraview.
-                                   'opacity', 1)                                    % Visualization opacity for either SimMechanics Explorer or Paraview.
-        morrisonElement   = struct(...                                          % Structure defining the Morrison Elements
-                                   'cd',                 [0 0 0], ...               % Viscous (quadratic) drag cd, vector length 3
-                                   'ca',                 [0 0 0], ...               % Added mass coefficent for Morrison Element (format [Ca_x Ca_y Ca_z], default = [0 0 0])
-                                   'characteristicArea', [0 0 0], ...               % Characteristic area for Morrison Elements calculations (format [Area_x Area_y Area_z], default = [0 0 0])
-                                   'VME',                 0     , ...               % Characteristic volume for Morrison Element (default = 0)
-                                   'rgME',               [0 0 0])                   % Vector from center of gravity to point of application for Morrison Element (format [X Y Z], default = [0 0 0]).
-%         nhBody            = 0                                                   % Flag for non-hydro body
+    properties (SetAccess = public, GetAccess = public) % input file
+        
+        % Mass in kg or specify 'equilibrium' to have mass = displacement vol * density
+        mass = [];
+
+        % Moment of inertia [Ixx Iyy Izz] in kg*m^2 for the body
+        momOfInertia = [];
+        
+        % Names of geomtry stl file for this body in geometry subfolder
+        geometryFile = 'NONE';                                              
+        
+        % viscDrag - Structure defining the viscous (quadratic) drag
+        %  Must contain the fields 'cd' and 'characteristicArea'. The 'cd'
+        %  field should contain a vector length 6 defining the Viscous
+        %  (quadratic) drag. The 'characteristicArea' field should contain
+        %  another vector of length 6 defining the Characteristic area for
+        %  viscous drag.
+        %
+        viscDrag = struct( 'cd',                   [0 0 0 0 0 0], ... 
+                           'characteristicArea',   [0 0 0 0 0 0] );
+                                
+        % initDisp - Structure defining the initial displacement.
+        %  Should contain three fields:
+        %
+        %  initLinDisp : Initial displacement of center of gravity - used
+        %   for decay tests (format: [displacment in m], default = [0 0 0])
+        %
+        %  initAngularDispAxis : Initial displacement of centre of gravity
+        %   (axis of rotation) used for decay tests (format: [x y z],
+        %   default = [1 0 0])
+        %
+        %  initAngularDispAngle : Initial displacement of centre of gravity
+        %    (angle of rotation) - used for decay tests (format: [radians],
+        %    default = 0)
+        %
+        initDisp = struct( 'initLinDisp',          [0 0 0], ... 
+                           'initAngularDispAxis',  [0 1 0], ...
+                           'initAngularDispAngle', 0 );
+                       
+        % linearDamping - Linear drag coefficient, vector length 6
+        linearDamping = [0 0 0 0 0 0];
+        
+        % Excitation IRF from BEMIO used for User-Defined Time-Series
+        userDefinedExcIRF = [] ;
+        
+        % viz - Structure defining visualization properties for Paraview
+        %  Should contain two fields, 'color' and 'opacity'.
+        %
+        %  color : three element vector containing the rgb values defining
+        %   the body color in Paraview
+        %
+        %  opacity : scalar value defining the opacity of the body in 
+        %   Paraview.
+        %
+        viz = struct( 'color', [1, 1, 0], ...                           
+                      'opacity', 1 );
+                               
+        % morrisonElement - structure defining morrison element input
+        %  Should be a structure containing the fields 'cd', 'ca',
+        %  'characteristicArea', 'VME' and 'rgME'
+        %
+        %  cd : vector length 3 containing the viscous (quadratic) drag
+        %   coefficients
+        %
+        %  ca : Added mass coefficent for Morrison Element (format [Ca_x
+        %   Ca_y Ca_z], default = [0 0 0])
+        %
+        %  characteristicArea : Characteristic area for Morrison Elements
+        %   calculations (format [Area_x Area_y Area_z], default = [0 0 0])
+        %
+        %  VME : Characteristic volume for Morrison Element (default = 0)
+        %
+        %  rgME : Vector from center of gravity to point of application for
+        %   Morrison Element (format [X Y Z], default = [0 0 0]).
+        %
+        morrisonElement = struct( 'cd',                 [0 0 0], ...
+                                  'ca',                 [0 0 0], ...
+                                  'characteristicArea', [0 0 0], ...
+                                  'VME',                 0     , ...
+                                  'rgME',               [0 0 0] );
+
+        % bodyGeometry - Structure defining body's mesh
+        %  Should contain the fields 'numFace', 'numVertex', 'vertex',
+        %  'face', 'norm', 'area', 'center'. Generally this is filled by
+        %  reading the geometry STL file.
+        %
+        %  numFace : Number of faces
+        %
+        %  numVertex : Number of vertices
+        %
+        %  vertex : List of vertices
+        %
+        %  face : List of faces
+        %
+        %  norm : List of normal vectors
+        %
+        %  area : List of cell areas
+        %
+        %  center : List of cell centers
+        %
+        bodyGeometry = struct( 'numFace', [], ...
+                               'numVertex', [], ...
+                               'vertex', [], ...
+                               'face', [], ...
+                               'norm', [], ...
+                               'area', [], ...
+                               'center', [] );
+                           
     end
 
-    properties (SetAccess = 'public', GetAccess = 'public') % body geometry stl file
-        bodyGeometry      = struct(...                                          % Structure defining body's mesh
-                                   'numFace', [], ...                               % Number of faces
-                                   'numVertex', [], ...                             % Number of vertices
-                                   'vertex', [], ...                                % List of vertices
-                                   'face', [], ...                                  % List of faces
-                                   'norm', [], ...                                  % List of normal vectors
-                                   'area', [], ...                                  % List of cell areas
-                                   'center', [])                                    % List of cell centers
-    end
+    properties (SetAccess = protected, GetAccess = public) % internal
+        
+        % hydroForce - Structure containing hydrodynamic forces and coefficients used during simulation
+        %  Will be a structure containing various fields depending on what
+        %  simulation settings were chosen.
+        hydroForce = struct();
+        
+        % hydroDataBodyNum - Body number within the hdf5 file.
+        hydroDataBodyNum = [];          
+        
+        % massCalcMethod - Method used to obtain mass: 'user', 'fixed', 'equilibrium'
+        massCalcMethod = [];          
+        
+        % bodyNumber - body number in the order body was added to a wsim.hydroSystem. 
+        %  Can be different from the BEM body number, this is the index of
+        %  the body in the wsim.hydroSystem
+        bodyNumber = [];
+        
+        % bodyTotal - Total number of hydro bodies in the wsim.hydroSystem
+        bodyTotal = [];
+        
+        % lenJ - Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
+        lenJ = [];          
 
-    properties (SetAccess = 'public', GetAccess = 'public') %internal
-        hydroForce        = struct()                                            % Hydrodynamic forces and coefficients used during simulation.
-        hydroDataFile     = ''                                                  % hdf5 or mat file containing the hydrodynamic data
-        hydroDataBodyNum  = []                                                  % Body number within the hdf5 file.
-        massCalcMethod    = []                                                  % Method used to obtain mass: 'user', 'fixed', 'equilibrium'
-        bodyNumber        = []                                                  % bodyNumber in WEC-Sim as defined in the input file. Can be different from the BEM body number.
-        bodyTotal         = []                                                  % Total number of WEC-Sim bodies (body block iterations)
-        lenJ              = []                                                  % Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
-    end
-
-
-    properties (SetAccess = 'private', GetAccess = 'public') % internal
-
+        % excitationMethod - Character vector containing the wave excitation method to be used
+        %  can be one of: 'noWave', 'noWaveCIC', 'regular', 'regularCIC',
+        %  'irregular', 'irregularImport', 'userDefined'
         excitationMethod;
-        doNonLinearFKExcitation;
+        
+        % doNonLinearFKExcitation - true/false flag indicating if FK force will be calculated
+        %  Indicates whether the nonlinear Froude-Krylov wave excitation
+        %  forces will be calculated
+        doNonLinearFKExcitation;  
+        
+        % radiationMethod - character vector with a description of the radiation method
+        %  Contains one of the following character vectors describing what
+        %  method will be used to calculated the radiation forces:
+        %
+        %     'constant radiation coefficients'
+        %     'state space representation'
+        %     'state space representation using external solver'
+        %     'convolution integral'
+        %
         radiationMethod;
-        hydroRestoringForceMethod;
+        
+%         hydroRestoringForceMethod;
+        
+        % freeSurfaceMethod - character vector indicating what fre surface method will be used
+        %  Will be 'mean' or 'instantaneous'
         freeSurfaceMethod;
+        
+        % bodyToBodyInteraction - true/false flag indicating if body-to-body interaction is included
         bodyToBodyInteraction;
+        
+        % bodyToBodyInteraction - true/false flag indicating if morrison element viscous drag is included
         doMorrisonElementViscousDrag;
+        
+        % caseDirectory - Simulation case directory containing the hydroData and geometry subdirectories
         caseDirectory;
-        hydroDataFileFullPath = ''                                              % full path to hdf5 or mat file containing the hydrodynamic data
+        
+        % hydroDataFile - name of hdf5 or mat file containing the hydrodynamic data (without path)
+        hydroDataFile = '';          
+        
+        % hydroDataFileFullPath - full path to h5 or mat file containing the hydrodynamic data for the body
+        hydroDataFileFullPath = ''         
 
     end
 
-    properties (SetAccess = 'private', GetAccess = 'private') % internal
+    properties (SetAccess = private, GetAccess = private) % internal
 
         waves;
         simu;
@@ -140,9 +269,13 @@ classdef hydroBody < handle
             % Input
             %
             %  filename - string containing the h5 or mat file containing
-            %    the hydrodynamic data for the body, without the path, e.g.
-            %    float.mat, or rm3.h5. The hydrobody searches for the file
-            %    in the <case_directory>/hydroData folder.
+            %   the hydrodynamic data for the body, without the path, e.g.
+            %   float.mat, or rm3.h5. The hydrobody searches for the file
+            %   in the <case_directory>/hydroData folder. The validity of
+            %   the file name is not checked until the setCaseDirectory
+            %   method is called (which is usually called by a parent
+            %   wism.hydroSystem object which sets the case directory for
+            %   all hydroBodies in a system).
             %
             % Output
             %
@@ -150,27 +283,6 @@ classdef hydroBody < handle
             %
             %
             
-%             options.Waves = [];
-%             options.Simu = [];
-%             options.CaseDirectory = pwd();
-%             
-%             options = parse_pv_pairs (options, varargin);
-%             
-%             hydrofile = fullfile (options.CaseDirectory, 'hydroData', filename);
-%             
-%             if exist (hydrofile, 'file') ~= 2
-%                 if exist (options.CaseDirectory, 'dir') ~= 7
-%                     error ('The case directory %s does not appear to exist', options.CaseDirectory);
-%                 else
-%                     [filepath,~,ext] = fileparts (hydrofile);
-%                     error ( 'The specified hydro data (%s) file was not found in the directory:\n%s', ...
-%                             ext, ...
-%                             filepath );
-%                 end
-%             end
-
-            % hydro data file
-%             obj.caseDir = options.CaseDirectory;
             obj.hydroDataFile = filename;
             
         end
@@ -212,7 +324,7 @@ classdef hydroBody < handle
             % file location is expected to be in the case directory
             % provided on construction of the object.
             %
-            % - Generating the hydrodynamic data:
+            % Generating the hydrodynamic data:
             %
             % The hydroBody requires frequency-domain hydrodynamic
             % coefficients (added mass, radiation damping, and wave
@@ -222,7 +334,7 @@ classdef hydroBody < handle
             % HDF5 file must then be generated from the output of these
             % codes.
             %
-            % - Create HDF5 file:
+            % Create HDF5 file:
             %
             % readH5File reads the hydrodynamic data in HDF5 format from
             % the (<hydrodata_file_name>.h5) file provided when the object
@@ -523,7 +635,10 @@ classdef hydroBody < handle
         end
 
         function bodyGeo(obj,fname)
-            % Reads mesh file and calculates areas and centroids
+            % Reads an STL mesh file and calculates areas and centroids
+            %
+            % 
+            
             try
                 [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,1);
             catch
