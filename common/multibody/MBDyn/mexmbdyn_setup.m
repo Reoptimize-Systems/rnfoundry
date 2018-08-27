@@ -149,12 +149,19 @@ function mexmbdyn_setup (varargin)
     
     cd(fullfile(getmfilepath (mfilename), '+mbdyn', '+mint'));
 
-    mexMBCNodal_mexargs = {'mexMBCNodal.cpp', ['EXE="mexMBCNodal.', options.MexExtension, '"']};
-    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp', ['EXE="mexMBCNodalSharedMem.', options.MexExtension, '"']};
+    mexMBCNodal_mexargs = {'mexMBCNodal.cpp'};
+    mexMBCNodalSharedMem_mexargs = {'mexMBCNodalSharedMem.cpp'};
     
-    if ~isoctave
-        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'CXXFLAGS="$CXXFLAGS -std=c++11"'}];
-        mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'CXXFLAGS="$CXXFLAGS -std=c++11"'}];
+    if ~isoctave ()
+        mexMBCNodal_mexargs = [ mexMBCNodal_mexargs, ...
+                                { ['EXE="mexMBCNodal.', options.MexExtension, '"'], ...
+                                  'CXXFLAGS="$CXXFLAGS -std=c++11"' } ...
+                              ];
+                            
+        mexMBCNodalSharedMem_mexargs = [ mexMBCNodalSharedMem_mexargs, ...
+                                         { ['EXE="mexMBCNodalSharedMem.', options.MexExtension, '"'], ...
+                                           'CXXFLAGS="$CXXFLAGS -std=c++11"' } ...
+                                       ];
     end
     
     if ~isempty (options.MBCIncludeDir)
