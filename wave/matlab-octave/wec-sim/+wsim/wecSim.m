@@ -1843,7 +1843,7 @@ classdef wecSim < handle
             % steps
             nsteps = (self.hydroSystem.simu.endTime - self.hydroSystem.simu.startTime) ./ self.hydroSystem.simu.dt + 1;
             
-            % always store time, as is is independent variabl for other
+            % always store time, as is is independent variable for other
             % vars in logger object
             self.logger.addVariable ( 'Time', [1, 1], ...
                                       'Desc', 'main hydrodynamic/multibody time step', ...
@@ -2169,124 +2169,124 @@ classdef wecSim < handle
 
             % always store time, as is is independent variable for other
             % vars in logger object
-            self.logger.logVal ( 'Time', self.lastTime );
+            self.logger.logVal ( 'Time', self.lastTime, false, false );
             
             if self.loggingSettings.positions
-                self.logger.logVal ( 'Positions', self.lastPositions );
+                self.logger.logVal ( 'Positions', self.lastPositions, false, false );
             end
             
             if self.loggingSettings.angularPositions
-                self.logger.logVal ( 'AngularPositions', self.lastAngularPositions );
+                self.logger.logVal ( 'AngularPositions', self.lastAngularPositions, false, false );
             end
             
             if self.loggingSettings.velocities
-                self.logger.logVal ( 'Velocities', self.lastVelocities );
+                self.logger.logVal ( 'Velocities', self.lastVelocities, false, false );
             end
             
             if self.loggingSettings.angularVelocities
-                self.logger.logVal ( 'AngularVelocities', self.lastAngularVelocities );
+                self.logger.logVal ( 'AngularVelocities', self.lastAngularVelocities, false, false );
             end
             
             if self.loggingSettings.angularAccelerations
-                self.logger.logVal ( 'AngularAccelerations', self.lastAngularAccelerations );
+                self.logger.logVal ( 'AngularAccelerations', self.lastAngularAccelerations, false, false );
             end
             
             if self.loggingSettings.accelerations
-                self.logger.logVal ( 'Accelerations', self.lastAccelerations );
+                self.logger.logVal ( 'Accelerations', self.lastAccelerations, false, false );
             end
             
             % log the forces
             
             if self.loggingSettings.nodeForcesUncorrected ...
                     || self.loggingSettings.forceAddedMass
-                self.logger.logVal ( 'NodeForcesUncorrected', self.lastNodeForcesUncorrected );
+                self.logger.logVal ( 'NodeForcesUncorrected', self.lastNodeForcesUncorrected, false, false );
             end
             
             if self.loggingSettings.forceHydro
-                self.logger.logVal ( 'ForceHydro', self.lastForceHydro );
+                self.logger.logVal ( 'ForceHydro', self.lastForceHydro, false, false );
             end
             
             if self.loggingSettings.forceExcitation
-                self.logger.logVal ( 'ForceExcitation', self.lastForceExcitation );
+                self.logger.logVal ( 'ForceExcitation', self.lastForceExcitation, false, false );
             end
             
             if self.loggingSettings.forceExcitationRamp
-                self.logger.logVal ( 'ForceExcitationRamp', self.lastForceExcitationRamp );
+                self.logger.logVal ( 'ForceExcitationRamp', self.lastForceExcitationRamp, false, false );
             end
             
             if self.loggingSettings.forceExcitationLin
-                self.logger.logVal ( 'ForceExcitationLin', self.lastForceExcitationLin );
+                self.logger.logVal ( 'ForceExcitationLin', self.lastForceExcitationLin, false, false );
             end
             
             if self.loggingSettings.forceExcitationNonLin
-                self.logger.logVal ( 'ForceExcitationNonLin', self.lastForceExcitationNonLin );
+                self.logger.logVal ( 'ForceExcitationNonLin', self.lastForceExcitationNonLin, false, false );
             end
             
             if self.loggingSettings.forceRadiationDamping
-                self.logger.logVal ( 'ForceRadiationDamping', self.lastForceRadiationDamping );
+                self.logger.logVal ( 'ForceRadiationDamping', self.lastForceRadiationDamping, false, false );
             end
             
             if self.loggingSettings.forceRestoring
-                self.logger.logVal ( 'ForceRestoring', self.lastForceRestoring );
+                self.logger.logVal ( 'ForceRestoring', self.lastForceRestoring, false, false );
             end
             
             if self.loggingSettings.forceMorrison
-                self.logger.logVal ( 'ForceMorrison', self.lastForceMorrison );
+                self.logger.logVal ( 'ForceMorrison', self.lastForceMorrison, false, false );
             end
             
             if self.loggingSettings.forceViscousDamping
-                self.logger.logVal ( 'ForceViscousDamping', self.lastForceViscousDamping );
+                self.logger.logVal ( 'ForceViscousDamping', self.lastForceViscousDamping, false, false );
             end
             
             if self.loggingSettings.forceAddedMass || self.loggingSettings.forceAddedMassUncorrected
-                self.logger.logVal ( 'ForceAddedMassUncorrected', self.lastForceAddedMassUncorrected );
+                self.logger.logVal ( 'ForceAddedMassUncorrected', self.lastForceAddedMassUncorrected, false, false );
             end
             
             % log the moments
             
             if self.loggingSettings.nodeMomentsUncorrected ...
                     || self.loggingSettings.momentAddedMass
-                self.logger.logVal ( 'NodeMomentsUncorrected', self.lastNodeMomentsUncorrected );
+                self.logger.logVal ( 'NodeMomentsUncorrected', self.lastNodeMomentsUncorrected, false, false );
             end
             
             if self.loggingSettings.momentHydro
-                self.logger.logVal ( 'MomentHydro', self.lastMomentHydro );
+                self.logger.logVal ( 'MomentHydro', self.lastMomentHydro, false, false );
             end
             
             if self.loggingSettings.momentExcitation
-                self.logger.logVal ( 'MomentExcitation', self.lastMomentExcitation );
+                self.logger.logVal ( 'MomentExcitation', self.lastMomentExcitation, false, false );
             end
             
             if self.loggingSettings.momentExcitationRamp
-                self.logger.logVal ( 'MomentExcitationRamp', self.lastMomentExcitationRamp );
+                self.logger.logVal ( 'MomentExcitationRamp', self.lastMomentExcitationRamp, false, false );
             end
             
             if self.loggingSettings.momentExcitationLin
-                self.logger.logVal ( 'MomentExcitationLin', self.lastMomentExcitationLin );
+                self.logger.logVal ( 'MomentExcitationLin', self.lastMomentExcitationLin, false, false );
             end
             
             if self.loggingSettings.momentExcitationNonLin
-                self.logger.logVal ( 'MomentExcitationNonLin', self.lastMomentExcitationNonLin );
+                self.logger.logVal ( 'MomentExcitationNonLin', self.lastMomentExcitationNonLin, false, false );
             end
             
             if self.loggingSettings.momentRadiationDamping
-                self.logger.logVal ( 'MomentRadiationDamping', self.lastMomentRadiationDamping );
+                self.logger.logVal ( 'MomentRadiationDamping', self.lastMomentRadiationDamping, false, false );
             end
             
             if self.loggingSettings.momentRestoring
-                self.logger.logVal ( 'MomentRestoring', self.lastMomentRestoring );
+                self.logger.logVal ( 'MomentRestoring', self.lastMomentRestoring, false, false );
             end
             
             if self.loggingSettings.momentMorrison
-                self.logger.logVal ( 'MomentMorrison', self.lastMomentMorrison );
+                self.logger.logVal ( 'MomentMorrison', self.lastMomentMorrison, false, false );
             end
             
             if self.loggingSettings.momentViscousDamping
-                self.logger.logVal ( 'MomentViscousDamping', self.lastMomentViscousDamping );
+                self.logger.logVal ( 'MomentViscousDamping', self.lastMomentViscousDamping, false, false );
             end
             
             if self.loggingSettings.momentAddedMass || self.loggingSettings.momentAddedMassUncorrected
-                self.logger.logVal ( 'MomentAddedMassUncorrected', self.lastMomentAddedMassUncorrected );
+                self.logger.logVal ( 'MomentAddedMassUncorrected', self.lastMomentAddedMassUncorrected, false, false );
             end
             
             
