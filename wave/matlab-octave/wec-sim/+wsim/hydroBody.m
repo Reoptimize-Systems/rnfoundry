@@ -141,7 +141,7 @@ classdef hydroBody < handle
                            'initAngularDispAngle', 0 );
                        
         % linearDamping - Linear drag coefficient, vector length 6
-        linearDamping = [0 0 0 0 0 0];
+        linearDampingCoeff = [0 0 0 0 0 0];
         
         % Excitation IRF from BEMIO used for User-Defined Time-Series
         userDefinedExcIRF = [] ;
@@ -208,7 +208,17 @@ classdef hydroBody < handle
                                'norm', [], ...
                                'area', [], ...
                                'center', [] );
-                           
+
+        % bodyNumber - body number in the order body was added to a wsim.hydroSystem. 
+        %  Can be different from the BEM body number, this is the index of
+        %  the body in the wsim.hydroSystem
+        bodyNumber = [];
+        
+        % bodyTotal - Total number of hydro bodies in the wsim.hydroSystem
+        bodyTotal = [];
+        
+        % lenJ - Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
+        lenJ = [];  
     end
 
     properties (SetAccess = protected, GetAccess = public) % internal
@@ -222,19 +232,8 @@ classdef hydroBody < handle
         hydroDataBodyNum = [];          
         
         % massCalcMethod - Method used to obtain mass: 'user', 'fixed', 'equilibrium'
-        massCalcMethod = [];          
+        massCalcMethod = [];  
         
-        % bodyNumber - body number in the order body was added to a wsim.hydroSystem. 
-        %  Can be different from the BEM body number, this is the index of
-        %  the body in the wsim.hydroSystem
-        bodyNumber = [];
-        
-        % bodyTotal - Total number of hydro bodies in the wsim.hydroSystem
-        bodyTotal = [];
-        
-        % lenJ - Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
-        lenJ = [];          
-
         % excitationMethod - Character vector containing the wave excitation method to be used
         %  can be one of: 'noWave', 'noWaveCIC', 'regular', 'regularCIC',
         %  'irregular', 'irregularImport', 'userDefined'
@@ -645,7 +644,7 @@ classdef hydroBody < handle
             
             obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
             
-            obj.hydroForce.linearDamping = diag (obj.linearDamping);
+            obj.hydroForce.linearDamping = diag (obj.linearDampingCoeff);
             
             obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)),6);   %initializing userDefinedFe for non user-defined cases
             
@@ -1628,6 +1627,9 @@ classdef hydroBody < handle
 
             % always do viscous damping
             breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
+            
+            % always do linear damping
+            breakdown.F_LinearDamping = linearDamping (obj, vel(:,obj.bodyNumber));
 
             % always do radiation forces
             [breakdown.F_AddedMass, breakdown.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
@@ -1636,7 +1638,7 @@ classdef hydroBody < handle
             elv = waveElevation(obj, pos, t);
             
             % hydrostatic restoring forces
-            [breakdown.F_Restoring, breakdown.BodyHSPressure ] =  hydrostaticForces (obj, t, pos, elv);
+            [breakdown.F_Restoring, breakdown.BodyHSPressure ] = hydrostaticForces (obj, t, pos, elv);
 
             if obj.doNonLinearFKExcitation
 
@@ -1670,13 +1672,20 @@ classdef hydroBody < handle
                      - breakdown.F_AddedMass ...
                      - breakdown.F_Restoring ...
                      - breakdown.F_RadiationDamping ...
-                     - breakdown.F_MorrisonElement;
+                     - breakdown.F_MorrisonElement ...
+                     - breakdown.F_LinearDamping;
 
         end
 
+        function forces = linearDamping (obj, vel)
+            
+            forces = obj.hydroForce.linearDamping * vel;
+            
+        end
+        
         function forces = viscousDamping (obj, vel)
 
-            forces = obj.hydroForce.visDrag * ( vel .* abs (vel));
+            forces = obj.hydroForce.visDrag * ( vel .* abs (vel) );
 
         end
 
