@@ -1187,7 +1187,7 @@ classdef logger < handle
         end
 
 
-        function status = logVal(obj, varname, val, ignoremissing)
+        function status = logVal(obj, varname, val, ignoremissing, checkexists)
             % log a new value of a variable
             %
             % Syntax
@@ -1227,12 +1227,18 @@ classdef logger < handle
                 ignoremissing = false;
             end
             
-            if ~isfield (obj.data, varname)
-                if ignoremissing
-                    status = -1;
-                    return;
-                else
-                    error ('data logging field: %s does not exist', varname);
+            if nargin < 5
+                checkexists = true;
+            end
+            
+            if checkexists
+                if ~isfield (obj.data, varname)
+                    if ignoremissing
+                        status = -1;
+                        return;
+                    else
+                        error ('data logging field: %s does not exist', varname);
+                    end
                 end
             end
             
