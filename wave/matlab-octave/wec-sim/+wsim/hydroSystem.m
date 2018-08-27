@@ -301,7 +301,8 @@ classdef hydroSystem < handle
             % Non-linear hydro
             if (self.simu.nlHydro > 0) || (self.simu.paraview == 1)
                 for bodyind = 1:length(self.hydroBodies(1,:))
-                    self.hydroBodies(bodyind).bodyGeo (body(bodyind).geometryFile)
+                    % load the body stl file
+                    self.hydroBodies(bodyind).bodyGeo ();
                 end
             end
             
