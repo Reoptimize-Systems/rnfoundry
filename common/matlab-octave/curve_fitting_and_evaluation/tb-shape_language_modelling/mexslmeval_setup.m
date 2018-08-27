@@ -31,7 +31,11 @@ function mexslmeval_setup (varargin)
     
     cd(getmfilepath (mfilename));
     
-    mexargs = {'mexslmeval.cpp', '-lgsl', '-lgslcblas', ['EXE="mexslmeval.', options.MexExtension, '"']};
+    mexargs = {'mexslmeval.cpp', '-lgsl', '-lgslcblas'};
+    
+    if ~isoctave ()
+        mexargs = [mexargs, { ['EXE="mexslmeval.', options.MexExtension, '"']}];
+    end
     
     if options.Verbose
         mexargs = [ mexargs, {'-v'}];

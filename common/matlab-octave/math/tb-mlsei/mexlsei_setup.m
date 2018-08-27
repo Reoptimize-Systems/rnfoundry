@@ -240,8 +240,11 @@ function mexlsei_setup(varargin)
                   './c/dlsei.c', ...
                   './c/i1mach.c', ...
                   './c/d1mach.c', ...
-                  sprintf('-l%s', libfilemexcallname), ...
-                  ['EXE="existfile.', options.MexExtension, '"'] };
+                  sprintf('-l%s', libfilemexcallname) };
+              
+	if ~isoctave ()
+        mexinputs = [mexinputs, {['EXE="existfile.', options.MexExtension, '"']}];
+    end
               
     if ~isempty (includepath)
         mexinputs = [mexinputs, { sprintf('-I"%s"', includepath) }];

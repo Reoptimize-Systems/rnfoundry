@@ -16,7 +16,11 @@ function mexcompile_existfile (varargin)
     
     cd (filepath)
     
-    mexargs = {'existfile.c', ['EXE="existfile.', options.MexExtension, '"']};
+    mexargs = {'existfile.c'};
+    
+    if ~isoctave ()
+        mexargs = [mexargs, { ['EXE="existfile.', options.MexExtension, '"']}];
+    end
     
     if options.Verbose
         mexargs = [mexargs, {'-v'}];

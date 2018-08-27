@@ -32,9 +32,14 @@ function mexppval_setup (varargin)
     
     cd(getmfilepath (mfilename));
 
-    ppmval_mexargs = {'ppmval.cpp', 'interpUtil.cpp', ['EXE="ppmval.', options.MexExtension, '"'] };
+    ppmval_mexargs = { 'ppmval.cpp', 'interpUtil.cpp' };
     
-    ppuval_mexargs = {'ppuval.cpp', 'interpUtil.cpp', ['EXE="ppuval.', options.MexExtension, '"']};
+    ppuval_mexargs = { 'ppuval.cpp', 'interpUtil.cpp' };
+    
+    if ~isoctave ()
+        ppmval_mexargs = [ ppmval_mexargs, {['EXE="ppmval.', options.MexExtension, '"']} ];
+        ppuval_mexargs = [ ppuval_mexargs, {['EXE="ppuval.', options.MexExtension, '"']} ];
+    end
     
     if options.Verbose
         ppmval_mexargs = [ppmval_mexargs, {'-v'}];
