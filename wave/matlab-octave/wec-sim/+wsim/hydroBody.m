@@ -1,5 +1,71 @@
 classdef hydroBody < handle
-
+% represents one hydrodynamically interacting body in a hydrodynamic system
+%
+% Syntax
+%
+% hb = hydroBody (filename)
+%
+% Description
+%
+% wsim.hydroBody represents one hydrodynamically interacting body in a
+% hydrodynamic system. It is intended to be used in conjunction with the
+% wsim.hydroSystem class which manages a collection of wsim.hydroBody
+% objects and is used to perform the time domain simulation of the bodies.
+%
+% The body simulation data is contained in a case directory. This case
+% directory should contain two subdirectories, 'hydroData' and 'geometry'.
+%
+% The hydroData subdirectory should contain either one .h5 file containing
+% the output of the BEMIO files which process the output of various BEM
+% solvers to a format understood by the hydroBody class, or, a collection
+% of .mat files containing hydroData structures which can be directly
+% loaded by the body. In this case, there will be one mat file for each
+% body.
+%
+% The geometry subdirectory should contain a collection of STL files, one
+% for each body. 
+%
+% wsim.hydroBody Methods:
+%
+%   hydroBody - constructor for the hydroBody class
+%   adjustMassMatrix - Merges diagonal term of added mass matrix to the mass matrix
+%   advanceStep - advance to the next time step, accepting the current time
+%   bodyGeo - Reads an STL mesh file and calculates areas and centroids
+%   checkInputs - Checks the user inputs
+%   forceAddedMass - Recomputes the real added mass force time history for the
+%   getVelHist - not documented
+%   hydroForcePre - performs pre-processing calculations to populate hydroForce structure
+%   hydroForces - hydroForces calculates the hydrodynamic forces acting on a
+%   hydrostaticForces - calculates the hydrostatic forces acting on the body
+%   lagrangeInterp - not documented
+%   linearExcitationForces - calculates linear wave excitation forces during transient
+%   linearInterp - not documented
+%   listInfo - Display some information about the body at the command line
+%   loadHydroData - load hydrodynamic data from file or variable
+%   makeMBDynComponents - creates mbdyn components for the hydroBody
+%   morrisonElementForce - not documented
+%   nonlinearExcitationForces - calculates the non-linear excitation forces on the body
+%   offsetXYZ - Function to move the position vertices
+%   plotStl - Plots the body's mesh and normal vectors
+%   radForceODEOutputfcn - OutputFcn to be called after every completed ode time step
+%   radForceSSDerivatives - wsim.hydroBody/radForceSSDerivatives is a function.
+%   radiationForces - calculates the wave radiation forces
+%   readH5File - Reads an HDF5 file containing the hydrodynamic data for the body
+%   restoreMassMatrix - Restore the mass and added-mass matrix back to the original value
+%   rotateXYZ - Function to rotate a point about an arbitrary axis
+%   saveHydroData - saves the body's hydrodata structure to a .mat file
+%   setCaseDirectory - set the case directory for the simulation the body is part of
+%   setInitDisp - Sets the initial displacement when having initial rotation
+%   storeForceAddedMass - Store the modified added mass and total forces history (inputs)
+%   timeDomainSimReset - resets the body in readiness for a transient simulation
+%   timeDomainSimSetup - sets up the body in preparation for a transient simulation
+%   viscousDamping - not documented
+%   waveElevation - calculate the wave elevation at centroids of triangulated surface
+%   write_paraview_vtp - Writes vtp files for visualization with ParaView
+%
+%
+% See Also: wsim.hydroSystem
+%
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copyright 2014 the National Renewable Energy Laboratory and Sandia Corporation
@@ -279,7 +345,7 @@ classdef hydroBody < handle
             %
             % Output
             %
-            %  hb - a hydroBody object
+            %  hb - a wsim.hydroBody object
             %
             %
             
@@ -288,8 +354,36 @@ classdef hydroBody < handle
         end
         
         function setCaseDirectory (obj, case_directory)
-            % set the case directory for the simulation
-            
+            % set the case directory for the simulation the body is part of
+            %
+            % Syntax
+            %
+            % setCaseDirectory (hb, case_directory)
+            %
+            % Description
+            %
+            % setCaseDirectory sets the path to the case directory of the
+            % simulation of which the hydroBody is a part. This is intended
+            % to be called by the wsim.hydroSystem to which the body is
+            % added, rather than called by a user directly. The case
+            % directory should contain two subdirectories, 'hydroData' and
+            % 'geometry'. The hydroData directory should contain the .h5
+            % file or .mat file containing the hydrodynamic data for the
+            % body using a BEM solver and the BEMIO functions. The geometry
+            % folder should contain any STL file describing the geometry of
+            % the body.
+            %
+            % Input
+            %
+            %  hb - a wsim.hydroBody object
+            %
+            %  case_directory - character vector containing the full path
+            %   to the case directory of the simulation.
+            %
+            %
+            % See Also: wsim.hydroSystem
+            %
+
             hydrofile = fullfile (case_directory, 'hydroData', obj.hydroDataFile);
             
             if exist (hydrofile, 'file') ~= 2
@@ -310,8 +404,7 @@ classdef hydroBody < handle
         end
 
         function readH5File (obj)
-            % Reads the HDF5 file containing the hydrodynamic data for the
-            % body
+            % Reads an HDF5 file containing the hydrodynamic data for the body
             %
             % Syntax
             %
@@ -380,6 +473,7 @@ classdef hydroBody < handle
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/B/all']); end
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
+            
         end
 
         function loadHydroData (obj, hydroData)
@@ -393,8 +487,8 @@ classdef hydroBody < handle
             %
             % Description
             %
-            % Loads hydrodynamic data from a .mat file, .h5 file or a
-            % matlab variable.
+            % Loads hydrodynamic data from a .mat file, .h5 file or
+            % directly from a matlab structure.
             %
             % Input
             %
@@ -440,7 +534,7 @@ classdef hydroBody < handle
                         
                     case '.h5'
                         
-                        readH5File (obj)
+                        readH5File (obj);
                         
                     otherwise
                         
@@ -466,7 +560,38 @@ classdef hydroBody < handle
         
         function saveHydroData (obj, filename, varargin)
             % saves the body's hydrodata structure to a .mat file
-            
+            %
+            % Syntax
+            %
+            % saveHydroData (hb, filename)
+            % saveHydroData (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % saveHydroData saves the body's hydroData structure to a .mat
+            % file for later use. This avoids having to read the .h5 file.
+            % By default saveHydroData saves the file in the hydroData
+            % subdirectory of the case directory. The 'Directory' option
+            % may be used to change this behaviour.
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+            %  filename - name withput path of the .mat file in which to
+            %   save the 
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'Directory' - optional alternative direcotry in which to
+            %    save the .mat file instead of the hydroData subdirectory
+            %    of the simulation case directory.
+            %
+            % See Also: wsim.hydroBody.loadHydroData
+            %
+
+            options.FileName = [ obj.name, '.mat' ];
             options.Directory = fullfile (obj.caseDirectory, 'hydroData');
             
             options = parse_pv_pairs (options, varargin);
@@ -488,10 +613,26 @@ classdef hydroBody < handle
         end
 
         function hydroForcePre(obj)
-            % HydroForce Pre-processing calculations
-            % 1. Set the linear hydrodynamic restoring coefficient, viscous
-            %    drag, and linear damping matrices
-            % 2. Set the wave excitation force
+            % performs pre-processing calculations to populate hydroForce structure
+            %
+            % Syntax
+            %
+            % hydroForcePre (hb)
+            %
+            % Description
+            %
+            % hydroForcePre performs various pre-processing calulations in
+            % prepration for a simulation. It populates the hydroForce
+            % property of the hydroBody as a structure with the linear
+            % hydrodynamic restoring coefficient, viscous drag, and linear
+            % damping matrices, and also sets the wave excitation force
+            % calculation method from the specified wave type.
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+
                   
             rho = obj.simu.rho;
             g = obj.simu.g;
@@ -547,10 +688,28 @@ classdef hydroBody < handle
         end
 
         function adjustMassMatrix(obj)
-            % Merge diagonal term of added mass matrix to the mass matrix
-            % 1. Store the original mass and added-mass properties
-            % 2. Add diagonal added-mass inertia to moment of inertia
-            % 3. Add the maximum diagonal translational added-mass to body mass
+            % Merges diagonal term of added mass matrix to the mass matrix
+            %
+            % Syntax
+            %
+            % adjustMassMatrix (hb)
+            %
+            % Description
+            %
+            % adjustMassMatrix performs the following tasks in preparation
+            % for a simulation:
+            %
+            % * Stores the original mass and added-mass properties
+            % * Adds diagonal added-mass inertia to moment of inertia
+            % * Adds the maximum diagonal translational added-mass to body
+            % mass
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+
+            
             iBod = obj.bodyNumber;
             obj.hydroForce.storage.mass = obj.mass;
             obj.hydroForce.storage.momOfInertia = obj.momOfInertia;
@@ -604,11 +763,30 @@ classdef hydroBody < handle
         end
 
         function setInitDisp(obj, x_rot, ax_rot, ang_rot, addLinDisp)
-            % Function to set the initial displacement when having initial rotation
-            % x_rot: rotation point
-            % ax_rot: axis about which to rotate (must be a normal vector)
-            % ang_rot: rotation angle in radians
-            % addLinDisp: initial linear displacement (in addition to the displacement caused by rotation)
+            % Sets the initial displacement when having initial rotation
+            %
+            % Syntax
+            %
+            % setInitDisp (hb, x_rot, ax_rot, ang_rot, addLinDisp)
+            %
+            % Description
+            %
+            % Sets the initial displacement of the body when having initial
+            % rotation.
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+            %  x_rot - rotation point
+            %
+            %  ax_rot - axis about which to rotate (must be a normal vector)
+            %
+            %  ang_rot - rotation angle in radians
+            %
+            %  addLinDisp - initial linear displacement (in addition to the
+            %   displacement caused by rotation)
+            %
 
             relCoord = obj.cg - x_rot;
 
@@ -627,7 +805,8 @@ classdef hydroBody < handle
         end
 
         function listInfo(obj)
-            % List body info
+            % Display some information about the body at the command line
+            
             fprintf('\n\t***** Body Number %G, Name: %s *****\n',obj.hydroData.properties.body_number,obj.hydroData.properties.name)
             fprintf('\tBody CG                          (m) = [%G,%G,%G]\n',obj.hydroData.properties.cg)
             fprintf('\tBody Mass                       (kg) = %G \n',obj.mass);
@@ -637,7 +816,32 @@ classdef hydroBody < handle
         function bodyGeo(obj,fname)
             % Reads an STL mesh file and calculates areas and centroids
             %
-            % 
+            % Syntax
+            %
+            % bodyGeo (hb, fname)
+            %
+            % Description
+            %
+            % bodyGeo
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+            %  fname - (optional) full path to the STL file to be loaded.
+            %   If not supplied, the file specified in the body's
+            %   geometryFile property (and expected to be in the 'geometry'
+            %   folder of the simulation case directory) will be used.
+            %
+            
+            if nargin < 2
+                if isempty (obj.geometryFile) || strcmp (obj.geometryFile, 'NONE')
+                    error ('No geometry file is specified in the ''geometryFile'' property of the body, and the full path to an STL file has also not be specified');
+                end
+                fname = fullfile (obj.caseDirectory, 'geometry', obj.geometryFile);
+            end
+            
+            assert (exist (fname, 'file'), 'The STl file:\n%s\n does not appear to exist', fname);
             
             try
                 [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,1);
@@ -649,6 +853,7 @@ classdef hydroBody < handle
             obj.checkStl ();
             obj.triArea ();
             obj.triCenter ();
+            
         end
 
         function plotStl(obj)
