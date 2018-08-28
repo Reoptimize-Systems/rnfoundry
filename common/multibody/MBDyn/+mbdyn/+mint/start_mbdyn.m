@@ -161,7 +161,7 @@ function [status, cmdout, pid] = start_mbdyn (inputfile, varargin)
                 pid = str2double (cmdout);
                 
                 if strcmpi (cmdout, 'mbdyn')
-
+                    % do nothing, we've got the mbdyn pid
                 else
                     % try pid + 1
                     pid = pid + 1;
@@ -176,9 +176,7 @@ function [status, cmdout, pid] = start_mbdyn (inputfile, varargin)
             end
             
         end
-    
-    else
-        
+
     end
 
     pause (options.StartWaitTime);
