@@ -1,4 +1,4 @@
-function [status, cmdout] = start_mbdyn (inputfile, varargin)
+function [status, cmdout, pid] = start_mbdyn (inputfile, varargin)
 % runs mbdyn with the appropriate commands
 %
 % Syntax
@@ -108,20 +108,68 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
     end
 
     % start mbdyn
-    cmdline = sprintf ( '%s %s -f "%s" -o "%s" > "%s" 2>&1 %s', ...
-                        options.MBDynExecutable, ...
-                        Pcmds, ...
-                        inputfile, ...
-                        options.OutputPrefix, ...
-                        options.MBDynOutputFile,  ...
-                        blockstr ...
-                      );
+    if ispc
+        cmdline = sprintf ( '%s %s -f "%s" -o "%s" > "%s" 2>&1 %s', ...
+                            options.MBDynExecutable, ...
+                            Pcmds, ...
+                            inputfile, ...
+                            options.OutputPrefix, ...
+                            options.MBDynOutputFile,  ...
+                            blockstr ...
+                          ); 
+    else
+        % see https://serverfault.com/questions/205498/how-to-get-pid-of-just-started-process
+        cmdline = sprintf ( 'sh -c ''echo $$; exec %s %s -f "%s" -o "%s" > "%s" 2>&1 %s''', ...
+                            options.MBDynExecutable, ...
+                            Pcmds, ...
+                            inputfile, ...
+                            options.OutputPrefix, ...
+                            options.MBDynOutputFile,  ...
+                            blockstr ...
+                          ); 
+    end
 
     if options.Verbosity > 0
         fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
     end
 
     [status, cmdout] = mbdyn.mint.cleansystem ( cmdline );
+    
+    pid = [];
+    
+    if status == 0
+        
+        if ispc
+            pid = [];
+        else
+            
+            if ~options.Block
+                
+                % check the PID is actually mbdyn
+                [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
+
+                pid = str2double (cmdout);
+                
+                if strcmpi (cmdout, 'mbdyn')
+
+                else
+                    % try pid + 1
+                    pid = pid + 1;
+                    
+                    [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
+
+                    if ~strcmpi (cmdout, 'mbdyn')
+                        pid = [];
+                    end
+                end
+                
+            end
+            
+        end
+    
+    else
+        
+    end
 
     pause (options.StartWaitTime);
 
