@@ -733,13 +733,23 @@ classdef wecSim < handle
             % create the communicator object. As an mbdyn system object is
             % supplied, the mbdyn input file will be generated
             % automatically
-            self.mBDynMBCNodal = mbdyn.mint.MBCNodal ('MBDynPreProc', self.mBDynSystem, ...
-                'UseMoments', true, ...
-                'MBDynInputFile', self.mBDynInputFile, ...
-                'OverwriteInputFile', true, ...
-                'OutputPrefix', self.outputFilePrefix, ...
-                'NodeOrientationType', 'euler 123' ...
-                );
+            try
+                self.mBDynMBCNodal = mbdyn.mint.MBCNodal ('MBDynPreProc', self.mBDynSystem, ...
+                    'UseMoments', true, ...
+                    'MBDynInputFile', self.mBDynInputFile, ...
+                    'OverwriteInputFile', true, ...
+                    'OutputPrefix', self.outputFilePrefix, ...
+                    'NodeOrientationType', 'euler 123' ...
+                    );
+            catch err
+                self.readyToRun = false;
+                if exist (self.mBDynOutputFile, 'file')
+                    self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
+                end
+                self.cleanUpAfterError ();
+                error ('Starting MBDyn communication falied, aborting sim, some output might have beed sent to the following file:\n%s\nIf so, this may help diagnose the error.', ...
+                        self.mBDynMBCNodal.MBDynOutputFile)
+            end
             
             % copy over the input file location to make it easier to
             % examine later if required
@@ -778,6 +788,7 @@ classdef wecSim < handle
                 if exist (self.mBDynOutputFile, 'file')
                     self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
                 end
+                self.cleanUpAfterError ();
                 error ('mbdyn returned %d, aborting sim, check output file:\n%s\nfor clues at to why this happened.', ...
                         status, self.mBDynMBCNodal.MBDynOutputFile)
             end
@@ -2417,6 +2428,32 @@ classdef wecSim < handle
                 
                 error ('hax must be an axes handle or empty');
                 
+            end
+            
+        end
+        
+        function cleanUpAfterError (self)
+            
+            % clear mBDynMBCNodal to trigger the delete method on the
+            % object and close sockets etc
+            self.mBDynMBCNodal = [];
+            
+            if isunix
+                
+                % kill mbdyn process if we know the pid
+                if ~isempty (self.mBDynMBCNodal.mBDynPID)
+
+                    cleansystem (sprintf ('kill %d', self.mBDynMBCNodal.mBDynPID));
+
+                end
+
+                % remove local socket file if it exists
+                if ~isempty (self.mBDynMBCNodal.path)
+                    if exist (self.mBDynMBCNodal.path, 'file')
+                        delete (self.mBDynMBCNodal.path);
+                    end
+                end
+            
             end
             
         end
