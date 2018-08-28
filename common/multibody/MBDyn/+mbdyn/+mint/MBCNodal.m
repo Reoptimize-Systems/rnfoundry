@@ -64,6 +64,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         MBDynExecutable;
         MBDynStartWaitTime;
         MBDynOutputFile;
+        mBDynPID;
         
     end
     
@@ -81,6 +82,8 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         outputPrefix;
         nodeOrientiationType;
         setNodePositions;
+        
+        
         
     end
     
@@ -1222,7 +1225,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             options = parse_pv_pairs (options, varargin);
             
-            mbdyn.mint.start_mbdyn ( ...
+            [status, cmdout, self.mBDynPID] = mbdyn.mint.start_mbdyn ( ...
                                 self.MBDynInputFile , ...
                                 'Verbosity', options.Verbosity, ...
                                 'StartWaitTime', self.MBDynStartWaitTime, ...
@@ -1230,6 +1233,8 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                                 'MBDynOutputFile', self.MBDynOutputFile, ...
                                 'OutputPrefix', self.outputPrefix, ...
                                 'Block', false );
+                            
+             assert (status == 0, 'Starting MBDyn failed');
             
         end
         
