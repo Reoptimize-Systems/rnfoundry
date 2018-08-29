@@ -1,4 +1,4 @@
-function [status, cmdout, pid] = start_mbdyn (inputfile, varargin)
+function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
 % runs mbdyn with the appropriate commands
 %
 % Syntax
@@ -143,23 +143,22 @@ function [status, cmdout, pid] = start_mbdyn (inputfile, varargin)
         fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
     end
 
-    [status, cmdout] = mbdyn.mint.cleansystem ( cmdline );
+    [mbstatus, cmdout] = mbdyn.mint.cleansystem ( cmdline );
     
     pid = [];
     
-    if status == 0
+    if mbstatus == 0
         
         if ispc
             pid = [];
         else
+            pid = str2double (cmdout);
             
             if ~options.Block
                 
                 % check the PID is actually mbdyn
                 [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
 
-                pid = str2double (cmdout);
-                
                 if strcmpi (cmdout, 'mbdyn')
                     % do nothing, we've got the mbdyn pid
                 else
@@ -168,9 +167,10 @@ function [status, cmdout, pid] = start_mbdyn (inputfile, varargin)
                     
                     [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
 
-                    if ~strcmpi (cmdout, 'mbdyn')
+                    if ~strncmpi (cmdout, 'mbdyn', 5)
                         pid = [];
                     end
+                    
                 end
                 
             end
