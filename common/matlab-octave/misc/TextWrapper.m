@@ -264,15 +264,21 @@ classdef TextWrapper
             % See also: TexWrapper.fill, TextWrapper.wraplines
             %
 
-            text = self.mungewhitespacechars (text);
+            if numel (text) < self.width
+                
+                lines = {text};
+                
+            else
+                text = self.mungewhitespacechars (text);
 
-            chunks = self.split (text);
+                chunks = self.split (text);
 
-            if self.fixSentenceEndings
-                chunks = self.adjust_sentence_endings (chunks);
+                if self.fixSentenceEndings
+                    chunks = self.adjust_sentence_endings (chunks);
+                end
+
+                lines = self.wrap_chunks (chunks);
             end
-
-            lines = self.wrap_chunks (chunks);
 
         end
         
