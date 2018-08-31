@@ -15,8 +15,6 @@ classdef wecSim < handle
         
         powerTakeOffs;
         wecController;
-        forceRelTol;
-        forceAbsTol;
         mBDynOutputFile;
         mBDynInputFile;
         caseDirectory;
@@ -57,6 +55,11 @@ classdef wecSim < handle
         
         logger; % wsim.logger object containing the logged simulation data from the current or most recent sim
         
+        minForceIterations; % minimum number of iterations which will be performed at each time step
+        maxForceIterations; % maximum number of iteration allowed before convergence
+        absForceTolerance;  % absolute tolerance on the forces for convergence
+        relForceTolerance;  % relative  tolerance on the forces for convergence
+        
     end
     
     properties (GetAccess = private, SetAccess = private)
@@ -69,10 +72,6 @@ classdef wecSim < handle
         hydroMotionSyncStepCount = 1;
         simStepCount;
         mBDynMBCNodal;
-        minForceIterations;
-        absForceTolerance;
-        relForceTolerance;
-        maxForceIterations;
         outputFilePrefix;
         
         
@@ -84,6 +83,8 @@ classdef wecSim < handle
         
         drawAxesH;
         waveSurfH;
+        
+        defaultAbsForceTolerance;
         
     end
     
@@ -325,6 +326,17 @@ classdef wecSim < handle
             % clear any mbdyn.postproc object
             self.mBDynPostProc = [];
             
+            % calculate the default absolute force tolerance based on an
+            % acceleration for each body
+            absforcetols = zeros (1, self.hydroSystem.nHydroBodies);
+            minaccel = 0.01;
+            for hbind = 1:numel (self.hydroSystem.nHydroBodies)
+                
+                absforcetols(hbind) = self.hydroSystem.getBodyProperty (hbind, 'mass') * minaccel;
+                
+            end
+            self.defaultAbsForceTolerance = min (absforcetols);
+            
             self.readyToRun = true;
             self.simComplete = false;
             
@@ -472,7 +484,7 @@ classdef wecSim < handle
             thedate = datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF');
             options.OutputFilePrefix = fullfile (self.caseDirectory, ['output_', thedate], ['mbdyn_sim_results_', thedate]);
             options.Verbosity = 0;
-            options.AbsForceTolerance = 100;
+            options.AbsForceTolerance = self.defaultAbsForceTolerance;
             options.RelForceTolerance = 1e-5;
             options.MinIterations = 0;
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
@@ -635,7 +647,7 @@ classdef wecSim < handle
             thedate = datestr(now (), 'yyyy-mm-dd_HH-MM-SS-FFF');
             options.OutputFilePrefix = fullfile (self.caseDirectory, ['output_', thedate], ['mbdyn_sim_results_', thedate]);
             options.Verbosity = 0;
-            options.AbsForceTolerance = 100;
+            options.AbsForceTolerance = self.defaultAbsForceTolerance;
             options.RelForceTolerance = 1e-5;
             options.MinIterations = 0;
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
