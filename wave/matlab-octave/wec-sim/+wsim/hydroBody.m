@@ -96,6 +96,9 @@ classdef hydroBody < handle
         % Center of gravity [x y z] in meters. This is obtained from the h5 or mat file.
         cg = [];
         
+        % Center of buoyancy [x y z] in meters. For WEC bodies this is given in the h5 file.
+        cb = [];
+        
         % Displaced volume at equilibrium position in m^3. This is obtained from the h5 or mat file.
         dispVol = [];
         
@@ -113,13 +116,15 @@ classdef hydroBody < handle
         geometryFile = 'NONE';                                              
         
         % viscDrag - Structure defining the viscous (quadratic) drag
-        %  Must contain the fields 'cd' and 'characteristicArea'. The 'cd'
-        %  field should contain a vector length 6 defining the Viscous
-        %  (quadratic) drag. The 'characteristicArea' field should contain
-        %  another vector of length 6 defining the Characteristic area for
-        %  viscous drag.
+        %  Must contain the fields 'Drag', 'cd' and 'characteristicArea'.
+        %  The 'Drag' field should contain a (6x6) matrix defining the
+        %  Viscous (quadratic) drag. The 'cd' field should contain a vector
+        %  length 6 defining the Viscous (quadratic) drag. The
+        %  'characteristicArea' field should contain another vector of
+        %  length 6 defining the Characteristic area for viscous drag.
         %
-        viscDrag = struct( 'cd',                   [0 0 0 0 0 0], ... 
+        viscDrag = struct( 'Drag',                 zeros(6), ...
+                           'cd',                   [0 0 0 0 0 0], ... 
                            'characteristicArea',   [0 0 0 0 0 0] );
                                 
         % initDisp - Structure defining the initial displacement.
@@ -140,8 +145,11 @@ classdef hydroBody < handle
                            'initAngularDispAxis',  [0 1 0], ...
                            'initAngularDispAngle', 0 );
                        
+        % (6x6) Hydrostatic stiffness matrix which overrides BEMIO definition
+        hydroStiffness   = zeros(6);
+                       
         % linearDamping - Linear drag coefficient, vector length 6
-        linearDampingCoeff = [0 0 0 0 0 0];
+        linearDamping = [0 0 0 0 0 0];
         
         % Excitation IRF from BEMIO used for User-Defined Time-Series
         userDefinedExcIRF = [] ;
@@ -444,6 +452,8 @@ classdef hydroBody < handle
             name = ['/body' num2str(obj.bodyNumber)];
             obj.cg = h5read(filename,[name '/properties/cg']);
             obj.cg = obj.cg';
+            obj.cb = h5read(filename,[name '/properties/cb']);
+            obj.cb = obj.cb';
             obj.dispVol = h5read(filename,[name '/properties/disp_vol']);
             obj.name = h5read(filename,[name '/properties/name']);
             try obj.name = obj.name{1}; end
@@ -456,6 +466,7 @@ classdef hydroBody < handle
             try obj.hydroData.properties.name = obj.hydroData.properties.name{1}; end
             obj.hydroData.properties.body_number = h5read(filename,[name '/properties/body_number']);
             obj.hydroData.properties.cg = h5read(filename,[name '/properties/cg']);
+            obj.hydroData.properties.cb = h5read(filename,[name '/properties/cb']);
             obj.hydroData.properties.disp_vol = h5read(filename,[name '/properties/disp_vol']);
             obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.bemio.h5load(filename, [name '/hydro_coeffs/linear_restoring_stiffness']);
             obj.hydroData.hydro_coeffs.excitation.re = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/re']);
@@ -545,6 +556,7 @@ classdef hydroBody < handle
                 
                 obj.hydroData = hydroData;
                 obj.cg        = hydroData.properties.cg';
+                obj.cb        = hydroData.properties.cb';
                 obj.dispVol   = hydroData.properties.disp_vol;
                 obj.name      = hydroData.properties.name;
                 
@@ -638,15 +650,25 @@ classdef hydroBody < handle
             
             obj.setMassMatrix(rho, obj.simu.nlHydro)
             
-            k = obj.hydroData.hydro_coeffs.linear_restoring_stiffness;
+            % check if obj.hydroStiffness is defined directly
+            if any(any(obj.hydroStiffness)) == 1
+                obj.hydroForce.linearHydroRestCoef = obj.hydroStiffness;
+            else
+                k = obj.hydroData.hydro_coeffs.linear_restoring_stiffness;
+                obj.hydroForce.linearHydroRestCoef = k .* rho .* g;
+            end
             
-            obj.hydroForce.linearHydroRestCoef = k .* rho .* g;
+            % check if obj.viscDrag.Drag is defined directly
+            if  isfield (obj.viscDrag, 'Drag') && (any(any(obj.viscDrag.Drag)) == 1)
+                obj.hydroForce.visDrag = obj.viscDrag.Drag;                
+            else
+                obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
+            end
             
-            obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
+            obj.hydroForce.linearDamping = diag (obj.linearDamping);
             
-            obj.hydroForce.linearDamping = diag (obj.linearDampingCoeff);
-            
-            obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)),6);   %initializing userDefinedFe for non user-defined cases
+            % initialize userDefinedFe for non user-defined cases
+            obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)),6);
             
             switch obj.waves.type
                 case {'noWave'}
@@ -669,12 +691,12 @@ classdef hydroBody < handle
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 1;
                     
-                case {'irregular','irregularImport'}
+                case {'irregular', 'spectrumImport'}
                     obj.irrExcitation ();
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 2;
                     
-                case {'userDefined'}
+                case {'etaImport'}
                     obj.userDefinedExcitation (obj.waves.waveAmpTime);
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 3;
@@ -1053,6 +1075,7 @@ classdef hydroBody < handle
             t =  min(kt):obj.simu.dt:max(kt);
             
             for ii = 1:6
+                
                 if length (obj.hydroData.simulation_parameters.wave_dir) > 1
                     
                     [X,Y] = meshgrid (kt, obj.hydroData.simulation_parameters.wave_dir);
@@ -1066,7 +1089,10 @@ classdef hydroBody < handle
                     kernel = squeeze (kf(ii,1,:));
                     
                     obj.userDefinedExcIRF = interp1 (kt,kernel,min(kt):obj.simu.dt:max(kt));
+                else
                     
+                    error('Default wave direction different from hydro database value. Wave direction (waves.waveDir) should be specified on input file.')
+                
                 end
                 obj.hydroForce.userDefinedFe(:,ii) = conv (waveAmpTime(:,2), obj.userDefinedExcIRF, 'same') * obj.simu.dt;
                 
@@ -1629,7 +1655,7 @@ classdef hydroBody < handle
             breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
             
             % always do linear damping
-            breakdown.F_LinearDamping = linearDamping (obj, vel(:,obj.bodyNumber));
+            breakdown.F_LinearDamping = linearDampingForce (obj, vel(:,obj.bodyNumber));
 
             % always do radiation forces
             [breakdown.F_AddedMass, breakdown.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
@@ -1677,7 +1703,7 @@ classdef hydroBody < handle
 
         end
 
-        function forces = linearDamping (obj, vel)
+        function forces = linearDampingForce (obj, vel)
             
             forces = obj.hydroForce.linearDamping * vel;
             
@@ -1931,14 +1957,20 @@ classdef hydroBody < handle
             switch obj.freeSurfaceMethodNum
 
                 case 0
+                    % linear hydrostatic restoring force
 
                     body_hspressure_out = [];
 
                     forces = obj.hydroForce.linearHydroRestCoef * pos;
 
+                    f_gravity = obj.simu.g .* obj.hydroForce.storage.mass;
+                    
+                    f_buoyancy = obj.simu.rho .* obj.simu.g .*  obj.dispVol;
+                    
                     % Add Net Bouyancy Force to Z-Direction
-                    forces(3) = forces(3) + ...
-                        ((obj.simu.g .* obj.hydroForce.storage.mass) - (obj.simu.rho .* obj.simu.g .*  obj.dispVol));
+                    forces(3) = forces(3) + (f_gravity - f_buoyancy);
+                    
+                    forces(4:6) = forces(4:6) + cross ([0,0,f_buoyancy], (obj.cb - obj.cg)')';
 
                 case 1
 
@@ -2603,6 +2635,39 @@ classdef hydroBody < handle
             
         end
 
+    end
+    
+    
+    % getters and setters
+    methods
+        
+        function set.mass (self, new_mass)
+            
+            if ischar (new_mass)
+                ok = check.allowedStringInputs (new_mass, {'equilibrium'}, false);
+                assert (ok, 'If mass is a string, it must be ''equilibrium''');
+            else
+                check.isNumericScalar(new_mass, true, 'mass', 1);
+                assert (new_mass > 0, 'mass must be greater than 0');
+            end
+            
+            self.mass = new_mass;
+            
+        end
+        
+        
+        function set.momOfInertia (self, new_momOfInertia)
+            
+            ok = check.isNumericMatrix (new_momOfInertia, false, 'new_momOfInertia', 1);
+            
+            assert (ok && (numel (new_momOfInertia) == 3), ...
+                'momOfInertia must be a 3 element vector of positive real values. This is the diagonal of the inertia matrix ([Ixx, Iyy, Izz])' );
+            
+            self.momOfInertia = new_momOfInertia;
+            
+        end
+        
+        
     end
 
 end
