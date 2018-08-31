@@ -130,8 +130,8 @@ classdef waveSettings < handle
         % w - [rad/s] Wave frequency (regular waves) or wave frequency vector (irregular waves)
         w = []; 
         
-        % phaseRand - [rad] Wave phase (only used for irregular waves)
-        phaseRand  = 0; 
+        % phase - [rad] Wave phase (only used for irregular waves)
+        phase = 0; 
         
         % dw - [rad] Frequency spacing for irregular waves.
         dw = 0; 
