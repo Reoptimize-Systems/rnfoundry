@@ -510,7 +510,7 @@ classdef waveSettings < handle
                     
                     for iw = 1:length (obj.w)
                         
-                        Z = Z + sqrt (obj.A(iw)*obj.dw(iw)) * cos ( -1*obj.k(iw)*Xt + obj.w(iw)*t + obj.phaseRand(iw) );
+                        Z = Z + sqrt (obj.A(iw)*obj.dw(iw)) * cos ( -1*obj.k(iw)*Xt + obj.w(iw)*t + obj.phase(iw) );
                         
                     end
                     
