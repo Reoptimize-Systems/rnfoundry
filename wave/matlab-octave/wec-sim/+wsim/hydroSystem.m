@@ -34,6 +34,8 @@ classdef hydroSystem < handle
         hydroBodies; % array of wsim.hydroBody objects
         hydroBodyInds = []; % array of indices of the hydrobodies
         
+%         hydroBodyPropNames;
+        
     end
     
     
@@ -71,6 +73,9 @@ classdef hydroSystem < handle
             
             self.simu = simu;
             self.waves = waves;
+            
+%             % store the names of the public properties (used in the get
+%             self.hydroBodyPropNames = properties ('wsim.hydroBody');
             
             self.odeSimInitialised = false;
             
@@ -748,6 +753,17 @@ classdef hydroSystem < handle
             
             n = numel (self.hydroBodies);
 
+        end
+        
+        
+        function propval = getBodyProperty (self, bodyind, property_name)
+            
+            assert (bodyind <= self.nHydroBodies, ...
+                'bodyind is greater than the number of hydroBody object in the system' );
+            
+            propval = self.hydroBodies(bodyind).(property_name);
+            
+            
         end
         
         
