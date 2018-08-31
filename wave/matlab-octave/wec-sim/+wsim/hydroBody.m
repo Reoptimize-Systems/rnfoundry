@@ -1779,9 +1779,9 @@ classdef hydroBody < handle
                     % TOD: check correct dimension/orientation of force output
                     A1 = bsxfun (@plus, obj.waves.w * t, pi/2);
 
-                    B1 = sin (bsxfun (@plus, A1, obj.waves.phaseRand));
+                    B1 = sin (bsxfun (@plus, A1, obj.waves.phase));
 
-                    B11 = sin (bsxfun (@plus, obj.waves.w * t, obj.waves.phaseRand));
+                    B11 = sin (bsxfun (@plus, obj.waves.w * t, obj.waves.phase));
 
                     C1 = sqrt (bsxfun (@times, obj.waves.A, obj.waves.dw));
 
@@ -2229,7 +2229,7 @@ classdef hydroBody < handle
                                 .* sqrt (obj.waves.AH(i) * obj.waves.dw) ...
                                 .* cos ( obj.waves.k(i) .* center(:,1) ...
                                          - obj.waves.w(i) * t ...
-                                         - obj.waves.phaseRand(i) ...
+                                         - obj.waves.phase(i) ...
                                        );
 
                         f = f + f_tmp .* ( cosh ( obj.waves.k(i) .* (z + obj.waves.wDepth) ) ...
@@ -2244,7 +2244,7 @@ classdef hydroBody < handle
                                 .* obj.simu.g ...
                                 .* sqrt (obj.waves.AH(i) * obj.waves.dw) ...
                                 .* cos ( obj.waves.k(i) .* center(:,1) ...
-                                         - obj.waves.w(i) * t - obj.waves.phaseRand(i) ...
+                                         - obj.waves.w(i) * t - obj.waves.phase(i) ...
                                        );
 
                         f = f + f_tmp .* exp (obj.waves.k(i) .* z);
@@ -2420,7 +2420,7 @@ classdef hydroBody < handle
                 
                 tmp1 = ones (1, length (center(:,1)));
                 
-                tmp2 = (obj.waves.w .* t + obj.waves.phaseRand) * tmp1;
+                tmp2 = (obj.waves.w .* t + obj.waves.phase) * tmp1;
                 
                 tmp3 = cos (obj.waves.k * X'- tmp2);
                 
