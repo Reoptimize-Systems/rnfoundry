@@ -44,7 +44,9 @@ function [status,result] = cleansystem (cmd, restoreuser)
         precmd = 'unset LD_LIBRARY_PATH ; ';
         
         if restoreuser
-            precmd = [precmd, 'source ~/.bashrc ;'];
+            % the '.' below it the portable version of the bash 'source'
+            % command. 
+            precmd = [precmd, '. ~/.bashrc ;'];
         end
         
     end
