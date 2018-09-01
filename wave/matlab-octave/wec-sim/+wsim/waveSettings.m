@@ -16,8 +16,8 @@
 
 classdef waveSettings < handle
     
-    % these properties may be set by the user
-    properties (SetAccess = 'public', GetAccess = 'public')
+    % The following properties can be set by the user
+    properties (SetAccess = public, GetAccess = public)
         
         % type - String defining the type of waves to be generated.
         %   Can be one of: 'noWave', 'noWaveCIC', 'regular', 'regularCIC',
@@ -97,8 +97,8 @@ classdef waveSettings < handle
         
     end
     
-    % internally calculated properties
-    properties (SetAccess = 'private', GetAccess = 'public')
+    % The following properties are for internal use
+    properties (SetAccess = private, GetAccess = public)
         
         % typeNum - Number to represent different type of waves
         typeNum = []; 
@@ -144,7 +144,7 @@ classdef waveSettings < handle
         
     end
     
-    methods (Access = 'public')
+    methods (Access = public)
         
         % Constructor
         function obj = waveSettings (wavetype)
@@ -489,7 +489,32 @@ classdef waveSettings < handle
         
         function Z = waveElevationGrid (obj, t, X, Y)
             % calculates wave elevation on a grid at a given time
-            
+            %
+            % Syntax
+            %
+            % Z = waveElevationGrid (ws, t, X, Y)
+            %
+            % Input
+            %
+            %  ws - wsim.waveSettings object
+            %
+            %  t - the current time
+            %
+            %  X - (m x n) matrix of X coordinates at which to calculate
+            %    the wave elevation
+            %
+            %  Y - (m x n) matrix of Y coordinates at which to calculate
+            %    the wave elevation
+            %
+            % Output
+            %
+            %  Z - (m x n) matrix of Z coordinates of the wave elevation
+            %
+            %
+            %
+            % See Also: wsim.waveSettings.write_paraview_vtp
+            %
+
             switch obj.type
                 
                 case {'noWave','noWaveCIC','etaImport'}
