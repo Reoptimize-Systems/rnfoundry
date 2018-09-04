@@ -1462,6 +1462,9 @@ classdef postproc < handle
             
             options = parse_pv_pairs (options, varargin);
             
+            assert (tind <= numel(self.time), ...
+                'Requested time index is greater than the maximum time index available.');
+            
             if options.DrawNodes == false
                 options.OnlyNodes = false;
             end
