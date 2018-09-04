@@ -650,7 +650,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %    could be obtained.
             %
             
-            status = self.cppcall ('GetMotion');
+            status = feval (self.mex_interface_fcn, 'GetMotion', self.objectHandle);
             
             self.needForces = true;
             self.needMoments = true;
@@ -699,8 +699,9 @@ classdef MBCNodal < mbdyn.mint.cppinterface
         end
 
         function rot = GetRot (self)
+            
             % get the rotation matrices for all nodes in the chosen format
-            rot = self.cppcall ('GetRot');
+            rot = feval (self.mex_interface_fcn, 'GetRot', self.objectHandle);
             
             for ind = 1:self.NNodes
                 
@@ -710,16 +711,17 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                         
                         case 'orientation matrix'
                             
-                            om = mbdyn.pre.orientmat (self.nodeOrientiationType, rot(1:3,1:3,ind));
-                            
+                            set3x3OrientMatNoChecking (self.structuralNodes{ind}, rot(1:3,1:3,ind));
                             
                         otherwise
                             
                             om = mbdyn.pre.orientmat (self.nodeOrientiationType, rot(1:3,ind));
+                            
+                            set3x3OrientMatNoChecking (self.structuralNodes{ind}, om.orientationMatrix);
                         
                     end
                     
-                    self.structuralNodes{ind}.absoluteOrientation = om;
+                    
                     
                 end
             
@@ -762,7 +764,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               pos(1:3,ind) = X (self, n(ind));
+               pos(1:3,ind) = feval (self.mex_interface_fcn, 'X', self.objectHandle, n(ind))';
                
                if self.setNodePositions
                     self.structuralNodes{n(ind)}.absolutePosition = pos(1:3,ind);
@@ -803,7 +805,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               vel(1:3,ind) = XP (self, n(ind));
+               vel(1:3,ind) = feval (self.mex_interface_fcn, 'XP', self.objectHandle, n(ind))';
                
                if self.setNodePositions
                     self.structuralNodes{n(ind)}.absoluteVelocity = vel (1:3,ind);
@@ -844,7 +846,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               accel(1:3,ind) = XPP (self, n(ind));
+               accel(1:3,ind) = feval (self.mex_interface_fcn, 'XPP', self.objectHandle, n(ind))';
                
             end
             
@@ -881,7 +883,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               theta(1:3,ind) = Theta (self, n(ind));
+               theta(1:3,ind) = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, n(ind))';
                
                if self.setNodePositions
                    
@@ -894,7 +896,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
         end
         
-        function vel = NodeOmegas (self, n)
+        function omega = NodeOmegas (self, n)
             % gets the angular velocities of one or more nodes
             %
             % Syntax
@@ -921,14 +923,14 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            vel = nan * ones (3, numel(n));
+            omega = nan * ones (3, numel(n));
             
             for ind = 1:numel (n)
                 
-               vel (1:3,ind) = Omega (self, n(ind));
+               omega (1:3,ind) = feval (self.mex_interface_fcn, 'Omega', self.objectHandle, n(ind))';
                
                if self.setNodePositions
-                    self.structuralNodes{n(ind)}.absoluteAngularVelocity = vel (1:3,ind);
+                    setAbsoluteAngularVelocityNoChecking (self.structuralNodes{n(ind)}, omega (1:3,ind));
                end
                
             end
@@ -966,7 +968,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             
             for ind = 1:numel (n)
                 
-               accel (1:3,ind) = OmegaP (self, n(ind));
+               accel (1:3,ind) = feval (self.mex_interface_fcn, 'OmegaP', self.objectHandle, n(ind))';
                
             end
             
@@ -988,7 +990,9 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             %  pos - (3 x 1) vector containing the xyz position of the node
             %
-            pos = self.cppcall ('X', n)';
+
+            pos = feval (self.mex_interface_fcn, 'X', self.objectHandle, n)';
+            
         end
 
         function vel = XP (self, n)
@@ -1007,7 +1011,9 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             %  pos - (3 x 1) vector containing the xyz velocity of the node
             %
-            vel = self.cppcall ('XP', n)';
+            
+            vel = feval (self.mex_interface_fcn, 'X', self.objectHandle, n)';
+            
         end
         
         function acc = XPP (self, n)
@@ -1028,12 +1034,13 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %    node
             %
             
-            if ~self.useAccelerations
-                error ('MBCNodal:xpp:nouseaccelerations', ...
-                    'You have set UseAccelerations to false, acceleration data is not available.')
+            if self.useAccelerations
+                acc = feval (self.mex_interface_fcn, 'XPP', self.objectHandle, n)';
             else
-                acc = self.cppcall ('XPP', n)';
+                error ('MBCNodal:xpp:nouseaccelerations', ...
+                    'You have set UseAccelerations to false, acceleration data is not available.');
             end
+            
         end
         
         function theta = Theta (self, n)
@@ -1053,7 +1060,8 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %  pos - (3 x 1) vector containing the xyz angular position of
             %    the node
             %
-            theta = self.cppcall ('Theta', n)';
+            theta = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, n)';
+            
         end
         
         function theta = Euler123 (self, n)
@@ -1070,10 +1078,12 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             % Output
             %
-            %  pos - (3 x 1) vector containing the xyz angular position of
+            %  theta - (3 x 1) vector containing the xyz angular position of
             %    the node
             %
-            theta = self.cppcall ('Euler123', n)';
+            
+            theta = feval (self.mex_interface_fcn, 'Euler123', self.objectHandle, n)';
+            
         end
         
         function w = Omega (self, n)
@@ -1093,7 +1103,9 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %  pos - (3 x 1) vector containing the xyz angular velocity of
             %    the node
             %
-            w = self.cppcall ('Omega', n)';
+            
+            w = feval (self.mex_interface_fcn, 'Omega', self.objectHandle, n)';
+            
         end
         
         function w = OmegaP (self, n)
@@ -1113,12 +1125,14 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %  pos - (3 x 1) vector containing the xyz anangular
             %    acceleration of the node
             %
-            if ~self.useAccelerations
+            
+            if self.useAccelerations
+                w = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, n)';
+            else
                 error ('MBCNodal:omegap:nouseaccelerations', ...
                     'You have set UseAccelerations to false, angular acceleration data is not available.');
-            else
-                w = self.cppcall ('OmegaP', n)';
             end
+            
         end
         
         function F (self, forces)
@@ -1138,11 +1152,13 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %  None
             %
             
-            self.cppcall ('F', forces);
+%             self.cppcall ('F', forces);
+            feval (self.mex_interface_fcn, 'F', self.objectHandle, forces);
             self.needForces = false;
             
             if ~self.useMoments
-                self.cppcall ('M', zeros (size (forces)));
+%                 self.cppcall ('M', zeros (size (forces)));
+                feval (self.mex_interface_fcn, 'M', self.objectHandle, zeros (size (forces)));
                 self.needMoments = false;
             end
         end
@@ -1165,7 +1181,8 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             
             if self.useMoments
-                self.cppcall ('M', moments );
+%                 self.cppcall ('M', moments );
+                feval (self.mex_interface_fcn, 'M', self.objectHandle, moments);
                 self.needMoments = false;
             else
                 warning ('MBCNodal:nousemoments', ...

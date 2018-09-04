@@ -49,7 +49,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
 %   frame of the node to a position in the global frame
 %
     
-    properties (GetAccess = public, SetAccess = public)
+    properties (GetAccess = public, SetAccess = protected)
         
         absoluteOrientation; % Absolute orientation of the node in the global frame
         absoluteAngularVelocity; % Absolute angular velocity of the node in the global frame
@@ -276,25 +276,47 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             str = self.addOutputLine (str, ';', 1, false, 'end structural node');
             
         end
+        
+        function set3x3OrientMatNoChecking (self, neworientation)
+            
+            self.absoluteOrientation.orientationMatrix = neworientation;
+            
+        end
+        
+        function setOrientMatObjNoChecking (self, neworientation)
+            
+            self.absoluteOrientation.orientationMatrix = neworientation.orientationMatrix;
+            
+        end
     
 
-        function set.absoluteOrientation (self, neworientation)
+        function setAbsoluteOrientation (self, neworientation)
             % set the absolute orientation of the structural node
             
             self.checkOrientationMatrix (neworientation, true);
             
-            if ~isa (neworientation, 'mbdyn.pre.orientmat')
-                neworientation = mbdyn.pre.orientmat ('orientation', neworientation);
+            if isa (neworientation, 'mbdyn.pre.orientmat')
+                
+                self.absoluteOrientation = neworientation;
+                
+            else
+                % just update the existing orientmat
+                self.absoluteOrientation.orientationMatrix = neworientation;
             end
-            
-            self.absoluteOrientation = neworientation;
             
         end
         
-        function set.absoluteAngularVelocity (self, newomega)
+        function setAbsoluteAngularVelocity (self, newomega)
             % set the absolute orientation of the structural node
             
             self.check3ElementNumericVector (newomega, true, 'absoluteAngularVelocity');
+            
+            self.absoluteAngularVelocity = newomega;
+            
+        end
+        
+        function setAbsoluteAngularVelocityNoChecking (self, newomega)
+            % set the absolute orientation of the structural node
             
             self.absoluteAngularVelocity = newomega;
             

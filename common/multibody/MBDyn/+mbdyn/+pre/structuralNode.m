@@ -322,25 +322,25 @@ classdef structuralNode < mbdyn.pre.node
     
     % getters/setters
     methods
-        function set.absolutePosition (self, newpos)
-            % set the absolute position of the structural node
-            
-            % report name as absolutePosition as this is what user will see
-            self.checkCartesianVector (newpos, true, 'absolutePosition');
-            
-            self.absolutePosition = newpos;
-            
-        end
-        
-        function set.absoluteVelocity (self, newvel)
-            % set the absolute position of the structural node
-            
-            % report name as absoluteVelocity as this is what user will see
-            self.checkCartesianVector (newvel, true, 'absoluteVelocity');
-            
-            self.absoluteVelocity = newvel;
-            
-        end
+%         function set.absolutePosition (self, newpos)
+%             % set the absolute position of the structural node
+%             
+%             % report name as absolutePosition as this is what user will see
+%             self.checkCartesianVector (newpos, true, 'absolutePosition');
+%             
+%             self.absolutePosition = newpos;
+%             
+%         ended
+%         
+%         function set.absoluteVelocity (self, newvel)
+%             % set the absolute position of the structural node
+%             
+%             % report name as absoluteVelocity as this is what user will see
+%             self.checkCartesianVector (newvel, true, 'absoluteVelocity');
+%             
+%             self.absoluteVelocity = newvel;
+%             
+%         end
     end
     
     methods (Access = protected)
