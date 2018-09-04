@@ -341,6 +341,7 @@ classdef logger < handle
             options.PreallocateStorage = [];
             options.IndependentVariable = '';
             options.Windowed = false;
+            options.Legends = {};
             
             options = parse_pv_pairs (options, varargin);
             
@@ -462,7 +463,8 @@ classdef logger < handle
                                            'LoggedVariableNumber', numel(obj.info) + 1, ...
                                            'LoggedSize', loggedvarsize, ...
                                            'Windowed', options.Windowed, ...
-                                           'AxisLabel', options.AxisLabel );
+                                           'AxisLabel', options.AxisLabel, ...
+                                           'Legends', {options.Legends} );
 
             end
             
@@ -890,6 +892,11 @@ classdef logger < handle
             options = parse_pv_pairs (options, varargin);
             
             if ~ischar(varname), obj.mesgfunc([varname 'must be a string specifying field that are already added to the logger object.']); return; end
+            
+            if ~isfield (obj.data, varname)
+                obj.mesgfunc(['Variable %s does not appear to exist.' varname]);
+            end
+            
             if ~isnumeric(obj.data.(varname)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' varname]); return; end
 
             indepvar = obj.info.(varname).IndependentVariable;
@@ -1115,7 +1122,11 @@ classdef logger < handle
                                                    options.PlotFcnArgs{:} ) ...
                                 ];
                             
-                            legstrs = [ legstrs, {sprintf('Series (%d,%d)', dataind1, dataind2)}];
+                            if isempty (obj.info.(f2).Legends)
+                                legstrs = [ legstrs, {sprintf('Series (%d,%d)', dataind1, dataind2)}];
+                            else
+                                legstrs = [ legstrs, obj.info.(f2).Legends(dataind1, dataind2)];
+                            end
                         
                         end
                         
