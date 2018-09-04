@@ -258,12 +258,12 @@ public:
 //     void GetStatus (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //     {
 //         std::vector<int> nallowed;
-// 
+//
 //         nallowed.push_back (0);
 //         int nargin = mxnarginchk (nrhs, nallowed, 2);
-// 
+//
 //         int status = mbc->GetStatus ();
-// 
+//
 //         mxSetLHS (status, 1, nlhs, plhs);
 //     }
 
@@ -344,41 +344,158 @@ public:
     void X (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         std::vector<int> nallowed;
+        std::vector<mwSize> out_index;
+        std::vector<mwSize> in_index;
 
-        // one arg, the node number
+        // one arg, the node number(s)
         nallowed.push_back (1);
 
         int nargin = mxnarginchk (nrhs, nallowed, 2);
 
-        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
 
-        std::vector<double> X;
+        mwSize nrows = nodenums.getRows ();
+        mwSize ncols = nodenums.getColumns ();
 
-        X.push_back (mbc->X(n, 1));
-        X.push_back (mbc->X(n, 2));
-        X.push_back (mbc->X(n, 3));
+        if ( (ncols != 1))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:X:badinputsize",
+         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+                    nrows, ncols );
+        }
 
-        mxSetLHS (X, 1, nlhs, plhs);
+        unsigned nnodes = mbc->GetNodes();
+
+        // create the output matrix
+        const mwSize dims[] = {3, nrows};
+        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+
+        // wrap it for easy indexing
+        mxNumericArrayWrapper Xmat ( plhs[0] );
+
+        // initialise the matrix index vectors
+        in_index.clear ();
+        in_index.push_back (0);
+        in_index.push_back (0);
+        in_index[1] = (mwSize)0; // always want col 1 of in index
+
+        out_index.clear ();
+        out_index.push_back (0);
+        out_index.push_back (0);
+
+        for (unsigned n = 1; n <= nrows; n++)
+        {
+            in_index[0] = (mwSize)n-1;
+
+            int nodenum = int(nodenums.getInt32Value (in_index));
+
+            if ( (nodenum > nnodes))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:X:badnodenum",
+             "Input node num %d is greater than the number of available nodes (%d).",
+                        n, nnodes );
+            }
+
+            if ( (nodenum < 1))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:X:badnodenum",
+             "Input node num %d is less than 1 (it is %d).",
+                        n, nodenum );
+            }
+
+            out_index[0] = (mwSize)0;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 1));
+
+            out_index[0] = (mwSize)1;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 2));
+
+            out_index[0] = (mwSize)2;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 3));
+
+        }
+
     }
 
     void XP (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         std::vector<int> nallowed;
+        std::vector<mwSize> out_index;
+        std::vector<mwSize> in_index;
 
-        // one arg, the node number
+        // one arg, the node number(s)
         nallowed.push_back (1);
 
         int nargin = mxnarginchk (nrhs, nallowed, 2);
 
-        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
 
-        std::vector<double> XP;
+        mwSize nrows = nodenums.getRows ();
+        mwSize ncols = nodenums.getColumns ();
 
-        XP.push_back (mbc->XP(n, 1));
-        XP.push_back (mbc->XP(n, 2));
-        XP.push_back (mbc->XP(n, 3));
+        if ( (ncols != 1))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:XP:badinputsize",
+         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+                    nrows, ncols );
+        }
 
-        mxSetLHS (XP, 1, nlhs, plhs);
+        unsigned nnodes = mbc->GetNodes();
+
+        // create the output matrix
+        const mwSize dims[] = {3, nrows};
+        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+
+        // wrap it for easy indexing
+        mxNumericArrayWrapper Xmat ( plhs[0] );
+
+        // initialise the matrix index vectors
+        in_index.clear ();
+        in_index.push_back (0);
+        in_index.push_back (0);
+        in_index[1] = (mwSize)0; // always want col 1 of in index
+
+        out_index.clear ();
+        out_index.push_back (0);
+        out_index.push_back (0);
+
+        for (unsigned n = 1; n <= nrows; n++)
+        {
+            in_index[0] = (mwSize)n-1;
+
+            int nodenum = int(nodenums.getInt32Value (in_index));
+
+            if ( (nodenum > nnodes))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:XP:badnodenum",
+             "Input node num %d is greater than the number of available nodes (%d).",
+                        n, nnodes );
+            }
+
+            if ( (nodenum < 1))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:XP:badnodenum",
+             "Input node num %d is less than 1 (it is %d).",
+                        n, nodenum );
+            }
+
+            out_index[0] = (mwSize)0;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->XP (nodenum, 1));
+
+            out_index[0] = (mwSize)1;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->XP (nodenum, 2));
+
+            out_index[0] = (mwSize)2;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->XP (nodenum, 3));
+
+        }
     }
 
     void XPP (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -390,21 +507,79 @@ public:
         }
 
         std::vector<int> nallowed;
+        std::vector<mwSize> out_index;
+        std::vector<mwSize> in_index;
 
-        // one arg, the node number
+        // one arg, the node number(s)
         nallowed.push_back (1);
 
         int nargin = mxnarginchk (nrhs, nallowed, 2);
 
-        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
 
-        std::vector<double> XPP;
+        mwSize nrows = nodenums.getRows ();
+        mwSize ncols = nodenums.getColumns ();
 
-        XPP.push_back (mbc->XPP(n, 1));
-        XPP.push_back (mbc->XPP(n, 2));
-        XPP.push_back (mbc->XPP(n, 3));
+        if ( (ncols != 1))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:XPP:badinputsize",
+         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+                    nrows, ncols );
+        }
 
-        mxSetLHS (XPP, 1, nlhs, plhs);
+        unsigned nnodes = mbc->GetNodes();
+
+        // create the output matrix
+        const mwSize dims[] = {3, nrows};
+        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+
+        // wrap it for easy indexing
+        mxNumericArrayWrapper Xmat ( plhs[0] );
+
+        // initialise the matrix index vectors
+        in_index.clear ();
+        in_index.push_back (0);
+        in_index.push_back (0);
+        in_index[1] = (mwSize)0; // always want col 1 of in index
+
+        out_index.clear ();
+        out_index.push_back (0);
+        out_index.push_back (0);
+
+        for (unsigned n = 1; n <= nrows; n++)
+        {
+            in_index[0] = (mwSize)n-1;
+
+            int nodenum = int(nodenums.getInt32Value (in_index));
+
+            if ( (nodenum > nnodes))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:XPP:badnodenum",
+             "Input node num %d is greater than the number of available nodes (%d).",
+                        n, nnodes );
+            }
+
+            if ( (nodenum < 1))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:XPP:badnodenum",
+             "Input node num %d is less than 1 (it is %d).",
+                        n, nodenum );
+            }
+
+            out_index[0] = (mwSize)0;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->XPP (nodenum, 1));
+
+            out_index[0] = (mwSize)1;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->XPP (nodenum, 2));
+
+            out_index[0] = (mwSize)2;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->XPP (nodenum, 3));
+
+        }
     }
 
     void Theta (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -419,23 +594,81 @@ public:
         }
 
         std::vector<int> nallowed;
+        std::vector<mwSize> out_index;
+        std::vector<mwSize> in_index;
 
-        // one arg, the node number
+        // one arg, the node number(s)
         nallowed.push_back (1);
 
         int nargin = mxnarginchk (nrhs, nallowed, 2);
 
-        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
 
-        std::vector<double> Theta;
+        mwSize nrows = nodenums.getRows ();
+        mwSize ncols = nodenums.getColumns ();
 
-        Theta.push_back (mbc->Theta(n, 1));
-        Theta.push_back (mbc->Theta(n, 2));
-        Theta.push_back (mbc->Theta(n, 3));
+        if ( (ncols != 1))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:Theta:badinputsize",
+         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+                    nrows, ncols );
+        }
 
-        mxSetLHS (Theta, 1, nlhs, plhs);
+        unsigned nnodes = mbc->GetNodes();
+
+        // create the output matrix
+        const mwSize dims[] = {3, nrows};
+        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+
+        // wrap it for easy indexing
+        mxNumericArrayWrapper Xmat ( plhs[0] );
+
+        // initialise the matrix index vectors
+        in_index.clear ();
+        in_index.push_back (0);
+        in_index.push_back (0);
+        in_index[1] = (mwSize)0; // always want col 1 of in index
+
+        out_index.clear ();
+        out_index.push_back (0);
+        out_index.push_back (0);
+
+        for (unsigned n = 1; n <= nrows; n++)
+        {
+            in_index[0] = (mwSize)n-1;
+
+            int nodenum = int(nodenums.getInt32Value (in_index));
+
+            if ( (nodenum > nnodes))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:Theta:badnodenum",
+             "Input node num %d is greater than the number of available nodes (%d).",
+                        n, nnodes );
+            }
+
+            if ( (nodenum < 1))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:Theta:badnodenum",
+             "Input node num %d is less than 1 (it is %d).",
+                        n, nodenum );
+            }
+
+            out_index[0] = (mwSize)0;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Theta (nodenum, 1));
+
+            out_index[0] = (mwSize)1;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Theta (nodenum, 2));
+
+            out_index[0] = (mwSize)2;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Theta (nodenum, 3));
+
+        }
     }
-    
+
     void Eul (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
 
@@ -448,41 +681,158 @@ public:
         }
 
         std::vector<int> nallowed;
+        std::vector<mwSize> out_index;
+        std::vector<mwSize> in_index;
 
-        // one arg, the node number
+        // one arg, the node number(s)
         nallowed.push_back (1);
 
         int nargin = mxnarginchk (nrhs, nallowed, 2);
 
-        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
 
-        std::vector<double> Euler123;
+        mwSize nrows = nodenums.getRows ();
+        mwSize ncols = nodenums.getColumns ();
 
-        Euler123.push_back (mbc->Euler123(n, 1));
-        Euler123.push_back (mbc->Euler123(n, 2));
-        Euler123.push_back (mbc->Euler123(n, 3));
+        if ( (ncols != 1))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:Euler123:badinputsize",
+         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+                    nrows, ncols );
+        }
 
-        mxSetLHS (Euler123, 1, nlhs, plhs);
+        unsigned nnodes = mbc->GetNodes();
+
+        // create the output matrix
+        const mwSize dims[] = {3, nrows};
+        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+
+        // wrap it for easy indexing
+        mxNumericArrayWrapper Xmat ( plhs[0] );
+
+        // initialise the matrix index vectors
+        in_index.clear ();
+        in_index.push_back (0);
+        in_index.push_back (0);
+        in_index[1] = (mwSize)0; // always want col 1 of in index
+
+        out_index.clear ();
+        out_index.push_back (0);
+        out_index.push_back (0);
+
+        for (unsigned n = 1; n <= nrows; n++)
+        {
+            in_index[0] = (mwSize)n-1;
+
+            int nodenum = int(nodenums.getInt32Value (in_index));
+
+            if ( (nodenum > nnodes))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:Euler123:badnodenum",
+             "Input node num %d is greater than the number of available nodes (%d).",
+                        n, nnodes );
+            }
+
+            if ( (nodenum < 1))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:Euler123:badnodenum",
+             "Input node num %d is less than 1 (it is %d).",
+                        n, nodenum );
+            }
+
+            out_index[0] = (mwSize)0;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 1));
+
+            out_index[0] = (mwSize)1;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 2));
+
+            out_index[0] = (mwSize)2;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 3));
+
+        }
+
     }
 
     void Omega (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         std::vector<int> nallowed;
+        std::vector<mwSize> out_index;
+        std::vector<mwSize> in_index;
 
-        // one arg, the node number
+        // one arg, the node number(s)
         nallowed.push_back (1);
 
         int nargin = mxnarginchk (nrhs, nallowed, 2);
 
-        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
 
-        std::vector<double> Omega;
+        mwSize nrows = nodenums.getRows ();
+        mwSize ncols = nodenums.getColumns ();
 
-        Omega.push_back (mbc->Omega(n, 1));
-        Omega.push_back (mbc->Omega(n, 2));
-        Omega.push_back (mbc->Omega(n, 3));
+        if ( (ncols != 1))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:Omega:badinputsize",
+         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+                    nrows, ncols );
+        }
 
-        mxSetLHS (Omega, 1, nlhs, plhs);
+        unsigned nnodes = mbc->GetNodes();
+
+        // create the output matrix
+        const mwSize dims[] = {3, nrows};
+        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+
+        // wrap it for easy indexing
+        mxNumericArrayWrapper Xmat ( plhs[0] );
+
+        // initialise the matrix index vectors
+        in_index.clear ();
+        in_index.push_back (0);
+        in_index.push_back (0);
+        in_index[1] = (mwSize)0; // always want col 1 of in index
+
+        out_index.clear ();
+        out_index.push_back (0);
+        out_index.push_back (0);
+
+        for (unsigned n = 1; n <= nrows; n++)
+        {
+            in_index[0] = (mwSize)n-1;
+
+            int nodenum = int(nodenums.getInt32Value (in_index));
+
+            if ( (nodenum > nnodes))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:Omega:badnodenum",
+             "Input node num %d is greater than the number of available nodes (%d).",
+                        n, nnodes );
+            }
+
+            if ( (nodenum < 1))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:Omega:badnodenum",
+             "Input node num %d is less than 1 (it is %d).",
+                        n, nodenum );
+            }
+
+            out_index[0] = (mwSize)0;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Omega (nodenum, 1));
+
+            out_index[0] = (mwSize)1;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Omega (nodenum, 2));
+
+            out_index[0] = (mwSize)2;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->Omega (nodenum, 3));
+
+        }
     }
 
     void OmegaP (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -495,21 +845,79 @@ public:
         }
 
         std::vector<int> nallowed;
+        std::vector<mwSize> out_index;
+        std::vector<mwSize> in_index;
 
-        // one arg, the node number
+        // one arg, the node number(s)
         nallowed.push_back (1);
 
         int nargin = mxnarginchk (nrhs, nallowed, 2);
 
-        int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
 
-        std::vector<double> OmegaP;
+        mwSize nrows = nodenums.getRows ();
+        mwSize ncols = nodenums.getColumns ();
 
-        OmegaP.push_back (mbc->OmegaP(n, 1));
-        OmegaP.push_back (mbc->OmegaP(n, 2));
-        OmegaP.push_back (mbc->OmegaP(n, 3));
+        if ( (ncols != 1))
+        {
+            mexErrMsgIdAndTxt("MBCNodal:OmegaP:badinputsize",
+         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+                    nrows, ncols );
+        }
 
-        mxSetLHS (OmegaP, 1, nlhs, plhs);
+        unsigned nnodes = mbc->GetNodes();
+
+        // create the output matrix
+        const mwSize dims[] = {3, nrows};
+        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+
+        // wrap it for easy indexing
+        mxNumericArrayWrapper Xmat ( plhs[0] );
+
+        // initialise the matrix index vectors
+        in_index.clear ();
+        in_index.push_back (0);
+        in_index.push_back (0);
+        in_index[1] = (mwSize)0; // always want col 1 of in index
+
+        out_index.clear ();
+        out_index.push_back (0);
+        out_index.push_back (0);
+
+        for (unsigned n = 1; n <= nrows; n++)
+        {
+            in_index[0] = (mwSize)n-1;
+
+            int nodenum = int(nodenums.getInt32Value (in_index));
+
+            if ( (nodenum > nnodes))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:OmegaP:badnodenum",
+             "Input node num %d is greater than the number of available nodes (%d).",
+                        n, nnodes );
+            }
+
+            if ( (nodenum < 1))
+            {
+                mexErrMsgIdAndTxt("MBCNodal:OmegaP:badnodenum",
+             "Input node num %d is less than 1 (it is %d).",
+                        n, nodenum );
+            }
+
+            out_index[0] = (mwSize)0;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 1));
+
+            out_index[0] = (mwSize)1;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 2));
+
+            out_index[0] = (mwSize)2;
+            out_index[1] = (mwSize)(n-1);
+            Xmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 3));
+
+        }
     }
 
 
@@ -1010,6 +1418,86 @@ private:
     bool verboseflag;
     int timeout;
 	MBCBase::Rot rot;
+//
+//    void Xreturn3ElVal (void (MBCNodal::*fpntr)(const int, const int), int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+//    {
+//        std::vector<int> nallowed;
+//        std::vector<mwSize> out_index;
+//        std::vector<mwSize> in_index;
+//
+//        // one arg, the node number(s)
+//        nallowed.push_back (1);
+//
+//        int nargin = mxnarginchk (nrhs, nallowed, 2);
+//
+//        //int n = int (mxnthargscalar (nrhs, prhs, 1, 2));
+//        mxNumericArrayWrapper nodenums = mxnthargmatrix (nrhs, prhs, 1, 2);
+//
+//        mwSize nrows = nodenums.getRows ();
+//        mwSize ncols = nodenums.getColumns ();
+//
+//        if ( (ncols != 1))
+//        {
+//            mexErrMsgIdAndTxt("MBCNodal:M:badinputsize",
+//         "Input node nums should be a column vector of node numbers, but is actually (%d x %d).",
+//                    nrows, ncols );
+//        }
+//
+//        unsigned nnodes = mbc->GetNodes();
+//
+//        // create the output matrix
+//        const mwSize dims[] = {3, nrows};
+//        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
+//
+//        // wrap it for easy indexing
+//        mxNumericArrayWrapper Xmat ( plhs[0] );
+//
+//        // initialise the matrix index vectors
+//        in_index.clear ();
+//        in_index.push_back (0);
+//        in_index.push_back (0);
+//        in_index[1] = (mwSize)0; // always want col 1 of in index
+//
+//        out_index.clear ();
+//        out_index.push_back (0);
+//        out_index.push_back (0);
+//
+//        for (unsigned n = 1; n <= nrows; n++)
+//        {
+//            in_index[0] = (mwSize)n-1;
+//
+//            int nodenum = int(nodenums.getInt32Value (in_index));
+//
+//            if ( (nodenum > nnodes))
+//            {
+//                mexErrMsgIdAndTxt("MBCNodal:X:badnodenum",
+//             "Input node num %d is greater than the number of available nodes (%d).",
+//                        n, nnodes );
+//            }
+//
+//            if ( (nodenum < 1))
+//            {
+//                mexErrMsgIdAndTxt("MBCNodal:X:badnodenum",
+//             "Input node num %d is less than 1 (it is %d).",
+//                        n, nodenum );
+//            }
+//
+//            out_index[0] = (mwSize)0;
+//            out_index[1] = (mwSize)(n-1);
+//            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 1));
+//
+//            out_index[0] = (mwSize)1;
+//            out_index[1] = (mwSize)(n-1);
+//            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 2));
+//
+//            out_index[0] = (mwSize)2;
+//            out_index[1] = (mwSize)(n-1);
+//            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 3));
+//
+//        }
+//
+//        //mxSetLHS (Xmat, 1, nlhs, plhs);
+//    }
 
 };
 

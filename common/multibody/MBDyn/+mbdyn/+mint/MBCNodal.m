@@ -760,16 +760,16 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            pos = nan * ones (3, numel(n));
+            pos = feval (self.mex_interface_fcn, 'X', self.objectHandle, int32(n(:)));
             
-            for ind = 1:numel (n)
+            if self.setNodePositions
                 
-               pos(1:3,ind) = feval (self.mex_interface_fcn, 'X', self.objectHandle, n(ind))';
-               
-               if self.setNodePositions
+                for ind = 1:numel (n)
+                    %                pos(1:3,ind) = feval (self.mex_interface_fcn, 'X', self.objectHandle, int32(n(ind)))';
+                    
                     self.structuralNodes{n(ind)}.absolutePosition = pos(1:3,ind);
-               end
-               
+                end
+                
             end
             
         end
@@ -801,16 +801,13 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            vel = nan * ones (3, numel(n));
+            vel = feval (self.mex_interface_fcn, 'XP', self.objectHandle, int32(n(:)));
             
-            for ind = 1:numel (n)
-                
-               vel(1:3,ind) = feval (self.mex_interface_fcn, 'XP', self.objectHandle, n(ind))';
-               
-               if self.setNodePositions
+            if self.setNodePositions
+                for ind = 1:numel (n)
                     self.structuralNodes{n(ind)}.absoluteVelocity = vel (1:3,ind);
-               end
-               
+                end
+                
             end
             
         end
@@ -842,13 +839,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            accel = nan * ones (3, numel(n));
-            
-            for ind = 1:numel (n)
-                
-               accel(1:3,ind) = feval (self.mex_interface_fcn, 'XPP', self.objectHandle, n(ind))';
-               
-            end
+            accel = feval (self.mex_interface_fcn, 'XPP', self.objectHandle, int32(n(:)));           
             
         end
         
@@ -879,19 +870,17 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            theta = nan * ones (3, numel(n));
+            theta = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, int32(n(:)));
             
-            for ind = 1:numel (n)
+            if self.setNodePositions
                 
-               theta(1:3,ind) = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, n(ind))';
-               
-               if self.setNodePositions
-                   
+                for ind = 1:numel (n)
+                    
                     om = mbdyn.pre.orientmat (self.nodeOrientiationType, theta(1:3,ind));
-                   
+                    
                     self.structuralNodes{n(ind)}.absoluteOrientation = om.orientationMatrix;
-               end
-               
+                end
+                
             end
             
         end
@@ -923,16 +912,15 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            omega = nan * ones (3, numel(n));
-            
-            for ind = 1:numel (n)
+            omega = feval (self.mex_interface_fcn, 'Omega', self.objectHandle, int32(n(:)));
+           
+            if self.setNodePositions
                 
-               omega (1:3,ind) = feval (self.mex_interface_fcn, 'Omega', self.objectHandle, n(ind))';
-               
-               if self.setNodePositions
+                for ind = 1:numel (n)
+                    
                     setAbsoluteAngularVelocityNoChecking (self.structuralNodes{n(ind)}, omega (1:3,ind));
-               end
-               
+                end
+                
             end
             
         end
@@ -964,13 +952,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 n = 1:self.NNodes;
             end
             
-            accel = nan * ones (3, numel(n));
-            
-            for ind = 1:numel (n)
-                
-               accel (1:3,ind) = feval (self.mex_interface_fcn, 'OmegaP', self.objectHandle, n(ind))';
-               
-            end
+            accel = feval (self.mex_interface_fcn, 'OmegaP', self.objectHandle, int32(n(:)));
             
         end
         
