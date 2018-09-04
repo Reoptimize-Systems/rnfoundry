@@ -110,7 +110,7 @@ hsys.timeDomainSimSetup ();
 % multibody system with other joints, constraints and bodies
 [hydro_mbnodes, hydro_mbbodies, hydro_mbelements] = hsys.makeMBDynComponents ();
 
-problem_options.ResidualTol = 1e-5;
+problem_options.ResidualTol = 1e-6;
 problem_options.MaxIterations = 200;
 problem_options.Output = {}; % 'iterations', 'solution', 'jacobian matrix', 'matrix condition number', 'solver condition number'
 % problem_options.NonLinearSolver = mbdyn.pre.newtonRaphsonSolver ();
@@ -151,35 +151,37 @@ pto = wsim.linearPowerTakeOff ( hydro_mbnodes{2}, hydro_mbnodes{1}, 3, forcefcn 
 
 lgsett = wsim.loggingSettings ();
 
-lssett.positions = true;
-lssett.velocities = true;
-lssett.accelerations = true;
-lssett.nodeForces = true;
-lssett.nodeForcesUncorrected = true;
-lssett.forceHydro = true;
-lssett.forceExcitation = true;
-lssett.forceExcitationRamp = true;
-lssett.forceExcitationLin = true;
-lssett.forceExcitationNonLin = true;
-lssett.forceRadiationDamping = true;
-lssett.forceRestoring = true;
-lssett.forceMorrison = true;
-lssett.forceViscousDamping = true;
+lgsett.positions = true;
+lgsett.velocities = true;
+lgsett.accelerations = true;
+lgsett.nodeForces = true;
+lgsett.nodeForcesUncorrected = true;
+lgsett.forceHydro = true;
+lgsett.forceExcitation = true;
+lgsett.forceExcitationRamp = true;
+lgsett.forceExcitationLin = true;
+lgsett.forceExcitationNonLin = true;
+lgsett.forceRadiationDamping = true;
+lgsett.forceRestoring = true;
+lgsett.forceMorrison = true;
+lgsett.forceViscousDamping = true;
 % lssett.ForceAddedMassUncorrected = false;
-lssett.momentAddedMass = true;
-lssett.nodeMoments = true;
-lssett.nodeMomentsUncorrected = true;
-lssett.momentHydro = true;
-lssett.momentExcitation = true;
-lssett.momentExcitationRamp = true;
-lssett.momentExcitationLin = true;
-lssett.momentExcitationNonLin = true;
-lssett.momentRadiationDamping = true;
-lssett.momentRestoring = true;
-lssett.momentMorrison = true;
-lssett.momentViscousDamping = true;
+lgsett.momentAddedMass = true;
+lgsett.nodeMoments = true;
+lgsett.nodeMomentsUncorrected = true;
+lgsett.momentHydro = true;
+lgsett.momentExcitation = true;
+lgsett.momentExcitationRamp = true;
+lgsett.momentExcitationLin = true;
+lgsett.momentExcitationNonLin = true;
+lgsett.momentRadiationDamping = true;
+lgsett.momentRestoring = true;
+lgsett.momentMorrison = true;
+lgsett.momentViscousDamping = true;
 % lssett.momentAddedMassUncorrected = false;
-lssett.momentAddedMass = true;
+lgsett.momentAddedMass = true;
+
+lgsett.forceIterations = true;
         
 % create the wecSim object
 wsobj = wsim.wecSim ( hsys, mbsys, ...
