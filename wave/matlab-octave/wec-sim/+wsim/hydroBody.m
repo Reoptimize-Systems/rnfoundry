@@ -272,8 +272,14 @@ classdef hydroBody < handle
         % bodyToBodyInteraction - true/false flag indicating if body-to-body interaction is included
         bodyToBodyInteraction;
         
-        % bodyToBodyInteraction - true/false flag indicating if morrison element viscous drag is included
+        % doMorrisonElementViscousDrag - true/false flag indicating if morrison element viscous drag is included
         doMorrisonElementViscousDrag;
+        
+        % doViscousDamping - true/false flag indicating if viscous damping is included
+        doViscousDamping;
+        
+        % doLinearDamping - true/false flag indicating if linear damping is included
+        doLinearDamping;
         
         % caseDirectory - Simulation case directory containing the hydroData and geometry subdirectories
         caseDirectory;
@@ -295,6 +301,8 @@ classdef hydroBody < handle
         radiationMethodNum;
         hydroRestoringForceMethodNum;
         freeSurfaceMethodNum;
+        diagViscDrag;
+        viscDragDiagVals;
 
         % properties used to calculate nonFKForce at reduced sample time
         oldForce    = [];
@@ -663,6 +671,21 @@ classdef hydroBody < handle
                 obj.hydroForce.visDrag = obj.viscDrag.Drag;                
             else
                 obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
+            end
+            
+            if all (obj.hydroForce.visDrag(:) == 0)
+                obj.doViscousDamping = false;
+            end
+            
+            if isdiag (obj.hydroForce.visDrag)
+                obj.diagViscDrag = true;
+                obj.viscDragDiagVals = diag (obj.hydroForce.visDrag);
+            else
+                obj.diagViscDrag = false;
+            end
+            
+            if all (obj.linearDamping == 0)
+                obj.doLinearDamping = false;
             end
             
             obj.hydroForce.linearDamping = diag (obj.linearDamping);
@@ -1327,7 +1350,21 @@ classdef hydroBody < handle
             obj.waves = waves;
             obj.simu = simu;
             obj.bodyNumber = bodynum;
-
+            
+            % Linear Damping
+            if obj.simu.linearDamping == 0
+                obj.doLinearDamping = false;
+            elseif obj.simu.linearDamping == 1
+                obj.doLinearDamping = true;
+            end
+            
+            % Viscous Damping
+            if obj.simu.viscousDamping == 0
+                obj.doViscousDamping = false;
+            elseif obj.simu.viscousDamping == 1
+                obj.doViscousDamping = true;
+            end
+                
             % Morrison Element
             if obj.simu.morrisonElement == 0
                 obj.doMorrisonElementViscousDrag = false;
@@ -1610,8 +1647,6 @@ classdef hydroBody < handle
             %
             %  accel - (6 x n) acceleration of all bodies in system
             %
-            %  elv - wave elevation
-            %
             % Output
             %
             %  forces - (6 x 1) forces and moments acting on the body
@@ -1647,30 +1682,39 @@ classdef hydroBody < handle
             %
             
 
-            
             % always do linear excitation forces
             breakdown.F_ExcitLin = linearExcitationForces (obj, t);
 
-            % always do viscous damping
-            breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
+            if obj.doViscousDamping
+                breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
+            else
+                breakdown.F_ViscousDamping = zeros (6, 1);
+            end
             
             % always do linear damping
-            breakdown.F_LinearDamping = linearDampingForce (obj, vel(:,obj.bodyNumber));
+            if obj.doLinearDamping
+                breakdown.F_LinearDamping = linearDampingForce (obj, vel(:,obj.bodyNumber));
+            else
+                breakdown.F_LinearDamping = zeros (6, 1);
+            end
 
             % always do radiation forces
             [breakdown.F_AddedMass, breakdown.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
-
-            % calculate the wave elevation
-            elv = waveElevation(obj, pos, t);
             
-            % hydrostatic restoring forces
-            [breakdown.F_Restoring, breakdown.BodyHSPressure ] = hydrostaticForces (obj, t, pos, elv);
+            % always do hydrostatic restoring forces
+            [breakdown.F_Restoring, breakdown.BodyHSPressure, waveElv ] = hydrostaticForces (obj, t, pos);
 
             if obj.doNonLinearFKExcitation
+                
+                if isempty (waveElv)
+                    % calculate the wave elevation if it has not already
+                    % been done by the hydrostaticForces method
+                    waveElv = waveElevation(obj, pos, t);
+                end
 
                 [ breakdown.F_ExcitNonLin, ...
                   breakdown.WaveNonLinearPressure, ...
-                  breakdown.WaveLinearPressure ] = nonlinearExcitationForces (obj, t, pos, elv);
+                  breakdown.WaveLinearPressure ] = nonlinearExcitationForces (obj, t, pos, waveElv);
 
             else
                 breakdown.F_ExcitNonLin = zeros (6, 1);
@@ -1681,7 +1725,6 @@ classdef hydroBody < handle
                 breakdown.F_MorrisonElement = morrisonElementForce ( obj, t, pos, ...
                                                                      vel(:,obj.bodyNumber), ...
                                                                      accel(:,obj.bodyNumber) );
-
             else
 
                 breakdown.F_MorrisonElement = zeros (6, 1);
@@ -1705,13 +1748,20 @@ classdef hydroBody < handle
 
         function forces = linearDampingForce (obj, vel)
             
-            forces = obj.hydroForce.linearDamping * vel;
+%             forces = obj.hydroForce.linearDamping * vel;
+            % linear damping is always a diagonal matrix, so just multiply
+            % the values along the diagonal
+            forces = obj.linearDamping(:) .* vel;
             
         end
         
         function forces = viscousDamping (obj, vel)
 
-            forces = obj.hydroForce.visDrag * ( vel .* abs (vel) );
+            if obj.diagViscDrag
+                forces = obj.viscDragDiagVals(:) .* ( vel .* abs (vel) );
+            else
+                forces = obj.hydroForce.visDrag * ( vel .* abs (vel) );
+            end
 
         end
 
@@ -1765,7 +1815,7 @@ classdef hydroBody < handle
                     forces = obj.waves.A(1,:) .* ( ...
                                 cos (wt) .* obj.hydroForce.fExt.re(1,:) ...
                                 - sin (wt) .* obj.hydroForce.fExt.im(1,:) ...
-                                             ).';
+                                                 ).';
 
                 case 2
                     % irregular wave
@@ -1949,10 +1999,12 @@ classdef hydroBody < handle
             
         end
 
-        function [forces, body_hspressure_out] = hydrostaticForces (obj, t, pos, waveElv)
+        function [forces, body_hspressure_out, waveElv] = hydrostaticForces (obj, t, pos)
             % calculates the hydrostatic forces acting on the body
             
             pos = pos - [ obj.cg; 0; 0; 0 ];
+            
+            waveElv = [];
 
             switch obj.freeSurfaceMethodNum
 
@@ -1973,6 +2025,8 @@ classdef hydroBody < handle
                     forces(4:6) = forces(4:6) + cross ([0,0,f_buoyancy], (obj.cb - obj.cg)')';
 
                 case 1
+                    
+                    waveElv = waveElevation(obj, pos, t);
 
                     [forces, body_hspressure_out]  = nonLinearBuoyancy( obj, pos, waveElv, t );
 
