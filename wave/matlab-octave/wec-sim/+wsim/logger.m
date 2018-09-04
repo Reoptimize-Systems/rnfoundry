@@ -1291,7 +1291,25 @@ classdef logger < handle
             S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).LastLogIndex + 1;
             
             % assign the new value
-            obj.data.(varname) = subsasgn (obj.data.(varname), S, val);
+            switch obj.info.(varname).IndexDimension
+                
+                case 1
+                    
+                    obj.data.(varname)(obj.info.(varname).LastLogIndex + 1) = val;
+                    
+                case 2
+                    
+                    obj.data.(varname)(:,obj.info.(varname).LastLogIndex + 1) = val;
+                    
+                case 3
+                    
+                    obj.data.(varname)(:,:,obj.info.(varname).LastLogIndex + 1) = val;
+                    
+                otherwise
+                    
+                    obj.data.(varname) = subsasgn (obj.data.(varname), S, val);
+                    
+            end
             
             % increment the data index counter for this field
             obj.info.(varname).LastLogIndex = obj.info.(varname).LastLogIndex + 1;
