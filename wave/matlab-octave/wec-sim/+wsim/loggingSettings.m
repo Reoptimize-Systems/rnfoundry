@@ -37,6 +37,8 @@ classdef loggingSettings
         momentAddedMassUncorrected = true;
         momentAddedMass = true;
         
+        forceIterations = false;
+        
         powerTakeOffInternal = true;
         
     end
@@ -213,6 +215,10 @@ classdef loggingSettings
             
         end
         
+        function self = set.forceIterations (self, val)
+            check.isLogicalScalar (val, true, 'forceIterations');
+            self.forceIterations = val;
+        end
         
         function self = set.powerTakeOffInternal (self, val)
             check.isLogicalScalar (val, true, 'powerTakeOffInternal');
@@ -257,6 +263,8 @@ classdef loggingSettings
             self.momentViscousDamping = false;
             self.momentAddedMassUncorrected = false;
             self.momentAddedMass = false;
+            
+            self.forceIterations = false;
 
             self.powerTakeOffInternal = false;
             
