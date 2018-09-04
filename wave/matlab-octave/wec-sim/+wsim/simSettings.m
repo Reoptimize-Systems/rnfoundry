@@ -65,6 +65,8 @@ classdef simSettings < handle
         adjMassWeightFun = 2; % Weighting function for adjusting added mass term in the translational direction (default = 2)
         mcrCaseFile = []; % mat file that contain a list of the multiple conditions runs with given conditions  
         morrisonElement = 0; % Option for Morrison Element calculation: Off->'0', On->'1', (default = 0)
+        viscousDamping = 1; % Option for Viscous Damping calculation: Off->'0', On->'1', (default = 1)
+        linearDamping = 1; % Option for Linear Damping calculation: Off->'0', On->'1', (default = 1)
         
 %         reloadH5Data = 0; % Option to re-load hydro data from hf5 file between runs: Off->'0', On->'1', (default = 0)
         
