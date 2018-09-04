@@ -539,7 +539,7 @@ classdef system < mbdyn.pre.base
             for ind = 1:numel (self.nodes)
                
                 if self.nodes{ind}.label == label
-                    self.nodes{ind}.absoluteOrientation = neworientation;
+                    self.nodes{ind}.setAbsoluteOrientation ( neworientation );
                     return;
                 end
                 
