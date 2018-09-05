@@ -505,7 +505,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             options.Timeout = -1;
             options.Verbosity = 0;
             options.StartMBDyn = true;
-            options.MBDynStartWaitTime = 1;
+            options.MBDynStartWaitTime = 0.1;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -973,7 +973,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %  pos - (3 x 1) vector containing the xyz position of the node
             %
 
-            pos = feval (self.mex_interface_fcn, 'X', self.objectHandle, n)';
+            pos = feval (self.mex_interface_fcn, 'X', self.objectHandle, int32(n(:)));
             
         end
 
@@ -994,7 +994,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %  pos - (3 x 1) vector containing the xyz velocity of the node
             %
             
-            vel = feval (self.mex_interface_fcn, 'X', self.objectHandle, n)';
+            vel = feval (self.mex_interface_fcn, 'XP', self.objectHandle, int32(n(:)));
             
         end
         
@@ -1017,7 +1017,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             
             if self.useAccelerations
-                acc = feval (self.mex_interface_fcn, 'XPP', self.objectHandle, n)';
+                acc = feval (self.mex_interface_fcn, 'XPP', self.objectHandle, int32(n(:)));
             else
                 error ('MBCNodal:xpp:nouseaccelerations', ...
                     'You have set UseAccelerations to false, acceleration data is not available.');
@@ -1039,10 +1039,10 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             % Output
             %
-            %  pos - (3 x 1) vector containing the xyz angular position of
+            %  theta - (3 x 1) vector containing the xyz angular position of
             %    the node
             %
-            theta = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, n)';
+            theta = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, int32(n(:)));
             
         end
         
@@ -1064,7 +1064,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %    the node
             %
             
-            theta = feval (self.mex_interface_fcn, 'Euler123', self.objectHandle, n)';
+            theta = feval (self.mex_interface_fcn, 'Euler123', self.objectHandle, int32(n(:)));
             
         end
         
@@ -1086,7 +1086,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %    the node
             %
             
-            w = feval (self.mex_interface_fcn, 'Omega', self.objectHandle, n)';
+            w = feval (self.mex_interface_fcn, 'Omega', self.objectHandle, int32(n(:)));
             
         end
         
@@ -1109,7 +1109,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
             %
             
             if self.useAccelerations
-                w = feval (self.mex_interface_fcn, 'Theta', self.objectHandle, n)';
+                w = feval (self.mex_interface_fcn, 'OmegaP', self.objectHandle, int32(n(:)));
             else
                 error ('MBCNodal:omegap:nouseaccelerations', ...
                     'You have set UseAccelerations to false, angular acceleration data is not available.');
