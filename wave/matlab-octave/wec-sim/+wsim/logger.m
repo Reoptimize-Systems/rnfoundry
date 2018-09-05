@@ -1253,9 +1253,7 @@ classdef logger < handle
                 end
             end
             
-            % copy the pre-constructed indexing structure (created when
-            % adding the variable)
-            S = obj.info.(varname).IndexAssignment;
+            S = [];
             
             if obj.info.(varname).LastLogIndex + 1 > obj.info.(varname).PreallocatedLogLength
                 
@@ -1275,6 +1273,11 @@ classdef logger < handle
                                     obj.info.(varname).LastLogIndex + 1, ...
                                     round (obj.info.(varname).LastLogIndex * obj.expandPreallocFactor) ...
                                                                    );
+                                                               
+                    % copy the pre-constructed indexing structure (created when
+                    % adding the variable)
+                    S = obj.info.(varname).IndexAssignment;
+                    
                     % build the correct index into the logged variable by
                     % replacing the appropriate index with the new index of the
                     % end of the preallocated data
@@ -1286,9 +1289,7 @@ classdef logger < handle
             
             end
             
-            % build the correct index into the logged variable by replacing
-            % the appropriate index with the new log index
-            S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).LastLogIndex + 1;
+           
             
             % assign the new value
             switch obj.info.(varname).IndexDimension
@@ -1306,6 +1307,15 @@ classdef logger < handle
                     obj.data.(varname)(:,:,obj.info.(varname).LastLogIndex + 1) = val;
                     
                 otherwise
+                    if isempty (S)
+                        % copy the pre-constructed indexing structure (created when
+                        % adding the variable)
+                        S = obj.info.(varname).IndexAssignment;
+                    end
+            
+                    % build the correct index into the logged variable by replacing
+                    % the appropriate index with the new log index
+                    S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).LastLogIndex + 1;
                     
                     obj.data.(varname) = subsasgn (obj.data.(varname), S, val);
                     
