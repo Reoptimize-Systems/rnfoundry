@@ -372,7 +372,7 @@ public:
         plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 
         // wrap it for easy indexing
-        mxNumericArrayWrapper Xmat ( plhs[0] );
+        mxNumericArrayWrapper outmat ( plhs[0] );
 
         // initialise the matrix index vectors
         in_index.clear ();
@@ -406,15 +406,15 @@ public:
 
             out_index[0] = (mwSize)0;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 1));
+            outmat.setDoubleValue (out_index, mbc->X (nodenum, 1));
 
             out_index[0] = (mwSize)1;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 2));
+            outmat.setDoubleValue (out_index, mbc->X (nodenum, 2));
 
             out_index[0] = (mwSize)2;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 3));
+            outmat.setDoubleValue (out_index, mbc->X (nodenum, 3));
 
         }
 
@@ -451,7 +451,7 @@ public:
         plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 
         // wrap it for easy indexing
-        mxNumericArrayWrapper Xmat ( plhs[0] );
+        mxNumericArrayWrapper outmat ( plhs[0] );
 
         // initialise the matrix index vectors
         in_index.clear ();
@@ -485,15 +485,15 @@ public:
 
             out_index[0] = (mwSize)0;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->XP (nodenum, 1));
+            outmat.setDoubleValue (out_index, mbc->XP (nodenum, 1));
 
             out_index[0] = (mwSize)1;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->XP (nodenum, 2));
+            outmat.setDoubleValue (out_index, mbc->XP (nodenum, 2));
 
             out_index[0] = (mwSize)2;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->XP (nodenum, 3));
+            outmat.setDoubleValue (out_index, mbc->XP (nodenum, 3));
 
         }
     }
@@ -535,7 +535,7 @@ public:
         plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 
         // wrap it for easy indexing
-        mxNumericArrayWrapper Xmat ( plhs[0] );
+        mxNumericArrayWrapper outmat ( plhs[0] );
 
         // initialise the matrix index vectors
         in_index.clear ();
@@ -569,15 +569,15 @@ public:
 
             out_index[0] = (mwSize)0;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->XPP (nodenum, 1));
+            outmat.setDoubleValue (out_index, mbc->XPP (nodenum, 1));
 
             out_index[0] = (mwSize)1;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->XPP (nodenum, 2));
+            outmat.setDoubleValue (out_index, mbc->XPP (nodenum, 2));
 
             out_index[0] = (mwSize)2;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->XPP (nodenum, 3));
+            outmat.setDoubleValue (out_index, mbc->XPP (nodenum, 3));
 
         }
     }
@@ -622,7 +622,7 @@ public:
         plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 
         // wrap it for easy indexing
-        mxNumericArrayWrapper Xmat ( plhs[0] );
+        mxNumericArrayWrapper outmat ( plhs[0] );
 
         // initialise the matrix index vectors
         in_index.clear ();
@@ -656,15 +656,15 @@ public:
 
             out_index[0] = (mwSize)0;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Theta (nodenum, 1));
+            outmat.setDoubleValue (out_index, mbc->Theta (nodenum, 1));
 
             out_index[0] = (mwSize)1;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Theta (nodenum, 2));
+            outmat.setDoubleValue (out_index, mbc->Theta (nodenum, 2));
 
             out_index[0] = (mwSize)2;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Theta (nodenum, 3));
+            outmat.setDoubleValue (out_index, mbc->Theta (nodenum, 3));
 
         }
     }
@@ -709,7 +709,7 @@ public:
         plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 
         // wrap it for easy indexing
-        mxNumericArrayWrapper Xmat ( plhs[0] );
+        mxNumericArrayWrapper outmat ( plhs[0] );
 
         // initialise the matrix index vectors
         in_index.clear ();
@@ -743,15 +743,15 @@ public:
 
             out_index[0] = (mwSize)0;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 1));
+            outmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 1));
 
             out_index[0] = (mwSize)1;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 2));
+            outmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 2));
 
             out_index[0] = (mwSize)2;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 3));
+            outmat.setDoubleValue (out_index, mbc->Euler123 (nodenum, 3));
 
         }
 
@@ -788,7 +788,7 @@ public:
         plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 
         // wrap it for easy indexing
-        mxNumericArrayWrapper Xmat ( plhs[0] );
+        mxNumericArrayWrapper outmat ( plhs[0] );
 
         // initialise the matrix index vectors
         in_index.clear ();
@@ -822,15 +822,15 @@ public:
 
             out_index[0] = (mwSize)0;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Omega (nodenum, 1));
+            outmat.setDoubleValue (out_index, mbc->Omega (nodenum, 1));
 
             out_index[0] = (mwSize)1;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Omega (nodenum, 2));
+            outmat.setDoubleValue (out_index, mbc->Omega (nodenum, 2));
 
             out_index[0] = (mwSize)2;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->Omega (nodenum, 3));
+            outmat.setDoubleValue (out_index, mbc->Omega (nodenum, 3));
 
         }
     }
@@ -873,7 +873,7 @@ public:
         plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 
         // wrap it for easy indexing
-        mxNumericArrayWrapper Xmat ( plhs[0] );
+        mxNumericArrayWrapper outmat ( plhs[0] );
 
         // initialise the matrix index vectors
         in_index.clear ();
@@ -907,15 +907,15 @@ public:
 
             out_index[0] = (mwSize)0;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 1));
+            outmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 1));
 
             out_index[0] = (mwSize)1;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 2));
+            outmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 2));
 
             out_index[0] = (mwSize)2;
             out_index[1] = (mwSize)(n-1);
-            Xmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 3));
+            outmat.setDoubleValue (out_index, mbc->OmegaP (nodenum, 3));
 
         }
     }
@@ -1450,7 +1450,7 @@ private:
 //        plhs[0] = mxCreateNumericArray (2, dims, mxDOUBLE_CLASS, mxREAL);
 //
 //        // wrap it for easy indexing
-//        mxNumericArrayWrapper Xmat ( plhs[0] );
+//        mxNumericArrayWrapper outmat ( plhs[0] );
 //
 //        // initialise the matrix index vectors
 //        in_index.clear ();
@@ -1484,19 +1484,19 @@ private:
 //
 //            out_index[0] = (mwSize)0;
 //            out_index[1] = (mwSize)(n-1);
-//            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 1));
+//            outmat.setDoubleValue (out_index, mbc->X (nodenum, 1));
 //
 //            out_index[0] = (mwSize)1;
 //            out_index[1] = (mwSize)(n-1);
-//            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 2));
+//            outmat.setDoubleValue (out_index, mbc->X (nodenum, 2));
 //
 //            out_index[0] = (mwSize)2;
 //            out_index[1] = (mwSize)(n-1);
-//            Xmat.setDoubleValue (out_index, mbc->X (nodenum, 3));
+//            outmat.setDoubleValue (out_index, mbc->X (nodenum, 3));
 //
 //        }
 //
-//        //mxSetLHS (Xmat, 1, nlhs, plhs);
+//        //mxSetLHS (outmat, 1, nlhs, plhs);
 //    }
 
 };
