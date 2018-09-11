@@ -1252,7 +1252,7 @@ classdef body < nemoh.base
             assert (~isempty (self.meshVertices), ...
                 'Mesh does not appear to be loaded yet (meshVertices is empty).');
             
-            self.meshVertices = self.meshVertices + [x, y, 0];
+            self.meshVertices = bsxfun (@plus, self.meshVertices, [x, y, 0]);
             
         end
         
