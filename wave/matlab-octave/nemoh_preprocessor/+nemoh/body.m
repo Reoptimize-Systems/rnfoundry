@@ -1225,6 +1225,37 @@ classdef body < nemoh.base
             
         end
         
+        function translateMesh (self, x, y)
+            % translate the mesh vertex locations in X-Y plane
+            %
+            % Syntax
+            %
+            % translateMesh (nb, x, y)
+            %
+            % Description
+            %
+            % translateMesh translates a mesh by adding a displacement in x
+            % and y to every mesh vertex location.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object
+            %
+            %  x - displacement in x direction
+            %
+            %  y - displacement in y direction
+            %
+            
+            self.checkNumericScalar (x, true, 'x');
+            self.checkNumericScalar (y, true, 'y');
+            
+            assert (~isempty (self.meshVertices), ...
+                'Mesh does not appear to be loaded yet (meshVertices is empty).');
+            
+            self.meshVertices = self.meshVertices + [x, y, 0];
+            
+        end
+        
         function scaleMesh (self, scale_factor, varargin)
             % scale the mesh vertex locations by a given factor
             %
@@ -1265,6 +1296,9 @@ classdef body < nemoh.base
             options = parse_pv_pairs (options, varargin);
             
             self.checkLogicalScalar (options.ScaleCoG, true, 'ScaleCoG');
+            
+            assert (~isempty (self.meshVertices), ...
+                'Mesh does not appear to be loaded yet (meshVertices is empty).');
 
             self.meshVertices = self.meshVertices .* scale_factor;
             
