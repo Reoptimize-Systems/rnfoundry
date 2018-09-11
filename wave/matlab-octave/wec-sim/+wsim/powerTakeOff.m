@@ -30,6 +30,7 @@ classdef powerTakeOff < handle
     properties
         
         id; % positive scalar integer for uniquely idenifying the object
+        loggingOn; % flag indicating whether logging is active for the PTO
         
     end
     
@@ -199,6 +200,7 @@ classdef powerTakeOff < handle
             self.loggingInfo = logginginfo;
             
             self.loggerReady = false;
+            self.loggingOn = true;
             self.logger = [];
             
         end
@@ -269,18 +271,25 @@ classdef powerTakeOff < handle
             %           wsim.powerTakeOff.advanceStep
             %
             
-            if self.loggerReady
-                for ind = 1:numel(self.loggingInfo.LoggedVarInds)
+            if self.loggingOn
+                
+                if self.loggerReady
                     
-                    fieldname = self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)};
+                    for ind = 1:numel(self.loggingInfo.LoggedVarInds)
+
+                        fieldname = self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)};
+
+                        self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
+                                             self.internalVariables.(fieldname), ...
+                                             false, ...
+                                             false );
+                                         
+                    end
                     
-                    self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
-                                         self.internalVariables.(fieldname), ...
-                                         false, ...
-                                         false );
+                else
+                    error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
                 end
-            else
-                error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
+                
             end
             
         end
