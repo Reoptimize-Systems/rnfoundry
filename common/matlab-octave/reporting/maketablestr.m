@@ -131,6 +131,8 @@ function tablestr = maketablestr (data, varargin)
     
     options = parse_pv_pairs (options, varargin);
 
+    tablestr = '';
+    
     if ~isempty (options.RowHeadings) ...
             && (~iscellstr(options.RowHeadings) || ~isvector(options.RowHeadings))
         error ('row headings must be vector cell array of strings');
@@ -288,7 +290,6 @@ function tablestr = maketablestr (data, varargin)
         
         end
         
-        tablestr = '';
         totalwid = numel (options.RowStart) ...
                     + sum (options.ColWidth) ...
                     + numel (options.ColSep)*numel (options.ColWidth) ...
