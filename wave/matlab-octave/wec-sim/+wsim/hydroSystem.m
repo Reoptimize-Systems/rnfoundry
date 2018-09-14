@@ -311,6 +311,8 @@ classdef hydroSystem < handle
                 end
             end
             
+
+            
             % call each body's timeDomainSimSetup method
             for bodyind = 1:numel(self.hydroBodies)
                 
@@ -318,9 +320,9 @@ classdef hydroSystem < handle
                 
             end
             
-            for bodyind = 1:numel(self.hydroBodies)
-                self.hydroBodies(bodyind).adjustMassMatrix ();
-            end
+%             for bodyind = 1:numel(self.hydroBodies)
+%                 self.hydroBodies(bodyind).adjustMassMatrix ();
+%             end
             
             self.odeSimInitialised = true;
             
