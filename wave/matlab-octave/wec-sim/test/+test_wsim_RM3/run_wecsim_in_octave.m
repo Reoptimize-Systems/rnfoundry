@@ -3,15 +3,11 @@
 clear waves simu hsys mbsys float_hbody spar_hbody hydro_mbnodes hydro_mbbodies hydro_mbelements lssett wsobj
 
 %% Hydro Simulation Data
-simu = wsim.simSettings (getmfilepath ('test_wsim_RM3.run'));  % Create the Simulation Variable
-% simu.mode = 'normal';                 %Specify Simulation Mode ('normal','accelerator','rapid-accelerator')
-% simu.explorer='on';                   %Turn SimMechanics Explorer (on/off)
+simu = wsim.simSettings (fullfile (wecsim_rootdir (), 'test', '+test_wsim_RM3'));  % Create the Simulation Variable
 simu.startTime = 0;                   %Simulation Start Time [s]
 simu.endTime=400;                       %Simulation End bdcloseTime [s]
-simu.solver = 'ode4';                   %simu.solver = 'ode4' for fixed step & simu.solver = 'ode45' for variable step 
 simu.dt = 0.1; 							%Simulation time-step [s]
 simu.rampT = 100;                       %Wave Ramp Time Length [s]
-simu.multibodySolver = 'MBDyn';
 simu.b2b = true;
 
 %% Wave Information 
@@ -72,7 +68,7 @@ waves.T = 8;                            %Wave Period [s]
 % <case_directory>/hydroData
 
 % Float
-float_hbody = wsim.hydroBody('float.mat', 'CaseDirectory', simu.caseDir);      
+float_hbody = wsim.hydroBody('float.mat');      
     %Create the wsim.hydroBody(1) Variable, Set Location of Hydrodynamic Data File 
     %and Body Number Within this File.   
 float_hbody.mass = 'equilibrium';                   
@@ -82,13 +78,16 @@ float_hbody.momOfInertia = [20907301, 21306090.66, 37085481.11];  %Moment of Ine
 float_hbody.geometryFile = 'float.stl'; % Geomtry File Name (assumed to be in <case_directory>/geometry)
 
 % Spar/Plate
-spar_hbody = wsim.hydroBody('spar.mat', 'CaseDirectory', simu.caseDir); 
+spar_hbody = wsim.hydroBody('spar.mat'); 
 spar_hbody.mass = 'equilibrium';                   
 spar_hbody.momOfInertia = [94419614.57, 94407091.24, 28542224.82];
 spar_hbody.geometryFile = 'plate.stl'; % Geomtry File Name (assumed to be in <case_directory>/geometry)
 
+bodies = float_hbody;
+bodies(2) = spar_hbody;
+
 % make a hydrosys object for simulation
-hsys = wsim.hydroSystem (waves, simu, [float_hbody, spar_hbody]);
+hsys = wsim.hydroSystem (waves, simu, bodies);
 
 % set up transient simulation
 hsys.initialiseHydrobodies ();
@@ -120,8 +119,6 @@ problem_options.LinearSolver = [];
 %              'Joints', false, ...
 %              'StructuralNodes', false)
 
-mbdpath = fullfile (simu.caseDir, 'RM3.mbd');
-
 %% Set up Power Take-Off (PTO)
 
 % set up a simple linear spring-damper power take-off force based on a
@@ -138,42 +135,42 @@ pto = wsim.linearPowerTakeOff ( hydro_mbnodes{2}, hydro_mbnodes{1}, 3, forcefcn 
 
 %% Run the simulation
 
-lssett = wsim.loggingSettings ();
+lgsett = wsim.loggingSettings ();
 
-lssett.positions = true;
-lssett.velocities = true;
-lssett.accelerations = true;
-lssett.nodeForces = true;
-lssett.nodeForcesUncorrected = true;
-lssett.forceHydro = true;
-lssett.forceExcitation = true;
-lssett.forceExcitationRamp = true;
-lssett.forceExcitationLin = true;
-lssett.forceExcitationNonLin = true;
-lssett.forceRadiationDamping = true;
-lssett.forceRestoring = true;
-lssett.forceMorrison = true;
-lssett.forceViscousDamping = true;
+lgsett.positions = true;
+lgsett.velocities = true;
+lgsett.accelerations = true;
+lgsett.nodeForces = true;
+lgsett.nodeForcesUncorrected = true;
+lgsett.forceHydro = true;
+lgsett.forceExcitation = true;
+lgsett.forceExcitationRamp = true;
+lgsett.forceExcitationLin = true;
+lgsett.forceExcitationNonLin = true;
+lgsett.forceRadiationDamping = true;
+lgsett.forceRestoring = true;
+lgsett.forceMorrison = true;
+lgsett.forceViscousDamping = true;
 % lssett.ForceAddedMassUncorrected = false;
-lssett.momentAddedMass = true;
-lssett.nodeMoments = true;
-lssett.nodeMomentsUncorrected = true;
-lssett.momentHydro = true;
-lssett.momentExcitation = true;
-lssett.momentExcitationRamp = true;
-lssett.momentExcitationLin = true;
-lssett.momentExcitationNonLin = true;
-lssett.momentRadiationDamping = true;
-lssett.momentRestoring = true;
-lssett.momentMorrison = true;
-lssett.momentViscousDamping = true;
+lgsett.momentAddedMass = true;
+lgsett.nodeMoments = true;
+lgsett.nodeMomentsUncorrected = true;
+lgsett.momentHydro = true;
+lgsett.momentExcitation = true;
+lgsett.momentExcitationRamp = true;
+lgsett.momentExcitationLin = true;
+lgsett.momentExcitationNonLin = true;
+lgsett.momentRadiationDamping = true;
+lgsett.momentRestoring = true;
+lgsett.momentMorrison = true;
+lgsett.momentViscousDamping = true;
 % lssett.momentAddedMassUncorrected = false;
-lssett.momentAddedMass = true;
+lgsett.momentAddedMass = true;
         
 % create the wesim object
 wsobj = wsim.wecSim ( hsys, mbsys, ...
                       'PTO', pto, ... % PTO(s) could also be added later using the 
-                      'LoggingSettings', lssett );
+                      'LoggingSettings', lgsett );
 
 % initialise the simulation
 wsobj.prepare ();
