@@ -333,12 +333,12 @@ classdef wecSim < handle
             % acceleration for each body
             absforcetols = zeros (3, self.hydroSystem.nHydroBodies);
             absmomenttols = zeros (3, self.hydroSystem.nHydroBodies);
-            minaccel = repmat (0.001, 3, 1);
-            minomegap = repmat (0.001, 3, 1);
+            minaccel = repmat (1e-3, 3, 1);
+            minomegap = repmat (1e-3, 3, 1);
             for hbind = 1:self.hydroSystem.nHydroBodies
                 
-                absforcetols(1:3,hbind) = self.hydroSystem.getBodyProperty (hbind, 'mass') * minaccel;
-                absmomenttols(1:3,hbind) = diag (self.hydroSystem.getBodyProperty (hbind, 'momOfInertia')) * minomegap;
+                absforcetols(1:3,hbind) = min ([1; 1; 1], self.hydroSystem.getBodyProperty (hbind, 'mass') * minaccel);
+                absmomenttols(1:3,hbind) = min ([1; 1; 1], diag (self.hydroSystem.getBodyProperty (hbind, 'momOfInertia')) * minomegap);
                 
             end
             self.defaultAbsForceTolerance = absforcetols;
@@ -493,7 +493,7 @@ classdef wecSim < handle
             options.Verbosity = 0;
             options.AbsForceTolerance = self.defaultAbsForceTolerance;
             options.AbsMomentTolerance = self.defaultAbsMomentTolerance;
-            options.RelForceTolerance = 1e-5;
+            options.RelForceTolerance = 1e-6;
             options.MinIterations = 0;
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
             options.HydroMotionSyncSteps = 1;
@@ -968,14 +968,14 @@ classdef wecSim < handle
                     repeat_force = false;
                 end
                 
-                pos = newpos;
-                vel = newvel;
-                accel = newaccel;
-            
             end
             
             if repeat_force
-
+                
+                pos = newpos;
+                vel = newvel;
+                accel = newaccel;
+                
                 % repeat the force calulation to test convergence
 
                 % clear out the previous forces and moments
@@ -1098,11 +1098,11 @@ classdef wecSim < handle
                     end
 
                 end
-            
-            end
+                
+                % get latest motion from MBDyn
+                status = self.mBDynMBCNodal.GetMotion ();
 
-            % get latest motion from MBDyn
-            status = self.mBDynMBCNodal.GetMotion ();
+            end
 
             if status ~= 0
 
@@ -1175,8 +1175,13 @@ classdef wecSim < handle
                     || self.loggingSettings.nodeMoments ...
                     || self.loggingSettings.momentAddedMass
                 
-                self.logger.setSeries ('NodeForces', self.logger.data.NodeForcesUncorrected);
-                self.logger.setSeries ('NodeMoments', self.logger.data.NodeMomentsUncorrected);
+                if self.loggingSettings.nodeForces
+                    self.logger.setSeries ('NodeForces', self.logger.data.NodeForcesUncorrected);
+                end
+                
+                if self.loggingSettings.nodeMoments
+                    self.logger.setSeries ('NodeMoments', self.logger.data.NodeMomentsUncorrected);
+                end
 
                 % the total forces on hydrodynamic bodies must be corrected
                 [ corrected_node_forces_and_moments, ...
@@ -1190,8 +1195,13 @@ classdef wecSim < handle
                                                 self.logger.data.AngularAccelerations ] ...
                                           );
 
-                self.logger.data.NodeForces(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(1:3,:,:);
-                self.logger.data.NodeMoments(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(4:6,:,:);
+                if self.loggingSettings.nodeForces
+                    self.logger.data.NodeForces(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(1:3,:,:);
+                end
+                
+                if self.loggingSettings.nodeMoments
+                    self.logger.data.NodeMoments(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(4:6,:,:);
+                end
                 
                 if self.loggingSettings.forceAddedMass
                     self.logger.setSeries ('ForceAddedMass', F_and_M_added_mass(1:3,:,:));
@@ -1202,6 +1212,7 @@ classdef wecSim < handle
                 end
                 
             end
+            
             
             % tell the PTOs we are done
             self.finishPTOs ();
@@ -2068,7 +2079,11 @@ classdef wecSim < handle
                                           'Legends', legstrs );
             end
             
-            if self.loggingSettings.accelerations
+            if self.loggingSettings.accelerations ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
                 
                 legstrs = {};
                 for noden = 1:extforceinfo.NNodes
@@ -2086,7 +2101,11 @@ classdef wecSim < handle
                                           'Legends', legstrs );
             end
             
-            if self.loggingSettings.angularAccelerations
+            if self.loggingSettings.angularAccelerations ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
                 
                 legstrs = {};
                 for noden = 1:extforceinfo.NNodes
@@ -2126,7 +2145,12 @@ classdef wecSim < handle
                                           'Legends', legstrs );
             end
             
-            if self.loggingSettings.nodeForcesUncorrected || self.loggingSettings.forceAddedMass
+            if self.loggingSettings.nodeForcesUncorrected ...
+                    || self.loggingSettings.forceAddedMass ...
+                    || self.loggingSettings.momentAddedMass ...
+                    || self.loggingSettings.nodeMoments ...
+                    || self.loggingSettings.momentAddedMass ...
+                    || self.loggingSettings.nodeForces
                 
                 legstrs = {};
                 for noden = 1:extforceinfo.NNodes
@@ -2145,7 +2169,11 @@ classdef wecSim < handle
             end
             
             
-            if self.loggingSettings.forceHydro
+            if self.loggingSettings.forceHydro ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
                 
                 legstrs = {};
                 for noden = 1:extforceinfo.NNodes
@@ -2357,7 +2385,13 @@ classdef wecSim < handle
                                           'ForceLogDimension', 3 );
             end
             
-            if self.loggingSettings.nodeMomentsUncorrected || self.loggingSettings.momentAddedMass
+            if self.loggingSettings.nodeMomentsUncorrected ...
+                    || self.loggingSettings.momentAddedMass ...
+                    || self.loggingSettings.nodeMoments ...
+                    || self.loggingSettings.momentAddedMass ...
+                    || self.loggingSettings.nodeForces ...
+                    || self.loggingSettings.forceAddedMass
+                
                 self.logger.addVariable ( 'NodeMomentsUncorrected', [3, extforceinfo.NNodes], ...
                                           'Desc', 'sum of all moments (with uncorrected added mass moments) for all external structural nodes with external moments', ...
                                           'AxisLabel', 'Uncorrected Added Mass Moments [Nm] on Nodes', ...
@@ -2367,7 +2401,11 @@ classdef wecSim < handle
             end
             
             
-            if self.loggingSettings.momentHydro
+            if self.loggingSettings.momentHydro ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
                 self.logger.addVariable ( 'MomentHydro', [3, self.hydroSystem.nHydroBodies], ...
                                           'Desc', 'sum of all hydrodynamic moments for all hydro nodes', ...
                                           'AxisLabel', 'Total Hydro Moments [Nm] on Nodes', ...
@@ -2484,6 +2522,14 @@ classdef wecSim < handle
                     
                 end
                 
+            else
+                
+                for ptoind = 1:numel (self.powerTakeOffs)
+                    
+                    self.powerTakeOffs{ptoind}.loggingOn = false;
+                    
+                end
+                
             end
 
         end
@@ -2512,22 +2558,42 @@ classdef wecSim < handle
                 self.logger.logVal ( 'AngularVelocities', self.lastAngularVelocities, false, false );
             end
             
-            if self.loggingSettings.angularAccelerations
+            if self.loggingSettings.angularAccelerations ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
+            
                 self.logger.logVal ( 'AngularAccelerations', self.lastAngularAccelerations, false, false );
+                
             end
             
-            if self.loggingSettings.accelerations
+            if self.loggingSettings.accelerations ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
+            
                 self.logger.logVal ( 'Accelerations', self.lastAccelerations, false, false );
+                
             end
             
             % log the forces
             
             if self.loggingSettings.nodeForcesUncorrected ...
-                    || self.loggingSettings.forceAddedMass
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
+            
                 self.logger.logVal ( 'NodeForcesUncorrected', self.lastNodeForcesUncorrected, false, false );
             end
             
-            if self.loggingSettings.forceHydro
+            if self.loggingSettings.forceHydro ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
                 self.logger.logVal ( 'ForceHydro', self.lastForceHydro, false, false );
             end
             
@@ -2570,11 +2636,20 @@ classdef wecSim < handle
             % log the moments
             
             if self.loggingSettings.nodeMomentsUncorrected ...
+                    || self.loggingSettings.nodeForces ...
+                    || self.loggingSettings.forceAddedMass ...
+                    || self.loggingSettings.nodeMoments ...
                     || self.loggingSettings.momentAddedMass
+                
                 self.logger.logVal ( 'NodeMomentsUncorrected', self.lastNodeMomentsUncorrected, false, false );
+                
             end
             
-            if self.loggingSettings.momentHydro
+            if self.loggingSettings.momentHydro ...
+                || self.loggingSettings.nodeForces ...
+                || self.loggingSettings.forceAddedMass ...
+                || self.loggingSettings.nodeMoments ...
+                || self.loggingSettings.momentAddedMass
                 self.logger.logVal ( 'MomentHydro', self.lastMomentHydro, false, false );
             end
             
@@ -2615,7 +2690,7 @@ classdef wecSim < handle
             end
             
             if self.loggingSettings.forceIterations
-                self.logger.logVal ( 'ForceIterations', self.lastForceIterations );
+                self.logger.logVal ( 'ForceIterations', self.lastForceIterations, false, false );
             end
             
             
