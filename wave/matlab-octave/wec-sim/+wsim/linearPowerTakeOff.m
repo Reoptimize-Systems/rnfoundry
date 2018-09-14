@@ -140,6 +140,8 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
 
             options.InitialDisplacementZero = true;
             options.LoggedVars = {};
+            options.LogIsWindowed = false;
+            options.LogWindowSize = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -165,7 +167,9 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             
             
             self = self@wsim.powerTakeOff ( reference_node, other_node, info, ...
-                                            'LoggedVars', options.LoggedVars );
+                                            'LoggedVars', options.LoggedVars, ...
+                                            'LogIsWindowed', options.LogIsWindowed, ...
+                                            'LogWindowSize', options.LogWindowSize );
             
             self.mbdynForceObj = mbdyn.mint.twoNodeTranslationalForce ( ...
                                     reference_node, other_node, axisNum, ...

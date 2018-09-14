@@ -41,6 +41,9 @@ classdef loggingSettings
         
         powerTakeOffInternal = true;
         
+        windowed = false;
+        windowSize = 1000;
+        
     end
     
     methods
