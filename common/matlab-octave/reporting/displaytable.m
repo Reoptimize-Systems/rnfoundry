@@ -1,4 +1,4 @@
-function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, rowending)
+function displaytable(data, varargin)
 % Prints formatted matrix of numerical data with headings
 % 
 % Syntax
@@ -110,53 +110,101 @@ function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, row
 % Jimmy Slick |                3 |           0.4854 |     8.00280E-001
 % Norman Noob |                1 |             none |     0.00000E+000
 %
-% See Also: DISP, FPRINTF
+% See Also: maketablestr, DISP, FPRINTF
 
 % Created by Richard Crozier 2012
 
-    if nargin < 8 || isempty(rowending)
-        rowending = '';
-    end
 
-    if nargin < 7 || isempty(colsep)
-        colsep = ' | ';
-    end
+    options.WrapColHeadings = false;
+    options.ColHeaderRule = false;
+    options.RuleChar = '-';
+    options.TopRule = false;
+    options.BottomRule = false;
+        
+    if iscell (varargin{1})
+        
+        if nargin < 9 || isempty(varargin{8})
+            options.RowStart = '';
+        end
+        
+        if nargin < 8 || isempty(varargin{7})
+            options.RowEnding = '';
+        end
 
-    % do some basic checking of input
-    if nargin < 6 || isempty(fid)
-        % print to the command line
-        fid = 1;
-    end
-    
-    if nargin < 5 || isempty(rowheadings)
-        % no row headings supplied, use empty cell array
-        rowheadings = {};
-    end
-    
-    if nargin < 4 || isempty(fms)
-        % no format specifiers supplied, use 'g' for all columns
-        fms = 'g';
-    end
-    
-    if nargin < 3 || isempty(wid)
-        % default width is 10, this will be modified if column headers are
-        % supplied
-        wid = 10;
-    end
-    
-    if nargin < 2
-        colheadings = {};
-    end
+        if nargin < 7 || isempty(varargin{6})
+            options.ColSep = ' | ';
+        end
 
-    if nargin >= 6 ...
-            && ~isempty (rowheadings) ...
-            && (~iscellstr(rowheadings) || ~isvector(rowheadings))
-        error ('row headings must be vector cell array of strings');
+        % do some basic checking of input
+        if nargin < 6 || isempty(varargin{5})
+            % print to the command line
+            options.FileID = 1;
+        end
+
+        if nargin < 5 || isempty(varargin{4})
+            % no row headings supplied, use empty cell array
+            options.RowHeadings = {};
+        end
+
+        if nargin < 4 || isempty(varargin{3})
+            % no format specifiers supplied, use 'g' for all columns
+            options.Format = 'g';
+        end
+
+        if nargin < 3 || isempty(varargin{2})
+            % default width is 10, this will be modified if column headers are
+            % supplied
+            options.ColWidth = 10;
+        end
+
+        if nargin < 2
+            options.ColHeadings = {};
+        else
+            options.ColHeadings = varargin{1};
+        end
+
+        if nargin >= 6 && ~isempty (varargin{5})
+            if  ~iscellstr(varargin{5}) || ~isvector(varargin{5})
+                error ('row headings must be vector or cell array of strings');
+            else
+                options.RowEnding = varargin{5};
+            end
+        else
+            options.RowEnding = '';
+        end
+    
+        options.WrapColHeadings = false;
+        
+    else
+        
+        options.RowEnding = '';
+        options.RowStart = '';
+        options.ColSep = ' | ';
+        options.RowHeadings = {};
+        options.Format = 'g';
+        options.ColWidth = 10;
+        options.ColHeadings = {};
+        options.FileID = 1;
+        
+        options = parse_pv_pairs (options, varargin);
+        
     end
     
-    tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, colsep, rowending);
+    tablestr = maketablestr ( data, ...
+                              'ColHeadings', options.ColHeadings, ...
+                              'ColWidth', options.ColWidth, ...
+                              'Format', options.Format, ...
+                              'RowHeadings', options.RowHeadings, ...
+                              'RowEnding', options.RowEnding, ...
+                              'WrapColHeadings', options.WrapColHeadings, ...
+                              'ColSep', options.ColSep, ...
+                              'WrapColHeadings', options.WrapColHeadings, ...
+                              'ColHeaderRule', options.ColHeaderRule, ...
+                              'RuleChar', options.RuleChar, ...
+                              'TopRule', options.TopRule, ...
+                              'BottomRule', options.BottomRule );
         
     % print to fid
-    fprintf (fid, '%s', tablestr);
+    fprintf (options.FileID, '%s', tablestr);
         
 end
