@@ -120,12 +120,14 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             
             if ~isempty (options.RelativeOffset1)
                 self.relativeOffset1 = self.checkJointPositionOffset ({options.RelativeOffset1Reference, options.RelativeOffset1});
+                self.relativeOffset1Reference = options.RelativeOffset1Reference;
             else
                 self.relativeOffset1 = [];
             end
             
             if ~isempty (options.RelativePositionOrientation1)
                 self.relativePositionOrientation1 = self.checkJointOrientationOffset ({options.RelativePositionOrientation1Reference, options.RelativePositionOrientation1});
+                self.relativePositionOrientation1Reference = options.RelativePositionOrientation1Reference;
             else
                 self.relativePositionOrientation1 = [];
             end
@@ -318,13 +320,17 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
         
         function setTransform (self)
             
-            ref_node = mbdyn.pre.reference (self.node1.absolutePosition, ...
-                                            self.node1.absoluteOrientation, ...
-                                            [], []);
+%             ref_node = mbdyn.pre.reference (self.node1.absolutePosition, ...
+%                                             self.node1.absoluteOrientation, ...
+%                                             [], []);
                                         
-            ref_joint = mbdyn.pre.reference (self.relativeOffset1, self.relativePositionOrientation1, [], [], 'Parent', ref_node);
+            abspos = self.offset2AbsolutePosition (self.relativeOffset1{3}, self.relativeOffset1Reference, 1);
             
-            M = [ ref_joint.orientm.orientationMatrix , ref_joint.pos; ...
+            absorient = self.node1.absoluteOrientation.orientationMatrix;
+            
+%             ref_joint = mbdyn.pre.reference (self.relativeOffset1, self.relativePositionOrientation1, [], [], 'Parent', ref_node);
+            
+            M = [ absorient, abspos; ...
                   0, 0, 0, 1 ];
             
             % matlab uses different convention to mbdyn for rotation
