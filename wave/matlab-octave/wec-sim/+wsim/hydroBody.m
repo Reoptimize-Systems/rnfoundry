@@ -292,7 +292,7 @@ classdef hydroBody < handle
 
     end
 
-    properties (SetAccess = private, GetAccess = private) % internal
+    properties (SetAccess = protected, GetAccess = protected) % internal
 
         waves;
         simu;
@@ -706,7 +706,11 @@ classdef hydroBody < handle
                     
                 case {'regular'}
                     obj.regExcitation ();
-                    obj.constAddedMassAndDamping ();
+                    if obj.simu.ssCalc == 0
+                        obj.constAddedMassAndDamping ();
+                    else
+                        obj.irfInfAddedMassAndDamping ();
+                    end
                     obj.excitationMethodNum = 1;
                     
                 case {'regularCIC'}
@@ -1405,7 +1409,7 @@ classdef hydroBody < handle
             end
 
             % Radiation Damping
-            if obj.waves.typeNum == 0 || obj.waves.typeNum == 10 %'noWave' & 'regular'
+            if obj.waves.typeNum == 0 || (obj.waves.typeNum == 10 && obj.simu.ssCalc == 0)%'noWave' & 'regular'
                 % constant radiation coefficients
                 obj.radiationMethod = 'constant radiation coefficients';
                 obj.radiationMethodNum = 0;
@@ -1475,6 +1479,8 @@ classdef hydroBody < handle
                 % forces
                 
             end
+            
+            adjustMassMatrix(obj);
 
         end
         
@@ -1827,23 +1833,26 @@ classdef hydroBody < handle
                     % where i = each frequency bin.
 
                     % TOD: check correct dimension/orientation of force output
-                    A1 = bsxfun (@plus, obj.waves.w * t, pi/2);
+                    A1 = obj.waves.w * t + pi/2;
 
-                    B1 = sin (bsxfun (@plus, A1, obj.waves.phase));
+                    B1 = sin (A1 + obj.waves.phase);
 
-                    B11 = sin (bsxfun (@plus, obj.waves.w * t, obj.waves.phase));
+                    B11 = sin (obj.waves.w * t + obj.waves.phase);
 
-                    C1 = sqrt (bsxfun (@times, obj.waves.A, obj.waves.dw));
+                    C1 = sqrt (obj.waves.A .* obj.waves.dw);
 
-                    D1 = bsxfun (@times, obj.hydroForce.fExt.re, C1);
+                    % hydroForce.fExt.re and im will be a 6 * Nfreqs
+                    % matrices, not this statement takes advantage of
+                    % automatic
+                    D1 = obj.hydroForce.fExt.re .* C1;
 
-                    D11 = bsxfun (@times, obj.hydroForce.fExt.im, C1);
+                    D11 = obj.hydroForce.fExt.im .* C1;
 
-                    E1 = bsxfun (@times, B1, D1);
+                    E1 = B1 .* D1;
 
-                    E11 = bsxfun (@times, B11, D11);
+                    E11 = B11 .* D11;
 
-                    forces = sum (bsxfun (@minus, E1, E11))';
+                    forces = sum (E1 - E11)';
 
 
                 case 3
@@ -2022,7 +2031,7 @@ classdef hydroBody < handle
                     % Add Net Bouyancy Force to Z-Direction
                     forces(3) = forces(3) + (f_gravity - f_buoyancy);
                     
-                    forces(4:6) = forces(4:6) + cross ([0,0,f_buoyancy], (obj.cb - obj.cg)')';
+                    forces(4:6) = forces(4:6) + wsim.hydroBody.vcross ([0;0;f_buoyancy], (obj.cb - obj.cg));
 
                 case 1
                     
@@ -2036,6 +2045,7 @@ classdef hydroBody < handle
             end
 
         end
+        
         
         function f = waveElevation(obj, pos, t)
             % calculate the wave elevation at centroids of triangulated surface 
@@ -2340,14 +2350,14 @@ classdef hydroBody < handle
             % TODO: allow nonuniform time spacing for convolutionIntegral
             if abs(t - obj.radForceOldTime - obj.CIdt) < 1e-8
 
-                obj.radForceVelocity      = circshift(obj.radForceVelocity, 1, 2);
+                obj.radForceVelocity = circshift(obj.radForceVelocity, 1, 2);
 
                 obj.radForceVelocity(:,1) = vel(:);
 
                 % integrate
-                time_series = bsxfun(@times, obj.radForce_IRKB_interp, obj.radForceVelocity);
+                time_series = bsxfun (@times, obj.radForce_IRKB_interp, obj.radForceVelocity);
 
-                F_FM = squeeze(trapz(obj.simu.CTTime, sum(time_series, 1)));
+                F_FM = squeeze (trapz (obj.simu.CTTime, sum (time_series, 1)));
 
                 obj.radForceOldF_FM = F_FM;
 
@@ -2689,6 +2699,27 @@ classdef hydroBody < handle
             
         end
 
+        
+        function o = vcross(s,t)
+            %Vector cross product.
+            % o=vcross(s,t)
+            %-------------
+            %
+            %
+            %  Leutenegger Marcel  3.3.2005
+            %
+            %Input:
+            % s,t    vectors
+            %
+            %Output:
+            % o      vector: s X t = cross(s,t)
+            %
+
+            o = [ s(2,:).*t(3,:)-s(3,:).*t(2,:);
+                  s(3,:).*t(1,:)-s(1,:).*t(3,:);
+                  s(1,:).*t(2,:)-s(2,:).*t(1,:)];
+        end
+        
     end
     
     
