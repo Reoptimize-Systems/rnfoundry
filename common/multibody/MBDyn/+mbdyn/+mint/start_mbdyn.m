@@ -67,7 +67,7 @@ function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
 %
 
     options.Verbosity = 0;
-    options.StartWaitTime = 2;
+    options.StartWaitTime = 0.1;
     options.MBDynExecutable = mbdyn.mint.find_mbdyn (false);
     options.MBDynOutputFile = '';
     options.OutputPrefix = '';
