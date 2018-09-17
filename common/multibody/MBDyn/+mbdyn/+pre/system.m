@@ -456,7 +456,7 @@ classdef system < mbdyn.pre.base
             % remove empty
             drivers(cellfun('isempty',drivers)) = [];
             
-            self.checkCellArrayClass (drivers, 'mbdyn.pre.driver');
+            self.checkCellArrayClass (drivers, 'mbdyn.pre.drive');
             
             self.drivers = [self.drivers, drivers];
             
@@ -1145,7 +1145,7 @@ classdef system < mbdyn.pre.base
             if numel (self.drivers) > 0
                 str = self.addOutputLine (str , 'begin: drivers;', 0, false);
                 for ind = 1:numel (self.drivers)
-                    str = sprintf ('%s\n%s\n', str, self.drivers{ind}.generateMBDynInputString ());
+                    str = sprintf ('%s\n    drive caller : %d, %s\n', str, self.drivers{ind}.label, self.drivers{ind}.generateMBDynInputString ());
                 end
                 str = self.addOutputLine (str , 'end: drivers;', 0, false);
                 str = sprintf ('%s\n', str);
@@ -1154,7 +1154,7 @@ classdef system < mbdyn.pre.base
             %% variables
             if numel (self.variables) > 0
 
-                for ind = 1:numel (self.drivers)
+                for ind = 1:numel (self.variables)
                     str = sprintf ('%s\n%s\n', str, self.variables{ind}.generateMBDynInputString ());
                 end
                 
@@ -1306,6 +1306,10 @@ classdef system < mbdyn.pre.base
         end
         
         function ok = checkCellArrayClass (self, CC, classname, throw)
+            
+            if nargin < 4
+                throw = true;
+            end
             
             ok = true;
             if iscell (CC)
