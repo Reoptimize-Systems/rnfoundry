@@ -75,6 +75,7 @@ classdef system < mbdyn.pre.base
        nodes;
        drivers;
        elements;
+       variables;
         
     end
     
@@ -224,6 +225,7 @@ classdef system < mbdyn.pre.base
 
             options.Nodes = {};
             options.Elements = {};
+            options.Variables = {};
             options.Drivers = {};
             options.DefaultOutput = {};
             options.DefaultOrientation = '';
@@ -242,6 +244,7 @@ classdef system < mbdyn.pre.base
             self.elements = {};
             self.drivers = {};
             self.references = {};
+            self.variables = {};
             
             self.addProblems (problems);
             
@@ -251,6 +254,10 @@ classdef system < mbdyn.pre.base
             
             if ~isempty (options.Elements)
                 self.addElements (options.Elements)
+            end
+            
+            if ~isempty (options.Variables)
+                self.addVariables (options.Variables)
             end
             
             if ~isempty (options.Drivers)
@@ -420,6 +427,22 @@ classdef system < mbdyn.pre.base
             self.elements = [self.elements, elements];
             
             self.elements = self.uniqueCells (self.elements);
+            
+        end
+        
+        function addVariables (self, variables)
+            
+            variables = self.makeCellIfNot (variables);
+            
+            % ensure it's a row vector
+            variables = reshape (variables, 1, []);
+            
+            % remove empty
+            variables(cellfun('isempty',variables)) = [];
+            
+            self.checkCellArrayClass (variables, 'mbdyn.pre.variable');
+            
+            self.variables = [self.variables, variables];
             
         end
         
@@ -1125,6 +1148,16 @@ classdef system < mbdyn.pre.base
                     str = sprintf ('%s\n%s\n', str, self.drivers{ind}.generateMBDynInputString ());
                 end
                 str = self.addOutputLine (str , 'end: drivers;', 0, false);
+                str = sprintf ('%s\n', str);
+            end
+            
+            %% variables
+            if numel (self.variables) > 0
+
+                for ind = 1:numel (self.drivers)
+                    str = sprintf ('%s\n%s\n', str, self.variables{ind}.generateMBDynInputString ());
+                end
+                
                 str = sprintf ('%s\n', str);
             end
             
