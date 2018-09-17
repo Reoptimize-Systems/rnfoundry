@@ -33,6 +33,7 @@ classdef variable < mbdyn.pre.base
         declarationModifier; % declaration modifier for the variable
         typeModifier; % type modifier for the variable
         value; % value of the variable
+        labelReplacementObjects; % cell array of object replacing UID:X in string expressions
         
     end
 
@@ -97,6 +98,7 @@ classdef variable < mbdyn.pre.base
             options.Value = [];
             options.DeclarationModifier = '';
             options.TypeModifier = '';
+            options.LabelRepObjects = {};
             
             options = parse_pv_pairs (options, varargin);
             
@@ -162,6 +164,7 @@ classdef variable < mbdyn.pre.base
             self.varName = varName;
             self.declarationModifier = options.DeclarationModifier;
             self.typeModifier = options.TypeModifier;
+            self.labelReplacementObjects = options.LabelRepObjects;
 
         end
         
@@ -187,7 +190,7 @@ classdef variable < mbdyn.pre.base
             %  str - character vector for insertion into an MBDyn input
             %   file.
             %
-
+            
             str = sprintf('set: %s %s %s %s', self.declarationModifier, self.typeModifier, self.varType, self.varName);
             
             if ~isempty (self.value)
@@ -201,7 +204,9 @@ classdef variable < mbdyn.pre.base
                         if islogical (self.value) || isnumeric (self.value)
                             str = [str, self.formatInteger(self.value)];
                         else
-                            str = [str, sprintf('%s', self.value)];
+                            valuestr = processVariableString (self);
+                            
+                            str = [str, sprintf('%s', valuestr)];
                         end
                         
                     case 'integer'
@@ -209,7 +214,9 @@ classdef variable < mbdyn.pre.base
                         if isnumeric (self.value)
                             str = [str, self.formatInteger(self.value)];
                         else
-                            str = [str, sprintf('%s', self.value)];
+                            valuestr = processVariableString (self);
+                            
+                            str = [str, sprintf('%s', valuestr)];
                         end
                         
                     case 'real'
@@ -217,7 +224,9 @@ classdef variable < mbdyn.pre.base
                         if isnumeric (self.value)
                             str = [str, self.formatNumber(self.value)];
                         else
-                            str = [str, sprintf('%s', self.value)];
+                            valuestr = processVariableString (self);
+                            
+                            str = [str, sprintf('%s', valuestr)];
                         end
                         
                     case 'string'
@@ -229,6 +238,27 @@ classdef variable < mbdyn.pre.base
             end
             
             str = [ str, ' ;'];
+            
+        end
+        
+    end
+    
+    methods (Access = private)
+        
+        function valuestr = processVariableString (self)
+            
+               valuestr = self.value;
+            
+               if ~isempty (self.labelReplacementObjects)
+                   %                 uids = regexp (self.string, 'UID:([0-9]+)', 'tokens', 'forceCellOutput');
+                   %                 uids = uids{1};
+                   for objind = 1:numel (self.labelReplacementObjects)
+                       valuestr = strrep ( valuestr, ...
+                           ['UID:', int2str(self.labelReplacementObjects{objind}.uid)], ...
+                           int2str(self.labelReplacementObjects{objind}.label) );
+                   end
+                   
+               end
             
         end
         
