@@ -3,12 +3,13 @@ classdef stringDrive < mbdyn.pre.drive
     properties (GetAccess = public, SetAccess = protected)
         
         string;
+        labelReplacementObjects;
         
     end
     
     methods
         
-        function self = stringDrive (string)
+        function self = stringDrive (string, varargin)
             % drive which returns the value of a mathematical expression
             %
             % Syntax
@@ -35,6 +36,10 @@ classdef stringDrive < mbdyn.pre.drive
             %
             % See Also: 
             %
+            
+            options.LabelRepObjects = {};
+            
+            options = parse_pv_pairs (options, varargin);
 
             if ~ischar (string)
                 error ('''string'' must be a char array')
@@ -42,12 +47,26 @@ classdef stringDrive < mbdyn.pre.drive
             
             self.string = string;
             self.type = 'string';
+            self.labelReplacementObjects = options.LabelRepObjects;
                 
         end
         
         function str = generateMBDynInputString (self)
             
-            str = self.commaSepList (self.type, ['"', self.string, '"']);
+            drivestr = self.string;
+            
+            if ~isempty (self.labelReplacementObjects)
+%                 uids = regexp (self.string, 'UID:([0-9]+)', 'tokens', 'forceCellOutput');
+%                 uids = uids{1};
+                for objind = 1:numel (self.labelReplacementObjects)
+                    drivestr = strrep ( drivestr, ...
+                                        ['UID:', int2str(self.labelReplacementObjects{objind}.uid)], ...
+                                        int2str(self.labelReplacementObjects{objind}.label) );
+                end
+                
+            end
+            
+            str = self.commaSepList (self.type, ['"', drivestr, '"']);
             
         end
         
