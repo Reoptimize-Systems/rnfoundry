@@ -8,6 +8,7 @@ classdef base < handle
         type;
         transformObject;
         netCDFName;
+        uid;
         
     end
     
@@ -19,7 +20,7 @@ classdef base < handle
         needsRedraw; % track whether object needs to be redrawn
         drawAxesH; % handle to figure for plotting
         drawColour;
-        uid;
+        
         
     end
     
