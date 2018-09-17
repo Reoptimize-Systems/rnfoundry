@@ -1,20 +1,99 @@
 classdef variable < mbdyn.pre.base
-
+% represents an MBDyn input file variable
+%
+% Syntax
+%
+% variable (varType, varName)
+% variable (..., 'Parameter', Value)
+%
+% Description
+%
+% represents a variable in an mbdyn input file. Variable are
+% values or expressions which are evaluated before a simulation
+% starts and may be used in other places, such as string drive
+% expressions during the simulation. Their values are not
+% updated or changed as the simulation progresses, only once at
+% startup. See the mbdyn manual for more information on
+% variables.
+%
+%
+% mbdyn.pre.variable Methods:
+%
+%   variable - mbdyn.pre.variable constructor
+%   generateMBDynInputString - generate an mbdyn input file string for the element
+%
+%
+% See Also: mbdyn.pre.system
+%
 
     properties (GetAccess = public, SetAccess = protected)
         
-        varType;
-        varName;
-        declarationModifier;
-        typeModifier;
-        value; % value of the node
+        varType; % type of the variable ('bool', 'integer', 'real', or 'string')
+        varName; % name of the variable
+        declarationModifier; % declaration modifier for the variable
+        typeModifier; % type modifier for the variable
+        value; % value of the variable
         
     end
 
     methods
         
         function self = variable (varType, varName, varargin)
-
+            % mbdyn.pre.variable constructor
+            %
+            % Syntax
+            %
+            % variable (varType, varName)
+            % variable (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % represents a variable in an mbdyn input file. Variable are
+            % values or expressions which are evaluated before a simulation
+            % starts and may be used in other places, such as string drive
+            % expressions during the simulation. Their values are not
+            % updated or changed as the simulation progresses, only once at
+            % startup. See the mbdyn manual for more information on
+            % variables.
+            %
+            % Input
+            %
+            %  varType - character vector or string indicating the type of
+            %   variable. Can be one of 'bool', 'integer', 'real', or
+            %   'string'.
+            %
+            %  varName - character vector or string containing the name of
+            %   the variable.
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'Value' - the value of the variable. Can be a scalar logical
+            %    value, a numeric scalar, a string or a character vector.
+            %    Note that a string may be supplied as the 'value' for the
+            %    bool, integer or real variable types. This string should
+            %    be a mathematical expression, which is written into the
+            %    MBDyn output file as the right hand side of the variable
+            %    assignment.
+            %
+            %  'DeclarationModifier' - string or character vector. Can only
+            %    be the string 'ifndef' in which case MBDyn declares the
+            %    variable only if it does not exist yet, otherwise it is
+            %    ignored.
+            %
+            %  'TypeModifier' - string or character vector. Can only
+            %    be the string 'const'. If const is specifid, it indicates
+            %    that the variable cannot be changed after it's initial
+            %    assignment. This also means the variable must be assigned
+            %    a value, and cannot be left uninitialised.
+            %
+            % Output
+            %
+            %  var - mbdyn.pre.variable object
+            %
+            % See Also: mbdyn.pre.system
+            %
+            
             options.Value = [];
             options.DeclarationModifier = '';
             options.TypeModifier = '';
@@ -34,6 +113,10 @@ classdef variable < mbdyn.pre.base
             
             if ~isempty (options.TypeModifier)
                 self.checkAllowedStringInputs (options.TypeModifier, {'const'}, true, 'TypeModifier');
+                
+                if strcmp (options.TypeModifier, 'const') && isempty (options.Value)
+                    error ('Value must be supplied for const variables.');
+                end
             end
             
             if ~isempty (options.Value)
@@ -87,7 +170,7 @@ classdef variable < mbdyn.pre.base
             %
             % Syntax
             %
-            % str = generateMBDynInputString (an)
+            % str = generateMBDynInputString (var)
             %
             % Description
             %
@@ -97,7 +180,7 @@ classdef variable < mbdyn.pre.base
             %
             % Input
             %
-            %  an - mbdyn.pre.abstractNode
+            %  var - mbdyn.pre.variable
             %
             % Output
             %
