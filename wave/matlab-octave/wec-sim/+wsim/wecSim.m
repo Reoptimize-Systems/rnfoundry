@@ -498,6 +498,7 @@ classdef wecSim < handle
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
             options.HydroMotionSyncSteps = 1;
             options.ForceMBDynNetCDF = true;
+            options.SyncMBDynNetCDF = false;
             
             % specific to run
             options.TimeExecution = false;
@@ -515,7 +516,8 @@ classdef wecSim < handle
                             'MinIterations', options.MinIterations, ...
                             'MaxIterations', options.MaxIterations, ...
                             'HydroMotionSyncSteps', options.HydroMotionSyncSteps, ...
-                            'ForceMBDynNetCDF', options.ForceMBDynNetCDF );
+                            'ForceMBDynNetCDF', options.ForceMBDynNetCDF, ...
+                            'SyncMBDynNetCDF', options.SyncMBDynNetCDF );
             
             if options.TimeExecution, tic; end
             
@@ -663,6 +665,7 @@ classdef wecSim < handle
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
             options.HydroMotionSyncSteps = 1;
             options.ForceMBDynNetCDF = true;
+            options.SyncMBDynNetCDF = false;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -737,6 +740,7 @@ classdef wecSim < handle
             check.isPositiveScalarInteger (options.HydroMotionSyncSteps, true, 'HydroMotionSyncSteps');
             
             check.isLogicalScalar (options.ForceMBDynNetCDF, true, 'ForceMBDynNetCDF');
+            check.isLogicalScalar (options.SyncMBDynNetCDF, true, 'SyncMBDynNetCDF');
             
             % -----------------   input checking finished
             
@@ -751,12 +755,16 @@ classdef wecSim < handle
                 error ('Simulation is not ready to run, have you run ''prepare'' yet?');
             end
             
-            if nargout > 1 || options.ForceMBDynNetCDF
+            if options.ForceMBDynNetCDF
                 % ensure mbdyn will output a netcdf file so we can load the
                 % results from this after the sim
                 if isempty (self.mBDynSystem.controlData.OutputResults)
                     if ~ispc
-                        self.mBDynSystem.controlData.OutputResults = {'netcdf', 'no text'};
+                        self.mBDynSystem.controlData.OutputResults = {'netcdf'};
+                        if options.SyncMBDynNetCDF
+                            self.mBDynSystem.controlData.OutputResults = [self.mBDynSystem.controlData.OutputResults, {'sync'}];
+                        end
+                        self.mBDynSystem.controlData.OutputResults = [self.mBDynSystem.controlData.OutputResults, {'no text'}];
                     end
                 else
                     % netcdf not currently supported on windows
@@ -810,8 +818,8 @@ classdef wecSim < handle
                     self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
                 end
                 self.cleanUpAfterError ();
-                error ('Starting MBDyn communication falied, aborting sim, some output might have beed sent to the following file:\n%s\nIf so, this may help diagnose the error.', ...
-                        self.mBDynMBCNodal.MBDynOutputFile)
+                error ('Starting MBDyn communication falied, aborting sim, some output might have been sent to the following file:\n%s\nIf so, this may help diagnose the error.', ...
+                        self.mBDynOutputFile)
             end
             
             % copy over the input file location to make it easier to
@@ -853,7 +861,7 @@ classdef wecSim < handle
                 end
                 self.cleanUpAfterError ();
                 error ('mbdyn returned %d, aborting sim, check output file:\n%s\nfor clues at to why this happened.', ...
-                        status, self.mBDynMBCNodal.MBDynOutputFile)
+                        status, self.mBDynOutputFile)
             end
             
             % get the current motion of the multibody system which was sent
@@ -1459,6 +1467,38 @@ classdef wecSim < handle
             %    coordinates of the lower left corner of the figure and w
             %    and h are the height and width respectively.
             %
+            %  'VideoFile' - optional file name into which the aimation
+            %    will be saved as a video. Default is empty, in which case
+            %    no video file will be produced unless a VideoWriter object
+            %    is supplied instead through the 'VideoWriter' option (see
+            %    below).
+            %
+            %  'VideoWriter' - optional VideoWriter object which will be
+            %    used to create a video instead of creating one internally.
+            %    This option cannot be used at the same time as the
+            %    'VideoFile' option. If this option is used, the
+            %    VideoProfile option (see below) is ignored. However,
+            %    animate will still modify the FrameRate property orf the
+            %    supplied VideoWriter object internally, and the VideoSpeed
+            %    option (see below) will also be applied. Default is empty,
+            %    in which case no video file will be produced unless a
+            %    video file path is supplied instead through the
+            %    'VideoFile' option (see above).
+            %
+            %  'VideoSpeed' - optional speed multiplier for the video when 
+            %    using the 'VideoFile'or 'VideoWriter' option. It must be a
+            %    scalar value greater than 0. The animation will play a
+            %    speed multiplied by this factor (by changing the video
+            %    frame rate) rather than real time. Default is 1 (no
+            %    speedup).
+            %
+            %  'VideoProfile' - optional character vector indicating what
+            %    type of video compression to use when using the
+            %    'VideoFile' option. This option coresponds to the profile
+            %    option for the VideoWrite class, soo see the help for
+            %    VideoWriter to see what the possible options are. Default
+            %    is 'Motion JPEG AVI'.
+            %
             
             if ~self.simComplete
                 error ('No simulation results are available for plotting')
@@ -1476,6 +1516,9 @@ classdef wecSim < handle
             options.Light = false;
             options.VideoFile = [];
             options.VideoSpeed = 1;
+            options.VideoProfile = 'Motion JPEG AVI';
+            options.VideoWriter = [];
+            options.VideoQuality = 75;
             options.OnlyNodes = [];
             options.ExternalDrawFcn = [];
             options.View = [];
@@ -1514,6 +1557,9 @@ classdef wecSim < handle
                                               'Light', options.Light, ...
                                               'VideoFile', options.VideoFile, ...
                                               'VideoSpeed', options.VideoSpeed, ...
+                                              'VideoProfile', options.VideoProfile, ...
+                                              'VideoWriter', options.VideoWriter, ...
+                                              'VideoQuality', options.VideoQuality, ...
                                               ...'Title', options.Title, ...
                                               'OnlyNodes', options.OnlyNodes, ...
                                               ...'ForceRedraw', options.ForceRedraw, ...
@@ -1534,6 +1580,9 @@ classdef wecSim < handle
                                               'Light', options.Light, ...
                                               'VideoFile', options.VideoFile, ...
                                               'VideoSpeed', options.VideoSpeed, ...
+                                              'VideoProfile', VideoProfile, ...
+                                              'VideoWriter', options.VideoWriter, ...
+                                              'VideoQuality', options.VideoQuality, ...
                                               ...'Title', options.Title, ...
                                               'OnlyNodes', options.OnlyNodes, ...
                                               ...'ForceRedraw', options.ForceRedraw, ...
@@ -2865,6 +2914,14 @@ classdef wecSim < handle
         
         function cleanUpAfterError (self)
             
+            if isempty (self.mBDynMBCNodal)
+                mbdynpid = [];
+                sockpath = [];
+            else
+                mbdynpid = self.mBDynMBCNodal.mBDynPID;
+                sockpath = self.mBDynMBCNodal.path;
+            end
+            
             % clear mBDynMBCNodal to trigger the delete method on the
             % object and close sockets etc
             self.mBDynMBCNodal = [];
@@ -2872,16 +2929,16 @@ classdef wecSim < handle
             if isunix
                 
                 % kill mbdyn process if we know the pid
-                if ~isempty (self.mBDynMBCNodal.mBDynPID)
+                if ~isempty (mbdynpid)
 
-                    cleansystem (sprintf ('kill %d', self.mBDynMBCNodal.mBDynPID));
+                    cleansystem (sprintf ('kill %d', mbdynpid));
 
                 end
 
                 % remove local socket file if it exists
-                if ~isempty (self.mBDynMBCNodal.path)
-                    if exist (self.mBDynMBCNodal.path, 'file')
-                        delete (self.mBDynMBCNodal.path);
+                if ~isempty (sockpath)
+                    if exist (sockpath, 'file')
+                        delete (sockpath);
                     end
                 end
             
