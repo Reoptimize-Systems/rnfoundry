@@ -88,6 +88,8 @@ classdef externalFileCommunicator < mbdyn.pre.base
             
             options = parse_pv_pairs (options, varargin);
             
+            self = self@mbdyn.pre.base ();
+            
             if ~isempty (options.Coupling)
                 if ischar (options.Coupling)
                     
