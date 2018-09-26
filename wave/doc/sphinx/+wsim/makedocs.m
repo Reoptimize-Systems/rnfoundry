@@ -45,7 +45,7 @@ function [docrootdir, zipfilename] = makedocs (varargin)
 
     % exclude_list = { 'baseSystem.m', ...
     %                  'subsystem.m' };
-    exclude_list = { 'mooring.m' };
+    exclude_list = { 'mooring.m', 'hydroBodyMexForces.m' };
 
     for ind = 1:numel(wsim_class_list)
 
