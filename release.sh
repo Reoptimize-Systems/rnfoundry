@@ -64,7 +64,7 @@ while getopts "h?v:twmzc:o" opt; do
     o)  verbose=true
         echo "verbose: $verbose"
         ;;
-    b   launch_matlab_cmd=$OPTARG
+    b)  launch_matlab_cmd=$OPTARG
         echo "launch_matlab_cmd: $launch_matlab_cmd"
         ;;
     esac
@@ -150,7 +150,7 @@ if [ "$skip_mex" = false ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
   else
     # buld the mex files using (oldish) version of matlab
-    ${launch_matlab_cmd} -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}'); quit"
+    ${launch_matlab_cmd} -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}'); quit"
   fi
 fi
 
