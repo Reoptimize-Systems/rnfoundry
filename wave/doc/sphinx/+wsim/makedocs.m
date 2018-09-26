@@ -92,9 +92,7 @@ function [docrootdir, zipfilename] = makedocs (varargin)
     cd (tempdir ());
     
     [status, out] = cleansystem (sprintf ('zip -qr %s.zip %s/', outfilename, outfilename));
-    
-    disp (out);
-    
+
     zipfilename = [outfilename, '.zip'];
     
     if status == 0
