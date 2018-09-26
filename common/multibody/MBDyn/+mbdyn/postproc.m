@@ -340,15 +340,15 @@ classdef postproc < handle
                 
                 % open netcdf file in read only mode (the default). Will
                 % throw an error if the file cannot be opened
-                ncid = self.netcdf_open (self.ncFile, 'NOWRITE');
+                ncfileid = self.netcdf_open (self.ncFile, 'NOWRITE');
                 
                 % make sure the file's closed when we're done
-                CC = onCleanup (@() self.netcdf_close (ncid));
+                CC = onCleanup (@() self.netcdf_close (ncfileid));
                 
                 % get the simulation time steps
-                varid = self.netcdf_inqVarID (ncid, 'time');
+                varid = self.netcdf_inqVarID (ncfileid, 'time');
                 
-                self.time = self.netcdf_getVar (ncid,varid);
+                self.time = self.netcdf_getVar (ncfileid,varid);
                 
                 self.simInfo.InitialTime = self.time(1);
                 
@@ -377,17 +377,17 @@ classdef postproc < handle
                     
                     nodestr = sprintf('node.struct.%s', labelstr );
 
-                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.X', nodestr));
+                    varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.X', nodestr));
                     
-                    self.nodes.(nodename).Position = self.netcdf_getVar (ncid,varid).';
+                    self.nodes.(nodename).Position = self.netcdf_getVar (ncfileid,varid).';
                     
-                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.XP', nodestr));
+                    varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.XP', nodestr));
                     
-                    self.nodes.(nodename).Velocity = self.netcdf_getVar (ncid,varid).';
+                    self.nodes.(nodename).Velocity = self.netcdf_getVar (ncfileid,varid).';
                     
-                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.Omega', nodestr));
+                    varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.Omega', nodestr));
                    
-                    self.nodes.(nodename).AngularVelocity = self.netcdf_getVar (ncid,varid).';
+                    self.nodes.(nodename).AngularVelocity = self.netcdf_getVar (ncfileid,varid).';
                     
                     % now get orientation type by examining what variables
                     % are in the file
@@ -395,7 +395,7 @@ classdef postproc < handle
                         
                         try
 
-                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.R', nodestr));
+                            varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.R', nodestr));
 
                             self.simInfo.DefaultOrientation = 'orientation matrix';
 
@@ -403,7 +403,7 @@ classdef postproc < handle
 
                             try
                                 
-                                varid = self.netcdf_inqVarID (ncid, sprintf('%s.Phi', nodestr));
+                                varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.Phi', nodestr));
 
                                 self.simInfo.DefaultOrientation = 'orientation vector';
 
@@ -411,9 +411,9 @@ classdef postproc < handle
 
                                 try
                                     
-                                    varid = self.netcdf_inqVarID (ncid, sprintf('%s.E', nodestr));
+                                    varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.E', nodestr));
                                     
-                                    attrvalue = netcdf.getAtt(ncid,varid,'description');
+                                    attrvalue = netcdf.getAtt(ncfileid,varid,'description');
 
                                     if ~isempty(strfind (attrvalue, '123'))
                                         
@@ -450,21 +450,21 @@ classdef postproc < handle
 
                         case {'euler123', 'euler313', 'euler321'}
 
-                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.E', nodestr));
+                            varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.E', nodestr));
                             
-                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncid,varid).' ;
+                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncfileid,varid).' ;
 
                         case 'orientation vector'
                             
-                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.Phi', nodestr));
+                            varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.Phi', nodestr));
                             
-                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncid,varid).' ;
+                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncfileid,varid).' ;
 
                         case 'orientation matrix'
                             
-                            varid = self.netcdf_inqVarID (ncid, sprintf('%s.R', nodestr));
+                            varid = self.netcdf_inqVarID (ncfileid, sprintf('%s.R', nodestr));
                             
-                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncid,varid) ;
+                            self.nodes.(nodename).Orientation = self.netcdf_getVar (ncfileid,varid) ;
 
                         otherwise
 
