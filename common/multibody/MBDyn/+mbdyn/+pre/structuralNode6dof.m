@@ -162,18 +162,12 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             % See Also: mbdyn.pre.structuralNode3dof
             %
             
-            options.OrientationDescription = '';
-            options.AbsolutePosition = [0;0;0];
-            options.AbsoluteOrientation = mbdyn.pre.orientmat ('orientation', eye (3));
-            options.AbsoluteVelocity = [0;0;0];
-            options.AbsoluteAngularVelocity = [0;0;0];
-            options.InitialiseFromReference = [];
-            options.Accelerations = [];
-            options.HumanReadableLabel = '';
-            options.Scale = [];
-            options.Output = [];
+
+            [options, nopass_list] = mbdyn.pre.structuralNode6dof.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
             
             switch type
                 
@@ -200,12 +194,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                 end
             end
             
-            self = self@mbdyn.pre.structuralNode ( ...
-                       'AbsoluteVelocity', options.AbsoluteVelocity, ...
-                       'AbsolutePosition', options.AbsolutePosition, ...
-                       'HumanReadableLabel', options.HumanReadableLabel, ...
-                       'Scale', options.Scale, ...
-                       'Output', options.Output );
+            self = self@mbdyn.pre.structuralNode ( pvpairs{:} );
                    
             self.type = 'structural';
             
@@ -383,6 +372,26 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             set ( self.transformObject, 'Matrix', M );
             
         end
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.structuralNode.defaultConstructorOptions ();
+            
+            options.OrientationDescription = '';
+            options.AbsoluteOrientation = mbdyn.pre.orientmat ('orientation', eye (3));
+            options.AbsoluteAngularVelocity = [0;0;0];
+            options.InitialiseFromReference = [];
+
+            nopass_list = { 'OrientationDescription', ...
+                            'AbsoluteOrientation', ...
+                            'AbsoluteAngularVelocity', ...
+                            'InitialiseFromReference' };
+            
+        end
+        
     end
     
 end

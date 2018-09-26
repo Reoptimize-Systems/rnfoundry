@@ -53,10 +53,7 @@ classdef node < mbdyn.pre.base
             %
             % 
             
-            options.HumanReadableLabel = '';
-            options.Output = [];
-            options.Scale = [];
-%             options.UniqueTextLabelPrefix = 'node';
+            [options, nopass_list] = mbdyn.pre.node.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
@@ -143,6 +140,21 @@ classdef node < mbdyn.pre.base
         
         function draw (self, varargin)
             % draw/plot the element. Inactive for this element
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options.HumanReadableLabel = '';
+            options.Output = [];
+            options.Scale = [];
+            %             options.UniqueTextLabelPrefix = 'node';
+            
+            nopass_list = { };
             
         end
         
