@@ -22,8 +22,9 @@ make_zip=false
 make_docs=true
 matlab_cmds=""
 verbose=false
+launch_matlab_cmd="/usr/local/MATLAB/R2016b/bin/matlab"
 
-usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] -- creates Renewnet Foundry release
+usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd> -- creates Renewnet Foundry release
 
 where:
     -h  show this help text
@@ -33,7 +34,8 @@ where:
     -m  skip building mex files (requires matlab)
     -z  create zip file
     -c  additional matlab commands to run before running rnfoundry_release
-    -o  verbose output (default: false)"
+    -o  verbose output (default: false)
+    -b  command to run matlab (default: /usr/local/MATLAB/R2016b/bin/matlab)"
 
 while getopts "h?v:twmzc:o" opt; do
     case "$opt" in
@@ -61,6 +63,9 @@ while getopts "h?v:twmzc:o" opt; do
         ;;
     o)  verbose=true
         echo "verbose: $verbose"
+        ;;
+    b   launch_matlab_cmd=$OPTARG
+        echo "launch_matlab_cmd: $launch_matlab_cmd"
         ;;
     esac
 done
@@ -145,7 +150,7 @@ if [ "$skip_mex" = false ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
   else
     # buld the mex files using (oldish) version of matlab
-    /usr/local/MATLAB/R2016b/bin/matlab -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}'); quit"
+    ${launch_matlab_cmd} -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}'); quit"
   fi
 fi
 
@@ -153,7 +158,7 @@ rm ${release_dir}/rnfoundry_release.m
 
 if [ "$make_zip" = true ]; then
   # zip up the result
-  cd ${working_copy_dir}
+  cd ${release_dir}/..
   zip -qr ${release_name}.zip ${release_name}/
 fi
 

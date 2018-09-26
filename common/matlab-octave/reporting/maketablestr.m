@@ -1,52 +1,58 @@
-function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, colsep, rowending)
-% Prints formatted matrix of numerical data with headings
+function tablestr = maketablestr (data, varargin)
+% makes a char vector with formatted matrix of numerical data with headings
 % 
 % Syntax
 % 
-% tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, colsep, rowending)
+% tablestr = maketablestr (data)
+% tablestr = maketablestr (..., 'Parameter', value)
 % 
 % Input
 % 
 %  data - a matrix or cell array, containing the data to be put in the
 %   table. If a matrix the numbers in the table will be printed using the
-%   default format specifier (f), or the specifier(s) supplied in fms. data
-%   can also be a cell array containing a mixture of strings and numbers.
-%   each cell in this case can contain only a single scalar value. In this
-%   case numbers are printed as in the matrix case, while strings are
-%   printed up to the maximum width of the column.
+%   default format specifier (f), or the specifier(s) supplied in 'Format'
+%   option. data can also be a cell array containing a mixture of strings
+%   and numbers. each cell in this case can contain only a single scalar
+%   value. In this case numbers are printed as in the matrix case, while
+%   strings are printed up to the maximum width of the column.
 % 
-%  colheadings - a cell array of strings for the headings of each column.
-%   Can be an empty cell array if no headings are required. If no column
-%   widths are supplied (see below), the columns will be made wide enough
-%   to accomdate the headings.
+% Additional optional arguments can be supplied using parameter-value
+% pairs. The available options are:
+%
+%  'ColHeadings - a cell array of strings for the headings of each column.
+%    Can be an empty cell array if no headings are required. If no column
+%    widths are supplied (see below), the columns will be made wide enough
+%    to accomdate the headings.
 % 
-%  wid - (optional) scalar or vector of column widths to use for the table.
-%   If scalar, every column will have the same width. If a vector it must
-%   be of the same length as the number of columns of data. If not
-%   supplied, and column headers are supplied, the width of the widest
-%   column header will be used. If not supplied and column headers are not
-%   supplied, a default with of 16 characters is used.
+%  'ColWidth - (optional) scalar or vector of column Widths to use for the
+%    table. If scalar, every column will have the same width. If a vector
+%    it must be of the same length as the number of columns of data. If not
+%    supplied, and column headers are supplied, the width of the width
+%    column header will be used. If not supplied and column headers are not
+%    supplied, a default with of 16 characters is used.
 % 
-%  fms - (optional) a string, or cell array of strings containing format
-%   specifiers for formatting the numerical output in each column. If a
-%   single string, the same specifier is used for every column. If not
-%   supplied, the 'g' specifier is used for every column.
+%  'Format - (optional) a string, or cell array of strings containing format
+%    specifiers for formatting the numerical output in each column. If a
+%    single string, the same specifier is used for every column. If not
+%    supplied, the 'g' specifier is used for every column.
 % 
-%  rowheadings - (optional) a cell array of strings for the start of each
-%   row. Can be an empty cell array if no row headings are required. If row
-%   headings are supplied, the first column will be made wide enough to
-%   accomodate all the headings.
+%  'RowHeadings - (optional) a cell array of strings for the start of each
+%    row. Can be an empty cell array if no row headings are required. If
+%    row headings are supplied, the first column will be made wide enough
+%    to accomodate all the headings.
 % 
-%  fid - (optional) the file id to print to. Use 1 for stdout (to print to
-%   the command line).
+%  'ColSep - (optional) A string or character to insert between every 
+%    column. The default separation string is ' | ', i.e. a space followed
+%    by a vertical bar, followed by a space. A table suitible for inclusion
+%    in a LaTeX document can be created using the ' & ' string, for
+%    example.
 % 
-%  colsep - (optional) A string or character to insert between every column.
-%   The default separation string is ' | ', i.e. a space followed by a
-%   vertical bar, followed by a space. A table suitible for inclusion in a
-%   LaTeX document can be created using the ' & ' string, for example.
-% 
-%  rowending - (optional) An optional string or character to be appended at
-%   the end of every row. Default is an empty string.
+%  'RowEnding' - (optional) An optional string or character to be appended 
+%    at the end of every row. Default is an empty string.
+%
+% Outut
+%
+%  tablestr - character vector containing the generated text table
 %
 % Examples
 %
@@ -56,18 +62,16 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 % rowheadings = {'Jimmy Slick', 'Norman Noob'}
 % data = [3 rand(1) rand(1); 1 rand(1) rand(1)];
 % 
-% To format the first number in each row as a decimal (%d), the second
-% number %16.4f, and the third as %16.5E do the following:
+% % To format the first number in each row as a decimal (%d), the second
+% % number %16.4f, and the third as %16.5E do the following:
 % 
 % wid = 16;
-% fms = {'d','.4f','.5E'};
+% fmt = {'d','.4f','.5E'};
 % 
-% In this case 16 will be the field width, and '.5E' is what to use for the
-% fms argument
+% % In this case 16 will be the field width, and '.5E' is what to use for the
+% % options.Format argument
 % 
-% fileID = 1;
-% 
-% >> displaytable(data,colheadings,wid,fms,rowheadings,fileID);
+% >> maketablestr(data, 'ColHeadings', colheadings, 'ColWidth', wid, 'Format', fmt, 'RowHeadings', rowheadings);
 %             |number of projec |           sales |          profit 
 % Jimmy Slick |               3 |          0.4502 |    5.22908E-001 
 % Norman Noob |               1 |          0.9972 |    2.78606E-002 
@@ -75,17 +79,15 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 % Example 2 - Produce a latex table
 % 
 % colheadings = {'number of projects','sales','profit'};
-% rowheadings = {'Jimmy Slick', 'Norman Noob'};
+% rowheadings = {'Jimmy Slick', 'Norman Noob'}
 % data = [3 rand(1) rand(1); 1 rand(1) rand(1)];
 % wid = 16;
-% fms = {'d'};
+% options.Format = {'d'};
 % 
 % colsep = ' & ';
 % rowending = ' \\';
-% 
-% fileID = 1;
-% 
-% >> displaytable(data,colheadings,wid,fms,rowheadings,fileID,colsep,rowending);
+%
+% >> maketablestr(data, 'ColHeadings', colheadings, 'ColWidth', wid, 'Format', fmt, 'RowHeadings', rowheadings, 'ColSep', colsep, 'RowEnding', rowending);
 %
 %             & number of projec &            sales &           profit \\
 % Jimmy Slick &                3 &    6.948286e-001 &    3.170995e-001 \\
@@ -93,18 +95,18 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 % 
 % Example 3 - Mixed numeric and strings
 %
-% colheadings = {'number of projects','sales','profit'};
-% rowheadings = {'Jimmy Slick', 'Norman Noob'};
+% options.ColHeadings = {'number of projects','sales','profit'};
+% options.RowHeadings = {'Jimmy Slick', 'Norman Noob'};
 % 
 % data = {3, rand(1), rand(1); 
 %         1, 'none', 0};
 %     
-% wid = 16;
-% fms = {'d','.4f','.5E'};
+% options.ColWidth = 16;
+% options.Format = {'d','.4f','.5E'};
 % 
 % fileID = 1;
 % 
-% >> displaytable(data,colheadings,wid,fms,rowheadings,fileID);
+% >> displaytable(data,options.ColHeadings,options.ColWidth,options.Format,options.RowHeadings,fileID);
 %             | number of projec |            sales |           profit
 % Jimmy Slick |                3 |           0.4854 |     8.00280E-001
 % Norman Noob |                1 |             none |     0.00000E+000
@@ -114,37 +116,25 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 
 % Created by Richard Crozier 2018
 
-    if nargin < 7 || isempty(rowending)
-        rowending = '';
-    end
+    options.RowEnding = '';
+    options.RowStart = '';
+    options.ColSep = ' | ';
+    options.RowHeadings = {};
+    options.Format = 'g';
+    options.ColWidth = 10;
+    options.ColHeadings = {};
+    options.WrapColHeadings = false;
+    options.ColHeaderRule = false;
+    options.RuleChar = '-';
+    options.TopRule = false;
+    options.BottomRule = false;
+    
+    options = parse_pv_pairs (options, varargin);
 
-    if nargin < 6 || isempty(colsep)
-        colsep = ' | ';
-    end
+    tablestr = '';
     
-    if nargin < 5 || isempty(rowheadings)
-        % no row headings supplied, use empty cell array
-        rowheadings = {};
-    end
-    
-    if nargin < 4 || isempty(fms)
-        % no format specifiers supplied, use 'g' for all columns
-        fms = 'g';
-    end
-    
-    if nargin < 3 || isempty(wid)
-        % default width is 10, this will be modified if column headers are
-        % supplied
-        wid = 10;
-    end
-    
-    if nargin < 2
-        colheadings = {};
-    end
-
-    if nargin >= 6 ...
-            && ~isempty (rowheadings) ...
-            && (~iscellstr(rowheadings) || ~isvector(rowheadings))
+    if ~isempty (options.RowHeadings) ...
+            && (~iscellstr(options.RowHeadings) || ~isvector(options.RowHeadings))
         error ('row headings must be vector cell array of strings');
     end
     
@@ -152,166 +142,216 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
     [nRowD,nColD] = size(data);
     
     % check that sensible format specifiers have been supplied
-    if ~iscellstr(fms)
+    if ~iscellstr(options.Format)
         
-        if ischar(fms)
-            fms = repmat({fms},1,nColD);
+        if ischar(options.Format)
+            options.Format = repmat({options.Format},1,nColD);
         else
-            error('fms must be a string or cell array of strings.');
+            error('options.Format must be a string or cell array of strings.');
         end
         
-    elseif isempty(fms)
+    elseif isempty(options.Format)
         
-        fms = repmat({'f'},1,nColD);
+        options.Format = repmat({'f'},1,nColD);
         
-    elseif numel(fms) ~= nColD
+    elseif numel(options.Format) ~= nColD
         
-        if numel(fms) == 1
-            fms = repmat(fms,1,nColD);
+        if numel(options.Format) == 1
+            options.Format = repmat(options.Format,1,nColD);
         else
-           error('fms does not have the same number of format specifiers as there are columns.');
+           error('options.Format does not have the same number of format specifiers as there are columns.');
         end
         
     end
     
     % replace empty format specifiers with 'f'
-    for i = 1:numel(fms)
-        if isempty(fms{i})
-            fms{i} = 'f';
+    for i = 1:numel(options.Format)
+        if isempty(options.Format{i})
+            options.Format{i} = 'f';
         end
     end
     
-    [nRowFms,nColFms] = size(fms);
+    [nRowFms,nColFms] = size(options.Format);
     if(nRowFms>1)
-        error ('fms can not have more than one row');
+        error ('options.Format can not have more than one row');
     end
     
 
-    if ~isempty(rowheadings)
+    if ~isempty(options.RowHeadings)
         
-        if ~iscellstr(rowheadings)
-            error('rowheadings must be a cell array of strings');
+        if ~iscellstr(options.RowHeadings)
+            error('options.RowHeadings must be a cell array of strings');
         end
         
-        if numel(rowheadings) ~= size(data, 1)
+        if numel(options.RowHeadings) ~= size(data, 1)
             error('Rowheadings must be a cell array of strings of the same size as the number of rows in data.')
         end
     
         rhwid = 0;
 
-        for r = 1:numel(rowheadings)
+        for r = 1:numel(options.RowHeadings)
             % find the maximum width the first column must be to accomodate
             % the row headings
-            rhwid = max(rhwid, length(rowheadings{r}));
+            rhwid = max(rhwid, length(options.RowHeadings{r}));
         end
         
     end
     
-    if isscalar(wid)
+    if isscalar(options.ColWidth)
         
-        tempwid = zeros(1, numel(fms));
+        tempoptions.ColWidth = zeros(1, numel(options.Format));
 
-        for i = 1:numel(fms)
+        for i = 1:numel(options.Format)
 
             % get the number of decimal places specified
-            [start_idx, end_idx, extents, matches] = regexp(fms{i}, '(?<=\.)\d+');
+            [start_idx, end_idx, extents, matches] = regexp(options.Format{i}, '(?<=\.)\d+');
 
             if isempty(start_idx)
 
                 % no numbers were found in the format spec, just use the
                 % supplied width
-                tempwid(i) = wid;
+                tempoptions.ColWidth(i) = options.ColWidth;
 
             else
 
                 % some numbers were supplied, use the larger of the width
                 % or the number of desired decimal places plus two (to
                 % allow for leading number plus decimal point)
-                tempwid(i) = max(wid, round(str2double(matches{1})) + 2);
+                tempoptions.ColWidth(i) = max(options.ColWidth, round(str2double(matches{1})) + 2);
 
             end
 
         end
 
         % replace scalar width with array of width values
-        wid = tempwid;
+        options.ColWidth = tempoptions.ColWidth;
         
     end
         
-    if ~isempty(colheadings)
+    if ~isempty(options.ColHeadings)
         
-        [nRowCH,nColCH] = size(colheadings);
+        [nRowCH,nColCH] = size(options.ColHeadings);
         if(nRowCH>1)
             error ('column headings can not have more than one row');
         end
         
-        if ~iscellstr(colheadings)
-            error('If not empty, colheadings must be a cell array of strings');
+        if ~iscellstr(options.ColHeadings)
+            error('If not empty, options.ColHeadings must be a cell array of strings');
         end
         
         if(nColCH ~= nColD)
             error ('data must have same number of columns as headings');
         end
     
-%         fmt = arrayfun(@(x) ['%',num2str(wid(x)),'s |'], 1:nColD, 'UniformOutput', false);
+%         fmt = arrayfun(@(x) ['%',num2str(options.ColWidth(x)),'s |'], 1:nColD, 'UniformOutput', false);
 
-        tablestr = '';
-        
-        if ~isempty(rowheadings)
-            % TODO allow extra heading for column
-            tablestr = appendstr (tablestr, ['%s',colsep], repmat(' ', 1,rhwid));
-        end
-        
         if nargin < 3
             
             % only data and column headings have been supplied, so
             % determine a sensible value for the width of each column
             
-            tempwid = zeros(size(wid));
-            for i = 1:numel(colheadings)
+            tempoptions.ColWidth = zeros(size(options.ColWidth));
+            for i = 1:numel(options.ColHeadings)
 
                 % get a column width which is the minimum to accept the
                 % column heading length or the default width specification
-                tempwid(i) = max(length(colheadings{i}), wid(i));
+                tempoptions.ColWidth(i) = max(length(options.ColHeadings{i}), options.ColWidth(i));
                 
-                if tempwid < 1
+                if tempoptions.ColWidth < 1
                     error('Column width is less than 1, and the column header is empty.')
                 end
                 
             end
             
-            wid = tempwid;
+            options.ColWidth = tempoptions.ColWidth;
             
+        end
+        
+        if options.WrapColHeadings
+            
+            tempcolheads = options.ColHeadings;
+            nheaderrows = 1;
+            for colheadind = 1:numel (options.ColHeadings)
+
+                tempcolheads{colheadind} = TextWrapper.wraplines ( options.ColHeadings{colheadind}, ...
+                                                                   'Width', options.ColWidth(colheadind) );
+
+                nheaderrows = max ([nheaderrows, numel(tempcolheads{colheadind})]);
+
+            end
+
+            options.ColHeadings = repmat ({''}, nheaderrows, numel (options.ColHeadings));
+
+            for colheadind = 1:size (options.ColHeadings, 2)
+
+                options.ColHeadings(1:numel(tempcolheads{colheadind}), colheadind) = tempcolheads{colheadind};
+
+            end
+        
+        end
+        
+        totalwid = numel (options.RowStart) ...
+                    + sum (options.ColWidth) ...
+                    + numel (options.ColSep)*numel (options.ColWidth) ...
+                    + rhwid ...
+                    + numel (options.RowEnding);
+        horizontal_rule = repmat ( options.RuleChar, 1, totalwid);
+        
+        
+        if options.TopRule
+
+            tablestr = appendstr ( tablestr, '%s\n', horizontal_rule);
+
         end
         
         % Now loop through the column headings printing them out with the
-        % desired column separator
-        for i = 1:numel(colheadings)
+        % desired column separator        
+        for colheadrowind = 1:size (options.ColHeadings, 1)
             
-            str = sprintf(['%',num2str(wid(i)),'s'],colheadings{i});
-
-            if i == numel(colheadings)
-                % If we are at the end of a row, don't print the column
-                % separator
-                tablestr = appendstr (tablestr, '%s', str(1:wid(i)) );
-            else
-                % print the column header and column separator
-                tablestr = appendstr (tablestr, ['%s',colsep], str(1:wid(i)) );
+            tablestr = appendstr (tablestr, '%s', options.RowStart);
+            
+            if ~isempty(options.RowHeadings)
+                % TODO allow extra heading for column
+                tablestr = appendstr (tablestr, ['%s',options.ColSep], repmat(' ', 1,rhwid));
             end
-            
-        end
         
-        tablestr = appendstr (tablestr, '%s\n', rowending);
+            for colheadcolind = 1:size (options.ColHeadings, 2)
+
+                str = sprintf ( ['%',num2str(options.ColWidth(colheadcolind)),'s'], ...
+                                options.ColHeadings{colheadrowind,colheadcolind} );
+
+                if colheadcolind == size (options.ColHeadings, 2)
+                    % If we are at the end of a row, don't print the column
+                    % separator
+                    tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(i)) );
+                else
+                    % print the column header and column separator
+                    tablestr = appendstr (tablestr, ['%s',options.ColSep], str(1:options.ColWidth(i)) );
+                end
+
+            end
+
+            tablestr = appendstr (tablestr, '%s\n', options.RowEnding);
+        
+        end
 
     end
     
-    fmt = arrayfun(@(x) ['%',num2str(wid(x)),fms{x}],1:nColD,'UniformOutput',false);
+    if options.ColHeaderRule
+        
+        tablestr = appendstr ( tablestr, '%s\n', horizontal_rule);
+        
+    end
+    
+    fmt = arrayfun(@(x) ['%',num2str(options.ColWidth(x)),options.Format{x}],1:nColD,'UniformOutput',false);
     
     for i = 1:size(data,1)
         
+        tablestr = appendstr (tablestr, '%s', options.RowStart);
+        
         % first print a row header if necessary
-        if ~isempty(rowheadings)
-            tablestr = appendstr (tablestr, ['%',num2str(rhwid),'s',colsep], rowheadings{i});
+        if ~isempty(options.RowHeadings)
+            tablestr = appendstr (tablestr, ['%',num2str(rhwid),'s',options.ColSep], options.RowHeadings{i});
         end
             
         % now loop through the data formatting and printing as appropriate
@@ -323,22 +363,22 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 
                 if ischar(data{i,j})
                     
-                    str = sprintf(['%',num2str(wid(j)),'s'],data{i,j});
+                    str = sprintf(['%',num2str(options.ColWidth(j)),'s'],data{i,j});
                     
                 elseif isscalar(data{i,j})
                     
                     % write the number 
                     str = sprintf(fmt{j},data{i,j});
                     
-                    if length(str) > wid(j)
+                    if length(str) > options.ColWidth(j)
 
                         % convert to scientific notation as it doesn't fit
-                        str =  sprintf(['%',num2str(wid(j)),'g'],data{i,j});
+                        str =  sprintf(['%',num2str(options.ColWidth(j)),'g'],data{i,j});
 
-                        if length(str) > wid(j)
+                        if length(str) > options.ColWidth(j)
                             % fill space with #s as the number stil doesn't
                             % fit in
-                            str = repmat('#', 1, wid(j));
+                            str = repmat('#', 1, options.ColWidth(j));
                         end
 
                     end
@@ -346,7 +386,7 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
                 elseif isempty(data{i,j})
                     
                     % indicate an empty value 
-                    str = sprintf(['%',num2str(wid(j)),'s'],'');
+                    str = sprintf(['%',num2str(options.ColWidth(j)),'s'],'');
                     
                 else
                     % we can only tabulate strings and scalars, so throw an
@@ -357,11 +397,11 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
                 end
                 
                 % print the string
-                tablestr = appendstr (tablestr, '%s', str(1:wid(j)));
+                tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(j)));
                 
                 if j < size(data,2)
                     % print column separator
-                    tablestr = appendstr (tablestr, colsep);
+                    tablestr = appendstr (tablestr, options.ColSep);
                 end
 
             else
@@ -370,14 +410,14 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
 
                 str = sprintf(fmt{j},data(i,j));
 
-                if length(str) > wid(j)
+                if length(str) > options.ColWidth(j)
                     
                     % convert to scientific notation as it doesn't fit
-                    str =  sprintf(['%',num2str(wid(j)),'g'],data(i,j));
+                    str =  sprintf(['%',num2str(options.ColWidth(j)),'g'],data(i,j));
                     
-                    if length(str) > wid(j)
+                    if length(str) > options.ColWidth(j)
                         % fill space with #s as the number doesn't fit in
-                        str = repmat('#', 1, wid(j));
+                        str = repmat('#', 1, options.ColWidth(j));
                     end
                     
                 end
@@ -385,16 +425,24 @@ function tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, cols
                 if j == size(data,2)
                     % do not print the last column separator at the end of
                     % a row
-                    tablestr = appendstr (tablestr, '%s', str(1:wid(j)));
+                    tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(j)));
                 else
-                    tablestr = appendstr (tablestr, ['%s',colsep], str(1:wid(j)));
+                    tablestr = appendstr (tablestr, ['%s',options.ColSep], str(1:options.ColWidth(j)));
                 end
             end
             
         end
         
         % end of line so put in a new row
-        tablestr = appendstr (tablestr, '%s\n', rowending);
+        if j ~= size(data,1)
+            tablestr = appendstr (tablestr, '%s\n', options.RowEnding);
+        end
+        
+    end
+    
+    if options.BottomRule
+        
+        tablestr = appendstr ( tablestr, '%s', horizontal_rule);
         
     end
 

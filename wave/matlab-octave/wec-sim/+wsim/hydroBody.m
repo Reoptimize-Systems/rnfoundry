@@ -1,5 +1,75 @@
+classdef hydroBody < handle
+% represents one hydrodynamically interacting body in a hydrodynamic system
+%
+% Syntax
+%
+% hb = hydroBody (filename)
+%
+% Description
+%
+% wsim.hydroBody represents one hydrodynamically interacting body in a
+% hydrodynamic system. It is intended to be used in conjunction with the
+% wsim.hydroSystem class which manages a collection of wsim.hydroBody
+% objects and is used to perform the time domain simulation of the bodies.
+%
+% The body simulation data is contained in a case directory. This case
+% directory should contain two subdirectories, 'hydroData' and 'geometry'.
+%
+% The hydroData subdirectory should contain either one .h5 file containing
+% the output of the BEMIO files which process the output of various BEM
+% solvers to a format understood by the hydroBody class, or, a collection
+% of .mat files containing hydroData structures which can be directly
+% loaded by the body. In this case, there will be one mat file for each
+% body.
+%
+% The geometry subdirectory should contain a collection of STL files, one
+% for each body. 
+%
+% wsim.hydroBody Methods:
+%
+%   hydroBody - constructor for the hydroBody class
+%   adjustMassMatrix - Merges diagonal term of added mass matrix to the mass matrix
+%   advanceStep - advance to the next time step, accepting the current time
+%   bodyGeo - Reads an STL mesh file and calculates areas and centroids
+%   checkInputs - Checks the user inputs
+%   forceAddedMass - Recomputes the real added mass force time history for the
+%   getVelHist - not documented
+%   hydroForcePre - performs pre-processing calculations to populate hydroForce structure
+%   hydroForces - hydroForces calculates the hydrodynamic forces acting on a
+%   hydrostaticForces - calculates the hydrostatic forces acting on the body
+%   lagrangeInterp - not documented
+%   linearExcitationForces - calculates linear wave excitation forces during transient
+%   linearInterp - not documented
+%   listInfo - Display some information about the body at the command line
+%   loadHydroData - load hydrodynamic data from file or variable
+%   makeMBDynComponents - creates mbdyn components for the hydroBody
+%   morrisonElementForce - not documented
+%   nonlinearExcitationForces - calculates the non-linear excitation forces on the body
+%   offsetXYZ - Function to move the position vertices
+%   plotStl - Plots the body's mesh and normal vectors
+%   radForceODEOutputfcn - OutputFcn to be called after every completed ode time step
+%   radForceSSDerivatives - wsim.hydroBody/radForceSSDerivatives is a function.
+%   radiationForces - calculates the wave radiation forces
+%   readH5File - Reads an HDF5 file containing the hydrodynamic data for the body
+%   restoreMassMatrix - Restore the mass and added-mass matrix back to the original value
+%   rotateXYZ - Function to rotate a point about an arbitrary axis
+%   saveHydroData - saves the body's hydrodata structure to a .mat file
+%   setCaseDirectory - set the case directory for the simulation the body is part of
+%   setInitDisp - Sets the initial displacement when having initial rotation
+%   storeForceAddedMass - Store the modified added mass and total forces history (inputs)
+%   timeDomainSimReset - resets the body in readiness for a transient simulation
+%   timeDomainSimSetup - sets up the body in preparation for a transient simulation
+%   viscousDamping - not documented
+%   waveElevation - calculate the wave elevation at centroids of triangulated surface
+%   write_paraview_vtp - Writes vtp files for visualization with ParaView
+%
+%
+% See Also: wsim.hydroSystem
+%
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copyright 2014 the National Renewable Energy Laboratory and Sandia Corporation
+% Modified 2017 by The University of Edinburgh
 %
 % Licensed under the Apache License, Version 2.0 (the "License");
 % you may not use this file except in compliance with the License.
@@ -14,77 +84,215 @@
 % limitations under the License.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-classdef hydroBody < handle
 
-    properties (SetAccess = 'private', GetAccess = 'public') % hdf5 file
-        hydroData         = struct()                                            % Hydrodynamic data from BEM or user defined.
+    properties (SetAccess = protected, GetAccess = public) % hydroData h5 or mat file related
+        
+        % Hydrodynamic data from BEM or user defined.
+        hydroData = struct();
+        
+        % Body name. This is obtained from the h5 or mat file.
+        name = [];  
+        
+        % Center of gravity [x y z] in meters. This is obtained from the h5 or mat file.
+        cg = [];
+        
+        % Center of buoyancy [x y z] in meters. For WEC bodies this is given in the h5 file.
+        cb = [];
+        
+        % Displaced volume at equilibrium position in m^3. This is obtained from the h5 or mat file.
+        dispVol = [];
+        
     end
 
-    properties (SetAccess = 'public', GetAccess = 'public') % input file
-        name              = []                                                  % Body name. For WEC bodies this is given in the h5 file.
-        mass              = []                                                  % Mass in kg or specify 'equilibrium' to have mass= dis vol * density
-        momOfInertia      = []                                                  % Moment of inertia [Ixx Iyy Izz] in kg*m^2
-        cg                = []                                                  % Center of gravity [x y z] in meters. For WEC bodies this is given in the h5 file.
-        dispVol           = []                                                  % Displaced volume at equilibrium position in meters cubed. For WEC bodies this is given in the h5 file.
-        geometryFile      = 'NONE'                                              % Names of geomtry stl files in geometry subfolder
-        viscDrag          = struct(...                                          % Structure defining the viscous (quadratic) drag
-                                   'cd',                   [0 0 0 0 0 0], ...       % Viscous (quadratic) drag cd, vector length 6
-                                   'characteristicArea',   [0 0 0 0 0 0])           % Characteristic area for viscous drag, vector length 6
-        initDisp          = struct(...                                          % Structure defining the initial displacement
-                                   'initLinDisp',          [0 0 0], ...             % Initial displacement of center fo gravity - used for decay tests (format: [displacment in m], default = [0 0 0])
-                                   'initAngularDispAxis',  [0 1 0], ...             % Initial displacement of cog - axis of rotation - used for decay tests (format: [x y z], default = [1 0 0])
-                                   'initAngularDispAngle', 0)                       % Initial displacement of cog - Angle of rotation - used for decay tests (format: [radians], default = 0)
-        linearDamping     = [0 0 0 0 0 0]                                       % Linear drag coefficient, vector length 6
-        userDefinedExcIRF = []                                                  % Excitation IRF from BEMIO used for User-Defined Time-Series
-        viz               = struct(...                                          % Structur defining visualization properties
-                                   'color', [1 1 0], ...                            % Visualization color for either SimMechanics Explorer or Paraview.
-                                   'opacity', 1)                                    % Visualization opacity for either SimMechanics Explorer or Paraview.
-        morrisonElement   = struct(...                                          % Structure defining the Morrison Elements
-                                   'cd',                 [0 0 0], ...               % Viscous (quadratic) drag cd, vector length 3
-                                   'ca',                 [0 0 0], ...               % Added mass coefficent for Morrison Element (format [Ca_x Ca_y Ca_z], default = [0 0 0])
-                                   'characteristicArea', [0 0 0], ...               % Characteristic area for Morrison Elements calculations (format [Area_x Area_y Area_z], default = [0 0 0])
-                                   'VME',                 0     , ...               % Characteristic volume for Morrison Element (default = 0)
-                                   'rgME',               [0 0 0])                   % Vector from center of gravity to point of application for Morrison Element (format [X Y Z], default = [0 0 0]).
-%         nhBody            = 0                                                   % Flag for non-hydro body
+    properties (SetAccess = public, GetAccess = public) % input file
+        
+        % Mass in kg or specify 'equilibrium' to have mass = displacement vol * density
+        mass = [];
+
+        % Moment of inertia [Ixx Iyy Izz] in kg*m^2 for the body
+        momOfInertia = [];
+        
+        % Names of geomtry stl file for this body in geometry subfolder
+        geometryFile = 'NONE';                                              
+        
+        % viscDrag - Structure defining the viscous (quadratic) drag
+        %  Must contain the fields 'Drag', 'cd' and 'characteristicArea'.
+        %  The 'Drag' field should contain a (6x6) matrix defining the
+        %  Viscous (quadratic) drag. The 'cd' field should contain a vector
+        %  length 6 defining the Viscous (quadratic) drag. The
+        %  'characteristicArea' field should contain another vector of
+        %  length 6 defining the Characteristic area for viscous drag.
+        %
+        viscDrag = struct( 'Drag',                 zeros(6), ...
+                           'cd',                   [0 0 0 0 0 0], ... 
+                           'characteristicArea',   [0 0 0 0 0 0] );
+                                
+        % initDisp - Structure defining the initial displacement.
+        %  Should contain three fields:
+        %
+        %  initLinDisp : Initial displacement of center of gravity - used
+        %   for decay tests (format: [displacment in m], default = [0 0 0])
+        %
+        %  initAngularDispAxis : Initial displacement of centre of gravity
+        %   (axis of rotation) used for decay tests (format: [x y z],
+        %   default = [1 0 0])
+        %
+        %  initAngularDispAngle : Initial displacement of centre of gravity
+        %    (angle of rotation) - used for decay tests (format: [radians],
+        %    default = 0)
+        %
+        initDisp = struct( 'initLinDisp',          [0 0 0], ... 
+                           'initAngularDispAxis',  [0 1 0], ...
+                           'initAngularDispAngle', 0 );
+                       
+        % (6x6) Hydrostatic stiffness matrix which overrides BEMIO definition
+        hydroStiffness   = zeros(6);
+                       
+        % linearDamping - Linear drag coefficient, vector length 6
+        linearDamping = [0 0 0 0 0 0];
+        
+        % Excitation IRF from BEMIO used for User-Defined Time-Series
+        userDefinedExcIRF = [] ;
+        
+        % viz - Structure defining visualization properties for Paraview
+        %  Should contain two fields, 'color' and 'opacity'.
+        %
+        %  color : three element vector containing the rgb values defining
+        %   the body color in Paraview
+        %
+        %  opacity : scalar value defining the opacity of the body in 
+        %   Paraview.
+        %
+        viz = struct( 'color', [1, 1, 0], ...                           
+                      'opacity', 1 );
+                               
+        % morrisonElement - structure defining morrison element input
+        %  Should be a structure containing the fields 'cd', 'ca',
+        %  'characteristicArea', 'VME' and 'rgME'
+        %
+        %  cd : vector length 3 containing the viscous (quadratic) drag
+        %   coefficients
+        %
+        %  ca : Added mass coefficent for Morrison Element (format [Ca_x
+        %   Ca_y Ca_z], default = [0 0 0])
+        %
+        %  characteristicArea : Characteristic area for Morrison Elements
+        %   calculations (format [Area_x Area_y Area_z], default = [0 0 0])
+        %
+        %  VME : Characteristic volume for Morrison Element (default = 0)
+        %
+        %  rgME : Vector from center of gravity to point of application for
+        %   Morrison Element (format [X Y Z], default = [0 0 0]).
+        %
+        morrisonElement = struct( 'cd',                 [0 0 0], ...
+                                  'ca',                 [0 0 0], ...
+                                  'characteristicArea', [0 0 0], ...
+                                  'VME',                 0     , ...
+                                  'rgME',               [0 0 0] );
+
+        % bodyGeometry - Structure defining body's mesh
+        %  Should contain the fields 'numFace', 'numVertex', 'vertex',
+        %  'face', 'norm', 'area', 'center'. Generally this is filled by
+        %  reading the geometry STL file.
+        %
+        %  numFace : Number of faces
+        %
+        %  numVertex : Number of vertices
+        %
+        %  vertex : List of vertices
+        %
+        %  face : List of faces
+        %
+        %  norm : List of normal vectors
+        %
+        %  area : List of cell areas
+        %
+        %  center : List of cell centers
+        %
+        bodyGeometry = struct( 'numFace', [], ...
+                               'numVertex', [], ...
+                               'vertex', [], ...
+                               'face', [], ...
+                               'norm', [], ...
+                               'area', [], ...
+                               'center', [] );
+
+        % bodyNumber - body number in the order body was added to a wsim.hydroSystem. 
+        %  Can be different from the BEM body number, this is the index of
+        %  the body in the wsim.hydroSystem
+        bodyNumber = [];
+        
+        % bodyTotal - Total number of hydro bodies in the wsim.hydroSystem
+        bodyTotal = [];
+        
+        % lenJ - Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
+        lenJ = [];  
     end
 
-    properties (SetAccess = 'public', GetAccess = 'public') % body geometry stl file
-        bodyGeometry      = struct(...                                          % Structure defining body's mesh
-                                   'numFace', [], ...                               % Number of faces
-                                   'numVertex', [], ...                             % Number of vertices
-                                   'vertex', [], ...                                % List of vertices
-                                   'face', [], ...                                  % List of faces
-                                   'norm', [], ...                                  % List of normal vectors
-                                   'area', [], ...                                  % List of cell areas
-                                   'center', [])                                    % List of cell centers
-    end
-
-    properties (SetAccess = 'public', GetAccess = 'public') %internal
-        hydroForce        = struct()                                            % Hydrodynamic forces and coefficients used during simulation.
-        hydroDataFile     = ''                                                  % hdf5 or mat file containing the hydrodynamic data
-        hydroDataBodyNum  = []                                                  % Body number within the hdf5 file.
-        massCalcMethod    = []                                                  % Method used to obtain mass: 'user', 'fixed', 'equilibrium'
-        bodyNumber        = []                                                  % bodyNumber in WEC-Sim as defined in the input file. Can be different from the BEM body number.
-        bodyTotal         = []                                                  % Total number of WEC-Sim bodies (body block iterations)
-        lenJ              = []                                                  % Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
-    end
-
-
-    properties (SetAccess = 'private', GetAccess = 'public') % internal
-
+    properties (SetAccess = protected, GetAccess = public) % internal
+        
+        % hydroForce - Structure containing hydrodynamic forces and coefficients used during simulation
+        %  Will be a structure containing various fields depending on what
+        %  simulation settings were chosen.
+        hydroForce = struct();
+        
+        % hydroDataBodyNum - Body number within the hdf5 file.
+        hydroDataBodyNum = [];          
+        
+        % massCalcMethod - Method used to obtain mass: 'user', 'fixed', 'equilibrium'
+        massCalcMethod = [];  
+        
+        % excitationMethod - Character vector containing the wave excitation method to be used
+        %  can be one of: 'noWave', 'noWaveCIC', 'regular', 'regularCIC',
+        %  'irregular', 'irregularImport', 'userDefined'
         excitationMethod;
-        doNonLinearFKExcitation;
+        
+        % doNonLinearFKExcitation - true/false flag indicating if FK force will be calculated
+        %  Indicates whether the nonlinear Froude-Krylov wave excitation
+        %  forces will be calculated
+        doNonLinearFKExcitation;  
+        
+        % radiationMethod - character vector with a description of the radiation method
+        %  Contains one of the following character vectors describing what
+        %  method will be used to calculated the radiation forces:
+        %
+        %     'constant radiation coefficients'
+        %     'state space representation'
+        %     'state space representation using external solver'
+        %     'convolution integral'
+        %
         radiationMethod;
-        hydroRestoringForceMethod;
+        
+%         hydroRestoringForceMethod;
+        
+        % freeSurfaceMethod - character vector indicating what fre surface method will be used
+        %  Will be 'mean' or 'instantaneous'
         freeSurfaceMethod;
+        
+        % bodyToBodyInteraction - true/false flag indicating if body-to-body interaction is included
         bodyToBodyInteraction;
+        
+        % doMorrisonElementViscousDrag - true/false flag indicating if morrison element viscous drag is included
         doMorrisonElementViscousDrag;
+        
+        % doViscousDamping - true/false flag indicating if viscous damping is included
+        doViscousDamping;
+        
+        % doLinearDamping - true/false flag indicating if linear damping is included
+        doLinearDamping;
+        
+        % caseDirectory - Simulation case directory containing the hydroData and geometry subdirectories
         caseDirectory;
-        hydroDataFileFullPath = ''                                              % full path to hdf5 or mat file containing the hydrodynamic data
+        
+        % hydroDataFile - name of hdf5 or mat file containing the hydrodynamic data (without path)
+        hydroDataFile = '';          
+        
+        % hydroDataFileFullPath - full path to h5 or mat file containing the hydrodynamic data for the body
+        hydroDataFileFullPath = ''         
 
     end
 
-    properties (SetAccess = 'private', GetAccess = 'private') % internal
+    properties (SetAccess = protected, GetAccess = protected) % internal
 
         waves;
         simu;
@@ -93,6 +301,8 @@ classdef hydroBody < handle
         radiationMethodNum;
         hydroRestoringForceMethodNum;
         freeSurfaceMethodNum;
+        diagViscDrag;
+        viscDragDiagVals;
 
         % properties used to calculate nonFKForce at reduced sample time
         oldForce    = [];
@@ -140,44 +350,55 @@ classdef hydroBody < handle
             % Input
             %
             %  filename - string containing the h5 or mat file containing
-            %    the hydrodynamic data for the body, without the path, e.g.
-            %    float.mat, or rm3.h5. The hydrobody searches for the file
-            %    in the <case_directory>/hydroData folder.
+            %   the hydrodynamic data for the body, without the path, e.g.
+            %   float.mat, or rm3.h5. The hydrobody searches for the file
+            %   in the <case_directory>/hydroData folder. The validity of
+            %   the file name is not checked until the setCaseDirectory
+            %   method is called (which is usually called by a parent
+            %   wism.hydroSystem object which sets the case directory for
+            %   all hydroBodies in a system).
             %
             % Output
             %
-            %  hb - a hydroBody object
+            %  hb - a wsim.hydroBody object
             %
             %
             
-%             options.Waves = [];
-%             options.Simu = [];
-%             options.CaseDirectory = pwd();
-%             
-%             options = parse_pv_pairs (options, varargin);
-%             
-%             hydrofile = fullfile (options.CaseDirectory, 'hydroData', filename);
-%             
-%             if exist (hydrofile, 'file') ~= 2
-%                 if exist (options.CaseDirectory, 'dir') ~= 7
-%                     error ('The case directory %s does not appear to exist', options.CaseDirectory);
-%                 else
-%                     [filepath,~,ext] = fileparts (hydrofile);
-%                     error ( 'The specified hydro data (%s) file was not found in the directory:\n%s', ...
-%                             ext, ...
-%                             filepath );
-%                 end
-%             end
-
-            % hydro data file
-%             obj.caseDir = options.CaseDirectory;
             obj.hydroDataFile = filename;
             
         end
         
         function setCaseDirectory (obj, case_directory)
-            % set the case directory for the simulation
-            
+            % set the case directory for the simulation the body is part of
+            %
+            % Syntax
+            %
+            % setCaseDirectory (hb, case_directory)
+            %
+            % Description
+            %
+            % setCaseDirectory sets the path to the case directory of the
+            % simulation of which the hydroBody is a part. This is intended
+            % to be called by the wsim.hydroSystem to which the body is
+            % added, rather than called by a user directly. The case
+            % directory should contain two subdirectories, 'hydroData' and
+            % 'geometry'. The hydroData directory should contain the .h5
+            % file or .mat file containing the hydrodynamic data for the
+            % body using a BEM solver and the BEMIO functions. The geometry
+            % folder should contain any STL file describing the geometry of
+            % the body.
+            %
+            % Input
+            %
+            %  hb - a wsim.hydroBody object
+            %
+            %  case_directory - character vector containing the full path
+            %   to the case directory of the simulation.
+            %
+            %
+            % See Also: wsim.hydroSystem
+            %
+
             hydrofile = fullfile (case_directory, 'hydroData', obj.hydroDataFile);
             
             if exist (hydrofile, 'file') ~= 2
@@ -198,8 +419,7 @@ classdef hydroBody < handle
         end
 
         function readH5File (obj)
-            % Reads the HDF5 file containing the hydrodynamic data for the
-            % body
+            % Reads an HDF5 file containing the hydrodynamic data for the body
             %
             % Syntax
             %
@@ -212,7 +432,7 @@ classdef hydroBody < handle
             % file location is expected to be in the case directory
             % provided on construction of the object.
             %
-            % - Generating the hydrodynamic data:
+            % Generating the hydrodynamic data:
             %
             % The hydroBody requires frequency-domain hydrodynamic
             % coefficients (added mass, radiation damping, and wave
@@ -222,7 +442,7 @@ classdef hydroBody < handle
             % HDF5 file must then be generated from the output of these
             % codes.
             %
-            % - Create HDF5 file:
+            % Create HDF5 file:
             %
             % readH5File reads the hydrodynamic data in HDF5 format from
             % the (<hydrodata_file_name>.h5) file provided when the object
@@ -240,6 +460,8 @@ classdef hydroBody < handle
             name = ['/body' num2str(obj.bodyNumber)];
             obj.cg = h5read(filename,[name '/properties/cg']);
             obj.cg = obj.cg';
+            obj.cb = h5read(filename,[name '/properties/cb']);
+            obj.cb = obj.cb';
             obj.dispVol = h5read(filename,[name '/properties/disp_vol']);
             obj.name = h5read(filename,[name '/properties/name']);
             try obj.name = obj.name{1}; end
@@ -252,6 +474,7 @@ classdef hydroBody < handle
             try obj.hydroData.properties.name = obj.hydroData.properties.name{1}; end
             obj.hydroData.properties.body_number = h5read(filename,[name '/properties/body_number']);
             obj.hydroData.properties.cg = h5read(filename,[name '/properties/cg']);
+            obj.hydroData.properties.cb = h5read(filename,[name '/properties/cb']);
             obj.hydroData.properties.disp_vol = h5read(filename,[name '/properties/disp_vol']);
             obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.bemio.h5load(filename, [name '/hydro_coeffs/linear_restoring_stiffness']);
             obj.hydroData.hydro_coeffs.excitation.re = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/re']);
@@ -268,6 +491,7 @@ classdef hydroBody < handle
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/B/all']); end
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
+            
         end
 
         function loadHydroData (obj, hydroData)
@@ -281,8 +505,8 @@ classdef hydroBody < handle
             %
             % Description
             %
-            % Loads hydrodynamic data from a .mat file, .h5 file or a
-            % matlab variable.
+            % Loads hydrodynamic data from a .mat file, .h5 file or
+            % directly from a matlab structure.
             %
             % Input
             %
@@ -328,7 +552,7 @@ classdef hydroBody < handle
                         
                     case '.h5'
                         
-                        readH5File (obj)
+                        readH5File (obj);
                         
                     otherwise
                         
@@ -340,6 +564,7 @@ classdef hydroBody < handle
                 
                 obj.hydroData = hydroData;
                 obj.cg        = hydroData.properties.cg';
+                obj.cb        = hydroData.properties.cb';
                 obj.dispVol   = hydroData.properties.disp_vol;
                 obj.name      = hydroData.properties.name;
                 
@@ -354,7 +579,38 @@ classdef hydroBody < handle
         
         function saveHydroData (obj, filename, varargin)
             % saves the body's hydrodata structure to a .mat file
-            
+            %
+            % Syntax
+            %
+            % saveHydroData (hb, filename)
+            % saveHydroData (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % saveHydroData saves the body's hydroData structure to a .mat
+            % file for later use. This avoids having to read the .h5 file.
+            % By default saveHydroData saves the file in the hydroData
+            % subdirectory of the case directory. The 'Directory' option
+            % may be used to change this behaviour.
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+            %  filename - name withput path of the .mat file in which to
+            %   save the 
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'Directory' - optional alternative direcotry in which to
+            %    save the .mat file instead of the hydroData subdirectory
+            %    of the simulation case directory.
+            %
+            % See Also: wsim.hydroBody.loadHydroData
+            %
+
+            options.FileName = [ obj.name, '.mat' ];
             options.Directory = fullfile (obj.caseDirectory, 'hydroData');
             
             options = parse_pv_pairs (options, varargin);
@@ -376,25 +632,66 @@ classdef hydroBody < handle
         end
 
         function hydroForcePre(obj)
-            % HydroForce Pre-processing calculations
-            % 1. Set the linear hydrodynamic restoring coefficient, viscous
-            %    drag, and linear damping matrices
-            % 2. Set the wave excitation force
+            % performs pre-processing calculations to populate hydroForce structure
+            %
+            % Syntax
+            %
+            % hydroForcePre (hb)
+            %
+            % Description
+            %
+            % hydroForcePre performs various pre-processing calulations in
+            % prepration for a simulation. It populates the hydroForce
+            % property of the hydroBody as a structure with the linear
+            % hydrodynamic restoring coefficient, viscous drag, and linear
+            % damping matrices, and also sets the wave excitation force
+            % calculation method from the specified wave type.
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+
                   
             rho = obj.simu.rho;
             g = obj.simu.g;
             
             obj.setMassMatrix(rho, obj.simu.nlHydro)
             
-            k = obj.hydroData.hydro_coeffs.linear_restoring_stiffness;
+            % check if obj.hydroStiffness is defined directly
+            if any(any(obj.hydroStiffness)) == 1
+                obj.hydroForce.linearHydroRestCoef = obj.hydroStiffness;
+            else
+                k = obj.hydroData.hydro_coeffs.linear_restoring_stiffness;
+                obj.hydroForce.linearHydroRestCoef = k .* rho .* g;
+            end
             
-            obj.hydroForce.linearHydroRestCoef = k .* rho .* g;
+            % check if obj.viscDrag.Drag is defined directly
+            if  isfield (obj.viscDrag, 'Drag') && (any(any(obj.viscDrag.Drag)) == 1)
+                obj.hydroForce.visDrag = obj.viscDrag.Drag;                
+            else
+                obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
+            end
             
-            obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
+            if all (obj.hydroForce.visDrag(:) == 0)
+                obj.doViscousDamping = false;
+            end
+            
+            if isdiag (obj.hydroForce.visDrag)
+                obj.diagViscDrag = true;
+                obj.viscDragDiagVals = diag (obj.hydroForce.visDrag);
+            else
+                obj.diagViscDrag = false;
+            end
+            
+            if all (obj.linearDamping == 0)
+                obj.doLinearDamping = false;
+            end
             
             obj.hydroForce.linearDamping = diag (obj.linearDamping);
             
-            obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)),6);   %initializing userDefinedFe for non user-defined cases
+            % initialize userDefinedFe for non user-defined cases
+            obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)),6);
             
             switch obj.waves.type
                 case {'noWave'}
@@ -409,7 +706,11 @@ classdef hydroBody < handle
                     
                 case {'regular'}
                     obj.regExcitation ();
-                    obj.constAddedMassAndDamping ();
+                    if obj.simu.ssCalc == 0
+                        obj.constAddedMassAndDamping ();
+                    else
+                        obj.irfInfAddedMassAndDamping ();
+                    end
                     obj.excitationMethodNum = 1;
                     
                 case {'regularCIC'}
@@ -417,12 +718,12 @@ classdef hydroBody < handle
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 1;
                     
-                case {'irregular','irregularImport'}
+                case {'irregular', 'spectrumImport'}
                     obj.irrExcitation ();
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 2;
                     
-                case {'userDefined'}
+                case {'etaImport'}
                     obj.userDefinedExcitation (obj.waves.waveAmpTime);
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 3;
@@ -435,10 +736,28 @@ classdef hydroBody < handle
         end
 
         function adjustMassMatrix(obj)
-            % Merge diagonal term of added mass matrix to the mass matrix
-            % 1. Store the original mass and added-mass properties
-            % 2. Add diagonal added-mass inertia to moment of inertia
-            % 3. Add the maximum diagonal translational added-mass to body mass
+            % Merges diagonal term of added mass matrix to the mass matrix
+            %
+            % Syntax
+            %
+            % adjustMassMatrix (hb)
+            %
+            % Description
+            %
+            % adjustMassMatrix performs the following tasks in preparation
+            % for a simulation:
+            %
+            % * Stores the original mass and added-mass properties
+            % * Adds diagonal added-mass inertia to moment of inertia
+            % * Adds the maximum diagonal translational added-mass to body
+            % mass
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+
+            
             iBod = obj.bodyNumber;
             obj.hydroForce.storage.mass = obj.mass;
             obj.hydroForce.storage.momOfInertia = obj.momOfInertia;
@@ -492,11 +811,30 @@ classdef hydroBody < handle
         end
 
         function setInitDisp(obj, x_rot, ax_rot, ang_rot, addLinDisp)
-            % Function to set the initial displacement when having initial rotation
-            % x_rot: rotation point
-            % ax_rot: axis about which to rotate (must be a normal vector)
-            % ang_rot: rotation angle in radians
-            % addLinDisp: initial linear displacement (in addition to the displacement caused by rotation)
+            % Sets the initial displacement when having initial rotation
+            %
+            % Syntax
+            %
+            % setInitDisp (hb, x_rot, ax_rot, ang_rot, addLinDisp)
+            %
+            % Description
+            %
+            % Sets the initial displacement of the body when having initial
+            % rotation.
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+            %  x_rot - rotation point
+            %
+            %  ax_rot - axis about which to rotate (must be a normal vector)
+            %
+            %  ang_rot - rotation angle in radians
+            %
+            %  addLinDisp - initial linear displacement (in addition to the
+            %   displacement caused by rotation)
+            %
 
             relCoord = obj.cg - x_rot;
 
@@ -515,7 +853,8 @@ classdef hydroBody < handle
         end
 
         function listInfo(obj)
-            % List body info
+            % Display some information about the body at the command line
+            
             fprintf('\n\t***** Body Number %G, Name: %s *****\n',obj.hydroData.properties.body_number,obj.hydroData.properties.name)
             fprintf('\tBody CG                          (m) = [%G,%G,%G]\n',obj.hydroData.properties.cg)
             fprintf('\tBody Mass                       (kg) = %G \n',obj.mass);
@@ -523,7 +862,35 @@ classdef hydroBody < handle
         end
 
         function bodyGeo(obj,fname)
-            % Reads mesh file and calculates areas and centroids
+            % Reads an STL mesh file and calculates areas and centroids
+            %
+            % Syntax
+            %
+            % bodyGeo (hb, fname)
+            %
+            % Description
+            %
+            % bodyGeo
+            %
+            % Input
+            %
+            %  hb - wsim.hydroBody object
+            %
+            %  fname - (optional) full path to the STL file to be loaded.
+            %   If not supplied, the file specified in the body's
+            %   geometryFile property (and expected to be in the 'geometry'
+            %   folder of the simulation case directory) will be used.
+            %
+            
+            if nargin < 2
+                if isempty (obj.geometryFile) || strcmp (obj.geometryFile, 'NONE')
+                    error ('No geometry file is specified in the ''geometryFile'' property of the body, and the full path to an STL file has also not be specified');
+                end
+                fname = fullfile (obj.caseDirectory, 'geometry', obj.geometryFile);
+            end
+            
+            assert (exist (fname, 'file'), 'The STl file:\n%s\n does not appear to exist', fname);
+            
             try
                 [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,1);
             catch
@@ -534,6 +901,7 @@ classdef hydroBody < handle
             obj.checkStl ();
             obj.triArea ();
             obj.triCenter ();
+            
         end
 
         function plotStl(obj)
@@ -734,6 +1102,7 @@ classdef hydroBody < handle
             t =  min(kt):obj.simu.dt:max(kt);
             
             for ii = 1:6
+                
                 if length (obj.hydroData.simulation_parameters.wave_dir) > 1
                     
                     [X,Y] = meshgrid (kt, obj.hydroData.simulation_parameters.wave_dir);
@@ -747,7 +1116,10 @@ classdef hydroBody < handle
                     kernel = squeeze (kf(ii,1,:));
                     
                     obj.userDefinedExcIRF = interp1 (kt,kernel,min(kt):obj.simu.dt:max(kt));
+                else
                     
+                    error('Default wave direction different from hydro database value. Wave direction (waves.waveDir) should be specified on input file.')
+                
                 end
                 obj.hydroForce.userDefinedFe(:,ii) = conv (waveAmpTime(:,2), obj.userDefinedExcIRF, 'same') * obj.simu.dt;
                 
@@ -982,7 +1354,21 @@ classdef hydroBody < handle
             obj.waves = waves;
             obj.simu = simu;
             obj.bodyNumber = bodynum;
-
+            
+            % Linear Damping
+            if obj.simu.linearDamping == 0
+                obj.doLinearDamping = false;
+            elseif obj.simu.linearDamping == 1
+                obj.doLinearDamping = true;
+            end
+            
+            % Viscous Damping
+            if obj.simu.viscousDamping == 0
+                obj.doViscousDamping = false;
+            elseif obj.simu.viscousDamping == 1
+                obj.doViscousDamping = true;
+            end
+                
             % Morrison Element
             if obj.simu.morrisonElement == 0
                 obj.doMorrisonElementViscousDrag = false;
@@ -1023,7 +1409,7 @@ classdef hydroBody < handle
             end
 
             % Radiation Damping
-            if obj.waves.typeNum == 0 || obj.waves.typeNum == 10 %'noWave' & 'regular'
+            if obj.waves.typeNum == 0 || (obj.waves.typeNum == 10 && obj.simu.ssCalc == 0)%'noWave' & 'regular'
                 % constant radiation coefficients
                 obj.radiationMethod = 'constant radiation coefficients';
                 obj.radiationMethodNum = 0;
@@ -1093,6 +1479,8 @@ classdef hydroBody < handle
                 % forces
                 
             end
+            
+            adjustMassMatrix(obj);
 
         end
         
@@ -1265,8 +1653,6 @@ classdef hydroBody < handle
             %
             %  accel - (6 x n) acceleration of all bodies in system
             %
-            %  elv - wave elevation
-            %
             % Output
             %
             %  forces - (6 x 1) forces and moments acting on the body
@@ -1302,27 +1688,39 @@ classdef hydroBody < handle
             %
             
 
-            
             % always do linear excitation forces
             breakdown.F_ExcitLin = linearExcitationForces (obj, t);
 
-            % always do viscous damping
-            breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
+            if obj.doViscousDamping
+                breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
+            else
+                breakdown.F_ViscousDamping = zeros (6, 1);
+            end
+            
+            % always do linear damping
+            if obj.doLinearDamping
+                breakdown.F_LinearDamping = linearDampingForce (obj, vel(:,obj.bodyNumber));
+            else
+                breakdown.F_LinearDamping = zeros (6, 1);
+            end
 
             % always do radiation forces
             [breakdown.F_AddedMass, breakdown.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
-
-            % calculate the wave elevation
-            elv = waveElevation(obj, pos, t);
             
-            % hydrostatic restoring forces
-            [breakdown.F_Restoring, breakdown.BodyHSPressure ] =  hydrostaticForces (obj, t, pos, elv);
+            % always do hydrostatic restoring forces
+            [breakdown.F_Restoring, breakdown.BodyHSPressure, waveElv ] = hydrostaticForces (obj, t, pos);
 
             if obj.doNonLinearFKExcitation
+                
+                if isempty (waveElv)
+                    % calculate the wave elevation if it has not already
+                    % been done by the hydrostaticForces method
+                    waveElv = waveElevation(obj, pos, t);
+                end
 
                 [ breakdown.F_ExcitNonLin, ...
                   breakdown.WaveNonLinearPressure, ...
-                  breakdown.WaveLinearPressure ] = nonlinearExcitationForces (obj, t, pos, elv);
+                  breakdown.WaveLinearPressure ] = nonlinearExcitationForces (obj, t, pos, waveElv);
 
             else
                 breakdown.F_ExcitNonLin = zeros (6, 1);
@@ -1333,7 +1731,6 @@ classdef hydroBody < handle
                 breakdown.F_MorrisonElement = morrisonElementForce ( obj, t, pos, ...
                                                                      vel(:,obj.bodyNumber), ...
                                                                      accel(:,obj.bodyNumber) );
-
             else
 
                 breakdown.F_MorrisonElement = zeros (6, 1);
@@ -1350,13 +1747,27 @@ classdef hydroBody < handle
                      - breakdown.F_AddedMass ...
                      - breakdown.F_Restoring ...
                      - breakdown.F_RadiationDamping ...
-                     - breakdown.F_MorrisonElement;
+                     - breakdown.F_MorrisonElement ...
+                     - breakdown.F_LinearDamping;
 
         end
 
+        function forces = linearDampingForce (obj, vel)
+            
+%             forces = obj.hydroForce.linearDamping * vel;
+            % linear damping is always a diagonal matrix, so just multiply
+            % the values along the diagonal
+            forces = obj.linearDamping(:) .* vel;
+            
+        end
+        
         function forces = viscousDamping (obj, vel)
 
-            forces = obj.hydroForce.visDrag * ( vel .* abs (vel));
+            if obj.diagViscDrag
+                forces = obj.viscDragDiagVals(:) .* ( vel .* abs (vel) );
+            else
+                forces = obj.hydroForce.visDrag * ( vel .* abs (vel) );
+            end
 
         end
 
@@ -1410,7 +1821,7 @@ classdef hydroBody < handle
                     forces = obj.waves.A(1,:) .* ( ...
                                 cos (wt) .* obj.hydroForce.fExt.re(1,:) ...
                                 - sin (wt) .* obj.hydroForce.fExt.im(1,:) ...
-                                             ).';
+                                                 ).';
 
                 case 2
                     % irregular wave
@@ -1422,23 +1833,26 @@ classdef hydroBody < handle
                     % where i = each frequency bin.
 
                     % TOD: check correct dimension/orientation of force output
-                    A1 = bsxfun (@plus, obj.waves.w * t, pi/2);
+                    A1 = obj.waves.w * t + pi/2;
 
-                    B1 = sin (bsxfun (@plus, A1, obj.waves.phaseRand));
+                    B1 = sin (A1 + obj.waves.phase);
 
-                    B11 = sin (bsxfun (@plus, obj.waves.w * t, obj.waves.phaseRand));
+                    B11 = sin (obj.waves.w * t + obj.waves.phase);
 
-                    C1 = sqrt (bsxfun (@times, obj.waves.A, obj.waves.dw));
+                    C1 = sqrt (obj.waves.A .* obj.waves.dw);
 
-                    D1 = bsxfun (@times, obj.hydroForce.fExt.re, C1);
+                    % hydroForce.fExt.re and im will be a 6 * Nfreqs
+                    % matrices, not this statement takes advantage of
+                    % automatic
+                    D1 = obj.hydroForce.fExt.re .* C1;
 
-                    D11 = bsxfun (@times, obj.hydroForce.fExt.im, C1);
+                    D11 = obj.hydroForce.fExt.im .* C1;
 
-                    E1 = bsxfun (@times, B1, D1);
+                    E1 = B1 .* D1;
 
-                    E11 = bsxfun (@times, B11, D11);
+                    E11 = B11 .* D11;
 
-                    forces = sum (bsxfun (@minus, E1, E11))';
+                    forces = sum (E1 - E11)';
 
 
                 case 3
@@ -1594,24 +2008,34 @@ classdef hydroBody < handle
             
         end
 
-        function [forces, body_hspressure_out] = hydrostaticForces (obj, t, pos, waveElv)
+        function [forces, body_hspressure_out, waveElv] = hydrostaticForces (obj, t, pos)
             % calculates the hydrostatic forces acting on the body
             
             pos = pos - [ obj.cg; 0; 0; 0 ];
+            
+            waveElv = [];
 
             switch obj.freeSurfaceMethodNum
 
                 case 0
+                    % linear hydrostatic restoring force
 
                     body_hspressure_out = [];
 
                     forces = obj.hydroForce.linearHydroRestCoef * pos;
 
+                    f_gravity = obj.simu.g .* obj.hydroForce.storage.mass;
+                    
+                    f_buoyancy = obj.simu.rho .* obj.simu.g .*  obj.dispVol;
+                    
                     % Add Net Bouyancy Force to Z-Direction
-                    forces(3) = forces(3) + ...
-                        ((obj.simu.g .* obj.hydroForce.storage.mass) - (obj.simu.rho .* obj.simu.g .*  obj.dispVol));
+                    forces(3) = forces(3) + (f_gravity - f_buoyancy);
+                    
+                    forces(4:6) = forces(4:6) + wsim.hydroBody.vcross ([0;0;f_buoyancy], (obj.cb - obj.cg));
 
                 case 1
+                    
+                    waveElv = waveElevation(obj, pos, t);
 
                     [forces, body_hspressure_out]  = nonLinearBuoyancy( obj, pos, waveElv, t );
 
@@ -1621,6 +2045,7 @@ classdef hydroBody < handle
             end
 
         end
+        
         
         function f = waveElevation(obj, pos, t)
             % calculate the wave elevation at centroids of triangulated surface 
@@ -1868,7 +2293,7 @@ classdef hydroBody < handle
                                 .* sqrt (obj.waves.AH(i) * obj.waves.dw) ...
                                 .* cos ( obj.waves.k(i) .* center(:,1) ...
                                          - obj.waves.w(i) * t ...
-                                         - obj.waves.phaseRand(i) ...
+                                         - obj.waves.phase(i) ...
                                        );
 
                         f = f + f_tmp .* ( cosh ( obj.waves.k(i) .* (z + obj.waves.wDepth) ) ...
@@ -1883,7 +2308,7 @@ classdef hydroBody < handle
                                 .* obj.simu.g ...
                                 .* sqrt (obj.waves.AH(i) * obj.waves.dw) ...
                                 .* cos ( obj.waves.k(i) .* center(:,1) ...
-                                         - obj.waves.w(i) * t - obj.waves.phaseRand(i) ...
+                                         - obj.waves.w(i) * t - obj.waves.phase(i) ...
                                        );
 
                         f = f + f_tmp .* exp (obj.waves.k(i) .* z);
@@ -1925,14 +2350,14 @@ classdef hydroBody < handle
             % TODO: allow nonuniform time spacing for convolutionIntegral
             if abs(t - obj.radForceOldTime - obj.CIdt) < 1e-8
 
-                obj.radForceVelocity      = circshift(obj.radForceVelocity, 1, 2);
+                obj.radForceVelocity = circshift(obj.radForceVelocity, 1, 2);
 
                 obj.radForceVelocity(:,1) = vel(:);
 
                 % integrate
-                time_series = bsxfun(@times, obj.radForce_IRKB_interp, obj.radForceVelocity);
+                time_series = bsxfun (@times, obj.radForce_IRKB_interp, obj.radForceVelocity);
 
-                F_FM = squeeze(trapz(obj.simu.CTTime, sum(time_series, 1)));
+                F_FM = squeeze (trapz (obj.simu.CTTime, sum (time_series, 1)));
 
                 obj.radForceOldF_FM = F_FM;
 
@@ -2059,7 +2484,7 @@ classdef hydroBody < handle
                 
                 tmp1 = ones (1, length (center(:,1)));
                 
-                tmp2 = (obj.waves.w .* t + obj.waves.phaseRand) * tmp1;
+                tmp2 = (obj.waves.w .* t + obj.waves.phase) * tmp1;
                 
                 tmp3 = cos (obj.waves.k * X'- tmp2);
                 
@@ -2274,6 +2699,60 @@ classdef hydroBody < handle
             
         end
 
+        
+        function o = vcross(s,t)
+            %Vector cross product.
+            % o=vcross(s,t)
+            %-------------
+            %
+            %
+            %  Leutenegger Marcel  3.3.2005
+            %
+            %Input:
+            % s,t    vectors
+            %
+            %Output:
+            % o      vector: s X t = cross(s,t)
+            %
+
+            o = [ s(2,:).*t(3,:)-s(3,:).*t(2,:);
+                  s(3,:).*t(1,:)-s(1,:).*t(3,:);
+                  s(1,:).*t(2,:)-s(2,:).*t(1,:)];
+        end
+        
+    end
+    
+    
+    % getters and setters
+    methods
+        
+        function set.mass (self, new_mass)
+            
+            if ischar (new_mass)
+                ok = check.allowedStringInputs (new_mass, {'equilibrium'}, false);
+                assert (ok, 'If mass is a string, it must be ''equilibrium''');
+            else
+                check.isNumericScalar(new_mass, true, 'mass', 1);
+                assert (new_mass > 0, 'mass must be greater than 0');
+            end
+            
+            self.mass = new_mass;
+            
+        end
+        
+        
+        function set.momOfInertia (self, new_momOfInertia)
+            
+            ok = check.isNumericMatrix (new_momOfInertia, false, 'new_momOfInertia', 1);
+            
+            assert (ok && (numel (new_momOfInertia) == 3), ...
+                'momOfInertia must be a 3 element vector of positive real values. This is the diagonal of the inertia matrix ([Ixx, Iyy, Izz])' );
+            
+            self.momOfInertia = new_momOfInertia;
+            
+        end
+        
+        
     end
 
 end

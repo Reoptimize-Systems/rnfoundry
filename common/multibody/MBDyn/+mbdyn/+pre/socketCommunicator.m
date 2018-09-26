@@ -84,8 +84,20 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             %  'Path' - MBDyn supports local (unix) sockets, defined using
             %    the Path parameter, and inet sockets, defined using the
             %    Port and Host parameter. When using local sockets, Path
-            %    should be a character vector containing the file path to
-            %    the local socket which MBDyn will listen on.
+            %    should be a character vector. It can either contain the
+            %    file path to the local socket which MBDyn will listen on,
+            %    or can be the string 'auto'. If it is 'auto' a socket file
+            %    name will be generated with a random integer in the name
+            %    in the temp directory with the pattern:
+            %
+            %    /tmp/mbdyn_<random_integer>.sock
+            %
+            %    e.g. /tmp/mbdyn_172727.sock
+            %
+            %    The integer will be generated using the randi function and
+            %    will be between 1 and 100000. The result is stored in the
+            %    path proerty for later use. If the path is set to 'auto'
+            %    and 'Create' is 'no' an error will be thrown.
             %
             % Output
             %
@@ -130,16 +142,26 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
                 assert (ischar (options.Host), 'Host must be a character vector');
             end
             
-            self.create = options.Create;
-            self.path = options.Path;
-            self.port = options.Port;
-            self.host = options.Host;
-            
             if isempty (options.Path)
                 self.commMethod = 'inet socket';
             else
                 self.commMethod = 'local socket';
+                
+                if strcmpi (options.Path, 'auto')
+                    
+                    if isempty (options.Create) || strcmpi (options.Create, 'no'), ...
+                        error ('If Create is ''no'' or empty, Path cannot be ''auto''');
+                    end
+                    
+                    options.Path = fullfile (tempdir, sprintf ('mbdyn_%d.sock', randi (100000) ));
+                    
+                end
             end
+            
+            self.create = options.Create;
+            self.path = options.Path;
+            self.port = options.Port;
+            self.host = options.Host;
             
         end
         

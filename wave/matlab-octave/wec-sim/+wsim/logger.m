@@ -341,6 +341,7 @@ classdef logger < handle
             options.PreallocateStorage = [];
             options.IndependentVariable = '';
             options.Windowed = false;
+            options.Legends = {};
             
             options = parse_pv_pairs (options, varargin);
             
@@ -462,7 +463,8 @@ classdef logger < handle
                                            'LoggedVariableNumber', numel(obj.info) + 1, ...
                                            'LoggedSize', loggedvarsize, ...
                                            'Windowed', options.Windowed, ...
-                                           'AxisLabel', options.AxisLabel );
+                                           'AxisLabel', options.AxisLabel, ...
+                                           'Legends', {options.Legends} );
 
             end
             
@@ -890,6 +892,11 @@ classdef logger < handle
             options = parse_pv_pairs (options, varargin);
             
             if ~ischar(varname), obj.mesgfunc([varname 'must be a string specifying field that are already added to the logger object.']); return; end
+            
+            if ~isfield (obj.data, varname)
+                obj.mesgfunc(['Variable %s does not appear to exist.' varname]);
+            end
+            
             if ~isnumeric(obj.data.(varname)) obj.mesgfunc(['Plotting only numeric values is supported at this point. Not generating the plot for' varname]); return; end
 
             indepvar = obj.info.(varname).IndependentVariable;
@@ -1115,7 +1122,11 @@ classdef logger < handle
                                                    options.PlotFcnArgs{:} ) ...
                                 ];
                             
-                            legstrs = [ legstrs, {sprintf('Series (%d,%d)', dataind1, dataind2)}];
+                            if isempty (obj.info.(f2).Legends)
+                                legstrs = [ legstrs, {sprintf('Series (%d,%d)', dataind1, dataind2)}];
+                            else
+                                legstrs = [ legstrs, obj.info.(f2).Legends(dataind1, dataind2)];
+                            end
                         
                         end
                         
@@ -1187,7 +1198,7 @@ classdef logger < handle
         end
 
 
-        function status = logVal(obj, varname, val, ignoremissing)
+        function status = logVal(obj, varname, val, ignoremissing, checkexists)
             % log a new value of a variable
             %
             % Syntax
@@ -1227,18 +1238,22 @@ classdef logger < handle
                 ignoremissing = false;
             end
             
-            if ~isfield (obj.data, varname)
-                if ignoremissing
-                    status = -1;
-                    return;
-                else
-                    error ('data logging field: %s does not exist', varname);
+            if nargin < 5
+                checkexists = true;
+            end
+            
+            if checkexists
+                if ~isfield (obj.data, varname)
+                    if ignoremissing
+                        status = -1;
+                        return;
+                    else
+                        error ('data logging field: %s does not exist', varname);
+                    end
                 end
             end
             
-            % copy the pre-constructed indexing structure (created when
-            % adding the variable)
-            S = obj.info.(varname).IndexAssignment;
+            S = [];
             
             if obj.info.(varname).LastLogIndex + 1 > obj.info.(varname).PreallocatedLogLength
                 
@@ -1258,6 +1273,11 @@ classdef logger < handle
                                     obj.info.(varname).LastLogIndex + 1, ...
                                     round (obj.info.(varname).LastLogIndex * obj.expandPreallocFactor) ...
                                                                    );
+                                                               
+                    % copy the pre-constructed indexing structure (created when
+                    % adding the variable)
+                    S = obj.info.(varname).IndexAssignment;
+                    
                     % build the correct index into the logged variable by
                     % replacing the appropriate index with the new index of the
                     % end of the preallocated data
@@ -1269,12 +1289,37 @@ classdef logger < handle
             
             end
             
-            % build the correct index into the logged variable by replacing
-            % the appropriate index with the new log index
-            S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).LastLogIndex + 1;
+           
             
             % assign the new value
-            obj.data.(varname) = subsasgn (obj.data.(varname), S, val);
+            switch obj.info.(varname).IndexDimension
+                
+                case 1
+                    
+                    obj.data.(varname)(obj.info.(varname).LastLogIndex + 1) = val;
+                    
+                case 2
+                    
+                    obj.data.(varname)(:,obj.info.(varname).LastLogIndex + 1) = val;
+                    
+                case 3
+                    
+                    obj.data.(varname)(:,:,obj.info.(varname).LastLogIndex + 1) = val;
+                    
+                otherwise
+                    if isempty (S)
+                        % copy the pre-constructed indexing structure (created when
+                        % adding the variable)
+                        S = obj.info.(varname).IndexAssignment;
+                    end
+            
+                    % build the correct index into the logged variable by replacing
+                    % the appropriate index with the new log index
+                    S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).LastLogIndex + 1;
+                    
+                    obj.data.(varname) = subsasgn (obj.data.(varname), S, val);
+                    
+            end
             
             % increment the data index counter for this field
             obj.info.(varname).LastLogIndex = obj.info.(varname).LastLogIndex + 1;

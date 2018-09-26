@@ -30,6 +30,7 @@ classdef powerTakeOff < handle
     properties
         
         id; % positive scalar integer for uniquely idenifying the object
+        loggingOn; % flag indicating whether logging is active for the PTO
         
     end
     
@@ -45,6 +46,8 @@ classdef powerTakeOff < handle
         loggerReady;
         internalVariables;
         simulationInfo;
+        logIsWindowed;
+        logWindowSize;
     end
     
     methods
@@ -131,6 +134,8 @@ classdef powerTakeOff < handle
             %
 
             options.LoggedVars = {};
+            options.LogIsWindowed = false;
+            options.LogWindowSize = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -140,6 +145,14 @@ classdef powerTakeOff < handle
             
             if ~isa (other_node, 'mbdyn.pre.structuralNode') 
                 error ('other_node must be an mbdyn.pre.structuralNode')
+            end
+            
+            check.isLogicalScalar (options.LogIsWindowed, true, 'LogIsWindowed');
+            
+            if options.LogIsWindowed == true
+                check.isPositiveScalarInteger (options.LogWindowSize, true, 'LogWindowSize');
+            else
+                options.LogWindowSize = [];
             end
             
             check.structHasAllFields ( logginginfo, ...
@@ -197,8 +210,11 @@ classdef powerTakeOff < handle
             self.referenceNode = reference_node;
             self.otherNode = other_node;
             self.loggingInfo = logginginfo;
+            self.logIsWindowed = options.LogIsWindowed;
+            self.logWindowSize = options.LogWindowSize;
             
             self.loggerReady = false;
+            self.loggingOn = true;
             self.logger = [];
             
         end
@@ -269,17 +285,25 @@ classdef powerTakeOff < handle
             %           wsim.powerTakeOff.advanceStep
             %
             
-            if self.loggerReady
-                for ind = 1:numel(self.loggingInfo.LoggedVarInds)
+            if self.loggingOn
+                
+                if self.loggerReady
                     
-                    fieldname = self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)};
+                    for ind = 1:numel(self.loggingInfo.LoggedVarInds)
+
+                        fieldname = self.loggingInfo.AvailableNames{self.loggingInfo.LoggedVarInds(ind)};
+
+                        self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
+                                             self.internalVariables.(fieldname), ...
+                                             false, ...
+                                             false );
+                                         
+                    end
                     
-                    self.logger.logVal ( self.uniqueLoggingNames{self.loggingInfo.LoggedVarInds(ind)}, ...
-                                         self.internalVariables.(fieldname) ...
-                                       );
+                else
+                    error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
                 end
-            else
-                error ('You have called logData, but logging has not been set up, have you called loggingSetup yet?');
+                
             end
             
         end
@@ -456,11 +480,23 @@ classdef powerTakeOff < handle
                     error ('Invalid PTO IndepVar');
                 end
                 
-                logger.addVariable ( info.UniqueLoggingNames{ind}, ...
-                                     info.Sizes{ind}, ...
-                                     'Desc', info.Descriptions{ind}, ...
-                                     'Indep', indepvar, ...
-                                     'AxisLabel', info.AxisLabels{ind} );
+                if self.logIsWindowed
+                    logger.addVariable ( info.UniqueLoggingNames{ind}, ...
+                                         info.Sizes{ind}, ...
+                                         'Desc', info.Descriptions{ind}, ...
+                                         'Indep', indepvar, ...
+                                         'AxisLabel', info.AxisLabels{ind}, ...
+                                         'Windowed', self.logIsWindowed, ...
+                                         'Prealloc', self.logWindowSize );
+
+                else
+                    logger.addVariable ( info.UniqueLoggingNames{ind}, ...
+                                         info.Sizes{ind}, ...
+                                         'Desc', info.Descriptions{ind}, ...
+                                         'Indep', indepvar, ...
+                                         'AxisLabel', info.AxisLabels{ind});
+
+                end
                 
             end
             

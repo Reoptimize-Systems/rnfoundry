@@ -44,7 +44,7 @@ function [status,result] = cleansystem (cmd, restoreuser)
         precmd = 'unset LD_LIBRARY_PATH ; ';
         
         if restoreuser
-            precmd = [precmd, 'source ~/.bashrc ;'];
+            precmd = [precmd, '. ~/.bashrc ;'];
         end
         
     end

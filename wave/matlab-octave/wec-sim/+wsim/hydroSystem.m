@@ -34,6 +34,8 @@ classdef hydroSystem < handle
         hydroBodies; % array of wsim.hydroBody objects
         hydroBodyInds = []; % array of indices of the hydrobodies
         
+%         hydroBodyPropNames;
+        
     end
     
     
@@ -71,6 +73,9 @@ classdef hydroSystem < handle
             
             self.simu = simu;
             self.waves = waves;
+            
+%             % store the names of the public properties (used in the get
+%             self.hydroBodyPropNames = properties ('wsim.hydroBody');
             
             self.odeSimInitialised = false;
             
@@ -301,9 +306,12 @@ classdef hydroSystem < handle
             % Non-linear hydro
             if (self.simu.nlHydro > 0) || (self.simu.paraview == 1)
                 for bodyind = 1:length(self.hydroBodies(1,:))
-                    self.hydroBodies(bodyind).bodyGeo (body(bodyind).geometryFile)
+                    % load the body stl file
+                    self.hydroBodies(bodyind).bodyGeo ();
                 end
             end
+            
+
             
             % call each body's timeDomainSimSetup method
             for bodyind = 1:numel(self.hydroBodies)
@@ -312,9 +320,9 @@ classdef hydroSystem < handle
                 
             end
             
-            for bodyind = 1:numel(self.hydroBodies)
-                self.hydroBodies(bodyind).adjustMassMatrix ();
-            end
+%             for bodyind = 1:numel(self.hydroBodies)
+%                 self.hydroBodies(bodyind).adjustMassMatrix ();
+%             end
             
             self.odeSimInitialised = true;
             
@@ -747,6 +755,17 @@ classdef hydroSystem < handle
             
             n = numel (self.hydroBodies);
 
+        end
+        
+        
+        function propval = getBodyProperty (self, bodyind, property_name)
+            
+            assert (bodyind <= self.nHydroBodies, ...
+                'bodyind is greater than the number of hydroBody object in the system' );
+            
+            propval = self.hydroBodies(bodyind).(property_name);
+            
+            
         end
         
         

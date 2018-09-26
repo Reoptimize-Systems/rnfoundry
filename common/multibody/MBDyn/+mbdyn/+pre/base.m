@@ -8,6 +8,7 @@ classdef base < handle
         type;
         transformObject;
         netCDFName;
+        uid;
         
     end
     
@@ -19,7 +20,7 @@ classdef base < handle
         needsRedraw; % track whether object needs to be redrawn
         drawAxesH; % handle to figure for plotting
         drawColour;
-        uid;
+        
         
     end
     
@@ -370,6 +371,47 @@ classdef base < handle
                 
                 if throw
                     error ('%s must be a scalar integer (to machine precision)', name);
+                end
+            end
+            
+        end
+        
+        function ok = checkValidScalarIndex (ind, throw, name)
+            % checks if input is a scalar integer value to machine precision
+            %
+            % Syntax
+            %
+            %  ok = checkValidScalarIndex (ind, throw)
+            %  ok = checkValidScalarIndex (..., name)
+            %
+            % Input
+            %
+            %  ind - value to be tested if it is a scalar array index
+            %
+            %  throw - logical flag determining whether an error is thrown
+            %   by checkScalarInteger if num fails check
+            %
+            %  name - optional string used to customise the error message.
+            %   The error will be <name> must be a scalar integer (to
+            %   machine precision). Default is 'value' if not supplied.
+            %
+            %
+            % Output
+            %
+            %  ok - logical flag indicating if check was passed
+            %
+            
+            if nargin < 3
+                name = 'index';
+            end
+            
+            ok = true;
+            if ~( isnumeric (ind) && isscalar (ind) && isreal (ind) && isint2eps (ind) && ind > 0 )
+                
+                ok = false;
+                
+                if throw
+                    error ('%s is not a valid array index, it must be a scalar integer greater than 0', name);
                 end
             end
             

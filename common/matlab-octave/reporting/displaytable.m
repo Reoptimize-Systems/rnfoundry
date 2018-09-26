@@ -1,4 +1,4 @@
-function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, rowending)
+function displaytable(data, varargin)
 % Prints formatted matrix of numerical data with headings
 % 
 % Syntax
@@ -7,46 +7,47 @@ function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, row
 % 
 % Input
 % 
-% data: a matrix or cell array, containing the data to be put in the table.
-% If a matrix the numbers in the table will be printed using the default
-% format specifier (f), or the specifier(s) supplied in fms. data can also
-% be a cell array containing a mixture of strings and numbers. each cell in
-% this case can contain only a single scalar value. In this case numbers
-% are printed as in the matrix case, while strings are printed up to the
-% maximum width of the column.
+%  data - a matrix or cell array, containing the data to be put in the
+%   table. If a matrix the numbers in the table will be printed using the
+%   default format specifier (f), or the specifier(s) supplied in fms. data
+%   can also be a cell array containing a mixture of strings and numbers.
+%   each cell in this case can contain only a single scalar value. In this
+%   case numbers are printed as in the matrix case, while strings are
+%   printed up to the maximum width of the column.
 % 
-% colheadings: a cell array of strings for the headings of each column. Can
-% be an empty cell array if no headings are required. If no column widths
-% are supplied (see below), the columns will be made wide enough to
-% accomdate the headings.
+%  colheadings - a cell array of strings for the headings of each column.
+%   Can be an empty cell array if no headings are required. If no column
+%   widths are supplied (see below), the columns will be made wide enough
+%   to accomdate the headings.
 % 
-% wid: (optional) scalar or vector of column widths to use for the table.
-% If scalar, every column will have the same width. If a vector it must be
-% of the same length as the number of columns of data. If not supplied, and
-% column headers are supplied, the width of the widest column header will
-% be used. If not supplied and column headers are not supplied, a default
-% with of 16 characters is used.
+%  wid - (optional) scalar or vector of column widths to use for the table.
+%   If scalar, every column will have the same width. If a vector it must
+%   be of the same length as the number of columns of data. If not
+%   supplied, and column headers are supplied, the width of the widest
+%   column header will be used. If not supplied and column headers are not
+%   supplied, a default with of 16 characters is used.
 % 
-% fms: (optional) a string, or cell array of strings containing format
-% specifiers for formatting the numerical output in each column. If a
-% single string, the same specifier is used for every column. If not
-% supplied, the 'g' specifier is used for every column.
+%  fms - (optional) a string, or cell array of strings containing format
+%   specifiers for formatting the numerical output in each column. If a
+%   single string, the same specifier is used for every column. If not
+%   supplied, the 'g' specifier is used for every column.
 % 
-% rowheadings: (optional) a cell array of strings for the start of each
-% row. Can be an empty cell array if no row headings are required. If row
-% headings are supplied, the first column will be made wide enough to
-% accomodate all the headings.
+%  rowheadings - (optional) a cell array of strings for the start of each
+%   row. Can be an empty cell array if no row headings are required. If row
+%   headings are supplied, the first column will be made wide enough to
+%   accomodate all the headings.
 % 
-% fid: (optional) the file id to print to. Use 1 for stdout (to print to
-% the command line). 
+%  fid - (optional) the file id to print to. Use 1 for stdout (to print to
+%   the command line).
 % 
-% colsep: (optional) A string or character to insert between every column.
-% The default separation string is ' | ', i.e. a space followed by a
-% vertical bar, followed by a space. A table suitible for inclusion in a
-% LaTeX document can be created using the ' & ' string, for example.
+%  colsep - (optional) A string or character to insert between every column.
+%   The default separation string is ' | ', i.e. a space followed by a
+%   vertical bar, followed by a space. A table suitible for inclusion in a
+%   LaTeX document can be created using the ' & ' string, for example.
 % 
-% rowending: (optional) An optional string or character to be appended at
-% the end of every row. Default is an empty string.
+%  rowending - (optional) An optional string or character to be appended at
+%   the end of every row. Default is an empty string.
+%
 % 
 % Examples
 %
@@ -109,53 +110,101 @@ function displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, row
 % Jimmy Slick |                3 |           0.4854 |     8.00280E-001
 % Norman Noob |                1 |             none |     0.00000E+000
 %
-% See Also: DISP, FPRINTF
+% See Also: maketablestr, DISP, FPRINTF
 
 % Created by Richard Crozier 2012
 
-    if nargin < 8 || isempty(rowending)
-        rowending = '';
-    end
 
-    if nargin < 7 || isempty(colsep)
-        colsep = ' | ';
-    end
+    options.WrapColHeadings = false;
+    options.ColHeaderRule = false;
+    options.RuleChar = '-';
+    options.TopRule = false;
+    options.BottomRule = false;
+        
+    if iscell (varargin{1})
+        
+        if nargin < 9 || isempty(varargin{8})
+            options.RowStart = '';
+        end
+        
+        if nargin < 8 || isempty(varargin{7})
+            options.RowEnding = '';
+        end
 
-    % do some basic checking of input
-    if nargin < 6 || isempty(fid)
-        % print to the command line
-        fid = 1;
-    end
-    
-    if nargin < 5 || isempty(rowheadings)
-        % no row headings supplied, use empty cell array
-        rowheadings = {};
-    end
-    
-    if nargin < 4 || isempty(fms)
-        % no format specifiers supplied, use 'g' for all columns
-        fms = 'g';
-    end
-    
-    if nargin < 3 || isempty(wid)
-        % default width is 10, this will be modified if column headers are
-        % supplied
-        wid = 10;
-    end
-    
-    if nargin < 2
-        colheadings = {};
-    end
+        if nargin < 7 || isempty(varargin{6})
+            options.ColSep = ' | ';
+        end
 
-    if nargin >= 6 ...
-            && ~isempty (rowheadings) ...
-            && (~iscellstr(rowheadings) || ~isvector(rowheadings))
-        error ('row headings must be vector cell array of strings');
+        % do some basic checking of input
+        if nargin < 6 || isempty(varargin{5})
+            % print to the command line
+            options.FileID = 1;
+        end
+
+        if nargin < 5 || isempty(varargin{4})
+            % no row headings supplied, use empty cell array
+            options.RowHeadings = {};
+        end
+
+        if nargin < 4 || isempty(varargin{3})
+            % no format specifiers supplied, use 'g' for all columns
+            options.Format = 'g';
+        end
+
+        if nargin < 3 || isempty(varargin{2})
+            % default width is 10, this will be modified if column headers are
+            % supplied
+            options.ColWidth = 10;
+        end
+
+        if nargin < 2
+            options.ColHeadings = {};
+        else
+            options.ColHeadings = varargin{1};
+        end
+
+        if nargin >= 6 && ~isempty (varargin{5})
+            if  ~iscellstr(varargin{5}) || ~isvector(varargin{5})
+                error ('row headings must be vector or cell array of strings');
+            else
+                options.RowEnding = varargin{5};
+            end
+        else
+            options.RowEnding = '';
+        end
+    
+        options.WrapColHeadings = false;
+        
+    else
+        
+        options.RowEnding = '';
+        options.RowStart = '';
+        options.ColSep = ' | ';
+        options.RowHeadings = {};
+        options.Format = 'g';
+        options.ColWidth = 10;
+        options.ColHeadings = {};
+        options.FileID = 1;
+        
+        options = parse_pv_pairs (options, varargin);
+        
     end
     
-    tablestr = maketablestr (data, colheadings, wid, fms, rowheadings, colsep, rowending);
+    tablestr = maketablestr ( data, ...
+                              'ColHeadings', options.ColHeadings, ...
+                              'ColWidth', options.ColWidth, ...
+                              'Format', options.Format, ...
+                              'RowHeadings', options.RowHeadings, ...
+                              'RowEnding', options.RowEnding, ...
+                              'WrapColHeadings', options.WrapColHeadings, ...
+                              'ColSep', options.ColSep, ...
+                              'WrapColHeadings', options.WrapColHeadings, ...
+                              'ColHeaderRule', options.ColHeaderRule, ...
+                              'RuleChar', options.RuleChar, ...
+                              'TopRule', options.TopRule, ...
+                              'BottomRule', options.BottomRule );
         
     % print to fid
-    fprintf (fid, '%s', tablestr);
+    fprintf (options.FileID, '%s', tablestr);
         
 end

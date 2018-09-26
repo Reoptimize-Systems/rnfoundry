@@ -32,6 +32,18 @@ fprintf (1, '%s\n', str);
 
 fprintf (1, '-- mbdyn.pre.base.addOutputLine test end --\n');
 
+
+%% Variable
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+tmp = mbdyn.pre.variable ( 'real', 'var1', ...
+                           'Value', sprintf ('this string contains a uid for conversion to a label later: UID:%d', sn1.uid), ...
+                           'LabelRepObjects', {sn1} );
+
+tmp.generateMBDynInputString ()
+
+
 %% mbdyn.pre.matrixFreeSolver('bicgstab')
 
 slv = mbdyn.pre.matrixFreeSolver('bicgstab');
@@ -965,6 +977,16 @@ rd.generateMBDynInputString ()
 sd = mbdyn.pre.stringDrive ('5 * Var');
 
 sd.generateMBDynInputString ()
+
+%%
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+tmp = mbdyn.pre.stringDrive ( sprintf ('this string contains a uid for conversion to a label later: UID:%d', sn1.uid), ...
+                              'LabelRepObjects', {sn1} );
+
+tmp.generateMBDynInputString ()
+
 
 %% deformableAxialJoint
 

@@ -348,7 +348,8 @@ double mxnthargscalar (int nrhs, const mxArray *prhs[], int ntharg, int offset=0
    if ((mxGetN(prhs[ntharg-1]) != 1) || (mxGetM(prhs[ntharg-1]) != 1))
    {
      mexErrMsgIdAndTxt("CPP:mxnthargscalar",
-         "Input argument is not scalar.");
+         "Input argument %d is not scalar.",
+         ntharg - offset);
    }
 
    return mxGetScalar(prhs[ntharg-1]);
@@ -373,7 +374,8 @@ bool mxnthargscalarbool (int nrhs, const mxArray *prhs[], int ntharg, int offset
    if ((mxGetN(prhs[ntharg-1]) != 1) || (mxGetM(prhs[ntharg-1]) != 1))
    {
      mexErrMsgIdAndTxt("CPP:mxnthargscalar",
-         "Input argument is not scalar.");
+         "Input argument %d is not scalar.",
+         ntharg - offset);
    }
 
    return (bool)mxGetScalar(prhs[ntharg-1]);
@@ -590,6 +592,36 @@ void mxSetLHS (const double* const out, int argn, int size, const int nlhs, mxAr
     }
 }
 
+
+//// return wrapped mxArray of doubles
+//void mxSetLHS (const &mxNumericArrayWrapper out, const int argn, const int nlhs, mxArray* plhs[], const int rows, const int cols)
+//{
+//    // check the argument position is possible
+//    mxnaroutgchk (nlhs, argn);
+//
+//    // create the output matrix to hold the vector of numbers
+//    plhs[argn-1] = mxCreateNumericMatrix(rows, cols, mxDOUBLE_CLASS, mxREAL);
+//
+//    // wrap the output mxArray to make setting the values easier
+//    mxNumericArrayWrapper mat = mxNumericArrayWrapper (plhs[argn-1]);
+//
+//    // copy the data
+//    int i = 0;
+//    std::vector<mwSize> index;
+//    index.push_back(0);
+//    index.push_back(0);
+//    for (int c = 0; c < mat.getColumns (); c++)
+//    {
+//        for (int r = 0; r < mat.getRows (); r++)
+//        {
+//            index[0] = r;
+//            index[1] = c;
+//            mat.setDoubleValue (index, out[i]);
+//            i++;
+//        }
+//    }
+//}
+
 // return double
 void mxSetLHS (const double out, int argn, const int nlhs, mxArray* plhs[])
 {
@@ -768,6 +800,11 @@ public:
       return _dimensions;
   }
 
+  unsigned int numDimensions ()
+  {
+      return _dimensions.size ();
+  }
+
   mwSize getRows ()
   {
       return _dimensions[0];
@@ -789,16 +826,68 @@ private:
 mxNumericArrayWrapper mxnthargmatrix (int nrhs, const mxArray *prhs[], int ntharg, int offset=0)
 {
 
-   ntharg = ntharg + offset;
+  ntharg = ntharg + offset;
 
-   if (ntharg > nrhs)
-   {
-     mexErrMsgIdAndTxt("CPP:mxnthargmatrix",
-         "Requested argument is greater than total number of arguments.");
-   }
+  if (ntharg > nrhs)
+  {
+    mexErrMsgIdAndTxt("CPP:mxnthargmatrix",
+        "Requested argument is greater than total number of arguments.");
+  }
 
-   return mxNumericArrayWrapper (prhs[ntharg-1]);
+  return mxNumericArrayWrapper (prhs[ntharg-1]);
 
+}
+
+const mxArray* mxnthargdoublemxArray (int nrhs, const mxArray *prhs[], int ntharg, int offset=0)
+{
+
+  ntharg = ntharg + offset;
+
+  if (ntharg > nrhs)
+  {
+    mexErrMsgIdAndTxt("CPP:mxnthargdoublemxArray",
+        "Requested argument is greater than total number of arguments.");
+  }
+
+  // check it's  double matrix
+  if (!mxIsDouble (prhs[ntharg-1]))
+  {
+    mexErrMsgIdAndTxt("CPP:mxArrayWrapper:notdouble",
+        "Attempted to get double value from non-double matrix (of class %s).",
+        mxGetClassName(prhs[ntharg-1]));
+  }
+
+  return prhs[ntharg-1];
+
+}
+
+// return column major 2D matrix of doubles stored in a linear array
+void mxSetLHS (const double* const out, const int argn, const int nlhs, mxArray* plhs[], const int rows, const int cols)
+{
+    // check the argument position is possible
+    mxnaroutgchk (nlhs, argn);
+
+    // create the output matrix to hold the vector of numbers
+    plhs[argn-1] = mxCreateNumericMatrix(rows, cols, mxDOUBLE_CLASS, mxREAL);
+
+    // wrap the output mxArray to make setting the values easier
+    mxNumericArrayWrapper mat = mxNumericArrayWrapper (plhs[argn-1]);
+
+    // copy the data
+    int i = 0;
+    std::vector<mwSize> index;
+    index.push_back(0);
+    index.push_back(0);
+    for (int c = 0; c < mat.getColumns (); c++)
+    {
+        for (int r = 0; r < mat.getRows (); r++)
+        {
+            index[0] = r;
+            index[1] = c;
+            mat.setDoubleValue (index, out[i]);
+            i++;
+        }
+    }
 }
 
 } // namespace mexutils
