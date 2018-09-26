@@ -3,7 +3,7 @@ classdef structuralForce < mbdyn.pre.force
     properties (GetAccess = public, SetAccess = protected)
         
         position;
-        postionReference;
+        positionReference;
         node;
         forceType;
         force;
@@ -124,6 +124,7 @@ classdef structuralForce < mbdyn.pre.force
             self.forceType = force_type;
             self.node = node;
             self.position = options.Position;
+            self.positionReference = options.PositionReference;
             
             self.momentOrientation = options.MomentOrientation;
             self.momentOrientationReference =  options.MomentOrientationReference;
@@ -149,7 +150,7 @@ classdef structuralForce < mbdyn.pre.force
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'position', ...
                                                                'reference', ...
-                                                               self.postionReference, ...
+                                                               self.positionReference, ...
                                                                self.position ), ...
                                            2, ...
                                            addcomma );
