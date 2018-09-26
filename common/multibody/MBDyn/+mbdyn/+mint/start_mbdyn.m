@@ -1,4 +1,4 @@
-function [status, cmdout] = start_mbdyn (inputfile, varargin)
+function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
 % runs mbdyn with the appropriate commands
 %
 % Syntax
@@ -67,11 +67,12 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
 %
 
     options.Verbosity = 0;
-    options.StartWaitTime = 2;
+    options.StartWaitTime = 0.1;
     options.MBDynExecutable = mbdyn.mint.find_mbdyn (false);
     options.MBDynOutputFile = '';
     options.OutputPrefix = '';
     options.Block = true;
+    options.ThrowExceptions = false;
     
     options = parse_pv_pairs (options, varargin);
     
@@ -101,27 +102,91 @@ function [status, cmdout] = start_mbdyn (inputfile, varargin)
         Pcmds = '';
     end
     
-    if options.Block
-        blockstr = '';
+    if options.ThrowExceptions
+        excepstr = '-e';
     else
-        blockstr = '&';
+        excepstr = '';
     end
 
     % start mbdyn
-    cmdline = sprintf ( '%s %s -f "%s" -o "%s" > "%s" 2>&1 %s', ...
-                        options.MBDynExecutable, ...
-                        Pcmds, ...
-                        inputfile, ...
-                        options.OutputPrefix, ...
-                        options.MBDynOutputFile,  ...
-                        blockstr ...
-                      );
+    if ispc
+        
+        if options.Block
+            blockstr = '/wait';
+        else
+            blockstr = '';
+        end
+        
+        % see https://superuser.com/questions/338277/windows-cmd-batch-start-and-output-redirection
+        % and https://ss64.com/nt/start.html
+        cmdline = sprintf ( 'start "mbdyn" /B %s "%s" %s %s -f "%s" -o "%s" ^1^> "%s" ^2^>^&^1', ...
+                            blockstr, ...
+                            options.MBDynExecutable, ...
+                            Pcmds, ...
+                            excepstr, ...
+                            inputfile, ...
+                            options.OutputPrefix, ...
+                            options.MBDynOutputFile  ...
+                          );
+    else
+        
+        if options.Block
+            blockstr = '';
+        else
+            blockstr = '&';
+        end
+        
+        % see https://serverfault.com/questions/205498/how-to-get-pid-of-just-started-process
+        cmdline = sprintf ( 'sh -c ''echo $$; exec "%s" %s %s -f "%s" -o "%s" > "%s" 2>&1 %s''', ...
+                            options.MBDynExecutable, ...
+                            Pcmds, ...
+                            excepstr, ...
+                            inputfile, ...
+                            options.OutputPrefix, ...
+                            options.MBDynOutputFile,  ...
+                            blockstr ...
+                          ); 
+    end
 
     if options.Verbosity > 0
         fprintf (1, 'Starting MBDyn with command:\n%s\n', cmdline);
     end
 
-    [status, cmdout] = mbdyn.mint.cleansystem ( cmdline );
+    [mbstatus, cmdout] = mbdyn.mint.cleansystem ( cmdline );
+    
+    pid = [];
+    
+    if mbstatus == 0
+        
+        if ispc
+            pid = [];
+        else
+            pid = str2double (cmdout);
+            
+            if ~options.Block
+                
+                % check the PID is actually mbdyn
+                [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
+
+                if strcmpi (cmdout, 'mbdyn')
+                    % do nothing, we've got the mbdyn pid
+                else
+                    % try pid + 1
+                    pid = pid + 1;
+                    
+                    [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
+
+                    if ~strncmpi (cmdout, 'mbdyn', 5)
+                        pid = [];
+                    end
+                    
+                end
+                
+            end
+            
+        end
+
+    end
 
     pause (options.StartWaitTime);
 

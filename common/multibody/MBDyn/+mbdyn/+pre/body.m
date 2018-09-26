@@ -1,6 +1,6 @@
 classdef body < mbdyn.pre.element
     
-    properties (GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = public)
         
         mass;                 % the mass of the body
         relativeCentreOfMass; % the location of the center of mass with respect to the node in the reference frame of the node

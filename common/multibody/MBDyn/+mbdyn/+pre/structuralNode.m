@@ -109,19 +109,15 @@ classdef structuralNode < mbdyn.pre.node
             %           mbdyn.pre.structuralNode3dof
             %
 
-            options.AbsolutePosition = [0;0;0];
-            options.AbsoluteVelocity = [0;0;0];
-            options.HumanReadableLabel = '';
-            options.Scale = [];
-            options.Output = [];
-            options.Accelerations = [];
+
+            
+            [options, nopass_list] = mbdyn.pre.structuralNode.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
-            self = self@mbdyn.pre.node ( ...
-                       'HumanReadableLabel', options.HumanReadableLabel, ...
-                       'Scale', options.Scale, ...
-                       'Output', options.Output );
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
+            self = self@mbdyn.pre.node ( pvpairs{:} );
             
             self.checkCartesianVector (options.AbsolutePosition, true, 'AbsolutePosition');
             self.checkCartesianVector (options.AbsoluteVelocity, true, 'AbsoluteVelocity');
@@ -322,25 +318,25 @@ classdef structuralNode < mbdyn.pre.node
     
     % getters/setters
     methods
-        function set.absolutePosition (self, newpos)
-            % set the absolute position of the structural node
-            
-            % report name as absolutePosition as this is what user will see
-            self.checkCartesianVector (newpos, true, 'absolutePosition');
-            
-            self.absolutePosition = newpos;
-            
-        end
-        
-        function set.absoluteVelocity (self, newvel)
-            % set the absolute position of the structural node
-            
-            % report name as absoluteVelocity as this is what user will see
-            self.checkCartesianVector (newvel, true, 'absoluteVelocity');
-            
-            self.absoluteVelocity = newvel;
-            
-        end
+%         function set.absolutePosition (self, newpos)
+%             % set the absolute position of the structural node
+%             
+%             % report name as absolutePosition as this is what user will see
+%             self.checkCartesianVector (newpos, true, 'absolutePosition');
+%             
+%             self.absolutePosition = newpos;
+%             
+%         ended
+%         
+%         function set.absoluteVelocity (self, newvel)
+%             % set the absolute position of the structural node
+%             
+%             % report name as absoluteVelocity as this is what user will see
+%             self.checkCartesianVector (newvel, true, 'absoluteVelocity');
+%             
+%             self.absoluteVelocity = newvel;
+%             
+%         end
     end
     
     methods (Access = protected)
@@ -355,6 +351,24 @@ classdef structuralNode < mbdyn.pre.node
             % plotting the structural node
             %
             
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.node.defaultConstructorOptions ();
+            
+            options.AbsolutePosition = [0;0;0];
+            options.AbsoluteVelocity = [0;0;0];
+            options.Accelerations = [];
+            
+            nopass_list = { 'AbsolutePosition', ...
+                            'AbsoluteVelocity', ...
+                            'Accelerations' };
             
         end
         

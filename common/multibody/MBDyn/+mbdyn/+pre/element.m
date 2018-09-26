@@ -609,6 +609,21 @@ classdef element < mbdyn.pre.base
                 
         function comment = nodeLabelComment (node)
             % generate a comment describing a node (uses label or name if present)
+            % 
+            % Syntax
+            %
+            % comment = mbdyn.pre.base.nodeLabelComment (node)
+            %
+            % Input
+            %
+            %  node - mbdyn.pre.node object
+            %
+            % Output
+            %
+            %  comment - string containing a coomen including the node's
+            %   name if not empty
+            %
+            
             
             if isempty (node.name)
                 comment = sprintf ('node label');

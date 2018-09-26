@@ -137,7 +137,7 @@ classdef orientmat
     %
     
     
-    properties (GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = public)
         
         orientationMatrix; % full (3 x 3) orientation matrix
         

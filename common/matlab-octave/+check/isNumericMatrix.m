@@ -1,5 +1,5 @@
 function ok = isNumericMatrix (inputval, throw, name, posorneg)
-% checks if input is a real numeric matrix 9m x n), optionally ALL +ve or -ve only
+% checks if input is a real numeric matrix (m x n), optionally ALL +ve or -ve only
 %
 % Syntax
 %

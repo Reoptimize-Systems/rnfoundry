@@ -49,7 +49,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
 %   frame of the node to a position in the global frame
 %
     
-    properties (GetAccess = public, SetAccess = public)
+    properties (GetAccess = public, SetAccess = protected)
         
         absoluteOrientation; % Absolute orientation of the node in the global frame
         absoluteAngularVelocity; % Absolute angular velocity of the node in the global frame
@@ -162,18 +162,12 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             % See Also: mbdyn.pre.structuralNode3dof
             %
             
-            options.OrientationDescription = '';
-            options.AbsolutePosition = [0;0;0];
-            options.AbsoluteOrientation = mbdyn.pre.orientmat ('orientation', eye (3));
-            options.AbsoluteVelocity = [0;0;0];
-            options.AbsoluteAngularVelocity = [0;0;0];
-            options.InitialiseFromReference = [];
-            options.Accelerations = [];
-            options.HumanReadableLabel = '';
-            options.Scale = [];
-            options.Output = [];
+
+            [options, nopass_list] = mbdyn.pre.structuralNode6dof.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
             
             switch type
                 
@@ -200,12 +194,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                 end
             end
             
-            self = self@mbdyn.pre.structuralNode ( ...
-                       'AbsoluteVelocity', options.AbsoluteVelocity, ...
-                       'AbsolutePosition', options.AbsolutePosition, ...
-                       'HumanReadableLabel', options.HumanReadableLabel, ...
-                       'Scale', options.Scale, ...
-                       'Output', options.Output );
+            self = self@mbdyn.pre.structuralNode ( pvpairs{:} );
                    
             self.type = 'structural';
             
@@ -276,25 +265,47 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             str = self.addOutputLine (str, ';', 1, false, 'end structural node');
             
         end
+        
+        function set3x3OrientMatNoChecking (self, neworientation)
+            
+            self.absoluteOrientation.orientationMatrix = neworientation;
+            
+        end
+        
+        function setOrientMatObjNoChecking (self, neworientation)
+            
+            self.absoluteOrientation.orientationMatrix = neworientation.orientationMatrix;
+            
+        end
     
 
-        function set.absoluteOrientation (self, neworientation)
+        function setAbsoluteOrientation (self, neworientation)
             % set the absolute orientation of the structural node
             
             self.checkOrientationMatrix (neworientation, true);
             
-            if ~isa (neworientation, 'mbdyn.pre.orientmat')
-                neworientation = mbdyn.pre.orientmat ('orientation', neworientation);
+            if isa (neworientation, 'mbdyn.pre.orientmat')
+                
+                self.absoluteOrientation = neworientation;
+                
+            else
+                % just update the existing orientmat
+                self.absoluteOrientation.orientationMatrix = neworientation;
             end
-            
-            self.absoluteOrientation = neworientation;
             
         end
         
-        function set.absoluteAngularVelocity (self, newomega)
+        function setAbsoluteAngularVelocity (self, newomega)
             % set the absolute orientation of the structural node
             
             self.check3ElementNumericVector (newomega, true, 'absoluteAngularVelocity');
+            
+            self.absoluteAngularVelocity = newomega;
+            
+        end
+        
+        function setAbsoluteAngularVelocityNoChecking (self, newomega)
+            % set the absolute orientation of the structural node
             
             self.absoluteAngularVelocity = newomega;
             
@@ -361,6 +372,26 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             set ( self.transformObject, 'Matrix', M );
             
         end
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.structuralNode.defaultConstructorOptions ();
+            
+            options.OrientationDescription = '';
+            options.AbsoluteOrientation = mbdyn.pre.orientmat ('orientation', eye (3));
+            options.AbsoluteAngularVelocity = [0;0;0];
+            options.InitialiseFromReference = [];
+
+            nopass_list = { 'OrientationDescription', ...
+                            'AbsoluteOrientation', ...
+                            'AbsoluteAngularVelocity', ...
+                            'InitialiseFromReference' };
+            
+        end
+        
     end
     
 end

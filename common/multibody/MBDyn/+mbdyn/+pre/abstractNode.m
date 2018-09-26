@@ -1,5 +1,5 @@
 classdef abstractNode < mbdyn.pre.node
-% replace h1 line
+% class representing an abstract node in mbdyn
 %
 % Syntax
 %

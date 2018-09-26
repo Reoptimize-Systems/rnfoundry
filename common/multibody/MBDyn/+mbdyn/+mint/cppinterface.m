@@ -54,8 +54,11 @@ classdef cppinterface < handle
             
             % call the mex function with the supplied keyword and the
             % object handle
+            %
+            % For an explanation of the use of nargout below, see:
+            % https://blogs.mathworks.com/loren/2009/04/14/convenient-nargout-behavior/
             if numel(varargin) > 1
-                [varargout{1:nargout}] = this.mex_interface_fcn(varargin{1}, this.objectHandle, varargin{2:end});
+                [varargout{1:nargout}] = feval (this.mex_interface_fcn, varargin{1}, this.objectHandle, varargin{2:end});
             else
                 [varargout{1:nargout}] = this.mex_interface_fcn(varargin{1}, this.objectHandle);
             end

@@ -6,12 +6,12 @@ classdef stateSpace < handle
         B;
         C;
         D;
-        x0;
-        x;
+        x0; % initial state
+        x;  % current state
         
         integrationReady;
-        t0;
-        t;
+        t0; % initial time
+        t;  % current time
         
     end
     
