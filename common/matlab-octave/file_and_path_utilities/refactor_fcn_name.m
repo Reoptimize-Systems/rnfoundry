@@ -1,4 +1,4 @@
-function refactor_fcn_name(fcnname, newfcnname, topdir, domove, stripvc)
+function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
 % refactor the name of a function, changing all references to the function
 % name in the path and moving the function file to the new named file
 %
@@ -34,6 +34,11 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, stripvc)
 
 % Copyright Richard Crozier 2013-2015
 
+    options.StripVersionControl = true;
+    options.AllowDotBeforeName = true;
+    options.WarnIfFcnNotOnPath = true;
+    
+    options = parse_pv_pairs (options, varargin);
 
     if ~ischar (fcnname)
         error ('fcnname must be a string');
@@ -46,8 +51,8 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, stripvc)
     % refactor_fcn_name
     loc = which (fcnname);
     
-    if isempty (loc)
-        warning('fcnname is not a function or class on the path')
+    if isempty (loc) && options.WarnIfFcnNotOnPath
+        warning('refactor_fcn_name:notonpath', 'fcnname is not a function or class on the path')
     end
     
     [pathstr, ~, ext] = fileparts (which (fcnname));
@@ -77,11 +82,8 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, stripvc)
         domove = true;
     end
     
-    if nargin < 5
-        stripvc = true;
-    end
     
-    if stripvc
+    if options.StripVersionControl
         rminds = [];
         vclist = {'.svn', '.hg', '.git', '.cvs'};
         for indi = 1:numel(thepath)
@@ -103,7 +105,11 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, stripvc)
             % replace string in file using regexprepfile, with a regex
             % looking for word boundaries to avoid functions with similar
             % substrings
-            regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), ['\<', fcnname, '\>'], newfcnname);
+            if options.AllowDotBeforeName
+                regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), ['(?<=^|\W)', fcnname, '(?=((\s*\()|(\s*;)|(\s*$)))'], newfcnname);
+            else
+                regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), ['(?<=^|\W)(?<![.])', fcnname, '(?=((\s*\()|(\s*;)|(\s*$)))'], newfcnname);
+            end
         end
 
     end
