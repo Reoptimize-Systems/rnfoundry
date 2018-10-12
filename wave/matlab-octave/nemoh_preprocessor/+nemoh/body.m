@@ -1002,7 +1002,7 @@ classdef body < nemoh.base
             CC = onCleanup (@() cd (pwd ()));
             cd (self.meshInputDirectory);
             
-            status = system (sprintf ('"%s" > "%s"', self.meshProgPath, logfile));   
+            status = cleansystem (sprintf ('"%s" > "%s"', self.meshProgPath, logfile));   
             
             if status ~= 0
                 error ('mesh processing failed with error code %d', status);
