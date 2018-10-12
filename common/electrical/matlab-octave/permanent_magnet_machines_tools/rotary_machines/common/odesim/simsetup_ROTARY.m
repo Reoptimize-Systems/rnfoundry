@@ -181,6 +181,36 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
 %    the solver determines the time steps with no maximum allowed step
 %    size.
 %
+%  'ForceAddPhaseCurrentODESolutionComps' - true/false flag. By default an
+%    ODE solution component specification is added for the multiphase phase
+%    current derivatives when certain evaluation functions are detected,
+%    but not otherwise. By setting this option to true, it forces this to
+%    be added. This is useful if using a custom evaluation function rather
+%    than one already present in the tools. For more information on the
+%    solution components structure see the help for simulatemachine_AM.
+%
+%  'ForceAddDQCurrentODESolutionComps' - true/false flag. By default an
+%    ODE solution component specification is added for the DQ phase
+%    current derivatives when certain evaluation functions are detected,
+%    but not otherwise. By setting this option to true, it forces this to
+%    be added. This is useful if using a custom evaluation function rather
+%    than one already present in the tools. For more information on the
+%    solution components structure see the help for simulatemachine_AM.
+%
+%  'NoAddPhaseCurrentODESolutionComps' - true/false flag. By default an
+%    ODE solution component specification is added for the multiphase phase
+%    current derivatives when certain evaluation functions are detected. By
+%    setting this option to true, it prevents this to be added, even if the
+%    functions are detected. For more information on the
+%    solution components structure see the help for simulatemachine_AM.
+%
+%  'NoAddDQCurrentODESolutionComps' - true/false flag. By default an
+%    ODE solution component specification is added for the DQ phase current
+%    derivatives when certain evaluation functions are detected. By setting
+%    this option to true, it prevents this to be added, even if the
+%    functions are detected. For more information on the
+%    solution components structure see the help for simulatemachine_AM.
+%
 % Output
 %
 %  simoptions - structure containing the specified simulation options, as
@@ -225,9 +255,6 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
 %
 
 
-
-
-
 % Created by Richard Crozier 2013
 
     Inputs.Rpm = [];
@@ -249,7 +276,10 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
     Inputs.simoptions = struct();
     Inputs.RampPoles = [];
     Inputs.MinPointsPerPole = 20;
-    Inputs.AddPhaseCurrentODESolutionComponents = false;
+    Inputs.ForceAddPhaseCurrentODESolutionComps = false;
+    Inputs.NoAddPhaseCurrentODESolutionComps = false;
+    Inputs.ForceAddDQCurrentODESolutionComps = false;
+    Inputs.NoAddDQCurrentODESolutionComps = false;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -423,77 +453,22 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
     if all (isfield (simoptions, {'drivetimes', 'omegaT'}))
         simoptions.pp_omegaT = interp1 (simoptions.drivetimes,simoptions.omegaT,'pchip','pp');
     end
+
+    phsolcmpfcns = { 'prescribedmotodetorquefcn_ROTARY', ...
+                     'prescribedmotodetorquefcn_activerect_ROTARY', ...
+                     'feaprescribedmotodetorquefcn_ROTARY' };
+
+    dqsolcmpfcns = { 'prescribedmotodetorquefcn_dqactiverect_ROTARY' };
     
-    % we will make the minimum phase current of interest that which
-    % generates a power of 10W per coil at 1m/s, or a current density of
-    % 0.1 A/mm^2 in the winding, whichever is less
-    if isfield (design, 'Dc')
-        if isfield (design, 'Maxdlambdadx')
-            minIofinterest = min ( design.ConductorArea * 0.1e6, ...
-                                   (10 / (design.Maxdlambdadx)) ) ...
-                                * design.Branches;
-        else
-            minIofinterest = design.ConductorArea * 0.1e6;
-        end
-    else
-        minIofinterest = [];
-    end
-             
-    if Inputs.AddPhaseCurrentODESolutionComponents
-        
-        simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
-
-        % create the phase current solution component specification
-        simoptions.ODESim.SolutionComponents = setfieldifabsent ( simoptions.ODESim.SolutionComponents, ...
-                                              'PhaseCurrents', ...
-                                              struct ('InitialConditions', zeros (1, design.Phases) ) ...
-                                                                );
-
-        if ~isempty (minIofinterest)
-            simoptions.ODESim.SolutionComponents.PhaseCurrents.AbsTol = repmat (minIofinterest, 1, design.Phases);
-        end
-        
-    else
-        
-        switch Inputs.EvalFcn
-
-            case { 'prescribedmotodetorquefcn_ROTARY', ...
-                   'prescribedmotodetorquefcn_activerect_ROTARY', ...
-                   'feaprescribedmotodetorquefcn_ROTARY' }
-
-                simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
-
-                % create the phase current solution component specification
-                simoptions.ODESim.SolutionComponents = setfieldifabsent ( simoptions.ODESim.SolutionComponents, ...
-                                                      'PhaseCurrents', ...
-                                                      struct ('InitialConditions', zeros (1, design.Phases) ) ...
-                                                                        );
-
-                if ~isempty (minIofinterest)
-                    simoptions.ODESim.SolutionComponents.PhaseCurrents.AbsTol = repmat (minIofinterest, 1, design.Phases);
-                end
-
-            case { 'prescribedmotodetorquefcn_dqactiverect_ROTARY' }
-
-                simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
-
-                % create the phase current solution component specification
-                simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
-                                                      'DQPhaseCurrents', ...
-                                                      struct ('InitialConditions', zeros (1, 2) ) ...
-                                                                        );
-
-                if ~isempty (minIofinterest)
-                    simoptions.ODESim.SolutionComponents.PhaseCurrents.AbsTol = repmat (minIofinterest, 1, 2);
-                end
-
-            otherwise
-
-
-
-        end
     
-    end
+    simoptions = simsetup_AM ( design, simoptions, Inputs.EvalFcn, ...
+                               'ForceAddPhaseCurrentODESolutionComps', Inputs.ForceAddPhaseCurrentODESolutionComps, ...
+                               'NoAddPhaseCurrentODESolutionComps', Inputs.NoAddPhaseCurrentODESolutionComps, ...
+                               'ForceAddDQCurrentODESolutionComps', Inputs.ForceAddDQCurrentODESolutionComps, ...
+                               'NoAddDQCurrentODESolutionComps', Inputs.NoAddDQCurrentODESolutionComps, ...
+                               'PhaseCurrentSolCompFcns', phsolcmpfcns, ...
+                               'DQCurrentSolCompFcns', dqsolcmpfcns );
+                
 
 end
 
