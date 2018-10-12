@@ -122,13 +122,32 @@ function [design, simoptions] = circuitprops_AM(design, simoptions)
         
     end
     
-    % chekc the coil numbers work
+    % check the coil numbers work
     check_coil_numbers (design);
     
-    % calculate the output resistance and inductances of a machine from the
-    % per-coil values
-    design.PhaseResistance = design.CoilsPerBranch .* design.CoilResistance ./ design.Branches;
-    design.PhaseInductance = design.CoilsPerBranch .* design.CoilInductance ./ design.Branches;
+    if ~isfield (design, 'PhaseResistance') && isfield (design, 'CoilResistance')
+        % calculate the output resistance of the machine phases from the
+        % per-coil values
+        design.PhaseResistance = design.CoilsPerBranch .* design.CoilResistance ./ design.Branches;
+    elseif isfield (design, 'PhaseResistance') && ~isfield (design, 'CoilResistance')
+        % calculate the output resistance of the machine coils from the
+        % per-phase values
+        design.CoilResistance = design.PhaseResistance .* (design.Branches ./ design.CoilsPerBranch);
+    elseif ~isfield (design, 'PhaseResistance') && ~isfield (design, 'CoilResistance')
+        error ('Neither the PhaseResistance nor the CoilResistance field are present in the machine design structure.')
+    end
+    
+    if ~isfield (design, 'PhaseInductance') && isfield (design, 'CoilInductance')
+        % calculate the inductance of the machine phases from the per-coil
+        % values
+        design.PhaseInductance = design.CoilsPerBranch .* design.CoilInductance ./ design.Branches;
+    elseif isfield (design, 'PhaseInductance') && ~isfield (design, 'CoilInductance')
+        % calculate the inductance ofthe machine coils from the per-phase
+        % values
+        design.CoilInductance = design.PhaseInductance .* (design.Branches ./ design.CoilsPerBranch);
+    elseif ~isfield (design, 'PhaseInductance') && ~isfield (design, 'CoilInductance')
+        error ('Neither the PhaseInductance nor the CoilInductance field are present in the machine design structure.')
+    end
     
     % make a resistance matrix for the Phases with diagonals all the
     % combined load and phase resistances
