@@ -32,16 +32,20 @@ function [design, simoptions] = simfun_ROTARY (design, simoptions)
     % set the winding type to overlapping by default
     design = setfieldifabsent (design, 'WindingType', 'nonoverlapping');
     
-    simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
-        'MagnetRegionMeshSize', choosemesharea_mfemm(design.tm, (design.Rmm*design.thetam), 1/10));
+    if ~simoptions.SkipFEA
     
-    simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
-        'BackIronRegionMeshSize', choosemesharea_mfemm(min(design.tbi), 2*(design.Rbm*design.thetap), 1/10));
+        simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
+            'MagnetRegionMeshSize', choosemesharea_mfemm(design.tm, (design.Rmm*design.thetam), 1/10));
+
+        simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
+            'BackIronRegionMeshSize', choosemesharea_mfemm(min(design.tbi), 2*(design.Rbm*design.thetap), 1/10));
+
+        simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
+            'AirGapMeshSize', choosemesharea_mfemm(design.g, (design.Rmm*design.thetap), 1/10));
+
+        simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
+            'OuterRegionsMeshSize', [choosemesharea_mfemm(design.tm, (design.Rbo*design.thetap), 1/5), -1]);
     
-    simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
-        'AirGapMeshSize', choosemesharea_mfemm(design.g, (design.Rmm*design.thetap), 1/10));
-    
-    simoptions.MagFEASim = setfieldifabsent (simoptions.MagFEASim, ...
-        'OuterRegionsMeshSize', [choosemesharea_mfemm(design.tm, (design.Rbo*design.thetap), 1/5), -1]);
+    end
     
 end
