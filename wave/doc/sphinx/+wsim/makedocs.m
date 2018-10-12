@@ -45,7 +45,7 @@ function [docrootdir, zipfilename] = makedocs (varargin)
 
     % exclude_list = { 'baseSystem.m', ...
     %                  'subsystem.m' };
-    exclude_list = { 'mooring.m' };
+    exclude_list = { 'mooring.m', 'hydroBodyMexForces.m' };
 
     for ind = 1:numel(wsim_class_list)
 
@@ -92,9 +92,7 @@ function [docrootdir, zipfilename] = makedocs (varargin)
     cd (tempdir ());
     
     [status, out] = cleansystem (sprintf ('zip -qr %s.zip %s/', outfilename, outfilename));
-    
-    disp (out);
-    
+
     zipfilename = [outfilename, '.zip'];
     
     if status == 0
