@@ -25,13 +25,15 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
         
         design.TorquePtoPeak = max(abs(results.Tqpto));
             
-        % get the maximum force on the magnets
-        %
-        % convert torques to forces at the mean magnet radius
-        results.Fpto = results.Tqpto ./ design.Rmm;
-        %
-        % determine the maximum force on the magnets
-        design.MaxFpto = design.TorquePtoPeak / design.Rmm;
+        if isfield (design, 'Rmm')
+            % get the maximum force on the magnets
+            %
+            % convert torques to forces at the mean magnet radius
+            results.Fpto = results.Tqpto ./ design.Rmm;
+            %
+            % determine the maximum force on the magnets
+            design.MaxFpto = design.TorquePtoPeak / design.Rmm;
+        end
         
         % divide the maximum amplitude of the normalised torque ripple by the
         % mean to get the ripple factor
