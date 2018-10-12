@@ -208,6 +208,7 @@ function rnfoundry_setup (varargin)
         options.ForceMBDynSetup = true;
         options.ForceMexPPValSetup = true;
         options.ForceExistfileSetup = true;
+        options.ForceMexmPhaseWLSetup = true;
     end
     
     didcompwarn = false;
