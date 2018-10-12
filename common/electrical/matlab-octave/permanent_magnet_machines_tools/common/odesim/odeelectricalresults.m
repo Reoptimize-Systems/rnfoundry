@@ -46,15 +46,18 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
     
     % rms branch (coil) current
     design.ICoilRms = contrms(T, Iphase(:,maxIind) ./ design.Branches);
-    design.JCoilRms = design.ICoilRms  / design.ConductorArea;
-    
-    % rms phase EMF (coil EMF times the number of coils per branch)
-    design.EMFPhaseRms = contrms(T, EMF(:,maxIind));
-    
     % peak branch (coil current) (phase current divided by number of
     % parallel branches))
     design.ICoilPeak = design.IPhasePeak ./ design.Branches;
-    design.JCoilPeak = design.ICoilPeak / design.ConductorArea;
+    
+    if isfield (design, 'ConductorArea')
+        % calculate the current densities
+        design.JCoilRms = design.ICoilRms  / design.ConductorArea;
+        design.JCoilPeak = design.ICoilPeak / design.ConductorArea;
+    end
+    
+    % rms phase EMF (coil EMF times the number of coils per branch)
+    design.EMFPhaseRms = contrms(T, EMF(:,maxIind));
     
     % peak phase EMF (coil EMF time the number of coils per branch)
     design.EMFPhasePeak = max(abs(EMF(:)));
