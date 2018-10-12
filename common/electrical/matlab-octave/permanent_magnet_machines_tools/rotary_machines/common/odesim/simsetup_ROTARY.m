@@ -249,7 +249,7 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
     Inputs.simoptions = struct();
     Inputs.RampPoles = [];
     Inputs.MinPointsPerPole = 20;
-    Inputs.Override = true;
+    Inputs.AddPhaseCurrentODESolutionComponents = false;
     
     Inputs = parse_pv_pairs(Inputs, varargin);
     
@@ -426,45 +426,73 @@ function simoptions = simsetup_ROTARY(design, PreProcFcn, PostPreProcFcn, vararg
     
     % we will make the minimum phase current of interest that which
     % generates a power of 10W per coil at 1m/s, or a current density of
-    % 0.1 A/mm^2 in the winding, whichever is less              
-    if isfield (design, 'Maxdlambdadx')
-        minIofinterest = min ( design.ConductorArea * 0.1e6, ...
-                               (10 / (design.Maxdlambdadx)) ) ...
-                            * design.Branches;
+    % 0.1 A/mm^2 in the winding, whichever is less
+    if isfield (design, 'Dc')
+        if isfield (design, 'Maxdlambdadx')
+            minIofinterest = min ( design.ConductorArea * 0.1e6, ...
+                                   (10 / (design.Maxdlambdadx)) ) ...
+                                * design.Branches;
+        else
+            minIofinterest = design.ConductorArea * 0.1e6;
+        end
     else
-        minIofinterest = design.ConductorArea * 0.1e6;
+        minIofinterest = [];
     end
-                     
-    switch Inputs.EvalFcn
+             
+    if Inputs.AddPhaseCurrentODESolutionComponents
         
-        case { 'prescribedmotodetorquefcn_ROTARY', ...
-               'prescribedmotodetorquefcn_activerect_ROTARY', ...
-               'feaprescribedmotodetorquefcn_ROTARY' }
-           
-            simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
-            
-            % create the phase current solution component specification
-            simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
-                                                  'PhaseCurrents', ...
-                                                  struct ('InitialConditions', zeros (1, design.Phases), ...
-                                                          'AbsTol', repmat (minIofinterest, 1, design.Phases) ) ...
-                                                                    );
-                                                                
-        case { 'prescribedmotodetorquefcn_dqactiverect_ROTARY' }
-            
-            simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
+        simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
 
-            % create the phase current solution component specification
-            simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
-                                                  'DQPhaseCurrents', ...
-                                                  struct ('InitialConditions', zeros (1, 2), ...
-                                                          'AbsTol', repmat (minIofinterest, 1, 2) ) ...
-                                                                    );
-                                                                
-        otherwise
-            
-            
-            
+        % create the phase current solution component specification
+        simoptions.ODESim.SolutionComponents = setfieldifabsent ( simoptions.ODESim.SolutionComponents, ...
+                                              'PhaseCurrents', ...
+                                              struct ('InitialConditions', zeros (1, design.Phases) ) ...
+                                                                );
+
+        if ~isempty (minIofinterest)
+            simoptions.ODESim.SolutionComponents.PhaseCurrents.AbsTol = repmat (minIofinterest, 1, design.Phases);
+        end
+        
+    else
+        
+        switch Inputs.EvalFcn
+
+            case { 'prescribedmotodetorquefcn_ROTARY', ...
+                   'prescribedmotodetorquefcn_activerect_ROTARY', ...
+                   'feaprescribedmotodetorquefcn_ROTARY' }
+
+                simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
+
+                % create the phase current solution component specification
+                simoptions.ODESim.SolutionComponents = setfieldifabsent ( simoptions.ODESim.SolutionComponents, ...
+                                                      'PhaseCurrents', ...
+                                                      struct ('InitialConditions', zeros (1, design.Phases) ) ...
+                                                                        );
+
+                if ~isempty (minIofinterest)
+                    simoptions.ODESim.SolutionComponents.PhaseCurrents.AbsTol = repmat (minIofinterest, 1, design.Phases);
+                end
+
+            case { 'prescribedmotodetorquefcn_dqactiverect_ROTARY' }
+
+                simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'SolutionComponents', struct ());
+
+                % create the phase current solution component specification
+                simoptions.ODESim.SolutionComponents = setfieldifabsent (simoptions.ODESim.SolutionComponents, ...
+                                                      'DQPhaseCurrents', ...
+                                                      struct ('InitialConditions', zeros (1, 2) ) ...
+                                                                        );
+
+                if ~isempty (minIofinterest)
+                    simoptions.ODESim.SolutionComponents.PhaseCurrents.AbsTol = repmat (minIofinterest, 1, 2);
+                end
+
+            otherwise
+
+
+
+        end
+    
     end
 
 end
