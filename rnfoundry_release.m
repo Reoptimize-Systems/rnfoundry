@@ -55,13 +55,17 @@ function rnfoundry_release (varargin)
     
     [ mbdyndocrootdir, mbdyndoczipfilename ] = mbdyn.makedocs ('Version', options.MBDynVersion);
     
-    movefile ( fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), ...
-               rndocdir );
+%     movefile ( fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), ...
+%                rndocdir );
+           
+	unzip (fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), rndocdir);
            
 	[ ewstdocrootdir, ewstdoczipfilename ] = wsim.makedocs ('Version', options.EWSTVersion);
     
-    movefile ( fullfile (ewstdocrootdir, '..', ewstdoczipfilename), ...
-               rndocdir );
+%     movefile ( fullfile (ewstdocrootdir, '..', ewstdoczipfilename), ...
+%                rndocdir );
+
+    unzip (fullfile (ewstdocrootdir, '..', ewstdoczipfilename), rndocdir);
     
     % create the readme files
     help2txtfile (fullfile (thisfilepath, 'README.txt'), 'rnfoundry_release>readme');
@@ -101,6 +105,10 @@ function readme ()
 % USAGE
 % =====
 % 
+% Documentation for some parts of the Renewnet Foundry is provided
+% in html (web page) format in the top level 'documentation' 
+% directory.
+%
 % You can find some example scripts in the following directories:
 % 
 % Edinburgh Wave Systems Toolbox
