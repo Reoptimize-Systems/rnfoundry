@@ -6,14 +6,18 @@ function [design, simoptions] = finfun_AM(design, simoptions)
 
     % set any missing design properties
     
-    % check the wire and coil properties are all present
-    design = checkcoilprops_AM (design);
+    if ~simoptions.SkipCheckCoilProps
+        % check the wire and coil properties are all present
+        design = checkcoilprops_AM (design);
+    end
     
     % calculate the circuit properties
     [design, simoptions] = circuitprops_AM(design, simoptions);
     
     % calculate the coil wire conductor area
-    design = setfieldifabsent(design, 'ConductorArea', circlearea (design.Dc/2));
+    if isfield (design, 'Dc')
+        design = setfieldifabsent(design, 'ConductorArea', circlearea (design.Dc/2));
+    end
 
     % coefficient of friction for translator (for legacy code)
     design = setfieldifabsent(design, 'mu_fT', 0);
