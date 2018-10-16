@@ -431,26 +431,21 @@ function [design, simoptions] = focsetup (design, simoptions)
     
     design = setfieldifabsent (design, 'FOControl', struct ());
     
+    design.FOControl.Ls = cyclicinductance_AM (design);
+    
     if all (isfield (design.FOControl, { 'DirectCurentKp', ...
                                          'DirectCurentKi', ...
                                          'QuadratureCurentKp', ...
                                          'QuadratureCurentKi' } ))
                                      
         design.FOControl = setfieldifabsent (design.FOControl, 'DirectCurentKd', 0);
-        design.FOControl = setfieldifabsent (design.FOControl, 'QuadratureCurentKd', 0);               
+        design.FOControl = setfieldifabsent (design.FOControl, 'QuadratureCurentKd', 0);
+        design.FOControl.MaxTimeStep = inf;
     
     else
         if have_control_tools
             
             design.FOControl.Rdc = design.MachineSidePowerConverter.REquivalent(1);
-    %         design.FOControl.Laa = design.PhaseInductance(1);
-    %         design.FOControl.M = design.PhaseInductance(2);
-    % 
-    %         design.FOControl.Lm = design.FOControl.M / -0.5;
-    % 
-    %         design.FOControl.Lsigma = design.FOControl.Laa - design.FOControl.Lm;
-
-            design.FOControl.Ls = cyclicinductance_AM (design);
 
             % voltage-current transfer function
             G = tf (1, [design.FOControl.Ls, design.FOControl.Rdc]);
@@ -491,6 +486,8 @@ function [design, simoptions] = focsetup (design, simoptions)
         end
     
     end
+    
+    
     
     % set Vdc to be twice the natural rectification voltage
     design.FOControl.PI_d = pidController ( design.FOControl.DirectCurentKp, ...
