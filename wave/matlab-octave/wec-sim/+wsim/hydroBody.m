@@ -598,12 +598,12 @@ classdef hydroBody < handle
             %  hb - wsim.hydroBody object
             %
             %  filename - name withput path of the .mat file in which to
-            %   save the 
+            %   save the hydrobody hydroData structure contents.
             %
             % Addtional arguments may be supplied as parameter-value pairs.
             % The available options are:
             %
-            %  'Directory' - optional alternative direcotry in which to
+            %  'Directory' - optional alternative directory in which to
             %    save the .mat file instead of the hydroData subdirectory
             %    of the simulation case directory.
             %
