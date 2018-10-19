@@ -57,6 +57,15 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             % rel_rot_orientation_1 matrix. It consists in the Euler vector
             % that expresses the imposed relative orientation, in radian.
             %
+            % Note that if the ImposedRelativePosition or
+            % ImposedRelativeOrientation is left to the default 'null'
+            % value, the two nodes will essentially be forced into the same
+            % global position. A common misunderstanding is that the
+            % imposed relative position/orientation will be taken from the
+            % initial node positions in this case, but in actuality they
+            % will moved/rotated such that they are in the same
+            % position/orientation at the start of the simulation.
+            %
             % Input
             %
             %  node1 - mbdyn.pre.structuralNode object
@@ -66,17 +75,64 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             % Addtional arguments may be supplied as parameter-value pairs.
             % The available options are:
             %
-            %  'PositionStatus' - 
+            %  'PositionStatus' - 3 element logical (true/false) vector or
+            %    3 element cell array where each element contains the
+            %    character vector 'active' or 'inactive'. This indicates
+            %    the status of the position constraint for each element. A
+            %    value of true or 'active' means the constraint supplied in
+            %    ImposedRelativePosition will be applied to that component,
+            %    a value of false or 'inactive' means the constraint will
+            %    not be applied to that component.
             %
-            %  'OrientationStatus' - 
+            %  'OrientationStatus' - 3 element logical (true/false) vector
+            %    or 3 element cell array where each element contains the
+            %    character vector 'active' or 'inactive'. This indicates
+            %    the status of the orientation constraint for each element.
+            %    A value of true or 'active' means the constraint supplied
+            %    in ImposedRelativeOrientation will be applied to that
+            %    component, a value of false or 'inactive' means the
+            %    constraint will not be applied to that component.
             %
-            %  'ImposedRelativePosition' - 
+            %  'ImposedRelativePosition' - either the keyword 'null' or an 
+            %    mbdyn.pre.tplDriveCaller object of output size 3. The
+            %    output of the drives defines the relative position of the
+            %    two nodes (after taking account of any values in
+            %    'RelativeOffset1', 'RelativePositionOrientation1',
+            %    'RelativeRotOrientation1', 'RelativeOffset2',
+            %    'RelativePositionOrientation2', and
+            %    'RelativeRotOrientation2'). If the keyword 'null' is used
+            %    this indicates that the relative position of the two nodes
+            %    is zero in all components (again, after applying any
+            %    relative offset and relative orientation values).
             %
-            %  'ImposedRelativeOrientation' - 
+            %  'ImposedRelativeOrientation' - either the keyword 'null' or an 
+            %    mbdyn.pre.tplDriveCaller object of output size 3. The
+            %    output of the drives defines the relative rotation of the
+            %    two nodes (after taking account of any values in
+            %    'RelativeOffset1', 'RelativePositionOrientation1',
+            %    'RelativeRotOrientation1', 'RelativeOffset2',
+            %    'RelativePositionOrientation2', and
+            %    'RelativeRotOrientation2'). If the keyword
+            %    'null' is used this indicates that the relative rotation
+            %    of the two nodes is zero in all components (again, after
+            %    applying any relative offset and relative orientation
+            %    values).
             %
-            %  'RelativeOffset1' - 
+            %  'RelativeOffset1' - optional offset of the applied position
+            %    constraint (ImposedRelativePosition) in a reference frame
+            %    rigidly attached to node 1. The offset can be specified in
+            %    a different reference frame using the
+            %    'RelativeOffset1Reference' option (see below). Default is
+            %    no offset. Note that if ImposedRelativePosition is left to
+            %    the default 'null' value, the two nodes will be moved
+            %    into the same position. See the description section above
+            %    for more information.
             %
-            %  'RelativeOffset1Reference' - 
+            %  'RelativeOffset1Reference' - optional character vector 
+            %    containing alternative reference frame in which the
+            %    relative offset in RelativeOffset1 is defined. Can be one
+            %    of 'node', 'local', 'global', 'other node' or 'other
+            %    position'.
             %
             %  'RelativePositionOrientation1' - 
             %
@@ -86,9 +142,21 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             %
             %  'RelativeRotOrientation1Reference' - 
             %
-            %  'RelativeOffset2' - 
+            %  'RelativeOffset2' - optional offset of the applied position
+            %    constraint (ImposedRelativePosition) in a reference frame
+            %    rigidly attached to node 2. The offset can be specified in
+            %    a different reference frame using the
+            %    'RelativeOffset2Reference' option (see below). Default is
+            %    no offset. Note that if ImposedRelativePosition is left to
+            %    the default 'null' value, the two nodes will be moved
+            %    into the same position. See the description section above
+            %    for more information.
             %
-            %  'RelativeOffset2Reference' - 
+            %  'RelativeOffset2Reference' - optional character vector 
+            %    containing alternative reference frame in which the
+            %    relative offset in RelativeOffset2 is defined. Can be one
+            %    of 'node', 'local', 'global', 'other node' or 'other
+            %    position'.
             %
             %  'RelativePositionOrientation2' - 
             %
@@ -320,24 +388,24 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
         
         function setTransform (self)
             
-%             ref_node = mbdyn.pre.reference (self.node1.absolutePosition, ...
-%                                             self.node1.absoluteOrientation, ...
-%                                             [], []);
-                                        
-            abspos = self.offset2AbsolutePosition (self.relativeOffset1{3}, self.relativeOffset1Reference, 1);
-            
-            absorient = self.node1.absoluteOrientation.orientationMatrix;
-            
-%             ref_joint = mbdyn.pre.reference (self.relativeOffset1, self.relativePositionOrientation1, [], [], 'Parent', ref_node);
-            
-            M = [ absorient, abspos; ...
-                  0, 0, 0, 1 ];
-            
-            % matlab uses different convention to mbdyn for rotation
-            % matrix
-            M = self.mbdynOrient2Matlab (M);
-                  
-            set ( self.transformObject, 'Matrix', M );
+% %             ref_node = mbdyn.pre.reference (self.node1.absolutePosition, ...
+% %                                             self.node1.absoluteOrientation, ...
+% %                                             [], []);
+%                                         
+%             abspos = self.offset2AbsolutePosition (self.relativeOffset1{3}, self.relativeOffset1Reference, 1);
+%             
+%             absorient = self.node1.absoluteOrientation.orientationMatrix;
+%             
+% %             ref_joint = mbdyn.pre.reference (self.relativeOffset1, self.relativePositionOrientation1, [], [], 'Parent', ref_node);
+%             
+%             M = [ absorient, abspos; ...
+%                   0, 0, 0, 1 ];
+%             
+%             % matlab uses different convention to mbdyn for rotation
+%             % matrix
+%             M = self.mbdynOrient2Matlab (M);
+%                   
+%             set ( self.transformObject, 'Matrix', M );
             
         end
         
