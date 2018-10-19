@@ -167,8 +167,6 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
             options = parse_pv_pairs (options, varargin);
             
-            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
-            
             switch type
                 
                 case 'static'
@@ -193,6 +191,8 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
                     options.AbsoluteAngularVelocity = ref.omega;
                 end
             end
+
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
             
             self = self@mbdyn.pre.structuralNode ( pvpairs{:} );
                    
