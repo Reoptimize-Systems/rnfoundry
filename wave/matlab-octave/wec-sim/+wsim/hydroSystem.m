@@ -259,14 +259,6 @@ classdef hydroSystem < handle
                     
                 end
                 
-                self.hydroBodies(bodyind).bodyTotal = self.simu.numWecBodies;
-                
-                if self.simu.b2b == 1
-                    self.hydroBodies(bodyind).lenJ = zeros (6*self.hydroBodies(bodyind).bodyTotal, 1);
-                else
-                    self.hydroBodies(bodyind).lenJ = zeros (6, 1);
-                end
-                
             end
             
             self.hydroBodiesInitialised = true;
