@@ -1389,7 +1389,67 @@ classdef logger < handle
             
             S.subs{obj.info.(varname).IndexDimension} = startindex : obj.info.(varname).LastLogIndex;
             
-            % assign the new value
+            % get the values
+            vals = subsref (obj.data.(varname), S);
+
+        end
+        
+        
+        function vals = getPrevLoggedVal(obj, varname, n)
+            % get the (end - n) logged value of a variable
+            %
+            % Syntax
+            %
+            % val = getPrevLoggedVal(obj, varname, n)
+            %
+            % Description
+            %
+            % If a variable exists, the last 'n' values logged to that
+            % variable are returned. If the number of logged variables is
+            % less than this, all available data will be returned.
+            %
+            % Input
+            %
+            %  obj - wsim.logger object
+            %
+            %  varname - name of the variable to be for which to obtain the
+            %    last logged value
+            %
+            %  n - the index of the logged variable to return.
+            %
+            % Output
+            %
+            %  vals - The last 'n' logged values for the supplied variable,
+            %    in the same shape as in the corresponding stored data
+            %    field.
+            %
+            %
+            % See Also: wsim.logger.logVal, wsim.logger.addVariable
+            %
+
+            if ~isfield (obj.data, varname)
+                error ('data logging field: %s does not exist', varname);
+            end
+            
+            if obj.info.(varname).LastLogIndex < 1
+                error ('No data has been logged for the variable %s yet.', varname);
+            end
+            
+            % copy the pre-constructed indexing structure (created when
+            % adding the variable)
+            S = obj.info.(varname).IndexAssignment;
+            
+            % build the correct index into the logged variable by replacing
+            % the appropriate index with the new log index
+            logindex = obj.info.(varname).LastLogIndex - n;
+            
+            if logindex < 1
+                error ('Requested value is before start of logging (or outside logging window)'); 
+            end
+
+            S.subs{obj.info.(varname).IndexDimension} = logindex;
+            
+            % get the value
             vals = subsref (obj.data.(varname), S);
 
         end
