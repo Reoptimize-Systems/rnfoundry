@@ -457,40 +457,40 @@ classdef hydroBody < handle
             %
             
             filename = obj.hydroDataFileFullPath;
-            name = ['/body' num2str(obj.bodyNumber)];
-            obj.cg = h5read(filename,[name '/properties/cg']);
+            body_name = ['/body' num2str(obj.bodyNumber)];
+            obj.cg = h5read(filename,[body_name '/properties/cg']);
             obj.cg = obj.cg';
-            obj.cb = h5read(filename,[name '/properties/cb']);
+            obj.cb = h5read(filename,[body_name '/properties/cb']);
             obj.cb = obj.cb';
-            obj.dispVol = h5read(filename,[name '/properties/disp_vol']);
-            obj.name = h5read(filename,[name '/properties/name']);
-            try obj.name = obj.name{1}; end
+            obj.dispVol = h5read(filename,[body_name '/properties/disp_vol']);
+            obj.name = h5read(filename,[body_name '/properties/name']);
+            try obj.name = obj.name{1}; end %#ok<TRYNC>
             obj.hydroData.simulation_parameters.scaled = h5read(filename,'/simulation_parameters/scaled');
             obj.hydroData.simulation_parameters.wave_dir = h5read(filename,'/simulation_parameters/wave_dir');
             obj.hydroData.simulation_parameters.water_depth = h5read(filename,'/simulation_parameters/water_depth');
             obj.hydroData.simulation_parameters.w = h5read(filename,'/simulation_parameters/w');
             obj.hydroData.simulation_parameters.T = h5read(filename,'/simulation_parameters/T');
-            obj.hydroData.properties.name = h5read(filename,[name '/properties/name']);
-            try obj.hydroData.properties.name = obj.hydroData.properties.name{1}; end
-            obj.hydroData.properties.body_number = h5read(filename,[name '/properties/body_number']);
-            obj.hydroData.properties.cg = h5read(filename,[name '/properties/cg']);
-            obj.hydroData.properties.cb = h5read(filename,[name '/properties/cb']);
-            obj.hydroData.properties.disp_vol = h5read(filename,[name '/properties/disp_vol']);
-            obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.bemio.h5load(filename, [name '/hydro_coeffs/linear_restoring_stiffness']);
-            obj.hydroData.hydro_coeffs.excitation.re = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/re']);
-            obj.hydroData.hydro_coeffs.excitation.im = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/im']);
-            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/f']); end
-            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t = wsim.bemio.h5load(filename, [name '/hydro_coeffs/excitation/impulse_response_fun/t']); end
-            obj.hydroData.hydro_coeffs.added_mass.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/added_mass/all']);
-            obj.hydroData.hydro_coeffs.added_mass.inf_freq = wsim.bemio.h5load(filename, [name '/hydro_coeffs/added_mass/inf_freq']);
-            obj.hydroData.hydro_coeffs.radiation_damping.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/all']);
-            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/K']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/impulse_response_fun/t']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.it = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/it']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/A/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/B/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/C/all']); end
-            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.bemio.h5load(filename, [name '/hydro_coeffs/radiation_damping/state_space/D/all']); end
+            obj.hydroData.properties.name = h5read(filename,[body_name '/properties/name']);
+            try obj.hydroData.properties.name = obj.hydroData.properties.name{1}; end %#ok<TRYNC>
+            obj.hydroData.properties.body_number = h5read(filename,[body_name '/properties/body_number']);
+            obj.hydroData.properties.cg = h5read(filename,[body_name '/properties/cg']);
+            obj.hydroData.properties.cb = h5read(filename,[body_name '/properties/cb']);
+            obj.hydroData.properties.disp_vol = h5read(filename,[body_name '/properties/disp_vol']);
+            obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/linear_restoring_stiffness']);
+            obj.hydroData.hydro_coeffs.excitation.re = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/re']);
+            obj.hydroData.hydro_coeffs.excitation.im = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/im']);
+            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/impulse_response_fun/f']); end %#ok<TRYNC>
+            try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/impulse_response_fun/t']); end %#ok<TRYNC>
+            obj.hydroData.hydro_coeffs.added_mass.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/added_mass/all']);
+            obj.hydroData.hydro_coeffs.added_mass.inf_freq = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/added_mass/inf_freq']);
+            obj.hydroData.hydro_coeffs.radiation_damping.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/all']);
+            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/impulse_response_fun/K']); end %#ok<TRYNC>
+            try obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/impulse_response_fun/t']); end %#ok<TRYNC>
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.it = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/it']); end %#ok<TRYNC>
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.A.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/A/all']); end %#ok<TRYNC>
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/B/all']); end %#ok<TRYNC>
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/C/all']); end %#ok<TRYNC>
+            try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/D/all']); end %#ok<TRYNC>
             
         end
 
@@ -1142,27 +1142,26 @@ classdef hydroBody < handle
                 rd(:,:,i) = rd(:,:,i) .* obj.hydroData.simulation_parameters.w(i);
             end
             % Change matrix size: B2B [6x6n], noB2B [6x6]
-            if obj.simu.b2b == true
+            if obj.bodyToBodyInteraction == true
                 
-                lenJ = 6*obj.bodyTotal;
-                obj.hydroForce.fAddedMass = zeros(6,lenJ);
-                obj.hydroForce.fDamping = zeros(6,lenJ);
-                obj.hydroForce.totDOF  =zeros(6,lenJ);
+                obj.hydroForce.fAddedMass = zeros(6,obj.lenJ);
+                obj.hydroForce.fDamping = zeros(6,obj.lenJ);
+                obj.hydroForce.totDOF  =zeros(6,obj.lenJ);
                 for ii=1:6
-                    for jj=1:lenJ
+                    for jj=1:obj.lenJ
                         obj.hydroForce.fAddedMass(ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(am(ii,jj,:)), obj.waves.w, 'spline');
                         obj.hydroForce.fDamping  (ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jj,:)), obj.waves.w, 'spline');
                     end
                 end
                     
             else
-                lenJ = 6;
-                obj.hydroForce.fAddedMass = zeros(6,lenJ);
-                obj.hydroForce.fDamping = zeros(6,lenJ);
-                obj.hydroForce.totDOF  =zeros(6,lenJ);
+
+                obj.hydroForce.fAddedMass = zeros(6,obj.lenJ);
+                obj.hydroForce.fDamping = zeros(6,obj.lenJ);
+                obj.hydroForce.totDOF  =zeros(6,obj.lenJ);
 
                 for ii=1:6
-                    for jj=1:lenJ
+                    for jj=1:obj.lenJ
                         jjj = 6*(obj.bodyNumber-1)+jj;
                         obj.hydroForce.fAddedMass(ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(am(ii,jjj,:)), obj.waves.w, 'spline');
                         obj.hydroForce.fDamping  (ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jjj,:)), obj.waves.w, 'spline');
@@ -1181,33 +1180,27 @@ classdef hydroBody < handle
             
             iBod = obj.bodyNumber;
             
-            if obj.simu.b2b == true
-                lenJ = obj.bodyTotal*6;
-            else
-                lenJ = 6;
-            end
-            
             % Convolution integral formulation
-            if obj.simu.b2b == true
+            if obj.bodyToBodyInteraction == true
                 obj.hydroForce.fAddedMass = obj.hydroData.hydro_coeffs.added_mass.inf_freq .* obj.simu.rho;
             else
                 obj.hydroForce.fAddedMass = obj.hydroData.hydro_coeffs.added_mass.inf_freq(1:6,(iBod-1)*6+1:(iBod-1)*6+6) .* obj.simu.rho;
             end
             
             % Radition IRF
-            obj.hydroForce.fDamping=zeros(6,lenJ);
+            obj.hydroForce.fDamping=zeros(6,obj.lenJ);
             irfk = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K .* obj.simu.rho;
             irft = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t;
-            %obj.hydroForce.irkb=zeros(CIkt,6,lenJ);
-            if obj.simu.b2b == true
+            %obj.hydroForce.irkb=zeros(CIkt,6,obj.lenJ);
+            if obj.bodyToBodyInteraction == true
                 for ii=1:6
-                    for jj=1:lenJ
+                    for jj=1:obj.lenJ
                         obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jj,:)), obj.simu.CTTime, 'spline');
                     end
                 end
             else
                 for ii=1:6
-                    for jj=1:lenJ
+                    for jj=1:obj.lenJ
                         jjj = (iBod-1)*6+jj;
                         obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jjj,:)), obj.simu.CTTime, 'spline');
                     end
@@ -1216,11 +1209,11 @@ classdef hydroBody < handle
             % State Space Formulation
             if obj.simu.ssCalc > 0
                 
-                if obj.simu.b2b == 1
+                if obj.bodyToBodyInteraction == true
                     
                     for ii = 1:6
                         
-                        for jj = 1:lenJ
+                        for jj = 1:obj.lenJ
                             
                             arraySize = obj.hydroData.hydro_coeffs.radiation_damping.state_space.it(ii,jj);
                             
@@ -1247,7 +1240,7 @@ classdef hydroBody < handle
                         
                     end
                     
-                    obj.hydroForce.ssRadf.D = zeros (6,lenJ);
+                    obj.hydroForce.ssRadf.D = zeros (6,obj.lenJ);
                     
                 else
                     
@@ -1436,17 +1429,25 @@ classdef hydroBody < handle
 
             % first reset everything
             timeDomainSimReset (obj);
-
-            % then do the setup again
+            
+            obj.bodyTotal = obj.simu.numWecBodies;
+            
+            if obj.bodyToBodyInteraction == true
+                obj.lenJ = 6*obj.bodyTotal;
+            else
+                obj.lenJ = 6;
+            end
+            
+            % now do the hydro force preprocessing
             obj.hydroForcePre ();
-
+            
             % Radiation Damping
             if obj.radiationMethodNum == 1 && ~isempty (fieldnames(obj.hydroForce))
 
                 % reset the radiation force convolution integral related states
                 obj.CIdt = obj.simu.CTTime(2) - obj.simu.CTTime(1);
 
-                obj.radForceVelocity = zeros(length(obj.lenJ),length(obj.simu.CTTime));
+                obj.radForceVelocity = zeros(obj.lenJ,length(obj.simu.CTTime));
 
                 obj.radForceOldTime = 0;
 
@@ -2732,8 +2733,8 @@ classdef hydroBody < handle
                 ok = check.allowedStringInputs (new_mass, {'equilibrium'}, false);
                 assert (ok, 'If mass is a string, it must be ''equilibrium''');
             else
-                check.isNumericScalar(new_mass, true, 'mass', 1);
-                assert (new_mass > 0, 'mass must be greater than 0');
+                check.isNumericScalar(new_mass, true, 'mass', 0);
+%                 assert (new_mass > 0, 'mass must be greater than 0');
             end
             
             self.mass = new_mass;
