@@ -43,7 +43,10 @@ function varargout = prescribedmotode_activerect_ROTARY (t, x, design, simoption
         machineodesim_AM (design, simoptions, thetaE, 0, omegaE, 0, Icoils);
     
     theta_flux = thetaE .* design.Poles / 2 + pi();
+%     theta_flux = thetaE .* design.Poles / 2 + pi()/2;
     Idq = abc2dq0 (Iphases(:), theta_flux, true);
+%     theta_flux = thetaE .* design.Poles / 2;
+%     Idq = abc2dq0 (Iphases(:), theta_flux, true);
 
     Vo = design.MachineSidePowerConverter.Vdc;
     
@@ -65,8 +68,10 @@ function varargout = prescribedmotode_activerect_ROTARY (t, x, design, simoption
         Vsqref = Vsqref + ( omega_flux * design.FluxLinkagePhasePeak );
         
         Vabc = dq02abc ( [Vsdref; Vsqref], theta_flux, true );
+%         Vabc = dq02abc ( [Vsdref; Vsqref], theta_flux, false );
         
         Vabc_conv = -Vabc;
+%         Vabc_conv = Vabc;
         
         if any (abs(Vabc_conv) > Vo)
             
