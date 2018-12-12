@@ -101,6 +101,8 @@ classdef distance < mbdyn.pre.twoNodeOffsetJoint
             self.type = 'distance';
             self.distanceValue = distance_val;
             
+            self.drawColour = 'g';
+            
         end
         
         function str = generateMBDynInputString (self)
@@ -136,6 +138,125 @@ classdef distance < mbdyn.pre.twoNodeOffsetJoint
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
 
+        end
+        
+        
+        function draw (self, varargin)
+            
+            options.AxesHandle = [];
+            options.ForceRedraw = false;
+            options.Mode = [];
+            
+            options = parse_pv_pairs (options, varargin);
+              
+            if options.ForceRedraw
+                self.needsRedraw = true;
+            end
+            
+            self.checkAxes (options.AxesHandle);
+            
+            if isempty (self.shapeObjects) ...
+                    || self.needsRedraw
+                % a full redraw is needed (and not just a modification of
+                % transform matrices for the objects).
+                
+%                 if isempty (self.lineTransformObj) || ~ishghandle (self.lineTransformObj)
+%                     self.lineTransformObj = hgtransform (self.drawAxesH);
+%                 end
+                
+                % delete the objects
+                self.deleteAllDrawnObjects ();
+                
+                point1pos = point1AbsolutePosition (self);
+            
+                point2pos = point2AbsolutePosition (self);
+                
+                % make the line
+                self.shapeObjects = { line( self.drawAxesH, ...
+                                            [ point1pos(1), point2pos(1) ], ...
+                                            [ point1pos(2), point2pos(2) ], ...
+                                            [ point1pos(3), point2pos(3) ], ...
+                                            'Color', self.drawColour, ...
+                                            'LineStyle', '-' ...
+                                            ...'Parent', self.lineTransformObj 
+                                           ), ...
+                                    };
+                                     
+                self.needsRedraw = false;
+
+                
+            end
+            
+            self.setTransform ();
+
+
+        end
+
+        
+        function abspos = point1AbsolutePosition (self)
+            % gets the position of the sliding point in the global frame
+            
+            if isempty (self.relativeOffset1)
+                offset = [0;0;0];
+            else
+                offset = self.relativeOffset1;
+            end
+            
+            abspos = offset2AbsolutePosition ( self, ...
+                                               offset , ...
+                                               self.offset1Reference, ...
+                                               1 );
+            
+        end
+        
+        function abspos = point2AbsolutePosition (self)
+            % gets the position of the sliding point in the global frame
+            
+            if isempty (self.relativeOffset2)
+                offset = [0;0;0];
+            else
+                offset = self.relativeOffset2;
+            end
+            
+            abspos = offset2AbsolutePosition ( self, ...
+                                               offset , ...
+                                               self.offset2Reference, ...
+                                               2 );
+            
+        end
+        
+        
+    end
+    
+    methods (Access = protected)
+        
+        function setTransform (self)
+
+            point1pos = point1AbsolutePosition (self);
+            
+            point2pos = point2AbsolutePosition (self);
+                  
+            % modify the line data
+            set ( self.shapeObjects{1}, ...
+                  'XData', [ point1pos(1), point2pos(1) ], ...
+                  'YData', [ point1pos(2), point2pos(2) ], ...
+                  'ZData', [ point1pos(3), point2pos(3) ] );
+              
+%             % set the transform object which controls the line
+%             % location and orientation
+%             M = [ lineorientm.orientationMatrix, linepos; ...
+%                   0, 0, 0, 1 ];
+%                   
+%             set ( self.lineTransformObj, 'Matrix', M );
+%             
+%             % set the transform object which controls the point cylinder
+%             % location and orientation
+%             M = [ lineorientm.orientationMatrix, pointpos; ...
+%                   0, 0, 0, 1 ];
+%                   
+%             set ( self.transformObject, 'Matrix', M );
+%             
+%             
         end
         
     end
