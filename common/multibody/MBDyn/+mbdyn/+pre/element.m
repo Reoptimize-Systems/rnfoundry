@@ -69,12 +69,12 @@ classdef element < mbdyn.pre.base
             %
             %  'DefaultShape' - optional string which chooses the shape to
             %    use to represent the element in a plot when an STL file is
-            %    not avaialable. Possible values are 'none', 'cuboid',
+            %    not available. Possible values are 'none', 'cuboid',
             %    'box', 'cylinder', 'tube', 'pipe', or 'annularcylinder'.
             %    Default is cuboid.
             % 
             %  'DefaultShapeOrientation' - optional mbdyn.pre.orientmat
-            %    object which sets theorientation of the default shape (see
+            %    object which sets the orientation of the default shape (see
             %    above). 
             %
             % Output
@@ -131,7 +131,8 @@ classdef element < mbdyn.pre.base
                     self.setSize (1, 0.5, 2);
 
                 case 'sphere'
-
+                    
+%                     self.setSize (1);
 
                 case 'ellipsoid'
 
@@ -203,6 +204,7 @@ classdef element < mbdyn.pre.base
             % setSize (el, sx, sy, sz)
             % setSize (el, radius, axiallength)
             % setSize (el, router, rinner, axiallength)
+            % setSize (el, R)
             %
             % Description
             %
@@ -239,6 +241,10 @@ classdef element < mbdyn.pre.base
             %
             %  axiallength - used when the shape is a tube/pipe/annularcylinder,
             %   this is the axial length of the tube.
+            %
+            %  R - used when the shape is a sphere, this is the radius of
+            %   the sphere
+            %
             %
             % Output
             %
@@ -330,6 +336,15 @@ classdef element < mbdyn.pre.base
 
                     case 'sphere'
 
+%                         % sphere, 1 argument expected, radius
+%                         assert (numel (varargin) == 1, ...
+%                                 'setSize requires 1 size input arguments when the shape is a sphere, R, the radius');
+% 
+%                         self.checkNumericScalar (varargin{1}, true, 'R');
+% 
+%                         assert (varargin{1} > 0, 'sx must be greater than zero');
+% 
+%                         self.shapeParameters(1) = varargin{1};
 
                     case 'ellipsoid'
 
@@ -826,6 +841,42 @@ classdef element < mbdyn.pre.base
                                    8, 7, 6, 5 ];
                                
         end
+        
+%         function shapedata = makeSphereShape (R, orientation)
+%             
+%             if nargin < 2
+%                 orientation = eye (3);
+%             end
+%             
+%             angle = 0;
+%             
+%             [x, y, z] = sph2cart ( linspace (0, pi, nsides), ...
+%                                    repmat (angle, 1, nsides), ...
+%                                    repmat (R, 1, nsides) );
+%                                    
+%             shapedata{1} = struct ();
+%             shapedata{1}.Vertices = [];
+%             shapedata{1}.Faces = [];
+%             
+%             nsides = 20;
+%             
+%             
+%             for ind = 1:nsides
+%                
+%                 [x, y, z] = sph2cart ( linspace (0, pi, nsides), ...
+%                                        repmat (angle, 1, nsides), ...
+%                                        repmat (R, 1, nsides) );
+%                 
+%                 angle = angle + (2*pi)/nsides;
+%                 
+%                 shapedata{1}.Vertices = [ shapedata{1}.Vertices;
+%                                           x(:), y(:), z(:); ];
+%                                       
+%                 shapedata{1}.Faces = [ shapedata{1}.Faces; 
+%             end
+%             
+%                                
+%         end
 
     end
     
