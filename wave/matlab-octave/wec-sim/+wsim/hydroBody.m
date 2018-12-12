@@ -1774,6 +1774,8 @@ classdef hydroBody < handle
 
         function forces = morrisonElementForce (obj, t, pos, vel, accel)
 
+            error ('Morrison Element Forces have not yet been implemented');
+            
             % TODO: convert morrison element simulink models
             switch obj.excitationMethodNum
 
