@@ -314,7 +314,7 @@ classdef inline < mbdyn.pre.twoNodeJoint
         end
         
         function abspos = pointAbsolutePosition (self)
-            % gets the position of the clamp in the global frame
+            % gets the position of the sliding point in the global frame
             
             if isempty (self.relativeOffset)
                 offset = [0;0;0];
