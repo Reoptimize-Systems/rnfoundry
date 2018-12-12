@@ -1523,6 +1523,7 @@ classdef logger < handle
                     error ('New data for series must be the same length as the linked independant variable');
                     
                 end
+                
             end
             
             % Check new data is the right size (matches existing variable
@@ -1554,8 +1555,15 @@ classdef logger < handle
             obj.data.(varname) = subsasgn (obj.data.(varname), S, newdata);
 
             % update the log index
-            obj.info.(varname).LastLogIndex = sz(varinfo.IndexDimension);
-            
+            if ~isempty (varinfo.IndependentVariable)
+                % assume the last correct log index is the same as the
+                % linked independant variable
+                obj.info.(varname).LastLogIndex = ivinfo.LastLogIndex;
+            else
+                % take last log index as end of provided series
+                obj.info.(varname).LastLogIndex = sz(varinfo.IndexDimension);
+            end
+
         end
 
 
