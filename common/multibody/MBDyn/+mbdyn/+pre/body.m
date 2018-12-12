@@ -69,6 +69,16 @@ classdef body < mbdyn.pre.element
             %    this option determines whether the name stored in the
             %    stl file is assigned to the body. Default is false.
             %
+            %  'DefaultShape' - optional string which chooses the shape to
+            %    use to represent the element in a plot when an STL file is
+            %    not available. Possible values are 'none', 'cuboid',
+            %    'box', 'cylinder', 'tube', 'pipe', or 'annularcylinder'.
+            %    Default is cuboid.
+            % 
+            %  'DefaultShapeOrientation' - optional mbdyn.pre.orientmat
+            %    object which sets the orientation of the default shape (see
+            %    above). 
+            %
             % Output
             %
             %  bd - mbdyn.pre.body object
