@@ -889,7 +889,7 @@ classdef hydroBody < handle
                 fname = fullfile (obj.caseDirectory, 'geometry', obj.geometryFile);
             end
             
-            assert (exist (fname, 'file'), 'The STl file:\n%s\n does not appear to exist', fname);
+            assert (exist (fname, 'file') == 2, 'The STl file:\n%s\n does not appear to exist', fname);
             
             try
                 [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,1);
@@ -2043,7 +2043,7 @@ classdef hydroBody < handle
                     [forces, body_hspressure_out]  = nonLinearBuoyancy( obj, pos, waveElv, t );
 
                     % Add Net Bouyancy Force to Z-Direction
-                    forces = -forces + [ 0, 0, (obj.simu.g .* obj.hydroForce.storage.mass), 0, 0, 0 ];
+                    forces = -forces + [ 0; 0; (obj.simu.g .* obj.hydroForce.storage.mass); 0; 0; 0 ];
 
             end
 
@@ -2060,14 +2060,14 @@ classdef hydroBody < handle
                 
                 if isempty(obj.oldElev)
                     
-                    f = calc_elev (pos,t);
+                    f = calc_elev (obj, pos, t);
                     
                     obj.oldElev = f;
                     
                 else
                     if mod(t, obj.simu.dtFeNonlin) < obj.simu.dt/2
                         
-                        f = calc_elev (pos,t);
+                        f = calc_elev (obj, pos, t);
                         
                         obj.oldElev = f;
                         
@@ -2185,20 +2185,20 @@ classdef hydroBody < handle
             % forces.
 
             % Compute new tri coords after cog rotation and translation
-            centerMeanFS = hydroBody.offsetXYZ (obj.bodyGeometry.center, obj.hydroData.properties.cg);
-            avMeanFS     = obj.bodyGeometry.tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
+            centerMeanFS = obj.offsetXYZ (obj.bodyGeometry.center, obj.hydroData.properties.cg);
+            avMeanFS     = obj.bodyGeometry.norm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
 
             % Compute new tri coords after cog rotation and translation
-            center = hydroBody.rotateXYZ (obj.bodyGeometry.center, [1 0 0], pos(4));
-            center = hydroBody.rotateXYZ (center, [0 1 0], pos(5));
-            center = hydroBody.rotateXYZ (center, [0 0 1], pos(6));
-            center = hydroBody.offsetXYZ (center, pos);
-            center = hydroBody.offsetXYZ (center, obj.hydroData.properties.cg);
+            center = obj.rotateXYZ (obj.bodyGeometry.center, [1 0 0], pos(4));
+            center = obj.rotateXYZ (center, [0 1 0], pos(5));
+            center = obj.rotateXYZ (center, [0 0 1], pos(6));
+            center = obj.offsetXYZ (center, pos);
+            center = obj.offsetXYZ (center, obj.hydroData.properties.cg);
 
             % Compute new normal vectors coords after cog rotation and translation
-            tnorm = hydroBody.rotateXYZ (obj.bodyGeometry.tnorm, [1 0 0], pos(4));
-            tnorm = hydroBody.rotateXYZ (tnorm, [0 1 0], pos(5));
-            tnorm = hydroBody.rotateXYZ (tnorm, [0 0 1], pos(6));
+            tnorm = obj.rotateXYZ (obj.bodyGeometry.norm, [1 0 0], pos(4));
+            tnorm = obj.rotateXYZ (tnorm, [0 1 0], pos(5));
+            tnorm = obj.rotateXYZ (tnorm, [0 0 1], pos(6));
 
             % Compute area vectors
             av = tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
@@ -2209,8 +2209,8 @@ classdef hydroBody < handle
             wp = pressureDistribution (obj, center, elv, t);
 
             % Calculate forces
-            f_linear    = FK ( centerMeanFS,  obj.hydroData.properties.cg,             avMeanFS, wpMeanFS );
-            f_nonLinear = FK ( center,        pos(1:3) + obj.hydroData.properties.cg,  av,       wp );
+            f_linear    = obj.FK ( centerMeanFS,  obj.hydroData.properties.cg,             avMeanFS, wpMeanFS );
+            f_nonLinear = obj.FK ( center,        pos(1:3) + obj.hydroData.properties.cg,  av,       wp );
             f = f_nonLinear - f_linear;
 
         end
@@ -2259,17 +2259,17 @@ classdef hydroBody < handle
 
                 f = obj.simu.rho ...
                     .* obj.simu.g ...
-                    .* obj.waves.AH(1) ...
+                    .* obj.waves.A(1) ...
                     .* cos ( obj.waves.k(1) .* center(:,1) - obj.waves.w(1) * t );
 
                 if obj.waves.deepWaterWave == 0
 
                     z = (center(:,3) - elv) ...
-                        .* obj.waves.wDepth ...
-                        ./ (obj.waves.wDepth + elv);
+                        .* obj.waves.waterDepth ...
+                        ./ (obj.waves.waterDepth + elv);
 
-                    f = f .* ( cosh ( obj.waves.k(1) .* (z + obj.waves.wDepth) ) ...
-                                ./ cosh (obj.waves.k(1) * obj.waves.wDepth ) ...
+                    f = f .* ( cosh ( obj.waves.k(1) .* (z + obj.waves.waterDepth) ) ...
+                                ./ cosh (obj.waves.k(1) * obj.waves.waterDepth ) ...
                              );
 
                 else
@@ -2282,25 +2282,25 @@ classdef hydroBody < handle
 
             elseif obj.waves.typeNum < 30
 
-                for i = 1:length(obj.waves.AH)
+                for i = 1:length(obj.waves.A)
 
                     if obj.waves.deepWaterWave == 0 ...
-                            && obj.waves.wDepth <= 0.5*pi/obj.waves.k(i)
+                            && obj.waves.waterDepth <= 0.5*pi/obj.waves.k(i)
 
                         z = ( center(:,3) - elv ) ...
-                            .* obj.waves.wDepth ...
-                            ./ ( obj.waves.wDepth + elv );
+                            .* obj.waves.waterDepth ...
+                            ./ ( obj.waves.waterDepth + elv );
 
                         f_tmp = obj.simu.rho ...
                                 .* obj.simu.g ...
-                                .* sqrt (obj.waves.AH(i) * obj.waves.dw) ...
+                                .* sqrt (obj.waves.A(i) * obj.waves.dw(i)) ...
                                 .* cos ( obj.waves.k(i) .* center(:,1) ...
                                          - obj.waves.w(i) * t ...
                                          - obj.waves.phase(i) ...
                                        );
 
-                        f = f + f_tmp .* ( cosh ( obj.waves.k(i) .* (z + obj.waves.wDepth) ) ...
-                                           ./ cosh ( obj.waves.k(i) .* obj.waves.wDepth ) ...
+                        f = f + f_tmp .* ( cosh ( obj.waves.k(i) .* (z + obj.waves.waterDepth) ) ...
+                                           ./ cosh ( obj.waves.k(i) .* obj.waves.waterDepth ) ...
                                          );
 
                     else
@@ -2309,7 +2309,7 @@ classdef hydroBody < handle
 
                         f_tmp = obj.simu.rho ...
                                 .* obj.simu.g ...
-                                .* sqrt (obj.waves.AH(i) * obj.waves.dw) ...
+                                .* sqrt (obj.waves.A(i) * obj.waves.dw(i)) ...
                                 .* cos ( obj.waves.k(i) .* center(:,1) ...
                                          - obj.waves.w(i) * t - obj.waves.phase(i) ...
                                        );
@@ -2325,7 +2325,7 @@ classdef hydroBody < handle
 
         end
 
-        function f = FK(center, instcg, av, wp)
+        function f = FK(obj, center, instcg, av, wp)
             % Function to calculate the force and moment about the cog due
             % to Froude-Krylov pressure
 
@@ -2339,7 +2339,8 @@ classdef hydroBody < handle
 
             % Compute moment about cog
             tmp1 = ones (length (center(:,1)), 1);
-            tmp2 = tmp1 * instcg';
+%             tmp2 = tmp1 * instcg'; orig
+            tmp2 = tmp1 * instcg;
             center2cgVec = center - tmp2;
 
             f(4:6) = sum (cross (center2cgVec, pressureVect));
@@ -2410,16 +2411,16 @@ classdef hydroBody < handle
             % Function to apply translation and rotation and calculate forces
 
             % Compute new tri coords after cog rotation and translation
-            center = hydroBody.rotateXYZ(obj.bodyGeometry.center, [1 0 0], pos(4));
-            center = hydroBody.rotateXYZ(center, [0 1 0], pos(5));
-            center = hydroBody.rotateXYZ(center, [0 0 1], pos(6));
-            center = hydroBody.offsetXYZ(center, pos);
-            center = hydroBody.offsetXYZ(center, obj.cg);
+            center = obj.rotateXYZ(obj.bodyGeometry.center, [1 0 0], pos(4));
+            center = obj.rotateXYZ(center, [0 1 0], pos(5));
+            center = obj.rotateXYZ(center, [0 0 1], pos(6));
+            center = obj.offsetXYZ(center, pos);
+            center = obj.offsetXYZ(center, obj.cg);
 
             % Compute new normal vectors coords after cog rotation
-            tnorm = hydroBody.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], pos(4));
-            tnorm = hydroBody.rotateXYZ(tnorm, [0 1 0], pos(5));
-            tnorm = hydroBody.rotateXYZ(tnorm, [0 0 1], pos(6));
+            tnorm = obj.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], pos(4));
+            tnorm = obj.rotateXYZ(tnorm, [0 1 0], pos(5));
+            tnorm = obj.rotateXYZ(tnorm, [0 0 1], pos(6));
 
             % Calculate the hydrostatic forces
             av = tnorm .* [obj.bodyGeometry.area, obj.bodyGeometry.area, obj.bodyGeometry.area];
@@ -2461,7 +2462,7 @@ classdef hydroBody < handle
             center = obj.offsetXYZ (center, obj.cg);
             
             % Calculate the free surface
-            f = waveElev (center,t);
+            f = waveElev (obj, center,t);
         end
         
         function f = waveElev (obj, center, t)
@@ -2479,11 +2480,11 @@ classdef hydroBody < handle
                 
             elseif obj.waves.typeNum <20
                 
-                f = obj.waves.AH(1) .* cos(obj.waves.k(1) .* X - obj.waves.w(1) * t);
+                f = obj.waves.A(1) .* cos(obj.waves.k(1) .* X - obj.waves.w(1) * t);
                 
             elseif obj.waves.typeNum <30
                 
-                tmp = sqrt (obj.waves.AH .* obj.waves.dw);
+                tmp = sqrt (obj.waves.A .* obj.waves.dw);
                 
                 tmp1 = ones (1, length (center(:,1)));
                 
@@ -2497,7 +2498,7 @@ classdef hydroBody < handle
             
             % apply ramp if we are not past the initial ramp time
             if t <= obj.simu.rampT
-                rampF = (1 + cos (pi + pi * t / rampT)) / 2;
+                rampF = (1 + cos (pi + pi * t / obj.simu.rampT)) / 2;
                 f = f .* rampF;
             end
         end
@@ -2732,7 +2733,7 @@ classdef hydroBody < handle
         function set.mass (self, new_mass)
             
             if ischar (new_mass)
-                ok = check.allowedStringInputs (new_mass, {'equilibrium'}, false);
+                ok = check.allowedStringInputs (new_mass, {'equilibrium', 'fixed'}, false);
                 assert (ok, 'If mass is a string, it must be ''equilibrium''');
             else
                 check.isNumericScalar(new_mass, true, 'mass', 0);
