@@ -340,7 +340,8 @@ classdef body < nemoh.base
             %
             % Syntax
             %
-            % loadSTLMesh (nb, filename, draft, varargin)
+            % loadSTLMesh (nb, filename)
+            % loadSTLMesh (nb, filename, 'Parameter', value)
             %
             % Description
             %
