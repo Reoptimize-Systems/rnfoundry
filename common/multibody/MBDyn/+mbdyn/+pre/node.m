@@ -62,6 +62,9 @@ classdef node < mbdyn.pre.base
             if ~ischar (options.HumanReadableLabel)
                 error ('''HumanReadableLabel'' must be a char array');
             end
+            if ~ischar (options.Name)
+                error ('''Name'' must be a char array');
+            end
             
             if ~isempty (options.Output)
                 if ischar (options.Output)
@@ -92,6 +95,7 @@ classdef node < mbdyn.pre.base
             end
             
             self.humanReadableLabel = options.HumanReadableLabel;
+            self.name = options.Name;
             self.output = options.Output;
             self.scale = options.Scale;
             
@@ -150,6 +154,7 @@ classdef node < mbdyn.pre.base
         function [options, nopass_list] = defaultConstructorOptions ()
             
             options.HumanReadableLabel = '';
+            options.Name = '';
             options.Output = [];
             options.Scale = [];
             %             options.UniqueTextLabelPrefix = 'node';
