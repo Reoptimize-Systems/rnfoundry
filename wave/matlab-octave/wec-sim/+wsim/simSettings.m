@@ -251,6 +251,11 @@ classdef simSettings < handle
             wecsim_version_file = fullfile (wecsim_rootdir (), 'version.txt');
             
             if exist (wecsim_version_file, 'file') == 2
+                
+                if wecsim_version_file(1) == '/'
+                    % octave doesn't ignore first slash like Matlab does
+                    wecsim_version_file(1) = [];
+                end
 
                 obj.version = strtrim (urlread (['file:///' wecsim_version_file]));
                 
