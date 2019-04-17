@@ -228,6 +228,10 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
             str = self.addOutputLine ('' , '', 1, false, '6 DOF structural node');
             
+            if ~isempty (self.name)
+                str = self.addOutputLine(str, sprintf ('# node name is %s', self.name), 1, false);
+            end
+            
             % delete newline character and space from start
             str(1:2) = [];
             
