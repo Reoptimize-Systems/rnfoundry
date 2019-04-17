@@ -86,6 +86,7 @@ function SeaParameters = seasetup(varargin)
     Inputs.MaxFreq = (0.1*(0.6)^0.5 + 2.24) / (2*pi); % 0.3688 Hz
     Inputs.NoOfFrequencies = 1;
     Inputs.FrequencySpacing = 0;
+    Inputs.ForceFreqRange = false;
     
     % wave angular frequencies
     Inputs.Sigmas = 2 * pi * 1/9;
@@ -100,6 +101,8 @@ function SeaParameters = seasetup(varargin)
 
     % settings for a PM Spectrum, if -1 we are not using a PM spectrum
     Inputs.PMPeakFreq = -1;
+    
+    Inputs.PhaseSeed = [];
 
     Inputs = parse_pv_pairs(Inputs, varargin);
         
@@ -153,7 +156,9 @@ function SeaParameters = seasetup(varargin)
         % [amp, freqs, phase, power]
         [freqs, Inputs.Amplitudes, Inputs.Phases] = pmspectrum(Inputs.PMPeakFreq, ...
                                          'frange', [Inputs.MinFreq, Inputs.MaxFreq], ...
-                                         'N', Inputs.NoOfFrequencies);
+                                         'N', Inputs.NoOfFrequencies, ...
+                                         'PhaseSeed', Inputs.PhaseSeed, ...
+                                         'ForceFreqRange', Inputs.ForceFreqRange);
 
         Inputs.Sigmas = 2 * pi * freqs;
 
