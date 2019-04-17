@@ -2396,7 +2396,7 @@ if havelsqlin
   % the Largescale solver will not allow general constraints,
   % either equality or inequality
   options.LargeScale='off';
-  options.Algorithm = 'active-set';
+  options.Algorithm = 'interior-point';
 
   % and solve
   [coef,~,~,exitflag,~,lambda] = ...
