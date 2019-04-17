@@ -50,6 +50,9 @@ function [freqs, amps, phase, power] = pmspectrum(fpeak, varargin)
     Inputs.g = 9.81;
     % 100 frequencies by default
     Inputs.N = 100;
+    Inputs.ForceFreqRange = false;
+    
+    Inputs.PhaseSeed = [];
     
     % parse the input parameter-value pairs
     Inputs = parse_pv_pairs(Inputs, varargin);
@@ -67,6 +70,12 @@ function [freqs, amps, phase, power] = pmspectrum(fpeak, varargin)
     amps = 0.5 .* sqrt(2 .* power .* 2 .* pi .* fspacing);
 
     % create random phase differences for each frequency
+    if isempty (Inputs.PhaseSeed)
+        rng('shuffle');
+    else
+        rng(Inputs.PhaseSeed);
+    end
+    
     phase = 2 * pi * rand(size(freqs));
 
 end
