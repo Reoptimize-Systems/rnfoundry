@@ -22,7 +22,7 @@ classdef element < mbdyn.pre.base
 %
 %
     
-    properties (GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = public)
        
         name; % name of the element
         
@@ -616,7 +616,18 @@ classdef element < mbdyn.pre.base
             
             
         end
-
+        
+    end
+    
+    methods
+        
+        function set.name (self, newname)
+            
+            assert (ischar (newname), 'name must be a character vector');
+            
+            self.name = newname;
+            
+        end
         
     end
     
@@ -643,7 +654,7 @@ classdef element < mbdyn.pre.base
             if isempty (node.name)
                 comment = sprintf ('node label');
             else 
-                comment = sprintf ('node label: %s', node.name);
+                comment = sprintf ('node label %s', node.name);
             end
             
         end
