@@ -40,9 +40,6 @@ classdef structuralForce < mbdyn.pre.force
             %   follower force is defined in the reference frame of the
             %   node. The total force is intrinsically follower. 
             %
-            %  position - (3 x 1) vector defining the offset with respect
-            %  to the node of the point where the force is applied.
-            %
             %  force_value - mbdyn.pre.componentTplDriveCaller object with
             %   3 components defining the force applied to the node.
             %
@@ -68,7 +65,7 @@ classdef structuralForce < mbdyn.pre.force
             %
             %
             
-            options.Position = [];
+            options.Position = 'null';
             options.PositionReference = 'node';
             options.ForceOrientation = [];
             options.ForceOrientationReference = 'node';
