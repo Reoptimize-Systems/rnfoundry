@@ -30,7 +30,8 @@ classdef clamp < mbdyn.pre.singleNodeJoint
             %
             % Syntax
             %
-            % cl = clamp (node, position, orientation, varargin)
+            % cl = clamp (node, position, orientation)
+            % cl = clamp (node, position, orientation, 'Parameter', value)
             %
             % Description
             %
