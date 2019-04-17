@@ -154,13 +154,13 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
                     
             end
             
-            if ischar (self.relativeOffset1)
+            if ischar (self.relativeOffset1) || isempty (self.relativeOffset1)
                 reloffset = [0;0;0];
             else
                 reloffset = self.relativeOffset1;
             end
             
-            if ischar (self.relativeOrientation1)
+            if ischar (self.relativeOrientation1) || isempty (self.relativeOrientation1)
                 relorient = mbdyn.pre.orientmat ('eye');
             else
                 relorient = mbdyn.pre.orientmat ('orientation', self.getOrientationMatrix (self.relativeOrientation1));
@@ -228,7 +228,7 @@ classdef twoNodeOffsetJoint < mbdyn.pre.twoNodeJoint
                 str = self.addOutputLine (str, self.commaSepList ('orientation', 'reference', self.orientation1Reference, self.relativeOrientation1), 3, true);
             end
             
-            addcomma = ~isempty (self.relativeOrientation2) ...
+            addcomma = ~isempty (self.relativeOffset2) ...
                         || ~isempty (self.relativeOrientation2) ...
                         || finalcomma;
 
