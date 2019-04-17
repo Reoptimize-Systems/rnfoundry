@@ -63,6 +63,7 @@ classdef body < nemoh.base
         
         nQuads;
         quadMesh;
+        triMesh;
         nMeshNodes;
         nPanelsTarget; % Target for number of panels in mesh refinement
         centreOfGravity;
@@ -100,6 +101,7 @@ classdef body < nemoh.base
        sanitizedName; % name, but altered if necessary to be valid file name
        stlLoaded;
        defaultTargetPanels;
+       haveGIBBON;
     end
     
     methods
@@ -175,6 +177,7 @@ classdef body < nemoh.base
             % internal flags
             self.stlLoaded = false;
             self.meshPlottable = false;
+            self.haveGIBBON = exist ('discQuadMesh', 'file') == 2;
             
         end
         
@@ -537,31 +540,90 @@ classdef body < nemoh.base
             % it is not suplied
             self.centreOfGravity = [ 0, 0, zCoG ];
             
+            ntheta = ntheta + ~iseven(ntheta);% Force even
+            
             % discretisation angles
-            theta = linspace (0., pi(), ntheta);
+            theta = linspace (0., pi(), ntheta+3);
             
             self.nMeshNodes = 0;
             
+            endn = n;
+            numpoints = n;
+            nskip = 1;
+            
+            
+            
+            
+            nodeaddstart = 1;
+            nodeaddend = n;
+            
+%             quadaddstart = 1;
+            quadaddend = n - 1;
+            
             % Create the vertices
-            for j = 1:ntheta
-                for i = 1:n
+            if self.haveGIBBON && r(1) == 0
+                % if the first point on the 2d curve is on the z axis, we
+                % must skip it and add a special quad circle mesh 
+                
+                nodeaddstart = 2;
+                quadaddend = quadaddend - 1;
+                
+                endn = n - 1;
+                numpoints = n - 1;
+                
+                if z(1) > z(end)
+                    revquads = false;
+                else
+                    revquads = true;
+                end
+                
+                self.addCircleSurfMesh (r(2), z(1), z(2), ntheta/2, true, revquads);
+                
+            end
+            
+            if self.haveGIBBON && r(n) == 0
+                
+                nodeaddend = nodeaddend - 1;
+                quadaddend = quadaddend - 1;
+                endn = endn - 1;
+                numpoints = numpoints - 1;
+                
+            end
+            
+            prevvertnunm = self.nMeshNodes;
+            for j = 1:ntheta+3
+                for i = nodeaddstart:nodeaddend
                     self.nMeshNodes = self.nMeshNodes + 1;
                     self.meshVertices(1, self.nMeshNodes) = r(i)*cos(theta(j));
                     self.meshVertices(2, self.nMeshNodes) = r(i)*sin(theta(j));
                     self.meshVertices(3, self.nMeshNodes) = z(i);
                 end
             end
-            
-            % Make the faces
-            self.nQuads = 0;
-            for i = 1:n-1
-                for j = 1:ntheta-1
+
+            % Make the other faces
+            self.nQuads = size (self.quadMesh, 2);
+           
+            for i = 1:quadaddend
+                for j = 1:ntheta+2
                     self.nQuads = self.nQuads + 1;
-                    self.quadMesh(1,self.nQuads) = i+n*(j-1);
-                    self.quadMesh(2,self.nQuads) = i+1+n*(j-1);
-                    self.quadMesh(3,self.nQuads) = i+1+n*j;
-                    self.quadMesh(4,self.nQuads) = i+n*j;
+                    self.quadMesh(1,self.nQuads) = prevvertnunm+i+numpoints*(j-1);
+                    self.quadMesh(2,self.nQuads) = prevvertnunm++1+i+numpoints*(j-1);
+                    self.quadMesh(3,self.nQuads) = prevvertnunm++1+i+numpoints*j;
+                    self.quadMesh(4,self.nQuads) = prevvertnunm+i+numpoints*j;
                 end
+            end
+
+            % make the bottom/top
+            if self.haveGIBBON && r(n) == 0
+                
+                if z(1) > z(end)
+                    revquads = true;
+                else
+                    revquads = false;
+                end
+                
+                self.addCircleSurfMesh (r(n-1), z(n), z(n-1), ntheta/2, true, revquads);
+                
             end
             
             if options.Verbose
@@ -911,6 +973,75 @@ classdef body < nemoh.base
             else
                 error ('body %s mesh is not available for plotting', self.uniqueName);
             end
+            
+        end
+        
+        function makeTriMeshFromQuads (self)
+            % makes a triangle mesh by splitting each quad in the quad mesh
+            
+            assert ( self.nQuads > 0 && size (self.quadMesh,2) > 0, ...
+                     'There is no quad mesh to split into triangles (nQuads = %d, size (quadMesh,2) = %d, both must be greater than zero, and should be the same).', ...
+                     self.nQuads, ...
+                     size (self.quadMesh,2) );
+            
+            self.triMesh = [ self.quadMesh(1:3,:), ...
+                             [ self.quadMesh(3,:);
+                               self.quadMesh(4,:);
+                               self.quadMesh(1,:) ] ...
+                            ];
+            
+        end
+        
+        function [hmesh, hax, hfig] = drawTriMesh (self, varargin)
+            
+            options.Axes = [];
+            options.PlotForces = true;
+            options.AddTitle = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            setequal = true;
+            if isempty (options.Axes)
+                hfig = figure;
+                hax = axes (hfig);
+                view (hax, 3);
+            else
+                self.checkIsAxes (options.Axes, true);
+                hax = options.Axes;
+                hfig = get (hax, 'Parent');
+                % leave the axis as it is, don't mess with user's
+                % settings
+                setequal = false;
+            end
+            
+            assert ( size (self.triMesh,2) > 0, ...
+                     'There is no triangle mesh to draw (size (triMesh,2) = %d), have you called makeTriMeshFromQuads?', ...
+                     self.nQuads, ...
+                     size (self.quadMesh,2) );
+                 
+            [hmesh, hax, hfig] = self.polyMeshPlot ( self.meshVertices', ...
+                                                     self.triMesh', ...
+                                                     'Axes', hax );
+                                                 
+            if options.AddTitle
+                title ('Mesh for NEMOH Body');
+            end
+
+            if setequal
+                axis equal;
+            end
+        end
+        
+        function writeSTL (self, filename)
+            % writes a triangle mesh of the body to an STL file
+            
+            if size (self.triMesh,2) < 1
+                % attmept to make the triangle mesh if it doesn't exist yet
+                self.makeTriMeshFromQuads ();
+            end
+            
+            % write the stl file
+            stl.write (filename, self.triMesh.', self.meshVertices.');
             
         end
         
@@ -1782,6 +1913,7 @@ classdef body < nemoh.base
             self.axiMeshZ = [];
             self.meshVertices = [];
             self.quadMesh = [];
+            self.triMesh = [];
             self.nMeshNodes = [];
             self.nQuads = [];
             
@@ -1866,6 +1998,71 @@ classdef body < nemoh.base
             
             self.meshSize = self.meshBoundBox(:,2) - self.meshBoundBox(:,1);
 
+        end
+        
+        function addCircleSurfMesh (self, r, z1, z2, ner, axi, revquads)
+            
+            % ner - Elements in radius
+            % r - Outer radius of disc
+            % f - Fraction (with respect to outer radius) where central square appears
+            % z1 - z position of 0,0
+            % z2 - z position on rim
+
+            if nargin < 6
+                axi = true;
+            end
+            
+            if nargin < 7
+                revquads = false;
+            end
+            
+            f = 0.5;
+            
+            % Create the 2D mesh
+            [Fc, Vc, ~, indEdge] = discQuadMesh (ner, r, f);
+            
+            if axi
+                
+                indl0 = find (Vc(:,2) < -10*eps);
+%                 indge0 = find (Vc(:,1) >= 0);
+                
+                rmind = [];
+                for ind = 1:size(Fc,1)
+                    if any ( any (Fc(ind,:) == indl0) )
+                        rmind = [rmind, ind];
+                    end
+                end
+                
+                Fc(rmind,:) = [];
+                
+                [Fc, Vc] = removeNotIndexed (Fc, Vc);
+                
+            end
+            
+            [~, rho] = cart2pol (Vc(:,1), Vc(:,2));
+            
+            rho(rho>r) = r;
+            
+            Vc(:,3) = interp1 ([0, r], [z1, z2],  rho );
+            
+            Fc = Fc + size (self.meshVertices, 2);
+            
+            if revquads
+                Fc = fliplr (Fc);
+            end
+            
+            self.quadMesh = [self.quadMesh, Fc.'];
+            
+            self.meshVertices = [ self.meshVertices, Vc.'];
+            
+            [Fc,Vc,ind1,ind2] = mergeVertices (self.quadMesh.', self.meshVertices.', 10);
+            
+            self.quadMesh = Fc.';
+            self.meshVertices = Vc.';
+            
+            self.nMeshNodes = size (self.meshVertices, 2);
+            self.nQuads = size (self.quadMesh, 2);
+            
         end
         
     end
