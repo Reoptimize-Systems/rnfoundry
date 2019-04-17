@@ -8,7 +8,11 @@ classdef sphericalBody < mbdyn.pre.body
     
     methods
         
-        function self = sphericalBody (mass, R, node)
+        function self = sphericalBody (mass, R, node, varargin)
+            
+            options.Name = '';
+            
+            options = parse_pv_pairs (options, varargin);
             
             mbdyn.pre.base.checkNumericScalar (mass, true, 'mass');
             mbdyn.pre.base.checkNumericScalar (R, true, 'R');
@@ -18,7 +22,7 @@ classdef sphericalBody < mbdyn.pre.body
             
             Isphere = (2/5) * mass * R^2;
             
-            self = self@mbdyn.pre.body (mass, cog, diag ([Isphere, Isphere, Isphere]), node);
+            self = self@mbdyn.pre.body (mass, cog, diag ([Isphere, Isphere, Isphere]), node, 'Name', options.Name);
             
             self.setSize (R, R, R);
     
