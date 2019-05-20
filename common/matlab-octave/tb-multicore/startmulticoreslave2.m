@@ -5,7 +5,7 @@ function startmulticoreslave2(multicoreDir, quitmode, quitdatenum, IDfilestart, 
 % Syntax
 %
 % startmulticoreslave2
-% startmulticoreslave2(startmulticoreslave2(multicoreDir))
+% startmulticoreslave2(multicoreDir)
 % startmulticoreslave2(..., quitmode)
 % startmulticoreslave2(..., quitdatenum)
 % startmulticoreslave2(..., IDfilestart)
