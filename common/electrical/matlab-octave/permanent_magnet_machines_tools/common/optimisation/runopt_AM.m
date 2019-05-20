@@ -1,6 +1,83 @@
 function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaoptions, fieldbounds, istestrun, isfirstrun, varargin)
-% run an electrical machine optimisation, allow easy test runs of small
-% populations to be performed
+% run an electrical machine optimisation
+%
+% Syntax
+%
+% [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaoptions, fieldbounds, istestrun, isfirstrun)
+% [mpgastate, mpgaoptions] = runopt_AM (..., 'Parameter', Value)
+%
+% Description
+%
+% runopt_AM runs an electrical machine optimisation. It is essentially a
+% wrapper for the 'mpga' function which allows easy test runs of small
+% populations to be performed to ensure the system is working before doing
+% a live optimisation with the full population. runopt_AM requires the
+% optimisation objective function to take either four or five arguments,
+% i.e. one of the following syntaxes:
+%
+% RtnVal = objfcn (Chrom, rtn_type, simoptions, multicoredir)
+%
+% RtnVal = objfcn (Chrom, rtn_type, FieldBounds, simoptions, multicoredir)
+%
+% The first is assumed if fieldbounds is empty.
+%
+% Input
+%
+%  simoptions - simulation options structure passed to the objective
+%   function
+%
+%  evaloptions - evaluation options structure
+%
+%  mpgaoptions - options structure for the mpga function which is used to
+%    launch the ga optimisation process. This may be modified for test
+%    runs (see Test* options below).
+%
+%  fieldbounds - 
+%
+%  istestrun - true/false flag indicating whether this is a test run. If
+%   true some values in the evaloptions structure which control the
+%   multicore and optimisation process will be overridden to test the
+%   optimisation on very small population. The intended purpose is to
+%   ensure several entire generations can be processed before wasting a lot
+%   of computing time on a large population. In addition it allows errors
+%   to be debugged more easily as by default everything is evaluated in the
+%   local matlab instance, without spawning multicore slaves.
+%
+%  isfirstrun - true/false flag indicating whether this is the first run of
+%    the optimisation or whether it is being resumed from an earlier run.
+%    If isfirstrun is true, runopt_AM will check if there is an existing GA
+%    save file with the same path and ask if it is to be overwritten before
+%    proceeding with the optimisation. 
+%
+% Addtional arguments may be supplied as parameter-value pairs. The
+% available options are:
+%
+%  'MulticoreSharedDir' - directory to be used for the multicore files
+%
+%  'TestForceSlaveSpawn' - true/false flag indicating whether to
+%    automatically spawn multicore slaves when doing test run. Default is
+%    false, meaning all of the population will be evaluated using the
+%    master, so all errors will be thrown in the local matlab instance.
+%
+%  'TestNIND' - scalar integer, the number of individuals to use in the GA
+%    population when doing a test run. Default is 4. 
+%
+%  'TestNSUBPOP' - scalar integer, the number of subpopulations to use in
+%    the GA population when doing a test run. Default is 1.
+%
+%  'TestMaxSlaves' - scalar integer, the number of slave processes to use
+%    in the GA population when doing a test run. This is only used/relevant
+%    when TestForceSlaveSpawn is true. Default is 1.
+%
+% Output
+%
+%  mpgastate - 
+%
+%  mpgaoptions - 
+%
+%
+%
+% See Also: 
 %
 
     Inputs.MulticoreSharedDir = fullfile (tempdir (), 'machine_opt_temp_files');
@@ -14,6 +91,15 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
     if nargin < 3
         mpgaoptions = struct();
     end
+    
+    % input checking
+    check.isLogicalScalar (istestrun, true, 'istestrun');
+    check.isLogicalScalar (isfirstrun, true, 'isfirstrun');
+    
+    check.isLogicalScalar (Inputs.TestForceSlaveSpawn, true, 'TestForceSlaveSpawn');
+    check.isPositiveScalarInteger (Inputs.TestNIND, true, 'TestNIND', false);
+    check.isPositiveScalarInteger (Inputs.TestNSUBPOP, true, 'TestNSUBPOP', false);
+    check.isPositiveScalarInteger (Inputs.TestMaxSlaves, true, 'TestMaxSlaves', false);
     
     mpgastate = [];
 
