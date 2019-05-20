@@ -25,7 +25,7 @@ Getting Nemoh
 =============
 
 For information and instructions on obtaining and installing Nemoh, 
-see _install-nemoh. Note also the section _nemoh-interface-exec-loc 
+see :ref:`install-nemoh`. Note also the section :ref:`nemoh-interface-exec-loc` 
 below.
 
 
@@ -173,7 +173,6 @@ Output of ``help nemoh.simulation/run``
 
 
 .. _nemoh-interface-exec-loc:
-
 
 The NEMOH Executables Location
 ==============================

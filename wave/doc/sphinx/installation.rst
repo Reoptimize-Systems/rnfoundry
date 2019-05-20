@@ -32,7 +32,7 @@ solver used for calculating wave loads on offshore structures. A
 copy of the Nemoh solver is not provided with the toolbox. You must 
 obtain this software separately. Further information on where Nemoh 
 should be installed is available in the section 
-_nemoh-interface-exec-loc. For convenience, a copy of Nemoh 2.03 
+:ref:`nemoh-interface-exec-loc`. For convenience, a copy of Nemoh 2.03 
 (the latest stable release) may be downloaded from the following 
 location: `RenewNet Foundry Nemoh Downloads`_. 
 
