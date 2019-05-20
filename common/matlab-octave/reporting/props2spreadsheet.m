@@ -1,6 +1,34 @@
 function props2spreadsheet (obj, filename, varargin)
 % output numeric scalar and vector object properties to a spreadsheet
 %
+% Syntax
+%
+% props2spreadsheet (obj, filename)
+% props2spreadsheet (..., 'Parameter', Value)
+%
+% Description
+%
+% output numeric scalar and vector object properties to a spreadsheet
+%
+% Input
+%
+%  obj - matlab object with properties to be exported
+%
+%  filename - name of the output spreadsheet file
+%
+% Addtional arguments may be supplied as parameter-value pairs. The available options are:
+%
+%  'WriteFcn' - optional character vector containing the name of the 
+%    function to be used to write the output spreadsheet. Default is
+%    'xlwrite'.
+%
+%  'SheetName' - optional name of the sheet to which to export the data
+%
+%  'NameReplacements' - optional (n x 2) cell array containing character
+%    vectors to be swapped to alternative names.
+%
+%  'FirstColumn' - optional scalar containing the number of the column in
+%    which the property names (or their replacemnets) will be written
 %
 
     options.WriteFcn = 'xlwrite';
