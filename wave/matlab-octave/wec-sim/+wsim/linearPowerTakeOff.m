@@ -45,7 +45,7 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             %
             % Syntax
             %
-            % lpto = wsim.linearPowerTakeOff (reference_node, other_node, axisNum)
+            % lpto = wsim.linearPowerTakeOff (reference_node, other_node, axisNum, force_fcn)
             % lpto = wsim.linearPowerTakeOff (..., 'Parameter', value)
             %
             % Description
