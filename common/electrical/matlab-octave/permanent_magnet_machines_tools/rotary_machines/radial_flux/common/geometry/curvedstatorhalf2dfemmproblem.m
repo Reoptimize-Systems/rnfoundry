@@ -30,35 +30,68 @@ function [FemmProblem, outernodes, coillabellocs, slotinfo] = curvedstatorhalf2d
 %
 %  thetaslot - angular displacement between slots
 %
-%  thetacoil - 
+%  thetacoil - coil pitch in radians
 %
-%  thetashoegap - angular span of slot opening
+%  thetashoegap - pitch of space between tooth shoes, i.e. the size of the
+%     coil slot opening in the coil pitch direction. Measure in radians.
 %
-%  ryoke - radial thickness of the sttor yoke
+%  ryoke - radial length of the stator yoke on which the slots are mounted
 %
-%  rcoil - radial height of the filled slot
+%  rcoil - radial length of the coil in the slot, i.e. the slot depth
 %
-%  rshoebase - 
+%  rshoebase - radial length of the tooth shoe at the point where it joins
+%     the tooth.
 %
-%  rshoegap - 
+%  rshoegap - radial length of the tooth shoe at it's tip at the slot
+%     opening.
 %
-%  roffset - 
+%  roffset - radial position of the centre of the stator yoke (radial
+%     distance from the centre of the machine).
 %
 %  In addition, a number of other optional arguments can be supplied as
 %  parameter-value pairs. These options and their behaviour are as follows:
 %
-%  'FemmProblem'
+%  'FemmProblem' - 
+%
 %  'NWindingLayers'
-%  'SlotPositions'
-%  'NSlots'
-%  'Tol'
-%  'ShoeGapMaterial'
-%  'ShoeGapRegionMeshSize'
-%  'CoilBaseFraction'
-%  'ShoeCurveControlFrac'
-%  'SplitX'
-%  'CoilInsulationThickness'
-%  'DrawCoilInsulation'
+%
+%   'Tol' - tolerance at which to consider various dimensions to be zero,
+%     by default this is 1e-5. This is used to prevent meshes occuring with
+%     very large numbers of triangles.
+%
+%  'ShoeGapMaterial' - 
+%
+%  'ShoeGapRegionMeshSize' - 
+%
+%  'CoilBaseFraction' - 
+%
+%   'ShoeCurveControlFrac' - factor controlling the 'curvature' of the 
+%     tooth shoe, this is a value between 0 and 1. The exact effect of this
+%     number is complex, and depends on the geometry of the slot. However,
+%     in general a lower number results in a curve closer to a line draw
+%     directly from the shoe base to the shoe gap, while higher numbers
+%     aproximate a sharp right angle. Anything in between will produce a
+%     smooth curve. Defaults to 0.5.
+%
+%     N.B. the slot geometry affects this curve in the following way. If
+%     the position of the shoe gap node is below the intercept of the line
+%     formed by the edge of the slot and a vertical line at the shoe gap
+%     node, the resulting curve will bend outward from the inside of the
+%     slot. If the intercept is below the shoe gap node, the curve will
+%     bend into the slot.
+%
+%  'SplitSlot' - true/false flag. If there is only two winding layers, the 
+%    slot can be split into two in the circumferential direction rather
+%    than the radial by setting this flag to true. Defaults to false. If
+%    true coil label locations are provided in an anti-clockwise direction.
+%
+%   'DrawCoilInsulation' = true/false flag indicating whether to draw a
+%     layer of coil insulation in the slot
+%
+%   'CoilInsulationThickness' - scalar value giving the thickness of the
+%     coil insulation to draw when DrawCoilInsulation is true. Default is 0
+%     if not supplied, so no coil insulation will actually be drawn unless
+%     you explicitly set a value greater than zero.
 %
 % Output
 %
@@ -72,7 +105,7 @@ function [FemmProblem, outernodes, coillabellocs, slotinfo] = curvedstatorhalf2d
     Inputs.Tol = 1e-5;
     Inputs.CoilBaseFraction = 0.05;
     Inputs.ShoeCurveControlFrac = 0.5;
-    Inputs.SplitX = false;
+    Inputs.SplitSlot = false;
     Inputs.DrawCoilInsulation = false;
     Inputs.CoilInsulationThickness = 0;
     
@@ -94,13 +127,25 @@ function [FemmProblem, outernodes, coillabellocs, slotinfo] = curvedstatorhalf2d
         insulationthickness = 0;
     end
     
+    if Inputs.SplitSlot
+        if Inputs.NWindingLayers ~= 2
+            error ('If SplitSlot is true, NWindingLayers must be equal to 2');
+        else
+            % set the number of winding layers to 1, as
+            % internalslotnodelinks will split it into two coil sides in
+            % the case
+            Inputs.NWindingLayers = 1;
+        end
+    end
+    
     % make a single slot
     [nodes, links, slotinfo] = internalslotnodelinks( thetacoil, thetashoegap, ryoke/2, rcoil, ...
                                    rshoebase, rshoegap, Inputs.NWindingLayers, Inputs.Tol, ...
                                    'CoilBaseFraction', Inputs.CoilBaseFraction, ...
                                    'InsulationThickness', insulationthickness, ...
                                    'ShoeCurveControlFrac', Inputs.ShoeCurveControlFrac, ...
-                                   'YScale', roffset + ryoke + rcoil/2  );
+                                   'YScale', roffset + ryoke + rcoil/2, ...
+                                   'SplitX', Inputs.SplitSlot );
 
     links = [ links, ismember(1:size(links,1),slotinfo.vertlinkinds)', ismember(1:size(links,1),slotinfo.toothlinkinds)' ];
     

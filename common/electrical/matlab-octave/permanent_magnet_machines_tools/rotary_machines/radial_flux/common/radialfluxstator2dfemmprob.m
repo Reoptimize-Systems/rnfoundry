@@ -46,44 +46,71 @@ function [FemmProblem, info] = radialfluxstator2dfemmprob(slots, Poles, ryokecen
 % not supplied these are given default values. The possible parameters are
 % listed below:
 %
-% 'FemmProblem' - an existing mfemm FemmProblem structure to which the new
-%    elements will be added. If not supplied a new problem is created.
+%   'FemmProblem' - an existing mfemm FemmProblem structure to which the new
+%     elements will be added. If not supplied a new problem is created.
 % 
-% 'NStators' - integer number of stators to be drawn in total. Defaults to
-%    one. If more than one are to be drawn they will drawn with the center
-%    fo each yoke separated by the value of yokecentresep
+%   'NStators' - integer number of stators to be drawn in total. Defaults to
+%     one. If more than one are to be drawn they will drawn with the center
+%     fo each yoke separated by the value of yokecentresep
 %
-% 'NWindingLayers' - integer number of axial coil layers in the design.
+%   'NWindingLayers' - integer number of axial coil layers in the design.
 %
-% 'SlotMaterial' - index of the material in the FemmProblem.Materials
-%    structure containing the material to be used for the slots/coils
+%   'SlotMaterial' - index of the material in the FemmProblem.Materials
+%     structure containing the material to be used for the slots/coils
 %
-% 'SlotRegionMeshSize' - Mesh size for the slot regions, usually the coil
-%    cross-section. 
+%   'SlotRegionMeshSize' - Mesh size for the slot regions, usually the coil
+%     cross-section. 
 %
-% 'ShoeGapMaterial' - index of the material in the FemmProblem.Materials
+%   'ShoeGapMaterial' - index of the material in the FemmProblem.Materials
 %    structure containing the material to be used for the gap between teeth
 %    shoes when the teeth have a shoe which ends in a blunt edge.
 %
-% 'ShoeGapRegionMeshSize' - Mesh size for the gap between teeth shoes when
-%   the teeth have a shoe which ends in a blunt edge.
+%   'ShoeGapRegionMeshSize' - Mesh size for the gap between teeth shoes when
+%     the teeth have a shoe which ends in a blunt edge.
 %
-% 'NSlots' - integer value determining the number of slots to be drawn. If
-%   not supplied enough slots will be drawn to fill two Poles of the
-%   machine design. This options can be used to draw large or smaller
-%   simulations of the same design.
+%   'NSlots' - integer value determining the number of slots to be drawn. 
+%     If not supplied enough slots will be drawn to fill two Poles of the
+%     machine design. This options can be used to draw large or smaller
+%     simulations of the same design.
 %
-% 'Tol' - tolerance at which to consider various dimensions to be zero, by
-%   default this is 1e-5. This is used to prevent meshes occuring with very
-%   large numbers of triangles.
+%   'Tol' - tolerance at which to consider various dimensions to be zero,
+%     by default this is 1e-5. This is used to prevent meshes occuring with
+%     very large numbers of triangles.
 %
-% 'CoilBaseFraction' - 
+%   'CoilBaseFraction' - scalar value indicating the starting point of 
+%     curvature at the base of the slot (closest to the yoke). By default
+%     the coil slot is given a curved base. This value indicates where the
+%     curvature begins, specified as a fraction of the distance between the
+%     yoke and the start of the base of any shoe (if present), or just the
+%     top of the slot, if no shoe is present.
 %
-% 'DrawCoilInsulation' - 
+%   'DrawCoilInsulation' = true/false flag indicating whether to draw a
+%     layer of coil insulation in the slot
 %
-% 'CoilInsulationThickness' -
+%   'CoilInsulationThickness' - scalar value giving the thickness of the
+%     coil insulation to draw when DrawCoilInsulation is true. Default is 0
+%     if not supplied, so no coil insulation will actually be drawn unless
+%     you explicitly set a value greater than zero.
 %
-% 'ShoeCurveControlFrac' - 
+%   'ShoeCurveControlFrac' - factor controlling the 'curvature' of the 
+%     tooth shoe, this is a value between 0 and 1. The exact effect of this
+%     number is complex, and depends on the geometry of the slot. However,
+%     in general a lower number results in a curve closer to a line draw
+%     directly from the shoe base to the shoe gap, while higher numbers
+%     aproximate a sharp right angle. Anything in between will produce a
+%     smooth curve. Defaults to 0.5.
+%
+%     N.B. the slot geometry affects this curve in the following way. If
+%     the position of the shoe gap node is below the intercept of the line
+%     formed by the edge of the slot and a vertical line at the shoe gap
+%     node, the resulting curve will bend outward from the inside of the
+%     slot. If the intercept is below the shoe gap node, the curve will
+%     bend into the slot.
+%
+%  'SplitSlot' - true/false flag. If there is only two winding layers, the 
+%    slot can be split into two in the circumferential direction rather
+%    than the radial by setting this flag to true. Defaults to false. If
+%    true coil label locations are provided in an anti-clockwise direction.
 %
 % Output
 %
@@ -113,6 +140,7 @@ function [FemmProblem, info] = radialfluxstator2dfemmprob(slots, Poles, ryokecen
     end
     
     Inputs.NWindingLayers = 1;
+    Inputs.SplitSlot = false;
     Inputs.FemmProblem = newproblem_mfemm('planar');
     Inputs.SlotMaterial = 1;
     Inputs.SlotRegionMeshSize = -1;
@@ -152,7 +180,8 @@ function [FemmProblem, info] = radialfluxstator2dfemmprob(slots, Poles, ryokecen
                       'NSlots', Inputs.NSlots, ...
                       'DrawCoilInsulation', Inputs.DrawCoilInsulation, ...
                       'CoilInsulationThickness', Inputs.CoilInsulationThickness, ...
-                      'CoilBaseFraction', Inputs.CoilBaseFraction);
+                      'CoilBaseFraction', Inputs.CoilBaseFraction, ...
+                      'SplitSlot', Inputs.SplitSlot);
     end
     
     if drawnsides(2)
@@ -170,7 +199,8 @@ function [FemmProblem, info] = radialfluxstator2dfemmprob(slots, Poles, ryokecen
                       'NSlots', Inputs.NSlots, ...
                       'DrawCoilInsulation', Inputs.DrawCoilInsulation, ...
                       'CoilInsulationThickness', Inputs.CoilInsulationThickness, ...
-                      'CoilBaseFraction', Inputs.CoilBaseFraction);
+                      'CoilBaseFraction', Inputs.CoilBaseFraction, ...
+                      'SplitSlot', Inputs.SplitSlot);
 
     end
     

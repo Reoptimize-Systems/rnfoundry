@@ -11,8 +11,8 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 % Inputs
 %
 %  design - Structure containing the design specification. See the help for
-%  completedesign_RADIAL_SLOTTED.m for a detailed discussion of how a
-%  design can be specified.
+%   completedesign_RADIAL_SLOTTED.m for a detailed discussion of how a
+%   design can be specified.
 %
 %  Finer control over the drawing can be made using a number of optional
 %  arguments supplied as parameter-value pairs, i.e. a string followed by
@@ -73,7 +73,8 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %
 %   'DrawOuterRegions' = true;
 %
-%   'DrawCoilInsulation' = false;
+%   'DrawCoilInsulation' = true/false flag indicating whether to draw a
+%     layer of coil insulation in the slot
 %
 %   'CoilInsRegionMeshSize' = -1;
 %
@@ -98,6 +99,11 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
 %     coils, should be specified in design structure (which will also
 %     override this option, even if it is specified).
 %
+%  'SplitSlot' - true/false flag. If there is only two winding layers, the 
+%     slot can be split into two in the circumferential direction rather
+%     than the radial by setting this flag to true. Defaults to false. If
+%     true coil label locations are provided in an anti-clockwise
+%     direction.
 %
 
     % First set up some default inputs
@@ -131,6 +137,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
     Inputs.StatorOuterRegionSize = [];
     Inputs.DrawCoilInsulation = false;
     Inputs.CoilInsRegionMeshSize = -1;
+    Inputs.SplitSlot = false;
     
     if design.tsg > 1e-5
         if design.tsb > 1e-5
@@ -308,6 +315,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
                 design.Qs, design.Poles, Rs, design.thetap, design.thetac, ...
                 design.thetasg, design.ty, design.tc(1), design.tsb, design.tsg, drawnstatorsides, ...
                 'NWindingLayers', Inputs.NWindingLayers, ...
+                'SplitSlot', Inputs.SplitSlot, ...
                 'FemmProblem', FemmProblem, ...
                 'ShoeGapMaterial', GapMatInd, ...
                 'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
@@ -430,6 +438,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
                 design.Qs, design.Poles, Rs, design.thetap, design.thetac, ...
                 design.thetasg, design.ty, design.tc(1), design.tsb, design.tsg, drawnstatorsides, ...
                 'NWindingLayers', Inputs.NWindingLayers, ...
+                'SplitSlot', Inputs.SplitSlot, ...
                 'FemmProblem', FemmProblem, ...
                 'ShoeGapMaterial', GapMatInd, ...
                 'ShoeGapRegionMeshSize', Inputs.ShoeGapRegionMeshSize, ...
@@ -440,7 +449,7 @@ function [FemmProblem, rotorinfo, statorinfo] = slottedfemmprob_radial(design, v
                 'CoilBaseFraction', coilbasefrac, ...
                 'ShoeCurveControlFrac', shoecurvefrac, ...
                 'NSlots', Inputs.NSlots, ...
-                'YShift', YShift);
+                'YShift', YShift );
             
             [FemmProblem, statorinfo] = stator_iron_boundary (FemmProblem, design, Inputs, statorinfo, Rs, 0, YShift);
             
