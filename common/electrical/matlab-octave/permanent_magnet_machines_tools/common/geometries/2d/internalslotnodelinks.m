@@ -122,8 +122,9 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
 %    shoe, this is a value between 0 and 1. The exact effect of this number
 %    is complex, and depends on the geometry of the slot. However, in
 %    general a lower number results in a curve closer to a line draw
-%    directly from the shoe base to the shoe gap, whicle higher numbers
-%    aproximate a sharp right angle. Defaults to 0.5. 
+%    directly from the shoe base to the shoe gap, while higher numbers
+%    aproximate a sharp right angle. Anything in between will produce a
+%     smooth curve. Defaults to 0.5. 
 %
 %    N.B. the slot geometry affects this curve in the following way. If the
 %    position of the shoe gap node is below the intercept of the line
@@ -132,9 +133,10 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
 %    slot. If the intercept is below the shoe gap node, the curve will bend
 %    into the slot.
 %
-%  SplitX - if there are layers in the y direction, the slot can be split
-%    into two in the x direction by setting this flag to true. Defaults to
-%    false. If true coil label locations are provide from bottom to top.
+%  SplitX - if there is only one layer in the y direction, the slot can be 
+%    split into two in the x direction by setting this flag to true.
+%    Defaults to false. If true, coil label locations are provided from
+%    bottom to top.
 %
 % Output
 %
@@ -775,7 +777,7 @@ function [nodes, links, info] = internalslotnodelinks(ycoil, yshoegap, xcore, xc
             
             % get a suitible position for the coil labels
             info.coillabelloc = [ xcore + xcoilbase + xcoilbody/2, ycoilshoe/4;
-                             xcore + xcoilbase + xcoilbody/2, -ycoilshoe/4 ];
+                                  xcore + xcoilbase + xcoilbody/2, -ycoilshoe/4 ];
         else
             % just add links making the sides
             links = [ links; 
