@@ -328,7 +328,7 @@ function simoptions = simsetup_linear (design, PreProcFcn, PostPreProcFcn, varar
     
     phsolcmpfcns = { 'prescribedmotode_linear', ...
                      'prescribedmotodeforcefcn_linear', ...
-                    'feaprescribedmotodeforcefcn_linear' };
+                     'feaprescribedmotodeforcefcn_linear' };
             
     dqsolcmpfcns = { 'prescribedmotodeforcefcn_dqactiverect_linear' };
     
