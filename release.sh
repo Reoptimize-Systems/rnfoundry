@@ -30,7 +30,7 @@ where:
     -h  show this help text
     -v  set the release version string (default: $version)
     -t  run tests
-    -w  copy windows libraries etc
+    -w  don't copy windows libraries etc
     -m  skip building mex files (requires matlab)
     -z  create zip file
     -c  additional matlab commands to run before running rnfoundry_release
