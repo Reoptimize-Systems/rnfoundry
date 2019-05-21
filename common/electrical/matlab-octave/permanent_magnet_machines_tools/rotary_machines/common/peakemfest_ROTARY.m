@@ -1,12 +1,16 @@
 function emf = peakemfest_ROTARY(peakfl, omega, pp)
-% peakemfest_ROTARY: estimates the peak voltage of a rotary machine at a
-% specified angular velocity given the peak flux linkage and the number of
-% pole pairs
+% estimates the peak emf of a rotary machine from peak of sinusoidal flux linkage
 %
 % Syntax
 %
-% emf = peakemfest_linear(peakfl, omega, pp)
+% emf = peakemfest_ROTARY(peakfl, omega, pp)
 %
+% Desription
+%
+% peakemfest_ROTARY estimates the peak voltage of a rotary machine at a
+% specified angular velocity given the peak flux linkage and the number of
+% pole pairs. The peak emf is estimated assuming a perfectly sinusoidal
+% flux linkage waveform.
 %
 % Input
 %
