@@ -1,5 +1,5 @@
 function path = wecsim_rootdir()
-% returns the root directory for rnfoundry common code
+% returns the root directory for wec simulation common code
 
     path = getmfilepath(mfilename());
 
