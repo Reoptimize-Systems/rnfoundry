@@ -7,7 +7,7 @@
 # Run this script from the directory containing it
 
 # stop on first error
-set -e
+set -ex
 
 # A POSIX variable
 OPTIND=1  # Reset in case getopts has been used previously in the shell.
@@ -23,9 +23,9 @@ make_docs=true
 matlab_cmds=""
 verbose=false
 launch_matlab_cmd="/usr/local/MATLAB/R2016b/bin/matlab"
-mbdyn_release_dir="~/build/mbdyn/x86_64-w64-mingw32_static"
+mbdyn_release_dir="${HOME}/build/mbdyn/x86_64-w64-mingw32_static"
 mxedir="/opt/mxe"
-matlab_windows_lib_dir="~/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64"
+matlab_windows_lib_dir="${HOME}/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64"
 
 usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] [-l <mat_lib_dir>] -- creates Renewnet Foundry release
 
@@ -43,7 +43,7 @@ where:
     -x  MXE install dir (default: /opt/mxe)
     -l  directory containing the windows mingw64 mex libraries (default: ~/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64)"
 
-while getopts "h?v:twmzc:oM:x:l:" opt; do
+while getopts "h?v:twmzc:oM:x:l:b:" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
