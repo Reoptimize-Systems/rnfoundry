@@ -814,7 +814,9 @@ classdef wecSim < handle
                     );
             catch err
                 self.readyToRun = false;
-                if exist (self.mBDynOutputFile, 'file')
+                % note the conversion to char below is for Octave which
+                % doesn't accept an empty matrix as input to 'exist'
+                if exist (char (self.mBDynOutputFile), 'file')
                     self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
                 end
                 self.cleanUpAfterError ();
