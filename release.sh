@@ -25,8 +25,9 @@ verbose=false
 launch_matlab_cmd="/usr/local/MATLAB/R2016b/bin/matlab"
 mbdyn_release_dir="~/build/mbdyn/x86_64-w64-mingw32_static"
 mxedir="/opt/mxe"
+matlab_windows_lib_dir="~/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64"
 
-usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] -- creates Renewnet Foundry release
+usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] [-l <mat_lib_dir>] -- creates Renewnet Foundry release
 
 where:
     -h  show this help text
@@ -39,9 +40,10 @@ where:
     -o  verbose output (default: false)
     -b  command to run matlab (default: /usr/local/MATLAB/R2016b/bin/matlab)
     -M  mbdyn release dir (default: ~/build/mbdyn/x86_64-w64-mingw32_static)
-    -x  MXE install dir (default: /opt/mxe)"
+    -x  MXE install dir (default: /opt/mxe)
+    -l  directory containing the windows mingw64 mex libraries (default: ~/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64)"
 
-while getopts "h?v:twmzc:oM:x:" opt; do
+while getopts "h?v:twmzc:oM:x:l:" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -76,6 +78,9 @@ while getopts "h?v:twmzc:oM:x:" opt; do
         ;;
     x)  mxedir=$OPTARG
         echo "mxedir: $mxedir"
+        ;;
+    l)  matlab_windows_lib_dir=$OPTARG
+        echo "matlab_windows_lib_dir: $matlab_windows_lib_dir"
         ;;
     esac
 done
@@ -158,7 +163,7 @@ if [ "$skip_mex" = false ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
   else
     # buld the mex files using (oldish) version of matlab
-    ${launch_matlab_cmd} -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}'); quit"
+    ${launch_matlab_cmd} -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}', 'W64CrossBuildMexLibsDir', '${matlab_windows_lib_dir}'); quit"
   fi
 fi
 
