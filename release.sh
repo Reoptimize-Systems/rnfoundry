@@ -23,21 +23,25 @@ make_docs=true
 matlab_cmds=""
 verbose=false
 launch_matlab_cmd="/usr/local/MATLAB/R2016b/bin/matlab"
+mbdyn_release_dir="~/build/mbdyn/x86_64-w64-mingw32_static"
+mxedir="/opt/mxe"
 
-usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd> -- creates Renewnet Foundry release
+usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] -- creates Renewnet Foundry release
 
 where:
     -h  show this help text
     -v  set the release version string (default: $version)
     -t  run tests
-    -w  don't copy windows libraries etc
+    -w  don't build windows libraries using MXE or copy them
     -m  skip building mex files (requires matlab)
     -z  create zip file
-    -c  additional matlab commands to run before running rnfoundry_release
+    -c  additional matlab commands to run before running rnfoundry_release (default: "")
     -o  verbose output (default: false)
-    -b  command to run matlab (default: /usr/local/MATLAB/R2016b/bin/matlab)"
+    -b  command to run matlab (default: /usr/local/MATLAB/R2016b/bin/matlab)
+    -M  mbdyn release dir (default: ~/build/mbdyn/x86_64-w64-mingw32_static)
+    -x  MXE install dir (default: /opt/mxe)"
 
-while getopts "h?v:twmzc:o" opt; do
+while getopts "h?v:twmzc:oM:x:" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -66,6 +70,12 @@ while getopts "h?v:twmzc:o" opt; do
         ;;
     b)  launch_matlab_cmd=$OPTARG
         echo "launch_matlab_cmd: $launch_matlab_cmd"
+        ;;
+    M)  mbdyn_release_dir=$OPTARG
+        echo "mbdyn_release_dir: $mbdyn_release_dir"
+        ;;
+    x)  mxedir=$OPTARG
+        echo "mxedir: $mxedir"
         ;;
     esac
 done
@@ -103,8 +113,6 @@ echo ${version} > ${release_dir}/wave/matlab-octave/wec-sim/version.txt
 
 if [ "$copy_win_libs" = true ]; then
 
-    mxedir=/opt/mxe
-
     cd ${mxedir}
     make gsl libf2c
 
@@ -130,10 +138,10 @@ if [ "$copy_win_libs" = true ]; then
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libf2c.a  ${release_dir}/x86_64-w64-mingw32/lib/f2c.lib
 
     # mbdyn
-    cp -r ~/build/mbdyn/x86_64-w64-mingw32_static/* ${release_dir}/x86_64-w64-mingw32/
+    cp -r ${mbdyn_release_dir}/* ${release_dir}/x86_64-w64-mingw32/
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/
     # matlab needs libraries to have a different name (.lib)
-    cp ~/build/mbdyn/x86_64-w64-mingw32_static/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
+    cp ${mbdyn_release_dir}/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/ws2_32.lib
 
     # boost (for shared memory communication)
