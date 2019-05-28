@@ -78,6 +78,7 @@ classdef body < nemoh.base
         
         centreOfBuoyancy; % X,Y,Z cordinates of centre of buoyancy
         kH  % hydrostatic stiffness matrix
+        volume; % volume of mesh
         mass; % mass of buoy
         WPA;
         inertia; % inertia matrix (estimated assuming mass is distributed on wetted surface)
@@ -94,6 +95,7 @@ classdef body < nemoh.base
         uniqueName; % unique name derived from name and id
         meshType; % string indicating the type of mesh specification used for the body (e.g. 'axi')
         
+        haveGIBBON;
     end
     
     properties (GetAccess = private, SetAccess = private)
@@ -101,7 +103,6 @@ classdef body < nemoh.base
        sanitizedName; % name, but altered if necessary to be valid file name
        stlLoaded;
        defaultTargetPanels;
-       haveGIBBON;
     end
     
     methods
@@ -209,6 +210,15 @@ classdef body < nemoh.base
             
             self.uniqueName = sprintf('%s_id_%d', self.sanitizedName, self.id);
             
+        end
+        
+        function setCentreOfBuoyancy (self, CoB)
+
+            assert ( isnumeric (CoB) && size(CoB,1) == 3 && size(CoB,2) == 1, ...
+                     'CoB must be a (3 x 1) numeric column vector' );
+
+            self.centreOfBuoyancy = CoB;
+
         end
         
         function setMeshProgPath (self, meshprogpath)
@@ -550,9 +560,6 @@ classdef body < nemoh.base
             endn = n;
             numpoints = n;
             nskip = 1;
-            
-            
-            
             
             nodeaddstart = 1;
             nodeaddend = n;
@@ -1622,19 +1629,44 @@ classdef body < nemoh.base
                 CC = onCleanup (@() fclose (fid));
                 
                 line = fscanf (fid, '%s', 2);
-                self.centreOfBuoyancy(1,1) = fscanf (fid, '%f', 1);
+                [tmp, count] = fscanf (fid, '%f', 1);
+                if count == 1
+                    self.centreOfBuoyancy(1,1) = tmp;
+                else
+                    self.centreOfBuoyancy(1,1) = nan;
+                    warning ('Centre of buoyancy in X could not be read from Nemoh processed mesh output. centreOfBuoyancy(3,1) will be nan');
+                end
 
                 line = fgetl (fid);
                 line = fscanf (fid,'%s',2);
-                self.centreOfBuoyancy(2,1) = fscanf (fid,'%f',1);
+                [tmp, count] = fscanf (fid, '%f', 1);
+                if count == 1
+                    self.centreOfBuoyancy(2,1) = tmp;
+                else
+                    self.centreOfBuoyancy(2,1) = nan;
+                    warning ('Centre of buoyancy in Y could not be read from Nemoh processed mesh output. centreOfBuoyancy(3,1) will be nan');
+                end
 
                 line = fgetl (fid);
                 line = fscanf (fid,'%s',2);
-                self.centreOfBuoyancy(3,1) = fscanf (fid,'%f',1);
-
+                [tmp, count] = fscanf (fid, '%f', 1);
+                if count == 1
+                    self.centreOfBuoyancy(3,1) = tmp;
+                else
+                    self.centreOfBuoyancy(3,1) = nan;
+                    warning ('Centre of buoyancy in Z could not be read from Nemoh processed mesh output. centreOfBuoyancy(3,1) will be nan');
+                end
+                
                 line = fgetl (fid);
                 line = fscanf (fid,'%s',2);
-                self.mass = fscanf (fid,'%f',1)*self.rho;
+                [tmp, count] = fscanf (fid,'%f',1);
+                if count == 1
+                    self.volume = tmp;
+                else
+                    self.volume = nan;
+                    warning ('Volume could not be read from Nemoh processed mesh output. ''volume'' property will be nan (''mass'' will also be nan)');
+                end
+                self.mass = self.volume * self.rho;
 
                 line = fgetl (fid);
                 line = fscanf (fid,'%s',2);
