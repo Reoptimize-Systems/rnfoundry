@@ -97,6 +97,8 @@ function hydro = processnemoh (filedir, varargin)
 %
 
     options.HydroStructure = struct ();
+    options.ForceCoG = [];
+    options.ForceCoB = [];
 %     options.DoRadiationIRF = true;
 %     options.IRFDuration = [];
 %     options.IRFNSteps = [];
@@ -252,8 +254,17 @@ function hydro = processnemoh (filedir, varargin)
 
         for i = 1:3
             tmp = textscan (raw{i},'%s %s %f %s %s %s %f');
-            hydro(hydroind).cg(i,bodyind) = tmp{7};  % Center of gravity
-            hydro(hydroind).cb(i,bodyind) = tmp{3};  % Center of buoyancy
+            if ~isempty(options.ForceCoG{bodyind})
+                hydro(hydroind).cg(i,bodyind) = options.ForceCoG{bodyind}(i);
+            else
+                hydro(hydroind).cg(i,bodyind) = tmp{7};  % Center of gravity
+            end
+            
+            if ~isempty(options.ForceCoB{bodyind})
+                hydro(hydroind).cb(i,bodyind) = options.ForceCoB{bodyind}(i);
+            else
+                hydro(hydroind).cb(i,bodyind) = tmp{3};  % Center of buoyancy
+            end
         end
 
         tmp = textscan(raw{4},'%s %s %f');

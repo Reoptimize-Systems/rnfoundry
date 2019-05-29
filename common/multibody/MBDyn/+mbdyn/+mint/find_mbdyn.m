@@ -48,7 +48,7 @@ function [ path, found ] = find_mbdyn (throw)
     comparch = computer ('arch');
     switch comparch
 
-        case 'win64'
+        case {'win64', 'mingw32-x86_64'}
             candidate_locs = [candidate_locs, ...
                 fullfile(getmfilepath ('mexmbdyn_setup'), 'x86_64-w64-mingw32', 'bin', 'mbdyn.exe')];
         case 'win32'
@@ -66,7 +66,7 @@ function [ path, found ] = find_mbdyn (throw)
     if exist ('rnfoundry_setup', 'file') == 2
         switch comparch
 
-            case 'win64'
+            case {'win64', 'mingw32-x86_64'}
                 candidate_locs = [candidate_locs, ...
                     fullfile(getmfilepath ('rnfoundry_setup'), 'x86_64-w64-mingw32', 'bin', 'mbdyn.exe')];
             case 'win32'

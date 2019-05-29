@@ -76,7 +76,7 @@ function [libdir, includedir, libwasfound, headerwasfound] = find_libmbc (vararg
     
     switch comparch
 
-        case 'win64'
+        case {'win64', 'mingw32-x86_64'}
             libdir_candidate_locs = [libdir_candidate_locs, ...
                 fullfile(getmfilepath ('mexmbdyn_setup'), 'x86_64-w64-mingw32', 'lib')];
             includedir_candidate_locs = [includedir_candidate_locs, ...
@@ -102,7 +102,7 @@ function [libdir, includedir, libwasfound, headerwasfound] = find_libmbc (vararg
     if exist ('rnfoundry_setup', 'file') == 2
         switch comparch
 
-            case 'win64'
+            case {'win64', 'mingw32-x86_64'}
                 libdir_candidate_locs = [libdir_candidate_locs, ...
                     fullfile(getmfilepath ('rnfoundry_setup'), 'x86_64-w64-mingw32', 'lib')];
                 includedir_candidate_locs = [includedir_candidate_locs, ...
