@@ -7,7 +7,7 @@
 # Run this script from the directory containing it
 
 # stop on first error
-set -e
+set -ex
 
 # A POSIX variable
 OPTIND=1  # Reset in case getopts has been used previously in the shell.
@@ -23,21 +23,27 @@ make_docs=true
 matlab_cmds=""
 verbose=false
 launch_matlab_cmd="/usr/local/MATLAB/R2016b/bin/matlab"
+mbdyn_release_dir="${HOME}/build/mbdyn/x86_64-w64-mingw32_static"
+mxedir="/opt/mxe"
+matlab_windows_lib_dir="${HOME}/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64"
 
-usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd> -- creates Renewnet Foundry release
+usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] [-l <mat_lib_dir>] -- creates Renewnet Foundry release
 
 where:
     -h  show this help text
     -v  set the release version string (default: $version)
     -t  run tests
-    -w  copy windows libraries etc
+    -w  don't build windows libraries using MXE or copy them
     -m  skip building mex files (requires matlab)
     -z  create zip file
-    -c  additional matlab commands to run before running rnfoundry_release
+    -c  additional matlab commands to run before running rnfoundry_release (default: "")
     -o  verbose output (default: false)
-    -b  command to run matlab (default: /usr/local/MATLAB/R2016b/bin/matlab)"
+    -b  command to run matlab (default: /usr/local/MATLAB/R2016b/bin/matlab)
+    -M  mbdyn release dir (default: ~/build/mbdyn/x86_64-w64-mingw32_static)
+    -x  MXE install dir (default: /opt/mxe)
+    -l  directory containing the windows mingw64 mex libraries (default: ~/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64)"
 
-while getopts "h?v:twmzc:o" opt; do
+while getopts "h?v:twmzc:oM:x:l:b:" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -66,6 +72,15 @@ while getopts "h?v:twmzc:o" opt; do
         ;;
     b)  launch_matlab_cmd=$OPTARG
         echo "launch_matlab_cmd: $launch_matlab_cmd"
+        ;;
+    M)  mbdyn_release_dir=$OPTARG
+        echo "mbdyn_release_dir: $mbdyn_release_dir"
+        ;;
+    x)  mxedir=$OPTARG
+        echo "mxedir: $mxedir"
+        ;;
+    l)  matlab_windows_lib_dir=$OPTARG
+        echo "matlab_windows_lib_dir: $matlab_windows_lib_dir"
         ;;
     esac
 done
@@ -103,8 +118,6 @@ echo ${version} > ${release_dir}/wave/matlab-octave/wec-sim/version.txt
 
 if [ "$copy_win_libs" = true ]; then
 
-    mxedir=/opt/mxe
-
     cd ${mxedir}
     make gsl libf2c
 
@@ -130,10 +143,10 @@ if [ "$copy_win_libs" = true ]; then
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libf2c.a  ${release_dir}/x86_64-w64-mingw32/lib/f2c.lib
 
     # mbdyn
-    cp -r ~/build/mbdyn/x86_64-w64-mingw32_static/* ${release_dir}/x86_64-w64-mingw32/
+    cp -r ${mbdyn_release_dir}/* ${release_dir}/x86_64-w64-mingw32/
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/
     # matlab needs libraries to have a different name (.lib)
-    cp ~/build/mbdyn/x86_64-w64-mingw32_static/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
+    cp ${mbdyn_release_dir}/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
     cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/ws2_32.lib
 
     # boost (for shared memory communication)
@@ -150,7 +163,7 @@ if [ "$skip_mex" = false ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
   else
     # buld the mex files using (oldish) version of matlab
-    ${launch_matlab_cmd} -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}'); quit"
+    ${launch_matlab_cmd} -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}', 'W64CrossBuildMexLibsDir', '${matlab_windows_lib_dir}'); quit"
   fi
 fi
 
