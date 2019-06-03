@@ -1,5 +1,27 @@
 classdef revolutePin < mbdyn.pre.singleNodeJoint
-    
+% class representing a revolute pin constraint (hinge pinned to global frame)
+%
+% Syntax
+%
+% obj = mbdyn.pre.revolutePin (node, relative_offset, absolute_pin_position)
+% obj = mbdyn.pre.revolutePin (..., 'Parameter', value)
+%
+% Description
+%
+% revolutePin is a joint which only allows the absolute rotation of a node
+% about a given axis, which is axis 3 in the reference systems defined by
+% the two orientation statements, i.e. rotation occurs about the local axis
+% 3 of the constraint.
+%
+% mbdyn.pre.revolutePin Methods:
+%
+%   revolutePin - mbdyn.pre.revolutePin constructor
+%   defaultConstructorOptions - get the parent class's default options
+%   draw - draw an mbdyn.pre.revolutePin in a figure
+%   generateMBDynInputString - generates MBDyn input string for revolutePin object
+%   reference - returns a mbdyn.pre.reference object for the joint position
+%   setSize - set the size of the revolutePin in plots
+%
     
     properties (GetAccess = public, SetAccess = protected)
         
@@ -18,9 +40,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
     methods
         
         function self = revolutePin (node, relative_offset, absolute_pin_position, varargin)
-            % joint which only allows the absolute rotation of a node about
-            % a given axis, which is axis 3 in the reference systems
-            % defined by the two orientation statements
+            % mbdyn.pre.revolutePin constructor
             %
             % Syntax
             %
@@ -41,16 +61,18 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             %    This is the node which will be constrained by the pin
             %    joint.
             %
-            %  relative_offset - the position of the node relative to the
-            %    hinge point. Note that by default this is a position
-            %    relative to the global coordinate system, i.e. it is
-            %    actually just the absolute position of the hinge point.
-            %    You can specify positions relative to other coordinate
-            %    systems using the 'NodeOffsetReference' option described
-            %    below. 
+            %  relative_offset - (3 x 1) vector (or 'null') representing the 
+            %    position of the hinge point relative to the node. Note
+            %    that by default this is a position relative to the global
+            %    coordinate system, i.e. it is actually just the absolute
+            %    position of the hinge. You can specify positions relative
+            %    to other coordinate systems using the
+            %    'NodeOffsetReference' option described below.
             %
-            %  absolute_pin_position - the position of the hinge point in
-            %    the global reference frame.
+            %  absolute_pin_position - (3 x 1) vector (or 'null') 
+            %    representing the position of the hinge point in the global
+            %    reference frame. This must match the position defined in
+            %    'relative_offset'.
             %
             % Additional optional arguments can be supplied using
             % parameter-value pairs. The available options are:
@@ -124,6 +146,27 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for revolutePin object
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (rp)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  rp - mbdyn.pre.revolutePin object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = generateMBDynInputString@mbdyn.pre.singleNodeJoint(self);
             
@@ -171,7 +214,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
         end
         
         function [ref_pos, ref_orient] = reference (self)
-            % returns a reference object for the joint position
+            % returns a mbdyn.pre.reference object for the joint position
             
             switch self.relativeOffsetReference
                 
@@ -273,6 +316,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
         
         
         function draw (self, varargin)
+            % draw an mbdyn.pre.revolutePin in a figure
             
             options.AxesHandle = self.drawAxesH;
             options.ForceRedraw = false;
@@ -353,10 +397,10 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             M = [ ref_orient.orientm.orientationMatrix , ref_pos.pos; ...
                   0, 0, 0, 1 ];
             
-            % matlab uses different convention to mbdyn for rotation
-            % matrix
-            M = self.mbdynOrient2Matlab (M);
-                  
+%             % matlab uses different convention to mbdyn for rotation
+%             % matrix
+%             M = self.mbdynOrient2Matlab (M);
+%                   
             set ( self.transformObject, 'Matrix', M );
             
         end 
