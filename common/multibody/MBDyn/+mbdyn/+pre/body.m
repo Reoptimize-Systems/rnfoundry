@@ -188,6 +188,7 @@ classdef body < mbdyn.pre.element
         end
         
         function hax = draw (self, varargin)
+            % draw an mbdyn.pre.body in a figure
             
             options.AxesHandle = [];
             options.ForceRedraw = false;
