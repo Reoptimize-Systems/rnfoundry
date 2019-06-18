@@ -3,8 +3,8 @@ function hydro = processnemoh (filedir, varargin)
 %
 % Syntax
 %
-% hydro = processnemoh (filedir)
-% hydro = processnemoh (..., 'Parameter' value)
+% hydro = wsim.bemio.processnemoh (filedir)
+% hydro = wsim.bemio.processnemoh (..., 'Parameter', value)
 %
 % Input
 % 
@@ -31,6 +31,39 @@ function hydro = processnemoh (filedir, varargin)
 %   It may also be an empty structure, in which case it has the new data
 %   fields added. If the option is not supplied, this is the default value
 %   of the option.
+%
+% 'ForceCoG' - option to replace all or some of the bodies' Centres of
+%   Gravity (CoG). Should contain a cell array with the same number of
+%   elements as bodies in the Nemoh solution being loaded. For each body,
+%   the corresponding cell of the array will be checked for a replacement 3
+%   element centre of gravity vector. Each cell should either contain an
+%   empty matrix, or a replacement 3 element centre of gravity vector for
+%   the corresponding body. If is empty the CoG is not replaced, if it is a
+%   vector, the CoG is replaced with this vector. e.g.
+%
+%   hydro = wsim.bemio.processnemoh ( 'my_nemoh_ouput_dir', ...
+%                                     'ForceCoG', { [0, 0, 0.5], [], [0, 0,1.4] });
+%
+%   loads Nemoh output in a folder 'my_nemoh_ouput_dir' with three bodies,
+%   and replaces the CoG of the first and third body, but leaves the second
+%   body as it is in the Nemoh files.
+%
+%
+% 'ForceCoB' - option to replace all or some of the bodies' Centres of
+%   Buoyancy (CoB). Should contain a cell array with the same number of
+%   elements as bodies in the Nemoh solution being loaded. For each body,
+%   the corresponding cell of the array will be checked for a replacement 3
+%   element centre of buoyancy vector. Each cell should either contain an
+%   empty matrix, or a replacement 3 element centre of buoyancy vector for
+%   the corresponding body. If is empty the CoG is not replaced, if it is a
+%   vector, the CoB is replaced with this vector. e.g.
+%
+%   hydro = wsim.bemio.processnemoh ( 'my_nemoh_ouput_dir', ...
+%                                     'ForceCoB', { [0, 0, 0.5], [], [0, 0,1.4] });
+%
+%   loads Nemoh output in a folder 'my_nemoh_ouput_dir' with three bodies,
+%   and replaces the CoB of the first and third body, but leaves the second
+%   body as it is in the Nemoh files.
 %
 % Output
 %
@@ -97,8 +130,9 @@ function hydro = processnemoh (filedir, varargin)
 %
 
     options.HydroStructure = struct ();
-    options.ForceCoG = [];
-    options.ForceCoB = [];
+    options.ForceCoG = {};
+    options.ForceCoB = {};
+    options.ForceVolume = {};
 %     options.DoRadiationIRF = true;
 %     options.IRFDuration = [];
 %     options.IRFNSteps = [];
@@ -107,6 +141,9 @@ function hydro = processnemoh (filedir, varargin)
 %     options.IRFOmegaMax = [];
     
     options = parse_pv_pairs (options, varargin);
+    
+    assert (iscell (options.ForceCoG), 'ForceCoG must be a cell array');
+    assert (iscell (options.ForceCoB), 'ForceCoB must be a cell array');
     
     hydro = options.HydroStructure;
     
@@ -234,6 +271,18 @@ function hydro = processnemoh (filedir, varargin)
 
     end
     % waitbar(1/7);
+    
+    % if no replacement CoG or CoB was supplied, ensure the default is the
+    % right size.
+    if isempty (options.ForceCoG)
+        options.ForceCoG = repmat ({[]}, 1, hydro(hydroind).Nb);
+    end
+    if isempty (options.ForceCoB)
+        options.ForceCoB = repmat ({[]}, 1, hydro(hydroind).Nb);
+    end
+    if isempty (options.ForceVolume)
+        options.ForceVolume = repmat ({[]}, 1, hydro(hydroind).Nb);
+    end
 
     %% Hydrostatics file(s)
     for bodyind = 1:hydro(hydroind).Nb
@@ -269,7 +318,11 @@ function hydro = processnemoh (filedir, varargin)
 
         tmp = textscan(raw{4},'%s %s %f');
 
-        hydro(hydroind).Vo(bodyind) = tmp{3};  % Displacement volume
+        if ~isempty(options.ForceVolume{bodyind})
+            hydro(hydroind).Vo(bodyind) = options.ForceVolume{bodyind};
+        else
+            hydro(hydroind).Vo(bodyind) = tmp{3};  % Displacement volume
+        end
 
     end
     % waitbar(2/7);
