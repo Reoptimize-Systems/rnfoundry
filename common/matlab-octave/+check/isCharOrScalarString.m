@@ -32,19 +32,17 @@ function ok = isCharOrScalarString (input, throw, inputname)
     ok = true;
     
     if ischar (input)
-        
+        % do nothing
     elseif isstring (input)
-        if numel (string) ~= 1
+        % check it's scalar
+        if numel (input) ~= 1
             ok = false;
             if throw
-                error ('%s must be a scalar sting, with numel(%s) == 1', inputname, inputname);
+                error ('%s must be a scalar sting, i.e. with numel(%s) == 1', inputname, inputname);
             end
         end
     else
          ok = false;
-         if throw
-                
-         end
     end
     
     if throw && ~ok
