@@ -313,7 +313,7 @@ classdef simulation < nemoh.base
         end
         
         function addBody (self, body)
-            % add a body to the simulation
+            % add one or more bodies to the simulation
             %
             % Syntax
             %
@@ -321,37 +321,50 @@ classdef simulation < nemoh.base
             %
             % Description
             %
-            % Adds a nemoh body to the simulation. The bodies' data are
-            % used to generate the bodies section of the Nemoh.cal input
-            % file. When added, the id of the body is set to a new value,
-            % the values for rho and g are set to the simulation values and
-            % the MeshProgPath value is set to the same value as the
-            % simulation property. Adding a body means that the simulation
-            % is reset, so wrteMeshes, processMeshes and writeNemoh must
-            % all be re-run before the simulation can be run again (i.e. by
-            % using the 'run' method).
+            % Adds one or more nemoh bodies to the simulation. The bodies'
+            % data are used to generate the bodies section of the Nemoh.cal
+            % input file. When added, the id of the body is set to a new
+            % value, the values for rho and g are set to the simulation
+            % values and the MeshProgPath value is set to the same value as
+            % the simulation property. Adding a body means that the
+            % simulation is reset, so wrteMeshes, processMeshes and
+            % writeNemoh must all be re-run before the simulation can be
+            % run again (i.e. by using the 'run' method).
             %
             % Input
             %
             %  ns - nemoh.simulation object.
             %
-            %  body - nemoh.body object
+            %  body - nemoh.body object (or array of nemoh.body objects)
             %
             
             if ~isa (body, 'nemoh.body')
                 error ('body must be a nemoh.body object');
             end
             
-            self.bodies = [self.bodies, body];
+            for ind = 1:numel (body)
+                
+                % work around for the fact that 
+                %   self.bodies = [self.bodies, body];
+                % won't work in octave due to bug 
+                n = numel (self.bodies);
+                if n == 0
+                    self.bodies = body;
+                else
+                    self.bodies(end+1) = body;
+                end
+
+                % set ids starting from zero (we got 'n' before adding a
+                % body)
+                self.bodies(end).setID (n);
+
+                self.bodies(end).setMeshProgPath (self.meshProgPath);
+
+                self.bodies(end).setRho (self.rho);
+
+                self.bodies(end).setg (self.g);
             
-            % set ids starting from zero
-            self.bodies(end).setID (numel (self.bodies)-1);
-            
-            self.bodies(end).setMeshProgPath (self.meshProgPath);
-            
-            self.bodies(end).setRho (self.rho);
-            
-            self.bodies(end).setg (self.g);
+            end
             
             self.simReady = false;
             

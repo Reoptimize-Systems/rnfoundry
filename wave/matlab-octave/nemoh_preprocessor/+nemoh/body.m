@@ -32,6 +32,7 @@ classdef body < nemoh.base
     %  setTargetPanels - sets the target number of panels in refined
     %    mesh
     %  scaleMesh - scale the mesh vertex location data by a factor
+    %  writeSTL - writes a triangle mesh of the body to an STL file
     %
     % The folowing methods are mainly for use by a nemoh.simulation object
     % to which the body has been added:
@@ -218,6 +219,15 @@ classdef body < nemoh.base
                      'CoB must be a (3 x 1) numeric column vector' );
 
             self.centreOfBuoyancy = CoB;
+
+        end
+        
+        function setVolume (self, vol)
+
+            assert ( isnumeric (vol) && isscalar (vol) && vol >= 0, ...
+                     'CoB must be a numeric scalar >= 0' );
+
+            self.volume = vol;
 
         end
         
@@ -933,23 +943,31 @@ classdef body < nemoh.base
                                 self.centreOfGravity(3), ...
                                 '+' );
                        
-                text ( hax, self.centreOfGravity(1) + 0.01 * self.meshSize(1), ...
-                            self.centreOfGravity(2) + 0.01 * self.meshSize(2), ...
-                            self.centreOfGravity(3), ...
-                            sprintf ('%s CoG', self.name) );
+                % note we use the 'parent property rather than first
+                % argument as being the axes to create the text object in
+                % for Octave compatibility.
+                text ( self.centreOfGravity(1) + 0.01 * self.meshSize(1), ...
+                       self.centreOfGravity(2) + 0.01 * self.meshSize(2), ...
+                       self.centreOfGravity(3), ...
+                       sprintf ('%s CoG', self.name), ...
+                       'parent', hax );
 
                 if self.meshProcessed && ~isempty (self.centreOfBuoyancy)
                     
-                    % add centre of gravity
-                    scatter3 ( hax, self.centreOfGravity(1), ...
-                                    self.centreOfGravity(2), ...
-                                    self.centreOfGravity(3), ...
+                    % add centre of buoyancy
+                    scatter3 ( hax, self.centreOfBuoyancy(1), ...
+                                    self.centreOfBuoyancy(2), ...
+                                    self.centreOfBuoyancy(3), ...
                                    '+' );
 
-                    text ( hax, self.centreOfGravity(1) + 0.01 * self.meshSize(1), ...
-                                self.centreOfGravity(2) + 0.01 * self.meshSize(2), ...
-                                self.centreOfGravity(3), ...
-                                sprintf ('%s CoB', self.name) );
+                    % note we use the 'parent property rather than first
+                    % argument as being the axes to create the text object
+                    % in for Octave compatibility.
+                    text ( self.centreOfBuoyancy(1) + 0.01 * self.meshSize(1), ...
+                           self.centreOfBuoyancy(2) + 0.01 * self.meshSize(2), ...
+                           self.centreOfBuoyancy(3), ...
+                           sprintf ('%s CoB', self.name), ...
+                           'parent', hax );
                        
                 end
                 
@@ -1039,8 +1057,14 @@ classdef body < nemoh.base
             end
         end
         
-        function writeSTL (self, filename)
+        function writeSTL (self, filename, varargin)
             % writes a triangle mesh of the body to an STL file
+            
+            options.ShiftCoGToOrigin = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            check.isLogicalScalar (options.ShiftCoGToOrigin, true, 'ShiftCoGToOrigin');
             
             if size (self.triMesh,2) < 1
                 % attmept to make the triangle mesh if it doesn't exist yet
@@ -1048,7 +1072,11 @@ classdef body < nemoh.base
             end
             
             % write the stl file
-            stl.write (filename, self.triMesh.', self.meshVertices.');
+            if options.ShiftCoGToOrigin
+                stl.write (filename, self.triMesh.', self.meshVertices.' - self.centreOfGravity);
+            else
+                stl.write (filename, self.triMesh.', self.meshVertices.');
+            end
             
         end
         
@@ -1992,14 +2020,15 @@ classdef body < nemoh.base
             
             options = parse_pv_pairs (options, varargin);
             
-            if isa (options.Axes, 'matlab.graphics.axis.Axes')
+            if check.isAxesHandle (options.Axes, false, 'options.Axes')
+                assert (numel (options.Axes) == 1, 'Axes must be a scalar');
                 hax = options.Axes;
                 hfig = get (hax, 'Parent');
             elseif isempty (options.Axes)
                 hfig = figure;
                 hax = axes;
             else
-                error ('Axes must be a matlab axes object, or empty.')
+                error ('Axes must be an axes object, or empty.')
             end
 
             hmesh = patch( 'faces', f, ...
