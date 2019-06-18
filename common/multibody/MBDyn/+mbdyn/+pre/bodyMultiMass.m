@@ -35,12 +35,10 @@ classdef bodyMultiMass < mbdyn.pre.element
                 error ('mass should be a numeric array of one or more mass values.');
             end
             
-
-            if ~ ( iscell (cog) ...
-                    && iscell (inertiamat) ...
-                    && samesize (mass, cog, inertiamat) )
-                error ('cog must be a cell array of 3 element vectors of the same size as mass, and inertiamat must a cell array of inertia matrices.');
-            end
+            assert ( iscell (cog) ...
+                     && iscell (inertiamat) ...
+                     && samesize (mass, cog, inertiamat), ...
+                     'cog must be a cell array of 3 element vectors of the same size as mass, and inertiamat must a cell array of inertia matrices.');
 
             self.checkIsStructuralNode (node, true);
             
