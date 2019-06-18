@@ -659,11 +659,19 @@ classdef hydroBody < handle
             obj.setMassMatrix(rho, obj.simu.nlHydro)
             
             % check if obj.hydroStiffness is defined directly
-            if any(any(obj.hydroStiffness)) == 1
-                obj.hydroForce.linearHydroRestCoef = obj.hydroStiffness;
+            if ischar (obj.hydroStiffness)
+                if strcmpi (obj.hydroStiffness, 'zero')
+                    obj.hydroForce.linearHydroRestCoef = zeros (6);
+                else
+                    error ('hydroStiffness is an unrecognised character vector');
+                end
             else
-                k = obj.hydroData.hydro_coeffs.linear_restoring_stiffness;
-                obj.hydroForce.linearHydroRestCoef = k .* rho .* g;
+                if any(any(obj.hydroStiffness)) == 1
+                    obj.hydroForce.linearHydroRestCoef = obj.hydroStiffness;
+                else
+                    k = obj.hydroData.hydro_coeffs.linear_restoring_stiffness;
+                    obj.hydroForce.linearHydroRestCoef = k .* rho .* g;
+                end
             end
             
             % check if obj.viscDrag.Drag is defined directly
