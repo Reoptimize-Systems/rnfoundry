@@ -121,7 +121,7 @@ function tablestr = maketablestr (data, varargin)
     options.ColSep = ' | ';
     options.RowHeadings = {};
     options.Format = 'g';
-    options.ColWidth = 10;
+    options.ColWidth = [];
     options.ColHeadings = {};
     options.WrapColHeadings = false;
     options.ColHeaderRule = false;
@@ -176,7 +176,7 @@ function tablestr = maketablestr (data, varargin)
         error ('options.Format can not have more than one row');
     end
     
-
+    rhwid = 0;
     if ~isempty(options.RowHeadings)
         
         if ~iscellstr(options.RowHeadings)
@@ -187,8 +187,6 @@ function tablestr = maketablestr (data, varargin)
             error('Rowheadings must be a cell array of strings of the same size as the number of rows in data.')
         end
     
-        rhwid = 0;
-
         for r = 1:numel(options.RowHeadings)
             % find the maximum width the first column must be to accomodate
             % the row headings
@@ -197,6 +195,35 @@ function tablestr = maketablestr (data, varargin)
         
     end
     
+    if isempty (options.ColWidth)
+
+        % no column width supplied, so determine a sensible value for the
+        % width of each column
+
+        if isempty (options.ColHeadings)
+            
+            options.ColWidth = 10;
+            
+        else
+            
+            tempoptions.ColWidth = zeros(size(options.ColHeadings));
+            for colheadind = 1:numel(options.ColHeadings)
+
+                % get a column width which is the minimum to accept the
+                % column heading length or the default width specification
+                tempoptions.ColWidth(colheadind) = max(length(options.ColHeadings{colheadind}), options.ColWidth(colheadind));
+
+                if tempoptions.ColWidth < 1
+                    error('Column width is less than 1, and the column header is empty.')
+                end
+
+            end
+
+            options.ColWidth = tempoptions.ColWidth;
+        end
+        
+    end
+
     if isscalar(options.ColWidth)
         
         tempoptions.ColWidth = zeros(1, numel(options.Format));
@@ -245,28 +272,6 @@ function tablestr = maketablestr (data, varargin)
     
 %         fmt = arrayfun(@(x) ['%',num2str(options.ColWidth(x)),'s |'], 1:nColD, 'UniformOutput', false);
 
-        if nargin < 3
-            
-            % only data and column headings have been supplied, so
-            % determine a sensible value for the width of each column
-            
-            tempoptions.ColWidth = zeros(size(options.ColWidth));
-            for i = 1:numel(options.ColHeadings)
-
-                % get a column width which is the minimum to accept the
-                % column heading length or the default width specification
-                tempoptions.ColWidth(i) = max(length(options.ColHeadings{i}), options.ColWidth(i));
-                
-                if tempoptions.ColWidth < 1
-                    error('Column width is less than 1, and the column header is empty.')
-                end
-                
-            end
-            
-            options.ColWidth = tempoptions.ColWidth;
-            
-        end
-        
         if options.WrapColHeadings
             
             tempcolheads = options.ColHeadings;
@@ -323,10 +328,10 @@ function tablestr = maketablestr (data, varargin)
                 if colheadcolind == size (options.ColHeadings, 2)
                     % If we are at the end of a row, don't print the column
                     % separator
-                    tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(i)) );
+                    tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(colheadcolind)) );
                 else
                     % print the column header and column separator
-                    tablestr = appendstr (tablestr, ['%s',options.ColSep], str(1:options.ColWidth(i)) );
+                    tablestr = appendstr (tablestr, ['%s',options.ColSep], str(1:options.ColWidth(colheadcolind)) );
                 end
 
             end
