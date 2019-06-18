@@ -1,5 +1,25 @@
 classdef structuralForce < mbdyn.pre.force
-    
+% Applies a force to a structural node
+%
+% Syntax
+%
+% sf = mbdyn.pre.structuralForce (node, force_type, force_value)
+% sf = mbdyn.pre.structuralForce (..., 'Parameter', value)
+%
+% Description
+%
+% Applies a force to a structural node.
+%
+% mbdyn.pre.structuralForce Methods:
+%
+%   structuralForce - mbdyn.pre.structuralForce constructor
+%   generateMBDynInputString - generates MBDyn input string for a mbdyn.pre.structuralForce
+%
+%
+% See Also: mbdyn.pre.structuralCouple, mbdyn.pre.structuralInternalForce
+%
+%
+
     properties (GetAccess = public, SetAccess = protected)
         
         position;
@@ -18,12 +38,12 @@ classdef structuralForce < mbdyn.pre.force
     methods
         
         function self = structuralForce (node, force_type, force_value, varargin)
-            % structuralForce constructor
+            % mbdyn.pre.structuralForce constructor
             %
             % Syntax
             %
-            % sf = structuralForce (node, force_type, force_value)
-            % sf = structuralForce (..., 'Parameter', value)
+            % sf = mbdyn.pre.structuralForce (node, force_type, force_value)
+            % sf = mbdyn.pre.structuralForce (..., 'Parameter', value)
             %
             % Description
             %
@@ -35,10 +55,10 @@ classdef structuralForce < mbdyn.pre.force
             %   structural node to which the couple is applied.
             %
             %  force_type - string containing the type of force element.
-            %   Can be either 'absolute' or 'follower'. The absolute force
-            %   has the force defined in the global frame wheras the
+            %   Can be 'absolute', 'follower' or 'total'. The absolute
+            %   force has the force defined in the global frame wheras the
             %   follower force is defined in the reference frame of the
-            %   node. The total force is intrinsically follower. 
+            %   node. The total force is intrinsically follower.
             %
             %  force_value - mbdyn.pre.componentTplDriveCaller object with
             %   3 components defining the force applied to the node.
@@ -62,7 +82,6 @@ classdef structuralForce < mbdyn.pre.force
             %
             %
             % See Also: 
-            %
             %
             
             options.Position = 'null';
@@ -131,6 +150,27 @@ classdef structuralForce < mbdyn.pre.force
         end
         
         function str = generateMBDynInputString (self)
+            % generates MBDyn input string for a mbdyn.pre.structuralForce
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (sf)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  sf - mbdyn.pre.structuralForce object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
             
             str = generateMBDynInputString@mbdyn.pre.force(self);
             
