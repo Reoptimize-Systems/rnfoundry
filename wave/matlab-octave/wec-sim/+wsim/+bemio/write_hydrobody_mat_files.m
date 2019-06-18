@@ -1,9 +1,10 @@
-function all_hydro_data = write_hydrobody_mat_files (hydro, outdir)
+function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
 % Converts a hydro structure to .mat files for wsim.hydroBody object(s)
 %
 % Syntax
 %
 % wsim.bemio.write_hydrobody_mat_files (hydro, outdir)
+% wsim.bemio.write_hydrobody_mat_files (..., 'Parameter', value);
 %
 % Description
 %
@@ -26,6 +27,13 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir)
 %  outdir - directory in which to create the .mat files containing the
 %   hydrodynamic data for each body
 %
+% Additional arguments may be supplied using parameter-value pairs. The
+% available options are:
+%
+%  'AppendToFileNames' - optional character vector to append to every body
+%    file name. Can be useful to denote different versions of the data for
+%    the same bodies.
+%
 % Output
 %
 %  all_hydro_data - array of structures, one for each body, containing the same
@@ -35,12 +43,18 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir)
 %
 %
 
+    options.AppendToFileNames = '';
+    
+    options = parse_pv_pairs (options, varargin);
+    
     % some input checking
     assert (isstruct (hydro) && isscalar (hydro), ...
         'hydro must be a scalar structure representing a hydrodynamic system' );
     assert (ischar (outdir), 'outdir must be a character vector' );
     assert (exist (outdir, 'dir') == 7, ...
         'The output directory outdir does not appear to exist' );
+    
+    assert (ischar (options.AppendToFileNames), 'AppendToFileNames must be a character vector');
     
     n = 0;
     all_hydro_data = struct ();
@@ -51,7 +65,7 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir)
 
         name = hydro.body{bodyind};
 
-        all_hydro_data(bodyind) = struct ();
+%         all_hydro_data(bodyind) = struct ();
 
         all_hydro_data(bodyind).simulation_parameters.scaled = 0;
         all_hydro_data(bodyind).simulation_parameters.wave_dir = hydro.beta;
@@ -61,6 +75,7 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir)
         all_hydro_data(bodyind).properties.name = name;
         all_hydro_data(bodyind).properties.body_number = bodyind - 1;
         all_hydro_data(bodyind).properties.cg = hydro.cg(:,bodyind)';
+        all_hydro_data(bodyind).properties.cb = hydro.cb(:,bodyind)';
         all_hydro_data(bodyind).properties.disp_vol = hydro.Vo(bodyind);
         all_hydro_data(bodyind).hydro_coeffs.linear_restoring_stiffness = hydro.C(:,:,bodyind);
 
@@ -87,7 +102,7 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir)
         end
 
         % write the .mat file for this body
-        outfile = fullfile (outdir, [name, '.mat']);
+        outfile = fullfile (outdir, [name, options.AppendToFileNames, '.mat']);
         hydroData = all_hydro_data(bodyind);
         save (outfile, '-struct', 'hydroData');
 
