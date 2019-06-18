@@ -125,36 +125,50 @@ function displaytable(data, varargin)
         
         if nargin < 9 || isempty(varargin{8})
             options.RowStart = '';
+        else
+            options.RowStart = varargin{8};
         end
         
         if nargin < 8 || isempty(varargin{7})
             options.RowEnding = '';
+        else
+            options.RowEnding = varargin{7};
         end
 
         if nargin < 7 || isempty(varargin{6})
             options.ColSep = ' | ';
+        else
+            options.ColSep = varargin{6};
         end
 
         % do some basic checking of input
         if nargin < 6 || isempty(varargin{5})
             % print to the command line
             options.FileID = 1;
+        else
+            options.FileID = varargin{5};
         end
 
         if nargin < 5 || isempty(varargin{4})
             % no row headings supplied, use empty cell array
             options.RowHeadings = {};
+        else
+            options.RowHeadings = varargin{4};
         end
 
         if nargin < 4 || isempty(varargin{3})
             % no format specifiers supplied, use 'g' for all columns
             options.Format = 'g';
+        else
+            options.Format = varargin{3};
         end
 
         if nargin < 3 || isempty(varargin{2})
             % default width is 10, this will be modified if column headers are
             % supplied
             options.ColWidth = 10;
+        else
+            options.ColWidth = varargin{2};
         end
 
         if nargin < 2
