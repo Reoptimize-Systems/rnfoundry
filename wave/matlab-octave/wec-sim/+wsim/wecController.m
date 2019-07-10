@@ -19,7 +19,7 @@ classdef wecController < handle
     methods
         
         function self = wecController (varargin)
-            % ceorl.wecController constructor
+            % wsim.wecController constructor
             %
             % Syntax
             %
@@ -38,7 +38,12 @@ classdef wecController < handle
             %
             %  'SampleDelays' - empty matrix or structure containing 
             %    specification of sample delayed logged variables to be
-            %    used by the controller to generate the control outputs
+            %    used by the controller to generate the control outputs. If
+            %    a structure it must contain at least the following fields:
+            %
+            %    SampleDelays : 
+            %
+            %    InitialValues : 
             %
             % Output
             %
@@ -116,6 +121,47 @@ classdef wecController < handle
 %         end
         
         function out = sampleDelayedLogVars (self, varnames, sampledelays, initialvals)
+            % returns logged variable delayed by a number of time steps
+            %
+            % Syntax
+            %
+            % out = sampleDelayedLogVars (ctrlobj, varnames, sampledelays, initialvals)
+            %
+            % Description
+            %
+            % sampleDelayedLogVars returns logged variables, but delayed by
+            % a specified number of time steps. Until that number of steps
+            % has passed an initial value for the variable is returned.
+            %
+            % Input
+            %
+            %  ctrlobj - wsim.wecController object
+            %
+            %  varnames - cell array of character vectors containing the
+            %   names of the variables to be returned. These must be names
+            %   of variables logged by the logger in the wsim.wecSim
+            %    object this controller is added to.
+            %
+            %  sampledelays - vector of integer of the same length as
+            %   varnames. Each element is the number of samples to delay
+            %   the output for, for the corresponding variable in
+            %   'variables' described above.
+            %
+            %  initialvals - vector of values of the same length as
+            %   varnames. Each element is the value which will be reported
+            %   for the corresponding variable in 'variables' described
+            %   above until the specified number of samples has passed.
+            %
+            % Output
+            %
+            %  out - cell array of values for each of the variables
+            %   requested in 'varnames'. Either the specified initial
+            %   value, or the value logged the specified number of time
+            %   steps ago.
+            %
+            %
+            % See also:
+            %
             
             % copy initial vals for output as this will be correct size and
             % hold the right default values which we will only overwrite
