@@ -791,7 +791,7 @@ classdef wecSim < handle
             self.simInfo.OutputDirectory = fileparts (self.outputFilePrefix);
             self.simInfo.CaseDirectory = self.caseDirectory;
 
-            % start the controller is there is one
+            % start the controller if there is one
             if ~isempty (self.wecController)
                 self.wecController.start ();
             end
@@ -804,7 +804,7 @@ classdef wecSim < handle
             % create the communicator object. As an mbdyn system object is
             % supplied, the mbdyn input file will be generated
             % automatically
-            try
+           try
                 self.mBDynMBCNodal = mbdyn.mint.MBCNodal ('MBDynPreProc', self.mBDynSystem, ...
                     'UseMoments', true, ...
                     'MBDynInputFile', self.mBDynInputFile, ...
@@ -812,17 +812,22 @@ classdef wecSim < handle
                     'OutputPrefix', self.outputFilePrefix, ...
                     'NodeOrientationType', 'euler 123' ...
                     );
-            catch err
-                self.readyToRun = false;
-                % note the conversion to char below is for Octave which
-                % doesn't accept an empty matrix as input to 'exist'
-                if exist (char (self.mBDynOutputFile), 'file')
-                    self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
-                end
-                self.cleanUpAfterError ();
-                error ('Starting MBDyn communication falied, aborting sim, some output might have been sent to the following file:\n%s\nIf so, this may help diagnose the error.', ...
-                        self.mBDynOutputFile)
-            end
+           catch err
+               self.readyToRun = false;
+               if ~isempty (self.mBDynOutputFile)
+                   if exist (self.mBDynOutputFile, 'file')
+                       self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
+                   end
+               end
+               self.cleanUpAfterError ();
+               disp(err)
+               if ~isempty (self.mBDynOutputFile)
+                   error ('Starting MBDyn communication falied, aborting sim, some output might have been sent to the following file:\n%s\nIf so, this may help diagnose the error.', ...
+                           self.mBDynOutputFile)
+               else
+                   error ('Starting MBDyn communication falied, aborting sim, unfortunately no MBDyn Output file is available to view, which means MBDyn probably never even started running.');
+               end
+           end
 
             % copy over the input file location to make it easier to
             % examine later if required
