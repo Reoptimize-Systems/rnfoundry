@@ -208,7 +208,7 @@ classdef linearPTOWithController < wsim.powerTakeOff
             
             % get the force, which is expected to be the control output
             % variable in this case
-            ptoforce = self.controller.ptoControlOutput (self.id, self.internalVariables);
+            ptoforce = self.controller.ptoControlOutput (self.id, time, self.internalVariables);
             
             FM = self.mbdynForceObj.force (ptoforce);
             
