@@ -79,25 +79,25 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
         all_hydro_data(bodyind).properties.disp_vol = hydro.Vo(bodyind);
         all_hydro_data(bodyind).hydro_coeffs.linear_restoring_stiffness = hydro.C(:,:,bodyind);
 
-        all_hydro_data(bodyind).hydro_coeffs.excitation.re = permute(hydro.ex_re((n+1):(n+m),:,:),[3 2 1]);
-        all_hydro_data(bodyind).hydro_coeffs.excitation.im = permute(hydro.ex_im((n+1):(n+m),:,:),[3 2 1]);
+        all_hydro_data(bodyind).hydro_coeffs.excitation.re = hydro.ex_re((n+1):(n+m),:,:);
+        all_hydro_data(bodyind).hydro_coeffs.excitation.im = hydro.ex_im((n+1):(n+m),:,:);
 
-        all_hydro_data(bodyind).hydro_coeffs.excitation.impulse_response_fun.f = permute(hydro.ex_K((n+1):(n+m),:,:),[3 2 1]);
+        all_hydro_data(bodyind).hydro_coeffs.excitation.impulse_response_fun.f = hydro.ex_K((n+1):(n+m),:,:);
         all_hydro_data(bodyind).hydro_coeffs.excitation.impulse_response_fun.t = hydro.ex_t;
         all_hydro_data(bodyind).hydro_coeffs.excitation.impulse_response_fun.w = hydro.ex_w;
-        all_hydro_data(bodyind).hydro_coeffs.added_mass.all = permute(hydro.A((n+1):(n+m),:,:),[3 2 1]);
-        all_hydro_data(bodyind).hydro_coeffs.added_mass.inf_freq = permute(hydro.Ainf((n+1):(n+m),:),[2 1]);
-        all_hydro_data(bodyind).hydro_coeffs.radiation_damping.all = permute(hydro.B((n+1):(n+m),:,:),[3 2 1]);
-        all_hydro_data(bodyind).hydro_coeffs.radiation_damping.impulse_response_fun.K = permute(hydro.ra_K((n+1):(n+m),:,:),[3 2 1]);
+        all_hydro_data(bodyind).hydro_coeffs.added_mass.all = hydro.A((n+1):(n+m),:,:);
+        all_hydro_data(bodyind).hydro_coeffs.added_mass.inf_freq = hydro.Ainf((n+1):(n+m),:);
+        all_hydro_data(bodyind).hydro_coeffs.radiation_damping.all = hydro.B((n+1):(n+m),:,:);
+        all_hydro_data(bodyind).hydro_coeffs.radiation_damping.impulse_response_fun.K = hydro.ra_K((n+1):(n+m),:,:);
         all_hydro_data(bodyind).hydro_coeffs.radiation_damping.impulse_response_fun.t = hydro.ra_t;
 
         if isfield(hydro,'ss_A')
 
-            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.it = permute(hydro.ss_O((n+1):(n+m),:),[2 1]);
-            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.A.all = permute(hydro.ss_A((n+1):(n+m),:,:,:),[4 3 2 1]);
-            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.B.all = permute(hydro.ss_B((n+1):(n+m),:,:,:),[4 3 2 1]);
-            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.C.all = permute(hydro.ss_C((n+1):(n+m),:,:,:),[4 3 2 1]);
-            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.D.all = permute(hydro.ss_D((n+1):(n+m),:),[2 1]);
+            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.it = hydro.ss_O((n+1):(n+m),:);
+            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.A.all = hydro.ss_A((n+1):(n+m),:,:,:);
+            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.B.all = hydro.ss_B((n+1):(n+m),:,:,:);
+            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.C.all = hydro.ss_C((n+1):(n+m),:,:,:);
+            all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.D.all = hydro.ss_D((n+1):(n+m),:);
 
         end
 
