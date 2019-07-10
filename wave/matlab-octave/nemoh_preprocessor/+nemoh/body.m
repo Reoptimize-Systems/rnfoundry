@@ -198,15 +198,19 @@ classdef body < nemoh.base
             self.sanitizedName = strrep (self.sanitizedName, filesep (), '_');
             
             % Replace non-word character with its HEXADECIMAL equivalent
-            badchars = unique ( self.sanitizedName( regexp (self.sanitizedName,'[^A-Za-z_0-9]') ) );
-            for ind = 1:numel (badchars)
-                if badchars(ind) <= intmax('uint8')
-                    width = 2;
-                else
-                    width = 4;
+            if ~isoctave ()
+                % for some reason the following call to unique fails in Octave 
+                % (as of Octave 5.1.0).
+                badchars = unique ( self.sanitizedName( regexp (self.sanitizedName,'[^A-Za-z_0-9]') ) );
+                for ind = 1:numel (badchars)
+                    if badchars(ind) <= intmax('uint8')
+                        width = 2;
+                    else
+                        width = 4;
+                    end
+                    replace = ['0x', dec2hex(badchars(ind), width)];
+                    self.sanitizedName = strrep (self.sanitizedName, badchars(ind), replace);
                 end
-                replace = ['0x', dec2hex(badchars(ind), width)];
-                self.sanitizedName = strrep (self.sanitizedName, badchars(ind), replace);
             end
             
             self.uniqueName = sprintf('%s_id_%d', self.sanitizedName, self.id);
@@ -624,8 +628,8 @@ classdef body < nemoh.base
                 for j = 1:ntheta+2
                     self.nQuads = self.nQuads + 1;
                     self.quadMesh(1,self.nQuads) = prevvertnunm+i+numpoints*(j-1);
-                    self.quadMesh(2,self.nQuads) = prevvertnunm++1+i+numpoints*(j-1);
-                    self.quadMesh(3,self.nQuads) = prevvertnunm++1+i+numpoints*j;
+                    self.quadMesh(2,self.nQuads) = prevvertnunm+1+i+numpoints*(j-1);
+                    self.quadMesh(3,self.nQuads) = prevvertnunm+1+i+numpoints*j;
                     self.quadMesh(4,self.nQuads) = prevvertnunm+i+numpoints*j;
                 end
             end
@@ -1169,7 +1173,11 @@ classdef body < nemoh.base
             CC = onCleanup (@() cd (pwd ()));
             cd (self.meshInputDirectory);
             
-            [status, result] = cleansystem (sprintf ('"%s" > "%s"', self.meshProgPath, logfile));   
+            if isoctave ()
+                [status, result] = system (sprintf ('"%s" > "%s"', self.meshProgPath, logfile));
+            else
+                [status, result] = cleansystem (sprintf ('"%s" > "%s"', self.meshProgPath, logfile));
+            end
             
             if status ~= 0
                 error ('mesh processing failed with error code %d', status);
