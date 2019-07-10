@@ -1,5 +1,5 @@
 classdef wecControllerFcnBased < wsim.wecController
-% base class for CEORl WEC controllers
+% base class for function based WEC controllers
     
     properties
         
@@ -16,30 +16,38 @@ classdef wecControllerFcnBased < wsim.wecController
     methods
         
        function self = wecControllerFcnBased (fcn, ptovarnames, wecsimvarnames, varargin)
-            % ceorl.wecController constructor
+            % wsim.wecControllerFcnBased constructor
             %
             % Syntax
             %
-            % ctrlobj = ceorl.wecController ()
-            % ctrlobj = ceorl.wecController ('Parameter', Value)
+            % ctrlobj = wsim.wecControllerFcnBased ()
+            % ctrlobj = wsim.wecControllerFcnBased ('Parameter', Value)
             %
             % Description
             %
-            % The ceorl.wecController class is a base class for all ceorl
-            % WEC controllers
+            % The wsim.wecControllerFcnBased class is a base class for all
+            % function based WEC controllers which can optionally include
+            % sample delays in the signals.
             %
             % Input
             %
             % Addtional arguments may be supplied as parameter-value pairs.
             % The available options are:
             %
-            %  'SampleDelays' - empty matrix or structure containing 
-            %    specification of sample delayed logged variables to be
-            %    used by the controller to generate the control outputs
+            %  'PTOVarSampleDelays' - empty matrix or structure containing 
+            %    specification of sample delayed logged variables from the
+            %    PTO to be used by the controller to generate the control
+            %    outputs.
+            %
+            %
+            %  'WECSimVarSampleDelays' - empty matrix or structure
+            %    containing specification of sample delayed logged (non
+            %    PTO) variables to be used by the controller to generate
+            %    the control outputs
             %
             % Output
             %
-            %  ctrlobj - ceorl.wecController object
+            %  ctrlobj - wsim.wecControllerFcnBased object
             %
             %
             %
@@ -109,7 +117,7 @@ classdef wecControllerFcnBased < wsim.wecController
             %
             % Output
             %
-            %  value - the force to be applued based on the damping
+            %  value - the force to be applied based on the damping
             %   coefficient and the relative velocity of the PTO components
             %
             %
