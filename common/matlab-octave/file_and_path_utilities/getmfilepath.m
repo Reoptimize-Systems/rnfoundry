@@ -28,7 +28,7 @@ function filepath = getmfilepath (mfile)
     loc = which (mfile);
 
     if isempty (loc)
-        error ('UTILS:nofile', 'm-file or class does not appear to exist')
+        error ('RNF:Utils:nofile', 'm-file or class does not appear to exist')
     else
         filepath = fileparts (loc);
     end
