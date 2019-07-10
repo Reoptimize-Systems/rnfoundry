@@ -33,7 +33,8 @@ classdef waveSettings < handle
         
         % H - % [m] Wave height or significant wave height for irregular
         %   Wave height (regular waves) or significant wave height
-        %   (irregular waves) (Default = 'NOT DEFINED')
+        %   (irregular waves). For regular waves this the peak-to-trough
+        %   amplitude. (Default = 'NOT DEFINED')
         H = 'NOT DEFINED';
 
         % spectrumType -  String containing the wave spectrum type
