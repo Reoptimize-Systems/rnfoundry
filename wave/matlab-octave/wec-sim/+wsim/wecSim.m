@@ -18,6 +18,32 @@ classdef wecSim < handle
         mBDynOutputFile;
         mBDynInputFile;
         caseDirectory;
+        
+        % simInfo - structure containing information about the simulation
+        %  The structure is populated when simStart is called (or the run
+        %  method, which ultimately calls simStart). It will contain the
+        %  following fields:
+        %
+        %  TStart : the simulation initial time
+        %
+        %  TEnd : the simulation end time
+        %
+        %  TStep : the magnitude of the time step of the simulation
+        %
+        %  MBDynSystem : the mbdyn.pre.system object representing the
+        %    multibody system 
+        %
+        %  HydroSystem : wsim.hydroSystem object representing the
+        %    hydrodynamic interaction system
+        %
+        %  HydroMotionSyncSteps : 
+        %
+        %  OutputDirectory : the location of the directory where results
+        %    will be output
+        %
+        %  CaseDirectory : the directory containing the case information
+        %    for the simulation
+        %
         simInfo;
 
         loggingSettings;
