@@ -26,4 +26,16 @@ classdef scalarFunction < mbdyn.pre.base
         
     end
     
+    methods (Static)
+        
+        function [ options, nopass_list ] = defaultConstructorOptions ()
+            
+            options = struct ();
+
+            nopass_list = {};
+            
+        end
+        
+    end
+    
 end
