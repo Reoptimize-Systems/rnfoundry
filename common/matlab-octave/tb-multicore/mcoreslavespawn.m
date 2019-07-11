@@ -45,17 +45,17 @@ function spawnstate = mcoreslavespawn (spawnopts, spawnstate)
 
         spawnstate.SlavesSubmitted = 0;
 
-        % count the number of paramter files in the multicore
+        % count the number of parameter files in the multicore
         % directory
         nparamfiles = countparameterfiles (spawnopts.sharedir);
 
-        % start some slaves
         nactiveslaves = countactiveslaves (spawnopts.sharedir);
 
         if (nparamfiles > 0) && (nactiveslaves < spawnopts.maxslaves) 
-
+            % start some slaves
+            
             % choose the number of slaves to launch, but no more
-            % than a hard limit of specified in spawnopts.maxslaves
+            % than a hard limit specified in spawnopts.maxslaves
             nslaves = spawnopts.maxslaves - nactiveslaves;
 
             % start the slaves
