@@ -78,9 +78,10 @@ classdef wecController < handle
             
         end
         
-        function value = ptoControlOutput (self, id, pto_internal_variables)
+        function [value, info] = ptoControlOutput (self, id, pto_internal_variables)
             
             value = 0;
+            info = struct ();
             
         end
         
