@@ -972,6 +972,15 @@ x = mbdyn.pre.constScalarFunction ('jimbob', tau);
 
 x.generateMBDynInputString ()
 
+%% cubicspline scalar function
+
+x = [1, 2, 3];
+y = [1, 10, 100];
+
+x = mbdyn.pre.cubicSplineScalarFunction ('jimbob', x, y);
+
+x.generateMBDynInputString ()
+
 %% discreteCoulombFriction Model
 
 friction_fcn = mbdyn.pre.constScalarFunction ('jimbob', tau);
@@ -1102,6 +1111,16 @@ offset2 = 'null';
 obj = mbdyn.pre.deformableDisplacementJoint (sn1, sn2, law, offset1, offset2);
 
 obj.generateMBDynInputString ()
+
+%% linearViscoElasticIsotropicConstituativeLaw
+
+law = mbdyn.pre.linearViscoElasticIsotropicConstituativeLaw (1, 2);
+
+law.generateMBDynInputString ()
+
+law = mbdyn.pre.linearViscoElasticIsotropicConstituativeLaw (1, 'proportional', 2);
+
+law.generateMBDynInputString ()
 
 %% beam3
 
