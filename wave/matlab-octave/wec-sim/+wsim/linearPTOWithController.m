@@ -151,8 +151,17 @@ classdef linearPTOWithController < wsim.powerTakeOff
                               
             info.AxisLabels = { 'Force [N]', 'Displacement [m]', 'Velocity [ms^{-1}]' };
             
-            info.NAvailable = numel(info.AvailableNames);
             
+            % get the information of variables to be logged by the
+            % controller
+            ctrl_info = controller.loggingInfo ();
+            % append it to the pto info
+            f = fieldnames(info);
+            for i = 1:length(f)
+                info.(f{i}) = [info.(f{i}), ctrl_info.(f{i})];
+            end
+            
+            info.NAvailable = numel(info.AvailableNames);
             
             self = self@wsim.powerTakeOff ( reference_node, other_node, info, ...
                                             'LoggedVars', options.LoggedVars );
@@ -208,7 +217,7 @@ classdef linearPTOWithController < wsim.powerTakeOff
             
             % get the force, which is expected to be the control output
             % variable in this case
-            ptoforce = self.controller.ptoControlOutput (self.id, time, self.internalVariables);
+            [ptoforce, ctrl_log_vars] = self.controller.ptoControlOutput (self.id, time, self.internalVariables);
             
             FM = self.mbdynForceObj.force (ptoforce);
             
@@ -218,6 +227,13 @@ classdef linearPTOWithController < wsim.powerTakeOff
             % note that this internalVariables property is astructure which
             % is initialised by wsim.powerTakeOff
             self.internalVariables.InternalForce = ptoforce;
+            
+             % copy the controller logged variables int the PTO
+             % internalVariables structure
+             f = fieldnames(ctrl_log_vars);
+             for i = 1:length(f)
+                self.internalVariables.(f{i}) = ctrl_log_vars.(f{i});
+             end
             
         end
         

@@ -94,7 +94,7 @@ classdef wecControllerFcnBased < wsim.wecController
             
        end
         
-       function value = ptoControlOutput (self, pto_id, pto_vars)
+       function [value, info] = ptoControlOutput (self, pto_id, pto_vars)
             % returns the desired force based on the current damping value and pto velocity
             %
             % Syntax
@@ -153,6 +153,7 @@ classdef wecControllerFcnBased < wsim.wecController
             end
             
             value = feval (self.outputFcns{pto_id}, fcn_input_vars{:});
+            info = struct ();
             
         end
         
