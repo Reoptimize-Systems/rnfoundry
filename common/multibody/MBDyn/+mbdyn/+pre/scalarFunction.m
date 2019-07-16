@@ -7,7 +7,7 @@ classdef scalarFunction < mbdyn.pre.base
     
     methods
         
-        function self = scalarFunction (name, fcnType)
+        function self = scalarFunction (name, fcnType, varargin)
             % base class for scalar function objects
             
             assert (ischar (name), 'name should be a char array');
