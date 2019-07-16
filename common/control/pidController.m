@@ -8,11 +8,18 @@ classdef pidController < handle
 %
 % Description
 %
-% pidController implements a proportional-integral-derivative
-% controller. Limits on the maximum and minimum values of the
-% output signal can be set. To convert to a PI or PD controller
-% one can simply set the values of Ki or Kd to zero.
+% pidController implements a proportional-integral-derivative controller.
+% Limits on the maximum and minimum values of the output signal can be set.
+% To convert to a PI or PD controller one can simply set the values of Ki
+% or Kd to zero.
 %
+% The PID controller class also has features to assist with using it within
+% a simulation being solved using the ode* family of functions (e.g. ode45,
+% ode15s etc). These functions typically do not give access to the current
+% time step, so it must be calculated from the previous value to the
+% simulation time, which must be stored internally by the pidController
+% class.
+%      
 % pidController Methods:
 %
 %  pidController - constructor
@@ -76,16 +83,11 @@ classdef pidController < handle
             %
             % The PID controller class also has features to assist with
             % using it within a simulation being solved using the ode*
-            % family of functions (e.g. ode45, ode15s etc). These funcitons
+            % family of functions (e.g. ode45, ode15s etc). These functions
             % typically do not give access to the current time step, so it
             % must be calculated from the previous value to the simulation
             % time, which must be stored internally by the pidController
             % class.
-            %
-            % pidController Methods:
-            %
-            %  reset - reset the controller to it's initial state
-            %  calculate - calculate the pid output signal
             %
             % Input
             %
@@ -110,6 +112,11 @@ classdef pidController < handle
             %    step. The value provided here is put in the fixed_dt
             %    property of the object, and it's default value is NaN (Not
             %    a Number) if not supplied.
+            %
+            %  'AntiWindup' - 
+            %
+            %  'SaturationTimeConstant' - 
+            %
             %
             % Output
             %
