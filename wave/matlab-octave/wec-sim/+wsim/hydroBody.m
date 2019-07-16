@@ -240,6 +240,14 @@ classdef hydroBody < handle
         hydroDataBodyNum = [];          
         
         % massCalcMethod - Method used to obtain mass: 'user', 'fixed', 'equilibrium'
+        %
+        %  'user' means the user has specified the mass directly
+        %
+        %  'fixed' means the mass is irrelevant as the hydrobody will be
+        %    clamped in place, so a default set of mass and inertia values
+        %    will be used.
+        %
+        %  'equilibrium' means the mass is calculated 
         massCalcMethod = [];  
         
         % excitationMethod - Character vector containing the wave excitation method to be used
@@ -2171,7 +2179,7 @@ classdef hydroBody < handle
             %
 
             % Logic to calculate nonFKForce at reduced sample time
-            if isempty(obj.oldForce) || (mod (t, obj.simu.dtFeNonlin) < obj.simu.dt/2)
+            if isempty(obj.oldForce) || (mod (t + 1000*eps (t), obj.simu.dtFeNonlin) < obj.simu.dt/2)
 
                 [f, wp, wpMeanFS] = calc_nonFKForce ( obj, pos, elv, t );
                 obj.oldForce = f;
@@ -2742,7 +2750,7 @@ classdef hydroBody < handle
             
             if ischar (new_mass)
                 ok = check.allowedStringInputs (new_mass, {'equilibrium', 'fixed'}, false);
-                assert (ok, 'If mass is a string, it must be ''equilibrium''');
+                assert (ok, 'If mass is a string, it must be ''equilibrium'' or ''fixed''');
             else
                 check.isNumericScalar(new_mass, true, 'mass', 0);
 %                 assert (new_mass > 0, 'mass must be greater than 0');
