@@ -17,36 +17,38 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
 %     be evaluated. objelectricalmachine requires the following fields to
 %     be present in simoptions:
 %
-%     evaloptions - a structure containing fields providing details of how
+%     Evaluation : a structure containing fields providing details of how
 %       the logistics of the evalauation is to be handled. It must contain
 %       the followinf fields:
 %
-%       masterIsWorkerSimFun - scalar field which must evaluate to true or
+%       masterIsWorkerSimFun : scalar field which must evaluate to true or
 %         false. If true the master 
 %
-%       MCorePreProc - 
+%       MCorePreProc : 
 %
-%       MCorePreProcDir - 
+%       MCorePreProcDir : 
 %
-%       spawnslaves - 
+%       spawnslaves : 
 %
-%       maxattempts - 
+%       maxattempts : 
 %
-%       MCoreFEADir - 
+%       MCoreFEADir : 
 %
-%       MCoreODEDir - 
+%       MCoreODEDir : 
 %
-%       MCoreMonitorFunction - 
+%       MCoreMonitorFunction : 
 %
-%       MCoreMonitorData - 
+%       MCoreMonitorData : 
 %
-%       starttime - 
+%       starttime : 
 %
-%       endtime - 
+%       endtime : 
 %
-%       slavestartdir - 
+%       slavestartdir : 
 %
-%       matoroctslaves - 
+%       matoroctslaves : 
+%
+%
 
 % Copyright Richard Crozer 2012, The University of Edinburgh
 
