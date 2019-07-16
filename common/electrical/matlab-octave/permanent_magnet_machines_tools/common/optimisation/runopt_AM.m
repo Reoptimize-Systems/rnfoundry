@@ -69,6 +69,10 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
 %    in the GA population when doing a test run. This is only used/relevant
 %    when TestForceSlaveSpawn is true. Default is 1.
 %
+%  'TestSaveGAState' - true/false flag indicating whether to honour the
+%    value of the mpgaoptions.SAVEMODE flag, instead of setting it to 0.
+%    Default is false.
+%
 % Output
 %
 %  mpgastate - 
@@ -85,6 +89,7 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
     Inputs.TestNIND = 4;
     Inputs.TestNSUBPOP = 1;
     Inputs.TestMaxSlaves = 1;
+    Inputs.TestSaveGAState = false;
     
     Inputs = parse_pv_pairs (Inputs, varargin);
     
@@ -105,7 +110,11 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
 
     if istestrun
         mpgaoptions.RESUME = false;
-        mpgaoptions.SAVEMODE = false;
+        
+        if Inputs.TestSaveGAState == false
+            % force SAVEMODE to zero
+            mpgaoptions.SAVEMODE = 0;
+        end
 
         if Inputs.TestForceSlaveSpawn
             evaloptions.spawnslaves = true;
@@ -172,7 +181,9 @@ function [mpgastate, mpgaoptions] = runopt_AM (simoptions, evaloptions, mpgaopti
             mpgaoptions.RESUME = true;
             mpgaoptions.RESUMEFILE = mpgaoptions.FILENAME;
         end
-        mpgaoptions.SAVEMODE = true;
+        
+        mpgaoptions.SAVEMODE = 1;
+        
         evaloptions = setfieldifabsent(evaloptions, 'spawnslaves', false);
         evaloptions = setfieldifabsent(evaloptions, 'masterIsWorkerEvFun', true);
         evaloptions = setfieldifabsent(evaloptions, 'masterIsWorkerSimFun', true);
