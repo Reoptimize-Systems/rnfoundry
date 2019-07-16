@@ -44,7 +44,7 @@ classdef cubicSplineScalarFunction < mbdyn.pre.scalarFunction
             
             pvpairs = mbdyn.pre.base.passThruPVPairs ( options, nopass_list);
             
-            self = self@mbdyn.pre.scalarFunction (name, 'cubicspline');
+            self = self@mbdyn.pre.scalarFunction (name, 'cubic spline', pvpairs{:});
             
             assert (isnumeric (x) && isreal (x) && isvector (x), ...
                     'x must be a vector of real numeric values' );
@@ -52,10 +52,8 @@ classdef cubicSplineScalarFunction < mbdyn.pre.scalarFunction
                     'y must be a vector of real numeric values' );
             assert (numel (x) == numel (y), 'x must be the same length as y');
             assert (numel(x) >= 3, 'There must be at least 3 points for the interpolation');
-            
             self.checkLogicalScalar (options.Extrapolate, true, 'Extrapolate');
             
-            self.name = name;
             self.extrapolate = options.Extrapolate;
             
             % store x and y ensuring they are row vectors as this makes it
