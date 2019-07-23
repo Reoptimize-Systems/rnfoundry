@@ -62,11 +62,38 @@ classdef simSettings < handle
         nlHydro = 0; % Option for nonlinear hydrohanamics calculation: linear->'0', nonlinear->'1', (default = 0)
         b2b = false; % Option for body2body interactions: off->false, on->true, (default = false)
         paraview = 0; % Option for writing vtp files for paraview visualization.
+        
+        % addedMassMethod - option controlling how added mass forces are calculated
+        %  Must contain one of 'extrap' or 'iterate'. 
+        %
+        %  'extrap' : If 'extrap' is used, the added mass forces are
+        %    calculated using accelerations determined by extrapolation from
+        %    the previous time steps.
+        %
+        %  'iterate' : If 'iterate' is used, the added mass forces are
+        %    calculated by iterating the solution until the forces and
+        %    motions converge. 
+        %
+        %  The default is 'extrap' and generally this performs well,
+        %  however, if this results in unusual results such as rapid
+        %  oscillations in the added mass force, try the 'iterate' method.
+        %  The 'iterate' method will be considerably slower than the
+        %  'extrap' method.
+        %
+        addedMassMethod = 'extrap';
+        
         adjMassWeightFun = 2; % Weighting function for adjusting added mass term in the translational direction (default = 2)
         mcrCaseFile = []; % mat file that contain a list of the multiple conditions runs with given conditions  
         morrisonElement = 0; % Option for Morrison Element calculation: Off->'0', On->'1', (default = 0)
         viscousDamping = 1; % Option for Viscous Damping calculation: Off->'0', On->'1', (default = 1)
         linearDamping = 1; % Option for Linear Damping calculation: Off->'0', On->'1', (default = 1)
+        
+        % disableAddedMassForce - true/false flag for disabling the added
+        %  mass force calculation. This option is primarily intended for
+        %  debugging purposes. If true, the added mass forces will be set
+        %  to zero, although the adjustments to the mass and inertia will
+        %  still take place.
+        disableAddedMassForce = false;
         
 %         reloadH5Data = 0; % Option to re-load hydro data from hf5 file between runs: Off->'0', On->'1', (default = 0)
         
