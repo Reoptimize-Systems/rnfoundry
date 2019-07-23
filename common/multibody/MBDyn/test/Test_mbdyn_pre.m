@@ -1122,6 +1122,21 @@ law = mbdyn.pre.linearViscoElasticIsotropicConstituativeLaw (1, 'proportional', 
 
 law.generateMBDynInputString ()
 
+%% symbolicViscousConstituativeLaw
+
+law = mbdyn.pre.symbolicViscousConstituativeLaw ('eps', '1000.*eps + 5.*eps^3');
+
+law.generateMBDynInputString ()
+
+law = mbdyn.pre.symbolicViscousConstituativeLaw ( {'eps1', 'eps3', 'eps3'}, ...
+                                                  {'1000.*eps1 + 5.*eps1^3 - 10.*eps2*eps3', ...
+                                                   '1000.*eps2 + 5.*eps2^3 - 10.*eps3*eps1', ...
+                                                   '1000.*eps3 + 5.*eps3^3 - 10.*eps1*eps2'} );
+
+law.generateMBDynInputString ()
+
+
+
 %% beam3
 
 sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
