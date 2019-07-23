@@ -176,7 +176,11 @@ classdef waveSettings < handle
             %
             %    'etaImport' : Irregular Waves with predefined elevation
             %
-            %    
+            %    'sinForce' : Simple sinusoidal force specification with
+            %      all other hydrodynamic forces disabled except buoyancy.
+            %      This is intended for testing other parts of the system
+            %      the hydrodynamic simulation is component of.
+            %
             % Output
             %
             %  ws - wsim.waveSettings object
@@ -189,7 +193,8 @@ classdef waveSettings < handle
                                   'regularCIC', ...
                                   'irregular', ...
                                   'spectrumImport', ...
-                                  'etaImport' };
+                                  'etaImport', ...
+                                  'sinForce' };
                               
             check.allowedStringInputs ( wavetype, allowed_wave_strs, true, 'wavetype');
             
@@ -218,6 +223,9 @@ classdef waveSettings < handle
 
                 case 'etaImport'     % Waves with imported wave elevation time-history
                     obj.typeNum = 30;
+                    
+                case 'sinForce' % a simple sinusoidal force all other hydro forces disabled
+                    obj.typeNum = 40;
                     
                 otherwise
                     error ('Wave type not recognised, must be one of ')
@@ -333,6 +341,13 @@ classdef waveSettings < handle
                     obj.waveAmpTime2(:,1)   = [0:maxIt]*dt;
                     obj.waveAmpTime3        = zeros(maxIt+1,2);
                     obj.waveAmpTime3(:,1)   = [0:maxIt]*dt;
+                case {'sinForce'}
+                    if isempty(obj.w)
+                        obj.w = 2.*pi./obj.T;
+                    end
+                    obj.A = 1;
+                    obj.waveNumber(g)
+                    obj.waveElevReg(rampTime, dt, maxIt);
             end
         end
         
@@ -374,6 +389,10 @@ classdef waveSettings < handle
                 case 'etaImport'
                     fprintf( '\tWave Type                           = Waves with imported wave elevation time-history\n')
                     fprintf(['\tWave Elevation Time-Series File    	= ' obj.etaDataFile '  \n'])
+                case 'sinForce'
+                    fprintf( '\tWave Type                           = Simple sinusoidal excitation force with prescribed amplitude\n')
+                    fprintf( '\tPeak-to-peak force amplitude, F (N) = %s\n', num2str (obj.H))
+                    fprintf( '\tForce Period, Tp              (sec) = %s\n', num2str (obj.T))
             end
         end
         
@@ -402,10 +421,10 @@ classdef waveSettings < handle
                 end
             end
             % check waves types
-            types = {'noWave', 'noWaveCIC', 'regular', 'regularCIC', 'irregular', 'spectrumImport', 'etaImport'};
+            types = {'noWave', 'noWaveCIC', 'regular', 'regularCIC', 'irregular', 'spectrumImport', 'etaImport', 'sinForce'};
             if sum(strcmp(types,obj.type)) ~= 1
                 error(['Unexpected wave environment type setting, choose from: ' ...
-                    '"noWave", "noWaveCIC", "regular", "regularCIC", "irregular", "spectrumImport", and "etaImport".'])
+                    '"noWave", "noWaveCIC", "regular", "regularCIC", "irregular", "spectrumImport", "etaImport" and "sinForce".'])
             end               
         end
 
