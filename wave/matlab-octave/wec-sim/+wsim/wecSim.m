@@ -87,15 +87,16 @@ classdef wecSim < handle
         absForceTolerance;  % absolute tolerance on the forces for convergence
         absMomentTolerance; % absolute tolerance on the moments for convergence
         relForceTolerance;  % relative  tolerance on the forces for convergence
-
+        
+        mBDynSystem;
+        hydroSystem;
     end
 
     properties (GetAccess = private, SetAccess = private)
 
         ptoIndexMap;
         hydroNodeIndexMap;
-        mBDynSystem;
-        hydroSystem;
+        
         hydroMotionSyncStep = 1;
         hydroMotionSyncStepCount = 1;
         simStepCount;
