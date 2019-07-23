@@ -52,7 +52,7 @@ classdef structuralForce < mbdyn.pre.force
             % Input
             %
             %  node - mbdyn.pre.structuralNode object defining the
-            %   structural node to which the couple is applied.
+            %   structural node to which the force is applied.
             %
             %  force_type - string containing the type of force element.
             %   Can be 'absolute', 'follower' or 'total'. The absolute
