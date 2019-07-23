@@ -540,10 +540,12 @@ classdef body < nemoh.base
             
             options.Verbose = true;
             options.NPanelsTarget = self.defaultTargetPanels;
+            options.AdvancedCricleMesh = true;
             
             options = parse_pv_pairs (options, varargin);
             
             self.checkNumericScalar (zCoG, true, 'zCoG (Vertical Centre of Gravity)');
+            self.checkLogicalScalar (options.AdvancedCricleMesh, true, 'AdvancedCricleMesh')
             
             self.nPanelsTarget = options.NPanelsTarget;
             
@@ -582,7 +584,7 @@ classdef body < nemoh.base
             quadaddend = n - 1;
             
             % Create the vertices
-            if self.haveGIBBON && r(1) == 0
+            if options.AdvancedCricleMesh && self.haveGIBBON && r(1) == 0
                 % if the first point on the 2d curve is on the z axis, we
                 % must skip it and add a special quad circle mesh 
                 
@@ -602,7 +604,7 @@ classdef body < nemoh.base
                 
             end
             
-            if self.haveGIBBON && r(n) == 0
+            if options.AdvancedCricleMesh && self.haveGIBBON && r(n) == 0
                 
                 nodeaddend = nodeaddend - 1;
                 quadaddend = quadaddend - 1;
@@ -635,7 +637,7 @@ classdef body < nemoh.base
             end
 
             % make the bottom/top
-            if self.haveGIBBON && r(n) == 0
+            if options.AdvancedCricleMesh && self.haveGIBBON && r(n) == 0
                 
                 if z(1) > z(end)
                     revquads = true;
