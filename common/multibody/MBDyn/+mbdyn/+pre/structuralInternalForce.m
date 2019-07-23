@@ -25,21 +25,24 @@ classdef structuralInternalForce < mbdyn.pre.force
     methods
         
         function self = structuralInternalForce (node1, node2, force_type, force_value, varargin)
-            % structuralForce constructor
+            % structuralInternalForce constructor
             %
             % Syntax
             %
-            % sf = structuralForce (node, force_type, force_value)
-            % sf = structuralForce (..., 'Parameter', value)
+            % sf = structuralInternalForce (node1, node2, force_type, force_value)
+            % sf = structuralInternalForce (..., 'Parameter', value)
             %
             % Description
             %
-            % Applies a force to a structural node.
+            % Applies a force between two structural nodes.
             %
             % Input
             %
             %  node - mbdyn.pre.structuralNode object defining the
-            %   structural node to which the couple is applied.
+            %   first structural node to which the force is applied.
+            %
+            %  node - mbdyn.pre.structuralNode object defining the
+            %   second structural node to which the force is applied.
             %
             %  force_type - string containing the type of force element.
             %   Can be either 'absolute' or 'follower'. The absolute force
@@ -67,7 +70,7 @@ classdef structuralInternalForce < mbdyn.pre.force
             %
             % Output
             %
-            %  sf - mbdyn.pre.structuralForce object
+            %  sf - mbdyn.pre.structuralInternalForce object
             %
             %
             %
