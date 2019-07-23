@@ -271,6 +271,14 @@ classdef hydroBody < handle
         %
         radiationMethod;
         
+        % addedMassMethod - character vector with a description of the added mass method
+        %  Contains one of the following character vectors describing what
+        %  method will be used to calculated the added mass forces:
+        %
+        %     'extrapolate acceleration from previous steps'
+        %     'iterate' 
+        addedMassMethod;
+        
 %         hydroRestoringForceMethod;
         
         % freeSurfaceMethod - character vector indicating what fre surface method will be used
@@ -296,7 +304,13 @@ classdef hydroBody < handle
         hydroDataFile = '';          
         
         % hydroDataFileFullPath - full path to h5 or mat file containing the hydrodynamic data for the body
-        hydroDataFileFullPath = ''         
+        hydroDataFileFullPath = ''
+        
+        % disableAddedMassForce - true/false flag indicating whether to calculate added mass forces
+        %   If this is true, the added mass force will be set to always
+        %   return [ 0; 0; 0; 0; 0; 0 ]. It is generally intended for
+        %   debugging purposes only
+        disableAddedMassForce = false;
 
     end
 
@@ -307,6 +321,7 @@ classdef hydroBody < handle
 
         excitationMethodNum;
         radiationMethodNum;
+        addedMassMethodNum;
         hydroRestoringForceMethodNum;
         freeSurfaceMethodNum;
         diagViscDrag;
@@ -744,6 +759,16 @@ classdef hydroBody < handle
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 3;
                     
+                case {'sinForce'}
+                    obj.sinForceExcitation ();
+                    obj.zeroAddedMassAndDamping ();
+                    obj.excitationMethodNum = 4;
+                    
+                case {'sinForceCIC'}
+                    obj.sinForceExcitation ();
+                    obj.irfInfAddedMassAndDamping ();
+                    obj.excitationMethodNum = 4;
+                    
             end
 
             % store the description of the wave type for information later
@@ -1080,6 +1105,18 @@ classdef hydroBody < handle
             end
             
         end
+        
+        function sinForceExcitation (obj)
+            % Excitation with a specified sinusoidal force (for testing)
+            % Used by hydroForcePre
+
+            obj.hydroForce.fExt.re = zeros(1,6);
+            obj.hydroForce.fExt.im = zeros(1,6);
+            
+            % H is actually the magnitude of the force in this case
+            obj.hydroForce.fExt.re(3) = obj.waves.H (obj.bodyNumber)/2;
+            
+        end
 
         function irrExcitation (obj)
             % Irregular wave excitation force
@@ -1186,6 +1223,12 @@ classdef hydroBody < handle
                     
             end
         end
+        
+        function zeroAddedMassAndDamping (obj)
+            obj.hydroForce.fAddedMass = zeros(6,obj.lenJ);
+            obj.hydroForce.fDamping = zeros(6,obj.lenJ);
+            obj.hydroForce.totDOF  =zeros(6,obj.lenJ);
+        end
 
         function irfInfAddedMassAndDamping (obj)
             % Set radiation force properties using impulse response function
@@ -1211,14 +1254,14 @@ classdef hydroBody < handle
             if obj.bodyToBodyInteraction == true
                 for ii=1:6
                     for jj=1:obj.lenJ
-                        obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jj,:)), obj.simu.CTTime, 'spline');
+                        obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jj,:)), obj.simu.CTTime, 'spline', 0);
                     end
                 end
             else
                 for ii=1:6
                     for jj=1:obj.lenJ
                         jjj = (iBod-1)*6+jj;
-                        obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jjj,:)), obj.simu.CTTime, 'spline');
+                        obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jjj,:)), obj.simu.CTTime, 'spline', 0);
                     end
                 end
             end
@@ -1364,6 +1407,36 @@ classdef hydroBody < handle
             obj.simu = simu;
             obj.bodyNumber = bodynum;
             
+            % Wave type
+
+            % linear excitation type
+            if obj.waves.typeNum < 10
+                obj.excitationMethod = 'no waves';
+                obj.excitationMethodNum = 0;
+            elseif obj.waves.typeNum >= 10 && obj.waves.typeNum < 20
+                obj.excitationMethod = 'regular waves';
+                obj.excitationMethodNum = 1;
+            elseif obj.waves.typeNum >= 20 && obj.waves.typeNum < 30
+                obj.excitationMethod = 'irregular waves';
+                obj.excitationMethodNum = 2;
+            elseif obj.waves.typeNum >= 30
+                obj.excitationMethod = 'user defined waves';
+                obj.excitationMethodNum = 3;
+            elseif obj.waves.typeNum >= 40
+                obj.excitationMethod = 'simple sinusoidal force';
+                obj.excitationMethodNum = 4;
+                
+                obj.simu.nlHydro = 0;
+                obj.doLinearDamping = false;
+                obj.doViscousDamping = false;
+                obj.doMorrisonElementViscousDrag = false;
+                obj.doNonLinearFKExcitation = false;
+                obj.simu.nlHydro = 0;
+                obj.bodyToBodyInteraction = false;
+                
+            end
+            
+            
             % Linear Damping
             if obj.simu.linearDamping == 0
                 obj.doLinearDamping = false;
@@ -1383,23 +1456,6 @@ classdef hydroBody < handle
                 obj.doMorrisonElementViscousDrag = false;
             elseif obj.simu.morrisonElement == 1
                 obj.doMorrisonElementViscousDrag = true;
-            end
-
-            % Wave type
-
-            % linear excitation type
-            if obj.waves.typeNum < 10
-                obj.excitationMethod = 'no waves';
-                obj.excitationMethodNum = 0;
-            elseif obj.waves.typeNum >= 10 && obj.waves.typeNum < 20
-                obj.excitationMethod = 'regular waves';
-                obj.excitationMethodNum = 1;
-            elseif obj.waves.typeNum >= 20 && obj.waves.typeNum < 30
-                obj.excitationMethod = 'irregular waves';
-                obj.excitationMethodNum = 2;
-            elseif obj.waves.typeNum >= 30
-                obj.excitationMethod = 'user defined waves';
-                obj.excitationMethodNum = 3;
             end
 
             % nonlinear excitation type
@@ -1426,14 +1482,33 @@ classdef hydroBody < handle
                 % state space radiation forces
                 obj.radiationMethod = 'state space representation';
                 obj.radiationMethodNum = 2;
-            elseif obj.simu.ssCalc == 2
+            elseif obj.simu.ssCalc == 2 || (obj.waves.typeNum == 40)
                 % state space radiation forces
-                obj.radiationMethod = 'state space representation using external solver';
+                obj.radiationMethod = 'no radiation forces (or handled by external solver)';
                 obj.radiationMethodNum = 3;
             else
                 % convolution integral radiation forces
                 obj.radiationMethod = 'convolution integral';
                 obj.radiationMethodNum = 1;
+            end
+            
+            if simu.disableAddedMassForce == true
+                obj.disableAddedMassForce = true;
+            end
+            
+            switch lower (obj.simu.addedMassMethod)
+                
+                case 'extrap'
+                    obj.addedMassMethod = 'extrapolate acceleration from previous steps';
+                    obj.addedMassMethodNum = 0;
+                    
+                case 'iterate'
+                    obj.addedMassMethod = 'iterate';
+                    obj.addedMassMethodNum = 1;
+                    
+                otherwise
+                    error ('Unrecognised addedMassMethod');
+                    
             end
 
             % Body2Body
@@ -1760,12 +1835,12 @@ classdef hydroBody < handle
             breakdown.F_ExcitRamp = applyRamp (obj, t, breakdown.F_Excit);
 
             forces = breakdown.F_ExcitRamp ...
-                     - breakdown.F_ViscousDamping ...
-                     - breakdown.F_AddedMass ...
-                     - breakdown.F_Restoring ...
-                     - breakdown.F_RadiationDamping ...
-                     - breakdown.F_MorrisonElement ...
-                     - breakdown.F_LinearDamping;
+                     + breakdown.F_ViscousDamping ...
+                     + breakdown.F_AddedMass ...
+                     + breakdown.F_Restoring ...
+                     + breakdown.F_RadiationDamping ...
+                     + breakdown.F_MorrisonElement ...
+                     + breakdown.F_LinearDamping;
 
         end
 
@@ -1774,16 +1849,16 @@ classdef hydroBody < handle
 %             forces = obj.hydroForce.linearDamping * vel;
             % linear damping is always a diagonal matrix, so just multiply
             % the values along the diagonal
-            forces = obj.linearDamping(:) .* vel;
+            forces = -obj.linearDamping(:) .* vel;
             
         end
         
         function forces = viscousDamping (obj, vel)
 
             if obj.diagViscDrag
-                forces = obj.viscDragDiagVals(:) .* ( vel .* abs (vel) );
+                forces = -obj.viscDragDiagVals(:) .* ( vel .* abs (vel) );
             else
-                forces = obj.hydroForce.visDrag * ( vel .* abs (vel) );
+                forces = -obj.hydroForce.visDrag * ( vel .* abs (vel) );
             end
 
         end
@@ -1793,6 +1868,9 @@ classdef hydroBody < handle
             error ('Morrison Element Forces have not yet been implemented');
             
             % TODO: convert morrison element simulink models
+            
+            % remember that in original WEC-Sim fomrulation the forces are
+            % calculated in the opposite direction in the subfunctions
             switch obj.excitationMethodNum
 
                 case 0
@@ -1805,6 +1883,14 @@ classdef hydroBody < handle
 
                 case 2
                     % irregular wave
+                    forces = [0 0 0 0 0 0];
+                    
+                case 3
+                    % sinusoidal force
+                    forces = [0 0 0 0 0 0];
+                    
+                case 4
+                    % sinusoidal force with CIC
                     forces = [0 0 0 0 0 0];
 
             end
@@ -1851,7 +1937,7 @@ classdef hydroBody < handle
                     %
                     % where i = each frequency bin.
 
-                    % TOD: check correct dimension/orientation of force output
+                    % TODO: check correct dimension/orientation of force output
                     A1 = obj.waves.w * t + pi/2;
 
                     B1 = sin (A1 + obj.waves.phase);
@@ -1883,6 +1969,15 @@ classdef hydroBody < handle
 
                     error ('not yet implemented')
                     % TODO: make interpolation function for user defined waves, using ppval (C++ version)
+                    
+                case 4
+                    % sinusoidal force
+
+                    % Apply a simple sinusoidally varying force
+
+                    wt = obj.waves.w(obj.bodyNumber) .* t;
+
+                    forces = sin (wt) .* obj.hydroForce.fExt.re(1,:).';
 
             end
 
@@ -1928,44 +2023,55 @@ classdef hydroBody < handle
             %
 
             % matrix multiplication with acceleration
-            delay = 10e-8;
-            if t > (obj.simu.startTime + delay)
+            switch obj.addedMassMethodNum
                 
-                if obj.stepCount > 2
-                    % extrapolate acceleration from previous time steps
-%                     thisaccel = interp1 (obj.timeStepHist', obj.accelHist, t-delay, 'linear', 'extrap');
+                case 0
+                    
+                    delay = 10e-8;
+                    if t > (obj.simu.startTime + delay) && ~obj.disableAddedMassForce
 
-%                     thisaccel = zeros (size (obj.accelHist,2), 1);
-%                     for ind = 1:numel (thisaccel)
-% %                         thisaccel(ind) = obj.lagrangeinterp (obj.timeStepHist',obj.accelHist(:,ind),t-delay);
-% 
-%                         p = polyfit (obj.timeStepHist(end-1:end)', obj.accelHist(end-1:end,ind), 1);
-%                         thisaccel(ind) = polyval (p, t-delay);
-%                     end
+                        if obj.stepCount > 2
+                            % extrapolate acceleration from previous time steps
+        %                     thisaccel = interp1 (obj.timeStepHist', obj.accelHist, t-delay, 'linear', 'extrap');
 
-                thisaccel = obj.linearInterp ( obj.timeStepHist(end-1), ...
-                                               obj.timeStepHist(end), ...
-                                               obj.accelHist(end-1,:), ...
-                                               obj.accelHist(end,:), ...
-                                               t-delay );
+        %                     thisaccel = zeros (size (obj.accelHist,2), 1);
+        %                     for ind = 1:numel (thisaccel)
+        % %                         thisaccel(ind) = obj.lagrangeinterp (obj.timeStepHist',obj.accelHist(:,ind),t-delay);
+        % 
+        %                         p = polyfit (obj.timeStepHist(end-1:end)', obj.accelHist(end-1:end,ind), 1);
+        %                         thisaccel(ind) = polyval (p, t-delay);
+        %                     end
+
+                        thisaccel = obj.linearInterp ( obj.timeStepHist(end-1), ...
+                                                       obj.timeStepHist(end), ...
+                                                       obj.accelHist(end-1,:), ...
+                                                       obj.accelHist(end,:), ...
+                                                       t-delay );
+
+                        elseif obj.stepCount == 2
+
+                            thisaccel = interp1 ( obj.timeStepHist(end-obj.stepCount+1:end)', ....
+                                                  obj.accelHist(end-obj.stepCount+1:end,:), ...
+                                                  t - delay, ...
+                                                  'linear', 'extrap' );
+
+                        elseif obj.stepCount == 1
+
+                            thisaccel = obj.accelHist (end,:)';
+
+                        end
+
+                        F_AddedMass = obj.hydroForce.fAddedMass * thisaccel(:);
+        %                 F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
+                    else
+                        F_AddedMass = [0;0;0;0;0;0];
+                    end
+            
+                case 1
                     
-                elseif obj.stepCount == 2
+                    % slower, but mbdyn will iterate to get the right force
+                    F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
                     
-                    thisaccel = interp1 ( obj.timeStepHist(end-obj.stepCount+1:end)', ....
-                                          obj.accelHist(end-obj.stepCount+1:end,:), ...
-                                          t - delay, ...
-                                          'linear', 'extrap' );
-                                      
-                elseif obj.stepCount == 1
-                    
-                    thisaccel = obj.accelHist (end,:)';
-                    
-                end
-                
-                F_AddedMass = obj.hydroForce.fAddedMass * thisaccel(:);
-%                 F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
-            else
-                F_AddedMass = [0;0;0;0;0;0];
             end
 
             switch obj.radiationMethodNum
@@ -1996,6 +2102,9 @@ classdef hydroBody < handle
                     F_RadiationDamping = [0;0;0;0;0;0];
 
             end
+            
+            F_RadiationDamping = -F_RadiationDamping;
+            F_AddedMass = -F_AddedMass;
 
         end
         
@@ -2062,6 +2171,9 @@ classdef hydroBody < handle
                     forces = -forces + [ 0; 0; (obj.simu.g .* obj.hydroForce.storage.mass); 0; 0; 0 ];
 
             end
+            
+            % correct the force direction
+            forces = -forces;
 
         end
         
@@ -2560,7 +2672,7 @@ classdef hydroBody < handle
                         jj = j;
                     end
                     iam = obj.hydroForce.fAddedMass(i,jj);
-                    tmp = tmp + acc(:,j) .* iam;
+                    tmp = tmp + acc(:,j) .* -iam;
                 end
                 fam(:,i) = tmp;
             end
@@ -2598,7 +2710,7 @@ classdef hydroBody < handle
                 fprintf(fid,'        <DataArray type="Float32" NumberOfComponents="3" format="ascii">\n');
                 for ii = 1:numVertex
                     fprintf(fid, '          %5.5f %5.5f %5.5f\n', vertex_mod(ii,:));
-                end;
+                end
                 clear vertex_mod
                 fprintf(fid,'        </DataArray>\n');
                 fprintf(fid,'      </Points>\n');
@@ -2607,14 +2719,14 @@ classdef hydroBody < handle
                 fprintf(fid,'        <DataArray type="Int32" Name="connectivity" format="ascii">\n');
                 for ii = 1:numFace
                     fprintf(fid, '          %i %i %i\n', face(ii,:)-1);
-                end;
+                end
                 fprintf(fid,'        </DataArray>\n');
                 fprintf(fid,'        <DataArray type="Int32" Name="offsets" format="ascii">\n');
                 fprintf(fid, '         ');
                 for ii = 1:numFace
                     n = ii * 3;
                     fprintf(fid, ' %i', n);
-                end;
+                end
                 fprintf(fid, '\n');
                 fprintf(fid,'        </DataArray>\n');
                 fprintf(fid, '      </Polys>\n');
@@ -2624,7 +2736,7 @@ classdef hydroBody < handle
                 fprintf(fid,'        <DataArray type="Float32" Name="Cell Area" NumberOfComponents="1" format="ascii">\n');
                 for ii = 1:numFace
                     fprintf(fid, '          %i', cellareas(ii));
-                end;
+                end
                 fprintf(fid, '\n');
                 fprintf(fid,'        </DataArray>\n');
                 % Hydrostatic Pressure
@@ -2632,7 +2744,7 @@ classdef hydroBody < handle
                     fprintf(fid,'        <DataArray type="Float32" Name="Hydrostatic Pressure" NumberOfComponents="1" format="ascii">\n');
                     for ii = 1:numFace
                         fprintf(fid, '          %i', hspressure.signals.values(it,ii));
-                    end;
+                    end
                     fprintf(fid, '\n');
                     fprintf(fid,'        </DataArray>\n');
                 end
@@ -2641,7 +2753,7 @@ classdef hydroBody < handle
                     fprintf(fid,'        <DataArray type="Float32" Name="Wave Pressure NonLinear" NumberOfComponents="1" format="ascii">\n');
                     for ii = 1:numFace
                         fprintf(fid, '          %i', wavenonlinearpressure.signals.values(it,ii));
-                    end;
+                    end
                     fprintf(fid, '\n');
                     fprintf(fid,'        </DataArray>\n');
                 end
@@ -2650,7 +2762,7 @@ classdef hydroBody < handle
                     fprintf(fid,'        <DataArray type="Float32" Name="Wave Pressure Linear" NumberOfComponents="1" format="ascii">\n');
                     for ii = 1:numFace
                         fprintf(fid, '          %i', wavelinearpressure.signals.values(it,ii));
-                    end;
+                    end
                     fprintf(fid, '\n');
                     fprintf(fid,'        </DataArray>\n');
                 end
