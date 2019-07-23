@@ -12,7 +12,16 @@ classdef postproc < handle
 %  loadResultsFromFiles - loads mbdyn output data
 %  clear - clears all data (loaded by loadResultsFromFiles)
 %  plotNodeTrajectories - create plot of the trajectories of all or a
-%     subset of nodes
+%    subset of nodes
+%  plotNodeAngularVelocities - plot the angular velocities of the nodes
+%  plotNodePositions - plot the positions of the nodes
+%  plotNodeTrajectories - plot the trajectories of the nodes
+%  plotNodeVelocities - plot the velocities of the nodes
+%  availableNetCDFOutput - get the output avaialble in the netcdf file (if
+%    it exists)
+%  displayNetCDFVarNames - display the names of variables in the netcdf
+%    file on the command line
+%  getNetCDFVariable - get the contents of a variable stored in the netcdf file
 %  drawStep - draw the system at the given time step index
 %  animate - animate the system
 %
@@ -830,7 +839,7 @@ classdef postproc < handle
             
         end
         
-        function [ names, info ] = availableOutput (self)
+        function [ names, info ] = availableNetCDFOutput (self)
             % gets information on the available output in the mbdyn netcdf file
             %
             % Syntax
@@ -851,7 +860,7 @@ classdef postproc < handle
             %
             % Syntax
             
-            [ names, info ] = availableOutput (self);
+            [ names, info ] = availableNetCDFOutput (self);
 
             for ind = 1:numel (names)
                 
@@ -960,7 +969,53 @@ classdef postproc < handle
         function var = getNetCDFVariable (self, component, quantity)
             % gets the contents of a variable from the mbdyn netcdf output file
             %
-            % 
+            % Syntax
+            %
+            % var = getNetCDFVariable (mbp, component)
+            % var = getNetCDFVariable (mbp, component, quantity)
+            %
+            % Description
+            %
+            % getNetCDFVariable loads data from the netcdf file created by
+            % MBDyn. If not netcdf file is available then an error will be
+            % thrown. The displayNetCDFVarNames method can be useful to
+            % discover the names used for quantities in the netcdf file for
+            % use with getNetCDFVariable.
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  component - either a character vector, an mbdyn.pre.element
+            %    object, or an mbdyn.pre.node object. If it is a character
+            %    vector it must be the full name of a variable in the
+            %    netcdf file, including the specifi quantity to be output
+            %    e.g. 'elem.joint.12.F'. In this case contnets of
+            %    "quantity" will be ignored. e.g.
+            %
+            %    var = getNetCDFVariable (mbp, 'elem.joint.12.F');
+            %
+            %    If component is an mbdyn.pre.element object, or an
+            %    mbdyn.pre.node object then these must be objects which
+            %    were used to create the system using mbdyn.pre.system, or
+            %    at least have the correct labels in their "label"
+            %    properties. "quantity" must then contain a string
+            %    indicating what quantity should be loaded, e.g:
+            %
+            %    var = getNetCDFVariable (mbp, joint_obj, 'F')
+            %
+            %  quantity - character vecto indicating what variable is to be
+            %    returned when "component" contains an mbdyn.pre.element
+            %    object, or an mbdyn.pre.node object.
+            %
+            % Output
+            %
+            %  var - the contents of the variable loaded from the output
+            %    netcdf file.
+            %
+            %
+            % See also: mbdyn.postproc.displayNetCDFVarNames
+            %
             
             if ~self.haveNetCDF
                 error ('No netcdf file is available for plotting')
@@ -1637,18 +1692,23 @@ classdef postproc < handle
         end
         
         function [ hax, hplot, hfig ] = plotNodeQuantity (self, fieldname, legprefix, varargin)
-            % plot the positions of the nodes
+            % plot a variable associated with each node
             %
             % Syntax
             %
-            % hax = plotNodePositions (mbp, 'Parameter', value, ...)
+            % hax = plotNodeQuantity (mbp, fieldname, legprefix, 'Parameter', value, ...)
             %
             % Input
             %
             %  mbp - mbdyn.postproc object
             %
-            %  Addtional optional arguments are supplied as paramter-value
-            %  pairs. The avaialable options are:
+            %  fieldname - character vector containing the name of the
+            %    variable associated with each node which is to be plotted
+            %
+            %  legprefix - prefix for legend entries
+            %
+            % Addtional optional arguments are supplied as parameter-value
+            % pairs. The avaialable options are:
             %
             %  'Legend' - flag determining whether to add a legend to the
             %    position plot. Default is true.
@@ -1659,6 +1719,10 @@ classdef postproc < handle
             %  'OnlyNodes' - vector of indices of nodes to plot, only these
             %    nodes will have their positions plotted. By default all
             %    node trajectories are plotted.
+            %
+            %  'PlotAxes' - handle to the axes in which to perform the
+            %    plot. Default is empty in which case a new figure and axes
+            %    are created.
             %
             % Output
             %
