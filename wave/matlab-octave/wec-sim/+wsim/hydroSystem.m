@@ -598,7 +598,7 @@ classdef hydroSystem < handle
             %    WaveLinearPressure : 
             %
             
-            forces = nan * ones (6, self.simu.numWecBodies );
+            forces = nan (self.hydroBodies(1).dof, self.simu.numWecBodies);
             
             for bodyind = 1:numel(self.hydroBodies)
                 [forces(:,bodyind), bodybreakdown] ...

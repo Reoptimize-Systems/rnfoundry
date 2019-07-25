@@ -101,6 +101,18 @@ classdef hydroBody < handle
         
         % Displaced volume at equilibrium position in m^3. This is obtained from the h5 or mat file.
         dispVol = [];
+
+        % dof - Number of DOFs. For WEC bodies this is given in the h5 file. IF not, default is 6
+        dof = []      
+
+        % dof_gbm - Number of DOFs for GBM.
+        dof_gbm = []                                                  
+
+        % dof_start - Index of DOF starts. For WEC bodies this is given in the h5 file. IF not, default is (bodyNumber-1)*6+1
+        dof_start = []                             
+
+        % dof_end - Index of DOF ends. For WEC bodies this is given in the h5 file. IF not, default is (bodyNumber-1)*6+6                                            
+        dof_end = []                                                  
         
     end
 
@@ -225,8 +237,14 @@ classdef hydroBody < handle
         % bodyTotal - Total number of hydro bodies in the wsim.hydroSystem
         bodyTotal = [];
         
-        % lenJ - Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
-        lenJ = [];  
+        % totalLenDOF - Matrices length. 6 for no body-to-body interactions. 6*numBodies if body-to-body interactions.
+        totalLenDOF = [];  
+
+        % flexHydroBody - Flag for flexible body. 
+        flexHydroBody     = 0                                                   
+
+        % meanDriftForce - Flag for mean drift force. 0: No; 1: from control surface; 2: from momentum conservation.
+        meanDriftForce    = 0
     end
 
     properties (SetAccess = protected, GetAccess = public) % internal
@@ -357,6 +375,9 @@ classdef hydroBody < handle
         
         % wave elevation
         oldElev;
+        
+        % For storing mean drift force which doesn't change during sim: waves.A(1,:) .* waves.A(1,:) .* body.hydroForce.fExt.md(1,:)
+        meanDriftForcePreCalc;
 
     end
 
@@ -499,6 +520,16 @@ classdef hydroBody < handle
             obj.hydroData.properties.cg = h5read(filename,[body_name '/properties/cg']);
             obj.hydroData.properties.cb = h5read(filename,[body_name '/properties/cb']);
             obj.hydroData.properties.disp_vol = h5read(filename,[body_name '/properties/disp_vol']);
+            obj.hydroData.properties.dof       = 6;
+            obj.hydroData.properties.dof_start = (obj.bodyNumber-1)*6+1;
+            obj.hydroData.properties.dof_end   = (obj.bodyNumber-1)*6+6;
+            try obj.hydroData.properties.dof       = h5read(filename,[name '/properties/dof']);       end
+            try obj.hydroData.properties.dof_start = h5read(filename,[name '/properties/dof_start']); end
+            try obj.hydroData.properties.dof_end   = h5read(filename,[name '/properties/dof_end']);   end
+            obj.dof       = obj.hydroData.properties.dof;
+            obj.dof_start = obj.hydroData.properties.dof_start;
+            obj.dof_end   = obj.hydroData.properties.dof_end;
+            obj.dof_gbm   = obj.dof-6;
             obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/linear_restoring_stiffness']);
             obj.hydroData.hydro_coeffs.excitation.re = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/re']);
             obj.hydroData.hydro_coeffs.excitation.im = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/im']);
@@ -514,7 +545,24 @@ classdef hydroBody < handle
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/B/all']); end %#ok<TRYNC>
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/C/all']); end %#ok<TRYNC>
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/D/all']); end %#ok<TRYNC>
+            try tmp = wsim.bemio.h5load(filename, [body_name '/properties/mass']);
+                obj.hydroData.gbm.mass      = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
+            try tmp = wsim.bemio.h5load(filename, [body_name '/properties/stiffness']);
+                obj.hydroData.gbm.stiffness = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
+            try tmp = wsim.bemio.h5load(filename, [body_name '/properties/damping']);
+                obj.hydroData.gbm.damping   = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp;end;
+            try obj.hydroData.hydro_coeffs.mean_drift_control_surface = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/control_surface/val']); end
+            try obj.hydroData.hydro_coeffs.mean_drift_momentum_conservation = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/momentum_conservation/val']); end
             
+            if obj.meanDriftForce == 0
+                obj.hydroData.hydro_coeffs.mean_drift = 0.*obj.hydroData.hydro_coeffs.excitation.re;
+            elseif obj.meanDriftForce == 1
+                obj.hydroData.hydro_coeffs.mean_drift = obj.hydroData.hydro_coeffs.mean_drift_control_surface;
+            elseif obj.meanDriftForce == 2
+                obj.hydroData.hydro_coeffs.mean_drift = obj.hydroData.hydro_coeffs.mean_drift_momentum_conservation;
+            else
+                error('Wrong flag for mean drift force.')
+            end
         end
 
         function loadHydroData (obj, hydroData)
@@ -590,6 +638,10 @@ classdef hydroBody < handle
                 obj.cb        = hydroData.properties.cb';
                 obj.dispVol   = hydroData.properties.disp_vol;
                 obj.name      = hydroData.properties.name;
+                obj.dof       = obj.hydroData.properties.dof;
+                obj.dof_start = obj.hydroData.properties.dof_start;
+                obj.dof_end   = obj.hydroData.properties.dof_end;
+                obj.dof_gbm   = obj.dof-6;
                 
             else
                 
@@ -679,8 +731,18 @@ classdef hydroBody < handle
             rho = obj.simu.rho;
             g = obj.simu.g;
             
-            obj.setMassMatrix(rho, obj.simu.nlHydro)
+            if obj.meanDriftForce == 0
+                obj.hydroData.hydro_coeffs.mean_drift = 0 .* obj.hydroData.hydro_coeffs.excitation.re;
+            elseif obj.meanDriftForce == 1
+                obj.hydroData.hydro_coeffs.mean_drift = obj.hydroData.hydro_coeffs.mean_drift_control_surface;
+            elseif obj.meanDriftForce == 2
+                obj.hydroData.hydro_coeffs.mean_drift = obj.hydroData.hydro_coeffs.mean_drift_momentum_conservation;
+            else
+                error('meanDriftForce must be an integer value: 0, 1 or 2')
+            end
             
+            obj.setMassMatrix(rho, obj.simu.nlHydro)
+            gbmDOF = obj.dof_gbm;
             % check if obj.hydroStiffness is defined directly
             if ischar (obj.hydroStiffness)
                 if strcmpi (obj.hydroStiffness, 'zero')
@@ -722,7 +784,7 @@ classdef hydroBody < handle
             obj.hydroForce.linearDamping = diag (obj.linearDamping);
             
             % initialize userDefinedFe for non user-defined cases
-            obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)),6);
+            obj.hydroForce.userDefinedFe = zeros (length (obj.waves.waveAmpTime(:,2)), obj.dof);
             
             switch obj.waves.type
                 case {'noWave'}
@@ -773,6 +835,31 @@ classdef hydroBody < handle
 
             % store the description of the wave type for information later
             obj.excitationMethod = obj.waves.type;
+            
+            % precalculate the constant mean drift force
+            obj.meanDriftForcePreCalc = (obj.waves.A(1,:) .* obj.waves.A(1,:) .* obj.hydroForce.fExt.md(1,:))';
+
+            if (gbmDOF > 0)
+                
+                obj.linearDamping = [obj.linearDamping(1:6), zeros(1,obj.dof_gbm)];
+                
+                obj.hydroForce.gbm.stiffness=obj.hydroData.gbm.stiffness;
+                obj.hydroForce.gbm.damping=obj.hydroData.gbm.damping;
+                obj.hydroForce.gbm.mass_ff=obj.hydroForce.fAddedMass(7:obj.dof,obj.dof_start+6:obj.dof_end)+obj.hydroData.gbm.mass;   % need scaling for hydro part
+                obj.hydroForce.fAddedMass(7:obj.dof,obj.dof_start+6:obj.dof_end) = 0;
+                obj.hydroForce.gbm.mass_ff_inv=inv(obj.hydroForce.gbm.mass_ff);
+                
+                % state-space formulation for solving the GBM
+                obj.hydroForce.gbm.state_space.A = [zeros(gbmDOF,gbmDOF),...
+                    eye(gbmDOF,gbmDOF);...  % move to ... hydroForce sector with scaling .
+                    -inv(obj.hydroForce.gbm.mass_ff)*obj.hydroForce.gbm.stiffness,-inv(obj.hydroForce.gbm.mass_ff)*obj.hydroForce.gbm.damping];             % or create a new fun for all flex parameters
+                obj.hydroForce.gbm.state_space.B = eye(2*gbmDOF,2*gbmDOF);
+                obj.hydroForce.gbm.state_space.C = eye(2*gbmDOF,2*gbmDOF);
+                obj.hydroForce.gbm.state_space.D = zeros(2*gbmDOF,2*gbmDOF);
+                obj.flexHydroBody = 1;
+            end
+            
+            
 
         end
 
@@ -1073,19 +1160,23 @@ classdef hydroBody < handle
 
         function noExcitation (obj)
             % Set excitation force for no excitation case
-            obj.hydroForce.fExt.re=zeros(1,6);
-            obj.hydroForce.fExt.im=zeros(1,6);
+            nDOF = obj.dof;
+            obj.hydroForce.fExt.re=zeros(1,nDOF);
+            obj.hydroForce.fExt.im=zeros(1,nDOF);
         end
 
         function regExcitation (obj)
             % Regular wave excitation force
             % Used by hydroForcePre
+            nDOF = obj.dof;
             re = obj.hydroData.hydro_coeffs.excitation.re(:,:,:) .* obj.simu.rho .* obj.simu.g;
             im = obj.hydroData.hydro_coeffs.excitation.im(:,:,:) .* obj.simu.rho .* obj.simu.g;
-            obj.hydroForce.fExt.re = zeros(1,6);
-            obj.hydroForce.fExt.im = zeros(1,6);
-            
-            for ii=1:6
+            md = obj.hydroData.hydro_coeffs.mean_drift(:,:,:)    .* obj.simu.rho .* obj.simu.g;
+            obj.hydroForce.fExt.re = zeros(1,nDOF);
+            obj.hydroForce.fExt.im = zeros(1,nDOF);
+            obj.hydroForce.fExt.md=zeros(1,nDOF);
+
+            for ii=1:nDOF
                 
                 if length(obj.hydroData.simulation_parameters.wave_dir) > 1
                     
@@ -1094,11 +1185,12 @@ classdef hydroBody < handle
                     
                     obj.hydroForce.fExt.re(ii) = interp2 (X, Y, squeeze(re(ii,:,:)), obj.waves.w, obj.waves.waveDir);
                     obj.hydroForce.fExt.im(ii) = interp2 (X, Y, squeeze(im(ii,:,:)), obj.waves.w, obj.waves.waveDir);
-                    
+                    obj.hydroForce.fExt.md(ii) = interp2(X, Y, squeeze(md(ii,:,:)), obj.waves.w, obj.waves.waveDir);
                 elseif obj.hydroData.simulation_parameters.wave_dir == obj.waves.waveDir
                     
                     obj.hydroForce.fExt.re(ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(re(ii,1,:)), obj.waves.w, 'spline');
                     obj.hydroForce.fExt.im(ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(im(ii,1,:)), obj.waves.w, 'spline');
+                    obj.hydroForce.fExt.md(ii) = interp1(obj.hydroData.simulation_parameters.w,squeeze(md(ii,1,:)), obj.waves.w,'spline');
                     
                 end
                 
@@ -1121,13 +1213,16 @@ classdef hydroBody < handle
         function irrExcitation (obj)
             % Irregular wave excitation force
             % Used by hydroForcePre
+            nDOF = obj.dof;
             re = obj.hydroData.hydro_coeffs.excitation.re(:,:,:) .* obj.simu.rho .* obj.simu.g;
             im = obj.hydroData.hydro_coeffs.excitation.im(:,:,:) .* obj.simu.rho .* obj.simu.g;
-            
-            obj.hydroForce.fExt.re = zeros (obj.waves.numFreq, 6);
-            obj.hydroForce.fExt.im = zeros (obj.waves.numFreq, 6);
-            
-            for ii=1:6
+            md = obj.hydroData.hydro_coeffs.mean_drift(:,:,:)    .* obj.simu.rho .* obj.simu.g;
+
+            obj.hydroForce.fExt.re = zeros (obj.waves.numFreq, nDOF);
+            obj.hydroForce.fExt.im = zeros (obj.waves.numFreq, nDOF);
+            obj.hydroForce.fExt.md = zeros(length(obj.waves.waveDir), obj.waves.numFreq, nDOF);
+
+            for ii=1:nDOF
                 if length (obj.hydroData.simulation_parameters.wave_dir) > 1
                     
                     [X,Y] = meshgrid (obj.hydroData.simulation_parameters.w, ...
@@ -1136,12 +1231,16 @@ classdef hydroBody < handle
                     obj.hydroForce.fExt.re(:,ii) = interp2 (X, Y, squeeze(re(ii,:,:)), obj.waves.w, obj.waves.waveDir);
                     
                     obj.hydroForce.fExt.im(:,ii) = interp2 (X, Y, squeeze(im(ii,:,:)), obj.waves.w, obj.waves.waveDir);
-                    
+
+                    obj.hydroForce.fExt.md(:,:,ii) = interp2(X, Y, squeeze(md(ii,:,:)), obj.waves.w, obj.waves.waveDir);
+
                 elseif obj.hydroData.simulation_parameters.wave_dir == obj.waves.waveDir
                     
                     obj.hydroForce.fExt.re(:,ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(re(ii,1,:)), obj.waves.w, 'spline');
                     
                     obj.hydroForce.fExt.im(:,ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(im(ii,1,:)), obj.waves.w, 'spline');
+
+                    obj.hydroForce.fExt.md(:,:,ii) = interp1 (obj.hydroData.simulation_parameters.w, squeeze(md(ii,1,:)), obj.waves.w, 'spline');
                     
                 end
             end
@@ -1150,11 +1249,13 @@ classdef hydroBody < handle
         function userDefinedExcitation (obj, waveAmpTime)
             % Calculated User-Defined wave excitation force with non-causal
             % convolution Used by hydroForcePre
+            nDOF = obj.dof;
+
             kf = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f .* obj.simu.rho .* obj.simu.g;
             kt = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t;
             t =  min(kt):obj.simu.dt:max(kt);
             
-            for ii = 1:6
+            for ii = 1:nDOF
                 
                 if length (obj.hydroData.simulation_parameters.wave_dir) > 1
                     
@@ -1178,9 +1279,9 @@ classdef hydroBody < handle
                 
             end
             
-            obj.hydroForce.fExt.re = zeros(1,6);
-            obj.hydroForce.fExt.im = zeros(1,6);
-            
+            obj.hydroForce.fExt.re = zeros(1,nDOF);
+            obj.hydroForce.fExt.im = zeros(1,nDOF);
+            obj.hydroForce.fExt.md = zeros(1,nDOF);
         end
 
         function constAddedMassAndDamping (obj)
@@ -1196,26 +1297,26 @@ classdef hydroBody < handle
             end
             % Change matrix size: B2B [6x6n], noB2B [6x6]
             if obj.bodyToBodyInteraction == true
-                
-                obj.hydroForce.fAddedMass = zeros(6,obj.lenJ);
-                obj.hydroForce.fDamping = zeros(6,obj.lenJ);
-                obj.hydroForce.totDOF  =zeros(6,obj.lenJ);
+                LDOF = 6*obj.bodyTotal;
+                obj.hydroForce.fAddedMass = zeros(6,LDOF);
+                obj.hydroForce.fDamping = zeros(6,LDOF);
+                obj.hydroForce.totDOF  =zeros(6,LDOF);
                 for ii=1:6
-                    for jj=1:obj.lenJ
+                    for jj=1:LDOF
                         obj.hydroForce.fAddedMass(ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(am(ii,jj,:)), obj.waves.w, 'spline');
                         obj.hydroForce.fDamping  (ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jj,:)), obj.waves.w, 'spline');
                     end
                 end
                     
             else
+                nDOF = obj.dof;
+                obj.hydroForce.fAddedMass = zeros(nDOF,nDOF);
+                obj.hydroForce.fDamping = zeros(nDOF,nDOF);
+                obj.hydroForce.totDOF  =zeros(nDOF,nDOF);
 
-                obj.hydroForce.fAddedMass = zeros(6,obj.lenJ);
-                obj.hydroForce.fDamping = zeros(6,obj.lenJ);
-                obj.hydroForce.totDOF  =zeros(6,obj.lenJ);
-
-                for ii=1:6
-                    for jj=1:obj.lenJ
-                        jjj = 6*(obj.bodyNumber-1)+jj;
+                for ii=1:nDOF
+                    for jj=1:nDOF
+                        jjj = obj.dof_start-1+jj;
                         obj.hydroForce.fAddedMass(ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(am(ii,jjj,:)), obj.waves.w, 'spline');
                         obj.hydroForce.fDamping  (ii,jj) = interp1 (obj.hydroData.simulation_parameters.w,squeeze(rd(ii,jjj,:)), obj.waves.w, 'spline');
                     end
@@ -1225,9 +1326,10 @@ classdef hydroBody < handle
         end
         
         function zeroAddedMassAndDamping (obj)
-            obj.hydroForce.fAddedMass = zeros(6,obj.lenJ);
-            obj.hydroForce.fDamping = zeros(6,obj.lenJ);
-            obj.hydroForce.totDOF  =zeros(6,obj.lenJ);
+            LDOF = 6*obj.bodyTotal;
+            obj.hydroForce.fAddedMass = zeros (6, LDOF);
+            obj.hydroForce.fDamping = zeros (6, LDOF);
+            obj.hydroForce.totDOF  = zeros (6, LDOF);
         end
 
         function irfInfAddedMassAndDamping (obj)
@@ -1236,31 +1338,31 @@ classdef hydroBody < handle
             % Added mass at infinite frequency
             % Convolution integral raditation damping
             % State space formulation
-            
-            iBod = obj.bodyNumber;
-            
+            nDOF = obj.dof;
+            LDOF = obj.totalLenDOF;
+
             % Convolution integral formulation
             if obj.bodyToBodyInteraction == true
                 obj.hydroForce.fAddedMass = obj.hydroData.hydro_coeffs.added_mass.inf_freq .* obj.simu.rho;
             else
-                obj.hydroForce.fAddedMass = obj.hydroData.hydro_coeffs.added_mass.inf_freq(1:6,(iBod-1)*6+1:(iBod-1)*6+6) .* obj.simu.rho;
+                obj.hydroForce.fAddedMass = obj.hydroData.hydro_coeffs.added_mass.inf_freq(:,obj.dof_start:obj.dof_end) .* obj.simu.rho;
             end
             
             % Radition IRF
-            obj.hydroForce.fDamping=zeros(6,obj.lenJ);
+            obj.hydroForce.fDamping=zeros(nDOF,LDOF);
             irfk = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K .* obj.simu.rho;
             irft = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t;
-            %obj.hydroForce.irkb=zeros(CIkt,6,obj.lenJ);
+            %obj.hydroForce.irkb=zeros(CIkt,6,obj.totalLenDOF);
             if obj.bodyToBodyInteraction == true
-                for ii=1:6
-                    for jj=1:obj.lenJ
+                for ii=1:nDOF
+                    for jj=1:LDOF
                         obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jj,:)), obj.simu.CTTime, 'spline', 0);
                     end
                 end
             else
-                for ii=1:6
-                    for jj=1:obj.lenJ
-                        jjj = (iBod-1)*6+jj;
+                for ii=1:nDOF
+                    for jj=1:LDOF
+                        jjj = obj.dof_start-1+jj;
                         obj.hydroForce.irkb(:,ii,jj) = interp1 (irft,squeeze(irfk(ii,jjj,:)), obj.simu.CTTime, 'spline', 0);
                     end
                 end
@@ -1270,9 +1372,9 @@ classdef hydroBody < handle
                 
                 if obj.bodyToBodyInteraction == true
                     
-                    for ii = 1:6
+                    for ii = 1:nDOF
                         
-                        for jj = 1:obj.lenJ
+                        for jj = 1:LDOF
                             
                             arraySize = obj.hydroData.hydro_coeffs.radiation_damping.state_space.it(ii,jj);
                             
@@ -1299,15 +1401,15 @@ classdef hydroBody < handle
                         
                     end
                     
-                    obj.hydroForce.ssRadf.D = zeros (6,obj.lenJ);
+                    obj.hydroForce.ssRadf.D = zeros (nDOF,LDOF);
                     
                 else
                     
-                    for ii = 1:6
+                    for ii = 1:nDOF
                         
-                        for jj = (iBod-1)*6+1:(iBod-1)*6+6
+                        for jj = obj.dof_start:obj.dof_end
                             
-                            jInd = jj-(iBod-1)*6;
+                            jInd = jj-obj.dof_start+1;
                             
                             arraySize = obj.hydroData.hydro_coeffs.radiation_damping.state_space.it(ii,jj);
                             
@@ -1329,13 +1431,13 @@ classdef hydroBody < handle
                         
                     end
                     
-                    obj.hydroForce.ssRadf.D = zeros (6,6);
+                    obj.hydroForce.ssRadf.D = zeros (nDOF,nDOF);
                 end
                 
                 obj.hydroForce.ssRadf.A = Af;
                 obj.hydroForce.ssRadf.B = Bf;
                 obj.hydroForce.ssRadf.C = Cf .* obj.simu.rho;
-                
+
             end
         end
 
@@ -1524,9 +1626,9 @@ classdef hydroBody < handle
             obj.bodyTotal = obj.simu.numWecBodies;
             
             if obj.bodyToBodyInteraction == true
-                obj.lenJ = 6*obj.bodyTotal;
+                obj.totalLenDOF = 6*obj.bodyTotal;
             else
-                obj.lenJ = 6;
+                obj.totalLenDOF = 6;
             end
             
             % now do the hydro force preprocessing
@@ -1538,7 +1640,7 @@ classdef hydroBody < handle
                 % reset the radiation force convolution integral related states
                 obj.CIdt = obj.simu.CTTime(2) - obj.simu.CTTime(1);
 
-                obj.radForceVelocity = zeros(obj.lenJ,length(obj.simu.CTTime));
+                obj.radForceVelocity = zeros(obj.totalLenDOF,length(obj.simu.CTTime));
 
                 obj.radForceOldTime = 0;
 
@@ -1786,18 +1888,20 @@ classdef hydroBody < handle
             if obj.doViscousDamping
                 breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
             else
-                breakdown.F_ViscousDamping = zeros (6, 1);
+                breakdown.F_ViscousDamping = zeros (obj.dof, 1);
             end
             
             % always do linear damping
             if obj.doLinearDamping
                 breakdown.F_LinearDamping = linearDampingForce (obj, vel(:,obj.bodyNumber));
             else
-                breakdown.F_LinearDamping = zeros (6, 1);
+                breakdown.F_LinearDamping = zeros (obj.dof, 1);
             end
 
             % always do radiation forces
-            [breakdown.F_AddedMass, breakdown.F_RadiationDamping] = radiationForces (obj, t, vel, accel);
+            breakdown.F_RadiationDamping = radiationDampingForces (obj, t, vel);
+            
+            breakdown.F_AddedMass = addedMassForces (obj, t, accel);
             
             % always do hydrostatic restoring forces
             [breakdown.F_Restoring, breakdown.BodyHSPressure, waveElv ] = hydrostaticForces (obj, t, pos);
@@ -1815,17 +1919,18 @@ classdef hydroBody < handle
                   breakdown.WaveLinearPressure ] = nonlinearExcitationForces (obj, t, pos, waveElv);
 
             else
-                breakdown.F_ExcitNonLin = zeros (6, 1);
+                breakdown.F_ExcitNonLin = zeros (obj.dof, 1);
             end
 
             if obj.doMorrisonElementViscousDrag
 
-                breakdown.F_MorrisonElement = morrisonElementForce ( obj, t, pos, ...
+                breakdown.F_MorrisonElement = morrisonElementForce ( obj, t, ...
+                                                                     pos(:,obj.bodyNumber), ...
                                                                      vel(:,obj.bodyNumber), ...
                                                                      accel(:,obj.bodyNumber) );
             else
 
-                breakdown.F_MorrisonElement = zeros (6, 1);
+                breakdown.F_MorrisonElement = zeros (obj.dof, 1);
 
             end
 
@@ -1864,26 +1969,24 @@ classdef hydroBody < handle
         end
 
         function forces = morrisonElementForce (obj, t, pos, vel, accel)
+            
 
-            error ('Morrison Element Forces have not yet been implemented');
+            % TODO: in WEC-Sim morrison element stuf uses acceleration delay like added mass forces
             
-            % TODO: convert morrison element simulink models
-            
-            % remember that in original WEC-Sim fomrulation the forces are
-            % calculated in the opposite direction in the subfunctions
+            % in original WEC-Sim formulation the forces
             switch obj.excitationMethodNum
 
                 case 0
                     % no wave
-                    forces = [0 0 0 0 0 0];
+                    forces = morrisonNoWave (obj, pos, vel, accel);
 
                 case 1
                     % regular wave
-                    forces = [0 0 0 0 0 0];
+                    forces = morrisonRegularWave (obj, t, pos, vel, accel);
 
                 case 2
                     % irregular wave
-                    forces = [0 0 0 0 0 0];
+                    forces = morrisonIrregularWave (obj, t, pos, vel, accel);
                     
                 case 3
                     % sinusoidal force
@@ -1911,7 +2014,7 @@ classdef hydroBody < handle
 
                 case 0
                     % no wave
-                    forces = [0; 0; 0; 0; 0; 0];
+                    forces = zeros (obj.dof, 1);
 
                 case 1
                     % regular wave
@@ -1927,6 +2030,10 @@ classdef hydroBody < handle
                                 cos (wt) .* obj.hydroForce.fExt.re(1,:) ...
                                 - sin (wt) .* obj.hydroForce.fExt.im(1,:) ...
                                                  ).';
+                                             
+                    % add the precalculated (in hydroForcePre) constant
+                    % mean drift force
+                    forces = forces + obj.meanDriftForcePreCalc;
 
                 case 2
                     % irregular wave
@@ -1939,25 +2046,34 @@ classdef hydroBody < handle
 
                     % TODO: check correct dimension/orientation of force output
                     A1 = obj.waves.w * t + pi/2;
+                    
+                    forces = zeros (obj.dof, 1);
+                    
+                    for wave_dir_ind = 1:length(obj.waves.waveDir)
+                        
+                        B1 = sin (A1 + obj.waves.phase(:,wave_dir_ind));
 
-                    B1 = sin (A1 + obj.waves.phase);
+                        B11 = sin (obj.waves.w * t + obj.waves.phase(:,wave_dir_ind));
 
-                    B11 = sin (obj.waves.w * t + obj.waves.phase);
+                        C0 = A .* obj.waves.waveSpread(wave_dir_ind) .* dw;
 
-                    C1 = sqrt (obj.waves.A .* obj.waves.dw);
+                        C1 = sqrt (obj.waves.A .* obj.waves.waveSpread(wave_dir_ind) .* obj.waves.dw);
 
-                    % hydroForce.fExt.re and im will be a 6 * Nfreqs
-                    % matrices, not this statement takes advantage of
-                    % automatic
-                    D1 = obj.hydroForce.fExt.re .* C1;
+                        D0 = obj.hydroForce.fExt.md(wave_dir_ind,:,:) .* C0;
 
-                    D11 = obj.hydroForce.fExt.im .* C1;
+                        % hydroForce.fExt.re and im will be a 6 * Nfreqs
+                        % matrices, note this statement takes advantage of
+                        % automatic broadcasting
+                        D1 = obj.hydroForce.fExt.re(wave_dir_ind,:,:) .* C1;
 
-                    E1 = B1 .* D1;
+                        D11 = obj.hydroForce.fExt.im(wave_dir_ind,:,:) .* C1;
 
-                    E11 = B11 .* D11;
+                        E1 = D0 + B1 .* D1;
 
-                    forces = sum (E1 - E11)';
+                        E11 = B11 .* D11;
+
+                        forces = forces + sum (E1 - E11)';
+                    end
 
 
                 case 3
@@ -1966,7 +2082,6 @@ classdef hydroBody < handle
                     % Calculates the wave force, F_wave, for the case of User Defined Waves.
                     %
                     % F_wave = convolution calculation [1x6]
-
                     error ('not yet implemented')
                     % TODO: make interpolation function for user defined waves, using ppval (C++ version)
                     
@@ -1986,18 +2101,18 @@ classdef hydroBody < handle
         function [forces, wavenonlinearpressure, wavelinearpressure] = nonlinearExcitationForces (obj, t, pos, elv)
             % calculates the non-linear excitation forces on the body
             
-            pos = pos - [ obj.hydroData.properties.cg, 0, 0, 0];
+            pos = pos - [ obj.hydroData.properties.cg, zeros(obj.dof-3, 1)];
             
             [forces, wavenonlinearpressure, wavelinearpressure] = nonFKForce (obj, t, pos, elv);
             
         end
 
-        function [F_AddedMass, F_RadiationDamping] = radiationForces (obj, t, vel, accel)
+        function F_RadiationDamping = radiationDampingForces (obj, t, vel)
             % calculates the wave radiation forces
             %
             % Syntax
             %
-            % [F_AddedMass, F_RadiationDamping] = radiationForces (obj, t, vel, accel)
+            % F_RadiationDamping = radiationForces (obj, t, vel, accel)
             %
             % Input
             %
@@ -2008,20 +2123,69 @@ classdef hydroBody < handle
             %    considered, a (6 x n) vector of all the body
             %    velocities.
             %
-            %  accel - (6 x 1) translational and angular acceleration of
-            %    the body, or, if body to body interactions are being
-            %    considered, a (6 x n) vector of all the body
-            %    accelerations.
-            %
-            %
             % Output
-            %
-            % F_AddedMass - force due to added mass
             %
             % F_RadiationDamping - force due to wave radiation damping
             %
             %
 
+
+            switch obj.radiationMethodNum
+
+                case 0
+                    % simple static coefficients
+                    if obj.simu.b2b
+                        F_RadiationDamping = obj.hydroForce.fDamping * vel(:);
+                    else
+                        F_RadiationDamping = obj.hydroForce.fDamping * vel(:,obj.bodyNumber);
+                    end
+
+                case 1
+                    % convolution
+                    F_RadiationDamping = convolutionIntegral (obj, vel(:), t);
+
+                case 2
+                    % state space
+%                     if obj.simu.b2b
+                        F_RadiationDamping = obj.radForceSS.outputs (vel(:));
+%                     else
+%                         F_RadiationDamping = obj.radForceSS.outputs (vel(:,obj.bodyNumber));
+%                     end
+                    
+                case 3
+                    % state space, but calculated by some external solver,
+                    % e.g. by supplying MBDyn with the state-space matrices
+                    F_RadiationDamping = [0;0;0;0;0;0];
+
+            end
+            
+            F_RadiationDamping = -F_RadiationDamping;
+            
+
+        end
+        
+        function F_AddedMass = addedMassForces (obj, t, accel)
+            % calculates the body added mass forces
+            %
+            % Syntax
+            %
+            % F_AddedMass = radiationForces (obj, t, vel, accel)
+            %
+            % Input
+            %
+            %  t - current simulation time
+            %
+            %  accel - (6 x 1) translational and angular acceleration of
+            %    the body, or, if body to body interactions are being
+            %    considered, a (6 x n) vector of all the body
+            %    accelerations.
+            %
+            % Output
+            %
+            % F_AddedMass - force due to added mass
+            %
+            %
+            
             % matrix multiplication with acceleration
             switch obj.addedMassMethodNum
                 
@@ -2064,7 +2228,7 @@ classdef hydroBody < handle
                         F_AddedMass = obj.hydroForce.fAddedMass * thisaccel(:);
         %                 F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
                     else
-                        F_AddedMass = [0;0;0;0;0;0];
+                        F_AddedMass = zeros (obj.dof, 1);
                     end
             
                 case 1
@@ -2073,39 +2237,9 @@ classdef hydroBody < handle
                     F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
                     
             end
-
-            switch obj.radiationMethodNum
-
-                case 0
-                    % simple static coefficients
-                    if obj.simu.b2b
-                        F_RadiationDamping = obj.hydroForce.fDamping * vel(:);
-                    else
-                        F_RadiationDamping = obj.hydroForce.fDamping * vel(:,obj.bodyNumber);
-                    end
-
-                case 1
-                    % convolution
-                    F_RadiationDamping = convolutionIntegral (obj, vel(:), t);
-
-                case 2
-                    % state space
-%                     if obj.simu.b2b
-                        F_RadiationDamping = obj.radForceSS.outputs (vel(:));
-%                     else
-%                         F_RadiationDamping = obj.radForceSS.outputs (vel(:,obj.bodyNumber));
-%                     end
-                    
-                case 3
-                    % state space, but calculated by some external solver,
-                    % e.g. by supplying MBDyn with the state-space matrices
-                    F_RadiationDamping = [0;0;0;0;0;0];
-
-            end
             
-            F_RadiationDamping = -F_RadiationDamping;
             F_AddedMass = -F_AddedMass;
-
+            
         end
         
         function statederivs = radForceSSDerivatives (obj, u)
@@ -2139,7 +2273,7 @@ classdef hydroBody < handle
         function [forces, body_hspressure_out, waveElv] = hydrostaticForces (obj, t, pos)
             % calculates the hydrostatic forces acting on the body
             
-            pos = pos - [ obj.cg; 0; 0; 0 ];
+            pos = pos - [ obj.cg; zeros(obj.dof-3, 1) ];
             
             waveElv = [];
 
@@ -2471,6 +2605,7 @@ classdef hydroBody < handle
             tmp2 = tmp1 * instcg;
             center2cgVec = center - tmp2;
 
+            % TODO: can cross here be replace by faster obj.vcross?
             f(4:6) = sum (cross (center2cgVec, pressureVect));
         end
 
@@ -2575,7 +2710,7 @@ classdef hydroBody < handle
             tmp1 = ones(length(center(:,1)),1);
             tmp2 = tmp1*instcg';
             center2cgVec = center - tmp2;
-
+            % TODO: can cross here be replace by faster obj.vcross?
             f(4:6)= sum(cross(center2cgVec,pressureVect));
         end
         
@@ -2625,10 +2760,279 @@ classdef hydroBody < handle
             end
             
             % apply ramp if we are not past the initial ramp time
-            if t <= obj.simu.rampT
-                rampF = (1 + cos (pi + pi * t / obj.simu.rampT)) / 2;
-                f = f .* rampF;
+            f = applyRamp (obj, t, f);
+%             if t <= obj.simu.rampT
+%                 rampF = (1 + cos (pi + pi * t / obj.simu.rampT)) / 2;
+%                 f = f .* rampF;
+%             end
+        end
+        
+        function f = morrisonRegularWave (obj, t, pos, vel, accel)
+            
+            [rr,~] = size(obj.morrisonElement.rgME);
+            
+            FMt = zeros(rr,6);
+            
+            for ii = 1:rr
+                
+                % Calculate Rotation Matrix
+                RotMax = [  cos(pos(5))*cos(pos(6)), cos(pos(4))*sin(pos(6)) + sin(pos(4))*sin(pos(5))*cos(pos(6)) , sin(pos(4))*sin(pos(6)) - cos(pos(4))*sin(pos(5))*sin(pos(6)); ...
+                           -cos(pos(5))*sin(pos(6)), cos(pos(4))*cos(pos(6)) -  sin(pos(4))*sin(pos(5))*sin(pos(6)), sin(pos(4))*cos(pos(6)) + cos(pos(4))*sin(pos(5))*sin(pos(6)); ...
+                            sin(pos(5))             , -sin(pos(4))*cos(pos(5))                                         , cos(pos(4))*cos(pos(5)) ...
+                         ];
+                      
+                % Rotate Cartesian
+                rRot    = mtimes(obj.morrisonElement.rgME(ii,:),RotMax);
+                Dispt   = [pos(1),pos(2),pos(3)];
+                ShiftCg = Dispt + rRot;
+                
+                % Update translational and rotational velocity
+                % w refers to \omega = rotational velocity
+                Velt    = [vel(4),vel(5),vel(6)];
+                wxr     = cross(Velt,obj.morrisonElement.rgME(ii,:)); % TODO: can cross here be replace by faster obj.vcross?
+                
+                % Vel should be a column vector
+                Vel2    = [vel(1),vel(2),vel(3)] + wxr;
+                
+                % Update translational and rotational acceleration
+                % dotw refers to \dot{\omega} = rotational acceleration
+                Accelt  = [accel(4),accel(5),accel(6)];
+                dotwxr  = cross(Accelt,obj.morrisonElement.rgME(ii,:)); % TODO: can cross here be replace by faster obj.vcross?
+                wxwxr   = cross(Velt,wxr); % TODO: can cross here be replace by faster obj.vcross?
+                Accel2  = [accel(1),accel(2),accel(3)] + dotwxr + wxwxr;
+                
+                % Calculate Orbital Velocity
+                waveDirRad     = obj.waves.waveDir*pi/180;
+                phaseArg       = obj.waves.w*t - obj.waves.k*(ShiftCg(1)*cos(waveDirRad) + ShiftCg(2)*sin(waveDirRad));
+                
+                % Vertical Variation
+                kh              = obj.waves.k*obj.waves.waterDepth;
+                kz              = obj.waves.k*ShiftCg(3);
+                if kh > pi  % Deep water wave
+                    coeffHorz  = exp(kz);
+                    coeffVert  = coeffHorz;
+                else        % Shallow & Intermediate Depth
+                    coeffHorz  = cosh(kz + kh)/cosh(kh);
+                    coeffVert  = sinh(kz + kh)/cosh(kh);
+                end
+                
+                
+                % TODo: could use obj.applyRamp here
+                % Ramp Time
+                ramp = applyRamp (obj, t, obj.waves.A);
+%                 if Time <= rampTime
+%                     ramp        = (obj.waves.A/2)*(1 + cos( pi + pi/rampTime*Time));
+%                 else
+%                     ramp        = obj.waves.A;
+%                 end
+                
+                % Orbital Velocity
+                uV              =  ramp*coeffHorz*cos(phaseArg)*obj.simu.g*obj.waves.k*(1/obj.waves.w)*cos(waveDirRad);
+                vV              =  ramp*coeffHorz*cos(phaseArg)*obj.simu.g*obj.waves.k*(1/obj.waves.w)*sin(waveDirRad);
+                wV              = -ramp*coeffVert*sin(phaseArg)*obj.simu.g*obj.waves.k*(1/obj.waves.w);
+                
+                % Orbital Acceleration
+                uA              = -ramp*coeffHorz*sin(phaseArg)*obj.simu.g*obj.waves.k*cos(waveDirRad);
+                vA              = -ramp*coeffHorz*sin(phaseArg)*obj.simu.g*obj.waves.k*sin(waveDirRad);
+                wA              = -ramp*coeffVert*cos(phaseArg)*obj.simu.g*obj.waves.k;
+                
+                %  ****      Added inertia and drag forces      ****
+                areaRot         = abs(mtimes(obj.morrisonElement.characteristicArea(ii,:),RotMax));
+                CdRot           = mtimes(abs(obj.morrisonElement.cd(ii,:)),RotMax);
+                CaRot           = abs(mtimes(obj.morrisonElement.ca(ii,:),RotMax));
+                
+                % Forces from velocity drag
+                uVdiff          = uV - Vel2(1); FxuV = (1/2)*abs(uVdiff)*uVdiff*obj.simu.rho*CdRot(1)*areaRot(1);
+                vVdiff          = vV - Vel2(2); FxvV = (1/2)*abs(vVdiff)*vVdiff*obj.simu.rho*CdRot(2)*areaRot(2);
+                wVdiff          = wV - Vel2(3); FxwV = (1/2)*abs(wVdiff)*wVdiff*obj.simu.rho*CdRot(3)*areaRot(3);
+                
+                % Forces from body acceleration inertia
+                uAdiff          = uA - Accel2(1); FxuA = uAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(1);
+                vAdiff          = vA - Accel2(2); FxvA = vAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(2);
+                wAdiff          = wA - Accel2(3); FxwA = wAdiff*obj.simu.rho*obj.morrisonElement.rVME(ii,:)*CaRot(3);
+                
+                % Forces from fluid acceleration inertia
+                FxuAf           = uA*obj.morrisonElement.VME(ii,:)*obj.simu.rho;
+                FxvAf           = vA*obj.morrisonElement.VME(ii,:)*obj.simu.rho;
+                FxwAf           = wA*obj.morrisonElement.VME(ii,:)*obj.simu.rho;
+                
+                % Sum the three force contributions
+                if ShiftCg(3) > 0
+                    F           = [0, 0, 0];
+                    M           = [0, 0, 0];
+                    FMt(ii,:)   = [F,M];
+                else
+                    F           = [FxuV + FxuA + FxuAf,...
+                        FxvV + FxvA + FxvAf,...
+                        FxwV + FxwA + FxwAf];
+                    M           = cross(rRot,F); % TODO: can cross here be replace by faster obj.vcross?
+                    FMt(ii,:)   = [F,M];
+                end
             end
+            
+            f  = [ sum(FMt(:,1)); 
+                   sum(FMt(:,2));
+                   sum(FMt(:,3));
+                   sum(FMt(:,4));
+                   sum(FMt(:,5));
+                   sum(FMt(:,6)) ];
+            
+        end
+        
+        function f = morrisonIrregularWave (obj, t, pos, vel, accel)
+            
+            [rr,~]  = size(obj.morrisonElement.rgME); 
+            ff    = length(obj.waves.w);
+            FMt     = zeros(rr,6);
+            uVt     = zeros(ff,1); vVt = uVt; wVt = vVt; uAt = wVt; vAt = uAt; wAt = vAt;
+            for ii = 1:rr
+                % Calculate Rotation Matrix
+                RotMax = [ cos(pos(5))*cos(pos(6)),  cos(pos(4))*sin(pos(6)) + sin(pos(4))*sin(pos(5))*cos(pos(6)) , sin(pos(4))*sin(pos(6)) - cos(pos(4))*sin(pos(5))*sin(pos(6));...
+                          -cos(pos(5))*sin(pos(6)),  cos(pos(4))*cos(pos(6)) -  sin(pos(4))*sin(pos(5))*sin(pos(6)), sin(pos(4))*cos(pos(6)) + cos(pos(4))*sin(pos(5))*sin(pos(6));...
+                           sin(pos(5))            , -sin(pos(4))*cos(pos(5))                                       , cos(pos(4))*cos(pos(5))                                        ];
+                % Rotate Cartesian
+                rRot    = mtimes(obj.morrisonElement.rgME(ii,:),RotMax);
+                Dispt   = [pos(1),pos(2),pos(3)];
+                ShiftCg = Dispt + rRot;
+                % Update translational and rotational velocity
+                % w refers to \omega = rotational velocity
+                Velt    = [vel(4),vel(5),vel(6)];
+                wxr     = cross(Velt,obj.morrisonElement.rgME(ii,:)); % TODO: can cross here be replace by faster obj.vcross?
+                % Update Translational Velocity
+                Vel2    = [vel(1),vel(2),vel(3)] + wxr;
+                % Update translational and rotational acceleration
+                % dotw refers to \dot{\omega} = rotational acceleration
+                Accelt  = [accel(4),accel(5),accel(6)];
+                dotwxr  = cross(Accelt,obj.morrisonElement.rgME(ii,:)); % TODO: can cross here be replace by faster obj.vcross?
+                wxwxr   = cross(Velt,wxr); % TODO: can cross here be replace by faster obj.vcross?
+                % Update Translational Acceleration
+                Accel2  = [accel(1),accel(2),accel(3)] + dotwxr + wxwxr;
+                %% Calculate Orbital Velocity
+                for jj = 1:ff
+                    waveDirRad      = obj.waves.waveDir*pi/180;
+                    phaseArg        = obj.waves.w(jj,1)*t - obj.waves.k(jj,1)*(ShiftCg(1)*cos(waveDirRad) + ShiftCg(2)*sin(waveDirRad)) + obj.waves.phase(jj,1);
+                    % Vertical Variation
+                    kh              = obj.waves.k(jj,1)*obj.waves.waterDepth;
+                    kz              = obj.waves.k(jj,1)*ShiftCg(3);
+                    if kh > pi % Deep Water Wave
+                        coeffHorz  = exp(kz);
+                        coeffVert  = coeffHorz;
+                    else % Shallow & Intermediate depth
+                        coeffHorz  = cosh(kz + kh)/cosh(kh);
+                        coeffVert  = sinh(kz + kh)/cosh(kh);
+                    end
+                    % Ramp Time
+                    ramp = applyRamp (obj, t, sqrt(obj.waves.A(jj,1)*obj.waves.dw(jj,1)));
+%                     if Time <= rampTime
+%                         ramp        = (sqrt(obj.waves.A(jj,1)*dw(jj,1))/2)*(1 + cos(pi + pi/rampTime*Time));
+%                     else
+%                         ramp        = sqrt(obj.waves.A(jj,1)*dw(jj,1));
+%                     end
+
+                    % Orbital Velocity for each individual wave component
+                    uVt(jj,1)       =  ramp*coeffHorz*cos(phaseArg)*obj.simu.g*obj.waves.k(jj,1)*(1/obj.waves.w(jj,1))*cos(waveDirRad);
+                    vVt(jj,1)       =  ramp*coeffHorz*cos(phaseArg)*obj.simu.g*obj.waves.k(jj,1)*(1/obj.waves.w(jj,1))*sin(waveDirRad);
+                    wVt(jj,1)       = -ramp*coeffVert*sin(phaseArg)*obj.simu.g*obj.waves.k(jj,1)*(1/obj.waves.w(jj,1));
+                    % Orbital Acceleration for each individual wave component
+                    uAt(jj,1)       = -ramp*coeffHorz*sin(phaseArg)*obj.simu.g*obj.waves.k(jj,1)*cos(waveDirRad);
+                    vAt(jj,1)       = -ramp*coeffHorz*sin(phaseArg)*obj.simu.g*obj.waves.k(jj,1)*sin(waveDirRad);
+                    wAt(jj,1)       = -ramp*coeffVert*cos(phaseArg)*obj.simu.g*obj.waves.k(jj,1);
+                end
+                % Sum the wave components to obtain the x, y, z orbital velocities
+                uV = sum(uVt); uA = sum(uAt); vV = sum(vVt); vA = sum(vAt); wV = sum(wVt); wA = sum(wAt);
+                %% Added inertia and drag forces
+                areaRot         = abs(mtimes(obj.morrisonElement.characteristicArea(ii,:),RotMax));
+                CdRot           = mtimes(abs(obj.morrisonElement.cd(ii,:)),RotMax);
+                CaRot           = abs(mtimes(obj.morrisonElement.ca(ii,:),RotMax));
+                % Forces from velocity drag
+                uVdiff          = uV - Vel2(1); FxuV = (1/2)*abs(uVdiff)*uVdiff*obj.simu.rho*CdRot(1)*areaRot(1);
+                vVdiff          = vV - Vel2(2); FxvV = (1/2)*abs(vVdiff)*vVdiff*obj.simu.rho*CdRot(2)*areaRot(2);
+                wVdiff          = wV - Vel2(3); FxwV = (1/2)*abs(wVdiff)*wVdiff*obj.simu.rho*CdRot(3)*areaRot(3);
+                % Forces from body acceleration inertia
+                uAdiff          = uA - Accel2(1); FxuA = uAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(1);
+                vAdiff          = vA - Accel2(2); FxvA = vAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(2);
+                wAdiff          = wA - Accel2(3); FxwA = wAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(3);
+                % Forces from fluid acceleration inertia
+                FxuAf           = uA*obj.morrisonElement.VME(ii,:)*obj.simu.rho;
+                FxvAf           = vA*obj.morrisonElement.VME(ii,:)*obj.simu.rho;
+                FxwAf           = wA*obj.morrisonElement.VME(ii,:)*obj.simu.rho;
+                % Combine the forces and moments
+                if ShiftCg(3) > 0
+                    F           = [0, 0, 0];
+                    M           = [0, 0, 0];
+                    FMt(ii,:)   = [F,M];
+                else
+                    F           = [ FxuV + FxuA + FxuAf,...
+                                    FxvV + FxvA + FxvAf,...
+                                    FxwV + FxwA + FxwAf];
+                    M           = cross(rRot,F); % TODO: can cross here be replace by faster obj.vcross?
+                    FMt(ii,:)   = [F,M];
+                end
+            end
+            
+            f  = [ sum(FMt(:,1));
+                   sum(FMt(:,2));
+                   sum(FMt(:,3));
+                   sum(FMt(:,4));
+                   sum(FMt(:,5));
+                   sum(FMt(:,6)) ];
+            
+        end
+        
+        function f = morrisonNoWave (obj, pos, vel, accel)
+            
+            [rr,~]=size(obj.morrisonElement.rgME);
+            FMt = zeros(rr,6);
+            for ii = 1:rr
+                % Calculate Rotation Matrix
+                RotMax = [ cos(pos(5))*cos(pos(6)),  cos(pos(4))*sin(pos(6)) + sin(pos(4))*sin(pos(5))*cos(pos(6)) , sin(pos(4))*sin(pos(6)) - cos(pos(4))*sin(pos(5))*sin(pos(6));...
+                          -cos(pos(5))*sin(pos(6)),  cos(pos(4))*cos(pos(6)) -  sin(pos(4))*sin(pos(5))*sin(pos(6)), sin(pos(4))*cos(pos(6)) + cos(pos(4))*sin(pos(5))*sin(pos(6));...
+                           sin(pos(5))            , -sin(pos(4))*cos(pos(5))                                       , cos(pos(4))*cos(pos(5))                                        ];
+                % Rotate Cartesian
+                rRot    = mtimes(obj.morrisonElement.rgME(ii,:),RotMax);
+                Dispt   = [pos(1),pos(2),pos(3)];
+                ShiftCg = Dispt + rRot;
+                % Update translational and rotational velocity
+                Velt    = [vel(4),vel(5),vel(6)];                       % w refers to \omega = rotational velocity
+                wxr     = cross(Velt,obj.morrisonElement.rgME(ii,:)); % TODO: can cross here be replace by faster obj.vcross?
+                %Vel should be a column vector
+                Vel2    = [vel(1),vel(2),vel(3)] + wxr;
+                % Update translational and rotational acceleration
+                Accelt  = [accel(4),accel(5),accel(6)];
+                dotwxr  = cross(Accelt,obj.morrisonElement.rgME(ii,:));                        % dotw refers to \dot{\omega} = rotational acceleration
+                wxwxr   = cross(Velt,wxr); % TODO: can cross here be replace by faster obj.vcross?
+                Accel2  = [accel(1),accel(2),accel(3)] + dotwxr + wxwxr;
+                %% Added inertia and drag forces
+                areaRot = abs(mtimes(obj.morrisonElement.characteristicArea(ii,:),RotMax));
+                CdRot   = mtimes(abs(obj.morrisonElement.cd(ii,:)),RotMax);
+                CaRot   = abs(mtimes(obj.morrisonElement.ca(ii,:),RotMax));
+                % Forces from body velocity drag
+                FxuV    = (1/2)*abs(-1*Vel2(1))*-1*Vel2(1)*obj.simu.rho*CdRot(1)*areaRot(1);
+                FxvV    = (1/2)*abs(-1*Vel2(2))*-1*Vel2(2)*obj.simu.rho*CdRot(2)*areaRot(2);
+                FxwV    = (1/2)*abs(-1*Vel2(3))*-1*Vel2(3)*obj.simu.rho*CdRot(3)*areaRot(3);
+                % Forces from body acceleration inertia
+                FxuA = obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(1)*-1*Accel2(1);
+                FxvA = obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(2)*-1*Accel2(2);
+                FxwA = obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(3)*-1*Accel2(3);
+                % Sum the force and moment contributions
+                if ShiftCg(3) > 0
+                    FMt(ii,:)   = [0, 0, 0, 0, 0, 0];
+                else
+                    F           = [ FxuV + FxuA,...
+                                    FxvV + FxvA,...
+                                    FxwV + FxwA];
+                    M           = cross(rRot,F); % TODO: can cross here be replace by faster obj.vcross?
+                    FMt(ii,:)   = [F,M];
+                end
+            end
+            
+            f  = [ sum(FMt(:,1));
+                   sum(FMt(:,2));
+                   sum(FMt(:,3));
+                   sum(FMt(:,4));
+                   sum(FMt(:,5));
+                   sum(FMt(:,6)) ];
+            
         end
 
     end
@@ -2672,7 +3076,7 @@ classdef hydroBody < handle
                         jj = j;
                     end
                     iam = obj.hydroForce.fAddedMass(i,jj);
-                    tmp = tmp + acc(:,j) .* -iam;
+                    tmp = tmp + acc(:,j) .* iam;
                 end
                 fam(:,i) = tmp;
             end
@@ -2688,10 +3092,10 @@ classdef hydroBody < handle
             for it = 1:length(t)
                 % calculate new position
                 pos = pos_all(it,:);
-                vertex_mod = hydroBody.rotateXYZ(vertex,[1 0 0],pos(4));
-                vertex_mod = hydroBody.rotateXYZ(vertex_mod,[0 1 0],pos(5));
-                vertex_mod = hydroBody.rotateXYZ(vertex_mod,[0 0 1],pos(6));
-                vertex_mod = hydroBody.offsetXYZ(vertex_mod,pos(1:3));
+                vertex_mod = wsim.hydroBody.rotateXYZ(vertex,[1 0 0],pos(4));
+                vertex_mod = wsim.hydroBody.rotateXYZ(vertex_mod,[0 1 0],pos(5));
+                vertex_mod = wsim.hydroBody.rotateXYZ(vertex_mod,[0 0 1],pos(6));
+                vertex_mod = wsim.hydroBody.offsetXYZ(vertex_mod,pos(1:3));
                 % open file
                 filename = ['vtk' filesep 'body' num2str(obj.bodyNumber) '_' bodyname filesep bodyname '_' num2str(it) '.vtp'];
                 fid = fopen(filename, 'w');
@@ -2832,24 +3236,34 @@ classdef hydroBody < handle
         end
 
         
-        function o = vcross(s,t)
-            %Vector cross product.
-            % o=vcross(s,t)
-            %-------------
+        function o = vcross (v1, v2)
+            % Vector cross product for multiple 3 element vectors
             %
+            % Syntax
             %
-            %  Leutenegger Marcel  3.3.2005
+            % o = wsim.hydroBody.vcross (v1, v2)
             %
-            %Input:
-            % s,t    vectors
+            % Description
             %
-            %Output:
-            % o      vector: s X t = cross(s,t)
+            % 
+            %
+            % Input
+            % 
+            %  v1 - (3 x n) matrix where the rows are each 3 element
+            %   vectors
+            %
+            %  v2 - (3 x n) matrix where the rows are each 3 element
+            %   vectors
+            %
+            % Output
+            %
+            %  o - (3 x n) matrix where each column is the cross product of
+            %    the vectors in each row of v1 and v2
             %
 
-            o = [ s(2,:).*t(3,:)-s(3,:).*t(2,:);
-                  s(3,:).*t(1,:)-s(1,:).*t(3,:);
-                  s(1,:).*t(2,:)-s(2,:).*t(1,:)];
+            o = [ v1(2,:).*v2(3,:) - v1(3,:).*v2(2,:);
+                  v1(3,:).*v2(1,:) - v1(1,:).*v2(3,:);
+                  v1(1,:).*v2(2,:) - v1(2,:).*v2(1,:) ];
         end
         
     end

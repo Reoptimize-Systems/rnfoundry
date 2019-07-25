@@ -58,7 +58,8 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
     
     n = 0;
     all_hydro_data = struct ();
-
+    m_add = 0;
+    
     for bodyind = 1:hydro.Nb
 
         m = hydro.dof(bodyind);
@@ -77,8 +78,44 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
         all_hydro_data(bodyind).properties.cg = hydro.cg(:,bodyind)';
         all_hydro_data(bodyind).properties.cb = hydro.cb(:,bodyind)';
         all_hydro_data(bodyind).properties.disp_vol = hydro.Vo(bodyind);
-        all_hydro_data(bodyind).hydro_coeffs.linear_restoring_stiffness = hydro.C(:,:,bodyind);
-
+        all_hydro_data(bodyind).properties.dof = hydro.dof(bodyind);
+        all_hydro_data(bodyind).properties.dof_start = m_add + 1;
+        all_hydro_data(bodyind).properties.dof_end = m_add + m;
+        
+        if isfield (hydro,'gbm') 
+            % Only if generalized body modes have been used
+            tmp = hydro.gbm((n+1):(n+m),:,1);
+            all_hydro_data(bodyind).gbm.mass = tmp(dof_start+6:dof_end, dof_start+6:dof_end);
+            
+            tmp = hydro.gbm((n+1):(n+m),:,2);
+            all_hydro_data(bodyind).gbm.damping = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end);
+            
+            tmp = hydro.gbm((n+1):(n+m),:,3);
+            all_hydro_data(bodyind).gbm.stiffness = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end);
+            
+            % the below permutes were too confusing for me to unpick
+            % quickly, so just replicating the first premute from Write_H5,
+            % then the second permute which would be done in h5load
+            tmp = permute(hydro.gbm((n+1):(n+m),:,4),[3 2 1]);
+            all_hydro_data(bodyind).hydro_coeffs.linear_restoring_stiffness = permute (tmp(1,m_add + 1:m_add + m,:), [3,2,1]);
+        else
+            all_hydro_data(bodyind).hydro_coeffs.linear_restoring_stiffness = hydro.C(:,:,bodyind);
+        end
+        
+        m_add = m_add + m;
+        
+        if isfield (hydro,'md_mc')
+            % Only if mean drift variables (momentum conservation) have been calculated in BEM
+             all_hydro_data(bodyind).mean_drift_momentum_conservation = hydro.md_mc((n+1):(n+m),:,:);
+%             H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/mean_drift/momentum_conservation/val/'],permute(hydro.md_mc((n+1):(n+m),:,:),[3 2 1]),'Value of mean drift force (momentum conservation)','');
+        end
+    
+        if isfield (hydro,'md_cs')
+            % Only if mean drift variables (control surface approach) have been calculated in BEM
+            all_hydro_data(bodyind).mean_drift_control_surface = hydro.md_cs((n+1):(n+m),:,:);
+%             H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/mean_drift/control_surface/val/'],permute(hydro.md_cs((n+1):(n+m),:,:),[3 2 1]),'Value of mean drift force (control surface)','');
+        end
+    
         all_hydro_data(bodyind).hydro_coeffs.excitation.re = hydro.ex_re((n+1):(n+m),:,:);
         all_hydro_data(bodyind).hydro_coeffs.excitation.im = hydro.ex_im((n+1):(n+m),:,:);
 
@@ -99,6 +136,26 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
             all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.C.all = hydro.ss_C((n+1):(n+m),:,:,:);
             all_hydro_data(bodyind).hydro_coeffs.radiation_damping.state_space.D.all = hydro.ss_D((n+1):(n+m),:);
 
+        end
+        
+        try tmp = wsim.bemio.h5load(filename, [body_name '/properties/mass']);
+            obj.hydroData.gbm.mass      = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
+        try tmp = wsim.bemio.h5load(filename, [body_name '/properties/stiffness']);
+            obj.hydroData.gbm.stiffness = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
+        try tmp = wsim.bemio.h5load(filename, [body_name '/properties/damping']);
+            obj.hydroData.gbm.damping   = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp;end;
+        if (obj.dof_gbm>0)
+            obj.linearDamping = [obj.linearDamping(1:6) zeros(1,obj.dof_gbm)];
+        end
+        
+        if obj.meanDriftForce == 0
+            obj.hydroData.hydro_coeffs.mean_drift = 0.*obj.hydroData.hydro_coeffs.excitation.re;
+        elseif obj.meanDriftForce == 1
+            obj.hydroData.hydro_coeffs.mean_drift =  wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/control_surface/val']);
+        elseif obj.meanDriftForce == 2
+            obj.hydroData.hydro_coeffs.mean_drift =  wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/momentum_conservation/val']);
+        else
+            error('Wrong flag for mean drift force.')
         end
 
         % write the .mat file for this body
