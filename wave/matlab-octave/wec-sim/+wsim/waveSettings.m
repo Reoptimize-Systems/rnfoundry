@@ -66,9 +66,11 @@ classdef waveSettings < handle
         numFreq = []; 
 
         % waveDir - [deg] Incident wave direction (Default = 0)
+        %  waveDir may be a vector to define more than one wave direction
         waveDir = 0; 
         
         % waveSpread - Wave Spread probability associated with the wave direction
+        %  waveSpread should be a vector of the same length as waveDir
         waveSpread = 1;
         
         % viz - Structure defining visualization options
@@ -80,22 +82,43 @@ classdef waveSettings < handle
                       'numPointsY', 50 ); 
         
         % statisticsDataLoad - File name from which to load wave statistics data
+        %   (Default = [])
         statisticsDataLoad = []; 
         
         % freqDisc - Method of frequency discretization for irregular waves. 
         %   Options for this variable are 'EqualEnergy' or 'Traditional'.
-        %   (default = 'EqualEnergy').
+        %   (Default = 'EqualEnergy').
         freqDisc = 'EqualEnergy';
         
-        % wavegauge1loc - [m] Wave gauge 1 location assumed to be along the x-axis
-        wavegauge1loc = 0;
+        % wavegauge1loc - [m] Wave gauge 1 [x,y] location
+        %   (Default = [0,0]).
+        wavegauge1loc = [0,0];
         
-        % wavegauge2loc - [m] Wave gauge 2 location assumed to be along the x-axis
-        wavegauge2loc = 0; 
+        % wavegauge2loc - [m] Wave gauge 2 [x,y] location
+        %   (Default = [0,0]).
+        wavegauge2loc = [0,0]; 
         
-        % wavegauge3loc - [m] Wave gauge 3 location assumed to be along the x-axis
-        wavegauge3loc = 0; 
+        % wavegauge3loc - [m] Wave gauge 3 [x,y] location
+        %   (Default = [0,0]).
+        wavegauge3loc = [0,0]; 
         
+        % currentSpeed - [m/s] Surface current speed that is uniform along the water column.
+        %   (Default = 0).
+        currentSpeed = 0;
+        
+        % currentDirection - [deg] Surface current direction.
+        %   (Default = 0).
+        currentDirection = 0;
+        
+        % currentOption - [-] Define the sub-surface current model to be used in WEC-Sim.
+        %   (Default = 0)
+        %   (0: Depth-independent model, 1: 1/7 power law variation with depth, 2: linear variation with depth, 3: no current)
+        currentOption = 3;
+        
+        % currentDepth - [m] Define the depth over which the sub-surface current is modeled.
+        % For options (1) and (2) the currentDepth must be defined. The current is not calculated for any depths greater than the specified currentDepth.
+        % (Default = 0).
+        currentDepth = 0;
     end
     
     % The following properties are for internal use
@@ -140,8 +163,11 @@ classdef waveSettings < handle
         % k - Wave Number
         k = []; 
         
-        % Sf - Wave Spectrum [m^2-s/rad]
-        Sf = [];
+        % S - Wave Spectrum [m^2-s/rad] for 'Traditional'
+        S = [];
+        
+        % Pw - Wave Power Per Unit Wave Crest [W/m]
+        Pw = [];
         
     end
     
@@ -249,16 +275,16 @@ classdef waveSettings < handle
         
         function plotSpectrum(obj)
             % Plot wave spetrum
-            m0 = trapz(obj.w,obj.Sf);
+            m0 = trapz(obj.w,obj.S);
             HsTest = 4*sqrt(m0);
-            [~,I] = max(abs(obj.Sf));
+            [~,I] = max(abs(obj.S));
             wp = obj.w(I);
             TpTest = 2*pi/wp;
             
             figure
-            plot(obj.w,obj.Sf,'s-')
+            plot(obj.w,obj.S,'s-')
             hold on
-            line([wp,wp],[0,max(obj.Sf)],'Color','k')
+            line([wp,wp],[0,max(obj.S)],'Color','k')
             xlim([0 max(obj.w)])
             title([obj.spectrumType, ' Spectrum, T_p= ' num2str(TpTest) ' [s], '  'H_m_0= ' num2str(HsTest), ' [m]'])
             if obj.spectrumType == 'JS'
@@ -268,7 +294,7 @@ classdef waveSettings < handle
             ylabel('Spectrum (m^2-s/rad)');
         end
         
-        function waveSetup(obj,bemFreq,wDepth,rampTime,dt,maxIt,g,endTime)
+        function waveSetup(obj,bemFreq,wDepth,rampTime,dt,maxIt,g, rho, endTime)
             % Calculate and set wave properties based on wave type
             obj.bemFreq    = bemFreq;
             obj.setWaveProps(wDepth)
@@ -287,6 +313,7 @@ classdef waveSettings < handle
                     obj.A = obj.H/2;
                     obj.waveNumber(g)
                     obj.waveElevReg(rampTime, dt, maxIt);
+                    obj.wavePowerReg(g,rho);
                 case {'irregular','spectrumImport'}
                     WFQSt=min(bemFreq);
                     WFQEd=max(bemFreq);
@@ -311,7 +338,7 @@ classdef waveSettings < handle
                             obj.dw= ones(obj.numFreq,1).*(WFQEd-WFQSt)./(obj.numFreq-1);
                         case {'EqualEnergy'}
                             numFreq_interp = 500000;
-                            obj.w = WFQSt:(WFQEd-WFQSt)/numFreq_interp:WFQEd;
+                            obj.w = (WFQSt:(WFQEd-WFQSt)/numFreq_interp:WFQEd)';
                             obj.dw = mean(diff(obj.w));
                             if isempty(obj.numFreq)
                                 obj.numFreq = 500;
@@ -327,7 +354,7 @@ classdef waveSettings < handle
                             obj.dw(obj.numFreq,1)= obj.w(end)-obj.w(end-1);
                     end
                     obj.setWavePhase;
-                    obj.irregWaveSpectrum(g)
+                    obj.irregWaveSpectrum(g,rho)
                     obj.waveNumber(g)
                     obj.waveElevIrreg(rampTime, dt, maxIt, obj.dw);
                 case {'etaImport'}    %  This does not account for wave direction
@@ -646,11 +673,11 @@ classdef waveSettings < handle
                     obj.waveAmpTime(i,1)    = t;
                     obj.waveAmpTime(i,2)    = obj.A*cos(obj.w*t);
                     obj.waveAmpTime1(i,1)   = t;
-                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge1loc);
+                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime2(i,1)   = t;
-                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge2loc);
+                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime3(i,1)   = t;
-                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge3loc);
+                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir*pi/180)));
                 end
             else
                 for i=1:maxRampIT
@@ -658,27 +685,38 @@ classdef waveSettings < handle
                     obj.waveAmpTime(i,1)    = t;
                     obj.waveAmpTime(i,2)    = obj.A*cos(obj.w*t)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                     obj.waveAmpTime1(i,1)   = t;
-                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge1loc)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
+                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir*pi/180)))*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                     obj.waveAmpTime2(i,1)   = t;
-                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge2loc)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
+                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir*pi/180)))*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                     obj.waveAmpTime3(i,1)   = t;
-                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge3loc)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
+                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir*pi/180)))*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                 end
                 for i=maxRampIT+1:maxIt+1
                     t = (i-1)*dt;
                     obj.waveAmpTime(i,1)    = t;
                     obj.waveAmpTime(i,2)    = obj.A*cos(obj.w*t);
                     obj.waveAmpTime1(i,1)   = t;
-                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge1loc);
+                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime2(i,1)   = t;
-                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge2loc);
+                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime3(i,1)   = t;
-                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge3loc);
+                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir*pi/180)));
                 end
             end
         end
         
-        function irregWaveSpectrum(obj,g)
+        function wavePowerReg(obj,g,rho)
+            % Calculate wave power per unit wave crest for regular waves
+            if obj.deepWaterWave == 1
+                % Deepwater Approximation
+                obj.Pw = 1/(8*pi)*rho*g^(2)*(obj.A).^(2).*obj.T;               
+            else
+                % Full Wave Power Equation
+                obj.Pw = rho*g*(obj.A).^(2)/4*sqrt(g./obj.k.*tanh(obj.k.*obj.waterDepth))*(1+2*obj.k.*obj.waterDepth./sinh(obj.k.*obj.waterDepth));
+            end
+        end
+        
+        function irregWaveSpectrum(obj,g,rho)
             % Calculate wave spectrum vector (obj.A)
             % Used by wavesIrreg (wavesIrreg used by waveSetup)
             freq = obj.w/(2*pi);
@@ -688,18 +726,15 @@ classdef waveSettings < handle
                 case 'PM' % Pierson-Moskowitz Spectrum from Tucker and Pitt (2001)
                     B_PM = (5/4)*(1/Tp)^(4);
                     A_PM = 0.0081*g^2*(2*pi)^(-4);
-                    S_f  = (A_PM*freq.^(-5).*exp(-B_PM*freq.^(-4)));
-                    obj.Sf = S_f./(2*pi);                         % Wave Spectrum [m^2-s/rad] for 'Traditional'
-                    S_f = obj.Sf*2*pi;                                          % Wave Spectrum [m^2-s]
+                    S_f  = (A_PM*freq.^(-5).*exp(-B_PM*freq.^(-4)));            % Wave Spectrum [m^2-s] for 'EqualEnergy'
+                    obj.S = S_f./(2*pi);                                        % Wave Spectrum [m^2-s/rad] for 'Traditional'
+                    S_f = obj.S*2*pi;
                 case 'BS' % Bretschneider Sprectrum from Tucker and Pitt (2001)
                     B_BS = (1.057/Tp)^4;
                     A_BS = B_BS*(Hs/2)^2;
                     S_f = (A_BS*freq.^(-5).*exp(-B_BS*freq.^(-4)));             % Wave Spectrum [m^2-s]
-                    obj.Sf = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
+                    obj.S = S_f./(2*pi);                                        % Wave Spectrum [m^2-s/rad]
                 case 'JS' % JONSWAP Spectrum from Hasselmann et. al (1973)
-                    [r,~] = size(freq);
-                    if r == 1; freq = sort(freq)';
-                    else freq = sort(freq); end
                     fp = 1/Tp;
                     siga = 0.07;sigb = 0.09;                                    % cutoff frequencies for gamma function
                     [lind,~] = find(freq<=fp);
@@ -707,20 +742,29 @@ classdef waveSettings < handle
                     Gf = zeros(size(freq));
                     Gf(lind) = obj.gamma.^exp(-(freq(lind)-fp).^2/(2*siga^2*fp^2));
                     Gf(hind) = obj.gamma.^exp(-(freq(hind)-fp).^2/(2*sigb^2*fp^2));
-                    Sf_temp = g^2*(2*pi)^(-4)*freq.^(-5).*exp(-(5/4).*(freq/fp).^(-4));
-                    alpha_JS = Hs^(2)/16/trapz(freq,Sf_temp.*Gf);
-                    S_f = alpha_JS*Sf_temp.*Gf;                                 % Wave Spectrum [m^2-s]
-                    obj.Sf = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
-                    freq = freq';
+                    S_temp = g^2*(2*pi)^(-4)*freq.^(-5).*exp(-(5/4).*(freq/fp).^(-4));
+                    alpha_JS = Hs^(2)/16/trapz(freq,S_temp.*Gf);
+                    S_f = alpha_JS*S_temp.*Gf;                                 % Wave Spectrum [m^2-s]
+                    obj.S = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad]
                 case 'spectrumImport' % Imported Wave Spectrum
                     data = importdata(obj.spectrumDataFile);
                     freq_data = data(:,1);
-                    Sf_data = data(:,2);
+                    S_data = data(:,2);
                     freq_loc = freq_data>=min(obj.bemFreq)/2/pi & freq_data<=max(obj.bemFreq)/2/pi;
-                    S_f = Sf_data(freq_loc);
-                    obj.Sf = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
+                    S_f = S_data(freq_loc);                                    % Wave Spectrum [m^2-s] for 'EqualEnergy'
+                    obj.S = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
                     fprintf('\t"spectrumImport" uses the number of imported wave frequencies (not "Traditional" or "EqualEnergy")\n')
             end
+            % Power per Unit Wave Crest
+            obj.waveNumber(g)                                                   %Calculate Wave Number for Larger Number of Frequencies Before Down Sampling in Equal Energy Method
+            if obj.deepWaterWave == 1
+                % Deepwater Approximation
+                obj.Pw = sum(1/2*rho*g^(2)*S_f.*obj.dw./obj.w);
+            else
+                % Full Wave Power Equation
+                obj.Pw = sum((1/2)*rho*g.*S_f.*obj.dw.*sqrt(9.81./obj.k.*tanh(obj.k.*obj.waterDepth)).*(1 + 2.*obj.k.*obj.waterDepth./sinh(2.*obj.k.*obj.waterDepth)));
+            end
+            %
             switch obj.freqDisc
                 case {'EqualEnergy'}
                     m0 = trapz(freq,abs(S_f));
@@ -742,15 +786,11 @@ classdef waveSettings < handle
                         wn(kk+1) = wna(kk)+wn(kk);
                         a_bins(kk) = trapz(freq(wn(kk):wn(kk+1)),abs(S_f(wn(kk):wn(kk+1))));
                     end
-                    obj.w = 2*pi*freq(wn(2:end-1))';
+                    obj.w = 2*pi*freq(wn(2:end-1));
                     obj.dw = [obj.w(1)-2*pi*freq(wn(1)); diff(obj.w)];
-                    if strcmp(obj.spectrumType,'JS') ==1
-                        obj.Sf = obj.Sf(wn(2:end-1));                           % Wave Spectrum [m^2-s/rad] for 'EqualEnergy'
-                    else
-                        obj.Sf = obj.Sf(wn(2:end-1))';                          % Wave Spectrum [m^2-s/rad] for 'EqualEnergy'
-                    end
+                    obj.S = obj.S(wn(2:end-1));                             % Wave Spectrum [m^2-s/rad] 
             end
-            obj.A = 2 * obj.Sf;                                                 % Wave Amplitude [m]
+            obj.A = 2 * obj.S;                                              % Wave Amplitude [m]
         end
         
         function waveElevIrreg(obj,rampTime,dt,maxIt,df)
@@ -767,9 +807,9 @@ classdef waveSettings < handle
                         t       = (i-1)*dt;
                         tmp     = sqrt(obj.A.*df*obj.waveSpread(idir));
                         tmp1    = tmp.*real(exp(sqrt(-1).*(obj.w.*t + obj.phase(:,idir))));
-                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge1loc + obj.phase(:,idir))));
-                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge2loc + obj.phase(:,idir))));
-                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge3loc + obj.phase(:,idir))));
+                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
                         obj.waveAmpTime(i,1)    = t;
                         obj.waveAmpTime(i,2)    = obj.waveAmpTime(i,2) + sum(tmp1);
                         obj.waveAmpTime1(i,1)   = t;
@@ -786,9 +826,9 @@ classdef waveSettings < handle
                         t = (i-1)*dt;
                         tmp=sqrt(obj.A.*df*obj.waveSpread(idir));
                         tmp1    = tmp.*real(exp(sqrt(-1).*(obj.w.*t + obj.phase(:,idir))));
-                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge1loc + obj.phase(:,idir))));
-                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge2loc + obj.phase(:,idir))));
-                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge3loc + obj.phase(:,idir))));
+                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
                         obj.waveAmpTime(i,1)    = t;
                         obj.waveAmpTime(i,2)    = obj.waveAmpTime(i,2) + sum(tmp1)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                         obj.waveAmpTime1(i,1)   = t;
@@ -804,9 +844,9 @@ classdef waveSettings < handle
                         t = (i-1)*dt;
                         tmp=sqrt(obj.A.*df*obj.waveSpread(idir));
                         tmp1  = tmp.*real(exp(sqrt(-1).*(obj.w.*t + obj.phase(:,idir))));
-                        tmp11 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge1loc + obj.phase(:,idir))));
-                        tmp12 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge2loc + obj.phase(:,idir))));
-                        tmp13 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge3loc + obj.phase(:,idir))));
+                        tmp11 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp12 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp13 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
                         obj.waveAmpTime(i,1)    = t;
                         obj.waveAmpTime(i,2)    = obj.waveAmpTime(i,2) + sum(tmp1);
                         obj.waveAmpTime1(i,1)   = t;
