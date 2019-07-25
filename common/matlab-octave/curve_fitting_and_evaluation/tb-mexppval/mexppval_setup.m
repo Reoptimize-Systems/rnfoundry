@@ -1,6 +1,5 @@
 function mexppval_setup (varargin)
-% compiles ppuva and ppmval functions for fast piecewise polynomial
-% evaluation
+% compiles ppuval and ppmval functions for fast piecewise polynomial evaluation
 %
 % Syntax
 %
