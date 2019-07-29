@@ -87,44 +87,53 @@ classdef hydroBody < handle
 
     properties (SetAccess = protected, GetAccess = public) % hydroData h5 or mat file related
         
-        % Hydrodynamic data from BEM or user defined.
+        % hydroData - Hydrodynamic data from BEM or user defined.
         hydroData = struct();
         
-        % Body name. This is obtained from the h5 or mat file.
+        % name - Body name. This is obtained from the h5 or mat file.
         name = [];  
         
-        % Center of gravity [x y z] in meters. This is obtained from the h5 or mat file.
+        % cg - Center of gravity [x; y; z] in meters. 
+        %  This is obtained from the h5 or mat file.
         cg = [];
         
-        % Center of buoyancy [x y z] in meters. For WEC bodies this is given in the h5 file.
+        % cb - Center of buoyancy [x; y; z] in meters. 
+        %  For WEC bodies this is given in the h5 file.
         cb = [];
         
-        % Displaced volume at equilibrium position in m^3. This is obtained from the h5 or mat file.
+        % dispVol Displaced volume at equilibrium position in m^3. 
+        %  This is obtained from the h5 or mat file.
         dispVol = [];
 
-        % dof - Number of DOFs. For WEC bodies this is given in the h5 file. IF not, default is 6
+        % dof - Number of DOFs. 
+        %  For WEC bodies this is given in the h5 file. IF not, default is
+        %  6
         dof = []      
 
         % dof_gbm - Number of DOFs for GBM.
         dof_gbm = []                                                  
 
-        % dof_start - Index of DOF starts. For WEC bodies this is given in the h5 file. IF not, default is (bodyNumber-1)*6+1
+        % dof_start - Index of DOF starts.
+        %  For WEC bodies this is given in the h5 file. IF not, default is
+        %  (bodyNumber-1)*6+1
         dof_start = []                             
 
-        % dof_end - Index of DOF ends. For WEC bodies this is given in the h5 file. IF not, default is (bodyNumber-1)*6+6                                            
+        % dof_end - Index of DOF ends. 
+        %  For WEC bodies this is given in the h5 file. IF not, default is
+        %  (bodyNumber-1)*6+6
         dof_end = []                                                  
         
     end
 
     properties (SetAccess = public, GetAccess = public) % input file
         
-        % Mass in kg or specify 'equilibrium' to have mass = displacement vol * density
+        % mass - Mass in kg or specify 'equilibrium' to have mass = displacement vol * density
         mass = [];
 
-        % Moment of inertia [Ixx Iyy Izz] in kg*m^2 for the body
+        % momOfInertia - Moment of inertia [Ixx Iyy Izz] in kg*m^2 for the body
         momOfInertia = [];
         
-        % Names of geomtry stl file for this body in geometry subfolder
+        % geometryFile - Names of geomtry stl file for this body in geometry subfolder
         geometryFile = 'NONE';                                              
         
         % viscDrag - Structure defining the viscous (quadratic) drag
@@ -241,10 +250,10 @@ classdef hydroBody < handle
         totalLenDOF = [];  
 
         % flexHydroBody - Flag for flexible body. 
-        flexHydroBody     = 0                                                   
+        flexHydroBody = 0                                                   
 
         % meanDriftForce - Flag for mean drift force. 0: No; 1: from control surface; 2: from momentum conservation.
-        meanDriftForce    = 0
+        meanDriftForce = 0
     end
 
     properties (SetAccess = protected, GetAccess = public) % internal
