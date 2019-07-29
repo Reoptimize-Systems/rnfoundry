@@ -650,6 +650,8 @@ classdef hydroBody < handle
             end
             
             
+            
+            
         end
         
         function saveHydroData (obj, filename, varargin)
@@ -1449,8 +1451,7 @@ classdef hydroBody < handle
                 if nlHydro == 0
                     obj.mass = obj.hydroData.properties.disp_vol * rho;
                 else
-                    cg_tmp = obj.hydroData.properties.cg;
-                    z = obj.bodyGeometry.center(:,3) + cg_tmp(3);
+                    z = obj.bodyGeometry.center(:,3) + obj.cg(3);
                     z(z>0) = 0;
                     area = obj.bodyGeometry.area;
                     av = [area area area] .* -obj.bodyGeometry.norm;
@@ -2101,7 +2102,7 @@ classdef hydroBody < handle
         function [forces, wavenonlinearpressure, wavelinearpressure] = nonlinearExcitationForces (obj, t, pos, elv)
             % calculates the non-linear excitation forces on the body
             
-            pos = pos - [ obj.hydroData.properties.cg, zeros(obj.dof-3, 1)];
+            pos = pos - [ obj.cg; zeros(obj.dof-3, 1)];
             
             [forces, wavenonlinearpressure, wavelinearpressure] = nonFKForce (obj, t, pos, elv);
             
@@ -2454,7 +2455,7 @@ classdef hydroBody < handle
             center = obj.rotateXYZ (obj.bodyGeometry.center, [1 0 0], pos(4));
             center = obj.rotateXYZ (center, [0 1 0], pos(5));
             center = obj.rotateXYZ (center, [0 0 1], pos(6));
-            center = obj.offsetXYZ (center, pos);
+            center = obj.offsetXYZ (center, pos(1:3)');
             center = obj.offsetXYZ (center, obj.hydroData.properties.cg);
 
             % Compute new normal vectors coords after cog rotation and translation
@@ -2472,7 +2473,7 @@ classdef hydroBody < handle
 
             % Calculate forces
             f_linear    = obj.FK ( centerMeanFS,  obj.hydroData.properties.cg,             avMeanFS, wpMeanFS );
-            f_nonLinear = obj.FK ( center,        pos(1:3) + obj.hydroData.properties.cg,  av,       wp );
+            f_nonLinear = obj.FK ( center,        pos(1:3)' + obj.hydroData.properties.cg,  av,       wp );
             f = f_nonLinear - f_linear;
 
         end
@@ -2677,8 +2678,8 @@ classdef hydroBody < handle
             center = obj.rotateXYZ(obj.bodyGeometry.center, [1 0 0], pos(4));
             center = obj.rotateXYZ(center, [0 1 0], pos(5));
             center = obj.rotateXYZ(center, [0 0 1], pos(6));
-            center = obj.offsetXYZ(center, pos);
-            center = obj.offsetXYZ(center, obj.cg);
+            center = obj.offsetXYZ(center, pos(1:3)');
+            center = obj.offsetXYZ(center, obj.cg');
 
             % Compute new normal vectors coords after cog rotation
             tnorm = obj.rotateXYZ(obj.bodyGeometry.norm, [1 0 0], pos(4));
@@ -2721,8 +2722,8 @@ classdef hydroBody < handle
             center = obj.rotateXYZ (obj.bodyGeometry.center, [1, 0, 0], pos(4));
             center = obj.rotateXYZ (center, [0, 1, 0], pos(5));
             center = obj.rotateXYZ (center, [0, 0, 1], pos(6));
-            center = obj.offsetXYZ (center, pos);
-            center = obj.offsetXYZ (center, obj.cg);
+            center = obj.offsetXYZ (center, pos(1:3)');
+            center = obj.offsetXYZ (center, obj.cg');
             
             % Calculate the free surface
             f = waveElev (obj, center,t);
@@ -2849,7 +2850,7 @@ classdef hydroBody < handle
                 % Forces from body acceleration inertia
                 uAdiff          = uA - Accel2(1); FxuA = uAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(1);
                 vAdiff          = vA - Accel2(2); FxvA = vAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(2);
-                wAdiff          = wA - Accel2(3); FxwA = wAdiff*obj.simu.rho*obj.morrisonElement.rVME(ii,:)*CaRot(3);
+                wAdiff          = wA - Accel2(3); FxwA = wAdiff*obj.simu.rho*obj.morrisonElement.VME(ii,:)*CaRot(3);
                 
                 % Forces from fluid acceleration inertia
                 FxuAf           = uA*obj.morrisonElement.VME(ii,:)*obj.simu.rho;
@@ -3205,10 +3206,11 @@ classdef hydroBody < handle
         end
 
         function verts_out = offsetXYZ (verts, x)
-            % Function to move the position vertices
-            verts_out(:,1) = verts(:,1) + x(1);
-            verts_out(:,2) = verts(:,2) + x(2);
-            verts_out(:,3) = verts(:,3) + x(3);
+            % translate the position vertices
+            
+            % this statement uses implicit broadcasting
+            verts_out = verts + x;
+            
         end
         
         function v = lagrangeInterp (x,y,u)
