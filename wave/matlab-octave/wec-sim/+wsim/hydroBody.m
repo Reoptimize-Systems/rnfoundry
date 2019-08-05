@@ -100,10 +100,6 @@ classdef hydroBody < handle
         % cb - Center of buoyancy [x; y; z] in meters. 
         %  For WEC bodies this is given in the h5 file.
         cb = [];
-        
-        % dispVol Displaced volume at equilibrium position in m^3. 
-        %  This is obtained from the h5 or mat file.
-        dispVol = [];
 
         % dof - Number of DOFs. 
         %  For WEC bodies this is given in the h5 file. IF not, default is
@@ -134,7 +130,13 @@ classdef hydroBody < handle
         momOfInertia = [];
         
         % geometryFile - Names of geomtry stl file for this body in geometry subfolder
-        geometryFile = 'NONE';                                              
+        geometryFile = 'NONE';
+        
+        % dispVol Displaced volume at equilibrium position in m^3. 
+        %  If dispVol is empty, it is obtained from the h5 or mat file (the
+        %  default behaviour). The value in the h5 or mat file is
+        %  ignored if dispVol is not empty and the selected value is used.
+        dispVol = [];
         
         % viscDrag - Structure defining the viscous (quadratic) drag
         %  Must contain the fields 'Drag', 'cd' and 'characteristicArea'.
@@ -300,7 +302,7 @@ classdef hydroBody < handle
         
         % addedMassMethod - character vector with a description of the added mass method
         %  Contains one of the following character vectors describing what
-        %  method will be used to calculated the added mass forces:
+        %  method will be used to calculate the added mass forces:
         %
         %     'extrapolate acceleration from previous steps'
         %     'iterate' 
@@ -515,7 +517,9 @@ classdef hydroBody < handle
             obj.cg = obj.cg';
             obj.cb = h5read(filename,[body_name '/properties/cb']);
             obj.cb = obj.cb';
-            obj.dispVol = h5read(filename,[body_name '/properties/disp_vol']);
+            if isempty (obj.dispVol)
+                obj.dispVol = h5read(filename,[body_name '/properties/disp_vol']);
+            end
             obj.name = h5read(filename,[body_name '/properties/name']);
             try obj.name = obj.name{1}; end %#ok<TRYNC>
             obj.hydroData.simulation_parameters.scaled = h5read(filename,'/simulation_parameters/scaled');
@@ -645,7 +649,9 @@ classdef hydroBody < handle
                 obj.hydroData = hydroData;
                 obj.cg        = hydroData.properties.cg';
                 obj.cb        = hydroData.properties.cb';
-                obj.dispVol   = hydroData.properties.disp_vol;
+                if isempty (obj.dispVol)
+                    obj.dispVol   = hydroData.properties.disp_vol;
+                end
                 obj.name      = hydroData.properties.name;
                 obj.dof       = obj.hydroData.properties.dof;
                 obj.dof_start = obj.hydroData.properties.dof_start;
@@ -817,6 +823,9 @@ classdef hydroBody < handle
                     end
                     obj.excitationMethodNum = 1;
                     
+                    % precalculate the constant mean drift force
+                    obj.meanDriftForcePreCalc = (obj.waves.A(1,:) .* obj.waves.A(1,:) .* obj.hydroForce.fExt.md(1,:))';
+            
                 case {'regularCIC'}
                     obj.regExcitation ();
                     obj.irfInfAddedMassAndDamping ();
@@ -847,9 +856,6 @@ classdef hydroBody < handle
             % store the description of the wave type for information later
             obj.excitationMethod = obj.waves.type;
             
-            % precalculate the constant mean drift force
-            obj.meanDriftForcePreCalc = (obj.waves.A(1,:) .* obj.waves.A(1,:) .* obj.hydroForce.fExt.md(1,:))';
-
             if (gbmDOF > 0)
                 
                 obj.linearDamping = [obj.linearDamping(1:6), zeros(1,obj.dof_gbm)];
@@ -1113,11 +1119,17 @@ classdef hydroBody < handle
 
             node = mbdyn.pre.structuralNode6dof ('dynamic', 'AbsolutePosition', ref_hydroBody.pos);
 
+            if ~isempty (obj.geometryFile)
+                stl_file = fullfile (obj.caseDirectory, 'geometry', obj.geometryFile);
+            else
+                stl_file = '';
+            end
+            
             body = mbdyn.pre.body ( obj.mass,  ...
                                     [0;0;0], ...
                                     diag (obj.momOfInertia), ...
                                     node, ...
-                                    'STLFile', fullfile (obj.caseDirectory, 'geometry', obj.geometryFile) );
+                                    'STLFile', stl_file );
             
         end
         
@@ -1289,6 +1301,10 @@ classdef hydroBody < handle
                 obj.hydroForce.userDefinedFe(:,ii) = conv (waveAmpTime(:,2), obj.userDefinedExcIRF, 'same') * obj.simu.dt;
                 
             end
+            
+            % create piecewise polynomial(s) to interpolate the user
+            % defined wave excitation
+            obj.hydroForce.userDefinedFeInterp = interp1 (waveAmpTime(:,1), obj.hydroForce.userDefinedFe, 'linear', 'pp');
             
             obj.hydroForce.fExt.re = zeros(1,nDOF);
             obj.hydroForce.fExt.im = zeros(1,nDOF);
@@ -2088,11 +2104,14 @@ classdef hydroBody < handle
 
                 case 3
                     % user defined
+                    
+                    forces = ppval (obj.hydroForce.userDefinedFeInterp, t);
+%                     [ waves.waveAmpTime(:,1), body.hydroForce.userDefinedFe];
 
                     % Calculates the wave force, F_wave, for the case of User Defined Waves.
                     %
                     % F_wave = convolution calculation [1x6]
-                    error ('not yet implemented')
+%                     error ('not yet implemented')
                     % TODO: make interpolation function for user defined waves, using ppval (C++ version)
                     
                 case 4
@@ -3306,6 +3325,14 @@ classdef hydroBody < handle
                 'momOfInertia must be a 3 element vector of positive real values. This is the diagonal of the inertia matrix ([Ixx, Iyy, Izz])' );
             
             self.momOfInertia = new_momOfInertia;
+            
+        end
+        
+        function set.dispVol (self, new_dispVol)
+            
+            check.isNumericScalar (new_dispVol, true, 'dispVol', 1);
+            
+            self.dispVol = new_dispVol;
             
         end
         
