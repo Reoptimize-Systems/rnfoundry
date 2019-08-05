@@ -1,3 +1,59 @@
+classdef waveSettings < handle
+% class representing a settings for the type of waves to be applied in a sim
+%
+%
+% Examples
+%
+% % No waves with radiation CIC  
+% waves = waveClass('noWaveCIC');       %Create the Wave Variable and Specify Type      
+%
+%
+% % Regular Waves with radiation convolution integral
+% waves = wsim.waveSettings ('regularCIC');  % Create the Wave Variable and Specify Type                               
+% waves.H = 2.5;                          % Wave Height [m]
+% waves.T = 8;                            % Wave Period [s]
+%
+%
+% % Regular Waves with fixed radiation coefficients
+% waves = wsim.waveSettings ('regular');  % Create the Wave Variable and Specify Type                               
+% waves.H = 2.5;                          % Wave Height [m]
+% waves.T = 8;                            % Wave Period [s]
+%
+%
+% % Irregular Waves using PM Spectrum with Convolution Integral Calculation
+% waves = wsim.waveSettings ('irregular');  % Create the Wave Variable and Specify Type
+% waves.H = 2.5;                        % Significant Wave Height [m]
+% waves.T = 8;                          % Peak Period [s]
+% waves.spectrumType = 'PM';
+%
+%
+% % Irregular Waves using BS Spectrum with Convolution Integral Calculation
+% waves = wsim.waveSettings ('irregular'); % Create the Wave Variable and Specify Type
+% waves.H = 2.5;                        % Significant Wave Height [m]
+% waves.T = 8;                          % Peak Period [s]
+% waves.spectrumType = 'BS';
+% 
+%
+% % Irregular Waves using BS Spectrum with State Space Calculation
+% waves = wsim.waveSettings ('irregular');  % Create the Wave Variable and Specify Type
+% waves.H = 2.5;                        % Significant Wave Height [m]
+% waves.T = 8;                          % Peak Period [s]
+% waves.spectrumType = 'BS';
+%
+% % Irregular Waves using User-Defined Spectrum
+% waves = wsim.waveSettings ('spectrumImport');  % Create the Wave Variable and Specify Type
+% waves.spectrumDataFile = 'ndbcBuoyData.txt';  % Name of User-Defined Spectrum File [2,:] = [omega, Sf]
+%
+%
+% % User-Defined Time-Series of wave heights
+% waves = wsim.waveSettings ('etaImport');     %Create the Wave Variable and Specify Type
+% waves.etaDataFile = 'umpqua46229_6_2008.mat'; % Name of User-Defined Time-Series File [:,2] = [time, wave_elev]
+%
+%
+% See also: wsim.simSettings
+%
+%
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copyright 2014 the National Renewable Energy Laboratory and Sandia Corporation
 %
@@ -14,8 +70,6 @@
 % limitations under the License.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-classdef waveSettings < handle
-    
     % The following properties can be set by the user
     properties (SetAccess = public, GetAccess = public)
         
@@ -294,7 +348,7 @@ classdef waveSettings < handle
             ylabel('Spectrum (m^2-s/rad)');
         end
         
-        function waveSetup(obj,bemFreq,wDepth,rampTime,dt,maxIt,g, rho, endTime)
+        function waveSetup(obj, bemFreq, wDepth, rampTime, dt, maxIt, g, rho, endTime)
             % Calculate and set wave properties based on wave type
             obj.bemFreq    = bemFreq;
             obj.setWaveProps(wDepth)
@@ -360,7 +414,7 @@ classdef waveSettings < handle
                 case {'etaImport'}    %  This does not account for wave direction
                     % Import 'etaImport' time-series here and interpolate
                     data = importdata(obj.etaDataFile) ;    % Import time-series
-                    t = [0:dt:endTime]';      % WEC-Sim simulation time [s]
+                    t = (0:dt:endTime)';      % WEC-Sim simulation time [s]
                     obj.waveElevUser(rampTime, dt, maxIt, data, t);
                     obj.waveAmpTime1        = zeros(maxIt+1,2);
                     obj.waveAmpTime1(:,1)   = [0:maxIt]*dt;
