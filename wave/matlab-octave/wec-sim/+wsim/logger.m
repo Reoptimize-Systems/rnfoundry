@@ -873,7 +873,10 @@ classdef logger < handle
             %
             %  'Skip' - integer defining a number of values to skip between
             %    plotted values (to reduce plot size for large series)
-            % 
+            %
+            %  'Scale' - scalar value by which to scale the data values
+            %    when plotting
+            %
             % Output
             %
             %  hplot - A handle (or array of handles) for the plot series
@@ -888,6 +891,7 @@ classdef logger < handle
     
             options.PlotFcnArgs = {};
             options.Skip = 1;
+            options.Scale = 1;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -910,11 +914,13 @@ classdef logger < handle
                     hax = axes (hfig);
                 end
                 
-                
-                
-                hplot = obj.plotfunc (hax, obj.data.(varname), options.PlotFcnArgs{:});
+                hplot = obj.plotfunc (hax, obj.data.(varname) .* options.Scale, options.PlotFcnArgs{:});
             
-                ylabel (obj.info.(varname).AxisLabel, 'FontSize', 16);
+                if options.Scale == 1
+                    ylabel (obj.info.(varname).AxisLabel, 'FontSize', 16);
+                else
+                    ylabel (sprintf ('%s X %g', obj.info.(varname).AxisLabel, options.Scale), 'FontSize', 16);
+                end
 
                 if ~isempty (obj.defaultXLabel)
                     xlabel (obj.defaultXLabel, 'FontSize',16);
@@ -941,7 +947,8 @@ classdef logger < handle
                                               obj.info.(varname).IndependentVariable, ...
                                               varname, ...
                                               'PlotFcnArgs', options.PlotFcnArgs, ...
-                                              'Skip', options.Skip );
+                                              'Skip', options.Skip, ...
+                                              'Scale', [1, options.Scale]);
                 
             end
 
@@ -964,10 +971,13 @@ classdef logger < handle
             % logs two variables 'height' and 'weight', giving
             % logger.plotvars('height','weight') will plot height vs.
             % weight. The parameters to the plot can be provided after the
-            % variables, and all those arguments go to the plot function.  For
-            % example,
+            % variables, and all those arguments go to the plot function.
+            % For example,
+            %
             % logger.plotvars('height','weight','LineWidth',2,'Color','r');
+            %
             % will pass the last four arguments to plot.
+            %
             %
             % Input
             %
@@ -976,6 +986,19 @@ classdef logger < handle
             %  f1 - name of first variable to plot
             %
             %  f2 - name of second variable to plot
+            %
+            % Additional arguments may be supplied as parameter-value
+            % pairs. The available options are:
+            %
+            %  'PlotFcnArgs' - cell array of additional arguments that are 
+            %    to be sent to the plotting function.
+            %
+            %  'Skip' - integer defining a number of values to skip between
+            %    plotted values (to reduce plot size for large series)
+            %
+            %  'Scale' - two element vector containing the values by which
+            %    to scale the data values for each variable when plotting.
+            %    Default is [1,1] if not supplied.
             %
             % Output
             %
@@ -993,6 +1016,7 @@ classdef logger < handle
             
             options.PlotFcnArgs = {};
             options.Skip = 1;
+            options.Scale = [1,1];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -1087,8 +1111,8 @@ classdef logger < handle
                         end
 
                         h = [ h, obj.plotfunc( hax, ...
-                                               squeeze ( subsref (obj.data.(f1), f1S) ), ...
-                                               squeeze ( subsref (obj.data.(f2), f2S) ), ...
+                                               squeeze ( subsref (obj.data.(f1), f1S) .* options.Scale(1) ), ...
+                                               squeeze ( subsref (obj.data.(f2), f2S) .* options.Scale(2) ), ...
                                                options.PlotFcnArgs{:} ) ...
                             ];
                         
@@ -1117,8 +1141,8 @@ classdef logger < handle
                             end
 
                             h = [ h, obj.plotfunc( hax, ...
-                                                   squeeze ( subsref (obj.data.(f1), f1S) ), ...
-                                                   squeeze ( subsref (obj.data.(f2), f2S) ), ...
+                                                   squeeze ( subsref (obj.data.(f1), f1S) .* options.Scale(1) ), ...
+                                                   squeeze ( subsref (obj.data.(f2), f2S) .* options.Scale(2) ), ...
                                                    options.PlotFcnArgs{:} ) ...
                                 ];
                             
@@ -1182,8 +1206,17 @@ classdef logger < handle
 
             hold off;
             
-            desc1 = obj.info.(f1).AxisLabel;
-            desc2 = obj.info.(f2).AxisLabel;
+            if options.Scale(1) == 1
+                desc1 = obj.info.(f1).AxisLabel;
+            else
+                desc1 = sprintf ('%s X %g', obj.info.(f1).AxisLabel, options.Scale(1));
+            end
+            
+            if options.Scale(2) == 1
+                desc2 = obj.info.(f2).AxisLabel;
+            else
+                desc2 = sprintf ('%s X %g', obj.info.(f2).AxisLabel, options.Scale(2));
+            end
 
             xlabel (desc1, 'FontSize', 12);
             ylabel (desc2, 'FontSize', 12);
