@@ -12,7 +12,7 @@ classdef sphericalPin < mbdyn.pre.singleNodeOffsetJoint
     
     methods
         
-        function self = sphericalPin (node, absolute_pin_position, varargin)
+        function self = sphericalPin (node, absolute_pin_position, relative_offset, varargin)
             % sphericalPin constructor
             %
             % Syntax
@@ -25,34 +25,30 @@ classdef sphericalPin < mbdyn.pre.singleNodeOffsetJoint
             %  node - mbdyn.pre.structuralNode (or derived class) object
             %    representing the node the joint connects
             %
+            %  absolute_pin_position - 
+            %
+            %
             % Additional arguments can be supplied as parameter-value
             % pairs. Available options are:
             %
-            %  'RelativeOffset' - (3 x 1) vector containing the offset of 
-            %    the ball joint relative to the node. To provide an
-            %    alternative reference you can use the optional
-            %    Offset1Reference parameter (see below). Default is null
-            %    (no offset) if not supplied.
-            %
-            %  'OffsetReference' - by default the position provided in
-            %    RelativeOffset is relaive to the nodes in its reference
+            %  'PositionReference' - by default the position provided in
+            %    absolute_pin_position is relative to the global reference
             %    frame. An alternative reference frame can be provided
             %    using this argument. Possible value for this are:
             %      'node'          : the default behaviour
             %      'global'        : the global reference frame
             %      'local'         : same as 'node'  
             %
-            %  'RelativeOrientation' - mbdyn.pre.orientmat object
+            %  'AbsoluteOrientation' - mbdyn.pre.orientmat object
             %    containing the orientation of the joint relative to the
-            %    node. To provide an alternative reference you can
+            %    gloabl frame. To provide an alternative reference you can
             %    use the optional Orientation1Reference parameter (see
             %    below)
             %
-            %  'OrientationReference' - string containing a reference for
-            %    the orientation in RelativeOrientation1, can be one of
-            %    'node', 'local' (equivalent to 'node'), 'other node',
-            %    'other orientation' and 'global'. Defaut is 'node'. See
-            %    Offset1Reference above for more information.
+            %  'AbsoluteOrientationReference' - string containing a 
+            %    reference for the orientation in AbsoluteOrientation, can
+            %    be one of 'node', 'local' (equivalent to 'node') and
+            %    'global'. Defaut is 'node'. 
             %  
             % Output
             %
@@ -68,6 +64,7 @@ classdef sphericalPin < mbdyn.pre.singleNodeOffsetJoint
             
             % call the superclass constructor
             self = self@mbdyn.pre.singleNodeOffsetJoint (node, ...
+                        'RelativeOffset', relative_offset, ...
                         pvpairs{:} );
                     
             allowedposrefstrs = {'global', 'node', 'local'};
@@ -226,7 +223,7 @@ classdef sphericalPin < mbdyn.pre.singleNodeOffsetJoint
         
             allfnames = fieldnames (options);
             
-            nopass_list = setdiff (allfnames, parentfnames);
+            nopass_list = [ {'RelativeOffset'}; setdiff(allfnames, parentfnames)];
             
         end
         
