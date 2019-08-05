@@ -19,20 +19,21 @@ classdef element < mbdyn.pre.base
 %   loadSTL - load an STL file which will be used when visualising the element
 %   setColour - set the colour of the element in plots
 %   setSize - set the size of the element in plots
-%
+%   
 %
     
     properties (GetAccess = public, SetAccess = public)
        
         name; % name of the element
+        defaultShape;
+        defaultShapeOrientation;
+        defaultShapeOffset;
         
     end
     
     properties (GetAccess = protected, SetAccess = protected)
        
         stlLoaded;
-        defaultShape;
-        defaultShapeOrientation;
         stlNormals;
         
     end
@@ -77,6 +78,10 @@ classdef element < mbdyn.pre.base
             %    object which sets the orientation of the default shape (see
             %    above). 
             %
+            %  'DefaultShapeOffset' - optional 3 element column vector
+            %    which sets the offset of the default shape (see
+            %    above) from the default initial position. 
+            %
             % Output
             %
             %  el - mbdyn.pre.element
@@ -88,14 +93,7 @@ classdef element < mbdyn.pre.base
             
             self = self@mbdyn.pre.base ();
             
-            self.checkAllowedStringInputs ( options.DefaultShape, ...
-                                            { 'none', 'cuboid', 'box', 'cylinder', 'sphere', 'ellipsoid', 'tube', 'pipe', 'annularcylinder' }, ...
-                                            true, ...
-                                            'DefaultShape' );
-                                        
-            self.checkOrientationMatrix ( options.DefaultShapeOrientation, ...
-                                          true, ...
-                                          'DefaultShapeOrientation' );
+            self.defaultShape = options.DefaultShape;
                                       
             assert (ischar (options.Name), 'Name must be a character vector');
             
@@ -104,9 +102,46 @@ classdef element < mbdyn.pre.base
             self.shapeData = struct([]);
             self.shapeObjects = {};
             self.drawAxesH = [];
-            self.defaultShape = options.DefaultShape;
             self.defaultShapeOrientation = options.DefaultShapeOrientation;
+            self.defaultShapeOffset = options.DefaultShapeOffset;
             self.name = options.Name;
+            
+            if ~isempty (options.STLFile)
+                if exist (options.STLFile, 'file')
+                    self.loadSTL (options.STLFile, options.UseSTLName);
+                else
+                    error ('Supplied STL file %s does not appear to exist', options.STLFile);
+                end
+            end
+            
+        end
+        
+        function set.defaultShapeOffset (self, new_offset)
+            
+            self.checkCartesianVector (new_offset, true, 'defaultShapeOffset');
+            
+            self.defaultShapeOffset = new_offset;
+            
+        end
+        
+        function set.defaultShapeOrientation (self, new_orientation)
+            
+            self.checkOrientationMatrix ( new_orientation, ...
+                                          true, ...
+                                          'DefaultShapeOrientation' );
+            
+            self.defaultShapeOrientation = new_orientation;
+            
+        end
+        
+        function set.defaultShape (self, newshape)
+            
+            self.checkAllowedStringInputs ( newshape, ...
+                                            { 'none', 'cuboid', 'box', 'cylinder', 'sphere', 'ellipsoid', 'tube', 'pipe', 'annularcylinder' }, ...
+                                            true, ...
+                                            'DefaultShape' );
+                                        
+            self.defaultShape = newshape;
             
             switch self.defaultShape
                 
@@ -142,13 +177,7 @@ classdef element < mbdyn.pre.base
                         
             end
             
-            if ~isempty (options.STLFile)
-                if exist (options.STLFile, 'file')
-                    self.loadSTL (options.STLFile, options.UseSTLName);
-                else
-                    error ('Supplied STL file %s does not appear to exist', options.STLFile);
-                end
-            end
+            self.needsRedraw = true;
             
         end
         
@@ -463,7 +492,9 @@ classdef element < mbdyn.pre.base
                         
                         orientation = self.defaultShapeOrientation.orientationMatrix;
                         
-                        self.shapeData = self.makeCuboidShape (lx, ly, lz, orientation);
+                        offset = self.defaultShapeOffset;
+                        
+                        self.shapeData = self.makeCuboidShape (lx, ly, lz, orientation, offset);
                         
                                      
                     case 'cylinder'
@@ -471,9 +502,10 @@ classdef element < mbdyn.pre.base
                         radius = self.shapeParameters(1);
                         axiallength = self.shapeParameters(2);
                         orientation = self.defaultShapeOrientation.orientationMatrix;
+                        offset = self.defaultShapeOffset;
                         npnts = 30;
                         
-                        self.shapeData = self.makeCylinderShape (radius, axiallength, orientation, npnts);
+                        self.shapeData = self.makeCylinderShape (radius, axiallength, orientation, offset, npnts);
                         
                         
                     case {'tube', 'pipe', 'annularcylinder'}
@@ -482,9 +514,10 @@ classdef element < mbdyn.pre.base
                         rinner = self.shapeParameters(2);
                         axiallength = self.shapeParameters(3);
                         orientation = self.defaultShapeOrientation.orientationMatrix;
+                        offset = self.defaultShapeOffset;
                         npnts = 20;
                         
-                        self.shapeData = self.makeAnnularCylinderShape (router, rinner, axiallength, orientation, npnts);
+                        self.shapeData = self.makeAnnularCylinderShape (router, rinner, axiallength, orientation, offset, npnts);
                         
                         
                     case 'sphere'
@@ -666,12 +699,13 @@ classdef element < mbdyn.pre.base
             options.Name = '';
             options.DefaultShape = 'cuboid';
             options.DefaultShapeOrientation = mbdyn.pre.orientmat ('eye');
+            options.DefaultShapeOffset = [0;0;0];
             
             nopass_list = {};
             
         end
         
-        function shapedata = makeCylinderShape (radius, axiallength, orientation, npnts)
+        function shapedata = makeCylinderShape (radius, axiallength, orientation, offset, npnts)
             % generate shape data for a closed cylinder
             
             if nargin < 4
@@ -710,30 +744,29 @@ classdef element < mbdyn.pre.base
             Y(2,:) = XYZtemp(2,:);
             Z(2,:) = XYZtemp(3,:);
 
-
             shapedata{1} = struct ();
             shapedata{1}.Vertices = [];
             shapedata{1}.Faces = [];
 
             shapedata{1}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)';
-                                      X(2,:)', Y(2,:)', Z(2,:)'; ];
+                                      X(2,:)', Y(2,:)', Z(2,:)'; ] + offset.';
 
             shapedata{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
             shapedata{1}.Faces (end, 2) = 1;
             shapedata{1}.Faces (end, 3) = 1 + npnts;
 
             shapedata{2} = struct ();
-            shapedata{2}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)' ];
+            shapedata{2}.Vertices = [ X(1,:)', Y(1,:)', Z(1,:)' ] + offset.';
             shapedata{2}.Faces = 1:npnts;
 
             shapedata{3} = struct ();
-            shapedata{3}.Vertices = [ X(2,:)', Y(2,:)', Z(2,:)' ];
+            shapedata{3}.Vertices = [ X(2,:)', Y(2,:)', Z(2,:)' ] + offset.';
             shapedata{3}.Faces = 1:npnts;     
             
         end
         
         
-        function shapedata = makeAnnularCylinderShape (router, rinner, axiallength, orientation, npnts)
+        function shapedata = makeAnnularCylinderShape (router, rinner, axiallength, orientation, offset, npnts)
             
             if nargin < 5
                 npnts = 20;
@@ -799,14 +832,14 @@ classdef element < mbdyn.pre.base
             shapedata{1}.Faces = [];
 
             shapedata{1}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
-                                      Xo(2,:)', Yo(2,:)', Zo(2,:)'; ];
+                                      Xo(2,:)', Yo(2,:)', Zo(2,:)'; ] + offset.';
 
             shapedata{1}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
             shapedata{1}.Faces (end, 2) = 1;
             shapedata{1}.Faces (end, 3) = 1 + npnts;
 
             shapedata{2}.Vertices = [ Xi(1,:)', Yi(1,:)', Zi(1,:)';
-                                      Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
+                                      Xi(2,:)', Yi(2,:)', Zi(2,:)'; ] + offset.';
 
             shapedata{2}.Faces = [ (1:npnts)', (1:npnts)' + 1, (1:npnts)' + 1 + npnts, (1:npnts)' + npnts ];
             shapedata{2}.Faces (end, 2) = 1;
@@ -814,12 +847,12 @@ classdef element < mbdyn.pre.base
 
             shapedata{3} = struct ();
             shapedata{3}.Vertices = [ Xo(1,:)', Yo(1,:)', Zo(1,:)';
-                                      Xi(1,:)', Yi(1,:)', Zi(1,:)'; ];
+                                      Xi(1,:)', Yi(1,:)', Zi(1,:)'; ] + offset.';
             shapedata{3}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
 
             shapedata{4} = struct ();
             shapedata{4}.Vertices = [ Xo(2,:)', Yo(2,:)', Zo(2,:)';
-                                      Xi(2,:)', Yi(2,:)', Zi(2,:)'; ];
+                                      Xi(2,:)', Yi(2,:)', Zi(2,:)'; ] + offset.';
             shapedata{4}.Faces = [ 1:npnts, 1, (1:npnts) + npnts, 1 + npnts ];
                         
         end
@@ -842,7 +875,7 @@ classdef element < mbdyn.pre.base
                                        lx/2,  ly/2,  lz/2;
                                       -lx/2,  ly/2,  lz/2; ];
                                   
-            shapedata{1}.Vertices = (orientation * shapedata{1}.Vertices.').';
+            shapedata{1}.Vertices = (orientation * shapedata{1}.Vertices.').'  + offset.';
 
             shapedata{1}.Faces = [ 1, 4, 3, 2;
                                    1, 5, 6, 2;
