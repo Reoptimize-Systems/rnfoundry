@@ -65,6 +65,17 @@ function hydro = processnemoh (filedir, varargin)
 %   and replaces the CoB of the first and third body, but leaves the second
 %   body as it is in the Nemoh files.
 %
+%
+% 'ForceKH' - option to replace all or some of the bodies' linear restoring 
+%   matrices. Should contain a cell array with the same number of elements
+%   as bodies in the Nemoh solution being loaded. For each body, the
+%   corresponding cell of the array will be checked for a replacement 6
+%   element vector representing the diagonal of the linear restoring
+%   matrix. Each cell should either contain an empty matrix, or a
+%   replacement 6 element vector for the corresponding body. If is empty
+%   the linear restoring matrix is not replaced, if it is a vector, the
+%   linear restoring matrix is replaced with this vector. 
+%
 % Output
 %
 %  hydro - array of one or more structures (one for each body) containing
@@ -133,6 +144,7 @@ function hydro = processnemoh (filedir, varargin)
     options.ForceCoG = {};
     options.ForceCoB = {};
     options.ForceVolume = {};
+    options.ForceKH = {};
 %     options.DoRadiationIRF = true;
 %     options.IRFDuration = [];
 %     options.IRFNSteps = [];
@@ -144,6 +156,8 @@ function hydro = processnemoh (filedir, varargin)
     
     assert (iscell (options.ForceCoG), 'ForceCoG must be a cell array');
     assert (iscell (options.ForceCoB), 'ForceCoB must be a cell array');
+    assert (iscell (options.ForceVolume), 'ForceVolume must be a cell array');
+    assert (iscell (options.ForceKH), 'ForceKH must be a cell array');
     
     hydro = options.HydroStructure;
     
@@ -283,6 +297,9 @@ function hydro = processnemoh (filedir, varargin)
     if isempty (options.ForceVolume)
         options.ForceVolume = repmat ({[]}, 1, hydro(hydroind).Nb);
     end
+    if isempty (options.ForceKH)
+        options.ForceKH = repmat ({[]}, 1, hydro(hydroind).Nb);
+    end
 
     %% Hydrostatics file(s)
     for bodyind = 1:hydro(hydroind).Nb
@@ -330,21 +347,27 @@ function hydro = processnemoh (filedir, varargin)
     %% KH file(s)
     for bodyind = 1:hydro(hydroind).Nb
 
-        if hydro(hydroind).Nb == 1
-            fileID = fopen (fullfile (meshdir, 'KH.dat'));
+        if isempty(options.ForceKH{bodyind})
+            
+            if hydro(hydroind).Nb == 1
+                fileID = fopen (fullfile (meshdir, 'KH.dat'));
+            else
+                fileID = fopen ( fullfile (meshdir, sprintf ('KH_%d.dat', bodyind-1)) );
+            end
+            
+            raw = textscan(fileID,'%[^\n\r]');
+            
+            raw = raw{:};
+            
+            fclose(fileID);
+            
+            for i = 1:6
+                tmp = textscan(raw{i},'%f');
+                hydro(hydroind).C(i,:,bodyind) = tmp{1,1}(1:6);  % Linear restoring stiffness
+            end
+            
         else
-            fileID = fopen ( fullfile (meshdir, sprintf ('KH_%d.dat', bodyind-1)) );
-        end
-
-        raw = textscan(fileID,'%[^\n\r]');
-
-        raw = raw{:};
-
-        fclose(fileID);
-
-        for i = 1:6
-            tmp = textscan(raw{i},'%f');
-            hydro(hydroind).C(i,:,bodyind) = tmp{1,1}(1:6);  % Linear restoring stiffness
+            hydro(hydroind).C(1:6,:,bodyind) = options.ForceKH{bodyind};
         end
 
     end
