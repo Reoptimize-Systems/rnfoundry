@@ -91,9 +91,15 @@ classdef simSettings < handle
         % disableAddedMassForce - true/false flag for disabling the added
         %  mass force calculation. This option is primarily intended for
         %  debugging purposes. If true, the added mass forces will be set
-        %  to zero, although the adjustments to the mass and inertia will
-        %  still take place.
+        %  to zero, and the adjustments to the mass and inertia will also
+        %  not take place.
         disableAddedMassForce = false;
+        
+        % disableRadiationForce - true/false flag for disabling the
+        %  radiation damping force calculation. This option is primarily
+        %  intended for debugging purposes. If true, the radiation forces
+        %  will be set to zero.
+        disableRadiationForce = false;
         
 %         reloadH5Data = 0; % Option to re-load hydro data from hf5 file between runs: Off->'0', On->'1', (default = 0)
         
