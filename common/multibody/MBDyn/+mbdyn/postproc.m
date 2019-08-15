@@ -359,6 +359,10 @@ classdef postproc < handle
                 
                 self.time = self.netcdf_getVar (ncfileid,varid);
                 
+                if isempty (self.time)
+                    error ('Simulation time in netcdf file is empty, aborting loading of simulation data as none is available');
+                end
+                
                 self.simInfo.InitialTime = self.time(1);
                 
                 self.simInfo.FinalTime = self.time(end);
@@ -1322,14 +1326,14 @@ classdef postproc < handle
                         % axes limits
                         stretchfactor = 0.1;
 
-                        axXlim(1) = axXlim(1) - stretchfactor*abs(axXlim(1)) - min (xExcursion(1), 0);
-                        axXlim(2) = axXlim(2) + stretchfactor*abs(axXlim(2)) + max (xExcursion(2), 0);
+                        axXlim(1) = axXlim(1) - stretchfactor*abs(axXlim(1)) - abs (min (xExcursion(1), 0));
+                        axXlim(2) = axXlim(2) + stretchfactor*abs(axXlim(2)) + abs (max (xExcursion(2), 0));
 
-                        axYlim(1) = axYlim(1) - stretchfactor*abs(axYlim(1)) - min (yExcursion(1), 0);
-                        axYlim(2) = axYlim(2) + stretchfactor*abs(axYlim(2)) + max (yExcursion(2), 0);
+                        axYlim(1) = axYlim(1) - stretchfactor*abs(axYlim(1)) - abs (min (yExcursion(1), 0));
+                        axYlim(2) = axYlim(2) + stretchfactor*abs(axYlim(2)) + abs (max (yExcursion(2), 0));
 
-                        axZlim(1) = axZlim(1) - stretchfactor*abs(axZlim(1)) - min (zExcursion(1), 0);
-                        axZlim(2) = axZlim(2) + stretchfactor*abs(axZlim(2)) + max (zExcursion(2), 0);
+                        axZlim(1) = axZlim(1) - stretchfactor*abs(axZlim(1)) - abs (min (zExcursion(1), 0));
+                        axZlim(2) = axZlim(2) + stretchfactor*abs(axZlim(2)) + abs (max (zExcursion(2), 0));
                         
                         options.AxLims = [axXlim; axYlim; axZlim];
                     end
