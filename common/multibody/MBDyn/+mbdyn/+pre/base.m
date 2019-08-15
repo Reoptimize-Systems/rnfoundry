@@ -210,7 +210,7 @@ classdef base < handle
             % checks if input is a 3 element numeric column vector,
             % suitible for position, angular position, velocity, angular
             % velocity etc. It can also be a string: 'null' which
-            % represents [ 0, 0, 0].
+            % represents [ 0; 0; 0].
             %
             % Syntax
             %
