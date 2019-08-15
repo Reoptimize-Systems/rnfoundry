@@ -17,7 +17,9 @@ function usages = find_in_files(exp, topdir, dodisplay)
 % mfiles in the folder topdir and all its subfolders recursively.
 % Infomation on the usages is returned on the command line, and in the cell
 % array usages, described below. If topdir is empty, the entire path is
-% searched.
+% searched. If topdir is the special keyword 'allbutroot', the entire
+% matlab path is searched except for the matlab root directory containing
+% the built-in matlab toolboxes etc.
 %
 % find_in_files(exp, topdir, dodisplay) performs as
 % find_in_files(exp,topdir) but allows control over whether results are
@@ -50,10 +52,15 @@ function usages = find_in_files(exp, topdir, dodisplay)
         if ~ischar(topdir)
             error('topdir must be a string');
         end
-        if exist(topdir, 'file') ~= 7
-            error('supplied directory name does not exist.')
+        if strcmpi (topdir, 'allbutroot')
+            thepath = path2cell (path);
+            thepath(strncmpi (thepath, matlabroot, numel (matlabroot))) = [];
+        else
+            if exist (topdir, 'file') ~= 7
+                error ('supplied directory name does not exist.')
+            end
+            thepath = path2cell (genpath (topdir));
         end
-        thepath = path2cell(genpath(topdir));
     end
     
     if nargin < 3
