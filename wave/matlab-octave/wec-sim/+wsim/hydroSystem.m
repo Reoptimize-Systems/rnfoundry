@@ -9,8 +9,9 @@ classdef hydroSystem < handle
 %
 % Methods:
 %
-%  addHydroBodies
-%  initialiseHydrobodies
+%  hydroSystem - wsim.hydroSystem constructor
+%  addHydroBodies - add hydroBodies to the system
+%  initialiseHydrobodies - 
 %
 % 
 % See also: wsim.hydroBody, wsim.wecSim
@@ -355,10 +356,12 @@ classdef hydroSystem < handle
                 mbnodes = {};
                 mbbodies = {};
                 mbelements = {};
+                forces = {};
                 
                 input_list = {};
                 
-                % make the structural nodes and bodies
+                % make the structural nodes and bodies, cancel gravity for
+                % each hydro node with an upward force
                 for bodyind = 1:numel (self.hydroBodies)
                     
                     [node, body] = self.hydroBodies(bodyind).makeMBDynComponents ();
@@ -366,12 +369,18 @@ classdef hydroSystem < handle
                     mbnodes = [mbnodes, {node}];
                     mbbodies = [mbbodies, {body}];
                     
+                    % upward force to cancel gravity which will be added
+                    % manually by the hydrobody when calculating buoyancy
+                    f_no_g_drv = mbdyn.pre.singleTplDriveCaller ([0;0;1], mbdyn.pre.const (self.simu.g * mbbodies{bodyind}.mass));
+                    
+                    forces = [forces, { mbdyn.pre.structuralForce(mbnodes{bodyind}, 'absolute', f_no_g_drv) } ];
+                    
                 end
                 
                 self.bodyMBDynNodes = mbnodes;
                 
                 absnodes = {};
-                forces = {};
+                
                 if self.simu.ssCalc == 2
                     % need to create abstract nodes for the moments of the
                     % structural nodes as these cannot be addressed
@@ -404,7 +413,7 @@ classdef hydroSystem < handle
                             fdc = mbdyn.pre.componentTplDriveCaller (drivecallers(1:3));
                             mdc = mbdyn.pre.componentTplDriveCaller (drivecallers(4:6));
                             
-                            forces = [forces, { mbdyn.pre.structuralForce(mbnodes{mbnodeind}, 'absolute', 'null', fdc), ...
+                            forces = [forces, { mbdyn.pre.structuralForce(mbnodes{mbnodeind}, 'absolute', fdc), ...
                                                 mbdyn.pre.structuralCouple(mbnodes{mbnodeind}, 'absolute', mdc) } ];
                             
                         end
@@ -505,7 +514,7 @@ classdef hydroSystem < handle
                     end
                 end
                 
-                mbelements = [ mbelements, forces ];
+                mbelements = [ mbelements, forces, {mbdyn.pre.gravity('GravityAcceleration', mbdyn.pre.singleTplDriveCaller ([0;0;-1], mbdyn.pre.const (self.simu.g)))} ];
                 mbnodes = [mbnodes, absnodes];
                 
             else
@@ -706,17 +715,21 @@ classdef hydroSystem < handle
             F_AddedMass = nan * ones (size (forceAddedMass));
             
             for bodyind = 1:numel(self.hydroBodies)
+                
                 self.hydroBodies(bodyind).restoreMassMatrix ();
                 
-                % body.forceAddedMass returns an (n x 6) matrix of values,
-                % with the rows being the time series history. We reshape
-                % this into a (6 x 1 x n) matrix for insertion into the
-                % F_AddedMass matrix in the appropriate location. To get
-                % the right shape we have to transpose the result of
-                % body.forceAddedMass before reshaping
-                F_AddedMass(:,bodyind,:) = reshape ( ...
-                    self.hydroBodies(bodyind).forceAddedMass(squeeze(accel(:,bodyind,:)).', self.simu.b2b).', ...
-                                                     6, 1, []);
+                if self.hydroBodies(bodyind).doAddedMass
+                    % body.forceAddedMass returns an (n x 6) matrix of values,
+                    % with the rows being the time series history. We reshape
+                    % this into a (6 x 1 x n) matrix for insertion into the
+                    % F_AddedMass matrix in the appropriate location. To get
+                    % the right shape we have to transpose the result of
+                    % body.forceAddedMass before reshaping
+                    F_AddedMass(:,bodyind,:) = reshape ( ...
+                        self.hydroBodies(bodyind).forceAddedMass(squeeze(accel(:,bodyind,:)).', self.simu.b2b).', ...
+                                                         6, 1, []);
+                end
+                
             end
             
             F_Total = F_Total - F_AddedMass;
