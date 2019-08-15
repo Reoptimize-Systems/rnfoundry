@@ -860,6 +860,7 @@ classdef system < mbdyn.pre.base
             options.References = false;
             options.ReferenceScale = 1;
             options.GlobalReference = true;
+            options.View = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -1001,7 +1002,11 @@ classdef system < mbdyn.pre.base
                 axis (self.drawAxesH, 'equal')
             end
             
-            view (self.drawAxesH, 3);
+            if isempty (options.View)
+                view (self.drawAxesH, 3);
+            else
+                view (self.drawAxesH, options.View);
+            end
             
         end
         
