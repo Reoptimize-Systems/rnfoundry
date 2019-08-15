@@ -394,10 +394,28 @@ classdef simulation < nemoh.base
             hold on;
             CC = onCleanup (@() hold ('off'));
             
+            colormap (hax, summer (numel (self.bodies)));
+            
+            ColOrd = get (hax,'ColorOrder');
+            % Determine the number of colors in
+            % the matrix
+            [m,n] = size(ColOrd);
+
             for ind = 1:numel (self.bodies)
+                
+                % Determine which row to use in the
+                % Color Order Matrix
+                ColRow = rem(ind,m);
+                if ColRow == 0
+                  ColRow = m;
+                end
+                % Get the color
+                Col = ColOrd(ColRow,:);
+    
                 self.bodies(ind).drawMesh ( 'Axes', hax, ...
                                             'PlotForces', options.PlotForces, ...
-                                            'AddTitle', false );
+                                            'AddTitle', false, ...
+                                            'EdgeColor', Col );
             end
             
             clear CC
