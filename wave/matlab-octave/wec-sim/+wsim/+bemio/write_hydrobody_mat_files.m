@@ -138,25 +138,26 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
 
         end
         
-        try tmp = wsim.bemio.h5load(filename, [body_name '/properties/mass']);
-            obj.hydroData.gbm.mass      = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
-        try tmp = wsim.bemio.h5load(filename, [body_name '/properties/stiffness']);
-            obj.hydroData.gbm.stiffness = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
-        try tmp = wsim.bemio.h5load(filename, [body_name '/properties/damping']);
-            obj.hydroData.gbm.damping   = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp;end;
-        if (obj.dof_gbm>0)
-            obj.linearDamping = [obj.linearDamping(1:6) zeros(1,obj.dof_gbm)];
-        end
-        
-        if obj.meanDriftForce == 0
-            obj.hydroData.hydro_coeffs.mean_drift = 0.*obj.hydroData.hydro_coeffs.excitation.re;
-        elseif obj.meanDriftForce == 1
-            obj.hydroData.hydro_coeffs.mean_drift =  wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/control_surface/val']);
-        elseif obj.meanDriftForce == 2
-            obj.hydroData.hydro_coeffs.mean_drift =  wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/momentum_conservation/val']);
-        else
-            error('Wrong flag for mean drift force.')
-        end
+%         try tmp = wsim.bemio.h5load(filename, [body_name '/properties/mass']);
+%             obj.hydroData.gbm.mass      = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
+%         try tmp = wsim.bemio.h5load(filename, [body_name '/properties/stiffness']);
+%             obj.hydroData.gbm.stiffness = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
+%         try tmp = wsim.bemio.h5load(filename, [body_name '/properties/damping']);
+%             obj.hydroData.gbm.damping   = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp;end;
+%
+%         if (obj.dof_gbm>0)
+%             obj.linearDamping = [obj.linearDamping(1:6) zeros(1,obj.dof_gbm)];
+%         end
+%         
+%         if obj.meanDriftForce == 0
+%             obj.hydroData.hydro_coeffs.mean_drift = 0.*obj.hydroData.hydro_coeffs.excitation.re;
+%         elseif obj.meanDriftForce == 1
+%             obj.hydroData.hydro_coeffs.mean_drift =  wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/control_surface/val']);
+%         elseif obj.meanDriftForce == 2
+%             obj.hydroData.hydro_coeffs.mean_drift =  wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/mean_drift/momentum_conservation/val']);
+%         else
+%             error('Wrong flag for mean drift force.')
+%         end
 
         % write the .mat file for this body
         outfile = fullfile (outdir, [name, options.AppendToFileNames, '.mat']);
