@@ -133,6 +133,12 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             %    containing the intial angular velocity of the node in the
             %    global frame. Default is [0;0;0] if not supplied.
             %
+            %  'InitialiseFromReference' - alternative to supplying the
+            %    'AbsolutePosition', 'AbsoluteOrientation',
+            %    'AbsoluteVelocity' or 'AbsoluteAngularVelocity' options,
+            %    where instead an mbdyn.pre.reference object is expected,
+            %    and is used to populate these values.
+            %
             %  'Accelerations' - true/false flag, or a character vector
             %    which must be 'yes' of 'no'. Determines whether this node
             %    will output acceleration data.
@@ -280,9 +286,8 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             
             self.absoluteOrientation.orientationMatrix = neworientation.orientationMatrix;
             
-        end
-    
-
+        end       
+        
         function setAbsoluteOrientation (self, neworientation)
             % set the absolute orientation of the structural node
             
@@ -312,6 +317,34 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             % set the absolute orientation of the structural node
             
             self.absoluteAngularVelocity = newomega;
+            
+        end
+        
+        function setKinematicsFromReference (self, ref)
+            % sets the position, orientation etc. from a mbdyn.pre.reference
+            
+            setKinematicsFromReference@mbdyn.pre.structuralNode (self, ref);
+            
+            setAbsoluteOrientation (self, ref.orientm);
+            setAbsoluteAngularVelocity (self, ref.omega);
+            
+        end 
+        
+        function setAbsoluteVelocity (self, newvel)
+            % set the absolute orientation of the structural node
+            
+            self.check3ElementNumericVector (newvel, true, 'absoluteVelocity');
+            
+            self.absoluteVelocity = newvel;
+            
+        end
+        
+        function setAbsolutePosition (self, newpos)
+            % set the absolute orientation of the structural node
+            
+            self.check3ElementNumericVector (newpos, true, 'absolutePosition');
+            
+            self.absolutePosition = newpos;
             
         end
         

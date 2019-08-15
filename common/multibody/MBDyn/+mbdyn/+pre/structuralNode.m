@@ -165,6 +165,32 @@ classdef structuralNode < mbdyn.pre.node
             str = generateMBDynInputString@mbdyn.pre.node (self);
         end
         
+        function setKinematicsFromReference (self, ref)
+            % sets the position, orientation etc. from a mbdyn.pre.reference
+            
+            setAbsolutePosition (self, ref.pos);
+            setAbsoluteVelocity (self, ref.v);
+            
+        end 
+        
+        function setAbsoluteVelocity (self, newvel)
+            % set the absolute orientation of the structural node
+            
+            self.check3ElementNumericVector (newvel, true, 'absoluteVelocity');
+            
+            self.absoluteVelocity = newvel;
+            
+        end
+        
+        function setAbsolutePosition (self, newpos)
+            % set the absolute orientation of the structural node
+            
+            self.check3ElementNumericVector (newpos, true, 'absolutePosition');
+            
+            self.absolutePosition = newpos;
+            
+        end
+        
         function draw (self, varargin)
             % plot the node in a figure
             %
