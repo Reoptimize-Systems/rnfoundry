@@ -139,12 +139,20 @@ classdef hydroBody < handle
         dispVol = [];
         
         % viscDrag - Structure defining the viscous (quadratic) drag
-        %  Must contain the fields 'Drag', 'cd' and 'characteristicArea'.
-        %  The 'Drag' field should contain a (6x6) matrix defining the
-        %  Viscous (quadratic) drag. The 'cd' field should contain a vector
-        %  length 6 defining the Viscous (quadratic) drag. The
-        %  'characteristicArea' field should contain another vector of
-        %  length 6 defining the Characteristic area for viscous drag.
+        %  Must contain either the field 'Drag', or the fields 'cd' and
+        %  'characteristicArea'. 
+        %
+        %    Drag : if supplied, this field should contain either a full 
+        %     (6x6) matrix defining the Viscous (quadratic) drag, or a
+        %     vector of length 6 representing the diagonal of this matrix.
+        %     These are the directly specified viscous drag coefficients.
+        %
+        %    cd : should contain a vector length 6 defining the Viscous
+        %     (quadratic) drag coefficients which will be multiplied by the
+        %     corresponding values in the 'characteristicArea' field.
+        %
+        %    characteristicArea : should contain a vector of length 
+        %     6 defining the Characteristic areas for viscous drag.
         %
         viscDrag = struct( 'Drag',                 zeros(6), ...
                            'cd',                   [0 0 0 0 0 0], ... 
@@ -326,6 +334,12 @@ classdef hydroBody < handle
         % doLinearDamping - true/false flag indicating if linear damping is included
         doLinearDamping;
         
+        % doRadiationDamping - true/false flag indicating if radiation forces are included
+        doRadiationDamping = true;
+        
+        % doAddedMass - true/false flag indicating if added mass forces are included
+        doAddedMass = true;
+        
         % caseDirectory - Simulation case directory containing the hydroData and geometry subdirectories
         caseDirectory;
         
@@ -340,6 +354,12 @@ classdef hydroBody < handle
         %   return [ 0; 0; 0; 0; 0; 0 ]. It is generally intended for
         %   debugging purposes only
         disableAddedMassForce = false;
+        
+        % disableRadiationForce - true/false flag indicating whether to calculate radiation forces
+        %   If this is true, the radiation damping force will be set to
+        %   always return [ 0; 0; 0; 0; 0; 0 ]. It is generally intended
+        %   for debugging purposes only
+        disableRadiationForce = false;
 
     end
 
@@ -558,6 +578,7 @@ classdef hydroBody < handle
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.B.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/B/all']); end %#ok<TRYNC>
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.C.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/C/all']); end %#ok<TRYNC>
             try obj.hydroData.hydro_coeffs.radiation_damping.state_space.D.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/radiation_damping/state_space/D/all']); end %#ok<TRYNC>
+            
             try tmp = wsim.bemio.h5load(filename, [body_name '/properties/mass']);
                 obj.hydroData.gbm.mass      = tmp(obj.dof_start+6:obj.dof_end,obj.dof_start+6:obj.dof_end); clear tmp; end;
             try tmp = wsim.bemio.h5load(filename, [body_name '/properties/stiffness']);
@@ -778,6 +799,9 @@ classdef hydroBody < handle
             
             % check if obj.viscDrag.Drag is defined directly
             if  isfield (obj.viscDrag, 'Drag') && (any(any(obj.viscDrag.Drag)) == 1)
+                if isvector (obj.viscDrag)
+                    obj.viscDrag = diag (obj.viscDrag);
+                end
                 obj.hydroForce.visDrag = obj.viscDrag.Drag;                
             else
                 obj.hydroForce.visDrag = diag (0.5 * rho .* obj.viscDrag.cd .* obj.viscDrag.characteristicArea);
@@ -830,6 +854,9 @@ classdef hydroBody < handle
                     obj.regExcitation ();
                     obj.irfInfAddedMassAndDamping ();
                     obj.excitationMethodNum = 1;
+                    
+                    % precalculate the constant mean drift force
+                    obj.meanDriftForcePreCalc = (obj.waves.A(1,:) .* obj.waves.A(1,:) .* obj.hydroForce.fExt.md(1,:))';
                     
                 case {'irregular', 'spectrumImport'}
                     obj.irrExcitation ();
@@ -902,39 +929,47 @@ classdef hydroBody < handle
             %  hb - wsim.hydroBody object
             %
 
-            
             iBod = obj.bodyNumber;
             obj.hydroForce.storage.mass = obj.mass;
             obj.hydroForce.storage.momOfInertia = obj.momOfInertia;
             obj.hydroForce.storage.fAddedMass = obj.hydroForce.fAddedMass;
-            
-            if obj.simu.b2b == true
                 
-                tmp.fadm = diag (obj.hydroForce.fAddedMass(:,1+(iBod-1)*6:6+(iBod-1)*6));
-                tmp.adjmass = sum(tmp.fadm(1:3)) * obj.simu.adjMassWeightFun;
-                obj.mass = obj.mass + tmp.adjmass;
-                obj.momOfInertia = obj.momOfInertia+tmp.fadm(4:6)';
-                obj.hydroForce.fAddedMass(1,1+(iBod-1)*6) = obj.hydroForce.fAddedMass(1,1+(iBod-1)*6) - tmp.adjmass;
-                obj.hydroForce.fAddedMass(2,2+(iBod-1)*6) = obj.hydroForce.fAddedMass(2,2+(iBod-1)*6) - tmp.adjmass;
-                obj.hydroForce.fAddedMass(3,3+(iBod-1)*6) = obj.hydroForce.fAddedMass(3,3+(iBod-1)*6) - tmp.adjmass;
-                obj.hydroForce.fAddedMass(4,4+(iBod-1)*6) = 0;
-                obj.hydroForce.fAddedMass(5,5+(iBod-1)*6) = 0;
-                obj.hydroForce.fAddedMass(6,6+(iBod-1)*6) = 0;
-                
-            else
-                
-                tmp.fadm = diag(obj.hydroForce.fAddedMass);
-                tmp.adjmass = sum (tmp.fadm(1:3)) * obj.simu.adjMassWeightFun;
-                obj.mass = obj.mass + tmp.adjmass;
-                obj.momOfInertia = obj.momOfInertia + tmp.fadm(4:6)';
-                obj.hydroForce.fAddedMass(1,1) = obj.hydroForce.fAddedMass(1,1) - tmp.adjmass;
-                obj.hydroForce.fAddedMass(2,2) = obj.hydroForce.fAddedMass(2,2) - tmp.adjmass;
-                obj.hydroForce.fAddedMass(3,3) = obj.hydroForce.fAddedMass(3,3) - tmp.adjmass;
-                obj.hydroForce.fAddedMass(4,4) = 0;
-                obj.hydroForce.fAddedMass(5,5) = 0;
-                obj.hydroForce.fAddedMass(6,6) = 0;
+             if obj.disableAddedMassForce
+                 
+                 obj.hydroForce.fAddedMass = zeros (size (obj.hydroForce.fAddedMass));
+                 
+             else
+                 
+                if obj.simu.b2b == true
+                    
+                    tmp.fadm = diag (obj.hydroForce.fAddedMass(:,1+(iBod-1)*6:6+(iBod-1)*6));
+                    tmp.adjmass = sum(tmp.fadm(1:3)) * obj.simu.adjMassWeightFun;
+                    obj.mass = obj.mass + tmp.adjmass;
+                    obj.momOfInertia = obj.momOfInertia+tmp.fadm(4:6)';
+                    obj.hydroForce.fAddedMass(1,1+(iBod-1)*6) = obj.hydroForce.fAddedMass(1,1+(iBod-1)*6) - tmp.adjmass;
+                    obj.hydroForce.fAddedMass(2,2+(iBod-1)*6) = obj.hydroForce.fAddedMass(2,2+(iBod-1)*6) - tmp.adjmass;
+                    obj.hydroForce.fAddedMass(3,3+(iBod-1)*6) = obj.hydroForce.fAddedMass(3,3+(iBod-1)*6) - tmp.adjmass;
+                    obj.hydroForce.fAddedMass(4,4+(iBod-1)*6) = 0;
+                    obj.hydroForce.fAddedMass(5,5+(iBod-1)*6) = 0;
+                    obj.hydroForce.fAddedMass(6,6+(iBod-1)*6) = 0;
+                    
+                else
+                    
+                    tmp.fadm = diag(obj.hydroForce.fAddedMass);
+                    tmp.adjmass = sum (tmp.fadm(1:3)) * obj.simu.adjMassWeightFun;
+                    obj.mass = obj.mass + tmp.adjmass;
+                    obj.momOfInertia = obj.momOfInertia + tmp.fadm(4:6)';
+                    obj.hydroForce.fAddedMass(1,1) = obj.hydroForce.fAddedMass(1,1) - tmp.adjmass;
+                    obj.hydroForce.fAddedMass(2,2) = obj.hydroForce.fAddedMass(2,2) - tmp.adjmass;
+                    obj.hydroForce.fAddedMass(3,3) = obj.hydroForce.fAddedMass(3,3) - tmp.adjmass;
+                    obj.hydroForce.fAddedMass(4,4) = 0;
+                    obj.hydroForce.fAddedMass(5,5) = 0;
+                    obj.hydroForce.fAddedMass(6,6) = 0;
+                    
+                end
                 
             end
+            
         end
 
         function restoreMassMatrix(obj)
@@ -955,47 +990,47 @@ classdef hydroBody < handle
             obj.hydroForce.storage.output_forceTotal = ft_mod;
         end
 
-        function setInitDisp(obj, x_rot, ax_rot, ang_rot, addLinDisp)
-            % Sets the initial displacement when having initial rotation
-            %
-            % Syntax
-            %
-            % setInitDisp (hb, x_rot, ax_rot, ang_rot, addLinDisp)
-            %
-            % Description
-            %
-            % Sets the initial displacement of the body when having initial
-            % rotation.
-            %
-            % Input
-            %
-            %  hb - wsim.hydroBody object
-            %
-            %  x_rot - rotation point
-            %
-            %  ax_rot - axis about which to rotate (must be a normal vector)
-            %
-            %  ang_rot - rotation angle in radians
-            %
-            %  addLinDisp - initial linear displacement (in addition to the
-            %   displacement caused by rotation)
-            %
-
-            relCoord = obj.cg - x_rot;
-
-            rotatedRelCoord = hydroBody.rotateXYZ(relCoord, ax_rot, ang_rot);
-
-            newCoord = rotatedRelCoord + x_rot;
-
-            linDisp = newCoord - obj.cg;
-
-            obj.initDisp.initLinDisp = linDisp + addLinDisp;
-
-            obj.initDisp.initAngularDispAxis = ax_rot;
-
-            obj.initDisp.initAngularDispAngle = ang_rot;
-
-        end
+%         function setInitDisp(obj, x_rot, ax_rot, ang_rot, addLinDisp)
+%             % Sets the initial displacement when having initial rotation
+%             %
+%             % Syntax
+%             %
+%             % setInitDisp (hb, x_rot, ax_rot, ang_rot, addLinDisp)
+%             %
+%             % Description
+%             %
+%             % Sets the initial displacement of the body when having initial
+%             % rotation.
+%             %
+%             % Input
+%             %
+%             %  hb - wsim.hydroBody object
+%             %
+%             %  x_rot - rotation point
+%             %
+%             %  ax_rot - axis about which to rotate (must be a normal vector)
+%             %
+%             %  ang_rot - rotation angle in radians
+%             %
+%             %  addLinDisp - initial linear displacement (in addition to the
+%             %   displacement caused by rotation)
+%             %
+% 
+%             relCoord = obj.cg - x_rot;
+% 
+%             rotatedRelCoord = hydroBody.rotateXYZ(relCoord, ax_rot, ang_rot);
+% 
+%             newCoord = rotatedRelCoord + x_rot;
+% 
+%             linDisp = newCoord - obj.cg;
+% 
+%             obj.initDisp.initLinDisp = linDisp + addLinDisp;
+% 
+%             obj.initDisp.initAngularDispAxis = ax_rot;
+% 
+%             obj.initDisp.initAngularDispAngle = ang_rot;
+% 
+%         end
 
         function listInfo(obj)
             % Display some information about the body at the command line
@@ -1074,13 +1109,15 @@ classdef hydroBody < handle
             end
             
             % geometry file
-            geomfile = fullfile (obj.caseDirectory, 'geometry', obj.geometryFile);
-            
-            if exist (geomfile, 'file') == 0
-                
-                error ( 'Could not locate and open geometry file:\n%s', ...
-                        geomfile )
-                    
+            if ~isempty (obj.geometryFile)
+                geomfile = fullfile (obj.caseDirectory, 'geometry', obj.geometryFile);
+
+                if exist (geomfile, 'file') == 0
+
+                    error ( 'Could not locate and open geometry file:\n%s', ...
+                            geomfile )
+
+                end
             end
             
         end
@@ -1622,6 +1659,12 @@ classdef hydroBody < handle
             
             if simu.disableAddedMassForce == true
                 obj.disableAddedMassForce = true;
+                obj.doAddedMass = false;
+            end
+            
+            if simu.disableRadiationForce == true
+                obj.disableRadiationForce = true;
+                obj.doRadiationDamping = false;
             end
             
             switch lower (obj.simu.addedMassMethod)
@@ -1911,23 +1954,33 @@ classdef hydroBody < handle
             % always do linear excitation forces
             breakdown.F_ExcitLin = linearExcitationForces (obj, t);
 
+            zero_force = zeros (obj.dof, 1);
+            
             if obj.doViscousDamping
                 breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
             else
-                breakdown.F_ViscousDamping = zeros (obj.dof, 1);
+                breakdown.F_ViscousDamping = zero_force;
             end
             
-            % always do linear damping
+            % linear damping
             if obj.doLinearDamping
                 breakdown.F_LinearDamping = linearDampingForce (obj, vel(:,obj.bodyNumber));
             else
-                breakdown.F_LinearDamping = zeros (obj.dof, 1);
+                breakdown.F_LinearDamping = zero_force;
             end
 
-            % always do radiation forces
-            breakdown.F_RadiationDamping = radiationDampingForces (obj, t, vel);
+            % radiation forces
+            if obj.doRadiationDamping
+                breakdown.F_RadiationDamping = radiationDampingForces (obj, t, vel);
+            else
+                breakdown.F_RadiationDamping = zero_force;
+            end
             
-            breakdown.F_AddedMass = addedMassForces (obj, t, accel);
+            if obj.doAddedMass
+                breakdown.F_AddedMass = addedMassForces (obj, t, accel);
+            else
+                breakdown.F_AddedMass = zero_force;
+            end
             
             % always do hydrostatic restoring forces
             [breakdown.F_Restoring, breakdown.BodyHSPressure, waveElv ] = hydrostaticForces (obj, t, pos);
@@ -1937,7 +1990,7 @@ classdef hydroBody < handle
                 if isempty (waveElv)
                     % calculate the wave elevation if it has not already
                     % been done by the hydrostaticForces method
-                    waveElv = waveElevation(obj, pos, t);
+                    waveElv = waveElevation (obj, pos, t);
                 end
 
                 [ breakdown.F_ExcitNonLin, ...
@@ -1945,7 +1998,7 @@ classdef hydroBody < handle
                   breakdown.WaveLinearPressure ] = nonlinearExcitationForces (obj, t, pos, waveElv);
 
             else
-                breakdown.F_ExcitNonLin = zeros (obj.dof, 1);
+                breakdown.F_ExcitNonLin = zero_force;
             end
 
             if obj.doMorrisonElementViscousDrag
@@ -1956,7 +2009,7 @@ classdef hydroBody < handle
                                                                      accel(:,obj.bodyNumber) );
             else
 
-                breakdown.F_MorrisonElement = zeros (obj.dof, 1);
+                breakdown.F_MorrisonElement = zero_force;
 
             end
 
@@ -1997,7 +2050,7 @@ classdef hydroBody < handle
         function forces = morrisonElementForce (obj, t, pos, vel, accel)
             
 
-            % TODO: in WEC-Sim morrison element stuf uses acceleration delay like added mass forces
+            % TODO: in WEC-Sim morrison element stuff uses acceleration delay like added mass forces
             
             % in original WEC-Sim formulation the forces
             switch obj.excitationMethodNum
@@ -2016,11 +2069,11 @@ classdef hydroBody < handle
                     
                 case 3
                     % sinusoidal force
-                    forces = [0 0 0 0 0 0];
+                    forces = zeros (obj.dof, 1);
                     
                 case 4
                     % sinusoidal force with CIC
-                    forces = [0 0 0 0 0 0];
+                    forces = zeros (obj.dof, 1);
 
             end
 
@@ -2163,7 +2216,7 @@ classdef hydroBody < handle
 
                 case 0
                     % simple static coefficients
-                    if obj.simu.b2b
+                    if obj.bodyToBodyInteraction
                         F_RadiationDamping = obj.hydroForce.fDamping * vel(:);
                     else
                         F_RadiationDamping = obj.hydroForce.fDamping * vel(:,obj.bodyNumber);
@@ -2171,7 +2224,11 @@ classdef hydroBody < handle
 
                 case 1
                     % convolution
-                    F_RadiationDamping = convolutionIntegral (obj, vel(:), t);
+                    if obj.bodyToBodyInteraction
+                        F_RadiationDamping = convolutionIntegral (obj, vel(:), t);
+                    else
+                        F_RadiationDamping = convolutionIntegral (obj, vel(:,obj.bodyNumber), t);
+                    end
 
                 case 2
                     % state space
@@ -2184,7 +2241,7 @@ classdef hydroBody < handle
                 case 3
                     % state space, but calculated by some external solver,
                     % e.g. by supplying MBDyn with the state-space matrices
-                    F_RadiationDamping = [0;0;0;0;0;0];
+                    F_RadiationDamping = zeros (obj.dof, 1);
 
             end
             
@@ -2216,12 +2273,14 @@ classdef hydroBody < handle
             %
             
             % matrix multiplication with acceleration
-            switch obj.addedMassMethodNum
+
                 
+            switch obj.addedMassMethodNum
+
                 case 0
-                    
+
                     delay = 10e-8;
-                    if t > (obj.simu.startTime + delay) && ~obj.disableAddedMassForce
+                    if t > (obj.simu.startTime + delay)
 
                         if obj.stepCount > 2
                             % extrapolate acceleration from previous time steps
@@ -2259,15 +2318,17 @@ classdef hydroBody < handle
                     else
                         F_AddedMass = zeros (obj.dof, 1);
                     end
-            
+
                 case 1
-                    
+
                     % slower, but mbdyn will iterate to get the right force
                     F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
-                    
+
             end
-            
+
             F_AddedMass = -F_AddedMass;
+            
+
             
         end
         
@@ -2643,7 +2704,7 @@ classdef hydroBody < handle
 
             % TODO: we could use advanceStep to ensure histories are
             % updated properly instead of the following test
-            % TODO: allow nonuniform time spacing for convolutionIntegral
+            % TODO: allow nonuniform time spacing for convolution integral
             if abs(t - obj.radForceOldTime - obj.CIdt) < 1e-8
 
                 obj.radForceVelocity = circshift(obj.radForceVelocity, 1, 2);
