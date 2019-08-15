@@ -223,6 +223,16 @@ classdef waveSettings < handle
         % Pw - Wave Power Per Unit Wave Crest [W/m]
         Pw = [];
         
+        % etaImportMaxTime - the maximum time in the simulation data
+        %   imported from the data file when using the 'etaImport' wave
+        %   type.
+        etaImportMaxTime = [];
+        
+        % etaImportMinTime - the minimum time in the simulation data
+        %   imported from the data file when using the 'etaImport' wave
+        %   type.
+        etaImportMinTime = [];
+        
     end
     
     methods (Access = public)
@@ -415,6 +425,8 @@ classdef waveSettings < handle
                     % Import 'etaImport' time-series here and interpolate
                     data = importdata(obj.etaDataFile) ;    % Import time-series
                     t = (0:dt:endTime)';      % WEC-Sim simulation time [s]
+                    obj.etaImportMaxTime = max (data(:,1));
+                    obj.etaImportMinTime = min (data(:,1));
                     obj.waveElevUser(rampTime, dt, maxIt, data, t);
                     obj.waveAmpTime1        = zeros(maxIt+1,2);
                     obj.waveAmpTime1(:,1)   = [0:maxIt]*dt;
