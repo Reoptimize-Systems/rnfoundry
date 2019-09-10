@@ -859,7 +859,7 @@ classdef postproc < handle
             
         end
         
-        function displayNetCDFVarNames (self)
+        function displayNetCDFVarNames (self, mbsys)
             % gets information on the available output in the mbdyn netcdf file
             %
             % Syntax
@@ -868,106 +868,129 @@ classdef postproc < handle
 
             for ind = 1:numel (names)
                 
+                out = regexp (names{ind}, '[a-zA-Z_]+\.[a-zA-Z_]+\.(\d+)$', 'tokens');
+                
+                if ~isempty (out)
+                    description = info.Variables(ind).Attributes(1).Value;
+                    
+%                     labelnum = str2num (out{1}{1});
+                    
+                    fprintf (1, '%s : type - %s\n', names{ind}, description );
+                    
+                    continue;
+                end
+                
                 description = 'no description';
                 for attind = 1:numel (info.Variables(ind).Attributes)
                     if strcmpi (info.Variables(ind).Attributes(attind).Name, 'description')
                         description = info.Variables(ind).Attributes(attind).Value;
+                        fprintf (1, '%s : %s\n', names{ind}, description );
                         break;
                     end
                 end
                 
-                fprintf (1, '%s : %s\n', names{ind}, description );
+                
                 
             end
             
         end
         
-%         function hax = plotOutput (self, component, quantity, varargin)
-%             % plot the output of a components (such as a joint or other element)
-%             %
-%             % Syntax
-%             %
-%             % hax = plotOutput (mbp, component_type, quantity, label) 
-%             % hax = plotOutput (..., 'Parameter', value);
-%             %
-%             % Description
-%             %
-%             % 
-%             %
-%             % Input
-%             %
-%             %  mbp - mbdyn.postproc object
-%             %
-%             %  Addtional optional arguments are supplied as paramter-value
-%             %  pairs. The avaialable options are:
-%             %
-%             %  'Legend' - flag determining whether to add a legend to the
-%             %    position plot. Default is true.
-%             %
-%             %  'Title' - flag determining whether to add a title to the
-%             %    position plot. Default is true.
-%             %
-%             % Output
-%             %
-%             %  hfig - handle to figure created
-%             %
-%             %  hax - handle to plot axes created
-%             %
-%             %
-%             
-%             options.Legend = true;
-%             options.Title = true;
-%             
-%             options = parse_pv_pairs (options, varargin);
-%             
-%             if ~self.haveNetCDF
-%                 error ('No netcdf file is available for plotting')
-%             end
-%             
-%             var = self.getNetCDFVariable (component, quantity);
-%             
-%             dims = size (var);
-%             
-%             plotdim = find (dim == length (self.time));
-%             
-%             if isempty (plotdim)
-%                 error ('Variable not the right size to plot against time.');
-%             end
-%             
-%             hfig = figure;
-%             hax = axes;
-%             
-%             ColOrd = get(hax,'ColorOrder');
-%             [m,n] = size(ColOrd);
-% 
-%             legstrings = {};
-%             
-%             switch numel (dims)
-%                 
-%                 case 2
-%                     
-%                     hold on
-%                     for ind = 1:numel (dims)
-%                         plot (self.time);
-%                     end
-%                     hold off
-%                     
+        function hax = plotNetCDFVar (self, component, quantity, varargin)
+            % plot the output of a components (such as a joint or other element)
+            %
+            % Syntax
+            %
+            % hax = plotOutput (mbp, component_type, quantity, label) 
+            % hax = plotOutput (..., 'Parameter', value);
+            %
+            % Description
+            %
+            % 
+            %
+            % Input
+            %
+            %  mbp - mbdyn.postproc object
+            %
+            %  Addtional optional arguments are supplied as paramter-value
+            %  pairs. The available options are:
+            %
+            %  'Legend' - flag determining whether to add a legend to the
+            %    position plot. Default is true.
+            %
+            %  'Title' - flag determining whether to add a title to the
+            %    position plot. Default is true.
+            %
+            % Output
+            %
+            %  hfig - handle to figure created
+            %
+            %  hax - handle to plot axes created
+            %
+            %
+            
+            options.Legend = true;
+            options.Title = true;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if ~self.haveNetCDF
+                error ('No netcdf file is available for plotting')
+            end
+            
+            var = self.getNetCDFVariable (component, quantity);
+            
+            dims = size (var);
+            
+            plotdim = find (dims == length (self.time));
+            
+            if isempty (plotdim)
+                error ('Variable not the right size to plot against time.');
+            end
+            
+            hfig = figure;
+            hax = axes;
+            
+            ColOrd = get(hax,'ColorOrder');
+            [m,n] = size(ColOrd);
+
+            legstrings = {};
+            
+            ndims = numel (dims);
+            switch ndims
+                
+                case 2
+                    
+                    if plotdim == 1
+                        plot (self.time, var);
+                    else
+                        plot (self.time, var.');
+                    end
+                    
 %                 case 3
-%                     
-%                 otherwise
-%                     
-%                     error ('Can only plot vars with 2 or 3 dimensions');
-%                     
-%             end
-%             
-%             xlabel (x_label);
-%             set (hax, 'XLim', [self.time(1), self.time(end)]);
-%             
-%             if options.Legend
-%                 legend (hax, legstrings, 'Interpreter', 'none', 'Location', 'BestOutside');
-%             end
-%             
-%         end
+                    
+                    
+                    
+                otherwise
+                    
+                    error ('Can only plot vars with 2 dimensions');
+                    
+            end
+            
+            xlabel ('Time [s]');
+            
+            y_label_str = '';
+            if ischar (component)
+                y_label_str = [y_label_str, component, ' : '];
+            end
+            y_label_str = [y_label_str, quantity];
+            ylabel (y_label_str);
+            set (hax, 'XLim', [self.time(1), self.time(end)]);
+            
+            if options.Legend
+                legend (hax, legstrings, 'Interpreter', 'none', 'Location', 'BestOutside');
+            end
+            
+        end
         
         
         function var = getNetCDFVariable (self, component, quantity)
@@ -1025,9 +1048,17 @@ classdef postproc < handle
                 error ('No netcdf file is available for plotting')
             end
             
-            if ischar (component)
+            if nargin < 3
+                quantity = [];
+            end
+            
+            if ischar (component) && isempty (quantity)
                 
                 varname = component;
+                
+            elseif ischar (component) && ischar (quantity)
+                
+                varname = [ component, '.', quantity];
                 
             elseif isa (component, 'mbdyn.pre.element')
                 
@@ -1185,6 +1216,7 @@ classdef postproc < handle
             options.ExternalDrawFcn = [];
             options.View = [];
             options.FigPositionAndSize = [];
+            options.Title = false;
             
             % the following options are specific to animate and must be
             % checked here
@@ -1244,6 +1276,12 @@ classdef postproc < handle
                     % clear the FigPositionAndSize option so we don't keep
                     % setting the size every step
                     options.FigPositionAndSize = [];
+                    
+                    % get the current view, instead of continuing to force
+                    % the initial view so we can rotate the thing during
+                    % playback
+%                     options.View = get (plotdata.HAx, 'View');
+                    
                 end
                 
                 plotdata = self.drawStep ( tind, ...
@@ -1255,7 +1293,7 @@ classdef postproc < handle
                               'DrawBodies', options.DrawBodies, ...
                               'Light', options.Light, ...
                               'PlotAxes', plotdata.HAx, ...
-                              'Title', false, ...
+                              'Title', options.Title, ...
                               'OnlyNodes', options.OnlyNodes, ...
                               'ForceRedraw', true, ...
                               'ExternalDrawFcn', options.ExternalDrawFcn, ...
