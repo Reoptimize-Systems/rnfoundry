@@ -65,11 +65,13 @@ classdef body < nemoh.base
         nQuads;
         quadMesh;
         triMesh;
+        triMeshVertices;
         nMeshNodes;
         nPanelsTarget; % Target for number of panels in mesh refinement
         centreOfGravity;
         meshBoundBox;
         meshSize;
+        meshTranslation;
         
         hydrostaticForces; % hydrostatic forces
         hydrostaticForcePoints; % X,Y,Z coordinates where hydrostatic forces were calculated
@@ -1009,19 +1011,61 @@ classdef body < nemoh.base
             
         end
         
-        function makeTriMeshFromQuads (self)
+        function makeTriMeshFromQuads (self, varargin)
             % makes a triangle mesh by splitting each quad in the quad mesh
+            
+            options.CompleteAxiMesh = true;
+            
+            options = parse_pv_pairs (options, varargin);
             
             assert ( self.nQuads > 0 && size (self.quadMesh,2) > 0, ...
                      'There is no quad mesh to split into triangles (nQuads = %d, size (quadMesh,2) = %d, both must be greater than zero, and should be the same).', ...
                      self.nQuads, ...
                      size (self.quadMesh,2) );
+                 
             
-            self.triMesh = [ self.quadMesh(1:3,:), ...
-                             [ self.quadMesh(3,:);
-                               self.quadMesh(4,:);
-                               self.quadMesh(1,:) ] ...
-                            ];
+            if strcmp (self.meshType, 'axi') && options.CompleteAxiMesh
+                
+                % we rotate existing x and y coordinates around z axis by 180
+                % degrees after undoing any mesh traslation which would
+                % have moved the mesh from being axisymmetric around the
+                % z axis. We then shift it back to the original location
+                Xnew = (self.meshVertices(1,:) - self.meshTranslation(1))  * cos(pi) - (self.meshVertices(2,:) - self.meshTranslation(2)) * sin(pi);
+                Xnew = Xnew + self.meshTranslation(1);
+                
+                Ynew = (self.meshVertices(1,:) - self.meshTranslation(1)) * sin(pi) +  (self.meshVertices(2,:) - self.meshTranslation(2)) * cos(pi);
+                Ynew = Ynew + self.meshTranslation(2);
+                
+                new_verts_startind = size (self.meshVertices, 2);
+                
+                self.triMeshVertices = [ self.meshVertices, ...
+                                         [ Xnew;
+                                           Ynew;
+                                           self.meshVertices(3,:) ]; ...
+                                       ];
+                                   
+                self.triMesh = [ self.quadMesh(1:3,:), ...
+                                 [ self.quadMesh(3,:);
+                                   self.quadMesh(4,:);
+                                   self.quadMesh(1,:) ] ...
+                                 self.quadMesh(1:3,:) + new_verts_startind, ...
+                                 [ self.quadMesh(3,:);
+                                   self.quadMesh(4,:);
+                                   self.quadMesh(1,:) ] + new_verts_startind ...
+                               ];
+                
+            else
+                self.triMeshVertices = self.meshVertices;
+                
+                self.triMesh = [ self.quadMesh(1:3,:), ...
+                                 [ self.quadMesh(3,:);
+                                   self.quadMesh(4,:);
+                                   self.quadMesh(1,:) ] ...
+                                ];
+                
+            end
+            
+
             
         end
         
@@ -1052,7 +1096,7 @@ classdef body < nemoh.base
                      self.nQuads, ...
                      size (self.quadMesh,2) );
                  
-            [hmesh, hax, hfig] = self.polyMeshPlot ( self.meshVertices', ...
+            [hmesh, hax, hfig] = self.polyMeshPlot ( self.triMeshVertices', ...
                                                      self.triMesh', ...
                                                      'Axes', hax );
                                                  
@@ -1069,6 +1113,7 @@ classdef body < nemoh.base
             % writes a triangle mesh of the body to an STL file
             
             options.ShiftCoGToOrigin = true;
+            options.CompleteAxiMesh = true;
             
             options = parse_pv_pairs (options, varargin);
             
@@ -1076,14 +1121,15 @@ classdef body < nemoh.base
             
             if size (self.triMesh,2) < 1
                 % attmept to make the triangle mesh if it doesn't exist yet
-                self.makeTriMeshFromQuads ();
+                self.makeTriMeshFromQuads ('CompleteAxiMesh', options.CompleteAxiMesh);
             end
-            
+
+               
             % write the stl file
             if options.ShiftCoGToOrigin
-                stl.write (filename, self.triMesh.', self.meshVertices.' - self.centreOfGravity);
+                stl.write (filename, self.triMesh.', self.triMeshVertices.' - self.centreOfGravity);
             else
-                stl.write (filename, self.triMesh.', self.meshVertices.');
+                stl.write (filename, self.triMesh.', self.triMeshVertices.');
             end
             
         end
@@ -1432,6 +1478,10 @@ classdef body < nemoh.base
                 'Mesh does not appear to be loaded yet (meshVertices is empty).');
             
             self.meshVertices = bsxfun (@plus, self.meshVertices, [x, y, 0]);
+            
+            % keep track of translation so we can undo it if necessary
+            % (e.g. when making a tiangle mesh of an axi mesh)
+            self.meshTranslation = self.meshTranslation + [x, y, 0];
             
         end
         
@@ -1988,6 +2038,7 @@ classdef body < nemoh.base
             self.triMesh = [];
             self.nMeshNodes = [];
             self.nQuads = [];
+            self.meshTranslation = [0; 0; 0];
             
             % mesh results
             self.hydrostaticForces = [];
