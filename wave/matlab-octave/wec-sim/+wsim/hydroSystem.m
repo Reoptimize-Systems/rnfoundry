@@ -736,6 +736,31 @@ classdef hydroSystem < handle
             
         end
         
+        function F = dynamicRealAddedMassForce (self, accels)
+            % calculates the real added mass force for all bodies
+            %
+            % Syntax
+            %
+            %  dynamicRealAddedMassForce (hsys, accels)
+            %
+            % Input
+            %
+            %  hsys - hydroSystem object
+            %
+            nbodies = numel(self.hydroBodies);
+            
+            F = zeros (6, nbodies);
+            
+            for ind = 1:nbodies
+                if self.simu.b2b
+                    F(:,ind) = -self.hydroBodies(ind).hydroForce.storage.fAddedMass * accels(:);
+                else
+                    F(:,ind) = -self.hydroBodies(ind).hydroForce.storage.fAddedMass * accel(:,obj.bodyNumber);
+                end
+            end
+            
+        end
+        
         function timeDomainSimReset (self)
             % reset the hydrodynamic system for transient simulation
             %
@@ -770,6 +795,17 @@ classdef hydroSystem < handle
                 'bodyind is greater than the number of hydroBody object in the system' );
             
             propval = self.hydroBodies(bodyind).(property_name);
+            
+            
+        end
+        
+        
+        function propval = getBodyMass (self, bodyind)
+            
+            assert (bodyind <= self.nHydroBodies, ...
+                'bodyind is greater than the number of hydroBody object in the system' );
+            
+            propval = self.hydroBodies(bodyind).hydroForce.storage.mass;
             
             
         end
