@@ -18,11 +18,11 @@ classdef constituativeLaw < mbdyn.pre.base
             self = self@mbdyn.pre.base ();
             
             if ~isempty (options.PreStress)
-%                 self.checkNumericScalar (options.PreStress, true, 'PreStress');
+                self.checkCartesianVector (options.PreStress, true, 'PreStress');
             end
             
             if ~isempty (options.PreStrain)
-%                 self.checkTplDriveCaller (options.PreStrain, true, 'PreStrain');
+                self.checkTplDriveCaller (options.PreStrain, true, 'PreStrain');
             end
             
             self.prestress = options.PreStress;
@@ -39,7 +39,7 @@ classdef constituativeLaw < mbdyn.pre.base
             end
             
             if ~isempty (self.prestrain)
-                str = [str, sprintf(',\n    '), self.commaSepList('prestrain', self.prestrain)];
+                str = [str, sprintf(',\n    '), self.commaSepList('prestrain', self.prestrain.generateMBDynInputString ())];
             end
             
         end
