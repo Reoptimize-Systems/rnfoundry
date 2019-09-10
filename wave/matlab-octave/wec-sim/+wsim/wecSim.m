@@ -67,17 +67,19 @@ classdef wecSim < handle
         lastForceViscousDamping;    % last calculated value of hydrodynamic viscous damping forces
         lastForceAddedMassUncorrected; % last calculated value of hydrodynamic forces due to added mass (uncorrected)
         lastNodeForcesUncorrected; % last calculated value ofcombined forces but with uncorrected added mass forces
-        lastMomentHydro;             % last calculated total of all hydrodynamic forces
-        lastMomentExcitation;        % last calculated value of all hydrodynamic excitation forces
-        lastMomentExcitationRamp;    % last calculated value of all hydrodynamic excitation forces with applied ramp
-        lastMomentExcitationLin;     % last calculated value of hydrodynamic linear excitation forces
-        lastMomentExcitationNonLin;  % last calculated value of hydrodynamic nonlinear excitation forces
-        lastMomentRadiationDamping;  % last calculated value of hydrodynamic radiation damping forces
-        lastMomentRestoring;         % last calculated value of hydrodynamic restoring (buoyancy) forces
-        lastMomentMorrison;          % last calculated value of hydrodynamic morrison forces
-        lastMomentViscousDamping;    % last calculated value of hydrodynamic viscous damping forces
-        lastMomentAddedMassUncorrected; % last calculated value of hydrodynamic forces due to added mass (uncorrected)
+        lastMomentHydro;             % last calculated total of all hydrodynamic moments
+        lastMomentExcitation;        % last calculated value of all hydrodynamic excitation moments
+        lastMomentExcitationRamp;    % last calculated value of all hydrodynamic excitation moments with applied ramp
+        lastMomentExcitationLin;     % last calculated value of hydrodynamic linear excitation moments
+        lastMomentExcitationNonLin;  % last calculated value of hydrodynamic nonlinear excitation moments
+        lastMomentRadiationDamping;  % last calculated value of hydrodynamic radiation damping moments
+        lastMomentRestoring;         % last calculated value of hydrodynamic restoring (buoyancy) moments
+        lastMomentMorrison;          % last calculated value of hydrodynamic morrison moments
+        lastMomentViscousDamping;    % last calculated value of hydrodynamic viscous damping moments
+        lastMomentAddedMassUncorrected; % last calculated value of hydrodynamic moments due to added mass (uncorrected)
         lastNodeMomentsUncorrected; % last calculated value ofcombined moments but with uncorrected added mass forces
+        lastForceAddedMass; % last calculated value of hydrodynamic forces due to added mass (corrected)
+        lastMomentAddedMass; % last calculated value of hydrodynamic moments due to added mass (corrected)
         lastForceIterations % Number of iterations in the last time step
 
         logger; % wsim.logger object containing the logged simulation data from the current or most recent sim
@@ -902,6 +904,15 @@ classdef wecSim < handle
             % by MBDyn
             [pos, vel, accel] = self.getMotion (self.mBDynMBCNodal);
 
+            % store most recently calculated motion so it can be used by
+            % the PTO or controller if necessary
+            self.lastPositions = pos(1:3,:);
+            self.lastAngularPositions = pos(4:6,:);
+            self.lastVelocities = vel(1:3,:);
+            self.lastAngularVelocities = vel(4:6,:);
+            self.lastAccelerations = accel(1:3,:);
+            self.lastAngularAccelerations = accel(4:6,:);
+            
             % calculate and apply hydrodynamic forces based on the motion
             forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
 
@@ -924,13 +935,6 @@ classdef wecSim < handle
 
             self.lastForceIterations =  1;
 
-            % store most recently calculated motion so it can be logged
-            self.lastPositions = pos(1:3,:);
-            self.lastAngularPositions = pos(4:6,:);
-            self.lastVelocities = vel(1:3,:);
-            self.lastAngularVelocities = vel(4:6,:);
-            self.lastAccelerations = accel(1:3,:);
-            self.lastAngularAccelerations = accel(4:6,:);
             self.lastNodeForcesUncorrected = forces_and_moments(1:3,:);
             self.lastNodeMomentsUncorrected = forces_and_moments(4:6,:);
 
@@ -1276,6 +1280,16 @@ classdef wecSim < handle
                 mbdyn_postproc = mbdyn.postproc (self.outputFilePrefix, self.mBDynSystem);
                 self.mBDynPostProc = mbdyn_postproc;
             end
+            
+            if self.simStepCount < 5
+                if ~isempty (self.mBDynOutputFile)
+                   if exist (self.mBDynOutputFile, 'file')
+                       fprintf (1, 'Simulation achieved less than 5 steps before stopping, printing the MBDyn output:\n');
+                       self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
+                   end
+                end
+            end
+                
 
         end
 
@@ -1454,7 +1468,7 @@ classdef wecSim < handle
             %    determined based on the motion data.
             %
             %  'Title' - flag determining whether to add a title to the
-            %    system plot. Default is true.
+            %    system plot. Default is false.
             %
             %  'DrawMode' - string indicating the drawing mode. Can be one
             %    of: 'solid', 'ghost', 'wire', 'wireghost'.
@@ -1558,6 +1572,7 @@ classdef wecSim < handle
             options.View = [];
             options.DrawWaves = true;
             options.FigPositionAndSize  = [];
+            options.Title = false;
 
             options = parse_pv_pairs (options, varargin);
 
@@ -1594,7 +1609,7 @@ classdef wecSim < handle
                                               'VideoProfile', options.VideoProfile, ...
                                               'VideoWriter', options.VideoWriter, ...
                                               'VideoQuality', options.VideoQuality, ...
-                                              ...'Title', options.Title, ...
+                                              'Title', options.Title, ...
                                               'OnlyNodes', options.OnlyNodes, ...
                                               ...'ForceRedraw', options.ForceRedraw, ...
                                               'ExternalDrawFcn', wavedrawfcn, ...
@@ -1617,7 +1632,7 @@ classdef wecSim < handle
                                               'VideoProfile', VideoProfile, ...
                                               'VideoWriter', options.VideoWriter, ...
                                               'VideoQuality', options.VideoQuality, ...
-                                              ...'Title', options.Title, ...
+                                              'Title', options.Title, ...
                                               'OnlyNodes', options.OnlyNodes, ...
                                               ...'ForceRedraw', options.ForceRedraw, ...
                                               'View', options.View, ...
@@ -1895,7 +1910,14 @@ classdef wecSim < handle
                 self.lastMomentMorrison = out.F_MorrisonElement(4:6,:);
                 self.lastMomentViscousDamping = out.F_ViscousDamping(4:6,:);
                 self.lastMomentAddedMassUncorrected = out.F_AddedMass(4:6,:);
+                
+                % calculate the 'real' added mass forces, as they will be
+                % reported at the end of the simulation
+                F_added_mass = dynamicRealAddedMassForce (self.hydroSystem, accel(:,self.hydroNodeIndexMap));
 
+                self.lastForceAddedMass = F_added_mass(1:3,:);
+                self.lastMomentAddedMass = F_added_mass(4:6,:);
+                
                 % reset step count
                 self.hydroMotionSyncStepCount = 1;
 
@@ -2081,7 +2103,7 @@ classdef wecSim < handle
 
             % preallocate data vectors for the predicted number of time
              % steps
-            nsteps = (self.hydroSystem.simu.endTime - self.hydroSystem.simu.startTime) ./ self.hydroSystem.simu.dt + 1;
+            nsteps = ceil ((self.hydroSystem.simu.endTime - self.hydroSystem.simu.startTime) ./ self.hydroSystem.simu.dt + 1);
 
             if self.loggingSettings.windowed == true
                 nsteps = min ([self.loggingSettings.windowSize, nsteps]);
@@ -2256,7 +2278,7 @@ classdef wecSim < handle
 
                 self.logger.addVariable ( 'NodeForcesUncorrected', [3, extforceinfo.NNodes], ...
                                           'Desc', 'sum of all forces (with uncorrected added mass forces) for all external structural nodes with external forces', ...
-                                          'AxisLabel', 'Uncorrected Added Mass Forces [N] on Nodes', ...
+                                          'AxisLabel', 'Uncorrected Forces [N] on Nodes', ...
                                           'PreallocateStorage', nsteps, ...
                                           'Windowed', self.loggingSettings.windowed, ...
                                           'Indep', 'Time', ...
@@ -2502,7 +2524,7 @@ classdef wecSim < handle
 
                 self.logger.addVariable ( 'NodeMomentsUncorrected', [3, extforceinfo.NNodes], ...
                                           'Desc', 'sum of all moments (with uncorrected added mass moments) for all external structural nodes with external moments', ...
-                                          'AxisLabel', 'Uncorrected Added Mass Moments [Nm] on Nodes', ...
+                                          'AxisLabel', 'Uncorrected Moments [Nm] on Nodes', ...
                                           'PreallocateStorage', nsteps, ...
                                           'Windowed', self.loggingSettings.windowed, ...
                                           'Indep', 'Time', ...
