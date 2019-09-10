@@ -350,14 +350,14 @@ classdef inline < mbdyn.pre.twoNodeJoint
               
             % set the transform object which controls the line
             % location and orientation
-            M = [ lineorientm, linepos; ...
+            M = [ lineorientm.orientationMatrix, linepos; ...
                   0, 0, 0, 1 ];
                   
             set ( self.lineTransformObj, 'Matrix', M );
             
             % set the transform object which controls the point cylinder
             % location and orientation
-            M = [ lineorientm, pointpos; ...
+            M = [ lineorientm.orientationMatrix, pointpos; ...
                   0, 0, 0, 1 ];
                   
             set ( self.transformObject, 'Matrix', M );
