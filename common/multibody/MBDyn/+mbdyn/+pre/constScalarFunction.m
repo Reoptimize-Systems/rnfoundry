@@ -33,7 +33,7 @@ classdef constScalarFunction < mbdyn.pre.scalarFunction
             %
             
             
-            assert (ischar (name), 'name should be a char array');
+            assert (ischar (name), 'name should be a character vector');
             
             self = self@mbdyn.pre.scalarFunction (name, 'const');
             
