@@ -31,9 +31,14 @@ classdef element < mbdyn.pre.base
         
     end
     
-    properties (GetAccess = protected, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = protected)
        
         stlLoaded;
+        
+    end
+    
+    properties (GetAccess = protected, SetAccess = protected)
+       
         stlNormals;
         
     end
@@ -284,7 +289,8 @@ classdef element < mbdyn.pre.base
 
             if self.stlLoaded
                 
-                % cuboid, 3 arguments expected, x, y and z dimensions
+                % shape bounding box, 3 arguments expected, x, y and z
+                % dimensions
                 assert (numel (varargin) == 3, ...
                         'setSize requires 3 size input arguments when the shape is from an STL file, sx, sy and sz, which represent the bounding box of the shape');
 
@@ -708,11 +714,15 @@ classdef element < mbdyn.pre.base
         function shapedata = makeCylinderShape (radius, axiallength, orientation, offset, npnts)
             % generate shape data for a closed cylinder
             
-            if nargin < 4
+            if nargin < 5
                 npnts = 30;
             end
             
             if nargin < 4
+                offset = [0;0;0];
+            end
+            
+            if nargin < 3
                 orientation = eye (3);
             end
             
@@ -768,8 +778,12 @@ classdef element < mbdyn.pre.base
         
         function shapedata = makeAnnularCylinderShape (router, rinner, axiallength, orientation, offset, npnts)
             
-            if nargin < 5
+            if nargin < 6
                 npnts = 20;
+            end
+            
+            if nargin < 5
+                offset = [0;0;0];
             end
             
             if nargin < 4
@@ -857,7 +871,11 @@ classdef element < mbdyn.pre.base
                         
         end
         
-        function shapedata = makeCuboidShape (lx, ly, lz, orientation)
+        function shapedata = makeCuboidShape (lx, ly, lz, orientation, offset)
+            
+            if nargin < 5
+                offset = [0;0;0];
+            end
             
             if nargin < 4
                 orientation = eye (3);
