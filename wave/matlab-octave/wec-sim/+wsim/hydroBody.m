@@ -768,6 +768,21 @@ classdef hydroBody < handle
                   
             rho = obj.simu.rho;
             g = obj.simu.g;
+            gbmDOF = obj.dof_gbm;
+            
+            if (gbmDOF > 0)
+                
+                obj.linearDamping = [obj.linearDamping zeros(1,obj.dof-length(obj.linearDamping))];
+                tmp0 = obj.viscDrag.Drag;
+                tmp1 = size(obj.viscDrag.Drag);
+                obj.viscDrag.Drag = zeros (obj.dof);
+                obj.viscDrag.Drag(1:tmp1(1),1:tmp1(2)) = tmp0;
+                obj.viscDrag.cd   = [obj.viscDrag.cd   zeros(1,obj.dof-length(obj.viscDrag.cd  ))];
+                obj.viscDrag.characteristicArea = [obj.viscDrag.characteristicArea zeros(1,obj.dof-length(obj.viscDrag.characteristicArea))];
+                
+                clear tmp0 tmp1
+                
+            end
             
             if obj.meanDriftForce == 0
                 obj.hydroData.hydro_coeffs.mean_drift = 0 .* obj.hydroData.hydro_coeffs.excitation.re;
@@ -780,7 +795,7 @@ classdef hydroBody < handle
             end
             
             obj.setMassMatrix(rho, obj.simu.nlHydro)
-            gbmDOF = obj.dof_gbm;
+            
             % check if obj.hydroStiffness is defined directly
             if ischar (obj.hydroStiffness)
                 if strcmpi (obj.hydroStiffness, 'zero')
@@ -885,8 +900,6 @@ classdef hydroBody < handle
             
             if (gbmDOF > 0)
                 
-                obj.linearDamping = [obj.linearDamping(1:6), zeros(1,obj.dof_gbm)];
-                
                 obj.hydroForce.gbm.stiffness=obj.hydroData.gbm.stiffness;
                 obj.hydroForce.gbm.damping=obj.hydroData.gbm.damping;
                 obj.hydroForce.gbm.mass_ff=obj.hydroForce.fAddedMass(7:obj.dof,obj.dof_start+6:obj.dof_end)+obj.hydroData.gbm.mass;   % need scaling for hydro part
@@ -901,6 +914,7 @@ classdef hydroBody < handle
                 obj.hydroForce.gbm.state_space.C = eye(2*gbmDOF,2*gbmDOF);
                 obj.hydroForce.gbm.state_space.D = zeros(2*gbmDOF,2*gbmDOF);
                 obj.flexHydroBody = 1;
+                
             end
             
             
@@ -1977,7 +1991,11 @@ classdef hydroBody < handle
             end
             
             if obj.doAddedMass
-                breakdown.F_AddedMass = addedMassForces (obj, t, accel);
+                if obj.bodyToBodyInteraction
+                    breakdown.F_AddedMass = addedMassForces (obj, t, accel);
+                else
+                    breakdown.F_AddedMass = addedMassForces (obj, t, accel(:,obj.bodyNumber));
+                end
             else
                 breakdown.F_AddedMass = zero_force;
             end
@@ -2321,15 +2339,14 @@ classdef hydroBody < handle
 
                 case 1
 
-                    % slower, but mbdyn will iterate to get the right force
+                    % slower (an assumption, not tested), but mbdyn will
+                    % iterate to get the right force
                     F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
 
             end
 
             F_AddedMass = -F_AddedMass;
-            
-
-            
+                        
         end
         
         function statederivs = radForceSSDerivatives (obj, u)
