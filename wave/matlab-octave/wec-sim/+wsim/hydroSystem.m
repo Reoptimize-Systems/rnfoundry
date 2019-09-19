@@ -755,7 +755,7 @@ classdef hydroSystem < handle
                 if self.simu.b2b
                     F(:,ind) = -self.hydroBodies(ind).hydroForce.storage.fAddedMass * accels(:);
                 else
-                    F(:,ind) = -self.hydroBodies(ind).hydroForce.storage.fAddedMass * accel(:,obj.bodyNumber);
+                    F(:,ind) = -self.hydroBodies(ind).hydroForce.storage.fAddedMass * accels(:,ind);
                 end
             end
             
