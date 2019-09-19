@@ -1437,9 +1437,8 @@ classdef logger < handle
             %
             % Description
             %
-            % If a variable exists, the last 'n' values logged to that
-            % variable are returned. If the number of logged variables is
-            % less than this, all available data will be returned.
+            % If a variable exists, the (last-n)th value logged to that
+            % variable is returned.
             %
             % Input
             %
@@ -1448,11 +1447,14 @@ classdef logger < handle
             %  varname - name of the variable to be for which to obtain the
             %    last logged value
             %
-            %  n - the index of the logged variable to return.
+            %  n - the indicator of index of the logged variable to return.
+            %   The value returned is the (last - n) logged value of the
+            %   variable. i.e. to get the last value logged, use n = 0, the
+            %   penultimate value n = 1 and so on.
             %
             % Output
             %
-            %  vals - The last 'n' logged values for the supplied variable,
+            %  vals - The last-n logged value for the supplied variable,
             %    in the same shape as in the corresponding stored data
             %    field.
             %
