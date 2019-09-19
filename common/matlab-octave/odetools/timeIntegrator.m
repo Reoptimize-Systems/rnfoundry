@@ -152,7 +152,7 @@ classdef timeIntegrator < handle
         end
         
         function integral = calculate (self, nextval, t)
-            % calculate the value of the PID controller output signal
+            % calculate the value of the integral at the current time
             %
             % Syntax
             %
