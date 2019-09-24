@@ -145,7 +145,7 @@ classdef streamOutput < mbdyn.pre.force
             options.Echo = [];
             options.EchoPrecision = [];
             options.EchoShift = [];
-            options.StreamName = 'xxxxxx'; % only used by RTAI mailbox
+            options.StreamName = sprintf ('%06d', randi (999999)); % only used by RTAI mailbox
             options.Path = [];
             options.Port = [];
             options.Host = [];
@@ -271,7 +271,7 @@ classdef streamOutput < mbdyn.pre.force
             end
             
             if ~isempty (self.signal)
-                if self.create
+                if self.signal
                     signalstr = 'signal';
                 else
                     signalstr = 'no signal'; 
@@ -280,7 +280,7 @@ classdef streamOutput < mbdyn.pre.force
             end
             
             if ~isempty (self.blocking)
-                if self.create
+                if self.blocking
                     blockingstr = 'blocking';
                 else
                     blockingstr = 'non blocking'; 
@@ -289,7 +289,7 @@ classdef streamOutput < mbdyn.pre.force
             end
             
             if ~isempty (self.sendFirst)
-                if self.create
+                if self.sendFirst
                     sendFirststr = 'send first';
                 else
                     sendFirststr = 'no send first'; 
@@ -298,7 +298,7 @@ classdef streamOutput < mbdyn.pre.force
             end
             
             if ~isempty (self.abortIfBroken)
-                if self.create
+                if self.abortIfBroken
                     abortIfBrokenstr = 'abort if broken';
                 else
                     abortIfBrokenstr = 'do not abort if broken'; 

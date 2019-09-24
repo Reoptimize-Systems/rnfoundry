@@ -33,6 +33,7 @@ public:
         verboseflag = false;
         timeout = -1;
         rot = MBCBase::MAT;
+        communicationInitialized = false;
     }
 
     ~MBCNodal_wrapper (void)
@@ -213,6 +214,9 @@ public:
                 mexErrMsgIdAndTxt ( "MBCNodal:initlocalCommFailure",
                    "Starting local socket communication failed.");
             }
+            
+            // if we reach here it means communication should be established
+            communicationInitialized = true;
         }
         else if (commethod.compare ("inet") == 0)
         {
@@ -234,6 +238,10 @@ public:
                 mexErrMsgIdAndTxt ( "MBCNodal:initInetCommFailure",
                 "Starting inet socket communication failed.");
             }
+            
+            // if we reach here it means communication should be established
+            communicationInitialized = true;
+            
         }
         else
         {
@@ -241,20 +249,40 @@ public:
                "Unrecognised communication method type (should be 'local' or 'inet').");
         }
 
-        /* "negotiate" configuration with MBDyn
-         * errors out if configurations are inconsistent */
-        if (mbc->Negotiate ())
-        {
-            mexErrMsgIdAndTxt ( "MBCNodal:inconsistantConfig",
-               "Negotiate call failed, indicating inconsistant configuration, check mbc file options etc. match options used here.");
-        }
-
         // free stuff allocated by mx
         mxFree (comstring);
 
 
     }
-
+    
+    void Negotiate (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        std::vector<int> nallowed;
+        
+        nallowed.push_back (0);
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+        
+        if (communicationInitialized == true)
+        {
+        
+            /* "negotiate" configuration with MBDyn
+             * errors out if configurations are inconsistent */
+            if (mbc->Negotiate ())
+            {
+                mexErrMsgIdAndTxt ( "MBCNodal:inconsistantConfig",
+                   "Negotiate call failed, which could indicate inconsistant configuration, check mbc file options etc. match options used here.");
+            }
+            
+        }
+        else
+        {
+            mexErrMsgIdAndTxt ( "MBCNodal:commsnotinitialized",
+                   "Not negotiating as communication has not yet been established.");
+        
+        }
+        
+    }
+    
 //     void GetStatus (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //     {
 //         std::vector<int> nallowed;
@@ -1418,6 +1446,8 @@ private:
     bool verboseflag;
     int timeout;
 	MBCBase::Rot rot;
+    
+    bool communicationInitialized;
 //
 //    void Xreturn3ElVal (void (MBCNodal::*fpntr)(const int, const int), int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //    {
@@ -1511,6 +1541,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      // with 'new' and created on the heap
      BEGIN_MEX_CLASS_WRAPPER(MBCNodal_wrapper)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,Initialize)
+       REGISTER_CLASS_METHOD(MBCNodal_wrapper,Negotiate)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetMotion)
        //REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetStatus)
        REGISTER_CLASS_METHOD(MBCNodal_wrapper,GetNodes)

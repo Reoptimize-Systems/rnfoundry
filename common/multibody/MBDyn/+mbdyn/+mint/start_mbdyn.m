@@ -50,7 +50,7 @@ function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
 %
 %  'Block' - optional true/false flag indicating whether start_mbdyn will
 %    wait for MBDyn to complete the requested operation, or run it
-%    asynchronously in the background. Deafault is true, so start_mbdyn
+%    asynchronously in the background. Default is true, so start_mbdyn
 %    will wait while MBDyn runs the command.
 %
 %
@@ -222,26 +222,26 @@ function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
         else
             pid = str2double (cmdout);
             
-            if ~options.Block
-                
-                % check the PID is actually mbdyn
-                [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
-
-                if strcmpi (cmdout, 'mbdyn')
-                    % do nothing, we've got the mbdyn pid
-                else
-                    % try pid + 1
-                    pid = pid + 1;
-                    
-                    [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
-
-                    if ~strncmpi (cmdout, 'mbdyn', 5)
-                        pid = [];
-                    end
-                    
-                end
-                
-            end
+%             if ~options.Block
+%                 
+%                 % check the PID is actually mbdyn
+%                 [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
+% 
+%                 if strcmpi (cmdout, 'mbdyn')
+%                     % do nothing, we've got the mbdyn pid
+%                 else
+%                     % try pid + 1
+%                     pid = pid + 1;
+%                     
+%                     [status, cmdout] = mbdyn.mint.cleansystem ( sprintf ('ps -p %s -o comm=', int2str (pid)) );
+% 
+%                     if ~strncmpi (cmdout, 'mbdyn', 5)
+%                         pid = [];
+%                     end
+%                     
+%                 end
+%                 
+%             end
             
         end
 
