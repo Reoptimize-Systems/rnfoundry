@@ -1001,6 +1001,16 @@ av = mbdyn.pre.angularVelocity ( sn1, rotaxis, drv );
 
 av.generateMBDynInputString ()
 
+%% linearVelocity
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+w = 1;
+drv = mbdyn.pre.const (w);
+rel_direction = [1;0;0];
+
+lv = mbdyn.pre.linearVelocity ( sn1, rel_direction, drv );
+
+lv.generateMBDynInputString ()
 
 %% rampDrive
 
@@ -1180,3 +1190,37 @@ beams = mbdyn.pre.beamSl
 obj = beamSlider (sn7, 'null', beams);
 
 obj.generateMBDynInputString ()
+
+
+%% streamDriver
+
+sd = mbdyn.pre.streamDriver (true, 3, 'Path', 'auto');
+
+sd.generateMBDynInputString ()
+
+
+sd = mbdyn.pre.streamDriver (true, 5, 'Path', 'auto');
+sd.setLabel (100);
+sd.generateMBDynInputString ()
+
+
+sd = mbdyn.pre.streamDriver (true, 5, 'Host', '127.0.0.1', 'Port', 3000, 'InitialValues', [1,2,3,4,5]);
+sd.setLabel (100);
+sd.generateMBDynInputString ()
+
+%% fileDrive
+
+sd = mbdyn.pre.streamDriver (true, 5, 'Host', '127.0.0.1', 'Port', 3000, 'InitialValues', [1,2,3,4,5]);
+sd.setLabel (100);
+
+fd = mbdyn.pre.fileDrive (sd);
+fd.generateMBDynInputString ()
+
+fd = mbdyn.pre.fileDrive (sd, 'ColumnNumber', 3);
+fd.generateMBDynInputString ()
+
+fd = mbdyn.pre.fileDrive (sd, 'ColumnNumber', 3, 'Amplitude', 0.1);
+fd.generateMBDynInputString ()
+
+fd = mbdyn.pre.fileDrive (sd, 'Amplitude', 0.1);
+fd.generateMBDynInputString ()
