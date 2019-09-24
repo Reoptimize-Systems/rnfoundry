@@ -73,8 +73,8 @@ classdef system < mbdyn.pre.base
        problems;
        controlData;
        nodes;
-       drives;
-       fileDrivers;
+       driveCallers;
+       drivers;
        elements;
        variables;
         
@@ -116,14 +116,15 @@ classdef system < mbdyn.pre.base
             %  'Elements' - cell array of mbdyn.pre.element objects (or
             %    derived objects, such as mbdyn.pre.body).
             %
-            %  'Drives' - cell array mbdyn.pre.drive objects to add to the
-            %    MBDyn input file, see the section on Drivers in Chapter 7
-            %    of the MBDyn manual for further details.
+            %  'DriveCallers' - cell array of mbdyn.pre.drive objects to add 
+            %    to the MBDyn input file. These define drives which may be
+            %    reused throughout the input file. See Section 2.4.3 'Drive
+            %    Caller' of the MBDyn manual for further details.
             %
-            %  'FileDrivers' - cell array mbdyn.pre.fileDrivers objects to add to the
-            %    drivers section of an MBDyn input file, see the section on
-            %    Drivers in Chapter 7 of the MBDyn manual for further
-            %    details.
+            %  'Drivers' - cell array mbdyn.pre.fileDriver objects to
+            %    add to the drivers section of an MBDyn input file, see the
+            %    section on Drivers in Chapter 7 of the MBDyn manual for
+            %    further details.
             %
             %  'DefaultOutput' - cell array of strings indicating the
             %    default output flag for a type of node or element. It can
@@ -231,11 +232,12 @@ classdef system < mbdyn.pre.base
             options.Nodes = {};
             options.Elements = {};
             options.Variables = {};
-            options.Drives = {};
+            options.DriveCallers = {};
             options.DefaultOutput = {};
             options.DefaultOrientation = '';
             options.References = {};
             options.DefaultScales = [];
+            options.Drivers = {};
             if ispc
                 options.OutputResults = {};
             else
@@ -247,30 +249,35 @@ classdef system < mbdyn.pre.base
             self.problems = {};
             self.nodes = {};
             self.elements = {};
-            self.drives = {};
+            self.driveCallers = {};
             self.references = {};
             self.variables = {};
+            self.drivers = {};
             
             self.addProblems (problems);
             
             if ~isempty (options.Nodes)
-                self.addNodes (options.Nodes)
+                self.addNodes (options.Nodes);
             end
             
             if ~isempty (options.Elements)
-                self.addElements (options.Elements)
+                self.addElements (options.Elements);
             end
             
             if ~isempty (options.Variables)
-                self.addVariables (options.Variables)
+                self.addVariables (options.Variables);
             end
             
-            if ~isempty (options.Drives)
-                self.addDrives (options.Drives)
+            if ~isempty (options.DriveCallers)
+                self.addDriveCallers (options.DriveCallers);
             end
             
             if ~isempty (options.References)
-                self.addReferences (options.References)
+                self.addReferences (options.References);
+            end
+            
+            if ~isempty (options.Drivers)
+                self.addDrivers (options.Drivers);
             end
             
             if ~isempty (options.DefaultOutput)
@@ -451,7 +458,7 @@ classdef system < mbdyn.pre.base
             
         end
         
-        function addDrives (self, drives)
+        function addDriveCallers (self, drives)
             
             drives = self.makeCellIfNot (drives);
             
@@ -459,13 +466,31 @@ classdef system < mbdyn.pre.base
             drives = reshape (drives, 1, []);
             
             % remove empty
-            drives(cellfun('isempty',drives)) = [];
+            drives(cellfun('isempty', drives)) = [];
             
             self.checkCellArrayClass (drives, 'mbdyn.pre.drive');
             
-            self.drives = [self.drives, drives];
+            self.driveCallers = [self.driveCallers, drives];
             
-            self.drives = self.uniqueCells (self.drives);
+            self.driveCallers = self.uniqueCells (self.driveCallers);
+            
+        end
+        
+        function addDrivers (self, drivers)
+            
+            drivers = self.makeCellIfNot (drivers);
+            
+            % ensure it's a row vector
+            drivers = reshape (drivers, 1, []);
+            
+            % remove empty
+            drivers(cellfun('isempty', drivers)) = [];
+            
+            self.checkCellArrayClass (drivers, 'mbdyn.pre.driver');
+            
+            self.drivers = [self.drivers, drivers];
+            
+            self.drivers = self.uniqueCells (self.drivers);
             
         end
         
@@ -1095,6 +1120,10 @@ classdef system < mbdyn.pre.base
                 str = self.addOutputLine (str , sprintf('loadable elements: %d;', elcount.LoadableElements), 1, false);
             end
             
+            if elcount.Drivers > 0
+                str = self.addOutputLine (str , sprintf('file drivers: %d;', elcount.Drivers), 1, false);
+            end
+            
             if elcount.Gravity
                 str = self.addOutputLine (str , 'gravity;', 1, false);
             end
@@ -1193,20 +1222,20 @@ classdef system < mbdyn.pre.base
             end
             
             %% file drivers section
-            if numel (self.fileDrivers) > 0
+            if numel (self.drivers) > 0
                 str = self.addOutputLine (str , 'begin: drivers;', 0, false);
                 for ind = 1:numel (self.drivers)
-                    str = sprintf ('%s\n    drive caller : %d, %s;\n', str, self.fileDrivers{ind}.label, self.fileDrivers{ind}.generateMBDynInputString ());
+                    str = sprintf ('%s\n%s\n', str, self.drivers{ind}.generateMBDynInputString ());
                 end
                 str = self.addOutputLine (str , 'end: drivers;', 0, false);
                 str = sprintf ('%s\n', str);
             end
             
             % drives (not file drivers)
-            if numel (self.drives) > 0
-                str = sprintf ('%s\n#Drives\n\n', str);
-                for ind = 1:numel (self.drives)
-                    str = sprintf ('%s\ndrive caller : %d, %s;\n', str, self.drives{ind}.label, self.drives{ind}.generateMBDynInputString ());
+            if numel (self.driveCallers) > 0
+                str = sprintf ('%s\n#DriveCallers\n\n', str);
+                for ind = 1:numel (self.driveCallers)
+                    str = sprintf ('%s\ndrive caller : %d, %s;\n', str, self.driveCallers{ind}.label, self.driveCallers{ind}.generateMBDynInputString ());
                 end
                 str = sprintf ('%s\n', str);
             end
@@ -1273,7 +1302,7 @@ classdef system < mbdyn.pre.base
             elcount.RigidBodies = 0;
             elcount.Joints = 0;
             elcount.Forces = 0;
-            elcount.FileDrivers = 0;
+            elcount.Drivers = numel (self.drivers);
             elcount.Gravity = false;
             elcount.Genels = 0;
             elcount.AbstractNodes = 0;
@@ -1383,8 +1412,13 @@ classdef system < mbdyn.pre.base
                 label = label + 1;
             end
             
-            for ind = 1:numel (self.drives)
-                self.drives{ind}.label = label;
+            for ind = 1:numel (self.drivers)
+                self.drivers{ind}.label = label;
+                label = label + 1;
+            end
+            
+            for ind = 1:numel (self.driveCallers)
+                self.driveCallers{ind}.label = label;
                 label = label + 1;
             end
             

@@ -522,6 +522,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 self.startMBdyn ('Verbosity', options.Verbosity);
             end
             
+                        
             % now initialise communication
             if strcmp (self.commMethod, 'local socket')
                 
@@ -547,7 +548,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     rethrow (err);
                 end
                            
-                self.NNodes = GetNodes (self);
+%                 self.NNodes = GetNodes (self);
                 
             elseif strcmp (self.commMethod, 'inet socket')
                 
@@ -578,7 +579,7 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     rethrow (err);
                 end
                            
-                self.NNodes = GetNodes (self);
+%                 self.NNodes = GetNodes (self);
                 
             elseif strcmp (self.commMethod, 'shared memory')
                 
@@ -609,12 +610,58 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     rethrow (err);
                 end
                            
-                self.NNodes = GetNodes (self);
+%                 self.NNodes = GetNodes (self);
                 
             else
                 error ('MBCNodal:badcommmethod', ...
                     'Unrecognised communication method ''%s'' specified', commethod);
             end
+            
+            if ~isempty (self.mbsys)
+                
+                if ~isempty (self.mbsys.drivers)
+                    
+                    sdinds = [];
+                    
+                    % find any stream drivers
+                    for ind = 1:numel (self.mbsys.drivers)
+                        if isa (self.mbsys.drivers{ind}, 'mbdyn.pre.streamDriver')
+                            sdinds = [sdinds, ind];
+%                             success = self.mbsys.drivers{ind}.start ();
+                            %                             self.mbsys.drivers{ind}.sendValues (self.mbsys.drivers{ind}.initialValues);
+                        end
+                    end
+                    
+                    if ~isempty (sdinds)
+                        % we found some stream drivers
+                        status = ones (size (sdinds));
+                        
+                        tnow = tic ();
+                        try_connect_timeout = 60;
+                        while ~all (status == 0) && (try_connect_timeout > (tnow - tic ()))
+                            
+                            for ind = 1:numel (sdinds)
+                                if status (ind) ~= 0
+                                    status(ind) = self.mbsys.drivers{sdinds(ind)}.start ();
+                                end
+                            end
+                            
+                        end
+                        
+                    end
+                    
+                end
+                
+            end
+            
+            self.cppcall ('Negotiate');
+            
+            for ind = 1:numel (sdinds)
+                self.mbsys.drivers{sdinds(ind)}.sendValues (self.mbsys.drivers{sdinds(ind)}.initialValues);
+            end
+            
+            self.NNodes = GetNodes (self);
+            
         end
         
 %         function status = GetStatus (self)
