@@ -1,5 +1,5 @@
 classdef timeIntegrator < handle
-% class implementing the PID control algorithm
+% class implementing a simple time domain integrator
 %
 % Syntax
 %
