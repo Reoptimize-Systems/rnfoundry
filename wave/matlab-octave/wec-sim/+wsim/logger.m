@@ -1781,7 +1781,7 @@ classdef logger < handle
             
                 % build the correct index into the logged variable by replacing
                 % the appropriate index with the new log index
-                S.subs{obj.info.(varname).IndexDimension} = obj.info.(varname).LastLogIndex : obj.info.(varname).PreallocatedLogLength;
+                S.subs{obj.info.(varname).IndexDimension} = (obj.info.(varname).LastLogIndex+1) : obj.info.(varname).PreallocatedLogLength;
             
                 % assign the new value
                 obj.data.(varname) = subsasgn (obj.data.(varname), S, []);
