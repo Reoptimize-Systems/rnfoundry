@@ -313,7 +313,7 @@ classdef postproc < handle
                             
                             case {'euler123', 'euler313', 'euler321', 'orientation vector'}
                                 
-                                self.nodes.(nodename).Orientation = [self.nodes.(nodename).Orientation; deg2rad (movdata(ind,orientinds))];
+                                self.nodes.(nodename).Orientation = [self.nodes.(nodename).Orientation; deg2rad(movdata(ind,orientinds))];
                                 
                             case 'orientation matrix'
                                 
