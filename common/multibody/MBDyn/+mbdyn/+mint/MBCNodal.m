@@ -617,11 +617,10 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     'Unrecognised communication method ''%s'' specified', commethod);
             end
             
+            sdinds = [];
             if ~isempty (self.mbsys)
                 
                 if ~isempty (self.mbsys.drivers)
-                    
-                    sdinds = [];
                     
                     % find any stream drivers
                     for ind = 1:numel (self.mbsys.drivers)
@@ -767,8 +766,6 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                             set3x3OrientMatNoChecking (self.structuralNodes{ind}, om.orientationMatrix);
                         
                     end
-                    
-                    
                     
                 end
             
