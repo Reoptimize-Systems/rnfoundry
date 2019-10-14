@@ -61,18 +61,19 @@ function design = completedesign_ROTARY (design, simoptions)
 % designed for handling fractions. See the help for the ''fr'' class for
 % further information. If CoilLayers is not supplied, it defaults to 1.
 % 
-% completedesign_ROTARY also adds further default design options common to all pm
-% machines if they are not already present in the design structure. The
-% following fields will be added to 'design' if they are not already present:
+% completedesign_ROTARY also adds further default design options common to
+% all pm machines if they are not already present in the design structure.
+% The following fields will be added to 'design' if they are not already
+% present:
 %
 %  CoilLayers - default is 1
 %
-%  MagnetSkew - determines the amount of magnet skewwing as a ratio of a pole
-%   width (i.e. it is expected to be between 0 and 1). Defaults to zero if not
-%   supplied.
+%  MagnetSkew - determines the amount of magnet skewwing as a ratio of a 
+%   pole width (i.e. it is expected to be between 0 and 1). Defaults to
+%   zero if not supplied.
 %
-%  NStrands - number of strands making up the wire in the coils. Defaults to 1
-%   if not supplied.
+%  NStrands - number of strands making up the wire in the coils. Defaults 
+%   to 1 if not supplied.
 %
 %  NStages - number of stages making up the machine. Defaults to 1 if not
 %   supplied
