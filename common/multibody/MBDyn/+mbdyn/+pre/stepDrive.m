@@ -24,10 +24,9 @@ classdef stepDrive < mbdyn.pre.drive
             %
             %  t_init - time at which step begins to be applied
             %
-            %  step_val - slope with which the ramp changes.
+            %  step_val - value of the drive after time t_init
             %
-            %  init_val - initial value of the drive from which it
-            %   increases  or decreases with slope in the specified times.
+            %  init_val - initial value of the drive until t_init
             %
             % Output
             %
@@ -35,7 +34,7 @@ classdef stepDrive < mbdyn.pre.drive
             %
             %
             %
-            % See Also: 
+            % See Also: mbdyn.pre.rampDrive
             %
             
             self.checkNumericScalar (t_init, true, 't_init');
