@@ -2152,11 +2152,11 @@ classdef hydroBody < handle
 
                         B11 = sin (obj.waves.w * t + obj.waves.phase(:,wave_dir_ind));
 
-                        C0 = A .* obj.waves.waveSpread(wave_dir_ind) .* dw;
+                        C0 = obj.waves.A .* obj.waves.waveSpread(wave_dir_ind) .* obj.waves.dw;
 
                         C1 = sqrt (obj.waves.A .* obj.waves.waveSpread(wave_dir_ind) .* obj.waves.dw);
 
-                        D0 = obj.hydroForce.fExt.md(wave_dir_ind,:,:) .* C0;
+                        D0 = squeeze(obj.hydroForce.fExt.md(wave_dir_ind,:,:) .* C0');
 
                         % hydroForce.fExt.re and im will be a 6 * Nfreqs
                         % matrices, note this statement takes advantage of
