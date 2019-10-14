@@ -204,13 +204,17 @@ classdef linearPowerTakeOff < wsim.powerTakeOff
             %   other node.
             %
             %  ptoforce - scalar force value applied to the nodes parallel
-            %   to axis three of the reference node
+            %   to axis three of the reference node. This is the force
+            %   which is applied to the non-reference node, the opposite
+            %   force is applied to the reference node.
             %
-            %  reldisp - relative displacement of the nodes in a direction
-            %   parallel to axis three of the reference node
+            %  reldisp - relative displacement of the non-reference node
+            %   relative to the reference node in a direction parallel to
+            %   axis three of the reference node
             %
-            %  relvel - relative angular velocity of the nodes in a
-            %   direction parallel to axis three of the reference node
+            %  relvel - relative angular velocity of the non-reference node
+            %   relative to the reference node in a direction parallel to
+            %   axis three of the reference node
             %
             %
             
