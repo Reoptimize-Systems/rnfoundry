@@ -99,6 +99,13 @@ classdef body < nemoh.base
         meshType; % string indicating the type of mesh specification used for the body (e.g. 'axi')
         
         haveGIBBON;
+        
+        % degreesOfFreedom - degrees of freedom to be solved for the body
+        %  This will be a cell array of objects derived from the
+        %  nemoh.degreeOfFreedom class, e.g. nemoh.translationalDoF and
+        %  nemoh.rotationalDoF
+        degreesOfFreedom; 
+        
     end
     
     properties (GetAccess = private, SetAccess = private)
@@ -146,6 +153,7 @@ classdef body < nemoh.base
             
             options.MeshProgPath = '';
             options.Name = 'body';
+            options.DegreesOfFreedom = 'default';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -177,6 +185,8 @@ classdef body < nemoh.base
 
             self.id = 0;
             self.setName (options.Name);
+            
+            self.degreesOfFreedom = options.DegreesOfFreedom;
             
             % internal flags
             self.stlLoaded = false;
@@ -1806,22 +1816,41 @@ classdef body < nemoh.base
             %
             %
             
+            if ischar (self.degreesOfFreedom)
+               
+                switch self.degreesOfFreedom
+                    
+                    case 'default'
+                         self.degreesOfFreedom = { nemoh.translationalDoF([1,0,0]), ...
+                                                   nemoh.translationalDoF([0,1,0]), ...
+                                                   nemoh.translationalDoF([0,0,1]), ...
+                                                   nemoh.rotationalDoF([1,0,0], self.centreOfGravity ), ...
+                                                   nemoh.rotationalDoF([0,1,0], self.centreOfGravity ), ...
+                                                   nemoh.rotationalDoF([0,0,1], self.centreOfGravity ) };
+                                     
+                    case 'none'
+                        
+                        self.degreesOfFreedom = {};
+                        
+                    otherwise
+                        
+                        error ('Invalid value in degreesOfFreedom property');
+                        
+                end
+                
+            end
+            
             if self.meshProcessed
             
                 str = sprintf ('%s\t\t! Name of mesh file\n', self.meshFileName);            
                 str = sprintf ('%s%g %g\t\t\t! Number of points and number of panels \t\n', str, self.nMeshNodes, self.nQuads);
 
                 % Degrees of freedom
-                str = sprintf ('%s6\t\t\t\t! Number of degrees of freedom\n', str);     
-                str = sprintf ('%s1 1. 0. 0. 0. 0. 0.\t\t! Surge\n', str);
-                str = sprintf ('%s1 0. 1. 0. 0. 0. 0.\t\t! Sway\n', str);
-                str = sprintf ('%s1 0. 0. 1. 0. 0. 0.\t\t! Heave\n', str);
-                str = sprintf ('%s2 1. 0. 0. %s %s %s\t\t! Roll about a point\n', str, ...
-                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
-                str = sprintf ('%s2 0. 1. 0.  %s %s %s\t\t! Pitch about a point\n', str, ...
-                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
-                str = sprintf ('%s2 0. 0. 1.  %s %s %s\t\t! Yaw about a point\n', str, ...
-                    self.formatNumber (self.centreOfGravity(1)), self.formatNumber (self.centreOfGravity(2)), self.formatNumber (self.centreOfGravity(3)));
+                str = sprintf ('%s%d\t\t\t\t! Number of degrees of freedom\n', str, numel (self.degreesOfFreedom));
+                
+                for ind = 1:numel (self.degreesOfFreedom)
+                    str = sprintf ('%s%s', str, self.degreesOfFreedom{ind}.generateDoFStr ());
+                end
 
                 % Resulting forces
                 str = sprintf ('%s6\t\t\t\t! Number of resulting generalised forces\n', str);
