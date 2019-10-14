@@ -136,20 +136,23 @@ classdef linearPTOWithController < wsim.powerTakeOff
             
             info.AvailableNames = { 'InternalForce', ...
                                     'RelativeDisplacement', ...
-                                    'RelativeVelocity' ...
+                                    'RelativeVelocity', ...
+                                    'DevelopedPower' ...
                                   };
                               
             info.IndepVars = { 'Time', ...
                                'Time', ...
+                               'Time', ...
                                'Time' };
                               
-            info.Sizes = { [1,1], [1,1], [1,1] };
+            info.Sizes = { [1,1], [1,1], [1,1], [1,1] };
             
             info.Descriptions = { 'Force applied between the two PTO nodes', ...
                                   'Relative displacement of the two PTO nodes in a direction parallel to the reference node''s chosen axis', ...
-                                  'Relative velocity of the two PTO nodes in a direction parallel to the reference node''s chosen axis' };
+                                  'Relative velocity of the two PTO nodes in a direction parallel to the reference node''s chosen axis', ...
+                                  'Developed Power calculated from pto force * relative velocity' };
                               
-            info.AxisLabels = { 'Force [N]', 'Displacement [m]', 'Velocity [ms^{-1}]' };
+            info.AxisLabels = { 'Force [N]', 'Displacement [m]', 'Velocity [ms^{-1}]', 'Power [W]' };
             
             
             % get the information of variables to be logged by the
@@ -183,9 +186,9 @@ classdef linearPTOWithController < wsim.powerTakeOff
             %
             % Description
             %
-            % wsim.linearPTOWithController.forceAndMoment calculates the forces
-            % and moments applied in the global frame by the PTO to the two
-            % nodes associated with the PTO.
+            % wsim.linearPTOWithController.forceAndMoment calculates the
+            % forces and moments applied in the global frame by the PTO to
+            % the two nodes associated with the PTO.
             %
             % Input
             %
@@ -200,13 +203,17 @@ classdef linearPTOWithController < wsim.powerTakeOff
             %   other node.
             %
             %  ptoforce - scalar force value applied to the nodes parallel
-            %   to axis three of the reference node
+            %   to axis three of the reference node. This is the force
+            %   which is applied to the non-reference node, the opposite
+            %   force is applied to the reference node.
             %
-            %  reldisp - relative displacement of the nodes in a direction
-            %   parallel to axis three of the reference node
+            %  reldisp - relative displacement of the non-reference node
+            %   relative to the reference node in a direction parallel to
+            %   axis three of the reference node
             %
-            %  relvel - relative angular velocity of the nodes in a
-            %   direction parallel to axis three of the reference node
+            %  relvel - relative angular velocity of the non-reference node
+            %   relative to the reference node in a direction parallel to
+            %   axis three of the reference node
             %
             %
             
@@ -224,9 +231,10 @@ classdef linearPTOWithController < wsim.powerTakeOff
             % need to add zero moments to forces
             FM = [FM; zeros(size (FM))];
             
-            % note that this internalVariables property is astructure which
-            % is initialised by wsim.powerTakeOff
+            % note that this internalVariables property is a structure
+            % which is initialised by wsim.powerTakeOff
             self.internalVariables.InternalForce = ptoforce;
+            self.internalVariables.DevelopedPower = ptoforce * self.internalVariables.RelativeVelocity;
             
              % copy the controller logged variables int the PTO
              % internalVariables structure
