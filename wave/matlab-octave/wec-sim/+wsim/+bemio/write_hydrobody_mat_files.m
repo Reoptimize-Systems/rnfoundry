@@ -44,6 +44,7 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
 %
 
     options.AppendToFileNames = '';
+    options.PrependToFileNames = '';
     
     options = parse_pv_pairs (options, varargin);
     
@@ -160,7 +161,7 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
 %         end
 
         % write the .mat file for this body
-        outfile = fullfile (outdir, [name, options.AppendToFileNames, '.mat']);
+        outfile = fullfile (outdir, [options.PrependToFileNames, name, options.AppendToFileNames, '.mat']);
         hydroData = all_hydro_data(bodyind);
         save (outfile, '-struct', 'hydroData');
 
