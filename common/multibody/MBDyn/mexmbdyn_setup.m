@@ -215,9 +215,11 @@ function mexmbdyn_setup (varargin)
         fprintf (1, 'mexMBCNodal was not able to be compiled.\n');
     end
     
-    if (ispc () || ~isempty (strfind (options.MBCIncludeDir, 'mingw'))) &&  ~options.ForceMexMBCNodalSharedMem
-         fprintf (1, 'Not compiling mexMBCNodalSharedMem as we are on Windows.\n');
-    else
+    if options.ForceMexMBCNodalSharedMem
+%         
+%     if (ispc () || ~isempty (strfind (options.MBCIncludeDir, 'mingw'))) &&  ~options.ForceMexMBCNodalSharedMem
+%          fprintf (1, 'Not compiling mexMBCNodalSharedMem as we are on Windows.\n');
+%     else
         % compiling mexMBCNodalSharedMem
         success = false;
         try
