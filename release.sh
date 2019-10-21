@@ -23,9 +23,11 @@ make_docs=true
 matlab_cmds=""
 verbose=false
 launch_matlab_cmd="/usr/local/MATLAB/R2016b/bin/matlab"
-mbdyn_release_dir="${HOME}/build/mbdyn/x86_64-w64-mingw32_static"
+mbdyn_release_dir="${HOME}/build/mbdyn-official-git/x86_64-w64-mingw32_static"
 mxedir="/opt/mxe"
-matlab_windows_lib_dir="${HOME}/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64"
+matlab_windows_lib_dir="${HOME}/Nextcloud/Personal/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64"
+mbdyn_src_dir=""
+build_windows_mbdyn=false
 
 usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] [-l <mat_lib_dir>] -- creates Renewnet Foundry release
 
@@ -36,14 +38,16 @@ where:
     -w  don't build windows libraries using MXE or copy them
     -m  skip building mex files (requires matlab)
     -z  create zip file
-    -c  additional matlab commands to run before running rnfoundry_release (default: "")
+    -c  additional matlab commands to run before running rnfoundry_release (default: "${matlab_cmds}")
     -o  verbose output (default: false)
-    -b  command to run matlab (default: /usr/local/MATLAB/R2016b/bin/matlab)
-    -M  mbdyn release dir (default: ~/build/mbdyn/x86_64-w64-mingw32_static)
-    -x  MXE install dir (default: /opt/mxe)
-    -l  directory containing the windows mingw64 mex libraries (default: ~/Sync/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64)"
+    -b  command to run matlab (default: "${launch_matlab_cmd}")
+    -M  mbdyn release dir (default: "${mbdyn_release_dir}")
+    -x  MXE install dir (default: "${mxedir}")
+    -l  directory containing the windows mingw64 mex libraries (default: "${matlab_windows_lib_dir}")
+    -s  mbdyn source directory (default: "${mbdyn_src_dir}")
+    -t  cross build mbdyn. (default: false)"
 
-while getopts "h?v:twmzc:oM:x:l:b:" opt; do
+while getopts "h?v:twmzc:oM:x:l:b:s:t" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -75,6 +79,12 @@ while getopts "h?v:twmzc:oM:x:l:b:" opt; do
         ;;
     M)  mbdyn_release_dir=$OPTARG
         echo "mbdyn_release_dir: $mbdyn_release_dir"
+        ;;
+    s)  mbdyn_src_dir=$OPTARG
+        echo "mbdyn_src_dir: $mbdyn_src_dir"
+        ;;
+    t)  build_windows_mbdyn=true
+        echo "build_windows_mbdyn: $build_windows_mbdyn"
         ;;
     x)  mxedir=$OPTARG
         echo "mxedir: $mxedir"
@@ -108,6 +118,9 @@ rm ${release_dir}/.hg_archival.txt
 rm ${release_dir}/.hgignore
 # remove the release scripts
 rm ${release_dir}/release.sh
+if [ -f "${release_dir}/upload_release.sh" ]; then
+  rm ${release_dir}/upload_release.sh
+fi
 rm ${release_dir}/test_release.sh
 # remove test scripts
 rm ${release_dir}/test_hg.sh
@@ -116,43 +129,53 @@ rm ${release_dir}/test_hg.sh
 echo ${version} > ${release_dir}/version.txt
 echo ${version} > ${release_dir}/wave/matlab-octave/wec-sim/version.txt
 
+
+
 if [ "$copy_win_libs" = true ]; then
 
-    cd ${mxedir}
-    make gsl libf2c
+  cd ${mxedir}
+  make gsl libf2c
 
-    # we need to copy a bunch of files cross-compiled using MXE to the
-    # release so it can be built on windows machines
-    mkdir ${release_dir}/x86_64-w64-mingw32
-    mkdir ${release_dir}/x86_64-w64-mingw32/include
-    mkdir ${release_dir}/x86_64-w64-mingw32/lib
+  # we need to copy a bunch of files cross-compiled using MXE to the
+  # release so it can be built on windows machines
+  mkdir ${release_dir}/x86_64-w64-mingw32
+  mkdir ${release_dir}/x86_64-w64-mingw32/include
+  mkdir ${release_dir}/x86_64-w64-mingw32/lib
 
-    # gsl
-    # octave requires standard unix lib names (.a)
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgsl.a  ${release_dir}/x86_64-w64-mingw32/lib/
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a ${release_dir}/x86_64-w64-mingw32/lib/
-    # matlab needs libraries to have a different name (.lib)
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgsl.a  ${release_dir}/x86_64-w64-mingw32/lib/gsl.lib
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a ${release_dir}/x86_64-w64-mingw32/lib/gslcblas.lib
-    cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/gsl/ ${release_dir}/x86_64-w64-mingw32/include/
+  # gsl
+  # octave requires standard unix lib names (.a)
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgsl.a  ${release_dir}/x86_64-w64-mingw32/lib/
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a ${release_dir}/x86_64-w64-mingw32/lib/
+  # matlab needs libraries to have a different name (.lib)
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgsl.a  ${release_dir}/x86_64-w64-mingw32/lib/gsl.lib
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libgslcblas.a ${release_dir}/x86_64-w64-mingw32/lib/gslcblas.lib
+  cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/gsl/ ${release_dir}/x86_64-w64-mingw32/include/
 
-    # f2c
-    # octave requires standard unix lib names (.a)
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libf2c.a  ${release_dir}/x86_64-w64-mingw32/lib/
-    # matlab needs libraries to have a different name (.lib)
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libf2c.a  ${release_dir}/x86_64-w64-mingw32/lib/f2c.lib
+  # f2c
+  # octave requires standard unix lib names (.a)
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libf2c.a  ${release_dir}/x86_64-w64-mingw32/lib/
+  # matlab needs libraries to have a different name (.lib)
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libf2c.a  ${release_dir}/x86_64-w64-mingw32/lib/f2c.lib
 
-    # mbdyn
-    cp -r ${mbdyn_release_dir}/* ${release_dir}/x86_64-w64-mingw32/
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/
-    # matlab needs libraries to have a different name (.lib)
-    cp ${mbdyn_release_dir}/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
-    cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/ws2_32.lib
+  # mbdyn
+  if [ "$build_windows_mbdyn" = true ]; then
+    if [ -d "$mbdyn_src_dir" ]; then
+      cd ${mbdyn_src_dir}/packaging/mswindows
+      ./win_package.sh
+    fi
+  fi
 
-    # boost (for shared memory communication)
-    #mkdir -p ${release_dir}/x86_64-w64-mingw32/include/boost
-    #cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/boost/interprocess ${release_dir}/x86_64-w64-mingw32/include/boost/interprocess
-    #cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/boost/date_time ${release_dir}/x86_64-w64-mingw32/include/boost/date_time
+  # mbdyn
+  cp -r ${mbdyn_release_dir}/* ${release_dir}/x86_64-w64-mingw32/
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/
+  # matlab needs libraries to have a different name (.lib)
+  cp ${mbdyn_release_dir}/lib/libmbc.a  ${release_dir}/x86_64-w64-mingw32/lib/mbc.lib
+  cp ${mxedir}/usr/x86_64-w64-mingw32.static/lib/libws2_32.a ${release_dir}/x86_64-w64-mingw32/lib/ws2_32.lib
+
+  # boost (for shared memory communication)
+  #mkdir -p ${release_dir}/x86_64-w64-mingw32/include/boost
+  #cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/boost/interprocess ${release_dir}/x86_64-w64-mingw32/include/boost/interprocess
+  #cp -r ${mxedir}/usr/x86_64-w64-mingw32.static/include/boost/date_time ${release_dir}/x86_64-w64-mingw32/include/boost/date_time
 
 else
   echo "Not copying gsl gslcblas and f2c libraries, or mbdyn program"
