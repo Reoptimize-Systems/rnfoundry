@@ -877,6 +877,10 @@ classdef logger < handle
             %  'Scale' - scalar value by which to scale the data values
             %    when plotting
             %
+            %  'FigureArgs' - cell array of additional arguments that are 
+            %    to be sent to the figure function when creating the
+            %    figure.
+            %
             % Output
             %
             %  hplot - A handle (or array of handles) for the plot series
@@ -892,6 +896,7 @@ classdef logger < handle
             options.PlotFcnArgs = {};
             options.Skip = 1;
             options.Scale = 1;
+            options.FigureArgs = {};
             
             options = parse_pv_pairs (options, varargin);
             
@@ -907,7 +912,7 @@ classdef logger < handle
             
             if isempty (indepvar)
                 
-                hfig = figure;
+                hfig = figure (options.FigureArgs{:});
                 if isoctave
                     hax = axes ();
                 else
@@ -948,7 +953,8 @@ classdef logger < handle
                                               varname, ...
                                               'PlotFcnArgs', options.PlotFcnArgs, ...
                                               'Skip', options.Skip, ...
-                                              'Scale', [1, options.Scale]);
+                                              'Scale', [1, options.Scale], ...
+                                              'FigureArgs', options.FigureArgs);
                 
             end
 
@@ -1000,6 +1006,10 @@ classdef logger < handle
             %    to scale the data values for each variable when plotting.
             %    Default is [1,1] if not supplied.
             %
+            %  'FigureArgs' - cell array of additional arguments that are 
+            %    to be sent to the figure function when creating the
+            %    figure.
+            %
             % Output
             %
             %  h - A handle (or array of handles) for the plot series
@@ -1017,6 +1027,7 @@ classdef logger < handle
             options.PlotFcnArgs = {};
             options.Skip = 1;
             options.Scale = [1,1];
+            options.FigureArgs = {};
             
             options = parse_pv_pairs (options, varargin);
             
@@ -1083,7 +1094,7 @@ classdef logger < handle
             legstrs = {};
             
             % make a new figure to plot in
-            hfig = figure;
+            hfig = figure (options.FigureArgs{:});
             if isoctave
                 hax = axes ();
             else
