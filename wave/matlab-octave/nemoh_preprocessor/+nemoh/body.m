@@ -238,6 +238,15 @@ classdef body < nemoh.base
 
         end
         
+        function setCentreOfGravity (self, CoG)
+
+            assert ( isnumeric (CoG) && size(CoG,1) == 3 && size(CoG,2) == 1, ...
+                     'CoB must be a (3 x 1) numeric column vector' );
+
+            self.centreOfGravity = CoG;
+
+        end
+        
         function setVolume (self, vol)
 
             assert ( isnumeric (vol) && isscalar (vol) && vol >= 0, ...
@@ -498,6 +507,92 @@ classdef body < nemoh.base
             
         end
         
+        
+        function addMeshDirect (self, vertices, faces, varargin)
+            % directly supply a mesh made in matlab
+            %
+            % Syntax
+            %
+            % addMeshDirect (nb, vertices, faces)
+            % addMeshDirect (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % Add a mesh specied in the native interface format to the
+            % body. The native format is two matricies, one (3 x p)
+            % containing the mesh vertices, the other (4 x q) containing
+            % the quadrilateral information (which is indiexes into the
+            % vertices matrix). See the descriptions of the 'vertices' and
+            % 'faces' input arguments for more information.
+            %
+            % Input
+            %
+            %  nb - nemoh.body object 
+            %
+            %  vertices - (3 x p) matrix of 'p' vertices where each row 
+            %   represents the x, y and z coordinate of each vertex. 
+            %
+            %  faces - (4 x q) matrix of 'q' vertex indices where each  
+            %   column represents one quadrilateral in the mesh, and each
+            %   row is the index of the column of the vertices matrix for
+            %   each point in the quadrilateral.
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'IsForAxiSim' - logical flag (true/false), if true indicates
+            %    that the mesh is one suitible for an axisymetric
+            %    simulation, and that an axisymmetric sim should be run.
+            %    Default is false.
+            %
+            %  'Verbose' - logical flag (true/false), if true some text
+            %    information about the mesh will be output to the command
+            %    line. Default is false.
+            %
+            %
+            % See Also: 
+            %
+
+%             options.NPanelsTarget = self.defaultTargetPanels;
+            options.IsForAxiSim = false;
+%             options.AddToExisting = false;
+            options.Verbose = false;
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            assert (size (vertices,1) == 3, 'vertices must be a 3 x n matrix');
+            assert (size (faces,1) == 4, 'faces must be a 4 x n matrix');
+%             assert (any (faces > size (vertices, 2), 'faces refers to vertices index greater than the size of vertices');
+
+            faces = faces + size (self.meshVertices, 2);
+            
+            self.quadMesh = [self.quadMesh, faces];
+            
+            self.meshVertices = [ self.meshVertices, vertices];
+            
+            [Fc,Vc,ind1,ind2] = mergeVertices (self.quadMesh.', self.meshVertices.', 10);
+            
+            self.quadMesh = Fc.';
+            self.meshVertices = Vc.';
+            
+            self.nMeshNodes = size (self.meshVertices, 2);
+            self.nQuads = size (self.quadMesh, 2);
+            
+            if options.Verbose
+                self.meshInfo ();
+            end
+            
+            if options.IsForAxiSim
+                self.meshType = 'axi';
+            else
+                self.meshType = 'nonaxi';
+            end
+            self.meshPlottable = true;
+            
+            self.calcMeshProps ();
+            
+        end
+        
         function makeAxiSymmetricMesh (self, r, z, ntheta, zCoG, varargin)
             % initialise a mesh based on a 2D profile rotated around z axis
             %
@@ -541,28 +636,44 @@ classdef body < nemoh.base
             % Additional optional arguments may be supplied using
             % parameter-value pairs. The available options are:
             %
-            % 'Verbose' - logical flag (true/false), if true some text
-            %   information about the mesh will be output to the command
-            %   line. Default is false.
+            %  'Verbose' - logical flag (true/false), if true some text
+            %    information about the mesh will be output to the command
+            %    line. Default is false.
             %
-            % 'NPanelsTarget' - scalar target number of panels for the
-            %   refined mesh Default is 250.
+            %  'NPanelsTarget' - scalar target number of panels for the
+            %    refined mesh Default is 250.
             %
             %
             
             options.Verbose = true;
             options.NPanelsTarget = self.defaultTargetPanels;
             options.AdvancedCricleMesh = true;
+            options.IsForAxiSim = true;
+            options.Theta = [];
+            options.AddToExisting = false;
             
             options = parse_pv_pairs (options, varargin);
+            
+            if options.IsForAxiSim
+                options.Theta = pi ();
+            else
+                if isempty (options.Theta)
+                    options.Theta = 2* pi ();
+                end
+                self.checkNumericScalar (options.Theta, true, 'Theta (rotation sweep angle)');
+                assert ( options.Theta > 0 && options.Theta <= 2*pi (), ...
+                         'Theta must be > 0 and <= 2*pi' );
+            end
             
             self.checkNumericScalar (zCoG, true, 'zCoG (Vertical Centre of Gravity)');
             self.checkLogicalScalar (options.AdvancedCricleMesh, true, 'AdvancedCricleMesh')
             
             self.nPanelsTarget = options.NPanelsTarget;
             
-            % clear any previous mesh and force data
-            self.clearMeshAndForceData ();
+            if ~options.AddToExisting
+                % clear any previous mesh and force data
+                self.clearMeshAndForceData ();
+            end
             
             % store profile for inspection later
             self.axiMeshR = r;
@@ -574,14 +685,14 @@ classdef body < nemoh.base
                 error ('Number of elements in r must be same as in z');
             end
             
-            % TODO: calculate centre of gravity assuming univorm density if
+            % TODO: calculate centre of gravity assuming uniform density if
             % it is not suplied
-            self.centreOfGravity = [ 0, 0, zCoG ];
+            self.centreOfGravity = [ 0; 0; zCoG ];
             
             ntheta = ntheta + ~iseven(ntheta);% Force even
             
             % discretisation angles
-            theta = linspace (0., pi(), ntheta+3);
+            theta = linspace (0., options.Theta, ntheta+3);
             
             self.nMeshNodes = 0;
             
@@ -594,6 +705,12 @@ classdef body < nemoh.base
             
 %             quadaddstart = 1;
             quadaddend = n - 1;
+            
+            if options.IsForAxiSim
+                n_circ_theta = ntheta/2;
+            else
+                n_circ_theta = ntheta/4;
+            end
             
             % Create the vertices
             if options.AdvancedCricleMesh && self.haveGIBBON && r(1) == 0
@@ -612,7 +729,8 @@ classdef body < nemoh.base
                     revquads = true;
                 end
                 
-                self.addCircleSurfMesh (r(2), z(1), z(2), ntheta/2, true, revquads);
+                
+                self.addCircleSurfMesh (r(2), z(1), z(2), n_circ_theta, options.IsForAxiSim, revquads);
                 
             end
             
@@ -657,7 +775,7 @@ classdef body < nemoh.base
                     revquads = false;
                 end
                 
-                self.addCircleSurfMesh (r(n-1), z(n), z(n-1), ntheta/2, true, revquads);
+                self.addCircleSurfMesh (r(n-1), z(n), z(n-1),n_circ_theta, options.IsForAxiSim, revquads);
                 
             end
             
@@ -665,7 +783,11 @@ classdef body < nemoh.base
                 self.meshInfo ();
             end
             
-            self.meshType = 'axi';
+            if options.IsForAxiSim
+                self.meshType = 'axi';
+            else
+                self.meshType = 'nonaxi';
+            end
             self.meshPlottable = true;
             
             self.calcMeshProps ();
@@ -957,20 +1079,24 @@ classdef body < nemoh.base
                                                          'Axes', hax, ...
                                                          'PatchParameters', {'edgecolor', options.EdgeColor} );
                                                      
-                % add centre of gravity
-                scatter3 ( hax, self.centreOfGravity(1), ...
-                                self.centreOfGravity(2), ...
-                                self.centreOfGravity(3), ...
-                                '+' );
-                       
-                % note we use the 'parent property rather than first
-                % argument as being the axes to create the text object in
-                % for Octave compatibility.
-                text ( self.centreOfGravity(1) + 0.01 * self.meshSize(1), ...
-                       self.centreOfGravity(2) + 0.01 * self.meshSize(2), ...
-                       self.centreOfGravity(3), ...
-                       sprintf ('%s CoG', self.name), ...
-                       'parent', hax );
+                if ~isempty (self.centreOfGravity)
+                    
+                    % add centre of gravity
+                    scatter3 ( hax, self.centreOfGravity(1), ...
+                                    self.centreOfGravity(2), ...
+                                    self.centreOfGravity(3), ...
+                                    '+' );
+
+                    % note we use the 'parent property rather than first
+                    % argument as being the axes to create the text object in
+                    % for Octave compatibility.
+                    text ( self.centreOfGravity(1) + 0.01 * self.meshSize(1), ...
+                           self.centreOfGravity(2) + 0.01 * self.meshSize(2), ...
+                           self.centreOfGravity(3), ...
+                           sprintf ('%s CoG', self.name), ...
+                           'parent', hax );
+                   
+                end
 
                 if self.meshProcessed && ~isempty (self.centreOfBuoyancy)
                     
@@ -1137,7 +1263,7 @@ classdef body < nemoh.base
                
             % write the stl file
             if options.ShiftCoGToOrigin
-                stl.write (filename, self.triMesh.', self.triMeshVertices.' - self.centreOfGravity);
+                stl.write (filename, self.triMesh.', self.triMeshVertices.' - self.centreOfGravity.');
             else
                 stl.write (filename, self.triMesh.', self.triMeshVertices.');
             end
@@ -1387,13 +1513,13 @@ classdef body < nemoh.base
             %   also the default if not supplied. Draft is always a
             %   positive number.
             %
-            % 'CentreOfGravity' - 3 element vector with the x,y,z
-            %   coordinates of the centre of gravity of the body in the stl
-            %   file. If not supplied it is assumed that the mesh is drawn
-            %   such that the centre of gravity is at the point (0,0,0) in
-            %   the coordinate system of the stl file. The centre of
-            %   gravity will be translated along with the mesh if it is
-            %   translated to achieve a specified draft.
+            % 'CentreOfGravity' - 3 x 1 element column vector with the 
+            %   x,y,z coordinates of the centre of gravity of the body in
+            %   the stl file. If not supplied it is assumed that the mesh
+            %   is drawn such that the centre of gravity is at the point
+            %   (0,0,0) in the coordinate system of the stl file. The
+            %   centre of gravity will be translated along with the mesh if
+            %   it is translated to achieve a specified draft.
             %
             % 'Verbose' - logical flag (true/false), if true some text
             %   information about the mesh will be output to the command
@@ -1645,6 +1771,8 @@ classdef body < nemoh.base
             data = fscanf (fid, '%f', 2);
             
             self.centreOfGravity =  fscanf (fid, '%f', 3);
+            % ensure it is a column vector
+            self.centreOfGravity = self.centreOfGravity(:);
             
             self.defaultTargetPanels =  fscanf (fid, '%d', 1);
             
