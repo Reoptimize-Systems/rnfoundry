@@ -1,7 +1,7 @@
 %%
 n = 16;
 R = 0.25;
-[Vertices, Faces, edge_inds] = mesh.quad.spherepatchgrid (R, n, ...
+[Vertices, Faces, info] = mesh.quad.spherepatchgrid (R, n, ...
                                                 'ProjectionType', 'equidistance', ...
                                                 'CutZMax', 0.2 * R );
 
@@ -17,7 +17,7 @@ axis(ax,'equal')
 view(ax,3)
 
 hold on
-scatter3 (Vertices(1, edge_inds), Vertices(2, edge_inds), Vertices(3, edge_inds), 'or');
+scatter3 (Vertices(1, info.AllEdgeInds), Vertices(2, info.AllEdgeInds), Vertices(3, info.AllEdgeInds), 'or');
 hold off
 
 

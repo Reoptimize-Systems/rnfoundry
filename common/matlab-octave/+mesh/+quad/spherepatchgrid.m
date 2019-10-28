@@ -1,4 +1,4 @@
-function [vertices, faces, edge_inds] = spherepatchgrid (R, n, varargin)
+function [vertices, faces, info] = spherepatchgrid (R, n, varargin)
 % creates a quad mesh of a patch on a sphere by projecting a grid onto it
 %
 % Syntax
@@ -45,11 +45,34 @@ function [vertices, faces, edge_inds] = spherepatchgrid (R, n, varargin)
 %  faces - (4 x u) matrix of indices into the vertices matrix where each
 %    column represents one face
 %
-%  edge_inds - vector of indices into the vertices matrix for the points on
-%    the outer edge of the generated mesh, these are the points on the
-%    outer boundary starting from the the point with the minimum Y position
-%    and minimum Z position and moving anti-clockwise around the outer
-%    boundary.
+%  info - structure contating further information on the mesh. It will 
+%    contain the following fields:
+%
+%    AllEdgeInds : vector of indices into the vertices matrix for the 
+%      points on the outer edge of the generated mesh, these are the points
+%      on the outer boundary starting from the the point with the minimum Y
+%      position and minimum Z position and moving anti-clockwise around the
+%      outer boundary.
+%
+%    BottomEdgeInds - vector of indices into the vertices matrix for the 
+%      points on the lower outer edge of the generated mesh, i.e. the edge
+%      points at the minimu Z position. Arranged from minimum Y position to
+%      maximum Y position.
+%
+%    RightEdgeInds - vector of indices into the vertices matrix for the 
+%      points on the right outer edge of the generated mesh, i.e. the edge
+%      points at the maximum Y position. Arranged from minimum Z position
+%      to maximum Z position.
+%
+%    TopEdgeInds - vector of indices into the vertices matrix for the 
+%      points on the upper outer edge of the generated mesh, i.e. the edge
+%      points at the maximum Z position. Arranged from maximum Y position
+%      to minimum Y position.
+%
+%    LeftEdgeInds - vector of indices into the vertices matrix for the 
+%      points on the lower outer edge of the generated mesh, i.e. the edge
+%      points at the minimum Y position. Arranged from maximum Z position
+%      to minimum Z position.
 %
 
 
@@ -192,39 +215,39 @@ function [vertices, faces, edge_inds] = spherepatchgrid (R, n, varargin)
     end
     
 
-    edge_inds = [];
+    info.AllEdgeInds = [];
     
-    this_edge_inds = find (Z <= min(Z));
+    info.BottomEdgeInds = find (Z <= min(Z));
 
-    tmpY2 = Y(this_edge_inds);
+    tmpY2 = Y(info.BottomEdgeInds);
 
     [~, I] = sort (tmpY2, 'ascend');
     
-    edge_inds = [ edge_inds; this_edge_inds(I)];
+    info.AllEdgeInds = [ info.AllEdgeInds; info.BottomEdgeInds(I)];
     
-    this_edge_inds = find (Y >= max(Y));
+    info.RightEdgeInds = find (Y >= max(Y));
     
-    tmpZ2 = Z(this_edge_inds);
+    tmpZ2 = Z(info.RightEdgeInds);
     
     [~, I] = sort (tmpZ2, 'ascend');
     
-    edge_inds = [ edge_inds; this_edge_inds(I(2:end))];
+    info.AllEdgeInds = [ info.AllEdgeInds; info.RightEdgeInds(I(2:end))];
     
-    this_edge_inds = find (Z >= max(Z));
+    info.TopEdgeInds = find (Z >= max(Z));
     
-    tmpY2 = Y(this_edge_inds);
+    tmpY2 = Y(info.TopEdgeInds);
     
     [~, I] = sort (tmpY2, 'descend');
     
-    edge_inds = [ edge_inds; this_edge_inds(I(2:end))];
+    info.AllEdgeInds = [ info.AllEdgeInds; info.TopEdgeInds(I(2:end))];
     
-    this_edge_inds = find (Y <= min(Y));
+    info.LeftEdgeInds = find (Y <= min(Y));
     
-    tmpZ2 = Z(this_edge_inds);
+    tmpZ2 = Z(info.LeftEdgeInds);
     
-    [~, I] = sort (tmpZ2, 'ascend');
+    [~, I] = sort (tmpZ2, 'descend');
     
-    edge_inds = [ edge_inds; this_edge_inds(I(2:end-1))];
+    info.AllEdgeInds = [ info.AllEdgeInds; info.LeftEdgeInds(I(2:end-1))];
 
 
     % Project on sphere S2
