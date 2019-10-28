@@ -149,6 +149,25 @@ classdef body < nemoh.base
             %   property. The unique name is generated using the id for the
             %   body, and is changed when the id is changed.
             %
+            % 'DegreesOfFreedom' - can be a character vector, contating a
+            %   keyword indicating a special setting for the degrees of
+            %   freedom for which motion is to be considered, or a cell
+            %   array containing one or more nemoh.translationalDoF objects
+            %   and/or nemoh.rotationalDoF objects. The following
+            %   keywords are available:
+            % 
+            %     'default' : The use of this keyword indicates that the 
+            %       translational degrees of freedom parallel to the x, y,
+            %       and z axes will be considered, and the rotational
+            %       degrees of freedom about the x, y and z axes with a
+            %       rotation point at the body centre of gravity will also
+            %       be considered. 
+            %
+            %     'none' : equivalent to an empty cell array, no degrees of
+            %       freedom will be considered.
+            %
+            %   Default is: 'default' if not supplied.
+            %
             %
             
             options.MeshProgPath = '';
