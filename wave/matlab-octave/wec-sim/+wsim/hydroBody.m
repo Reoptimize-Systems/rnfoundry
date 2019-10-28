@@ -158,23 +158,23 @@ classdef hydroBody < handle
                            'cd',                   [0 0 0 0 0 0], ... 
                            'characteristicArea',   [0 0 0 0 0 0] );
                                 
-        % initDisp - Structure defining the initial displacement.
-        %  Should contain three fields:
-        %
-        %  initLinDisp : Initial displacement of center of gravity - used
-        %   for decay tests (format: [displacment in m], default = [0 0 0])
-        %
-        %  initAngularDispAxis : Initial displacement of centre of gravity
-        %   (axis of rotation) used for decay tests (format: [x y z],
-        %   default = [1 0 0])
-        %
-        %  initAngularDispAngle : Initial displacement of centre of gravity
-        %    (angle of rotation) - used for decay tests (format: [radians],
-        %    default = 0)
-        %
-        initDisp = struct( 'initLinDisp',          [0 0 0], ... 
-                           'initAngularDispAxis',  [0 1 0], ...
-                           'initAngularDispAngle', 0 );
+%         % initDisp - Structure defining the initial displacement.
+%         %  Should contain three fields:
+%         %
+%         %  initLinDisp : Initial displacement of center of gravity - used
+%         %   for decay tests (format: [displacment in m], default = [0 0 0])
+%         %
+%         %  initAngularDispAxis : Initial displacement of centre of gravity
+%         %   (axis of rotation) used for decay tests (format: [x y z],
+%         %   default = [1 0 0])
+%         %
+%         %  initAngularDispAngle : Initial displacement of centre of gravity
+%         %    (angle of rotation) - used for decay tests (format: [radians],
+%         %    default = 0)
+%         %
+%         initDisp = struct( 'initLinDisp',          [0 0 0], ... 
+%                            'initAngularDispAxis',  [0 1 0], ...
+%                            'initAngularDispAngle', 0 );
                        
         % (6x6) Hydrostatic stiffness matrix which overrides BEMIO definition
         hydroStiffness   = zeros(6);
@@ -1165,6 +1165,12 @@ classdef hydroBody < handle
             %
             
             gref = mbdyn.pre.globalref;
+            
+%             obj.initDisp.initLinDisp = linDisp + addLinDisp;
+% 
+%             obj.initDisp.initAngularDispAxis = ax_rot;
+% 
+%             obj.initDisp.initAngularDispAngle = ang_rot;
             
             ref_hydroBody = mbdyn.pre.reference ( obj.cg, [], [], [], 'Parent', gref);
 
