@@ -702,7 +702,7 @@ classdef simulation < nemoh.base
             options.IRFDuration = 10;
             options.NWaveFreqs = 1;
             options.MinMaxWaveFreqs = 0.8;
-            options.NDirectionAngles = 0;
+            options.NDirectionAngles = 1;
             options.MinMaxDirectionAngles = [0, 0];
             options.FreeSurfacePoints = [0, 50];
             options.DomainSize = [400, 400];
