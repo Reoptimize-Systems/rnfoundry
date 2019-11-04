@@ -222,9 +222,6 @@ classdef body < mbdyn.pre.element
             M = [ ref_cog.orientm.orientationMatrix , ref_cog.pos; ...
                   0, 0, 0, 1 ];
             
-            % matlab uses different convention to mbdyn for rotation
-            % matrix
-            M = self.mbdynOrient2Matlab (M);
                   
             set ( self.transformObject, 'Matrix', M );
             
