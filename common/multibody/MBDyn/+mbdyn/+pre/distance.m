@@ -14,7 +14,7 @@ classdef distance < mbdyn.pre.twoNodeOffsetJoint
             %
             % Syntax
             %
-            % dst = mbdyn.pre.distance (node1, node2, omega_drive)
+            % dst = mbdyn.pre.distance (node1, node2, distance_val)
             % dst = mbdyn.pre.distance (..., 'Parameter', value)
             %
             % Description
