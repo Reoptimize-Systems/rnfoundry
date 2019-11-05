@@ -503,9 +503,9 @@ function hydro = processnemoh (filedir, varargin)
     
     %clear Kochin_BVP x theta i H
     if exist(fullfile(filedir,'Results','Kochin.    1.dat'),'file')==2
-        nb_DOF=size(hydro(F).ex_ma,1);
-        nBodies=hydro(F).Nb;
-        nw=hydro(F).Nf;
+        nb_DOF=size(hydro(hydroind).ex_ma,1);
+        nBodies=hydro(hydroind).Nb;
+        nw=hydro(hydroind).Nf;
         for j=1:nw
             for i=1:(nb_DOF*nBodies+1)
                 clear Kochin
@@ -541,19 +541,19 @@ function hydro = processnemoh (filedir, varargin)
         end
 
     %------Calculate RAO-------
-        w=hydro(F).w;
+        w=hydro(hydroind).w;
         i=sqrt(-1);
-        Fe = hydro(F).ex_re - hydro(F).ex_im*i; % Added by Toan
-        A= hydro(F).A;
-        B = hydro(F).B ;
+        Fe = hydro(hydroind).ex_re - hydro(hydroind).ex_im*i; % Added by Toan
+        A= hydro(hydroind).A;
+        B = hydro(hydroind).B ;
         f=w/(2*pi);
         M=zeros(6,6);
         for nn =1:3
-            M(nn,nn) = hydro(F).Vo(m)*hydro(F).rho;
+            M(nn,nn) = hydro(hydroind).Vo(m)*hydro(hydroind).rho;
         end
 
         %% Read Inertia
-        if hydro(F).Nb == 1
+        if hydro(hydroind).Nb == 1
             fileID = fopen(fullfile(filedir,'Mesh','Inertia_hull.dat'));
             if linuxFlag && fileID==-1
                 fileID = fopen(fullfile(filedir,'mesh','Inertia_hull.dat'));
@@ -569,7 +569,7 @@ function hydro = processnemoh (filedir, varargin)
             M(i+3,4:6)=ligne;
         end
 
-        KHyd = squeeze(hydro(F).C);
+        KHyd = squeeze(hydro(hydroind).C);
         for k=1:length(w)
             for j=1:nb_DOF
     %           RAO1(k,j)=(Fe(j,k))/(-(M+A(j,j,k))*(w(k))^2-1i*w(k)*(B(j,j,k))+KHyd(j,j)); % No coupling between the DoF
@@ -590,8 +590,8 @@ function hydro = processnemoh (filedir, varargin)
 
     %--------------- CALCULATION-----------------------%
         Kochin_BVP_complex(:,:)=Kochin_BVP(:,1,:).*exp(1i*Kochin_BVP(:,2,:)); % H complex
-        w=hydro(F).w;
-        depth=hydro(F).h;
+        w=hydro(hydroind).w;
+        depth=hydro(hydroind).h;
         for j=1:nw
             m0(j)=wave_number(w(j),depth);
         %       m0(j)=wave_number(w(j)/(2*pi),depth);
@@ -608,19 +608,19 @@ function hydro = processnemoh (filedir, varargin)
             H_real(:,j)=real(H(:,j));
             H_imag(:,j)=imag(H(:,j));
         end
-        rad = pi/180*hydro(F).beta; % conversion degrees to radians
+        rad = pi/180*hydro(hydroind).beta; % conversion degrees to radians
         ind_beta=find(abs(theta-rad)==min(abs(theta-rad))); % ind_beta used for determining the appropriate angle of H(dir)
         ind_beta=min(ind_beta); % in case of 2 min found
         for j=1:nw
             % FORMULA (2.170) in Delhommeau Thesis
-            first_constant(j)=-2*pi*ampl_wave*hydro(F).rho*w(j);
-            second_constant(j)=-(8*pi*hydro(F).rho*m0(j)*(k0(j)*depth)^2)/(depth*(m0(j)^2*depth^2-k0(j)^2*depth^2+k0(j)*depth));
+            first_constant(j)=-2*pi*ampl_wave*hydro(hydroind).rho*w(j);
+            second_constant(j)=-(8*pi*hydro(hydroind).rho*m0(j)*(k0(j)*depth)^2)/(depth*(m0(j)^2*depth^2-k0(j)^2*depth^2+k0(j)*depth));
             Fdrift_x(j)=first_constant(j)*cos(rad)*imag(H(ind_beta,j)) + second_constant(j)*imag(trapz(theta,H_real(:,j).*imag(conj(H(:,j))).*cos(theta')));
             Fdrift_y(j)=first_constant(j)*sin(rad)*imag(H(ind_beta,j)) + second_constant(j)*imag(trapz(theta,H_real(:,j).*imag(conj(H(:,j))).*sin(theta')));
         end
-        hydro(F).md_mc=hydro(F).ex_ma.*0;
-        hydro(F).md_mc(1,1,:) = Fdrift_x./hydro(F).rho./9.81;
-        hydro(F).md_mc(3,1,:) = Fdrift_y./hydro(F).rho./9.81;
+        hydro(hydroind).md_mc=hydro(hydroind).ex_ma.*0;
+        hydro(hydroind).md_mc(1,1,:) = Fdrift_x./hydro(hydroind).rho./9.81;
+        hydro(hydroind).md_mc(3,1,:) = Fdrift_y./hydro(hydroind).rho./9.81;
     end
 
     hydro = Normalize(hydro);  % Normalize the data according the WAMIT convention
