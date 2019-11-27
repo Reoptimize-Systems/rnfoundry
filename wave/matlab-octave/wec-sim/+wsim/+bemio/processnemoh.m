@@ -145,6 +145,7 @@ function hydro = processnemoh (filedir, varargin)
     options.ForceCoB = {};
     options.ForceVolume = {};
     options.ForceKH = {};
+    options.ProcessKochin = true;
 %     options.DoRadiationIRF = true;
 %     options.IRFDuration = [];
 %     options.IRFNSteps = [];
@@ -502,7 +503,8 @@ function hydro = processnemoh (filedir, varargin)
     %================= READING KOCHIN FILES ===================%
     
     %clear Kochin_BVP x theta i H
-    if exist(fullfile(resultsdir, 'Kochin.    1.dat'),'file') == 2
+    if exist(fullfile(resultsdir, 'Kochin.    1.dat'),'file') == 2 ...
+            && options.ProcessKochin == true
         
         nb_DOF=size(hydro(hydroind).ex_ma,1);
         nBodies=hydro(hydroind).Nb;
