@@ -211,6 +211,7 @@ classdef body < nemoh.base
             self.stlLoaded = false;
             self.meshPlottable = false;
             self.haveGIBBON = exist ('discQuadMesh', 'file') == 2;
+            self.meshTranslation = [0;0;0];
             
         end
         
@@ -1632,11 +1633,11 @@ classdef body < nemoh.base
             assert (~isempty (self.meshVertices), ...
                 'Mesh does not appear to be loaded yet (meshVertices is empty).');
             
-            self.meshVertices = bsxfun (@plus, self.meshVertices, [x, y, 0]);
+            self.meshVertices = bsxfun (@plus, self.meshVertices, [x; y; 0]);
             
             % keep track of translation so we can undo it if necessary
             % (e.g. when making a tiangle mesh of an axi mesh)
-            self.meshTranslation = self.meshTranslation + [x, y, 0];
+            self.meshTranslation = self.meshTranslation + [x; y; 0];
             
         end
         
