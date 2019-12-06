@@ -78,6 +78,12 @@ classdef wecController < handle
             
         end
         
+        function info = loggingInfo (self)
+            
+            info = [];
+            
+        end
+        
         function [value, info] = ptoControlOutput (self, id, pto_internal_variables)
             
             value = 0;
