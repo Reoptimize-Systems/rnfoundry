@@ -106,9 +106,16 @@ classdef waveSettings < handle
         %   (Default = 'NOT DEFINED')
         spectrumDataFile = 'NOT DEFINED';
         
-        % etaDataFile - Data file that contains the times-series data file
-        %   (Default = 'NOT DEFINED')
-        etaDataFile = 'NOT DEFINED';
+        % etaDataFile - Data file that contains the times-series wave data file.
+        %   The file should contain a single variable named etaData which
+        %   is a matrix with two columns, the first time, the second, wave
+        %   elevation. (Default = '')
+        etaDataFile = '';
+        
+        % etaData - (n X 2) matrix that contains the times-series wave data.
+        %   Must be a matrix with two columns, the first time, the second,
+        %   wave elevation. (Default = [])
+        etaData = [];
         
         % freqRange - Min and max frequency for irregular waves. 
         %   2x1 vector, rad/s, (default = frequency range in BEM data)
@@ -432,10 +439,29 @@ classdef waveSettings < handle
                     obj.waveElevIrreg(rampTime, dt, maxIt, obj.dw);
                 case {'etaImport'}    %  This does not account for wave direction
                     % Import 'etaImport' time-series here and interpolate
-                    data = importdata(obj.etaDataFile) ;    % Import time-series
-                    t = (0:dt:endTime)';      % WEC-Sim simulation time [s]
-                    obj.etaImportMaxTime = max (data(:,1));
+                    
+                    if isempty (obj.etaData) && ~isempty (obj.etaDataFile)
+                        data = importdata(obj.etaDataFile) ;    % Import time-series
+                    elseif ~isempty (obj.etaData) && isempty (obj.etaDataFile)
+                        data = obj.etaData;
+                    else
+                        error ('You must supply EITHER etaDataFile OR etaData if using the etaImport option');
+                    end
+                    
+                    obj.etaImportMaxTime = min(max (data(:,1)), endTime);
                     obj.etaImportMinTime = min (data(:,1));
+                    
+                    if endTime > data(end,1)
+                        endTime = data(end,1);
+                        maxIt = floor((obj.etaImportMaxTime - obj.etaImportMinTime) / dt);
+                    end
+                    
+                    if endTime > data(end,1)
+                        error ('Specified endTime is greater that wave data max time');
+                    end
+                    
+                    t = (obj.etaImportMinTime:dt:obj.etaImportMaxTime)';      % WEC-Sim simulation time [s]
+                    
                     obj.waveElevUser(rampTime, dt, maxIt, data, t);
                     obj.waveAmpTime1        = zeros(maxIt+1,2);
                     obj.waveAmpTime1(:,1)   = [0:maxIt]*dt;
