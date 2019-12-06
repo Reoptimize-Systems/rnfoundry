@@ -153,6 +153,13 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
                         error ('If Create is ''no'' or empty, Path cannot be ''auto''');
                     end
                     
+                    if ~mbdyn.pre.base.isOctave ()
+                        % make sure the random number seed is differrent in
+                        % different matlab instances to avoid name clashes
+                        rng('shuffle');
+                    end
+                    
+                    % make the path with the random name 
                     options.Path = fullfile (tempdir, sprintf ('mbdyn_%d.sock', randi (100000) ));
                     
                 end
