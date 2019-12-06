@@ -480,9 +480,10 @@ classdef hydroBody < handle
                 if exist (case_directory, 'dir') ~= 7
                     error ('The case directory %s does not appear to exist', options.CaseDirectory);
                 else
-                    [filepath,~,ext] = fileparts (hydrofile);
-                    error ( 'The specified hydro data (%s) file was not found in the directory:\n%s', ...
+                    [filepath,name,ext] = fileparts (hydrofile);
+                    error ( 'The specified hydro data (%s) file \n%s\n was not found in the directory:\n%s', ...
                             ext, ...
+                            [name, ext], ...
                             filepath );
                 end
             end
@@ -674,10 +675,22 @@ classdef hydroBody < handle
                     obj.dispVol   = hydroData.properties.disp_vol;
                 end
                 obj.name      = hydroData.properties.name;
-                obj.dof       = obj.hydroData.properties.dof;
-                obj.dof_start = obj.hydroData.properties.dof_start;
-                obj.dof_end   = obj.hydroData.properties.dof_end;
-                obj.dof_gbm   = obj.dof-6;
+                
+                if isfield (obj.hydroData.properties, 'dof')
+                    
+                    obj.dof       = obj.hydroData.properties.dof;
+                    obj.dof_start = obj.hydroData.properties.dof_start;
+                    obj.dof_end   = obj.hydroData.properties.dof_end;
+                    obj.dof_gbm   = obj.dof-6;
+                    
+                else
+                    
+                    obj.dof       = 6;
+                    obj.dof_start = 1;
+                    obj.dof_end   = 6;
+                    obj.dof_gbm   = obj.dof-6;
+
+                end
                 
             else
                 
@@ -1085,11 +1098,14 @@ classdef hydroBody < handle
             
             assert (exist (fname, 'file') == 2, 'The STl file:\n%s\n does not appear to exist', fname);
             
-            try
-                [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,1);
-            catch
-                [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,2);
-            end
+%             try
+%                 [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,1);
+%             catch
+%                 [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = import_stl_fast (fname,1,2);
+%             end
+            
+            [obj.bodyGeometry.vertex, obj.bodyGeometry.face, obj.bodyGeometry.norm] = stl.read (fname);
+            
             obj.bodyGeometry.numFace = length (obj.bodyGeometry.face);
             obj.bodyGeometry.numVertex = length (obj.bodyGeometry.vertex);
             obj.checkStl ();
@@ -1654,6 +1670,9 @@ classdef hydroBody < handle
                 obj.freeSurfaceMethod = 'mean';
                 obj.freeSurfaceMethodNum = 0;
             elseif obj.simu.nlHydro == 2
+                if isinf (obj.waves.waterDepth)
+                    error ('Nonlinear buoyancy cannot be calculated for infinite water depth.');
+                end
                 obj.freeSurfaceMethod = 'instantaneous';
                 obj.freeSurfaceMethodNum = 1;
             end
