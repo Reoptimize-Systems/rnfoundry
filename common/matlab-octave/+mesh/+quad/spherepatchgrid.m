@@ -125,34 +125,64 @@ function [vertices, faces, info] = spherepatchgrid (R, n, varargin)
     Y = Y(:);
     Z = Z(:);
     
-    remove_face = [];
+    S = R*sqrt(1./(X.^2+Y.^2+Z.^2));
+    
+%     X_tmp = X.*S;
+    Y_tmp = Y.*S;
+    Z_tmp = Z.*S;
+    
+%     remove_face = [];
+%     uncut_inds = [];
+
+    info.FullPatch = true;
+    
     if ~isempty (options.CutZMax)
-       
-        uncut_inds = find (Z <= options.CutZMax);
         
-        cut_inds = find (Z > options.CutZMax);
-        
-        for face_ind = 1:size(faces, 2)
-            for vert_ind = 1:4
-                if any (faces(vert_ind,face_ind) == cut_inds)
-                    remove_face = [remove_face, face_ind];
-                end
+        % gow down the rows from the top looking for rows with any 
+        % Z >= CutZMax
+        for rowind = n:-1:1
+            
+            this_row_vert_inds = (rowind-1)*n+1:rowind*n;
+            
+            if any (Z_tmp(this_row_vert_inds) >= options.CutZMax)
+                
+                info.FullPatch = false;
+
+                % remove the whole row of points and faces
+                cut_inds = this_row_vert_inds;
+
+                [X, Y, Z, faces ] = remove_faces_and_inds_and_renumber ( X, Y, Z, faces, cut_inds );
+                
+%                 remove_face = [];
+%                 for face_ind = 1:size(faces, 2)
+%                     for vert_ind = 1:4
+%                         if any (faces(vert_ind,face_ind) == cut_inds)
+%                             remove_face = [remove_face, face_ind];
+%                         end
+%                     end
+%                 end
+% 
+%                 faces(:,remove_face) = [];
+% 
+%                 X(cut_inds) = [];
+%                 Y(cut_inds) = [];
+%                 Z(cut_inds) = [];
+            
+            else
+                % none of the points on this row are above the threshold,
+                % so none below will be either, so stop searching
+                break;
             end
+        
         end
-        
-        faces(:,remove_face) = [];
-        
-        X = X(uncut_inds);
-        Y = Y(uncut_inds);
-        Z = Z(uncut_inds);
         
     end
     
     if ~isempty (options.CutZMin)
        
-        uncut_inds = find (Z >= options.CutZMin);
+        uncut_inds = [ uncut_inds, find(Z_tmp >= options.CutZMin)];
         
-        cut_inds = find (Z < options.CutZMin);
+        cut_inds = find (Z_tmp < options.CutZMin);
         
         for face_ind = 1:size(faces, 2)
             for vert_ind = 1:4
@@ -162,19 +192,19 @@ function [vertices, faces, info] = spherepatchgrid (R, n, varargin)
             end
         end
         
-        faces(:,remove_face) = [];
-        
-        X = X(uncut_inds);
-        Y = Y(uncut_inds);
-        Z = Z(uncut_inds);
+%         faces(:,remove_face) = [];
+%         
+%         X = X(uncut_inds);
+%         Y_tmp = Y_tmp(uncut_inds);
+%         Z_tmp = Z_tmp(uncut_inds);
         
     end
     
     if ~isempty (options.CutYMax)
        
-        uncut_inds = find (Y <= options.CutYMax);
+        uncut_inds = [ uncut_inds, find(Y_tmp <= options.CutYMax) ];
         
-        cut_inds = find (Y > options.CutYMax);
+        cut_inds = find (Y_tmp > options.CutYMax);
         
         for face_ind = 1:size(faces, 2)
             for vert_ind = 1:4
@@ -184,19 +214,19 @@ function [vertices, faces, info] = spherepatchgrid (R, n, varargin)
             end
         end
         
-        faces(:,remove_face) = [];
-        
-        X = X(uncut_inds);
-        Y = Y(uncut_inds);
-        Z = Z(uncut_inds);
+%         faces(:,remove_face) = [];
+%         
+%         X = X(uncut_inds);
+%         Y_tmp = Y_tmp(uncut_inds);
+%         Z_tmp = Z_tmp(uncut_inds);
         
     end
     
     if ~isempty (options.CutYMin)
        
-        uncut_inds = find (Y >= options.CutYMin);
+        uncut_inds = [ uncut_inds, find(Y_tmp >= options.CutYMin) ];
         
-        cut_inds = find (Y < options.CutYMin);
+        cut_inds = find (Y_tmp < options.CutYMin);
         
         for face_ind = 1:size(faces, 2)
             for vert_ind = 1:4
@@ -206,15 +236,24 @@ function [vertices, faces, info] = spherepatchgrid (R, n, varargin)
             end
         end
         
-        faces(:,remove_face) = [];
-        
-        X = X(uncut_inds);
-        Y = Y(uncut_inds);
-        Z = Z(uncut_inds);
+%         faces(:,remove_face) = [];
+%         
+%         X = X(uncut_inds);
+%         Y_tmp = Y_tmp(uncut_inds);
+%         Z_tmp = Z_tmp(uncut_inds);
         
     end
-    
 
+%     if ~isempty (remove_face)
+%         faces(:,remove_face) = [];
+%     end
+% 
+%     if ~isempty (uncut_inds)
+%         X = X(uncut_inds);
+%         Y = Y(uncut_inds);
+%         Z = Z(uncut_inds);
+%     end
+    
     info.AllEdgeInds = [];
     
     info.BottomEdgeInds = find (Z <= min(Z));
@@ -257,5 +296,33 @@ function [vertices, faces, info] = spherepatchgrid (R, n, varargin)
     Z = Z.*S;
 
     vertices = [ X(:), Y(:), Z(:) ].';
+
+end
+
+
+function [X, Y, Z, faces ] = remove_faces_and_inds_and_renumber ( X, Y, Z, faces, cut_inds )
+
+    remove_face = [];
+    for face_ind = 1:size(faces, 2)
+        for vert_ind = 1:4
+            if any (faces(vert_ind,face_ind) == cut_inds)
+                remove_face = [remove_face, face_ind];
+            end
+        end
+    end
+
+    faces(:,remove_face) = [];
+    
+    cut_inds = sort (cut_inds, 'descend');
+    
+    for cut_inds_ind = 1:numel (cut_inds)
+        
+        faces (faces > cut_inds (cut_inds_ind)) = faces (faces > cut_inds (cut_inds_ind)) - 1;
+
+        X(cut_inds(cut_inds_ind)) = [];
+        Y(cut_inds(cut_inds_ind)) = [];
+        Z(cut_inds(cut_inds_ind)) = [];
+    
+    end
 
 end
