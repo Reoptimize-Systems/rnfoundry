@@ -104,7 +104,7 @@ classdef element < mbdyn.pre.base
             
             self.stlLoaded = false;
             self.drawColour = [0.8, 0.8, 1.0];
-            self.shapeData = struct([]);
+            self.shapeData = {}; %struct([]);
             self.shapeObjects = {};
             self.drawAxesH = [];
             self.defaultShapeOrientation = options.DefaultShapeOrientation;
