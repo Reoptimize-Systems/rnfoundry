@@ -19,6 +19,16 @@ classdef orientmat
     %    'orientation', 'matrix', 'euler', 'euler123', 'euler321',
     %    'euler313', 'orientation vector, 'vector' and '2vectors'.
     %
+    %    '31' - an orientation with axis 3 lying parallel to the global
+    %      axis 1 (the X axis).
+    %
+    %    '32' - an orientation with axis 3 lying parallel to the global
+    %      axis 2 (the Y axis).
+    %
+    %    '33' - an orientation with axis 3 lying parallel to the global
+    %      axis 3 (the Y axis). This is in practice identical to 'eye', and
+    %      included for completeness.
+    %
     %  spec - orientation, the value of spec is dementdent on the value
     %    of spectype with the following possibilities:
     %
@@ -278,7 +288,7 @@ classdef orientmat
         
             switch spectype
                 
-                case 'eye'
+                case {'eye', '33'}
                     
                     this.orientationMatrix = eye (3);
                 
@@ -301,9 +311,25 @@ classdef orientmat
                     this.orientationMatrix = om.orientationMatrix;
                     clear om;
                     
-                case 'euler123'
+                case {'euler123', '31', '32'}
                     
-                    assert (~isempty (spec), 'Input vector cannot be empty.');
+                    
+        
+                    switch spectype
+
+                        case '31'
+
+                            spec = [ 0, pi/2, 0 ];
+
+                        case '32'
+                            
+                            spec = [ pi/2, 0, 0 ];
+                            
+                        case 'euler123'
+                            
+                            assert (~isempty (spec), 'Input vector cannot be empty.');
+                            
+                    end
                     
                     mbdyn.pre.base.check3ElementNumericVector (spec, true, 'when using ''euler123'', spec');
                     
