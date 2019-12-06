@@ -26,7 +26,7 @@ classdef structuralForce < mbdyn.pre.force
         positionReference;
         node;
         forceType;
-        force;
+        forceValue;
         moment;
         forceOrientation;
         momentOrientation;
@@ -135,7 +135,7 @@ classdef structuralForce < mbdyn.pre.force
             end
             
             self.subType = 'structural';
-            self.force = force_value;
+            self.forceValue = force_value;
             self.moment = options.MomentValue;
             self.forceType = force_type;
             self.node = node;
@@ -180,7 +180,7 @@ classdef structuralForce < mbdyn.pre.force
             
             addcomma = ~isempty (self.forceOrientation) ...
                         || ~isempty (self.momentOrientation) ...
-                        || ~isempty (self.force) ...
+                        || ~isempty (self.forceValue) ...
                         || ~isempty (self.moment);
             
             if ~isempty (self.position)
@@ -194,7 +194,7 @@ classdef structuralForce < mbdyn.pre.force
             end
             
             addcomma = ~isempty (self.momentOrientation) ...
-                        || ~isempty (self.force) ...
+                        || ~isempty (self.forceValue) ...
                         || ~isempty (self.moment);
                     
             if ~isempty (self.forceOrientation)
@@ -207,7 +207,7 @@ classdef structuralForce < mbdyn.pre.force
                                            addcomma );
             end
             
-            addcomma = ~isempty (self.force) ...
+            addcomma = ~isempty (self.forceValue) ...
                         || ~isempty (self.moment);
             
             if ~isempty (self.momentOrientation)
@@ -222,8 +222,8 @@ classdef structuralForce < mbdyn.pre.force
             
             addcomma = ~isempty (self.moment);
                     
-            if ~isempty (self.force)
-                str = self.addOutputLine (str, self.force.generateMBDynInputString(), 2, addcomma);
+            if ~isempty (self.forceValue)
+                str = self.addOutputLine (str, self.forceValue.generateMBDynInputString(), 2, addcomma);
             end
             
             if ~isempty (self.moment)
