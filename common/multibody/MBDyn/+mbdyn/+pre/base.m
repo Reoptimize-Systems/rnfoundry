@@ -1366,6 +1366,10 @@ classdef base < handle
             end
 
         end
+        
+        function ret = isOctave ()
+            ret = isoctave ();
+        end
     
     end
     
