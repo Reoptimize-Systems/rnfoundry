@@ -158,10 +158,13 @@ classdef linearPTOWithController < wsim.powerTakeOff
             % get the information of variables to be logged by the
             % controller
             ctrl_info = controller.loggingInfo ();
-            % append it to the pto info
-            f = fieldnames(info);
-            for i = 1:length(f)
-                info.(f{i}) = [info.(f{i}), ctrl_info.(f{i})];
+            
+            if ~isempty (ctrl_info)
+                % append it to the pto info
+                f = fieldnames(info);
+                for i = 1:length(f)
+                    info.(f{i}) = [info.(f{i}), ctrl_info.(f{i})];
+                end
             end
             
             info.NAvailable = numel(info.AvailableNames);
@@ -236,12 +239,14 @@ classdef linearPTOWithController < wsim.powerTakeOff
             self.internalVariables.InternalForce = ptoforce;
             self.internalVariables.DevelopedPower = ptoforce * self.internalVariables.RelativeVelocity;
             
-             % copy the controller logged variables int the PTO
-             % internalVariables structure
-             f = fieldnames(ctrl_log_vars);
-             for i = 1:length(f)
-                self.internalVariables.(f{i}) = ctrl_log_vars.(f{i});
-             end
+            if ~isempty (ctrl_log_vars)
+                % copy the controller logged variables into the PTO
+                % internalVariables structure
+                f = fieldnames(ctrl_log_vars);
+                for i = 1:length(f)
+                    self.internalVariables.(f{i}) = ctrl_log_vars.(f{i});
+                end
+            end
             
         end
         
