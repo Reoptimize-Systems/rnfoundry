@@ -1,10 +1,85 @@
-function [vertices, faces, info, hfig, hax] = hemisphere (R, n, varargin)
-
+function [vertices, faces, info, hfig, hax] = hemisphere (R, n_patch, varargin)
+% creates a quad shell mesh of a hemisphere that can optionally be sectioned
+%
+% Syntax
+%
+% [vertices, faces, info, hfig, hax] = mesh.quad.hemisphere (R, n_patch)
+% [vertices, faces, info, hfig, hax] = mesh.quad.hemisphere (..., 'Parameter', Value)
+%
+% Description
+%
+% mesh.quad.hemisphere creates a quadrilateral mesh of a hemisphere with
+% the centre (if it where a full sphere) at the origin and the flat edge
+% lying on the Z-Y plane. Optionally the hemisphere can also be truncated
+% at a desired height in the Z direction.
+%
+% Input
+%
+%  R - radius of the hemisphere
+%
+%  n_patch - number of quads in the patch making up the end of each
+%   hemishpere, and determining the overall density of the mesh.
+%
+% Addtional arguments may be supplied as parameter-value pairs. The
+% available options are:
+%
+%  'CutZMax' - Cut off any faces which extend higher in Z direction than 
+%    the value specified here. A new flat edge will be created at this Z
+%    position on a plane parallel to the X-Y plane.
+%
+%  'Draw' - optional true/false flag indicating whether to plot the mesh in
+%    a figure. Default is false if not supplied.
+%
+%  'NJointCircles' - optional scalar integer which is the number of
+%    vertical slices making up the mesh of the hemisphere between the end
+%    patch and the start of the cylindrical part. The same mesh spacing
+%    will then also be used for the cylinder. Default is sqrt(n_patch) if
+%    not supplied.
+%
+% Output
+%
+%  vertices - (3 x p) matrix of x, y and z coordinated of mesh vertices
+%
+%  faces - (4 x q) matrix of indices into the vertices matrix. Each colum
+%   representing on quadrilateral element of the mesh.
+%
+%  info - structure containing information about the mesh, the following
+%   fields can be present:
+%
+%   EndInds : indices of the columns of the vertices matrix containing the
+%    vertices on the flat face of the sphere on the Z-Y plane. Indices are
+%    provided going clockwise from the highest Z point when looking down
+%    the X axis in the -ve X direction.
+%
+%   EndThetas : the angular positions of the vertices on the flat face of
+%    the sphere on the Z-Y plane which are referred to in the EndInds
+%    field above. The angles are the angular positions of the points on a
+%    circle on the Z-Y plane with centre at (0,0,0), with angle of zero
+%    being at the point of maximum Z.
+%
+%   CutTopInds : indices of the columns of the vertices matrix containing 
+%    the vertices on the flat face of the sphere when it has been cut
+%    through the X-Y plane using the CutZMax option. Indices are provided
+%    going clockwise around the new top cut edge from the point of minimum
+%    Y to maximum Y.
+%
+%  hfig - if 'Draw' is true this will contain a handle to the figure
+%   containing the mesh plot. If draw is false, it will be the empty matrix
+%   [].
+%
+%  hax -  if 'Draw' is true this will contain a handle to the axes
+%   containing the mesh plot. If draw is false, it will be the empty matrix
+%   [].
+%
+%
+%
+% See Also: mesh.quad.spherepatchgrid
+%
     options.CutZMax = [];
     options.CutZMin = [];
     options.CutYMax = [];
     options.CutYMin = [];
-    options.NJointCircles = ceil (sqrt(n));
+    options.NJointCircles = ceil (sqrt(n_patch));
     options.Draw = false;
     
     options = parse_pv_pairs (options, varargin);
@@ -12,7 +87,7 @@ function [vertices, faces, info, hfig, hax] = hemisphere (R, n, varargin)
     hfig = []; 
     hax = [];
 
-    [vertices, faces, sphere_patch_info] = mesh.quad.spherepatchgrid (R, n, ...
+    [vertices, faces, sphere_patch_info] = mesh.quad.spherepatchgrid (R, n_patch, ...
                                                     'ProjectionType', 'equidistance', ...
                                                     'CutZMax', options.CutZMax, ...
                                                     'CutZMin', options.CutZMin, ...
@@ -165,12 +240,11 @@ function [vertices, faces, info, hfig, hax] = hemisphere (R, n, varargin)
 
     info.EndInds = [ info.CutTopInds(1), info.EndInds, info.CutTopInds(end) ];
     
-    new_faces = [ all_top_inds(1:end-1);
-                  info.CutTopInds(1:end-1);
+    new_faces = [ all_top_inds(2:end);
                   info.CutTopInds(2:end);
-                  all_top_inds(2:end) ];
-              
-new_faces = flipud (new_faces);
+                  info.CutTopInds(1:end-1);
+                  all_top_inds(1:end-1);
+                ];
 
 	faces = [ faces, new_faces ];
     
