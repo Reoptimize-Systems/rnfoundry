@@ -120,7 +120,7 @@ function [vertices, faces, info, hfig, hax] = hemisphere (R, n_patch, varargin)
     if options.CutZMax >= R
         % if the hemisphere is cut off above the top of the end patch, we
         % add in the patch top edge indices
-        circ_conn_inds = [ circ_conn_inds, sphere_patch_info.TopEdgeInds(2:end-1)' ];
+        circ_conn_inds = [ circ_conn_inds, flipud(sphere_patch_info.TopEdgeInds(2:end-1))' ];
     end
     
     % we'll now make up the rest of the hemisphere by joining circular
@@ -159,7 +159,13 @@ function [vertices, faces, info, hfig, hax] = hemisphere (R, n_patch, varargin)
               
 	faces = [ faces, new_faces ];
 
-    top_inds = [ new_vert_inds(1), new_vert_inds(end) ];
+    if options.CutZMax >= R
+        % need to join up the last quad to make a full circle
+        faces = [ faces, [ circ_conn_inds(end); new_vert_inds(end); new_vert_inds(1); circ_conn_inds(1) ] ];
+        top_inds = [];
+    else
+        top_inds = [ new_vert_inds(1), new_vert_inds(end) ];
+    end
 
     if options.Draw
         hold on;
@@ -192,13 +198,18 @@ function [vertices, faces, info, hfig, hax] = hemisphere (R, n_patch, varargin)
                   
         faces = [ faces, new_faces ];
 
+        if options.CutZMax >= R
+            % join up the final face, it's a fully closed circle
+            faces = [ faces, [ prev_vert_inds(end); new_vert_inds(end); new_vert_inds(1); prev_vert_inds(1) ] ];
+        else
+            top_inds = [ top_inds; new_vert_inds(1), new_vert_inds(end) ];
+        end
+        
         if options.Draw
             hold on;
             patch('vertices', vertices', 'faces', new_faces', 'FaceAlpha', 0, 'EdgeColor', 'b', 'parent',hax);
             hold off;
         end
-
-        top_inds = [ top_inds; new_vert_inds(1), new_vert_inds(end) ];
 
         prev_vert_inds = new_vert_inds;
 
@@ -206,47 +217,53 @@ function [vertices, faces, info, hfig, hax] = hemisphere (R, n_patch, varargin)
     
     info.EndInds = new_vert_inds;
 
-    top_inds = flipud (top_inds);
-
-    if sphere_patch_info.FullPatch
-        all_top_inds = [ top_inds(:,1)', sphere_patch_info.TopEdgeInds', flipud(top_inds(:,2))' ];
+    if options.CutZMax >= R
+        info.CutTopInds = [];
     else
-        all_top_inds = [ top_inds(:,1)', sphere_patch_info.TopEdgeInds', flipud(top_inds(:,2))' ];
-    end
+        
+        top_inds = flipud (top_inds);
 
-    % now draw the top edge and faces
+        if sphere_patch_info.FullPatch
+            all_top_inds = [ top_inds(:,1)', sphere_patch_info.TopEdgeInds', flipud(top_inds(:,2))' ];
+        else
+            all_top_inds = [ top_inds(:,1)', sphere_patch_info.TopEdgeInds', flipud(top_inds(:,2))' ];
+        end
+
+        % now draw the top edge and faces
+
+        % get Y position of cut at the X axis to give the radius of the slice
+        % through the sphere at this point
+        circ_slice_R = sqrt (R^2 - (options.CutZMax)^2);
+
+        top_thetas = cart2pol ( vertices( 1, all_top_inds ), vertices( 2, all_top_inds) );
+
+        [ circ_conn_X, circ_conn_Y ] = pol2cart (top_thetas, circ_slice_R);
+
+        if options.Draw
+            hold on
+            scatter3 (circ_conn_X, circ_conn_Y, repmat(options.CutZMax, size (circ_conn_X)), 'ob');
+            hold off
+        end
+
+        new_vertices = [ circ_conn_X; circ_conn_Y; repmat(options.CutZMax, size (circ_conn_X)) ];
+
+        nverts = size (vertices, 2);
+
+        vertices = [ vertices, new_vertices ];
+
+        info.CutTopInds = (nverts+1):(size (vertices, 2));
+
+        info.EndInds = [ info.CutTopInds(1), info.EndInds, info.CutTopInds(end) ];
+
+        new_faces = [ all_top_inds(2:end);
+                      info.CutTopInds(2:end);
+                      info.CutTopInds(1:end-1);
+                      all_top_inds(1:end-1);
+                    ];
+
+        faces = [ faces, new_faces ];
     
-    % get Y position of cut at the X axis to give the radius of the slice
-    % through the sphere at this point
-    circ_slice_R = sqrt (R^2 - (options.CutZMax)^2);
-
-    top_thetas = cart2pol ( vertices( 1, all_top_inds ), vertices( 2, all_top_inds) );
-
-    [ circ_conn_X, circ_conn_Y ] = pol2cart (top_thetas, circ_slice_R);
-
-    if options.Draw
-        hold on
-        scatter3 (circ_conn_X, circ_conn_Y, repmat(options.CutZMax, size (circ_conn_X)), 'ob');
-        hold off
     end
-
-    new_vertices = [ circ_conn_X; circ_conn_Y; repmat(options.CutZMax, size (circ_conn_X)) ];
-
-    nverts = size (vertices, 2);
-
-    vertices = [ vertices, new_vertices ];
-
-    info.CutTopInds = (nverts+1):(size (vertices, 2));
-
-    info.EndInds = [ info.CutTopInds(1), info.EndInds, info.CutTopInds(end) ];
-    
-    new_faces = [ all_top_inds(2:end);
-                  info.CutTopInds(2:end);
-                  info.CutTopInds(1:end-1);
-                  all_top_inds(1:end-1);
-                ];
-
-	faces = [ faces, new_faces ];
     
     info.EndThetas = cart2pol ( vertices( 2, info.EndInds ), vertices( 3, info.EndInds) );
     
