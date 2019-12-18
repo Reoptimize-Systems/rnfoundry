@@ -183,11 +183,11 @@ function displaytable(data, varargin)
             options.ColHeadings = varargin{1};
         end
 
-        if nargin >= 6 && ~isempty (varargin{5})
-            if  ~iscellstr(varargin{5}) || ~isvector(varargin{5})
+        if nargin >= 6 && ~isempty (varargin{7})
+            if  ~iscellstr(varargin{7}) || ~isvector(varargin{7})
                 error ('row headings must be vector or cell array of strings');
             else
-                options.RowEnding = varargin{5};
+                options.RowEnding = varargin{7};
             end
         else
             options.RowEnding = '';
