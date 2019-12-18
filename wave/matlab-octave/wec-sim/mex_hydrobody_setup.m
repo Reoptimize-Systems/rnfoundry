@@ -36,6 +36,7 @@ function mex_hydrobody_setup (varargin)
     
     options.Verbose = false;
     options.Debug = false;
+    options.DefineDEBUG = [];
     options.ThrowBuildErrors = false;
     options.MexExtension = mexext ();
     options.W64CrossBuild = false;
@@ -49,7 +50,7 @@ function mex_hydrobody_setup (varargin)
     
     cd(fullfile(getmfilepath (mfilename), '+wsim'));
 
-    mex_hydrobody_mexargs = {'mex_hydrobody.cpp', 'hydrobody.cpp'};
+    mex_hydrobody_mexargs = {'mex_hydrobody.cpp', 'hydrobody.cpp', '-DMATLAB_MEX'};
     
     if ~isoctave ()
         mex_hydrobody_mexargs = [ mex_hydrobody_mexargs, ...
@@ -64,7 +65,19 @@ function mex_hydrobody_setup (varargin)
     end
     
     if options.Debug
-        mex_hydrobody_mexargs = [mex_hydrobody_mexargs, {'-DDEBUG', '-DMATLAB_MEX'}];
+        
+        mex_hydrobody_mexargs = [mex_hydrobody_mexargs, {'-g'}];
+        
+        if isempty (options.DefineDEBUG)
+            options.DefineDEBUG = true;
+        else
+            check.isLogicalScalar (options.DefineDEBUG, true, 'DefineDEBUG');
+        end
+        
+        if options.DefineDEBUG
+            mex_hydrobody_mexargs = [mex_hydrobody_mexargs, {'-DDEBUG'}];
+        end
+        
     end
     
     % compiling mex_hydrobody
