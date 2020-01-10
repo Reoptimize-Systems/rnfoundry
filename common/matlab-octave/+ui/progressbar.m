@@ -43,7 +43,7 @@ classdef progressbar < handle
                 str = '';
             end
             
-            fprintf([str, '\n']);
+            fprintf (1, '%s\n', str);
             
         end
         
