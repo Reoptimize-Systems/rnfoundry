@@ -26,11 +26,13 @@ classdef system < mbdyn.pre.base
 %
 %   system - constructor, see constructor help for more detail on the main
 %     class options
-%   addDrivers - adds drives to the system
+%   addDriveCallers - add drives to the system 
+%   addDrivers - adds drivers to the system (like file drivers)
 %   addElements - adds elements to the system (bodies, joints, forces, 
 %     drives etc.)
 %   addNodes - adds nodes to the system
 %   addProblems - adds problems to the system
+%   addVariables - adds variables to the system
 %   draw - draws the system in a figure window
 %   externalStructuralCommInfo - returns information about the
 %     communication method used in any external structural force element
