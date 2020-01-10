@@ -12,7 +12,8 @@ classdef wecSim < handle
         readyToRun; % true/false flag indicating whether the simulation is ready to be run
         simStarted; % true/false flag indicating whether the simulation has started (i.e. simStart had been called)
         simComplete; % true/false flag indicating whether the simulation is finished (i.e. simFinish has been called)
-
+        showProgress; % true/false flag indicating whether a progress bar will be shown
+        
         powerTakeOffs;
         wecController;
         mBDynOutputFile;
@@ -117,6 +118,8 @@ classdef wecSim < handle
 
         defaultAbsForceTolerance;
         defaultAbsMomentTolerance;
+        
+        progressBar;
 
     end
 
@@ -388,7 +391,8 @@ classdef wecSim < handle
             %
             % Description
             %
-            % run runs the wsim.wecSim simulation without stopping.
+            % run runs the wsim.wecSim simulation to completion without
+            % stopping.
             %
             % This is a shortcut for calling simStart, then calling simStep
             % or simSteps until the simulation is finished and then calling
@@ -501,6 +505,10 @@ classdef wecSim < handle
             %    whether to time the execution of the simulation. Default
             %    is false.
             %
+            %  'ShowProgress' - optional true/false flag indicating
+            %    whether to show the percentage simulation complete using a
+            %    text based progress bar in the command window.
+            %
             % Output
             %
             %  datalog - wsim.logger object containing the logged data (if
@@ -528,6 +536,7 @@ classdef wecSim < handle
             options.HydroMotionSyncSteps = 1;
             options.ForceMBDynNetCDF = true;
             options.SyncMBDynNetCDF = false;
+            options.ShowProgress = false;
 
             % specific to run
             options.TimeExecution = false;
@@ -546,7 +555,8 @@ classdef wecSim < handle
                             'MaxIterations', options.MaxIterations, ...
                             'HydroMotionSyncSteps', options.HydroMotionSyncSteps, ...
                             'ForceMBDynNetCDF', options.ForceMBDynNetCDF, ...
-                            'SyncMBDynNetCDF', options.SyncMBDynNetCDF );
+                            'SyncMBDynNetCDF', options.SyncMBDynNetCDF, ...
+                            'ShowProgress', options.ShowProgress );
 
             if options.TimeExecution, tic; end
 
@@ -695,6 +705,7 @@ classdef wecSim < handle
             options.HydroMotionSyncSteps = 1;
             options.ForceMBDynNetCDF = true;
             options.SyncMBDynNetCDF = false;
+            options.ShowProgress = false;
 
             options = parse_pv_pairs (options, varargin);
 
@@ -770,6 +781,7 @@ classdef wecSim < handle
 
             check.isLogicalScalar (options.ForceMBDynNetCDF, true, 'ForceMBDynNetCDF');
             check.isLogicalScalar (options.SyncMBDynNetCDF, true, 'SyncMBDynNetCDF');
+            check.isLogicalScalar (options.ShowProgress, true, 'ShowProgress');
 
             % -----------------   input checking finished
 
@@ -779,6 +791,7 @@ classdef wecSim < handle
             self.relForceTolerance = options.RelForceTolerance;
             self.maxForceIterations = options.MaxIterations;
             self.outputFilePrefix = options.OutputFilePrefix;
+            self.showProgress = options.ShowProgress;
 
             if self.readyToRun == false
                 error ('Simulation is not ready to run, have you run ''prepare'' yet?');
@@ -898,6 +911,12 @@ classdef wecSim < handle
                 self.cleanUpAfterError ();
                 error ('mbdyn returned %d, aborting sim, check output file:\n%s\nfor clues at to why this happened.', ...
                         status, self.mBDynOutputFile)
+            end
+            
+            if self.showProgress
+                self.progressBar = ui.progressbar ();
+                self.progressBar.init ('TextLeader', sprintf('Sim Progress (of %ds): ', self.simInfo.TEnd - self.simInfo.TStart));
+                self.progressBar.dispProgress (0);
             end
 
             % get the current motion of the multibody system which was sent
@@ -1180,6 +1199,16 @@ classdef wecSim < handle
             self.advanceStep ();
 
             self.simStepCount = self.simStepCount + 1;
+            
+            if self.showProgress
+                
+                percent_progress = 100 * self.lastTime / self.simInfo.TEnd;
+                
+                if percent_progress >= self.progressBar.lastProgress + 5
+                    self.progressBar.dispProgress (percent_progress);
+                end
+                
+            end
 
         end
 
@@ -1267,6 +1296,10 @@ classdef wecSim < handle
             if ~isempty (self.wecController)
                 self.wecController.start ();
             end
+            
+            if self.showProgress
+                self.progressBar.done ();
+            end
 
             fprintf (1, 'Simulation complete\n');
 
@@ -1288,8 +1321,7 @@ classdef wecSim < handle
                        self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
                    end
                 end
-            end
-                
+            end 
 
         end
 
