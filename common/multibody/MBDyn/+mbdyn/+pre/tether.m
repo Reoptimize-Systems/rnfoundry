@@ -1,5 +1,47 @@
 classdef tether < mbdyn.pre.base
-    
+% implements a simple tether via forces
+%
+% Syntax
+%
+%
+% Description
+%
+% mbdyn.pre.tether creates a tether object. The tether applies
+% forces which act like a simple weightless rope. The initial
+% length of the tether is determined from the intial position
+% of the two nodes. At each time step the difference between
+% this initial length and the current length, dl, is
+% determined. Then, a force is applied with the following
+% function:
+%      _
+%     |  0               ,  (dl + x_p) <= 0
+% F = |
+%     |_ k * (dl + x_p)  ,  (dl + x_p) > 0
+%
+% Where k is a spring constant and x_p is a prestrain which can
+% be be adjusted using the 'Prestrain' option (or implicitly
+% via the 'Prestress' option).
+%
+% In other words, the tether acts like an ideal spring when
+% extended beyond its initial length, and provides zero force
+% when shorter, i.e. it goes slack. The default spring constant
+% is 1e3, and can be adjusted using the 'SpringConstant'
+% option.
+%
+% This class does not directly correspond to an MBDyn input
+% file component, but instead is used to generate all the
+% required components to create the tether using the
+% generateMBDynSystemInputs method.
+%
+% mbdyn.pre.tether Methods:
+%
+%   tether - constructor for mbdyn.pre.tether object
+%   generateMBDynSystemInputs - returns structure containing elements,
+%     drives and variables for tether
+%
+%
+% See Also: 
+%
     
     properties
         
@@ -7,6 +49,7 @@ classdef tether < mbdyn.pre.base
         node1;
         node2;
         springConstant;
+        zeroForceDistance;
         
     end
     
@@ -14,10 +57,92 @@ classdef tether < mbdyn.pre.base
     methods
         
         function self = tether (node1, node2, varargin)
+            % constructor for mbdyn.pre.tether object
+            %
+            % Syntax
+            %
+            % to = mbdyn.pre.tether (node1, node2)
+            % to = mbdyn.pre.tether (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % mbdyn.pre.tether creates a tether object. The tether applies
+            % forces which act like a simple weightless rope. The initial
+            % length of the tether is determined from the intial position
+            % of the two nodes. At each time step the difference between
+            % this initial length and the current length, dl, is
+            % determined. Then, a force is applied with the following
+            % function:
+            %      _
+            %     |  0               ,  (dl + x_p) <= 0
+            % F = |
+            %     |_ k * (dl + x_p)  ,  (dl + x_p) > 0
+            %
+            % Where k is a spring constant and x_p is a prestrain which can
+            % be be adjusted using the 'Prestrain' option (or implicitly
+            % via the 'Prestress' option).
+            %
+            % In other words, the tether acts like an ideal spring when
+            % extended beyond its initial length, and provides zero force
+            % when shorter, i.e. it goes slack. The default spring constant
+            % is 1e3, and can be adjusted using the 'SpringConstant'
+            % option.
+            %
+            % This class does not directly correspond to an MBDyn input
+            % file component, but instead is used to generate all the
+            % required components to create the tether using the
+            % generateMBDynSystemInputs method.
+            %
+            % Input
+            %
+            %  node1 - mbdyn.pre.structuralNode object
+            %
+            %  node2 - mbdyn.pre.structuralNode object
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'SpringConstant' - 
+            %
+            %  'PreStrain' - optional value of the initial prestrain of the
+            %    tether. This will result in there being an initial force
+            %    on the tether which is already 'stretched' by the
+            %    prestrain value at the start of the simulation. By default
+            %    the prestrain is empty, meaning it will be set to zero.
+            %    The PreStrain option is mutually exclusive with the
+            %    PreStress and ZeroForceDistance options. If supplied, the
+            %    PreStrain must be greater than zero.
+            %
+            %  'PreStress' - optional value of the initial prestress on the
+            %    tether. This will result in there being an initial force
+            %    on the tether which is already 'stretched' at the start of
+            %    the simulation. The Prestress is internall implemented by
+            %    calculating the prestrain required to achieve this force
+            %    and setting the prestrain to this value. By default the
+            %    prestress is empty, meaning it will be set to zero. The
+            %    PreStress option is mutually exclusive with the PreStrain
+            %    and ZeroForceDistance options. If supplied, the PreStress
+            %    must be greater than zero.
+            %
+            %  'ZeroForceDistance' - an alternative to the prestrain (or
+            %    prestress), this option allows setting the distance
+            %    between the nodes at which the tether force becomes zero.
+            %    This is otherwise calculated from the intial node
+            %    separation distance, and allows this to be overridden.
+            %
+            % Output
+            %
+            %  to - mbdyn.pre.tether object
+            %
+            %
+            %
+            % See Also: 
+            %
             
             options.PreStrain = [];
             options.PreStress = [];
             options.SpringConstant = 1e3;
+            options.ZeroForceDistance = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -26,6 +151,14 @@ classdef tether < mbdyn.pre.base
             mbdyn.pre.base.checkNumericScalar (options.SpringConstant, true, 'SpringConstant');
             assert (options.SpringConstant > 0, 'SpringConstant must be > 0');
             
+            if ~isempty (options.ZeroForceDistance)
+                if ~(isempty (options.PreStrain) && isempty (options.PreStress))
+                    error ('Setting ZeroForceDistance is not compatible with also setting PreStrain or PreStress');
+                end
+                mbdyn.pre.base.checkNumericScalar (options.ZeroForceDistance, true, 'ZeroForceDistance');
+                assert (options.ZeroForceDistance > 0, 'ZeroForceDistance must be > 0');
+            end
+                  
             if isempty (options.PreStrain) && isempty (options.PreStress)
                 
                 self.preStrain = 0;
@@ -62,10 +195,43 @@ classdef tether < mbdyn.pre.base
             self.node1 = node1;
             self.node2 = node2;
             self.springConstant = options.SpringConstant;
+            self.zeroForceDistance = options.ZeroForceDistance;
             
         end
         
         function sysinputs = generateMBDynSystemInputs (self)
+            % returns structure containing elements, drives and variables for tether
+            %
+            % Syntax
+            %
+            % sysinputs = generateMBDynSystemInputs (to)
+            %
+            % Description
+            %
+            % mndyn.pre.tether.generateMBDynSystemInputs returns a
+            % structure containing the elements, drives and variables
+            % required to create the tether in MBDyn.
+            %
+            % Input
+            %
+            %  to - mbdyn.pre.tether object
+            %
+            % Output
+            %
+            %  sysinputs - structure containing the following fields:
+            %   
+            %   Elements : mbdyn.pre.element objects required for the 
+            %    tether
+            %
+            %   Drives : mbdyn.pre.drive objects required for the tether
+            %
+            %   Variables : mbdyn.pre.variable objects required for the 
+            %    tether
+            %
+            %   These objects can be added to the mbdyn.pre.system object
+            %   which will construct the system.
+            %
+            %
             
             tether_dl_var_name = sprintf('dl_%d', self.uid);
             
@@ -75,18 +241,29 @@ classdef tether < mbdyn.pre.base
             
             tether_length_var_name = sprintf('tether_length_%d', self.uid);
             
-            % initial distance calculation to get the intial length of the
-            % tether to help with calculating dl during the simulation
-            v_init_dist = mbdyn.pre.variable ( 'real', tether_length_var_name, ...
-                                               'Value', dist_calc_str, ...
-                                               'LabelRepObjects', { self.node1, ...
-                                                                    self.node2 } ...
-                                              );
+            if isempty (self.zeroForceDistance)
+                % initial distance calculation to get the intial length of the
+                % tether to help with calculating dl during the simulation
+                v_init_dist = mbdyn.pre.variable ( 'real', tether_length_var_name, ...
+                                                   'Value', dist_calc_str, ...
+                                                   'LabelRepObjects', { self.node1, ...
+                                                                        self.node2 } ...
+                                                 );
+                                          
+            else
+                
+                % initial distance calculation to get the intial length of the
+                % tether to help with calculating dl during the simulation
+                v_init_dist = mbdyn.pre.variable ( 'real', tether_length_var_name, ...
+                                                   'Value', mbdyn.pre.base.formatNumber (self.zeroForceDistance) ...
+                                                 );
+            end
             
             d_instant_dist = mbdyn.pre.stringDrive ( dist_calc_str, ...
                                            'LabelRepObjects', { self.node1, self.node2 } ...
                                                     );
                                      
+            % distance - initial_length + prestrain
             dlength_calc_str = sprintf ( 'model::drive(UID:%d,Time) - %s + %.17g', ...
                                          d_instant_dist.uid, ...
                                          tether_length_var_name, ...
@@ -134,7 +311,6 @@ classdef tether < mbdyn.pre.base
             
             sysinputs.Elements = { F_tension };
             sysinputs.Drives = { d_instant_dist, d_dlength_calc, d_tension_calc, d_xunitvec, d_yunitvec, d_zunitvec };
-            sysinputs.Nodes = {};
             sysinputs.Variables = { v_dl, v_init_dist };
             
         end
