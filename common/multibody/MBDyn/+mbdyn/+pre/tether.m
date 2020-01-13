@@ -80,7 +80,11 @@ classdef tether < mbdyn.pre.base
             %
             % Where k is a spring constant and x_p is a prestrain which can
             % be be adjusted using the 'Prestrain' option (or implicitly
-            % via the 'Prestress' option).
+            % via the 'Prestress' option). The direction of the force in a
+            % line pointing between the two nodes to which the tether is
+            % attached, with equal and opposite forces applied to each node
+            % (this is actually implemented using an internal structural
+            % force, using the mbdyn.pre.structuralInternalForce class).
             %
             % In other words, the tether acts like an ideal spring when
             % extended beyond its initial length, and provides zero force
