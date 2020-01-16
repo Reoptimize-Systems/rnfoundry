@@ -21,6 +21,12 @@ std::stringstream mexoutstream;
 
 #endif // DEBUG
 
+#include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <utility>
+
+
 using namespace Eigen;
 
 namespace wsim
@@ -141,7 +147,7 @@ MEXSTREAM(_timeStepHist)
 
     }
 
-    void hydroBody::hydroForces(const double& t, const Vector61d pos, const Matrix6Nd vel, const Matrix6Nd accel)
+    void hydroBody::hydroForces(const double& t, const Vector61d& pos, const Matrix6Nd& vel, const Matrix6Nd& accel)
     {
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("calling linearExcitationForces\n");
@@ -223,9 +229,11 @@ mexPrintf ("calling morrisonElementForce\n");
         }
 
         F_Excit = F_ExcitLin + F_ExcitNonLin;
+        
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("calling applyRamp\n");
 #endif // DEBUG
+
         applyRamp (t, F_Excit, F_ExcitRamp);
 
         F_Total = F_ExcitRamp
@@ -235,6 +243,7 @@ mexPrintf ("calling applyRamp\n");
                  - F_RadiationDamping
                  - F_MorrisonElement
                  - F_LinearDamping;
+        
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("hydroForces : F_Excit:\n");
 MEXSTREAM(F_Excit)
@@ -256,6 +265,7 @@ mexPrintf ("hydroForces : F_Total:\n");
 MEXSTREAM(F_Total)
 mexPrintf ("leaving hydroForces\n");
 #endif // DEBUG
+
     }
 
 
@@ -273,22 +283,28 @@ mexPrintf ("leaving hydroForces\n");
         {
             naccelvals = 6;
         }
+
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces 1\n");
 #endif // DEBUG
+
         Array1Nd thisaccel(1, naccelvals);
 
         thisaccel = Array1Nd::Zero (1, naccelvals);
+        
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces 2\n");
 #endif // DEBUG
+
         if (t > (_startTime + delay))
         {
             if (_stepCount > 2)
             {
+                
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces 3\n");
 #endif // DEBUG
+
                 linearInterp ( _timeStepHist(0,CONV_HIST_LEN-2),
                                _timeStepHist(0,CONV_HIST_LEN-1),
                                _accelHist.row(CONV_HIST_LEN-2),
@@ -298,6 +314,7 @@ mexPrintf ("radiationForces 3\n");
             }
             else if (_stepCount == 2)
             {
+                
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces 4\n");
 mexPrintf ("radiationForces : _timeStepHist:\n");
@@ -315,12 +332,14 @@ MEXSTREAM(_accelHist.row(CONV_HIST_LEN - 1))
 //                                          obj.accelHist(end-_stepCount+1:end,:),
 //                                          t - delay,
 //                                          'linear', 'extrap' );
+
                 linearInterp ( _timeStepHist(0,CONV_HIST_LEN - 2),
                                _timeStepHist(0,CONV_HIST_LEN - 1),
                                _accelHist.row(CONV_HIST_LEN - 2),
                                _accelHist.row(CONV_HIST_LEN - 1),
                                t - delay,
                                thisaccel );
+
             }
             else if (_stepCount == 1)
             {
@@ -338,6 +357,7 @@ MEXSTREAM(_accelHist.row(CONV_HIST_LEN - 1))
 
             //Map<const MatrixN1d> allaccels (thisaccel.data(), thisaccel.size());
             F_AddedMass = _hydroForce.fAddedMass * thisaccel.matrix ().transpose ();
+            
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces : _stepCount:\n");
 MEXSTREAM(_stepCount)
@@ -348,28 +368,35 @@ MEXSTREAM(_hydroForce.fAddedMass)
 mexPrintf ("radiationForces : F_AddedMass:\n");
 MEXSTREAM(F_AddedMass)
 #endif // DEBUG
+
         }
         else
         {
             F_AddedMass = Vector61d::Zero ();
         }
+
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces 6\n");
 #endif // DEBUG
+
         switch (_radiationMethod)
         {
 
             case (RadiationMethod::STATIC_COEFF):
             {
+                
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces 7\n");
 #endif // DEBUG
+
                 // simple static coefficients
                 if (_bodyToBody == true)
                 {
+                    
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("radiationForces 8\n");
 #endif // DEBUG
+
                     Map<const MatrixN1d> allvels (vel.data(), vel.size());
                     F_RadiationDamping = _hydroForce.fDamping * allvels;
                 }
@@ -614,9 +641,16 @@ MEXSTREAM(( vel.col (_bodyNumber-1).array () * abs (vel.col (_bodyNumber-1).arra
                 time_series.push_back(_radForce_IRKB_interp[i] * _radForceVelocity);
             }
 
+#if defined(DEBUG) && defined(MATLAB_MEX_FILE)
+mexPrintf ("radiationConvolutionIntegral\n");
+mexPrintf ("time_series[0] : t:\n");
+MEXSTREAM(time_series[0])
+#endif
+
             for (int i = 0; i < time_series.size (); i++)
             {
-                F_FM(i,0) = trapz (_CTTime, time_series[i].rowwise ().sum ());
+
+                F_FM(i,0) = trapz (_CTTime, time_series[i].colwise ().sum ());
             }
 
             _radForceOldF_FM = F_FM;
@@ -746,7 +780,7 @@ MEXSTREAM(F_Restoring)
     }
 
 
-    void hydroBody::advanceStep(const double& t, const Matrix6Nd& vel, const Matrix6Nd& accel)
+    void hydroBody::advanceStep(const double& t, const MatrixN1d& vel, const MatrixN1d& accel)
     {
 #if defined(DEBUG) && defined(MATLAB_MEX_FILE)
 mexPrintf ("advanceStep 1\n");
@@ -792,11 +826,11 @@ MEXSTREAM(_timeStepHist)
     }
 
 
-    void linearInterp ( const Matrix11d x1,
-                        const Matrix11d x2,
-                        const Matrix1Nd y1,
-                        const Matrix1Nd y2,
-                        const double u,
+    void linearInterp ( const Matrix11d& x1,
+                        const Matrix11d& x2,
+                        const Matrix1Nd& y1,
+                        const Matrix1Nd& y2,
+                        const double& u,
                         Matrix1Nd &out )
     {
         Matrix1Nd m = (y2.array() - y1.array()) / (x2.array() - x1.array());
@@ -805,11 +839,11 @@ MEXSTREAM(_timeStepHist)
         out = m.array() * u + c.array();
     }
 
-    void linearInterp ( const double x1,
-                        const double x2,
-                        const Array1Nd y1,
-                        const Array1Nd y2,
-                        const double u,
+    void linearInterp ( const double& x1,
+                        const double& x2,
+                        const Array1Nd& y1,
+                        const Array1Nd& y2,
+                        const double& u,
                         Array1Nd &out )
     {
         Array1Nd m = (y2 - y1) / (x2 - x1);
@@ -818,31 +852,71 @@ MEXSTREAM(_timeStepHist)
         out = m * u + c;
     }
 
-    double trapz (const Array1Nd x, const Array1Nd y)
+    double trapz (const Array1Nd& x, const Array1Nd& y)
     {
         Array11d two;
         two(0,0) = 2.0;
+        
+#if defined(DEBUG) && defined(MATLAB_MEX_FILE)
+mexPrintf ("trapz 1\n");
+mexPrintf ("x :\n");
+MEXSTREAM(x)
+mexPrintf ("x rows:\n");
+MEXSTREAM(x.rows())
+mexPrintf ("x cols:\n");
+MEXSTREAM(x.cols())
+mexPrintf ("x size:\n");
+MEXSTREAM(x.size())
+mexPrintf ("y :\n");
+MEXSTREAM(y)
+mexPrintf ("y rows:\n");
+MEXSTREAM(y.rows())
+mexPrintf ("y cols:\n");
+MEXSTREAM(y.cols())
+mexPrintf ("y size:\n");
+MEXSTREAM(y.size())
+mexPrintf ("diff(x) size:\n");
+MEXSTREAM(diff(x).size())
+#endif // DEBUG
 
-        Array1Nd z = diff (x) * ( y.segment(0,y.size ()-1) + y.segment(1,y.size ()-1) ) / two;
+        Array1Nd diffx = diff (x);
+        
+        Array1Nd tmp = y.segment(0,y.size ()-1) + y.segment(1,y.size ()-1);
+        
+        Array1Nd tmp2 = tmp / 2.0;
+        
+        Array1Nd z = diffx * tmp2;
+        
+        
+        //Array1Nd z = diff (x) * ( y.segment(0,y.size ()-1) + y.segment(1,y.size ()-1) ) / two;
 
         return z.sum ();
     }
 
-    double trapz (const ArrayN1d x, const ArrayN1d y)
+    double trapz (const ArrayN1d& x, const ArrayN1d& y)
     {
         Array11d two;
         two(0,0) = 2.0;
-        Array1Nd z = diff (x) * ( y.segment(0,y.size ()-1) + y.segment(1,y.size ()-1) ) / two;
+        
+#if defined(DEBUG) && defined(MATLAB_MEX_FILE)
+mexPrintf ("trapz 2\n");
+mexPrintf ("x :\n");
+MEXSTREAM(x)
+mexPrintf ("y :\n");
+MEXSTREAM(y)
+#endif
+
+        ArrayN1d z = diff (x) * ( y.segment(0,y.size ()-1) + y.segment(1,y.size ()-1) ) / two;
 
         return z.sum ();
     }
 
-    Array1Nd diff (const Array1Nd x)
+    Array1Nd diff (const Array1Nd& x)
     {
         return x.segment(0,x.size ()-1) - x.segment(1,x.size ()-1);
     }
 
-    ArrayN1d diff (const ArrayN1d x)
+    ArrayN1d diff (const ArrayN1d& x)
     {
         return x.segment(0,x.size ()-1) - x.segment(1,x.size ()-1);
     }
