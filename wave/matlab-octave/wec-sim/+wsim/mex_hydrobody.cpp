@@ -29,6 +29,13 @@ wrapMxArrayDataInEigenMatrix (const mxArray* in_array)
             "wsim:wrapMxArrayDataInEigen",
             "Given array has > 2 dimensions. Can only create 2-dimensional matrices (and vectors).");
     }
+    
+    if (wrapped_in_array.numDimensions () < 2)
+    {
+        mexErrMsgIdAndTxt(
+            "wsim:wrapMxArrayDataInEigen",
+            "Given array has < 2 dimensions. Can only create 2-dimensional matrices (and vectors).");
+    }
 
     if (wrapped_in_array.numDimensions() == 1 || wrapped_in_array.numDimensions() == 0)
     {
@@ -61,6 +68,13 @@ wrapMxArrayDataInEigenArray (const mxArray* in_array)
         mexErrMsgIdAndTxt(
             "wsim:wrapMxArrayDataInEigen",
             "Given array has > 2 dimensions. Can only create 2-dimensional matrices (and vectors).");
+    }
+    
+    if (wrapped_in_array.numDimensions () < 2)
+    {
+        mexErrMsgIdAndTxt(
+            "wsim:wrapMxArrayDataInEigen",
+            "Given array has < 2 dimensions. Can only create 2-dimensional matrices (and vectors).");
     }
 
     if (wrapped_in_array.numDimensions() == 1 || wrapped_in_array.numDimensions() == 0)
@@ -128,7 +142,7 @@ class hydroBody_wrapper
 {
 public:
 
-    hydroBody_wrapper (void) : _hb (new hydroBody)
+    hydroBody_wrapper (void) : _hb (std::make_unique<hydroBody>())
     {
 
     }
@@ -298,8 +312,8 @@ public:
         tmpmx = mxnthargdoublemxArray (nrhs, prhs, 19, 2);
         waves.k = wrapMxArrayDataInEigenArray (tmpmx);
         // Sf
-        tmpmx = mxnthargdoublemxArray (nrhs, prhs, 20, 2);
-        waves.Sf = wrapMxArrayDataInEigenArray (tmpmx);
+        //tmpmx = mxnthargdoublemxArray (nrhs, prhs, 20, 2);
+        //waves.Sf = wrapMxArrayDataInEigenArray (tmpmx);
 
         // linearDamping
         tmpmx = mxnthargdoublemxArray (nrhs, prhs, 21, 2);
@@ -525,10 +539,10 @@ mexPrintf ("just set field_value_9\n");
         double t = mxnthargscalar(nrhs, prhs, 1, 2);
 
         const mxArray * tmpmx = mxnthargdoublemxArray (nrhs, prhs, 2, 2);
-        Matrix6Nd vel = wrapMxArrayDataInEigenMatrix (tmpmx);
+        MatrixN1d vel = wrapMxArrayDataInEigenMatrix (tmpmx);
 
         tmpmx = mxnthargdoublemxArray (nrhs, prhs, 3, 2);
-        Matrix6Nd accel = wrapMxArrayDataInEigenMatrix (tmpmx);
+        MatrixN1d accel = wrapMxArrayDataInEigenMatrix (tmpmx);
 
         _hb->advanceStep (t, vel, accel);
 

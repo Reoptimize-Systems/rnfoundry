@@ -39,11 +39,16 @@ namespace wsim
                                  EXTERNAL };
 
     struct excitFData {
+        
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+                
         MatrixN6d re;
         MatrixN6d im;
     };
 
     struct hydroForceData {
+        
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         excitFData fExt;
         Matrix66d visDrag;
@@ -54,19 +59,24 @@ namespace wsim
     };
 
     struct waveData {
+        
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
         ArrayN1d A;
         ArrayN1d w;
         ArrayN1d phase;
         ArrayN1d dw;
         ArrayN1d k;
-        ArrayN1d Sf;
+        //ArrayN1d Sf;
 
     };
 
     class hydroBody
     {
         public:
+            
+            // https://eigen.tuxfamily.org/dox/group__TopicStructHavingEigenMembers.html
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
             hydroBody();
             virtual ~hydroBody();
@@ -100,13 +110,13 @@ namespace wsim
                         const double &dispVol );
 
             void hydroForces ( const double &t,
-                               const Vector61d pos,
-                               const Matrix6Nd vel,
-                               const Matrix6Nd accel );
-
-            void advanceStep ( const double &t,
+                               const Vector61d &pos,
                                const Matrix6Nd &vel,
                                const Matrix6Nd &accel );
+
+            void advanceStep ( const double &t,
+                               const MatrixN1d &vel,
+                               const MatrixN1d &accel );
 
             Vector61d F_Total;
             Vector61d F_ExcitLin;
@@ -216,27 +226,27 @@ namespace wsim
 
 
 
-    void linearInterp ( const Matrix11d x1,
-                        const Matrix11d x2,
-                        const Matrix1Nd y1,
-                        const Matrix1Nd y2,
-                        const double u,
+    void linearInterp ( const Matrix11d &x1,
+                        const Matrix11d &x2,
+                        const Matrix1Nd &y1,
+                        const Matrix1Nd &y2,
+                        const double &u,
                         Matrix1Nd &out );
 
-    void linearInterp ( const double x1,
-                        const double x2,
-                        const Array1Nd y1,
-                        const Array1Nd y2,
-                        const double u,
+    void linearInterp ( const double &x1,
+                        const double &x2,
+                        const Array1Nd &y1,
+                        const Array1Nd &y2,
+                        const double &u,
                         Array1Nd &out );
 
-    double trapz (const Array1Nd x, const Array1Nd y);
+    double trapz (const Array1Nd &x, const Array1Nd &y);
 
-    double trapz (const ArrayN1d x, const ArrayN1d y);
+    double trapz (const ArrayN1d &x, const ArrayN1d &y);
 
-    Array1Nd diff (const Array1Nd x);
+    Array1Nd diff (const Array1Nd &x);
 
-    ArrayN1d diff (const ArrayN1d x);
+    ArrayN1d diff (const ArrayN1d &x);
 
 } // namespace wsim
 
