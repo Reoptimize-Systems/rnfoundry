@@ -47,25 +47,29 @@ function rnfoundry_release (varargin)
                   
 	exampledirs = {};
     
-	% now build the documentation
-    
-    rndocdir = fullfile (thisfilepath, 'documentation');
-    
-    mkdir (rndocdir);
-    
-    [ mbdyndocrootdir, mbdyndoczipfilename ] = mbdyn.makedocs ('Version', options.MBDynVersion);
-    
-%     movefile ( fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), ...
-%                rndocdir );
-           
-	unzip (fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), rndocdir);
-           
-	[ ewstdocrootdir, ewstdoczipfilename ] = wsim.makedocs ('Version', options.EWSTVersion);
-    
-%     movefile ( fullfile (ewstdocrootdir, '..', ewstdoczipfilename), ...
-%                rndocdir );
+    if exist ('help2rst', 'file')
+        
+        % now build the documentation
 
-    unzip (fullfile (ewstdocrootdir, '..', ewstdoczipfilename), rndocdir);
+        rndocdir = fullfile (thisfilepath, 'documentation');
+
+        mkdir (rndocdir);
+
+        [ mbdyndocrootdir, mbdyndoczipfilename ] = mbdyn.makedocs ('Version', options.MBDynVersion);
+
+    %     movefile ( fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), ...
+    %                rndocdir );
+
+        unzip (fullfile (mbdyndocrootdir, '..', mbdyndoczipfilename), rndocdir);
+
+        [ ewstdocrootdir, ewstdoczipfilename ] = wsim.makedocs ('Version', options.EWSTVersion);
+
+    %     movefile ( fullfile (ewstdocrootdir, '..', ewstdoczipfilename), ...
+    %                rndocdir );
+
+        unzip (fullfile (ewstdocrootdir, '..', ewstdoczipfilename), rndocdir);
+    
+    end
     
     % create the readme files
     help2txtfile (fullfile (thisfilepath, 'README.txt'), 'rnfoundry_release>readme');
