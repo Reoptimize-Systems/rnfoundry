@@ -53,6 +53,9 @@ function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
 %    asynchronously in the background. Default is true, so start_mbdyn
 %    will wait while MBDyn runs the command.
 %
+%  'ThrowExceptions' - optional true/false flag indicating whether MBDyn
+%    will thro exceptions (can be useful for debugging). Default is false. 
+%
 %
 % Output
 %
