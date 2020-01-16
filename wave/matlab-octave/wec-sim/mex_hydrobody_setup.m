@@ -48,14 +48,14 @@ function mex_hydrobody_setup (varargin)
     
     fprintf (1, 'Setting up mex_hydrobody.\n');
     
-    cd(fullfile(getmfilepath (mfilename), '+wsim'));
+    cd (fullfile (getmfilepath (mfilename), '+wsim'));
 
     mex_hydrobody_mexargs = {'mex_hydrobody.cpp', 'hydrobody.cpp', '-DMATLAB_MEX'};
     
     if ~isoctave ()
         mex_hydrobody_mexargs = [ mex_hydrobody_mexargs, ...
                                 { ['EXE="mex_hydrobody.', options.MexExtension, '"'], ...
-                                  'CXXFLAGS="$CXXFLAGS -std=c++11 -Wfatal-errors"' } ...
+                                  'CXXFLAGS="$CXXFLAGS -std=c++14 -Wfatal-errors"' } ...
                               ];
     end
     
