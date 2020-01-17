@@ -28,6 +28,7 @@ mxedir="/opt/mxe"
 matlab_windows_lib_dir="${HOME}/Nextcloud/Personal/work/matlab_windows_libs/r2016b/extern/lib/win64/mingw64"
 mbdyn_src_dir=""
 build_windows_mbdyn=false
+output_dir="/tmp"
 
 usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] [-l <mat_lib_dir>] -- creates Renewnet Foundry release
 
@@ -39,15 +40,16 @@ where:
     -m  skip building mex files (requires matlab)
     -z  create zip file
     -c  additional matlab commands to run before running rnfoundry_release (default: "${matlab_cmds}")
-    -o  verbose output (default: false)
+    -n  (noisy) verbose output (default: ${verbose})
     -b  command to run matlab (default: "${launch_matlab_cmd}")
     -M  mbdyn release dir (default: "${mbdyn_release_dir}")
     -x  MXE install dir (default: "${mxedir}")
     -l  directory containing the windows mingw64 mex libraries (default: "${matlab_windows_lib_dir}")
     -s  mbdyn source directory (default: "${mbdyn_src_dir}")
-    -t  cross build mbdyn. (default: false)"
+    -t  cross build mbdyn. (default: ${build_windows_mbdyn})
+    -o  output directory where the directory containing the release will be created (default: "${output_dir}")"
 
-while getopts "h?v:twmzc:oM:x:l:b:s:t" opt; do
+while getopts "h?v:twmzc:nM:x:l:b:s:to:" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -71,7 +73,7 @@ while getopts "h?v:twmzc:oM:x:l:b:s:t" opt; do
     c)  matlab_cmds=$OPTARG
         echo "matlab_cmds : $matlab_cmds"
         ;;
-    o)  verbose=true
+    n)  verbose=true
         echo "verbose: $verbose"
         ;;
     b)  launch_matlab_cmd=$OPTARG
@@ -92,6 +94,9 @@ while getopts "h?v:twmzc:oM:x:l:b:s:t" opt; do
     l)  matlab_windows_lib_dir=$OPTARG
         echo "matlab_windows_lib_dir: $matlab_windows_lib_dir"
         ;;
+    o)  output_dir=$OPTARG
+        echo "output_dir: $output_dir"
+        ;;
     esac
 done
 
@@ -102,7 +107,7 @@ echo "Releasing with version string: ${version}"
 release_name="RenewNet_${version}"
 
 # create release directory
-release_dir="/tmp/${release_name}"
+release_dir="${output_dir}/${release_name}"
 
 mkdir -p ${release_dir}
 
