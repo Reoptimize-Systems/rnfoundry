@@ -18,6 +18,7 @@ working_copy_dir=$(pwd)
 run_tests=false
 copy_win_libs=true
 skip_mex=false
+make_win_mex=false
 make_zip=false
 make_docs=true
 matlab_cmds=""
@@ -30,14 +31,15 @@ mbdyn_src_dir=""
 build_windows_mbdyn=false
 output_dir="/tmp"
 
-usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] [-l <mat_lib_dir>] -- creates Renewnet Foundry release
+usage="$(basename "$0") [-h] [-v <version>] [-t] [-w] [-m] [-W] [-z] [-c <matlab_commands>] [-o] [b <matlab_cmd>] [-M <mbdyn_release_dir>] [-x <mxedir>] [-l <mat_lib_dir>] -- creates Renewnet Foundry release
 
 where:
     -h  show this help text
     -v  set the release version string (default: $version)
     -t  run tests
     -w  don't build windows libraries using MXE or copy them
-    -m  skip building mex files (requires matlab)
+    -m  skip building any mex files (building mex requires matlab)
+    -W  attempt to cross-build mex files for windows
     -z  create zip file
     -c  additional matlab commands to run before running rnfoundry_release (default: "${matlab_cmds}")
     -n  (noisy) verbose output (default: ${verbose})
@@ -49,7 +51,7 @@ where:
     -t  cross build mbdyn. (default: ${build_windows_mbdyn})
     -o  output directory where the directory containing the release will be created (default: "${output_dir}")"
 
-while getopts "h?v:twmzc:nM:x:l:b:s:to:" opt; do
+while getopts "h?v:twmWzc:nM:x:l:b:s:to:" opt; do
     case "$opt" in
     h|\?)
         echo "$usage"
@@ -66,6 +68,9 @@ while getopts "h?v:twmzc:nM:x:l:b:s:to:" opt; do
         ;;
     m)  skip_mex=true
         echo "skip_mex: $skip_mex"
+        ;;
+    W)  make_win_mex=true
+        echo "make_win_mex: $make_win_mex"
         ;;
     z)  make_zip=true
         echo "make_zip: $make_zip"
@@ -191,14 +196,14 @@ if [ "$skip_mex" = false ]; then
     echo 'matlab is not installed, not building mex files using Matlab.' >&2
   else
     # buld the mex files using (oldish) version of matlab
-    ${launch_matlab_cmd} -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}', 'W64CrossBuildMexLibsDir', '${matlab_windows_lib_dir}'); quit"
+    ${launch_matlab_cmd} -nodesktop -r "restoredefaultpath; cd('${release_dir}'); ${matlab_cmds}; rnfoundry_release ('Throw', true, 'Verbose', ${verbose}, 'Version', '${version}', 'W64CrossBuild', ${make_win_mex}, 'W64CrossBuildMexLibsDir', '${matlab_windows_lib_dir}'); quit"
   fi
 fi
 
 rm ${release_dir}/rnfoundry_release.m
 
 if [ "$make_zip" = true ]; then
-  # zip up the result
+  # zip up the resultto maximise profit.
   cd ${release_dir}/..
   zip -qr ${release_name}.zip ${release_name}/
 fi
