@@ -801,19 +801,11 @@ classdef wecSim < handle
                 % ensure mbdyn will output a netcdf file so we can load the
                 % results from this after the sim
                 if isempty (self.mBDynSystem.controlData.OutputResults)
-                    if ~ispc
-                        self.mBDynSystem.controlData.OutputResults = {'netcdf'};
-                        if options.SyncMBDynNetCDF
-                            self.mBDynSystem.controlData.OutputResults = [self.mBDynSystem.controlData.OutputResults, {'sync'}];
-                        end
-                        self.mBDynSystem.controlData.OutputResults = [self.mBDynSystem.controlData.OutputResults, {'no text'}];
+                    self.mBDynSystem.controlData.OutputResults = {'netcdf'};
+                    if options.SyncMBDynNetCDF
+                        self.mBDynSystem.controlData.OutputResults = [self.mBDynSystem.controlData.OutputResults, {'sync'}];
                     end
-                else
-                    % netcdf not currently supported on windows
-                    if ispc
-                        warning (TextWrapper.wraptext ('You specified mbdyn netcdf output, but it is not currently supported on windows, text results files will be produced instead'))
-                        self.mBDynSystem.controlData.OutputResults = {};
-                    end
+                    self.mBDynSystem.controlData.OutputResults = [self.mBDynSystem.controlData.OutputResults, {'no text'}];
                 end
             end
 

@@ -240,11 +240,7 @@ classdef system < mbdyn.pre.base
             options.References = {};
             options.DefaultScales = [];
             options.Drivers = {};
-            if ispc
-                options.OutputResults = {};
-            else
-                options.OutputResults = { 'netcdf', 'no text' };
-            end
+            options.OutputResults = { 'netcdf', 'no text' };
             
             options = parse_pv_pairs (options, varargin);
             
