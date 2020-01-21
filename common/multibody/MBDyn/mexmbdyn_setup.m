@@ -200,13 +200,53 @@ function mexmbdyn_setup (varargin)
         mex (mexMBCNodal_mexargs{:}, options.MBCNodalExtraMexArgs{:});
         success = true; 
     catch err
-        if options.ThrowBuildErrors
-            rethrow (err);
+        
+        if ispc && ~isempty (strfind (err.message, '__imp___acrt_iob_func'))
+            % FUCK! this is a pain work around missing symbols for certain
+            % mingw versions
+            workaround_c_prefix = 'mingw_missing___imp___acrt_iob_func_workaround';
+            
+            mingwroot = getenv ('MW_MINGW64_LOC');
+            
+            workaround_c = help ('mexmbdyn_setup>create_mingw_missing___imp___acrt_iob_func_workaround_c');
+            
+            output_workaround_c = fullfile (options.MBCLibDir, [workaround_c_prefix, '.c']);
+            
+            str2txtfile ( output_workaround_c, workaround_c );
+            
+            cd (fullfile (mingwroot, 'bin'));
+            
+            system (sprintf ('"%s" -fPIC -O2 -c "%s" -o "%s"', 'gcc.exe', output_workaround_c, [output_workaround_c(1:end-2), '.o']));
+
+            cd (options.MBCLibDir);
+            
+            system (sprintf ('"%s" cr "%s" "%s"', fullfile (mingwroot, 'bin', 'ar.exe'), ['lib', workaround_c_prefix, '.a'], [workaround_c_prefix, '.o']));
+            
+            copyfile (fullfile (options.MBCLibDir, ['lib', workaround_c_prefix, '.a']), fullfile (options.MBCLibDir, ['lib', workaround_c_prefix, '.lib']));
+            
+            % add the library to the link commands
+            mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {['-l', workaround_c_prefix]}];
+            
+            cd(fullfile(getmfilepath (mfilename), '+mbdyn', '+mint'));
+            
+            try
+                mex (mexMBCNodal_mexargs{:}, options.MBCNodalExtraMexArgs{:});
+                success = true; 
+            catch err
+                % hopefully err survives to next statement
+            end
+            
         else
-            warning ('MEXMBDYN:compilefailed', ...
-                'Unable to compile mex function mexMBCNodal. Error reported was:\n%s', ...
-                err.message);
+            if options.ThrowBuildErrors
+                rethrow (err);
+            else
+                warning ('MEXMBDYN:compilefailed', ...
+                         'Unable to compile mex function mexMBCNodal. Error reported was:\n%s', ...
+                         err.message);
+            end
+            
         end
+
     end
     
     if success
@@ -226,6 +266,7 @@ function mexmbdyn_setup (varargin)
             mex (mexMBCNodalSharedMem_mexargs{:}, options.MBCNodalSharedMemExtraMexArgs{:});
             success = true;
         catch err
+            
             if options.ThrowBuildErrors
                 rethrow (err);
             else
@@ -233,6 +274,7 @@ function mexmbdyn_setup (varargin)
                     'Unable to compile mex function mexMBCNodalSharedMem. Error reported was:\n%s', ...
                     err.message);
             end
+            
         end
 
         if success
@@ -245,4 +287,20 @@ function mexmbdyn_setup (varargin)
     
     fprintf (1, 'Exiting MBDyn setup.\n');
     
+end
+
+
+function create_mingw_missing___imp___acrt_iob_func_workaround_c ()
+% /* mingw_missing___imp___acrt_iob_func_workaround.c */
+% #define _CRTBLD
+% #include <stdio.h>
+% 
+% FILE *__cdecl __acrt_iob_func(unsigned index)
+% {
+%     return &(__iob_func()[index]);
+% }
+% 
+% typedef FILE *__cdecl (*_f__acrt_iob_func)(unsigned index);
+% _f__acrt_iob_func __MINGW_IMP_SYMBOL(__acrt_iob_func) = __acrt_iob_func;
+
 end
