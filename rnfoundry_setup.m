@@ -404,7 +404,7 @@ function rnfoundry_setup (varargin)
                              'ThrowBuildErrors', options.ThrowBuildErrors );
         else
             if options.Verbose
-                fprintf (1, 'Not compiling %s mex as they already exists', 'ppmval and ppuval')
+                fprintf (1, 'Not compiling %s mex as they already exists\n', 'ppmval and ppuval')
             end
         end
     end
