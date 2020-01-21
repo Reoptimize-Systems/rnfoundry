@@ -226,6 +226,7 @@ function mexmbdyn_setup (varargin)
             
             % add the library to the link commands
             mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {['-l', workaround_c_prefix]}];
+            mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {['-l', workaround_c_prefix]}];
             
             cd(fullfile(getmfilepath (mfilename), '+mbdyn', '+mint'));
             
@@ -233,7 +234,13 @@ function mexmbdyn_setup (varargin)
                 mex (mexMBCNodal_mexargs{:}, options.MBCNodalExtraMexArgs{:});
                 success = true; 
             catch err
-                % hopefully err survives to next statement
+                if options.ThrowBuildErrors
+                    rethrow (err);
+                else
+                    warning ('MEXMBDYN:compilefailed', ...
+                             'Unable to compile mex function mexMBCNodal. Error reported was:\n%s', ...
+                             err.message);
+                end
             end
             
         else
