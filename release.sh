@@ -139,6 +139,7 @@ rm ${release_dir}/test_hg.sh
 echo ${version} > ${release_dir}/version.txt
 echo ${version} > ${release_dir}/wave/matlab-octave/wec-sim/version.txt
 
+sed -i "s/Unreleased/[${version}] - $(date +%F)/g" ${release_dir}/CHANGELOG.md
 
 
 if [ "$copy_win_libs" = true ]; then
