@@ -529,7 +529,7 @@ In the run_wecsim script, it is this system with is returned by the
 call to ``example_rm3.make_multibody_system``. The resulting system
 can be plotted in a figure:
 
-.. literalinclude:: /examples/+example_rm3/make_multibody_system.m
+.. literalinclude:: /examples/+example_rm3/run_wecsim.m
    :start-at: % draw it in a figure
    :end-before: %% Set up Power Take-Off
 
