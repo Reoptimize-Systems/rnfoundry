@@ -35,9 +35,8 @@ classdef streamOutput < mbdyn.pre.force
             %
             % Description
             %
-            % force element which allows communication with an external
-            % software that computes forces applied to a pool of nodes and
-            % may depend on the kinematics of those nodes.
+            % element which allows sending simulation data to an external
+            % software.
             %
             % Input
             %
