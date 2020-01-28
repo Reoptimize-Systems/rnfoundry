@@ -28,7 +28,70 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
     methods
         
         function self = totalPin (node, varargin)
-            
+            % mbdyn.pre.totalPin constructor
+            %
+            % Syntax
+            %
+            % tpin = mbdyn.pre.totalPin (node)
+            % tpin = mbdyn.pre.totalPin (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % mbdyn.pre.totalPin allows to arbitrarily constrain specific
+            % components of the absolute position and orientation of a
+            % node. The value of the constrained components of the absolute
+            % position and orientation can be imposed by means of drives.
+            % As such, this element allows to mimic the behavior of most
+            % ideal constraints that ground one node
+            %
+            % Input
+            %
+            %  node - node to which the total pin constraints are to be
+            %   applied
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'RelativeOffset' - 
+            %
+            %  'RelativeOffsetReference' - 
+            %
+            %  'RelativePositionOrientation' - 
+            %
+            %  'RelativePositionOrientationReference' - 
+            %
+            %  'RelativeRotOrientation' - 
+            %
+            %  'RelativeRotOrientationReference' - 
+            %
+            %  'AbsolutePosition' - 
+            %
+            %  'AbsolutePositionReference' - 
+            %
+            %  'AbsolutePositionOrientation' - 
+            %
+            %  'AbsolutePositionOrientationReference' - 
+            %
+            %  'AbsoluteRotOrientation' - 
+            %
+            %  'AbsoluteRotOrientationReference' - 
+            %
+            %  'PositionConstraint' - 
+            %
+            %  'PositionConstraintDrive' - 
+            %
+            %  'OrientationConstraint' - 
+            %
+            %  'OrientationConstraintDrive' - 
+            %
+            % Output
+            %
+            %  tpin - mbdyn.pre.totalPin object
+            %
+            %
+            %
+            % See Also: mbdyn.pre.totalJoint
+            %
             
             options.RelativeOffset = [];
             options.RelativeOffsetReference = 'node';
