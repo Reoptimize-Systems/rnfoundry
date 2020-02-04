@@ -42,6 +42,10 @@ classdef base < handle
             
         end
         
+        function name = workspaceName (self)
+            name = inputname (1);
+        end
+        
         function setLabel (self, label)
             self.label = label;
         end
@@ -632,7 +636,7 @@ classdef base < handle
             
         end
         
-        function ok = checkAllowedStringInputs (input, allowedstrs, throw, inputname)
+        function [ ok, allowed_ind ] = checkAllowedStringInputs (input, allowedstrs, throw, inputname)
             % checks is string is one of a set of allowed values
             %
             % Syntax
@@ -674,7 +678,10 @@ classdef base < handle
             assert (ischar (input), '%s must be a character vector', inputname);
             
             ok = true;
-            if ~any(strcmp (input, allowedstrs))
+            
+            allowed_ind = find (strcmp (input, allowedstrs));
+            
+            if isempty(allowed_ind)
                 ok = false;
             end
             
