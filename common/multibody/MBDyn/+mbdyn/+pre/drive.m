@@ -16,7 +16,9 @@ classdef drive < mbdyn.pre.base
         
         function str = generateMBDynInputString (self)
             
-             str = sprintf ('    drive : %d, %s,', self.label, self.type);
+             str = generateMBDynInputString@mbdyn.pre.element (self);
+            
+             str = sprintf ('%s    drive : %d, %s,', str, self.label, self.type);
             
         end
         

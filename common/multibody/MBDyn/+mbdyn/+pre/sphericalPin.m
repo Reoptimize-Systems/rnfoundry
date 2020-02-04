@@ -17,7 +17,7 @@ classdef sphericalPin < mbdyn.pre.singleNodeOffsetJoint
             %
             % Syntax
             %
-            %  rh = sphericalPin (node1)
+            %  rh = sphericalPin (node1, absolute_pin_position, relative_offset)
             %  rh = sphericalPin (..., 'Parameter', value)
             %
             % Input
@@ -27,6 +27,7 @@ classdef sphericalPin < mbdyn.pre.singleNodeOffsetJoint
             %
             %  absolute_pin_position - 
             %
+            %  relative_offset - 
             %
             % Additional arguments can be supplied as parameter-value
             % pairs. Available options are:
@@ -117,6 +118,8 @@ classdef sphericalPin < mbdyn.pre.singleNodeOffsetJoint
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf ('end %s', self.type));
+            
+            str = self.addRegularization (str);
             
         end
         

@@ -31,7 +31,9 @@ classdef body < mbdyn.pre.element
             % mbdyn.pre.body constructs a lumped rigid body when connected
             % to a regular, 6 degree of freedom structural node, or a point
             % mass when connected to a rotationless, 3 degree of freedom
-            % structural node.
+            % structural node. If you have mutliple bodies attached to the
+            % same node, consider using one mbdyn.pre.bodyMultiMass instead
+            % of several of these mbdyn.pre.body objects.
             %
             % Input
             %
@@ -79,6 +81,10 @@ classdef body < mbdyn.pre.element
             %    object which sets the orientation of the default shape (see
             %    above). 
             %
+            %  'DefaultShapeOffset' - optional 3 element column vector
+            %    which sets the offset of the default shape (see
+            %    above) from the default initial position. 
+            %
             % Output
             %
             %  bd - mbdyn.pre.body object
@@ -107,6 +113,7 @@ classdef body < mbdyn.pre.element
             
             self.mass = mass;
             self.nodeAttached = node;
+            self.type = 'body';
             
             if ~self.isPointMass
                 
@@ -160,10 +167,11 @@ classdef body < mbdyn.pre.element
             %   file.
             %
             
-            str = self.addOutputLine ('' , '', 1, false, 'one-mass body');
+%             str = self.addOutputLine ('' , '', 1, false, 'one-mass body');
+            str = generateMBDynInputString@mbdyn.pre.element (self);
             
             % delete newline character and space from start
-            str(1:2) = [];
+%             str(1:2) = [];
             
             str = self.addOutputLine (str, sprintf('body : %d, %d', self.label, self.nodeAttached.label), 1, true, 'label, node label');
 

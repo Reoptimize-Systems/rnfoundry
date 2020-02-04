@@ -10,24 +10,25 @@ classdef orientmat
     % The orientmat class is used to represent orientations in 3D space
     % and construct orientation matrices from a variety of methods of
     % describing orientations, e.g. from euler angles, orientation vectors
-    % etc. See the hlep for the constructor for full details and examples.
+    % etc. See the help for the constructor for full details and examples.
     %
     % Input
     %
     %  spectype - string stating how the orientation matrix is to be
     %    specified, possible options are: 'eye', 'orientation matrix',
     %    'orientation', 'matrix', 'euler', 'euler123', 'euler321',
-    %    'euler313', 'orientation vector, 'vector' and '2vectors'.
+    %    'euler313', 'orientation vector, 'vector', '2vectors', '31', '32',
+    %    and '33'.
     %
-    %    '31' - an orientation with axis 3 lying parallel to the global
-    %      axis 1 (the X axis).
+    %    '31' - an orientation with axis 3 (the local Z azis) lying 
+    %      parallel to the global axis 1 (the X axis).
     %
-    %    '32' - an orientation with axis 3 lying parallel to the global
-    %      axis 2 (the Y axis).
+    %    '32' - an orientation with axis 3 (the local Z azis) lying 
+    %      parallel to the global axis 2 (the Y axis).
     %
-    %    '33' - an orientation with axis 3 lying parallel to the global
-    %      axis 3 (the Y axis). This is in practice identical to 'eye', and
-    %      included for completeness.
+    %    '33' - an orientation with axis 3 (the local Z azis) lying
+    %      parallel to the global axis 3 (the Z axis). This is in practice
+    %      identical to 'eye', and included for completeness.
     %
     %  spec - orientation, the value of spec is dementdent on the value
     %    of spectype with the following possibilities:

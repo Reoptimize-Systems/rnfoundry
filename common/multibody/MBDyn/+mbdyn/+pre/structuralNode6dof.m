@@ -36,7 +36,7 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
 %
 % mbdyn.pre.structuralNode6dof Methods:
 %
-%  structuralNode6dof - constructor
+%  structuralNode6dof - constructor see for detailed options
 %  generateMBDynInputString - make MBDyn output string for node
 %  draw - draw the node in a figure
 %  setSize - set the size of the node when plotted in a figure
@@ -144,8 +144,8 @@ classdef structuralNode6dof < mbdyn.pre.structuralNode
             %    will output acceleration data.
             %
             %  'HumanReadableLabel' - optional character vector containing
-            %    a label used in plots and so on where the uniqueness of
-            %    the label is not not important.
+            %    a label used in plots and so on where a guarentee of
+            %    uniqueness of the label is not not important.
             %
             %  'Scale' - optional. Used to control the scaling of the
             %    residual for the node equations before performing testing

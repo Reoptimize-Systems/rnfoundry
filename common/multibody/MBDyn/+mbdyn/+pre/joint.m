@@ -1,7 +1,8 @@
 classdef joint < mbdyn.pre.element
     
     properties
-        
+        regularizeCoeff;
+        regularizationType;
     end
     
     methods
@@ -18,7 +19,13 @@ classdef joint < mbdyn.pre.element
             % call superclass constructor
             self = self@mbdyn.pre.element ( pvpairs{:} );
             
+            mbdyn.pre.base.checkAllowedStringInputs (options.RegularizationType, {'tikhonov'}, true, 'RegularizationType');
+            if ~isempty (options.RegularizeCoeff)
+                self.regularizeCoeff = options.RegularizeCoeff;
+            end
+            
             self.netCDFName = 'joint';
+            self.regularizationType = options.RegularizationType;
             
         end
         
@@ -45,12 +52,47 @@ classdef joint < mbdyn.pre.element
             %   file.
             %
             
-            str = sprintf ('    joint : %d, %s,', self.label, self.type);
+            str = generateMBDynInputString@mbdyn.pre.element (self);
+            
+%             if ~isempty (self.regularizeCoeff)
+%                 str = sprintf ('    joint regularization : %d, tikhonov, %s;\n\n', self.label, self.formatNumber (self.regularizeCoeff));
+%             end
+            str = self.addOutputLine (str, sprintf ('joint : %d, %s', self.label, self.type), 1);
+            
+%             str = sprintf ('%s    joint : %d, %s,', str, self.label, self.type);
         end
         
     end
     
     methods (Access = protected)
+        
+        function str = addRegularization (self, str)
+            
+            if ~isempty (self.regularizeCoeff)
+                
+                if numel (self.regularizeCoeff) == 1
+                    
+                    str = self.addOutputLine ( str, ...
+                                               sprintf ( 'joint regularization : %d, %s, %s;', ...
+                                                         self.label, ...
+                                                         self.regularizationType, ...
+                                                         self.formatNumber (self.regularizeCoeff) ), ...
+                                               1, ...
+                                               false );
+                else
+                    
+                    str = self.addOutputLine ( str, ...
+                                               sprintf ( 'joint regularization : %d, %s, list, %s;', ...
+                                                         self.label, ...
+                                                         self.regularizationType, ...
+                                                         self.commaSepList (self.regularizeCoeff) ), ...
+                                               1, ...
+                                               false );
+                end
+                
+            end
+            
+        end
         
 
         
@@ -62,7 +104,10 @@ classdef joint < mbdyn.pre.element
             
             options = mbdyn.pre.element.defaultConstructorOptions ();
             
-            nopass_list = {};
+            options.RegularizeCoeff = [];
+            options.RegularizationType = 'tikhonov';
+            
+            nopass_list = {'RegularizeCoeff', 'RegularizationType'};
             
         end
         

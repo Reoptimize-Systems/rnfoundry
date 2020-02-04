@@ -10,11 +10,15 @@ classdef node < mbdyn.pre.base
     
     properties (GetAccess = public, SetAccess = protected)
         
-        humanReadableLabel; % character vector with a label for the node
-        
         scale; % factor by which to scale the residual before applying a tolerance test
 
         output; % flag indicating whther the node will produce output
+        
+    end
+    
+    properties (GetAccess = public, SetAccess = public)
+        
+        humanReadableLabel; % character vector with a label for the node
         
         name; % name of the node
         
@@ -144,6 +148,31 @@ classdef node < mbdyn.pre.base
         
         function draw (self, varargin)
             % draw/plot the element. Inactive for this element
+            
+        end
+        
+    end
+    
+    % getters, setters
+    methods
+        
+        function set.name (self, newname)
+            
+            if ~ischar (newname)
+                error ('''name'' must be a char array');
+            end
+            
+            self.name = newname;
+            
+        end
+        
+        function set.humanReadableLabel (self, newlabel)
+            
+            if ~ischar (newlabel)
+                error ('''humanReadableLabel'' must be a char array');
+            end
+            
+            self.humanReadableLabel = newlabel;
             
         end
         

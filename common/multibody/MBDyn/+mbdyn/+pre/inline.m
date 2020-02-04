@@ -127,7 +127,7 @@ classdef inline < mbdyn.pre.twoNodeJoint
             
             str = generateMBDynInputString@mbdyn.pre.twoNodeJoint(self);
             
-            str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, 'node 1 label');
+            str = self.addOutputLine (str, sprintf('%d', self.node1.label), 2, true, self.nodeLabelComment (self.node1));
             
             if ~isempty (self.relativeLinePosition)
                 out = self.makeCellIfNot (self.relativeLinePosition);
@@ -143,7 +143,7 @@ classdef inline < mbdyn.pre.twoNodeJoint
             
             
             addcomma = ~isempty (self.relativeOffset);
-            str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, addcomma, 'node 2 label');
+            str = self.addOutputLine (str, sprintf('%d', self.node2.label), 2, addcomma, self.nodeLabelComment (self.node2));
             
             if ~isempty (self.relativeOffset)
                 out = self.makeCellIfNot (self.relativeOffset);
@@ -151,6 +151,8 @@ classdef inline < mbdyn.pre.twoNodeJoint
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
+            
+            str = self.addRegularization (str);
             
         end
         

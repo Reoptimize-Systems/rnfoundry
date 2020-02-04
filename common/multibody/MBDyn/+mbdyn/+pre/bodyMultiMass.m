@@ -3,12 +3,12 @@ classdef bodyMultiMass < mbdyn.pre.element
     properties (GetAccess = public, SetAccess = protected)
         
         mass;                 % the masses of the bodies
-        relativeCentreOfMass; % the location of the centers of mass with respect to the node in the reference frame of the node
-        inertiaMatrix;        % Inertia_matrices referred to the center of mass of each mass
-        inertialOrientation;  
-        nMasses;
+        relativeCentreOfMass; % the locations of the centers of mass with respect to the node in the reference frame of the node
+        inertiaMatrix;        % Inertia matrices referred to the center of mass of each mass
+        inertialOrientation;  % Orientation matrice defining local rotations of each mass relative to the node
+        nMasses;              % the number of attached masses
         
-        nodeAttached;
+        nodeAttached;         % the node to which the masses are attached
         
     end
     
@@ -20,7 +20,63 @@ classdef bodyMultiMass < mbdyn.pre.element
     methods
         
         function self = bodyMultiMass (mass, cog, inertiamat, node, varargin)
-        
+            % constructor for mbdyn.pre.bodyMultiMass, attaches mutliple bodies to node
+            %
+            % Syntax
+            %
+            % mbd = mbdyn.pre.bodyMultiMass (mass, cog, inertiamat, node)
+            % mbd = mbdyn.pre.bodyMultiMass (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % mbdyn.pre.bodyMultiMass can be used to attach multiple masses
+            % to a single node which will be condensed internally by MBDyn
+            % for efficiency. Each mass can have a different offset
+            % and orientation relative to the node.
+            %
+            % Input
+            %
+            %  mass - vector of length n containing the value of the mass
+            %   for each mass to be added.
+            %
+            %  cog - cell array of n (3 x 1) centre of gravity vectors
+            %   giving the location of the center of mass with respect to
+            %   the node in the reference frame of the node.
+            %
+            %  inertiamat - cell array of n inertia matrices, one for each
+            %   mass. The inertia matrix is always referred to the center
+            %   of mass of the mass that is being added. It can be rotated
+            %   locally (i.e. relative to the node) by using the
+            %   'InertialOrientation'option described below. By default the
+            %   inertia matrix is assumed to be input in the node reference
+            %   frame.
+            %
+            %  node - node to which the body is attached, can be either an
+            %    mbdyn.pre.structuralNode6dof object or a
+            %    mbdyn.pre.structuralNode3dof object.
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'InertialOrientation' - cell array of n orientation matrices
+            %    defining a local rotation of the mass relative to the
+            %    attached node.
+            %
+            %  'STLFiles' - cell array of n paths to STL files used to plot
+            %    each body in visualisations. If a given cell is empty, a
+            %    default shape is used for the corresponding body/mass.
+            %
+            %  'UseSTLName' - 
+            %
+            % Output
+            %
+            %  mbd - mbdyn.pre.bodyMultiMass
+            %
+            %
+            %
+            % See Also: mbdyn.pre.body
+            %
+            
             options.InertialOrientation = {};
             options.STLFiles = {};
             options.UseSTLName = false;
@@ -95,7 +151,7 @@ classdef bodyMultiMass < mbdyn.pre.element
                 options.STLFiles = cell (size(mass));
             else
                 if ~ (iscell (options.STLFiles) && samesize (options.STLFiles, self.masses) )
-                    error ('STLFiles must be a cell array of the smae size as the mass.');
+                    error ('STLFiles must be a cell array of the same size as the mass.');
                 end
             end
             
