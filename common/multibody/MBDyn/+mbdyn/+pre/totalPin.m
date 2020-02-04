@@ -14,11 +14,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
         absolutePositionOrientationReference;
         absoluteRotOrientation;
         absoluteRotOrientationReference;
-        positionConstraint;
-        positionConstraintDrive;
-        orientationConstraint;
-        orientationConstraintDrive;
-        
+        imposedAbsolutePosition;
+        imposedAbsoluteOrientation;
         positionStatus;
         orientationStatus;
         
@@ -28,70 +25,70 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
     methods
         
         function self = totalPin (node, varargin)
-            % mbdyn.pre.totalPin constructor
-            %
-            % Syntax
-            %
-            % tpin = mbdyn.pre.totalPin (node)
-            % tpin = mbdyn.pre.totalPin (..., 'Parameter', Value)
-            %
-            % Description
-            %
-            % mbdyn.pre.totalPin allows to arbitrarily constrain specific
-            % components of the absolute position and orientation of a
-            % node. The value of the constrained components of the absolute
-            % position and orientation can be imposed by means of drives.
-            % As such, this element allows to mimic the behavior of most
-            % ideal constraints that ground one node
-            %
-            % Input
-            %
-            %  node - node to which the total pin constraints are to be
-            %   applied
-            %
-            % Addtional arguments may be supplied as parameter-value pairs.
-            % The available options are:
-            %
-            %  'RelativeOffset' - 
-            %
-            %  'RelativeOffsetReference' - 
-            %
-            %  'RelativePositionOrientation' - 
-            %
-            %  'RelativePositionOrientationReference' - 
-            %
-            %  'RelativeRotOrientation' - 
-            %
-            %  'RelativeRotOrientationReference' - 
-            %
-            %  'AbsolutePosition' - 
-            %
-            %  'AbsolutePositionReference' - 
-            %
-            %  'AbsolutePositionOrientation' - 
-            %
-            %  'AbsolutePositionOrientationReference' - 
-            %
-            %  'AbsoluteRotOrientation' - 
-            %
-            %  'AbsoluteRotOrientationReference' - 
-            %
-            %  'PositionConstraint' - 
-            %
-            %  'PositionConstraintDrive' - 
-            %
-            %  'OrientationConstraint' - 
-            %
-            %  'OrientationConstraintDrive' - 
-            %
-            % Output
-            %
-            %  tpin - mbdyn.pre.totalPin object
-            %
-            %
-            %
-            % See Also: mbdyn.pre.totalJoint
-            %
+        % mbdyn.pre.totalPin constructor
+        %
+        % Syntax
+        %
+        % tpin = mbdyn.pre.totalPin (node)
+        % tpin = mbdyn.pre.totalPin (..., 'Parameter', Value)
+        %
+        % Description
+        %
+        % mbdyn.pre.totalPin allows to arbitrarily constrain specific
+        % components of the absolute position and orientation of a node.
+        % The value of the constrained components of the absolute position
+        % and orientation can be imposed by means of drives. As such, this
+        % element allows to mimic the behavior of most ideal constraints
+        % that ground one node
+        %
+        % Input
+        %
+        %  node - node to which the total pin constraints are to be
+        %   applied
+        %
+        % Addtional arguments may be supplied as parameter-value pairs.
+        % The available options are:
+        %
+        %  'RelativeOffset' - 
+        %
+        %  'RelativeOffsetReference' - 
+        %
+        %  'RelativePositionOrientation' - 
+        %
+        %  'RelativePositionOrientationReference' - 
+        %
+        %  'RelativeRotOrientation' - 
+        %
+        %  'RelativeRotOrientationReference' - 
+        %
+        %  'AbsolutePosition' - 
+        %
+        %  'AbsolutePositionReference' - 
+        %
+        %  'AbsolutePositionOrientation' - 
+        %
+        %  'AbsolutePositionOrientationReference' - 
+        %
+        %  'AbsoluteRotOrientation' - 
+        %
+        %  'AbsoluteRotOrientationReference' - 
+        %
+        %  'PositionStatus' - 
+        %
+        %  'ImposedAbsolutePosition' - 
+        %
+        %  'OrientationStatus' - 
+        %
+        %  'ImposedAbsoluteOrientation' - 
+        %
+        % Output
+        %
+        %  tpin - mbdyn.pre.totalPin object
+        %
+        %
+        %
+        % See Also: mbdyn.pre.totalJoint
+        %
             
             options.RelativeOffset = [];
             options.RelativeOffsetReference = 'node';
@@ -107,10 +104,10 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             options.AbsoluteRotOrientation =  [];
             options.AbsoluteRotOrientationReference = 'global';
             
-            options.PositionConstraint = {};
-            options.PositionConstraintDrive = 'null';
-            options.OrientationConstraint = {};
-            options.OrientationConstraintDrive = 'null';
+            options.PositionStatus = {};
+            options.ImposedAbsolutePosition = 'null';
+            options.OrientationStatus = {};
+            options.ImposedAbsoluteOrientation = 'null';
             
             options = parse_pv_pairs (options, varargin);
             
@@ -174,55 +171,25 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                                                 'AbsoluteRotOrientationReference');
             end
 
-            if ~isempty (options.PositionConstraint)
-                    
-                for ind = 1:numel (options.PositionConstraint)
-                    self.checkPosStatus (options.PositionConstraint{ind});
+            options.PositionStatus = self.checkPosStatus (options.PositionStatus);
+            options.OrientationStatus = self.checkOrientStatus (options.OrientationStatus);
 
-                    if islogical (options.PositionConstraint{ind})
-                        if options.PositionConstraint{ind} == true
-                            options.PositionConstraint{ind} = 'active';
-                        else
-                            options.PositionConstraint{ind} = 'inactive';
-                        end
-                    end
-                    
-                end
-            end
-
-            if ~isempty (options.PositionConstraintDrive)
-                assert (isa (options.PositionConstraintDrive, 'mbdyn.pre.componentTplDriveCaller') ...
+            if ~isempty (options.ImposedAbsolutePosition)
+                assert (isa (options.ImposedAbsolutePosition, 'mbdyn.pre.componentTplDriveCaller') ...
                             || ( ...
-                                 ischar (options.PositionConstraintDrive) ...
-                                    && strcmp (options.PositionConstraintDrive, 'null') ...
+                                 ischar (options.ImposedAbsolutePosition) ...
+                                    && strcmp (options.ImposedAbsolutePosition, 'null') ...
                                ), ..., ...
-                    'PositionConstraintDrive must be an mbdyn.pre.componentTplDriveCaller object, or the keyword ''null''');
+                    'ImposedAbsolutePosition must be an mbdyn.pre.componentTplDriveCaller object, or the keyword ''null''');
             end
 
-            if ~isempty (options.OrientationConstraint)
-                
-                for ind = 1:numel (options.OrientationConstraint)
-
-                    self.checkOrientStatus (options.OrientationConstraint{ind});
-
-                    if islogical (options.OrientationConstraint{ind})
-                        if options.OrientationConstraint{ind} == true
-                            options.OrientationConstraint{ind} = 'active';
-                        else
-                            options.OrientationConstraint{ind} = 'inactive';
-                        end
-                    end
-            
-                end
-            end
-
-            if ~isempty (options.OrientationConstraintDrive)
-                assert ( isa (options.OrientationConstraintDrive, 'mbdyn.pre.componentTplDriveCaller') ...
+            if ~isempty (options.ImposedAbsoluteOrientation)
+                assert ( isa (options.ImposedAbsoluteOrientation, 'mbdyn.pre.componentTplDriveCaller') ...
                             || ( ...
-                                 ischar (options.OrientationConstraintDrive) ...
-                                    && strcmp (options.OrientationConstraintDrive, 'null') ...
+                                 ischar (options.ImposedAbsoluteOrientation) ...
+                                    && strcmp (options.ImposedAbsoluteOrientation, 'null') ...
                                ), ...
-                    'OrientationConstraintDrive must be an mbdyn.pre.componentTplDriveCaller object, or the keyword ''null''');
+                    'ImposedAbsoluteOrientation must be an mbdyn.pre.componentTplDriveCaller object, or the keyword ''null''');
             end
             
             self.relativeOffset = options.RelativeOffset;
@@ -237,10 +204,10 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             self.absolutePositionOrientationReference = options.AbsolutePositionOrientationReference;
             self.absoluteRotOrientation = options.AbsoluteRotOrientation;
             self.absoluteRotOrientationReference = options.AbsoluteRotOrientationReference;
-            self.positionConstraint = options.PositionConstraint;
-            self.positionConstraintDrive = options.PositionConstraintDrive;
-            self.orientationConstraint = options.OrientationConstraint;
-            self.orientationConstraintDrive = options.OrientationConstraintDrive;
+            self.positionStatus = options.PositionStatus;
+            self.imposedAbsolutePosition = options.ImposedAbsolutePosition;
+            self.orientationStatus = options.OrientationStatus;
+            self.imposedAbsoluteOrientation = options.ImposedAbsoluteOrientation;
             
         end
         
@@ -275,8 +242,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                             || ~isempty (self.absolutePosition) ...
                             || ~isempty (self.absolutePositionOrientation) ...
                             || ~isempty (self.absoluteRotOrientation) ...
-                            || ~isempty (self.positionConstraint) ...
-                            || ~isempty (self.orientationConstraint);
+                            || ~isempty (self.positionStatus) ...
+                            || ~isempty (self.orientationStatus);
             
             str = self.addOutputLine ( str, ...
                                        sprintf ('%d', self.node.label), ...
@@ -292,8 +259,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                             || ~isempty (self.absolutePosition) ...
                             || ~isempty (self.absolutePositionOrientation) ...
                             || ~isempty (self.absoluteRotOrientation) ...
-                            || ~isempty (self.positionConstraint) ...
-                            || ~isempty (self.orientationConstraint);
+                            || ~isempty (self.positionStatus) ...
+                            || ~isempty (self.orientationStatus);
 
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'position', ...
@@ -310,8 +277,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                             || ~isempty (self.absolutePosition) ...
                             || ~isempty (self.absolutePositionOrientation) ...
                             || ~isempty (self.absoluteRotOrientation) ...
-                            || ~isempty (self.positionConstraint) ...
-                            || ~isempty (self.orientationConstraint);
+                            || ~isempty (self.positionStatus) ...
+                            || ~isempty (self.orientationStatus);
                         
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'position orientation', ...
@@ -327,8 +294,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                 addcomma =  ~isempty (self.absolutePosition) ...
                             || ~isempty (self.absolutePositionOrientation) ...
                             || ~isempty (self.absoluteRotOrientation) ...
-                            || ~isempty (self.positionConstraint) ...
-                            || ~isempty (self.orientationConstraint);
+                            || ~isempty (self.positionStatus) ...
+                            || ~isempty (self.orientationStatus);
                         
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'rotation orientation', ...
@@ -344,8 +311,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                 
                 addcomma =  ~isempty (self.absolutePositionOrientation) ...
                             || ~isempty (self.absoluteRotOrientation) ...
-                            || ~isempty (self.positionConstraint) ...
-                            || ~isempty (self.orientationConstraint);
+                            || ~isempty (self.positionStatus) ...
+                            || ~isempty (self.orientationStatus);
                         
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'position', ...
@@ -361,8 +328,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             if ~isempty (self.absolutePositionOrientation)
                 
                 addcomma =  ~isempty (self.absoluteRotOrientation) ...
-                            || ~isempty (self.positionConstraint) ...
-                            || ~isempty (self.orientationConstraint);
+                            || ~isempty (self.positionStatus) ...
+                            || ~isempty (self.orientationStatus);
                         
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'position', ...
@@ -377,8 +344,8 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             % rotation orientation
             if ~isempty (self.absoluteRotOrientation)
                 
-                addcomma =  ~isempty (self.positionConstraint) ...
-                            || ~isempty (self.orientationConstraint);
+                addcomma =  ~isempty (self.positionStatus) ...
+                            || ~isempty (self.orientationStatus);
                         
                 str = self.addOutputLine ( str, ...
                                            self.commaSepList ( 'position', ...
@@ -391,33 +358,35 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             end
             
             
-            if ~isempty (self.positionConstraint)
+            if ~isempty (self.positionStatus)
                 
-                addcomma =  ~isempty (self.orientationConstraint);
+                addcomma =  ~isempty (self.orientationStatus);
                         
                 str = self.addOutputLine (str, 'position constraint', 2, true);
-                str = self.addOutputLine (str, self.commaSepList (self.positionConstraint{:}), 3, true, 'position constraint status');
-                if ischar (self.positionConstraintDrive)
-                    str = self.addOutputLine (str, self.positionConstraintDrive, 3, addcomma);
+                str = self.addOutputLine (str, self.commaSepList (self.positionStatus{:}), 3, true, 'position constraint status');
+                if ischar (self.imposedAbsolutePosition)
+                    str = self.addOutputLine (str, self.imposedAbsolutePosition, 3, addcomma);
                 else
-                    str = self.addOutputLine (str, self.positionConstraintDrive.generateMBDynInputString (), 3, addcomma);
+                    str = self.addOutputLine (str, self.imposedAbsolutePosition.generateMBDynInputString (), 3, addcomma);
                 end
                 
             end
             
-            if ~isempty (self.orientationConstraint)
+            if ~isempty (self.orientationStatus)
                 
                 str = self.addOutputLine (str, 'orientation constraint', 2, true);
-                str = self.addOutputLine (str, self.commaSepList (self.orientationConstraint{:}), 3, true, 'orientation constraint status');
-                if ischar (self.orientationConstraintDrive)
-                    str = self.addOutputLine (str, self.orientationConstraintDrive, 3, false);
+                str = self.addOutputLine (str, self.commaSepList (self.orientationStatus{:}), 3, true, 'orientation constraint status');
+                if ischar (self.imposedAbsoluteOrientation)
+                    str = self.addOutputLine (str, self.imposedAbsoluteOrientation, 3, false);
                 else
-                    str = self.addOutputLine (str, self.orientationConstraintDrive.generateMBDynInputString (), 3, false);
+                    str = self.addOutputLine (str, self.imposedAbsoluteOrientation.generateMBDynInputString (), 3, false);
                 end
                 
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf ('end %s', self.type));
+            
+            str = self.addRegularization (str);
             
         end
         
@@ -461,27 +430,99 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             
         end
         
-        function checkPosStatus (self, posstatus)
-            % checks if the position status choice is valid
+        function newposstatus = checkPosStatus (self, posstatus)
+            % checks if the position status choicesare valid
             
-            if (ischar (posstatus) && ~any(strcmp (posstatus, {'inactive', 'active', 'position', 'velocity'}))) ...
-                    && ~islogical (posstatus)
+            if isempty (posstatus)
                 
-                error ('total joint position status must be: ''inactive'' | ''active'' | ''position'' | ''velocity'' | boolean true/false');
+                newposstatus = posstatus;
+                
+            else
+            
+                assert (numel (posstatus) == 3, ...
+                    'PositionStatus must have 3 elements (logical array or cell string array)');
+                
+                newposstatus = cell (1, 3);
+                
+                if islogical (posstatus)
+                    
+                    for ind = 1:3
+                        
+                        if posstatus(ind) == true
+                            newposstatus{ind} = 'active';
+                        else
+                            newposstatus{ind} = 'inactive';
+                        end
+                        
+                    end
+                    
+                elseif ~iscellstr (posstatus)
+                    error ('PositionStatus must be a 3 element logical array or 3 element cell string array');
+                    
+                else
+                    newposstatus = posstatus;
+                end
+                
+                for ind = 1:3
+                    self.checkAllowedStringInputs ( newposstatus{ind}, ...
+                                                    { 'inactive', ...
+                                                      'active', ...
+                                                      'position', ...
+                                                      'velocity'}, ...
+                                                    true, ...
+                                                    sprintf ('PostionStatus{%d}', ind) );
+                end
+            
             end
             
         end
         
-        function checkOrientStatus (self, orientstatus)
+        function neworientstatus = checkOrientStatus (self, orientstatus)
             % checks if the orientation status choice is valid
             
-            if (ischar (orientstatus) && ~any(strcmp (orientstatus, {'inactive', 'active', 'rotation', 'angular velocity'}))) ...
-                    && ~islogical (orientstatus)
+            if isempty (orientstatus)
                 
-                error ('total joint orientation status must be: ''inactive'' | ''active'' | ''rotation'' | ''angular velocity'' | boolean true/false');
+                neworientstatus = orientstatus;
+                
+            else
+            
+                assert (numel (orientstatus) == 3, ...
+                    'OrientationStatus must have 3 elements (logical array or cell string array)');
+                
+                neworientstatus = cell (1, 3);
+                
+                if islogical (orientstatus)
+                    
+                    for ind = 1:3
+                        
+                        if orientstatus(ind) == true
+                            neworientstatus{ind} = 'active';
+                        else
+                            neworientstatus{ind} = 'inactive';
+                        end
+                        
+                    end
+                    
+                elseif ~iscellstr (orientstatus)
+                    error ('OrientationStatus must be a 3 element logical array or 3 element cell string array');
+                else
+                    neworientstatus = orientstatus;
+                end
+                
+                for ind = 1:3
+                    self.checkAllowedStringInputs ( neworientstatus{ind}, ...
+                                                    { 'inactive', ...
+                                                      'active', ...
+                                                      'rotation', ...
+                                                      'angular velocity'}, ...
+                                                    true, ...
+                                                    sprintf ('OrientationStatus{%d}', ind) );
+                end
+            
             end
             
         end
+
         
     end
     
