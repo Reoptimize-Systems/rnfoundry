@@ -119,6 +119,10 @@ classdef element < mbdyn.pre.base
                 end
             end
             
+            if ~isempty (options.Size)
+                self.setSize (options.Size{:})
+            end
+            
         end
         
         function set.defaultShapeOffset (self, new_offset)
@@ -627,6 +631,33 @@ classdef element < mbdyn.pre.base
             end
         end
         
+        function str = generateMBDynInputString (self)
+            % generates MBDyn input string for common element
+            % 
+            % Syntax
+            %  
+            % str = generateMBDynInputString (jnt)
+            %  
+            % Description
+            %  
+            % generateMBDynInputString is a method shared by all MBDyn
+            % components and is called to generate a character vector used
+            % to construct an MBDyn input file.
+            %  
+            % Input
+            %  
+            %  jnt - mbdyn.pre.joint object
+            %  
+            % Output
+            %  
+            %  str - character vector for insertion into an MBDyn input
+            %   file.
+            %
+            
+            str = sprintf ('    %s', self.elementNameComment ());
+            
+        end
+        
     end
     
     methods (Access = protected)
@@ -653,6 +684,33 @@ classdef element < mbdyn.pre.base
                 error ('Centre of gravity offset must 3 element numeric column vector, or keyword ''null'' or empty');
             end
             
+            
+        end
+        
+        
+        function comment = elementNameComment (self)
+            % generate a comment describing an element (uses name if present)
+            % 
+            % Syntax
+            %
+            % comment = nodeLabelComment (el)
+            %
+            % Input
+            %
+            %  el - mbdyn.pre.element (or derived) object
+            %
+            % Output
+            %
+            %  comment - string containing a comment including the 
+            %   element's name if not empty
+            %
+            
+            
+            if isempty (self.name)
+                comment = sprintf ('# %s', self.type);
+            else 
+                comment = sprintf ('# %s with name %s ', self.type, self.name);
+            end
             
         end
         
@@ -706,6 +764,7 @@ classdef element < mbdyn.pre.base
             options.DefaultShape = 'cuboid';
             options.DefaultShapeOrientation = mbdyn.pre.orientmat ('eye');
             options.DefaultShapeOffset = [0;0;0];
+            options.Size = [];
             
             nopass_list = {};
             

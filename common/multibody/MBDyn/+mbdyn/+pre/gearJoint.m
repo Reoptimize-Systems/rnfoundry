@@ -178,6 +178,8 @@ classdef gearJoint < mbdyn.pre.userDefined
                                        false );
                                    
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.userTypeName));
+            
+            str = self.addRegularization (str);
 
         end
         

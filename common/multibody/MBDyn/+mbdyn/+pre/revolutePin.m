@@ -170,7 +170,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             
             str = generateMBDynInputString@mbdyn.pre.singleNodeJoint(self);
             
-            str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, true, 'node label');
+            str = self.addOutputLine (str, sprintf('%d', self.node.label), 2, true, self.nodeLabelComment (self.node));
 
             str = self.addOutputLine ( str, ...
                                        self.commaSepList ( 'position', ...
@@ -210,6 +210,8 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
+            
+            str = self.addRegularization (str);
             
         end
         

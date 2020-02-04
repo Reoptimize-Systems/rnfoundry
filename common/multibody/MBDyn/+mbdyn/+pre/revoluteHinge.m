@@ -186,6 +186,8 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             
+            str = self.addRegularization (str);
+            
         end
         
         function draw (self, varargin)

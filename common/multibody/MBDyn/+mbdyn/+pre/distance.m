@@ -88,6 +88,8 @@ classdef distance < mbdyn.pre.twoNodeOffsetJoint
             
             % call the superclass constructor
             self = self@mbdyn.pre.twoNodeOffsetJoint ( node1, node2, ...
+                                                       'RelativeOffset1', options.Offset1, ...
+                                                       'RelativeOffset2', options.Offset2, ...
                                                        pvpairs{:} );
             
             if ischar (distance_val)
@@ -137,6 +139,8 @@ classdef distance < mbdyn.pre.twoNodeOffsetJoint
             end
             
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
+            
+            str = self.addRegularization (str);
 
         end
         
@@ -268,7 +272,15 @@ classdef distance < mbdyn.pre.twoNodeOffsetJoint
             
             options = mbdyn.pre.twoNodeOffsetJoint.defaultConstructorOptions ();
             
-            nopass_list = { 'RelativeOrientation1', ...
+            options.Offset1 = 'null';
+            options.Offset2 = 'null';
+            
+            options = rmfield (options, 'RelativeOffset1');
+            options = rmfield (options, 'RelativeOffset2');
+            
+            nopass_list = { 'Offset1', ...
+                            'Offset2', ...
+                            'RelativeOrientation1', ...
                             'RelativeOrientation2', ...
                             'Orientation1Reference', ...
                             'Orientation2Reference' };
