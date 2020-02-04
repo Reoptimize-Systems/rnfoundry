@@ -575,7 +575,13 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     % dump the mbdyn output to the command window (should
                     % be short at this stage
                     fprintf (1, 'MBDyn output:\n\n');
-                    type (self.MBDynOutputFile);
+                    if ~isempty (self.MBDynOutputFile)
+                        if exist (self.MBDynOutputFile, 'file')
+                            type (self.MBDynOutputFile);
+                        else
+                            fprintf (1, 'The output from MBDyn could not be displayed as the output file does not exist (perhaps MBDyn never started running).\n');
+                        end
+                    end
                     rethrow (err);
                 end
                            
@@ -606,7 +612,13 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                     % dump the mbdyn output to the command window (should
                     % be short at this stage
                     fprintf (1, 'MBDyn output:\n\n');
-                    type (self.MBDynOutputFile);
+                    if ~isempty (self.MBDynOutputFile)
+                        if exist (self.MBDynOutputFile, 'file')
+                            type (self.MBDynOutputFile);
+                        else
+                            fprintf (1, 'The output from MBDyn could not be displayed as the output file does not exist (perhaps MBDyn never started running).\n');
+                        end
+                    end
                     rethrow (err);
                 end
                            
@@ -653,8 +665,22 @@ classdef MBCNodal < mbdyn.mint.cppinterface
                 
             end
             
-            self.cppcall ('Negotiate');
-            
+            try
+                self.cppcall ('Negotiate');
+            catch err
+                % dump the mbdyn output to the command window (should
+                % be short at this stage)
+                fprintf (1, 'MBDyn output:\n\n');
+                if ~isempty (self.MBDynOutputFile)
+                    if exist (self.MBDynOutputFile, 'file')
+                        type (self.MBDynOutputFile);
+                    else
+                        fprintf (1, 'The output from MBDyn could not be displayed as the output file does not exist (perhaps MBDyn never started running).\n');
+                    end
+                end
+                rethrow (err);
+            end
+                
             for ind = 1:numel (sdinds)
                 self.mbsys.drivers{sdinds(ind)}.sendValues (self.mbsys.drivers{sdinds(ind)}.initialValues);
             end
