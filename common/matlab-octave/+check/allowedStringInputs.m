@@ -1,4 +1,4 @@
-function ok = allowedStringInputs (input, allowedstrs, throw, inputname)
+function [ ok, allowed_ind ] = allowedStringInputs (input, allowedstrs, throw, inputname)
 % checks if string is one of a set of allowed values
 %
 % Syntax
@@ -36,7 +36,10 @@ function ok = allowedStringInputs (input, allowedstrs, throw, inputname)
     end
 
     ok = true;
-    if ~any(strcmp (input, allowedstrs))
+    
+    allowed_ind = find (strcmp (input, allowedstrs));
+
+    if isempty(allowed_ind)
         ok = false;
     end
 
