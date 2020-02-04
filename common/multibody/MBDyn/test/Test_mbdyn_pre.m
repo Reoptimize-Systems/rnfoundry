@@ -347,6 +347,17 @@ sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
 jnt = mbdyn.pre.revoluteRotation (sn1, sn2);
 jnt.generateMBDynInputString ()
 
+
+%% inPlane
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+jnt = mbdyn.pre.inPlane (sn1, sn2, [0;1;0]);
+
+jnt.generateMBDynInputString ()
+
+
 %% Spherical Hinge
 
 sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
