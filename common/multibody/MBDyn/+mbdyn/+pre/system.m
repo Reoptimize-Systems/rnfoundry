@@ -241,6 +241,8 @@ classdef system < mbdyn.pre.base
             options.DefaultScales = [];
             options.Drivers = {};
             options.OutputResults = { 'netcdf', 'no text' };
+            options.UseInAssembly = {};
+            options.AssemblyTolerance = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -282,7 +284,8 @@ classdef system < mbdyn.pre.base
                 if ~iscellstr (options.DefaultOutput)
                     error ('DefaultOutput must be a cell array of strings if supplied');
                 else
-                    okstrings = { 'all', 'none', ...
+                    okstrings = { 'all', ...
+                                  'none', ...
                                   'reference frames', ...
                                   'abstract nodes', ...
                                   'electric nodes', ...
@@ -382,10 +385,37 @@ classdef system < mbdyn.pre.base
 
             end
             
+            if ~isempty (options.UseInAssembly)
+                
+                assert (iscellstr (options.UseInAssembly), ...
+                        'UseInAssembly must be a cell array of character vectors' );
+                
+                valid_use_in_assembly = { 'rigid bodies', ...
+                                          'gravity', ...
+                                          'forces', ...
+                                          'beams', ...
+                                          'aerodynamic elements', ...
+                                          'loadable elements' };
+                
+                for ind = 1:numel (options.UseInAssembly)
+                    self.checkAllowedStringInputs ( options.UseInAssembly{ind}, ...
+                              valid_use_in_assembly, ...
+                              true, ...
+                              sprintf ('UseInAssembly{%d}', ind) );
+                end
+
+            end
+            
+            if ~isempty (options.AssemblyTolerance)
+                self.checkNumericScalar (options.AssemblyTolerance, true, 'AssemblyTolerance');
+            end
+            
             self.controlData.DefaultOutput = options.DefaultOutput;
             self.controlData.DefaultOrientation = options.DefaultOrientation;
             self.controlData.DefaultScales = options.DefaultScales;
             self.controlData.OutputResults = options.OutputResults;
+            self.controlData.UseInAssembly = options.UseInAssembly;
+            self.controlData.AssemblyTolerance = options.AssemblyTolerance;
             
         end
         
@@ -877,6 +907,7 @@ classdef system < mbdyn.pre.base
             options.Mode = 'solid';
             options.Bodies = true;
             options.StructuralNodes = true;
+            options.NodeLabels = false;
             options.Joints = true;
             options.Light = false;
             options.AxLims = [];
@@ -961,7 +992,8 @@ classdef system < mbdyn.pre.base
                 if isa (self.nodes{options.StructuralNodes(ind)}, 'mbdyn.pre.structuralNode')
                     draw (self.nodes{options.StructuralNodes(ind)}, ...
                         'AxesHandle', self.drawAxesH, ...
-                        'ForceRedraw', options.ForceRedraw);
+                        'ForceRedraw', options.ForceRedraw, ...
+                        'Label', options.NodeLabels);
                 end
             end
             
@@ -1035,10 +1067,40 @@ classdef system < mbdyn.pre.base
         
         function setStructuralNodeSize (self, sx, sy, sz)
             % set the size of all nodes for drawing
+            %
+            % Syntax
+            %
+            % mbdyn.pre.system.setStructuralNodeSize (s)
+            % mbdyn.pre.system.setStructuralNodeSize (sx, sy, sz)
+            %
+            % Description
+            %
+            % mbdyn.pre.system.setStructuralNodeSize sets the length of the
+            % lines used to plot structural nodes. Nodes are drawn as three
+            % lines representing the local coordinate axes of the nodes.
+            % The length of all three axis lines can be set to the same
+            % value, or they can be set individually.
+            %
+            % Input
+            %
+            %  s - if a single input is supplied, 's', this is the size of
+            %   the nodes representations in all dimentions 
+            %
+            %  sx - if three values are supplied, sx is the length of the 
+            %   node line representing the node's axis 1 (the X axis)
+            %
+            %  sy - if three values are supplied, sy is the length of the 
+            %   node line representing the node's axis 2 (the Y axis)
+            %
+            %  sz - if three values are supplied, sz is the length of the 
+            %   node line representing the node's axis 3 (the Z axis)
+            %
             
             if nargin == 2
                 sy = sx;
                 sz = sx;
+            elseif nargin < 4
+                error ('Input should be either a single value, ''s'' or three values, ''sx'', ''sy'' and ''sz''');
             end
             
             for ind = 1:numel (self.nodes)
@@ -1167,6 +1229,19 @@ classdef system < mbdyn.pre.base
                                            1, ...
                                            false );
                                        
+            end
+            
+            if ~isempty (self.controlData.UseInAssembly)
+                str = self.addOutputLine ( str, ...
+                                           [ 'use : ', ...
+                                             self.commaSepList(self.controlData.UseInAssembly{:}), ...
+                                             ', in assembly ;' ], ...
+                                           1, ...
+                                           false );
+            end
+            
+            if ~isempty (self.controlData.AssemblyTolerance)
+                str = self.addOutputLine (str , sprintf('tolerance: %s;',self.formatNumber (self.controlData.AssemblyTolerance)), 1, false);
             end
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
