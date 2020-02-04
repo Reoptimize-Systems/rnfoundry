@@ -1255,7 +1255,7 @@ classdef postproc < handle
             
             make_video = ~isempty (options.VideoFile) || ~isempty (options.VideoWriter);
             
-            plotdata.HAx = [];
+            plotdata.HAx = options.PlotAxes;
             plotdata.htraj = [];
             
             for tind = 1:options.Skip:size(self.nodes.(self.nodeNames{1}).Position,1)
@@ -1549,6 +1549,7 @@ classdef postproc < handle
             options.DrawMode = 'wireghost';
             options.DrawNodes = true;
             options.DrawBodies = true;
+            options.DrawReferences = false;
             options.Light = false;
             options.Title = true;
             options.OnlyNodes = 1:self.nNodes;
@@ -1601,9 +1602,11 @@ classdef postproc < handle
                     'Mode', options.DrawMode, ...
                     'Bodies', options.DrawBodies, ...
                     'StructuralNodes', options.OnlyNodes, ...
+                    'NodeLabels', options.DrawLabels, ...
                     'Joints', false, ...
                     'Light', options.Light, ...
-                    'ForceRedraw', options.ForceRedraw);
+                    'ForceRedraw', options.ForceRedraw, ...
+                    'References', options.DrawReferences );
                 
             end
             
@@ -1632,7 +1635,7 @@ classdef postproc < handle
             
             for indii = 1:self.nNodes
 
-                if options.DrawLabels
+                if isempty (self.preProcSystem) && options.DrawLabels
                     plotdata.HNodeLabels(indii) ...
                         = text ( plotdata.HAx, ...
                                  self.nodes.(self.nodeNames{indii}).Position(tind,1) + plotdata.nodeSize(indii), ...
