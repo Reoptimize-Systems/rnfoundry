@@ -864,6 +864,8 @@ classdef postproc < handle
             %
             % Syntax
             
+            havepreproc = ~isempty (self.preProcSystem);
+            
             [ names, info ] = availableNetCDFOutput (self);
 
             for ind = 1:numel (names)
@@ -875,7 +877,20 @@ classdef postproc < handle
                     
 %                     labelnum = str2num (out{1}{1});
                     
-                    fprintf (1, '%s : type - %s\n', names{ind}, description );
+                    fprintf (1, '%s : type - %s', names{ind}, description );
+                    
+                    if havepreproc
+                        comp_label = str2num (out{1}{1});
+                        
+                        comp = self.preProcSystem.getComponentByLabel (comp_label);
+                        
+                        if ~isempty (comp)
+                            fprintf (1, ', name - %s', comp.name );
+                        end
+                        
+                    end
+                    
+                    fprintf (1, '\n' );
                     
                     continue;
                 end
