@@ -265,61 +265,65 @@ classdef wecSim < handle
             %
             %
 
-            assert (isa (pto, 'wsim.powerTakeOff'), ...
-                'pto must be a wsim.powerTakeOff object (or derived class)');
+            if ~isempty (pto)
+                
+                assert (isa (pto, 'wsim.powerTakeOff'), ...
+                    'pto must be a wsim.powerTakeOff object (or derived class)');
 
-            % check that the PTO nodes are in the MBDyn system external
-            % structual force element
-            strinfo = self.mBDynSystem.externalStructuralInfo ();
+                % check that the PTO nodes are in the MBDyn system external
+                % structual force element
+                strinfo = self.mBDynSystem.externalStructuralInfo ();
 
-            for ptoind = 1:numel(self.powerTakeOffs)
+                for ptoind = 1:numel(self.powerTakeOffs)
 
-                foundptonode = false;
-                for nodeind = 1:numel (strinfo.Nodes)
+                    foundptonode = false;
+                    for nodeind = 1:numel (strinfo.Nodes)
 
-                    if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.referenceNode
+                        if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.referenceNode
 
-                        foundptonode = true;
+                            foundptonode = true;
 
-                        break;
+                            break;
 
+                        end
+
+                    end
+
+                    if foundptonode == false
+                        error ('Could not find reference node for new PTO in MBDyn system structural external force element');
+                    end
+
+                    foundptonode = false;
+                    for nodeind = 1:numel (strinfo.Nodes)
+
+                        if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.otherNode
+
+                            foundptonode = true;
+
+                            break;
+
+                        end
+
+                    end
+
+                    if foundptonode == false
+                        error ('Could not find non-reference node for new PTO in MBDyn system structural external force element');
                     end
 
                 end
 
-                if foundptonode == false
-                    error ('Could not find reference node for new PTO in MBDyn system structural external force element');
-                end
+                % append it to the existing PTO objects
+                self.powerTakeOffs = [ self.powerTakeOffs, {pto}];
 
-                foundptonode = false;
-                for nodeind = 1:numel (strinfo.Nodes)
+                % set the id of the pto
+                self.powerTakeOffs{end}.id = numel (self.powerTakeOffs);
 
-                    if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.otherNode
-
-                        foundptonode = true;
-
-                        break;
-
-                    end
-
-                end
-
-                if foundptonode == false
-                    error ('Could not find non-reference node for new PTO in MBDyn system structural external force element');
-                end
-
+                % mark ready to run false, as the PTO index map will need to be
+                % updated before proceeding to run a simulation
+                self.readyToRun = false;
+                
             end
-
-            % append it to the existing PTO objects
-            self.powerTakeOffs = [ self.powerTakeOffs, {pto}];
-
-            % set the id of the pto
-            self.powerTakeOffs{end}.id = numel (self.powerTakeOffs);
-
-            % mark ready to run false, as the PTO index map will need to be
-            % updated before proceeding to run a simulation
-            self.readyToRun = false;
-
+            
         end
 
         function prepare (self)
@@ -1401,6 +1405,7 @@ classdef wecSim < handle
             options.DrawMode = 'wireghost';
             options.DrawNodes = true;
             options.DrawBodies = true;
+            options.DrawReferences = false;
             options.Light = false;
             options.Title = true;
             options.OnlyNodes = [];
@@ -1418,7 +1423,7 @@ classdef wecSim < handle
             end
 
             if isempty (options.OnlyNodes)
-                options.OnlyNodes = self.mBDynPostProc.nNodes;
+                options.OnlyNodes = 1:self.mBDynPostProc.nNodes;
             end
 
             if options.DrawWaves
@@ -1437,6 +1442,7 @@ classdef wecSim < handle
                                               'DrawMode', options.DrawMode, ...
                                               'DrawNodes', options.DrawNodes, ...
                                               'DrawBodies', options.DrawBodies, ...
+                                              'DrawReferences', options.DrawReferences, ...
                                               'Light', options.Light, ...
                                               'Title', options.Title, ...
                                               'OnlyNodes', options.OnlyNodes, ...
