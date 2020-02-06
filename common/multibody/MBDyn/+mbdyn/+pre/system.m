@@ -1110,6 +1110,38 @@ classdef system < mbdyn.pre.base
             end
         end
         
+        function el = getElementByLabel (self, label)
+            
+            el = [];
+            for ind = 1:numel (self.elements)
+                if self.elements{ind}.label == label
+                    el = self.elements{ind};
+                end
+            end
+            
+        end
+        
+        function node = getNodeByLabel (self, label)
+            
+            node = [];
+            for ind = 1:numel (self.nodes)
+                if self.nodes{ind}.label == label
+                    node = self.nodes{ind};
+                end
+            end
+            
+        end
+        
+        function out = getComponentByLabel (self, label)
+            
+            out = getElementByLabel (self, label);
+            
+            if isempty (out)
+                out = getNodeByLabel (self, label);
+            end
+            
+        end
+        
         function str = generateMBDynInputStr (self)
             % creates a string representing the contents of an MBDyn input file
             %
