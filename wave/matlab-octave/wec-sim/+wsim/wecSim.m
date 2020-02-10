@@ -541,6 +541,7 @@ classdef wecSim < handle
             options.ForceMBDynNetCDF = true;
             options.SyncMBDynNetCDF = false;
             options.ShowProgress = false;
+            options.MBDynTimeout = 60;
 
             % specific to run
             options.TimeExecution = false;
@@ -560,7 +561,8 @@ classdef wecSim < handle
                             'HydroMotionSyncSteps', options.HydroMotionSyncSteps, ...
                             'ForceMBDynNetCDF', options.ForceMBDynNetCDF, ...
                             'SyncMBDynNetCDF', options.SyncMBDynNetCDF, ...
-                            'ShowProgress', options.ShowProgress );
+                            'ShowProgress', options.ShowProgress, ...
+                            'MBDynTimeout', options.MBDynTimeout );
 
             if options.TimeExecution, tic; end
 
@@ -710,6 +712,7 @@ classdef wecSim < handle
             options.ForceMBDynNetCDF = true;
             options.SyncMBDynNetCDF = false;
             options.ShowProgress = false;
+            options.MBDynTimeout = 60;
 
             options = parse_pv_pairs (options, varargin);
 
@@ -883,7 +886,7 @@ classdef wecSim < handle
 %                 CC = onCleanup (@() self.mBDynMBCNodal.delete ());
 %             end
 
-            self.mBDynMBCNodal.start ('Verbosity', options.Verbosity);
+            self.mBDynMBCNodal.start ('Verbosity', options.Verbosity, 'Timeout', options.MBDynTimeout);
 
             % get the number of nodes in the problem
             self.nMBDynNodes = self.mBDynMBCNodal.GetNodes ();
