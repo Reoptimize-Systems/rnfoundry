@@ -49,16 +49,16 @@ public:
     {
         std::vector<int> nallowed;
 
-        // Ten arguments must be supplied:
-        // refnode,
-        // refnoderot,
-        // nodes,
-        // getlabels,
-        // rot,
-        // accelerations,
-        // data_and_next,
-        // verboseflag,
-        // timeout,
+        // Ten arguments must be supplied: 
+        // refnode
+        // refnoderot
+        // nodes
+        // getlabels
+        // rot
+        // accelerations
+        // data_and_next
+        // verboseflag
+        // timeout
         // sharedmemname
         nallowed.push_back (10);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
@@ -1019,7 +1019,7 @@ private:
     bool verboseflag;
     int timeout;
 	MBCType rot;
-	bool communicationInitialized;
+    bool communicationInitialized;
 
 	void checkStatus (void)
 	{
