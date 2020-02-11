@@ -827,8 +827,8 @@ classdef hydroBody < handle
             
             % check if obj.viscDrag.Drag is defined directly
             if  isfield (obj.viscDrag, 'Drag') && (any(any(obj.viscDrag.Drag)) == 1)
-                if isvector (obj.viscDrag)
-                    obj.viscDrag = diag (obj.viscDrag);
+                if isvector (obj.viscDrag.Drag)
+                    obj.viscDrag.Drag = diag (obj.viscDrag.Drag);
                 end
                 obj.hydroForce.visDrag = obj.viscDrag.Drag;                
             else
