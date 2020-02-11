@@ -46,8 +46,19 @@ public:
     {
         std::vector<int> nallowed;
 
-        // eight or nine arguments must be supplied : refnode, refnoderot,
-        //   nodes, getlabels, rot, accelerations, data_and_next, verboseflag, timeout, commethod, comstring, hostport
+        // eight or nine arguments must be supplied : 
+        // refnode
+        // refnoderot
+        // nodes
+        // getlabels
+        // rot
+        // accelerations
+        // data_and_next
+        // verboseflag
+        // timeout
+        // commethod
+        // comstring
+        // hostport
         nallowed.push_back (11);
         nallowed.push_back (12);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
