@@ -7,15 +7,39 @@ classdef sharedMemoryCommunicator < mbdyn.pre.externalFileCommunicator
     
     methods
         
-        function self = sharedMemoryCommunicator (name, create, varargin)
+        function self = sharedMemoryCommunicator (varargin)
             
             options.SleepTime = [];
             options.Coupling = [];
             options.SendAfterPredict = 'yes';
+            options.Create = [];
+            options.SharedMemoryName = 'auto';
             
             options = parse_pv_pairs (options, varargin);
             
+            if ~isempty (options.Create)
+                mbdyn.pre.base.checkAllowedStringInputs (options.Create, {'yes', 'no'}, true, 'Create');
+            end
             
+            assert (ischar (options.SharedMemoryName), 'SharedMemoryName must be a character vector');
+            
+            if strcmpi (options.SharedMemoryName, 'auto')
+                
+                if isempty (options.Create) || strcmpi (options.Create, 'no'), ...
+                    error ('If Create is ''no'' or empty, SharedMemoryName cannot be ''auto''');
+                end
+                
+                if ~mbdyn.pre.base.isOctave ()
+                    % make sure the random number seed is differrent in
+                    % different matlab instances to avoid name clashes
+                    rng('shuffle');
+                end
+                
+                % make the path with the random name
+                options.SharedMemoryName = sprintf ('mbdyn_shared_memory_%d', randi (100000) );
+                
+            end
+
             self = self@mbdyn.pre.externalFileCommunicator ( ...
                         'SleepTime', options.SleepTime, ...
                         'Coupling', options.Coupling, ...
@@ -23,15 +47,8 @@ classdef sharedMemoryCommunicator < mbdyn.pre.externalFileCommunicator
                     
             self.type = 'shared memory';
             
-            if ischar (name)
-                self.sharedMemoryName = name;
-            else
-                error ('Shared memory region name in ''name'' must be a string');
-            end
-
-            self.checkAllowedStringInputs (create, {'yes', 'no'}, true, 'Create');
-            
-            self.create = create;
+            self.sharedMemoryName = options.SharedMemoryName;
+            self.create = options.Create;
             
             self.commMethod = 'shared memory';
             
