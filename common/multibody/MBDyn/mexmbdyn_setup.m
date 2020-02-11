@@ -180,8 +180,8 @@ function mexmbdyn_setup (varargin)
     end
     
     if options.Debug
-        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-DDEBUG'}];
-        mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-DDEBUG'}];
+        mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-DDEBUG', '-g'}];
+        mexMBCNodalSharedMem_mexargs = [mexMBCNodalSharedMem_mexargs, {'-DDEBUG', '-g'}];
     end
     
     mexMBCNodal_mexargs = [mexMBCNodal_mexargs, {'-lmbc'}];
