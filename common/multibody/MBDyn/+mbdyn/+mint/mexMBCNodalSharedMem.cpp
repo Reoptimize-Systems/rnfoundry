@@ -33,6 +33,7 @@ public:
         verboseflag = false;
         timeout = -1;
         rot = MBC_ROT_MAT;
+        communicationInitialized = false;
     }
 
     ~MBCSharedMemNodal_wrapper (void)
@@ -48,16 +49,16 @@ public:
     {
         std::vector<int> nallowed;
 
-        // Ten arguments must be supplied: 
-        // refnode, 
-        // refnoderot, 
-        // nodes, 
-        // getlabels, 
-        // rot, 
-        // accelerations, 
-        // data_and_next, 
-        // verboseflag, 
-        // timeout, 
+        // Ten arguments must be supplied:
+        // refnode,
+        // refnoderot,
+        // nodes,
+        // getlabels,
+        // rot,
+        // accelerations,
+        // data_and_next,
+        // verboseflag,
+        // timeout,
         // sharedmemname
         nallowed.push_back (10);
         int nargin = mxnarginchk (nrhs, nallowed, 2);
@@ -155,11 +156,11 @@ public:
             mexErrMsgIdAndTxt ( "MBCSharedMemNodal:badrotmattype",
                "Unrecgnised node rotation type.");
         }
-        
+
 //         if (userefnode == false)
 //         {
 //             refnoderot = rot;
-//             
+//
 //             #ifdef DEBUG
 //             mexPrintf ("refnoderot changed to: %d\n", refnoderot);
 //             #endif
@@ -202,7 +203,7 @@ public:
         if (userefnode && refnoderot == MBC_ROT_NONE)
         {
             refnoderot = rot;
-            
+
             #ifdef DEBUG
             mexPrintf ("refnoderot changed to: %d\n", refnoderot);
             #endif
@@ -217,7 +218,7 @@ public:
         mbc->SetVerbose (verboseflag);
 
         mbc->SetTimeout (timeout);
-        
+
         #ifdef DEBUG
         mexPrintf ("refnoderot now: %d\n", refnoderot);
         #endif
@@ -228,14 +229,41 @@ public:
                "MBCSharedMemNodal::Initialize() failed");
         }
 
-        mbc->Init ();
-
-        /* "negotiate" configuration with MBDyn
-         * errors out if configurations are inconsistent */
-        if (mbc->Negotiate ())
+        /* initialize shared memory */
+        if (mbc->Init ())
         {
-            mexErrMsgIdAndTxt ( "MBCSharedMemNodal:inconsistantConfig",
-               "Negotiate call failed, indicating inconsistant configuration, check mbc file options etc. match options used here.");
+            mexErrMsgIdAndTxt ( "MBCSharedMemNodal:initInetCommFailure",
+            "Starting shared memory communication failed.");
+        }
+
+        // if we reach here it means communication should be established
+        communicationInitialized = true;
+
+    }
+
+    void Negotiate (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+    {
+        std::vector<int> nallowed;
+
+        nallowed.push_back (0);
+        int nargin = mxnarginchk (nrhs, nallowed, 2);
+
+        if (communicationInitialized == true)
+        {
+            /* "negotiate" configuration with MBDyn
+             * errors out if configurations are inconsistent */
+            if (mbc->Negotiate ())
+            {
+                mexErrMsgIdAndTxt ( "MBCSharedMemNodal:inconsistantConfig",
+                   "Negotiate call failed, indicating inconsistant configuration, check mbc file options etc. match options used here.");
+            }
+
+        }
+        else
+        {
+            mexErrMsgIdAndTxt ( "MBCNodal:commsnotinitialized",
+                   "Not negotiating as communication has not yet been established.");
+
         }
 
     }
@@ -991,6 +1019,7 @@ private:
     bool verboseflag;
     int timeout;
 	MBCType rot;
+	bool communicationInitialized;
 
 	void checkStatus (void)
 	{
@@ -1032,6 +1061,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      // with 'new' and created on the heap
      BEGIN_MEX_CLASS_WRAPPER(MBCSharedMemNodal_wrapper)
        REGISTER_CLASS_METHOD(MBCSharedMemNodal_wrapper,Initialize)
+       REGISTER_CLASS_METHOD(MBCSharedMemNodal_wrapper,Negotiate)
        REGISTER_CLASS_METHOD(MBCSharedMemNodal_wrapper,GetMotion)
        REGISTER_CLASS_METHOD(MBCSharedMemNodal_wrapper,GetStatus)
        REGISTER_CLASS_METHOD(MBCSharedMemNodal_wrapper,GetNodes)
