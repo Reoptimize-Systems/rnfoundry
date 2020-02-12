@@ -19,6 +19,7 @@ classdef base < handle
         shapeObjects;   % object for the element shape drawing
         needsRedraw; % track whether object needs to be redrawn
         drawAxesH; % handle to figure for plotting
+        drawFigureH;
         drawColour;
         
         
@@ -93,7 +94,7 @@ classdef base < handle
                 end
                 self.drawAxesH = hax;
                 % abandon existing shape objects and transform object
-                % TODO: should we delet objects in old axes?
+                % TODO: should we delete objects in old axes?
                 self.shapeObjects = {};
                 self.transformObject = [];
                 % we need to redraw, as we're plotting in a different set
@@ -115,13 +116,17 @@ classdef base < handle
         function makeAxes (self)
             % create axes and transform object
             
-            hfig = figure;
+            self.drawFigureH = figure;
+            
+            set (self.drawFigureH, 'Clipping', 'off');
             
             if isoctave
                 self.drawAxesH = axes;
             else
-                self.drawAxesH = axes (hfig);
+                self.drawAxesH = axes (self.drawFigureH);
             end
+            
+            set (self.drawAxesH, 'Clipping', 'off');
             
             if ~isempty (self.transformObject) && ishghandle (self.transformObject)
                 delete (self.transformObject);
