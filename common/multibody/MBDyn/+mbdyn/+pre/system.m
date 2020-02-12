@@ -939,14 +939,9 @@ classdef system < mbdyn.pre.base
                                                1:elcount.Joints );
             
             % make figure and axes if necessary
-            if isempty (options.AxesHandle)
-                hfig = figure;
-                self.drawAxesH = axes;
-            else
-                self.drawAxesH = options.AxesHandle;
-                hfig = get (self.drawAxesH, 'Parent');
-            end
+            self.checkAxes (options.AxesHandle);
             hax = self.drawAxesH;
+            hfig = self.drawFigureH;
             
             if options.References
                 if ~isempty (self.references)
