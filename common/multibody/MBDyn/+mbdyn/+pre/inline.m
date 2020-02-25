@@ -103,11 +103,11 @@ classdef inline < mbdyn.pre.twoNodeJoint
                 self.relativeLinePosition = options.RelativeLinePosition;
             end
             
-            if ~isempty (options.RelativeOrientation)
+%             if ~isempty (options.RelativeOrientation)
                 self.relativeOrientation = self.checkJointOrientationOffset ({options.OrientationReference, options.RelativeOrientation});
-            else
-                self.relativeOrientation = options.RelativeOrientation;
-            end
+%             else
+%                 self.relativeOrientation = options.RelativeOrientation;
+%             end
             
             if ~isempty (options.RelativeOffset)
                 self.relativeOffset = self.checkJointPositionOffset ({options.OffsetReference, options.RelativeOffset});
@@ -352,14 +352,14 @@ classdef inline < mbdyn.pre.twoNodeJoint
               
             % set the transform object which controls the line
             % location and orientation
-            M = [ lineorientm.orientationMatrix, linepos; ...
+            M = [ lineorientm, linepos; ...
                   0, 0, 0, 1 ];
                   
             set ( self.lineTransformObj, 'Matrix', M );
             
             % set the transform object which controls the point cylinder
             % location and orientation
-            M = [ lineorientm.orientationMatrix, pointpos; ...
+            M = [ lineorientm, pointpos; ...
                   0, 0, 0, 1 ];
                   
             set ( self.transformObject, 'Matrix', M );
