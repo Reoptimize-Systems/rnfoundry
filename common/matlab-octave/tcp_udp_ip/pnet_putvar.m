@@ -13,7 +13,7 @@ function pnet_putvar(con,varargin)
 %  
 
   
-%   This file(s) is part of the tcp_udp_ip toolbox (C) Peter Rydesäter et al.  
+%   This file(s) is part of the tcp_udp_ip toolbox (C) Peter Rydesï¿½ter et al.  
 %   et al.  1998-2003 for running in MATLAB(R) as scripts and/or plug-ins.
 %
 %   This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ function pnet_putvar(con,varargin)
 %   along with this program; if not, write to the Free Software
 %   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 %
-%   In addition, as a SPECIAL EXCEPTION, Peter Rydesäter, SWEDEN,
+%   In addition, as a SPECIAL EXCEPTION, Peter Rydesï¿½ter, SWEDEN,
 %   gives permission to link the code of this program with any library,
 %   and distribute linked combinations of it. You must obey the GNU
 %   General Public License in all respects for all of the code in the
@@ -41,30 +41,46 @@ function pnet_putvar(con,varargin)
 %   pnet.c (.dll) as a plug-in as it is intended and let it be (dynamical)
 %   linked to MATLAB(R) or any compiled stand alone application.
 %  
-  if length(varargin)~=1,
-    for n=1:length(varargin),
-      pnet_sendvar(con,varargin{n});
+    if length (varargin) ~= 1
+        
+        for n = 1:length (varargin)
+            
+            pnet_putvar (con, varargin{n});
+            
+        end
+        
+        return;
+        
     end
-    return;
-  end
-  VAR=varargin{1};
-  switch class(VAR),
-   case {'double' 'char' 'int8' 'int16' 'int32' 'uint8' 'uint16' 'uint32'}
-      pnet(con,'printf','\n%s\n',class(VAR));
-      pnet(con,'Write',uint32(ndims(VAR)));
-      pnet(con,'Write',uint32(size(VAR)));
-      pnet(con,'Write',VAR);
-   otherwise
-    tmpfile=[tempname,'.mat'];
-    try,
-      save(tmpfile,'VAR');
-      filedata=dir(tmpfile);
-      pnet(con,'printf','\n--matfile--\n');
-      pnet(con,'Write',uint32(filedata.bytes));
-      pnet(con,'WriteFromFile',tmpfile);
+    
+    VAR = varargin{1};
+    
+    switch class (VAR)
+        
+        case {'double' 'char' 'int8' 'int16' 'int32' 'uint8' 'uint16' 'uint32'}
+            
+            pnet (con, 'printf', '\n%s\n', class(VAR));
+            pnet (con, 'Write', uint32(ndims(VAR)));
+            pnet (con, 'Write', uint32(size(VAR)));
+            pnet (con, 'Write', VAR);
+            
+        otherwise
+            
+            tmpfile = [tempname, '.mat'];
+            
+            try
+                save (tmpfile,'VAR');
+                filedata = dir (tmpfile);
+                pnet (con, 'printf', '\n--matfile--\n');
+                pnet (con, 'Write', uint32(filedata.bytes));
+                pnet (con, 'WriteFromFile', tmpfile);
+            end
+            
+            try
+                delete(tmpfile);
+            end
+            
     end
-    try,
-      delete(tmpfile);
-    end
-  end
+    
+end
   
