@@ -1,9 +1,9 @@
-function varargout=pnet_getvar(fid)
+function varargout = pnet_getvar(fid)
 % PNET_GETVAR - Gets any matlab variable (number-, cell-, struct- or object -array) from pnet.
 %
 % Syntax:  
 %  
-%   [variable1, variable2,.....]=pnet_getvar(con)
+%   [variable1, variable2,.....] = pnet_getvar(con)
 %  
 %   Receives matlab variables over a TCP connection that was sent with
 %   PNET_PUTVAR. This variable transfer uses its own non standard protocol.
@@ -15,7 +15,7 @@ function varargout=pnet_getvar(fid)
 
 
 %
-%   This file(s) is part of the tcp_udp_ip toolbox (C) Peter Rydesäter et al.  
+%   This file(s) is part of the tcp_udp_ip toolbox (C) Peter Rydesï¿½ter et al.  
 %   et al.  1998-2003 for running in MATLAB(R) as scripts and/or plug-ins.
 %
 %   This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@ function varargout=pnet_getvar(fid)
 %   along with this program; if not, write to the Free Software
 %   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 %
-%   In addition, as a SPECIAL EXCEPTION, Peter Rydesäter, SWEDEN,
+%   In addition, as a SPECIAL EXCEPTION, Peter Rydesï¿½ter, SWEDEN,
 %   gives permission to link the code of this program with any library,
 %   and distribute linked combinations of it. You must obey the GNU
 %   General Public License in all respects for all of the code in the
@@ -44,35 +44,77 @@ function varargout=pnet_getvar(fid)
 %   linked to MATLAB(R) or any compiled stand alone application.
 %  
   
-  if nargout~=1,
-    for n=1:nargout,
-      varargout{n}=pnet_getvar(fid);
+    if nargout ~= 1
+        
+        for n = 1:nargout
+            varargout{n} = pnet_getvar (fid);
+        end
+        
+        return;
     end
+    
+    while 1
+        % we loop until a line of input is available on the socket
+        
+        % first read the class of data being transmitted
+        dataclass = pnet (fid, 'readline', 1024);
+        
+%         fprintf (1, 'pnet_getvar: dataclass was %s\n', dataclass);
+        
+        switch dataclass
+            
+            case {'double', 'char', 'int8', 'int16', 'int32', 'uint8', 'uint16', 'uint32'}
+                
+%                 fprintf (1, 'pnet_getvar: in case {dataclasses}\n');
+                
+                % read the number of dimensions which are going to be sent
+                ndatadims = double (pnet (fid, 'Read', 1, 'uint32'));
+                
+%                 fprintf (1, 'pnet_getvar: ndatadims: %d\n', ndatadims);
+                
+                % read the actual dimensions of the variable
+                datasize = double (pnet (fid, 'Read', ndatadims, 'uint32'));
+                
+%                 fprintf (1, 'pnet_getvar: got datasize\n');
+                
+                % finally fetch the actual variable assuming the specified
+                % dimensions
+                VAR = pnet (fid, 'Read', datasize, dataclass);
+                
+%                 fprintf (1, 'pnet_getvar: VAR: %s\n', VAR);
+                
+                break;
+                
+            case '--matfile--'
+                
+                tmpfile = [tempname,'.mat'];
+                
+                VAR = [];
+                
+                try
+                    
+                    bytes = double (pnet (fid, 'Read', [1 1], 'uint32'));
+                    
+                    pnet (fid, 'ReadToFile', tmpfile, bytes);
+                    
+                    load (tmpfile);
+                    
+                end
+                try
+                    delete (tmpfile);
+                end
+                
+                break;
+                
+            otherwise
+                
+        end
+        
+    end
+    
+    varargout{1} = VAR;
+    
     return;
-  end
-  while 1,
-    dataclass=pnet(fid,'readline',1024);
-    switch dataclass,
-     case {'double' 'char' 'int8' 'int16' 'int32' 'uint8' 'uint16' 'uint32'}
-      datadims=double(pnet(fid,'Read',1,'uint32'));
-      datasize=double(pnet(fid,'Read',datadims,'uint32'));
-      VAR=pnet(fid,'Read',datasize,dataclass);
-      break;
-     case '--matfile--'
-      tmpfile=[tempname,'.mat'];
-      VAR=[];
-      try,
-	bytes=double(pnet(fid,'Read',[1 1],'uint32'));
-	pnet(fid,'ReadToFile',tmpfile,bytes);
-	load(tmpfile);
-      end
-      try,
-	delete(tmpfile);
-      end
-      break;
-     otherwise
-    end
-  end
-  varargout{1}=VAR;
-  return;
+    
+end
   
