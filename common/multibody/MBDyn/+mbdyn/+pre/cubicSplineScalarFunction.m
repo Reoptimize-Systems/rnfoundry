@@ -14,7 +14,7 @@ classdef cubicSplineScalarFunction < mbdyn.pre.scalarFunction
             %
             % Syntax
             %
-            % cssf = mbdyn.pre.cubicSplineScalarFunction (name, c)
+            % cssf = mbdyn.pre.cubicSplineScalarFunction (name, x, y)
             %
             % Description
             %
