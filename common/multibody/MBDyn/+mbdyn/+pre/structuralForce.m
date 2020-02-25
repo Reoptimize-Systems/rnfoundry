@@ -60,8 +60,13 @@ classdef structuralForce < mbdyn.pre.force
             %   follower force is defined in the reference frame of the
             %   node. The total force is intrinsically follower.
             %
-            %  force_value - mbdyn.pre.componentTplDriveCaller object with
-            %   3 components defining the force applied to the node.
+            %  force_value - either a simple three element column vector of 
+            %   constant forces to apply, or an
+            %   mbdyn.pre.componentTplDriveCaller object with 3 components
+            %   defining the force applied to the node. If a vector is
+            %   supplied this is internally converted to a
+            %   mbdyn.pre.componentTplDriveCaller object with three
+            %   mbdyn.pre.const drives.
             %
             % Additional arguments may be provided as parameter-value
             % pairs. Some are mandetory depending on the force_type value.
@@ -84,15 +89,14 @@ classdef structuralForce < mbdyn.pre.force
             % See Also: 
             %
             
-            options.Position = 'null';
-            options.PositionReference = 'node';
-            options.ForceOrientation = [];
-            options.ForceOrientationReference = 'node';
-            options.MomentValue = [];
-            options.MomentOrientation = [];
-            options.MomentOrientationReference = 'node';
+            [ options, nopass_list ] = mbdyn.pre.structuralForce.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs ( options, nopass_list);
+            
+            % call the superclass constructor
+            self = self@mbdyn.pre.force (pvpairs{:});
             
             self.checkIsStructuralNode (node, true);
             self.checkAllowedStringInputs (force_type, {'absolute', 'follower', 'total'}, true, 'force_type');
@@ -109,7 +113,20 @@ classdef structuralForce < mbdyn.pre.force
                     assert (~isempty (force_value), ...
                         'You must supply a force_value for the absolute and follower force types');
                     
-                    self.checkTplDriveCaller (force_value, true, 'force_value');
+                    if self.checkCartesianVector (force_value, false, 'force_value')
+                        
+                        force_val_vec = force_value;
+                        
+                        force_value = mbdyn.pre.componentTplDriveCaller ( { ...
+                                                mbdyn.pre.const(force_val_vec(1)), ...
+                                                mbdyn.pre.const(force_val_vec(2)), ...
+                                                mbdyn.pre.const(force_val_vec(3)) } );
+                        
+                    elseif self.checkTplDriveCaller (force_value, false, 'force_value')
+                        % do nothing
+                    else
+                        error ('force_value must be a 3 element cartesian vector or a mbdyn.pre.componentTplDriveCaller object.');
+                    end
                     self.checkCartesianVector (options.Position, true, 'Position');
                     
                     % ensure everything else is ignored
@@ -232,6 +249,30 @@ classdef structuralForce < mbdyn.pre.force
 
             str = self.addOutputLine (str, ';', 1, false, 'end structural force');
             
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [ options, nopass_list ] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.force.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            options.Position = 'null';
+            options.PositionReference = 'node';
+            options.ForceOrientation = [];
+            options.ForceOrientationReference = 'node';
+            options.MomentValue = [];
+            options.MomentOrientation = [];
+            options.MomentOrientationReference = 'node';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff (allfnames, parentfnames, 'stable');
+
         end
         
     end

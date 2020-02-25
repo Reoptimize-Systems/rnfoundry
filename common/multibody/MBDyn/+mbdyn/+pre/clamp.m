@@ -79,13 +79,14 @@ classdef clamp < mbdyn.pre.singleNodeJoint
             % See Also: 
             %
             
-            options.PositionReference = 'node';
-            options.OrientationReference = 'node';
+            [options, nopass_list] = mbdyn.pre.clamp.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.singleNodeJoint (node);
+            self = self@mbdyn.pre.singleNodeJoint (node, pvpairs{:});
             
             self.type = 'clamp';
             self.posIsNode = false;
@@ -252,6 +253,23 @@ classdef clamp < mbdyn.pre.singleNodeJoint
         
     end
     
-    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.singleNodeJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            options.PositionReference = 'node';
+            options.OrientationReference = 'node';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff (allfnames, parentfnames, 'stable');
+            
+        end
+        
+    end
     
 end

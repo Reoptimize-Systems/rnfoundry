@@ -11,7 +11,16 @@ classdef force < mbdyn.pre.element
     
     methods
         
-        function self = force ()
+        function self = force (varargin)
+            
+            [ options, nopass_list ] = mbdyn.pre.force.defaultConstructorOptions ();
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs ( options, nopass_list);
+            
+            % call the superclass constructor
+            self = self@mbdyn.pre.element (pvpairs{:} );
             
             self.type = 'force';
             self.netCDFName = 'force';
@@ -35,6 +44,18 @@ classdef force < mbdyn.pre.element
     end
     
     methods (Access = protected)
+        
+    end
+    
+    methods (Static)
+        
+        function [ options, nopass_list ] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.element.defaultConstructorOptions ();
+            
+            nopass_list = {};
+            
+        end
         
     end
     

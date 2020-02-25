@@ -78,21 +78,13 @@ classdef structuralInternalForce < mbdyn.pre.force
             %
             %
             
-            options.Position1 = [];
-            options.Position1Reference = 'node';
-            options.Position2 = [];
-            options.Position2Reference = 'node';
-            options.ForceOrientation1 = [];
-            options.ForceOrientation1Reference = 'node';
-            options.ForceOrientation2 = [];
-            options.ForceOrientation2Reference = 'node';
-            options.MomentValue = [];
-            options.MomentOrientation1 = [];
-            options.MomentOrientation1Reference = 'node';
-            options.MomentOrientation2 = [];
-            options.MomentOrientation2Reference = 'node';
+            [options, nopass_list] = mbdyn.pre.structuralInternalForce.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
+            self = self@mbdyn.pre.force (pvpairs{:});
             
             self.checkIsStructuralNode (node1, true);
             self.checkIsStructuralNode (node2, true);
@@ -267,6 +259,36 @@ classdef structuralInternalForce < mbdyn.pre.force
             end
 
             str = self.addOutputLine (str, ';', 1, false, 'end structural force');
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.force.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            options.Position1 = [];
+            options.Position1Reference = 'node';
+            options.Position2 = [];
+            options.Position2Reference = 'node';
+            options.ForceOrientation1 = [];
+            options.ForceOrientation1Reference = 'node';
+            options.ForceOrientation2 = [];
+            options.ForceOrientation2Reference = 'node';
+            options.MomentValue = [];
+            options.MomentOrientation1 = [];
+            options.MomentOrientation1Reference = 'node';
+            options.MomentOrientation2 = [];
+            options.MomentOrientation2Reference = 'node';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff (allfnames, parentfnames, 'stable');
             
         end
         

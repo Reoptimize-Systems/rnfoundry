@@ -37,9 +37,13 @@ classdef stringDrive < mbdyn.pre.drive
             % See Also: 
             %
             
-            options.LabelRepObjects = {};
+            [options, nopass_list] = mbdyn.pre.stringDrive.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
+            
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
+            self = self@mbdyn.pre.drive (pvpairs{:});
 
             if ~ischar (string)
                 error ('''string'' must be a char array')
@@ -67,6 +71,24 @@ classdef stringDrive < mbdyn.pre.drive
             end
             
             str = self.commaSepList (self.type, ['"', drivestr, '"']);
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.drive.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            options.LabelRepObjects = {};
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff (allfnames, parentfnames, 'stable');
             
         end
         
