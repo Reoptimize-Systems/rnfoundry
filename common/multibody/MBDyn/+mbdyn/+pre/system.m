@@ -33,6 +33,8 @@ classdef system < mbdyn.pre.base
 %   addNodes - adds nodes to the system
 %   addProblems - adds problems to the system
 %   addVariables - adds variables to the system
+%   addPluginVariables - 
+%   addScalarFunctions - 
 %   draw - draws the system in a figure window
 %   externalStructuralCommInfo - returns information about the
 %     communication method used in any external structural force element
@@ -79,6 +81,8 @@ classdef system < mbdyn.pre.base
        drivers;
        elements;
        variables;
+       pluginVariables;
+       scalarFunctions;
         
     end
     
@@ -234,7 +238,9 @@ classdef system < mbdyn.pre.base
             options.Nodes = {};
             options.Elements = {};
             options.Variables = {};
+            options.PluginVariables = {};
             options.DriveCallers = {};
+            options.ScalarFunctions = {};
             options.DefaultOutput = {};
             options.DefaultOrientation = '';
             options.References = {};
@@ -268,8 +274,16 @@ classdef system < mbdyn.pre.base
                 self.addVariables (options.Variables);
             end
             
+            if ~isempty (options.PluginVariables)
+                self.addPluginVariables (options.PluginVariables);
+            end
+            
             if ~isempty (options.DriveCallers)
                 self.addDriveCallers (options.DriveCallers);
+            end
+            
+            if ~isempty (options.ScalarFunctions)
+                self.addScalarFunctions (options.ScalarFunctions);
             end
             
             if ~isempty (options.References)
@@ -486,6 +500,22 @@ classdef system < mbdyn.pre.base
             
         end
         
+        function addPluginVariables (self, plugin_variables)
+            
+            plugin_variables = self.makeCellIfNot (plugin_variables);
+            
+            % ensure it's a row vector
+            plugin_variables = reshape (plugin_variables, 1, []);
+            
+            % remove empty
+            plugin_variables(cellfun('isempty',plugin_variables)) = [];
+            
+            self.checkCellArrayClass (plugin_variables, 'mbdyn.pre.pluginVariable');
+            
+            self.pluginVariables = [self.pluginVariables, plugin_variables];
+            
+        end
+        
         function addDriveCallers (self, drives)
             
             drives = self.makeCellIfNot (drives);
@@ -504,21 +534,21 @@ classdef system < mbdyn.pre.base
             
         end
         
-        function addDrivers (self, drivers)
+        function addScalarFunctions (self, sf)
             
-            drivers = self.makeCellIfNot (drivers);
+            sf = self.makeCellIfNot (sf);
             
             % ensure it's a row vector
-            drivers = reshape (drivers, 1, []);
+            sf = reshape (sf, 1, []);
             
             % remove empty
-            drivers(cellfun('isempty', drivers)) = [];
+            sf(cellfun('isempty', sf)) = [];
+
+            self.checkCellArrayClass (sf, 'mbdyn.pre.scalarFunction');
             
-            self.checkCellArrayClass (drivers, 'mbdyn.pre.driver');
+            self.scalarFunctions = [self.scalarFunctions, sf];
             
-            self.drivers = [self.drivers, drivers];
-            
-            self.drivers = self.uniqueCells (self.drivers);
+            self.scalarFunctions = self.uniqueCells (self.scalarFunctions);
             
         end
         
@@ -1310,6 +1340,26 @@ classdef system < mbdyn.pre.base
             str = self.addOutputLine (str , 'end: nodes;', 0, false);
             
             str = sprintf ('%s\n', str);
+            
+            %% plugin variables
+            if numel (self.pluginVariables) > 0
+
+                for ind = 1:numel (self.pluginVariables)
+                    str = sprintf ('%s\n%s\n', str, self.pluginVariables{ind}.generateMBDynInputString ());
+                end
+                
+                str = sprintf ('%s\n', str);
+            end
+            
+            %% scalar functions
+            if numel (self.scalarFunctions ) > 0
+
+                for ind = 1:numel (self.scalarFunctions)
+                    str = sprintf ('%s\nscalar function : %s ;\n', str, self.scalarFunctions{ind}.generateMBDynInputString ());
+                end
+                
+                str = sprintf ('%s\n', str);
+            end
 
             %% variables
             if numel (self.variables) > 0
