@@ -189,6 +189,9 @@ classdef waveSettings < handle
         %   current is not calculated for any depths greater than the
         %   specified currentDepth. (Default = 0).
         currentDepth = 0;
+        
+        
+        ignoreFrequencyBands = [];
     end
     
     % The following properties are for internal use
@@ -415,10 +418,26 @@ classdef waveSettings < handle
                                 obj.numFreq = 1000;
                             end
                             obj.w = (WFQSt:(WFQEd-WFQSt)/(obj.numFreq-1):WFQEd)';
-                            obj.dw= ones(obj.numFreq,1).*(WFQEd-WFQSt)./(obj.numFreq-1);
+
+                            if ~isempty (obj.ignoreFrequencyBands)
+                                for ind = 1:size (obj.ignoreFrequencyBands, 1)
+                                    obj.w(obj.w > obj.ignoreFrequencyBands(ind,1) && obj.w < obj.ignoreFrequencyBands(ind,2)) = [];
+                                end
+                                obj.dw = mean(diff(obj.w));
+                            else
+                                obj.dw= ones(obj.numFreq,1).*(WFQEd-WFQSt)./(obj.numFreq-1);
+                            end
+                            
                         case {'EqualEnergy'}
                             numFreq_interp = 500000;
                             obj.w = (WFQSt:(WFQEd-WFQSt)/numFreq_interp:WFQEd)';
+                            
+                            if ~isempty (obj.ignoreFrequencyBands)
+                                for ind = 1:size (obj.ignoreFrequencyBands, 1)
+                                    obj.w(obj.w >= obj.ignoreFrequencyBands(ind,1) && obj.w <= obj.ignoreFrequencyBands(ind,2)) = [];
+                                end
+                            end
+                            
                             obj.dw = mean(diff(obj.w));
                             if isempty(obj.numFreq)
                                 obj.numFreq = 500;
@@ -428,6 +447,13 @@ classdef waveSettings < handle
                             freq_data = data(:,1);
                             freq_loc = freq_data>=min(obj.bemFreq)/2/pi & freq_data<=max(obj.bemFreq)/2/pi;
                             obj.w    = freq_data(freq_loc).*2.*pi;
+                            
+                            if ~isempty (obj.ignoreFrequencyBands)
+                                for ind = 1:size (obj.ignoreFrequencyBands, 1)
+                                    obj.w(obj.w > obj.ignoreFrequencyBands(ind,1) && obj.w < obj.ignoreFrequencyBands(ind,2)) = [];
+                                end
+                            end
+                                
                             obj.numFreq = length(obj.w);
                             obj.dw(1,1)= obj.w(2)-obj.w(1);
                             obj.dw(2:obj.numFreq-1,1)=(obj.w(3:end)-obj.w(1:end-2))/2;
