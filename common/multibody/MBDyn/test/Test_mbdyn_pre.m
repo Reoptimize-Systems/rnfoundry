@@ -43,6 +43,25 @@ tmp = mbdyn.pre.variable ( 'real', 'var1', ...
 
 tmp.generateMBDynInputString ()
 
+%% Plugin Variable
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+tmp = mbdyn.pre.pluginVariable ( sn1, 'the_variable_name', 'X[3]' );
+
+tmp.generateMBDynInputString ()
+
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+sn2 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+jnt = mbdyn.pre.revoluteRotation (sn1, sn2);
+
+tmp = mbdyn.pre.pluginVariable ( jnt, 'the_variable_name', 'rz' );
+
+tmp.generateMBDynInputString ()
+
+
 
 %% mbdyn.pre.matrixFreeSolver('bicgstab')
 
