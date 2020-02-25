@@ -46,7 +46,7 @@ classdef externalStructuralForce < mbdyn.pre.force
             %
             %  nodeoffsets - array of structures describing any force
             %   offsets for any of the nodes provided in the in nodes
-            %   input. The structures contain the follwoing fields:
+            %   input. The structures contain the following fields:
             %
             %    NodeInd : the index of the node in the 'nodes' cell array
             %     for which this offset is specified.
@@ -225,6 +225,12 @@ classdef externalStructuralForce < mbdyn.pre.force
             self.echo = options.Echo;
             self.communicator = communicator;
             self.nodeOffsets = nodeoffsets;
+            
+        end
+        
+        function addNodes (self, nodes, nodeoffsets)
+            
+            
             
         end
         
