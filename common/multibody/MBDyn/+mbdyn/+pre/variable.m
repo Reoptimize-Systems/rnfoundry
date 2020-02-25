@@ -88,6 +88,9 @@ classdef variable < mbdyn.pre.base
             %    assignment. This also means the variable must be assigned
             %    a value, and cannot be left uninitialised.
             %
+            %  'LabelRepObjects' - 
+            %
+            %
             % Output
             %
             %  var - mbdyn.pre.variable object
