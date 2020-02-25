@@ -1267,7 +1267,50 @@ classdef body < nemoh.base
         
         function writeSTL (self, filename, varargin)
             % writes a triangle mesh of the body to an STL file
-            
+            %
+            % Syntax
+            %
+            % nemoh.body.writeSTL (bd, filename)
+            % nemoh.body.writeSTL (..., 'Parameter', Value)
+            %
+            % Description
+            %
+            % writeSTL creates an triangle STL file from the mesh. It does
+            % this by splitting quads in half. If the mesh is an
+            % axismmetric mesh it is by default completed into a full 360
+            % degree sweep before writing to the STL. By default the mesh
+            % is also translated such that the centre of gravity of the
+            % body lies at (0,0). This is done as this is how the time
+            % domain EWST solver expects it to be defined. Both of these
+            % defaults can be changed using optional parameters described
+            % below.
+            %
+            % Internally if the body's triMesh property is empty, writeSTL
+            % calls makeTriMeshFromQuads to create it, so the triangle
+            % mesh, before centre of gravity adjustment, is stored in the
+            % triMesh property and can be plotted with drawTriMesh. If
+            % triMesh is already populated, writeSTL doesn't call it again,
+            % but uses the existing mesh.
+            %
+            % Input
+            %
+            %  bd - nemoh.body object
+            %
+            %  filename - fill path to the stl file to be created
+            %
+            % Addtional arguments may be supplied as parameter-value pairs.
+            % The available options are:
+            %
+            %  'ShiftCoGToOrigin' - true/false flag indicating whether the
+            %    mesh written to the STL file will be translated such that
+            %    th body centre of gravity lies on the origin (0,0).
+            %    Default is true.
+            %
+            %  'CompleteAxiMesh' - true/false flag indicating whether
+            %    axisymmetric meshes which by default are only a half mesh
+            %    will be converted to a full mesh when exported to STL.
+            %
+
             options.ShiftCoGToOrigin = true;
             options.CompleteAxiMesh = true;
             
@@ -1386,7 +1429,7 @@ classdef body < nemoh.base
             end
             
             if status ~= 0
-                error ('mesh processing failed with error code %d', status);
+                error ('mesh processing failed with error code %d and messge: "%s"', status, result);
             end
 
             % move the mesh file to the top level input directory for NEMOH
@@ -2300,7 +2343,7 @@ classdef body < nemoh.base
 
         end
         
-        function addCircleSurfMesh (self, r, z1, z2, ner, axi, revquads)
+        function addCircleSurfMesh (self, r, z1, z2, ner, axi, revquads, f)
             
             % ner - Elements in radius
             % r - Outer radius of disc
@@ -2316,7 +2359,9 @@ classdef body < nemoh.base
                 revquads = false;
             end
             
-            f = 0.5;
+            if nargin < 8
+                f = 0.8;
+            end
             
             % Create the 2D mesh
             [Fc, Vc, ~, indEdge] = discQuadMesh (ner, r, f);
