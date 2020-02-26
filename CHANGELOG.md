@@ -7,21 +7,38 @@ This project adheres to [Keep a Changelog](http://keepachangelog.com/).
 ---
 
 ### New
+
+### Changes
+* MBDYN: allow 'Name' option for more elements, e.g. structuralForce
+
+### Fixes
+* MBDYN: don't use 'stable' option for setdiff for Octave compatibility
+* EWST: work around Octave bug #56172 in wsim.hydroSystem 
+* correct CHANGELOG.md
+
+### Breaks
+
+
+## [2.1.0] - 2020-02-26
+---
+
+### New
 * MBDyn: added cuboidalbody convenience class
 * MBDyn: added pipeBody convenience class
 
 ### Changes
 * MBDyn: added ability to plot node labels in preprocessor visualisation
 * MBDYN: added problem assembly related options UseInAssembly and AssemblyTolerance
-* MBDyn: added get*ByLabel methods for mbdyn.pre.system
+* MBDYN: added get*ByLabel methods for mbdyn.pre.system
 * MBDYN: report component names in output of mbdyn.postproc.displayNetCDFVarNames
+* MBDYN: add support for plugin variables
+* MBDYN: Allow non-inline scalar function declaration
 * Now return index of matching string in checkAllowedStrings functions
 * EWST: allow empty PTOs to be ignored by wsim.wecSim
 
 
 ### Fixes
 * EWST: +wsim/linearPowerTakeOff.m: correct input args in help text
-
 
 ### Breaks
 
