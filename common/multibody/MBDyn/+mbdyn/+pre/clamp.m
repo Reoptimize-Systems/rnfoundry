@@ -266,7 +266,7 @@ classdef clamp < mbdyn.pre.singleNodeJoint
             
             allfnames = fieldnames (options);
             
-            nopass_list = setdiff (allfnames, parentfnames, 'stable');
+            nopass_list = setdiff (allfnames, parentfnames);
             
         end
         
