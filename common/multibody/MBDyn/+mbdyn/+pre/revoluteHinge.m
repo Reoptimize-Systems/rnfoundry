@@ -297,7 +297,7 @@ classdef revoluteHinge < mbdyn.pre.twoNodeOffsetJoint
             
             allfnames = fieldnames (options);
             
-            C = setdiff (allfnames, parentfnames, 'stable');
+            C = setdiff (allfnames, parentfnames);
             
             nopass_list = [ { 'RelativeOffset1'; ...
                               'RelativeOffset2' }; ...
