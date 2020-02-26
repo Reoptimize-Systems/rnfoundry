@@ -624,8 +624,10 @@ classdef hydroSystem < handle
                         % remove some fields which change size for every
                         % body
                         rem_inds = find (strcmp ('WaveNonLinearPressure', fnames));
-                        rem_inds = [ rem_inds, find(strcmp ('WaveLinearPressure', fnames))];
-                        rem_inds = [ rem_inds, find(strcmp ('BodyHSPressure', fnames))];
+                        fnames(rem_inds) = [];
+                        rem_inds = find (strcmp ('WaveLinearPressure', fnames));
+                        fnames(rem_inds) = [];
+                        rem_inds = find (strcmp ('BodyHSPressure', fnames));
                         fnames(rem_inds) = [];
                     end
 
