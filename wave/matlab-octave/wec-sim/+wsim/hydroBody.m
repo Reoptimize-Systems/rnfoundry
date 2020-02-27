@@ -3360,6 +3360,40 @@ classdef hydroBody < handle
         end
         
         function v = linearInterp (x1, x2, y1, y2, u)
+            % linearInterp simple linear interpolation with no input checking
+            %
+            % Syntax
+            %
+            % v = wsim.hydroBody.linearInterp (x1, x2, y1, y2, u)
+            %
+            % Description
+            %
+            % wsim.hydroBody.linearInterp returns a simple linear
+            % interpolation with extrapolation without any input checking
+            % for speed. A linear function is created from two input data
+            % points on the line, (x1,y1) and (x2,y2).
+            %
+            % Input
+            %
+            %  x1 - x coordinate of first data point on line
+            %
+            %  x2 - x coordinate of second data point on line
+            %
+            %  y1 - y coordinate of first data point on line
+            %
+            %  y2 - y coordinate of second data point on line
+            %
+            %  u - x coordinate(s) at which to perform the interpolation
+            %
+            % Output
+            %
+            %  v - value of linear finction at interpolation points in u.
+            %
+            %
+            %
+            % See also: wsim.hydroBody.lagrangeInterp
+            %
+            %
             
             m = (y2 - y1) ./ (x2 - x1);
             c = y1 - m.*x1;
