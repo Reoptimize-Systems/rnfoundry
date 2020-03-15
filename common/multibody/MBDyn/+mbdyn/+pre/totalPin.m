@@ -90,29 +90,14 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
         % See Also: mbdyn.pre.totalJoint
         %
             
-            options.RelativeOffset = [];
-            options.RelativeOffsetReference = 'node';
-            options.RelativePositionOrientation =  [];
-            options.RelativePositionOrientationReference = 'node';
-            options.RelativeRotOrientation =  [];
-            options.RelativeRotOrientationReference = 'node';
-            
-            options.AbsolutePosition = [];
-            options.AbsolutePositionReference = 'global';
-            options.AbsolutePositionOrientation =  [];
-            options.AbsolutePositionOrientationReference = 'global';
-            options.AbsoluteRotOrientation =  [];
-            options.AbsoluteRotOrientationReference = 'global';
-            
-            options.PositionStatus = {};
-            options.ImposedAbsolutePosition = 'null';
-            options.OrientationStatus = {};
-            options.ImposedAbsoluteOrientation = 'null';
+            [options, nopass_list] = mbdyn.pre.totalPin.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.singleNodeJoint (node);
+            self = self@mbdyn.pre.singleNodeJoint (node, pvpairs{:});
             
             self.type = 'total pin joint';
             
@@ -526,6 +511,40 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
         
     end
     
-    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.singleNodeJoint.defaultConstructorOptions ();
+            
+            parentfnames = fieldnames (options);
+            
+            % add default options common to all totalPin objects
+            options.RelativeOffset = [];
+            options.RelativeOffsetReference = 'node';
+            options.RelativePositionOrientation =  [];
+            options.RelativePositionOrientationReference = 'node';
+            options.RelativeRotOrientation =  [];
+            options.RelativeRotOrientationReference = 'node';
+            
+            options.AbsolutePosition = [];
+            options.AbsolutePositionReference = 'global';
+            options.AbsolutePositionOrientation =  [];
+            options.AbsolutePositionOrientationReference = 'global';
+            options.AbsoluteRotOrientation =  [];
+            options.AbsoluteRotOrientationReference = 'global';
+            
+            options.PositionStatus = {};
+            options.ImposedAbsolutePosition = 'null';
+            options.OrientationStatus = {};
+            options.ImposedAbsoluteOrientation = 'null';
+            
+            allfnames = fieldnames (options);
+            
+            nopass_list = setdiff(allfnames, parentfnames);
+            
+        end
+        
+    end 
     
 end

@@ -88,7 +88,7 @@ classdef stringDrive < mbdyn.pre.drive
             
             allfnames = fieldnames (options);
             
-            nopass_list = setdiff (allfnames, parentfnames, 'stable');
+            nopass_list = setdiff (allfnames, parentfnames);
             
         end
         

@@ -271,7 +271,7 @@ classdef structuralForce < mbdyn.pre.force
             
             allfnames = fieldnames (options);
             
-            nopass_list = setdiff (allfnames, parentfnames, 'stable');
+            nopass_list = setdiff (allfnames, parentfnames);
 
         end
         

@@ -29,6 +29,7 @@ function total_joint = pinOneNode (node, varargin)
     options.ClampRotX = true;
     options.ClampRotY = true;
     options.ClampRotZ = true;
+    options.Name = '';
     
     options = parse_pv_pairs (options, varargin);
     
@@ -43,6 +44,7 @@ function total_joint = pinOneNode (node, varargin)
                                        'RelativeOffsetReference', 'node', ...
                                        'AbsolutePosition', 'null', ...
                                        'AbsolutePositionReference', 'node', ...
-                                       'ImposedAbsolutePosition', drv_position );
+                                       'ImposedAbsolutePosition', drv_position, ...
+                                       'Name', options.Name );
 
 end

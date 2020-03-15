@@ -15,7 +15,7 @@ classdef linearScalarFunction < mbdyn.pre.scalarFunction
             %
             % Syntax
             %
-            % lsf = mbdyn.pre.linearScalarFunction (name, c)
+            % lsf = mbdyn.pre.linearScalarFunction (name, x1, y1, x2, y2)
             %
             % Description
             %

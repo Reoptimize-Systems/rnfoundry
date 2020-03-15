@@ -206,6 +206,7 @@ classdef tether < mbdyn.pre.base
             self.node2 = node2;
             self.springConstant = options.SpringConstant;
             self.zeroForceDistance = options.ZeroForceDistance;
+            self.name = options.Name;
             
         end
         
