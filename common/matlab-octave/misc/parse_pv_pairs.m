@@ -76,14 +76,17 @@ function params = parse_pv_pairs(params,pv_pairs)
       p_i = lower(pv_pairs{2*i-1});
       v_i = pv_pairs{2*i};
 
-      ind = strmatch(p_i,lpropnames,'exact');
-      if isempty(ind)
+      result = strcmp(p_i,lpropnames);
+      if ~any(result)
+        % check for partial match
         ind = find(strncmp(p_i,lpropnames,length(p_i)));
         if isempty(ind)
           error(['No matching property found for: ',pv_pairs{2*i-1}])
         elseif length(ind)>1
           error(['Ambiguous property name: ',pv_pairs{2*i-1}])
         end
+      else
+        ind = find (result);
       end
       p_i = propnames{ind};
 
