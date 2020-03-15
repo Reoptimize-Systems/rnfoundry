@@ -45,7 +45,7 @@ classdef deformableDisplacementJoint < mbdyn.pre.twoNodeOffsetJoint
             %
             %  offset2 - (3 x 1) vector containing the offset of the joint
             %    relative to the second node. To provide an alternative
-            %    reference you can use the optional Offset1Reference
+            %    reference you can use the optional Offset2Reference
             %    parameter (see below). Can also be the keyword 'null'.
             %
             %
