@@ -22,14 +22,14 @@ else
     isSolid = strcmp(header(1:min(5,length(header))),'solid'); % take first 5 char
     fseek(fid,-80,1); % go to the end of the file minus 80 characters
     tail = char(fread(fid,80,'uchar')');
-    isEndSolid = findstr(tail,'endsolid');
+    isEndSolid = strfind(tail,'endsolid');
     
     % Double check by reading the last 80 characters of the file.
     % For an ASCII file, the data should end (give or take a few
     % blank lines or spaces) with 'endsolid <object_name>'.
     % If the last 80 characters contains the word 'endsolid' then this
     % confirms that the file is indeed ASCII.
-    if isSolid & isEndSolid
+    if isSolid && isEndSolid
         format = 'ascii';
     else
         format = 'binary';
