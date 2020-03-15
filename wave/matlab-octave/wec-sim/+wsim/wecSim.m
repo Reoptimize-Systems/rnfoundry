@@ -93,6 +93,12 @@ classdef wecSim < handle
         
         mBDynSystem;
         hydroSystem;
+        
+        stepCount;
+        hydroSyncMinSteps;
+        prevForceAndMomentsHydro;
+        prevTime;
+        
     end
 
     properties (GetAccess = private, SetAccess = private)
@@ -102,6 +108,7 @@ classdef wecSim < handle
         
         hydroMotionSyncStep = 1;
         hydroMotionSyncStepCount = 1;
+        firstApplyHydroCallThisStep = true;
         simStepCount;
         mBDynMBCNodal;
         outputFilePrefix;
@@ -270,46 +277,56 @@ classdef wecSim < handle
                 assert (isa (pto, 'wsim.powerTakeOff'), ...
                     'pto must be a wsim.powerTakeOff object (or derived class)');
 
-                % check that the PTO nodes are in the MBDyn system external
-                % structual force element
-                strinfo = self.mBDynSystem.externalStructuralInfo ();
+                has_ext_force = mBDynSysHasExtForce (self);
+                
+                if has_ext_force
+                    
+                    % if there is already an external structural force in
+                    % the MBDyn system, check that the PTO nodes are in the
+                    % MBDyn system external structual force element.
+                    % If there's not external structural force, one will be
+                    % added by the 'prepare' method before simulation
+                    % begins.
+                    strinfo = self.mBDynSystem.externalStructuralInfo ();
 
-                for ptoind = 1:numel(self.powerTakeOffs)
+                    for ptoind = 1:numel(self.powerTakeOffs)
 
-                    foundptonode = false;
-                    for nodeind = 1:numel (strinfo.Nodes)
+                        foundptonode = false;
+                        for nodeind = 1:numel (strinfo.Nodes)
 
-                        if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.referenceNode
+                            if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.referenceNode
 
-                            foundptonode = true;
+                                foundptonode = true;
 
-                            break;
+                                break;
 
-                        end
-
-                    end
-
-                    if foundptonode == false
-                        error ('Could not find reference node for new PTO in MBDyn system structural external force element');
-                    end
-
-                    foundptonode = false;
-                    for nodeind = 1:numel (strinfo.Nodes)
-
-                        if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.otherNode
-
-                            foundptonode = true;
-
-                            break;
+                            end
 
                         end
 
-                    end
+                        if foundptonode == false
+                            error ('Could not find reference node for new PTO in MBDyn system structural external force element');
+                        end
 
-                    if foundptonode == false
-                        error ('Could not find non-reference node for new PTO in MBDyn system structural external force element');
-                    end
+                        foundptonode = false;
+                        for nodeind = 1:numel (strinfo.Nodes)
 
+                            if strinfo.Nodes{nodeind} == self.powerTakeOffs{ptoind}.otherNode
+
+                                foundptonode = true;
+
+                                break;
+
+                            end
+
+                        end
+
+                        if foundptonode == false
+                            error ('Could not find non-reference node for new PTO in MBDyn system structural external force element');
+                        end
+
+                    end
+                
                 end
 
                 % append it to the existing PTO objects
@@ -347,15 +364,70 @@ classdef wecSim < handle
             % See Also: wsim.wecSim.run
             %
 
-            self.mapPTOForceInds ();
-            self.mapHydroForceInds ();
-            self.initDataStructures ();
-
             if ~isempty (self.wecController)
                 % give the controller access to this object so it can get
                 % the data
                 self.wecController.wecSimObj = self;
             end
+            
+            has_ext_force = false;
+            for ind = 1:numel (self.mBDynSystem.elements)
+                
+                if isa (self.mBDynSystem.elements{ind}, 'mbdyn.pre.externalStructuralForce')
+                    
+                    has_ext_force = true;
+                    break;
+                    
+                end
+                
+            end
+            
+            if ~has_ext_force
+                
+                if ispc ()
+                    % create an appropriate method of communication for the
+                    % matlab-mbdyn link for a windows system
+                    communicator = mbdyn.pre.socketCommunicator ('Port', 5500, ...
+                                                                 'Coupling', 'tight', ...
+                                                                 'Create', 'yes', ...
+                                                                 'SleepTime', 0, ...
+                                                                 'SendAfterPredict', 'no');
+                else
+                    % create an appropriate method of communication for the
+                    % matlab-mbdyn link for a non-windows system
+                    communicator = mbdyn.pre.socketCommunicator ('Path', 'auto', ...
+                                                                 'Coupling', 'tight', ...
+                                                                 'Create', 'yes', ...
+                                                                 'SleepTime', 0, ...
+                                                                 'SendAfterPredict', 'no');
+                end
+                
+                % get all pto nodes
+                pto_nodes = cell (1, 2*numel (self.powerTakeOffs));
+                for ind = 1:numel (self.powerTakeOffs)
+                    pto_nodes{2*ind - 1} = self.powerTakeOffs{ind}.referenceNode;
+                    pto_nodes{2*ind} = self.powerTakeOffs{ind}.otherNode;
+                end
+                
+                % add an external sturctural force with the bydro and pto
+                % nodes
+                ext_force = mbdyn.pre.externalStructuralForce ( [ self.hydroSystem.bodyMBDynNodes, pto_nodes ], ...
+                                                                [], ...
+                                                                communicator, ...
+                                                                'Labels', 'no', ...
+                                                                'Sorted', 'yes', ...
+                                                                'Orientation', 'orientation matrix' );
+                                                               
+                                                               
+                self.mBDynSystem.addElements (ext_force);
+
+            end
+            
+            % now that there's definately a structural external force in
+            % the system, map the PTO and Hydro force node inds
+            self.mapPTOForceInds ();
+            self.mapHydroForceInds ();
+            self.initDataStructures ();
 
             % TODO: check if NEMOH data needs updated
 
@@ -709,6 +781,7 @@ classdef wecSim < handle
             options.MinIterations = 0;
             options.MaxIterations = self.mBDynSystem.problems{1}.maxIterations;
             options.HydroMotionSyncSteps = 1;
+            options.HydroMotionSyncMinSteps = [];
             options.ForceMBDynNetCDF = true;
             options.SyncMBDynNetCDF = false;
             options.ShowProgress = false;
@@ -785,6 +858,11 @@ classdef wecSim < handle
                 options.MinIterations,  options.MaxIterations)
 
             check.isPositiveScalarInteger (options.HydroMotionSyncSteps, true, 'HydroMotionSyncSteps');
+            
+            if isempty (options.HydroMotionSyncMinSteps)
+                options.HydroMotionSyncMinSteps = options.HydroMotionSyncSteps * 3;
+            end
+            check.isPositiveScalarInteger (options.HydroMotionSyncMinSteps, true, 'HydroMotionSyncMinSteps');
 
             check.isLogicalScalar (options.ForceMBDynNetCDF, true, 'ForceMBDynNetCDF');
             check.isLogicalScalar (options.SyncMBDynNetCDF, true, 'SyncMBDynNetCDF');
@@ -815,6 +893,8 @@ classdef wecSim < handle
                     self.mBDynSystem.controlData.OutputResults = [self.mBDynSystem.controlData.OutputResults, {'no text'}];
                 end
             end
+            
+            self.stepCount = 0;
 
             self.hydroMotionSyncStep = options.HydroMotionSyncSteps;
             % set the hydro--mbdyn motion sync step count equal to the
@@ -822,6 +902,7 @@ classdef wecSim < handle
             % first time applyHydroForces is called (where this step count
             % is used)
             self.hydroMotionSyncStepCount = self.hydroMotionSyncStep;
+            self.hydroSyncMinSteps = options.HydroMotionSyncMinSteps;
 
             self.simInfo.TStart = self.mBDynSystem.problems{1}.initialTime;
             self.simInfo.TEnd = self.mBDynSystem.problems{1}.finalTime;
@@ -940,7 +1021,7 @@ classdef wecSim < handle
             % The node positions etc. are updated by the call to
             % mb.GetMotion (). This is possible because all PTO objects
             % also have access to the same mbsys object
-            forces_and_moments = self.applyPTOForces (forces_and_moments);
+            forces_and_moments = self.applyPTOForces (forces_and_moments, self.lastTime);
 
             % set the new forces an moments ready to be sent to MBDyn
             self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
@@ -985,7 +1066,7 @@ classdef wecSim < handle
                 return;
             end
 
-            self.lastTime = self.lastTime + self.mBDynSystem.problems{1}.timeStep;
+            currentTime = self.lastTime + self.mBDynSystem.problems{1}.timeStep;
 
             % get the current motion of the multibody system
             [pos, vel, accel] = self.getMotion (self.mBDynMBCNodal);
@@ -994,10 +1075,11 @@ classdef wecSim < handle
 
             % calculate new hydrodynamic interaction forces (also
             % updates self.lastForceHydro with new values)
-            forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
-
+            self.firstApplyHydroCallThisStep = true;
+            forces_and_moments = self.applyHydroForces (forces_and_moments, currentTime, pos, vel, accel);
+            
             % Add PTO forces
-            forces_and_moments = self.applyPTOForces (forces_and_moments);
+            forces_and_moments = self.applyPTOForces (forces_and_moments, currentTime);
 
             self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
             self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
@@ -1050,10 +1132,10 @@ classdef wecSim < handle
 
                 % calculate new hydrodynamic interaction forces (also
                 % updates self.lastForceHydro with new values)
-                forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
+                forces_and_moments = self.applyHydroForces (forces_and_moments, currentTime, pos, vel, accel);
 
                 % PTO forces
-                forces_and_moments = self.applyPTOForces (forces_and_moments);
+                forces_and_moments = self.applyPTOForces (forces_and_moments, currentTime);
 
                 self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
                 self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
@@ -1114,10 +1196,10 @@ classdef wecSim < handle
 
                     % calculate new hydrodynamic interaction forces (also
                     % updates self.lastForceHydro with new values)
-                    forces_and_moments = self.applyHydroForces (forces_and_moments, self.lastTime, pos, vel, accel);
+                    forces_and_moments = self.applyHydroForces (forces_and_moments, currentTime, pos, vel, accel);
 
                     % PTO forces
-                    forces_and_moments = self.applyPTOForces (forces_and_moments);
+                    forces_and_moments = self.applyPTOForces (forces_and_moments, currentTime);
 
                     self.mBDynMBCNodal.F (forces_and_moments(1:3,:));
                     self.mBDynMBCNodal.M (forces_and_moments(4:6,:));
@@ -1186,6 +1268,7 @@ classdef wecSim < handle
             mbconv = self.mBDynMBCNodal.applyForcesAndMoments (true);
 
             % store most recently calculated motion so it can be logged
+            self.lastTime = currentTime;
             self.lastPositions = pos(1:3,:);
             self.lastAngularPositions = pos(4:6,:);
             self.lastVelocities = vel(1:3,:);
@@ -1237,6 +1320,11 @@ classdef wecSim < handle
             % method
             self.mBDynMBCNodal = [];
 
+            if self.showProgress
+                % needs to be called before anything else is printed
+                self.progressBar.done ();
+            end
+            
             % finish off
             fprintf ( 1, 'Reached time %fs (%fs of an intended %fs), in %d steps, postprocessing ...\n', ...
                       self.lastTime, ...
@@ -1287,17 +1375,12 @@ classdef wecSim < handle
 
             end
 
-
             % tell the PTOs we are done
             self.finishPTOs ();
 
             % tell the controller we are done (if there is one)
             if ~isempty (self.wecController)
                 self.wecController.start ();
-            end
-            
-            if self.showProgress
-                self.progressBar.done ();
             end
 
             fprintf (1, 'Simulation complete\n');
@@ -1320,7 +1403,7 @@ classdef wecSim < handle
                        self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
                    end
                 end
-            end 
+            end
 
         end
 
@@ -1872,7 +1955,7 @@ classdef wecSim < handle
 
         end
 
-        function forces_and_moments = applyPTOForces (self, forces_and_moments)
+        function forces_and_moments = applyPTOForces (self, forces_and_moments, time)
 
             % get the PTO forces and moments and put them in the corect
             % places in the forces_and_moments matrix, based on an index
@@ -1885,7 +1968,7 @@ classdef wecSim < handle
                 % returned PTO force is applied to the reference node, and
                 % the opposite force is applied to the other node
 
-                ptoForceAndTorque = self.powerTakeOffs{ptoind}.forceAndMoment (self.lastTime);
+                ptoForceAndTorque = self.powerTakeOffs{ptoind}.forceAndMoment (time);
 
                 forces_and_moments (:,self.ptoIndexMap(ptoind,1)) = ...
                     forces_and_moments (:,self.ptoIndexMap(ptoind,1)) + ptoForceAndTorque(:,1);
@@ -1911,7 +1994,14 @@ classdef wecSim < handle
 
         function forces_and_moments = applyHydroForces (self, forces_and_moments, time, pos, vel, accel)
 
-            if self.hydroMotionSyncStepCount == self.hydroMotionSyncStep
+            if self.hydroMotionSyncStepCount == self.hydroMotionSyncStep || self.stepCount < self.hydroSyncMinSteps
+                
+                if self.firstApplyHydroCallThisStep
+                    
+                    self.prevForceAndMomentsHydro = [self.lastForceHydro; self.lastMomentHydro];
+                    self.prevTime = self.lastTime;
+                    
+                end
 
                 % calculate hydrodynamic forces based on the motion
                 [hydro_forces_and_moments, out] = self.hydroSystem.hydroForces ( ...
@@ -1953,12 +2043,33 @@ classdef wecSim < handle
                 
                 % reset step count
                 self.hydroMotionSyncStepCount = 1;
+                self.firstApplyHydroCallThisStep = false;
 
             else
 
-                % just return the last set of hydro forces calculated
-                hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
-
+%                 if self.stepCount < 2
+%                     
+%                     % just return the last set of hydro forces calculated
+%                     hydro_forces_and_moments = [ self.lastForceHydro; self.lastMomentHydro ];
+% 
+%                 else
+                    
+                    prevTime = self.logger.getPrevLoggedVal('Time', 1);
+                    prevHydroForce = self.logger.getPrevLoggedVal('ForceHydro', 1);
+                    prevHydroMoment = self.logger.getPrevLoggedVal('MomentHydro', 1);
+                    
+                    hydro_forces_and_moments = wsim.hydroBody.linearInterp ( prevTime, self.lastTime, [ prevHydroForce; prevHydroMoment ], [self.lastForceHydro; self.lastMomentHydro], time );
+                    
+                self.firstApplyHydroCallThisStep = true;
+                
+%                 hydro_forces_and_moments = wsim.hydroBody.linearInterp ( self.prevTime, ...
+%                                                                          self.lastTime, ...
+%                                                                          self.prevForceAndMomentsHydro, ...
+%                                                                          [self.lastForceHydro; self.lastMomentHydro], ...
+%                                                                          time );
+                
+%                 end
+                
                 self.hydroMotionSyncStepCount = self.hydroMotionSyncStepCount + 1;
 
             end
@@ -2895,6 +3006,8 @@ classdef wecSim < handle
             if ~isempty (self.wecController)
                 self.wecController.advanceStep ();
             end
+            
+            self.stepCount = self.stepCount + 1;
 
         end
 
@@ -3033,6 +3146,22 @@ classdef wecSim < handle
 
             end
 
+        end
+        
+        function has_ext_force = mBDynSysHasExtForce (self)
+            
+            has_ext_force = false;
+            for ind = 1:numel (self.mBDynSystem.elements)
+                
+                if isa (self.mBDynSystem.elements{ind}, 'mbdyn.pre.externalStructuralForce')
+                    
+                    has_ext_force = true;
+                    break;
+                    
+                end
+                
+            end
+            
         end
 
     end

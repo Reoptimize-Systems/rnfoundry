@@ -222,7 +222,7 @@ classdef inPlane < mbdyn.pre.twoNodeJoint
             
             allfnames = fieldnames (options);
             
-            C = setdiff (allfnames, parentfnames, 'stable');
+            C = setdiff (allfnames, parentfnames);
             
             nopass_list = C;
             

@@ -428,7 +428,7 @@ classdef revolutePin < mbdyn.pre.singleNodeJoint
             allfnames = fieldnames (options);
             
             % get just the new option names
-            C = setdiff (allfnames, parentfnames, 'stable');
+            C = setdiff (allfnames, parentfnames);
             
             % don't pass the new options to the parent, or the
             % 'DefaultShape' option ( we set this to another value)

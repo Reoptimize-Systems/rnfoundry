@@ -514,7 +514,7 @@ classdef totalJoint < mbdyn.pre.twoNodeJoint
             
             parentfnames = fieldnames (options);
             
-            % add default options common to all inline objects
+            % add default options common to all totalJoint objects
             options.PositionStatus = {};
             options.OrientationStatus = {};
             options.ImposedRelativePosition = 'null';

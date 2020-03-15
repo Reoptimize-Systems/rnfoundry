@@ -5,7 +5,7 @@ classdef structuralInternalForce < mbdyn.pre.force
         node1;
         node2;
         forceType;
-        force;
+        forceValue;
         moment;
         position1;
         position1Reference;
@@ -144,7 +144,7 @@ classdef structuralInternalForce < mbdyn.pre.force
             end
             
             self.subType = 'structural';
-            self.force = force_value;
+            self.forceValue = force_value;
             self.moment = options.MomentValue;
             self.forceType = force_type;
             self.node1 = node1;
@@ -208,7 +208,7 @@ classdef structuralInternalForce < mbdyn.pre.force
             
             addcomma = ~isempty (self.forceOrientation2) ...
                         || ~isempty (self.momentOrientation2) ...
-                        || ~isempty (self.force) ...
+                        || ~isempty (self.forceValue) ...
                         || ~isempty (self.moment);
             
             if ~isempty (self.position2)
@@ -222,7 +222,7 @@ classdef structuralInternalForce < mbdyn.pre.force
             end
             
             addcomma = ~isempty (self.momentOrientation2) ...
-                        || ~isempty (self.force) ...
+                        || ~isempty (self.forceValue) ...
                         || ~isempty (self.moment);
                     
             if ~isempty (self.forceOrientation2)
@@ -235,7 +235,7 @@ classdef structuralInternalForce < mbdyn.pre.force
                                            addcomma );
             end
             
-            addcomma = ~isempty (self.force) ...
+            addcomma = ~isempty (self.forceValue) ...
                         || ~isempty (self.moment);
             
             if ~isempty (self.momentOrientation2)
@@ -250,8 +250,8 @@ classdef structuralInternalForce < mbdyn.pre.force
             
             addcomma = ~isempty (self.moment);
                     
-            if ~isempty (self.force)
-                str = self.addOutputLine (str, self.force.generateMBDynInputString(), 2, addcomma);
+            if ~isempty (self.forceValue)
+                str = self.addOutputLine (str, self.forceValue.generateMBDynInputString(), 2, addcomma);
             end
             
             if ~isempty (self.moment)
@@ -288,7 +288,7 @@ classdef structuralInternalForce < mbdyn.pre.force
             
             allfnames = fieldnames (options);
             
-            nopass_list = setdiff (allfnames, parentfnames, 'stable');
+            nopass_list = setdiff (allfnames, parentfnames);
             
         end
         
