@@ -127,7 +127,7 @@ function displaytable(data, varargin)
     options.TopRule = false;
     options.BottomRule = false;
         
-    if iscell (varargin{1})
+    if ~isempty (varargin) && iscell (varargin{1})
         
         if nargin < 9 || isempty(varargin{8})
             options.RowStart = '';
