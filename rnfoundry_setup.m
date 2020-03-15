@@ -106,6 +106,8 @@ function rnfoundry_setup (varargin)
 %    is not built on Windows (but *is* built on other systems). Requires
 %    the BOOST C++ library to be available. Default is false. 
 %
+%  'MBCNodalSharedMemExtraMexArgs' - 
+%
 %  'PreventXFemmCheck' -  Many functions in the renewnet foundry require 
 %    the 'xfemm' finite element analysis package. This option determines
 %    whether rnfoundry_setup checks to see if xfemm is already installed
@@ -162,6 +164,7 @@ function rnfoundry_setup (varargin)
     options.PreventMBDynCheck = false;
     [options.MBCLibDir, options.MBCIncludeDir] = mbdyn.mint.find_libmbc ();
     options.ForceMexMBCNodalSharedMem = false;
+    options.MBCNodalSharedMemExtraMexArgs = {};
     if isunix
         options.GSLLibDir = ''; % for mexslmeval
         options.GSLIncludeDir = ''; % for mexslmeval
@@ -369,7 +372,7 @@ function rnfoundry_setup (varargin)
                              'PreventMBDynCheck', options.PreventMBDynCheck, ...
                              'ForceMexMBCNodalSharedMem', options.ForceMexMBCNodalSharedMem, ...
                              'MBCNodalExtraMexArgs',  extra_mex_args, ...
-                             'MBCNodalSharedMemExtraMexArgs', extra_mex_args, ...
+                             'MBCNodalSharedMemExtraMexArgs', [options.MBCNodalSharedMemExtraMexArgs, extra_mex_args], ...
                              'MexExtension', mex_ext, ...
                              'ThrowBuildErrors', options.ThrowBuildErrors, ...
                              'W64CrossBuild', options.W64CrossBuild );
