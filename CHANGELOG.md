@@ -10,6 +10,7 @@ This project adheres to [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changes
 * MBDYN: allow 'Name' option for more elements, e.g. structuralForce
+* EWST: add structural external force automatically if not present
 
 ### Fixes
 * MBDYN: don't use 'stable' option for setdiff for Octave compatibility
