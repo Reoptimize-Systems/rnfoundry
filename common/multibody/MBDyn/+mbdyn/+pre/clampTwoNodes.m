@@ -32,6 +32,7 @@ function total_joint = clampTwoNodes (node1, node2, varargin)
     options.ClampRotX = true;
     options.ClampRotY = true;
     options.ClampRotZ = true;
+    options.Name = '';
     
     options = parse_pv_pairs (options, varargin);
     
@@ -46,6 +47,7 @@ function total_joint = clampTwoNodes (node1, node2, varargin)
                                          'RelativeOffset1', 'null', ...
                                          'RelativeOffset1Reference', 'node', ...
                                          'RelativeOffset2', 'null', ...
-                                         'RelativeOffset2Reference', 'other node' );
+                                         'RelativeOffset2Reference', 'other node', ...
+                                         'Name', options.Name );
 
 end
