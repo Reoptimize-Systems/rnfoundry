@@ -1,12 +1,17 @@
-function str = floatforfilename (x)
+function str = floatforfilename (x, places)
     
-    str = formatNumber (x);
+
+    if nargin < 2
+        places = 18;
+    end
+    
+    str = formatNumber (x, places);
     
     str = strrep (str, '.', 'pt');
     
 end
 
-function numstr = formatNumber (num)
+function numstr = formatNumber (num, places)
 % fomats a decimal number for pretty output to mbdyn file
 %
 % If it is an integer (to machine precision), it will be output
@@ -17,7 +22,7 @@ function numstr = formatNumber (num)
     if check.isint2eps (num)
         numstr = sprintf ('%d.0', num);
     else
-        numstr = sprintf ('%.18f', num);
+        numstr = sprintf (['%.', int2str(places), 'f'], num);
         % strip trailing zeros from decimals
         n = numel (numstr);
         while numstr(n) ~= '.'
