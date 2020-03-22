@@ -146,6 +146,8 @@ function hydro = processnemoh (filedir, varargin)
     options.ForceVolume = {};
     options.ForceKH = {};
     options.ProcessKochin = true;
+    options.TruncateNegativeAddedMass = false;
+    options.TruncateNegativeRadiationDamping = false;
 %     options.DoRadiationIRF = true;
 %     options.IRFDuration = [];
 %     options.IRFNSteps = [];
@@ -391,8 +393,23 @@ function hydro = processnemoh (filedir, varargin)
 
             for k = 1:hydro(hydroind).Nf
                 tmp = textscan(raw{n+k},'%f');
-                hydro(hydroind).A(i,:,k) = tmp{1,1}(2:2:end);  % Added mass
-                hydro(hydroind).B(i,:,k) = tmp{1,1}(3:2:end);  % Radiation damping
+                
+                A = tmp{1,1}(2:2:end);   % Added mass
+                
+                if options.TruncateNegativeAddedMass
+                    A(A<0) = 0;
+                end
+                
+                hydro(hydroind).A(i,:,k) = A;  % Added mass
+                
+                B = tmp{1,1}(3:2:end); % Radiation damping
+                
+                if options.TruncateNegativeRadiationDamping
+                    B(B<0) = 0;
+                end
+                
+                hydro(hydroind).B(i,:,k) = B;  % Radiation damping
+                
             end
 
         end
