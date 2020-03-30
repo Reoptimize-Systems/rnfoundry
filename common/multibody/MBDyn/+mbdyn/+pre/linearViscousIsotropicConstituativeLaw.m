@@ -8,7 +8,7 @@ classdef linearViscousIsotropicConstituativeLaw < mbdyn.pre.constituativeLaw
     
     methods
         
-        function self = linearViscousIsotropicConstituativeLaw (viscosity)
+        function self = linearViscousIsotropicConstituativeLaw (viscosity, varargin)
             % linearViscousIsotropicConstituativeLaw constructor
             %
             % Syntax
