@@ -162,6 +162,26 @@ classdef base < handle
             end
         end
         
+        function C = uniqueCells (A)
+            
+            ia = mbdyn.pre.base.uniqueCellsIDXs (A);
+            
+            C = A(ia);
+            
+        end
+        
+        function ia = uniqueCellsIDXs (A)
+            
+            uids = cellfun (@(x) x.uid, A, 'UniformOutput', true);
+            
+            if isoctave
+                [~,ia,~] = unique (uids);
+            else
+                [~,ia,~] = unique (uids, 'stable');
+            end
+            
+        end
+        
         function ok = emptyOrCheck (checkfcn, checkvar, checkfcnargs)
             
             ok = true;
