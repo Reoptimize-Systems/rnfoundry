@@ -1579,26 +1579,6 @@ classdef system < mbdyn.pre.base
             
         end
         
-        function C = uniqueCells (self, A)
-            
-            ia = uniqueCellsIDXs (self, A);
-            
-            C = A(ia);
-            
-        end
-        
-        function ia = uniqueCellsIDXs (self, A)
-            
-            uids = cellfun (@(x) x.uid, A, 'UniformOutput', true);
-            
-            if isoctave
-                [~,ia,~] = unique (uids);
-            else
-                [~,ia,~] = unique (uids, 'stable');
-            end
-            
-        end
-        
         function elinds = processDrawInds (self, elspec, eltype, optname, allelinds)
             
             if ischar (elspec)
