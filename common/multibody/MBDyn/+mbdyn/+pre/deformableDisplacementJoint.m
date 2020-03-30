@@ -102,27 +102,40 @@ classdef deformableDisplacementJoint < mbdyn.pre.twoNodeOffsetJoint
             %
             % See Also: mbdyn.pre.deformableAxialJoint
             %
+           
+%             options.RelativeOrientation1 =  [];
+%             options.RelativeOrientation2 =  [];
+%             options.Offset1Reference = 'node';
+%             options.Offset2Reference = 'node';
+%             options.Orientation1Reference = 'node';
+%             options.Orientation2Reference = 'node';
+%             
+%             options = parse_pv_pairs (options, varargin);
+%             
+%             % call the superclass constructor
+%             self = self@mbdyn.pre.twoNodeOffsetJoint (node1, node2, ...
+%                     'RelativeOffset1', offset1, ...
+%                     'RelativeOffset2', offset2, ...
+%                     'RelativeOrientation1', options.RelativeOrientation1, ...
+%                     'RelativeOrientation2', options.RelativeOrientation2, ...
+%                     'Offset1Reference', options.Offset1Reference, ...
+%                     'Offset2Reference', options.Offset2Reference, ...
+%                     'Orientation1Reference', options.Orientation1Reference, ...
+%                     'Orientation2Reference', options.Orientation2Reference );
+% 
+%             options = parse_pv_pairs (options, varargin);
             
-            options.RelativeOrientation1 =  [];
-            options.RelativeOrientation2 =  [];
-            options.Offset1Reference = 'node';
-            options.Offset2Reference = 'node';
-            options.Orientation1Reference = 'node';
-            options.Orientation2Reference = 'node';
+            [options, nopass_list] = mbdyn.pre.deformableDisplacementJoint.defaultConstructorOptions ();
             
             options = parse_pv_pairs (options, varargin);
             
+            pvpairs = mbdyn.pre.base.passThruPVPairs (options, nopass_list);
+            
             % call the superclass constructor
-            self = self@mbdyn.pre.twoNodeOffsetJoint (node1, node2, ...
-                    'RelativeOffset1', offset1, ...
-                    'RelativeOffset2', offset2, ...
-                    'RelativeOrientation1', options.RelativeOrientation1, ...
-                    'RelativeOrientation2', options.RelativeOrientation2, ...
-                    'Offset1Reference', options.Offset1Reference, ...
-                    'Offset2Reference', options.Offset2Reference, ...
-                    'Orientation1Reference', options.Orientation1Reference, ...
-                    'Orientation2Reference', options.Orientation2Reference );
-
+            self = self@mbdyn.pre.twoNodeOffsetJoint ( node1, node2, pvpairs{:}, ...
+                                                       'RelativeOffset1', offset1, ...
+                                                       'RelativeOffset2', offset2, ...
+                                                       'DefaultShape', 'none' );
 
             assert (isa (law, 'mbdyn.pre.constituativeLaw'), ...
                 'law must be an mbdyn.pre.constituativeLaw' );
@@ -163,6 +176,18 @@ classdef deformableDisplacementJoint < mbdyn.pre.twoNodeOffsetJoint
             str = self.addOutputLine (str, ';', 1, false, sprintf('end %s', self.type));
             
             str = self.addRegularization (str);
+            
+        end
+        
+    end
+    
+    methods (Static)
+        
+        function [options, nopass_list] = defaultConstructorOptions ()
+            
+            options = mbdyn.pre.twoNodeOffsetJoint.defaultConstructorOptions ();
+            
+            nopass_list = {'DefaultShape', 'RelativeOffset1', 'RelativeOffset2'};
             
         end
         
