@@ -119,7 +119,8 @@ function all_hydro_data = write_hydrobody_mat_files (hydro, outdir, varargin)
     
         all_hydro_data(bodyind).hydro_coeffs.excitation.re = hydro.ex_re((n+1):(n+m),:,:);
         all_hydro_data(bodyind).hydro_coeffs.excitation.im = hydro.ex_im((n+1):(n+m),:,:);
-
+        all_hydro_data(bodyind).hydro_coeffs.excitation.mag = hydro.ex_ma((n+1):(n+m),:,:);
+        all_hydro_data(bodyind).hydro_coeffs.excitation.phase = hydro.ex_ph((n+1):(n+m),:,:);
         all_hydro_data(bodyind).hydro_coeffs.excitation.impulse_response_fun.f = hydro.ex_K((n+1):(n+m),:,:);
         all_hydro_data(bodyind).hydro_coeffs.excitation.impulse_response_fun.t = hydro.ex_t;
         all_hydro_data(bodyind).hydro_coeffs.excitation.impulse_response_fun.w = hydro.ex_w;

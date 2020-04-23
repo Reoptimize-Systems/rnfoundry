@@ -567,6 +567,8 @@ classdef hydroBody < handle
             obj.hydroData.hydro_coeffs.linear_restoring_stiffness = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/linear_restoring_stiffness']);
             obj.hydroData.hydro_coeffs.excitation.re = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/re']);
             obj.hydroData.hydro_coeffs.excitation.im = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/im']);
+            obj.hydroData.hydro_coeffs.excitation.mag = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/mag']);
+            obj.hydroData.hydro_coeffs.excitation.phase = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/phase']);
             try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/impulse_response_fun/f']); end %#ok<TRYNC>
             try obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/excitation/impulse_response_fun/t']); end %#ok<TRYNC>
             obj.hydroData.hydro_coeffs.added_mass.all = wsim.bemio.h5load(filename, [body_name '/hydro_coeffs/added_mass/all']);
@@ -1126,6 +1128,318 @@ classdef hydroBody < handle
             quiver3 (c(:,1),c(:,2),c(:,3),n(:,1),n(:,2),n(:,3))
             hold off
         end
+        
+        function [hax, hfig, hplot] = plotAddedMass (obj, varargin)
+            
+            options.Axes = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.Axes)
+            
+                hfig = []; % formatBEMOutputPlot will create the plot
+                Title = 'Normalized Added Mass: $$\bar{A}_{i,j}(\omega) = {\frac{A_{i,j}(\omega)}{\rho}}$$';
+                
+            else
+                hfig = get (options.Axes, 'Parent');                
+            end
+            
+            Subtitles = {'Surge','Heave','Pitch'};
+            XLables = {'$$\omega (rad/s)$$','$$\omega (rad/s)$$','$$\omega (rad/s)$$'};
+            YLables = {'$$\bar{A}_{1,1}(\omega)$$','$$\bar{A}_{3,3}(\omega)$$','$$\bar{A}_{5,5}(\omega)$$'};
+            
+            X = obj.hydroData.simulation_parameters.w;
+
+            rowstart = 0;
+            
+            if obj.simu.b2b
+                
+                colstart = 6* (obj.bodyTotal - 1);
+                
+                Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.added_mass.all(rowstart+1,colstart+1,:));
+                Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.added_mass.all(rowstart+3,colstart+3,:));
+                Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.added_mass.all(rowstart+5,colstart+5,:));
+
+            else
+                
+                colstart = 0;
+                Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.added_mass.all(rowstart+1,colstart+1,:));
+                Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.added_mass.all(rowstart+3,colstart+3,:));
+                Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.added_mass.all(rowstart+5,colstart+5,:));              
+                
+            end
+            
+            data_names{1,1} = obj.name;
+            data_names{2,1} = obj.name;
+            data_names{3,1} = obj.name;
+            
+            Notes = {'Notes:',...
+                ['$$\bullet$$ $$\bar{A}_{i,j}(\omega)$$ should tend towards a constant, ',...
+                '$$A_{\infty}$$, within the specified $$\omega$$ range.'],...
+                ['$$\bullet$$ Only $$\bar{A}_{i,j}(\omega)$$ for the surge, heave, and ',...
+                'pitch DOFs are plotted here. If another DOF is significant to the system, ',...
+                'that $$\bar{A}_{i,j}(\omega)$$ should also be plotted and verified before ',...
+                'proceeding.']};
+            
+            obj.formatBEMOutputPlot (Title,Subtitles,XLables,YLables,X,Y,data_names,Notes, ...
+                 'Figure', hfig, 'Axes', options.Axes );
+            
+        end
+        
+        function [hax, hfig, hplot] = plotRadiationDamping (obj, varargin)
+            
+            options.Axes = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.Axes)
+            
+                hfig = []; % formatBEMOutputPlot will create the plot
+                Title = 'Normalized Radiation Damping: $$\bar{B}_{i,j}(\omega) = {\frac{B_{i,j}(\omega)}{\rho\omega}}$$';
+                
+            else
+                hfig = get (options.Axes, 'Parent');                
+            end
+            
+            Subtitles = {'Surge','Heave','Pitch'};
+            XLables = {'$$\omega (rad/s)$$','$$\omega (rad/s)$$','$$\omega (rad/s)$$'};
+            YLables = {'$$\bar{B}_{1,1}(\omega)$$','$$\bar{B}_{3,3}(\omega)$$','$$\bar{B}_{5,5}(\omega)$$'};
+            
+            X = obj.hydroData.simulation_parameters.w;
+
+            rowstart = 0;
+            
+            if obj.simu.b2b
+                
+                colstart = 6* (obj.bodyTotal - 1);
+                
+                Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.all(rowstart+1,colstart+1,:));
+                Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.all(rowstart+3,colstart+3,:));
+                Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.all(rowstart+5,colstart+5,:));
+
+            else
+                
+                colstart = 0;
+                Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.all(rowstart+1,colstart+1,:));
+                Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.all(rowstart+3,colstart+3,:));
+                Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.all(rowstart+5,colstart+5,:));              
+                
+            end
+            
+            data_names{1,1} = obj.name;
+            data_names{2,1} = obj.name;
+            data_names{3,1} = obj.name;
+            
+            Notes = {'Notes:',...
+                    ['$$\bullet$$ $$\bar{B}_{i,j}(\omega)$$ should tend towards zero within ',...
+                    'the specified $$\omega$$ range.'],...
+                    ['$$\bullet$$ Only $$\bar{B}_{i,j}(\omega)$$ for the surge, heave, and ',...
+                    'pitch DOFs are plotted here. If another DOF is significant to the system ',...
+                    'that $$\bar{B}_{i,j}(\omega)$$ should also be plotted and verified before ',...
+                    'proceeding.']};
+            
+            obj.formatBEMOutputPlot (Title,Subtitles,XLables,YLables,X,Y,data_names,Notes, ...
+                 'Figure', hfig, 'Axes', options.Axes );
+            
+        end
+
+        function [hax, hfig, hplot] = plotExcitationForceMagnitude (obj, varargin)
+            
+            options.Axes = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.Axes)
+            
+                hfig = []; % formatBEMOutputPlot will create the plot
+                Title = ['Normalized Excitation Force Magnitude: ',...
+                         '$$\bar{X_i}(\omega,\beta) = {\frac{X_i(\omega,\beta)}{{\rho}g}}$$'];
+                
+            else
+                hfig = get (options.Axes, 'Parent');                
+            end
+            
+            B = 1;
+            
+            beta = obj.hydroData.simulation_parameters.wave_dir(B);
+            
+            Subtitles = {'Surge','Heave','Pitch'};
+            XLables = {'$$\omega (rad/s)$$','$$\omega (rad/s)$$','$$\omega (rad/s)$$'};
+            YLables = {['$$\bar{X_1}(\omega,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)'],...
+                       ['$$\bar{X_3}(\omega,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)'],...
+                       ['$$\bar{X_5}(\omega,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)'] };
+            
+            X = obj.hydroData.simulation_parameters.w;
+
+            rowstart = 0;
+            Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.mag(rowstart+1,B,:));
+            Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.mag(rowstart+3,B,:));
+            Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.mag(rowstart+5,B,:));              
+            
+            data_names{1,1} = obj.name;
+            data_names{2,1} = obj.name;
+            data_names{3,1} = obj.name;
+            
+            Notes = {''};
+            
+            obj.formatBEMOutputPlot (Title,Subtitles,XLables,YLables,X,Y,data_names,Notes, ...
+                 'Figure', hfig, 'Axes', options.Axes );
+            
+        end
+        
+        function [hax, hfig, hplot] = plotExcitationForcePhase (obj, varargin)
+            
+            options.Axes = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.Axes)
+            
+                hfig = []; % formatBEMOutputPlot will create the plot
+                Title = 'Excitation Force Phase: $$\phi_i(\omega,\beta)$$';
+                
+            else
+                hfig = get (options.Axes, 'Parent');                
+            end
+            
+            B = 1;
+            
+            beta = obj.hydroData.simulation_parameters.wave_dir(B);
+            
+            Subtitles = {'Surge','Heave','Pitch'};
+            XLables = {'$$\omega (rad/s)$$','$$\omega (rad/s)$$','$$\omega (rad/s)$$'};
+            YLables = {['$$\phi_1(\omega,\beta$$',' = ',num2str(beta),'$$^{\circ})$$'],...
+                       ['$$\phi_3(\omega,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)'],...
+                       ['$$\phi_5(\omega,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)'] };
+            
+            X = obj.hydroData.simulation_parameters.w;
+
+            rowstart = 0;
+            Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.phase(rowstart+1,B,:));
+            Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.phase(rowstart+3,B,:));
+            Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.phase(rowstart+5,B,:));              
+            
+            data_names{1,1} = obj.name;
+            data_names{2,1} = obj.name;
+            data_names{3,1} = obj.name;
+            
+            Notes = {''};
+            
+            obj.formatBEMOutputPlot (Title,Subtitles,XLables,YLables,X,Y,data_names,Notes, ...
+                 'Figure', hfig, 'Axes', options.Axes );
+            
+        end
+        
+        
+        function [hax, hfig, hplot] = plotRadiationIRF (obj, varargin)
+            
+            options.Axes = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.Axes)
+            
+                hfig = []; % formatBEMOutputPlot will create the plot
+                Title = ['Normalized Radiation Impulse Response Functions: ',...
+                         '$$\bar{K}_{i,j}(t) = {\frac{2}{\pi}}\int_0^{\infty}{\frac{B_{i,j}(\omega)}{\rho}}\cos({\omega}t)d\omega$$'];
+                
+            else
+                hfig = get (options.Axes, 'Parent');                
+            end
+            
+            Subtitles = {'Surge','Heave','Pitch'};
+            XLables = {'$$t (s)$$','$$t (s)$$','$$t (s)$$'};
+            YLables = {'$$\bar{K}_{1,1}(t)$$','$$\bar{K}_{3,3}(t)$$','$$\bar{K}_{3,3}(t)$$'};
+            
+            X = obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t;
+
+            rowstart = 0;
+            
+            if obj.simu.b2b
+                
+                colstart = 6* (obj.bodyTotal - 1);
+                
+                Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K(rowstart+1,colstart+1,:));
+                Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K(rowstart+3,colstart+3,:));
+                Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K(rowstart+5,colstart+5,:));
+
+            else
+                
+                colstart = 0;
+                Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K(rowstart+1,colstart+1,:));
+                Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K(rowstart+3,colstart+3,:));
+                Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.K(rowstart+5,colstart+5,:));              
+                
+            end
+            
+            data_names{1,1} = obj.name;
+            data_names{2,1} = obj.name;
+            data_names{3,1} = obj.name;
+            
+            Notes = {'Notes:',...
+                     ['$$\bullet$$ The IRF should tend towards zero within the specified timeframe. ',...
+                      'If it does not, attempt to correct this by adjusting the $$\omega$$ and ',...
+                      '$$t$$ range and/or step size used in the IRF calculation.'],...
+                     ['$$\bullet$$ Only the IRFs for the surge, heave, and pitch DOFs are plotted ',...
+                      'here. If another DOF is significant to the system, that IRF should also ',...
+                      'be plotted and verified before proceeding.']};
+            
+            obj.formatBEMOutputPlot (Title,Subtitles,XLables,YLables,X,Y,data_names,Notes, ...
+                 'Figure', hfig, 'Axes', options.Axes );
+            
+        end
+        
+        
+        function [hax, hfig, hplot] = plotExcitationIRF (obj, varargin)
+            
+            options.Axes = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.Axes)
+            
+                hfig = []; % formatBEMOutputPlot will create the plot
+                Title = ['Normalized Excitation Impulse Response Functions:   ',...
+                         '$$\bar{K}_i(t) = {\frac{1}{2\pi}}\int_{-\infty}^{\infty}{\frac{X_i(\omega,\beta)e^{i{\omega}t}}{{\rho}g}}d\omega$$'];
+                
+            else
+                hfig = get (options.Axes, 'Parent');                
+            end
+            
+            B = 1;
+            
+            beta = obj.hydroData.simulation_parameters.wave_dir(B);
+
+            Subtitles = {'Surge','Heave','Pitch'};
+            XLables = {'$$t (s)$$','$$t (s)$$','$$t (s)$$'};
+            YLables = {['$$\bar{K}_1(t,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)'],...
+                       ['$$\bar{K}_3(t,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)'],...
+                       ['$$\bar{K}_5(t,\beta$$',' = ',num2str(beta),'$$^{\circ}$$)']};
+
+            X = obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.t;
+
+            rowstart = 0;
+            Y(1,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f(rowstart+1,B,:));
+            Y(2,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f(rowstart+3,B,:));
+            Y(3,1,:) = squeeze(obj.hydroData.hydro_coeffs.excitation.impulse_response_fun.f(rowstart+5,B,:));              
+            
+            data_names{1,1} = obj.name;
+            data_names{2,1} = obj.name;
+            data_names{3,1} = obj.name;
+            
+            Notes = {'Notes:',...
+                     ['$$\bullet$$ The IRF should tend towards zero within the specified timeframe. ',...
+                      'If it does not, attempt to correct this by adjusting the $$\omega$$ and ',...
+                      '$$t$$ range and/or step size used in the IRF calculation.'],...
+                     ['$$\bullet$$ Only the IRFs for the first wave heading, surge, heave, and ',...
+                      'pitch DOFs are plotted here. If another wave heading or DOF is significant ',...
+                      'to the system, that IRF should also be plotted and verified before proceeding.']};
+            
+            obj.formatBEMOutputPlot (Title,Subtitles,XLables,YLables,X,Y,data_names,Notes, ...
+                 'Figure', hfig, 'Axes', options.Axes );
+            
+        end
+        
 
         function checkInputs(obj)
             % Checks the user inputs
@@ -3431,6 +3745,91 @@ classdef hydroBody < handle
             o = [ v1(2,:).*v2(3,:) - v1(3,:).*v2(2,:);
                   v1(3,:).*v2(1,:) - v1(1,:).*v2(3,:);
                   v1(1,:).*v2(2,:) - v1(2,:).*v2(1,:) ];
+        end
+        
+        function [hax, hfig] = formatBEMOutputPlot (heading, subtitle, x_lables, y_lables, X_data, Y_data, data_names, notes, varargin)
+            
+            options.Axes = [];
+            options.Figure = [];
+            
+            options = parse_pv_pairs (options, varargin);
+            
+            if isempty (options.Figure)
+                hfig = figure ('Position', [50,500,975,521]);
+%                 old_units = 
+%                 set (hfig, 'PaperUnits', get (hfig, 'Units'));
+%                 set
+                set (hfig, 'PaperPositionMode', 'auto');
+            else
+                hfig = options.Figure;
+            end
+            
+            if isempty (options.Axes)
+                
+                hax(1) = axes ('Parent', hfig, 'Position', [0.0731 0.3645 0.2521 0.4720]);
+                box (hax(1), 'on');
+                title (subtitle(1));
+                xlabel (x_lables(1), 'Interpreter', 'latex');
+                ylabel (y_lables(1), 'Interpreter', 'latex');
+            
+                hax(2) = axes ('Parent', hfig, 'Position', [0.3983 0.3645 0.2521 0.4720]);
+                box (hax(2), 'on');
+                title (subtitle(2));
+                xlabel (x_lables(2), 'Interpreter', 'latex');
+                ylabel (y_lables(2), 'Interpreter', 'latex');
+
+                hax(3) = axes ('Parent', hfig, 'Position', [0.7235 0.3645 0.2521 0.4720]);
+                box (hax(3), 'on');
+                title (subtitle(3));
+                xlabel (x_lables(3), 'Interpreter', 'latex');
+                ylabel (y_lables(3), 'Interpreter', 'latex');
+                            
+
+                annotation (hfig,'textbox',[0.0 0.9 1.0 0.1],...
+                    'String', heading,...
+                    'Interpreter', 'latex',...
+                    'HorizontalAlignment', 'center',...
+                    'FitBoxToText', 'off',...
+                    'FontWeight', 'bold',...
+                    'FontSize', 12,...
+                    'EdgeColor', 'none');
+
+                annotation (hfig,'textbox',[0.0 0.0 1.0 0.2628],...
+                    'String', notes,...
+                    'Interpreter', 'latex',...
+                    'FitBoxToText', 'off',...
+                    'EdgeColor', 'none');
+
+            else
+                assert (numel (options.Axes) == 3, 'options.Axes should be a three element vector');
+                for ind = 1:numel (options.Axes)
+                    assert (mbdyn.pre.base.isAxesHandle (options.Axes(ind)), 'options.Axes must be a vector of axes handles');
+                end
+                hax = options.Axes;
+            end
+
+            hold (hax(1), 'on');
+            hold (hax(2), 'on');
+            hold (hax(3), 'on');
+
+%             [p,b,s] = size(Y_data);
+            
+            for i = 1:size (Y_data, 2)
+                
+                plot (X_data, squeeze (Y_data(1,i,:)), 'LineWidth', 1, 'Parent', hax(1), 'DisplayName', data_names{1,i});
+                plot (X_data, squeeze (Y_data(2,i,:)), 'LineWidth', 1, 'Parent', hax(2), 'DisplayName', data_names{2,i});
+                plot (X_data, squeeze (Y_data(3,i,:)), 'LineWidth', 1, 'Parent', hax(3), 'DisplayName', data_names{3,i});
+                
+            end
+            
+            if isempty (options.Axes)
+                
+                legend (hax(1), 'location', 'best', 'Box', 'off', 'Interpreter', 'none');
+                legend (hax(2), 'location', 'best', 'Box', 'off', 'Interpreter', 'none');
+                legend (hax(3), 'location', 'best', 'Box', 'off', 'Interpreter', 'none');
+            
+            end
+
         end
         
     end
