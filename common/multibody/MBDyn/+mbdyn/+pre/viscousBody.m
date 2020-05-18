@@ -9,7 +9,7 @@ classdef viscousBody < mbdyn.pre.singleNodeOffsetJoint
     
     methods
         
-        function self = viscousBody (node, const_law, varargin)
+        function self = viscousBody (node, const_law, relative_offset, varargin)
             % viscousBody constructor
             %
             % Syntax
@@ -25,13 +25,22 @@ classdef viscousBody < mbdyn.pre.singleNodeOffsetJoint
             %  const_law - mbdyn.pre.constituativeLaw object representing a
             %   6D constituative law.
             %
+            %  relative_offset - (3 x 1) vector containing the relative
+            %   offset of the force from the node, or the character vector
+            %   'null', which is equivalent to [0;0;0]. By default this
+            %   offset is expressed in the reference frame of the node,
+            %   alternative reference frames can be selected using the
+            %   'PositionReference' option described below.
+            %
             % Additional arguments can be supplied as parameter-value
             % pairs. Available options are:
             %
-            %
-            %  'RelativeOffset' - 
-            %
-            %  'RelativeOrientation' - 
+            %  'RelativeOrientation' - mbdyn.pre.orientation object
+            %    defining the an orientation offset of the force from the
+            %    node. By default this offset is expressed in the reference
+            %    frame of the node, alternative reference frames can be
+            %    selected using the 'OrientationReference' option described
+            %    below.
             %
             %  'PositionReference' - by default the position provided in
             %    RelativeOffset is relative to the node reference frame. An
@@ -65,7 +74,7 @@ classdef viscousBody < mbdyn.pre.singleNodeOffsetJoint
             pvpairs = mbdyn.pre.base.passThruPVPairs ( options, nopass_list);
             
             % call the superclass constructor
-            self = self@mbdyn.pre.singleNodeOffsetJoint (node, pvpairs{:});
+            self = self@mbdyn.pre.singleNodeOffsetJoint (node, pvpairs{:}, 'RelativeOffset', relative_offset);
                     
             assert (isa (const_law, 'mbdyn.pre.constituativeLaw'), ...
                 'law must be an mbdyn.pre.constituativeLaw' );
@@ -203,7 +212,7 @@ classdef viscousBody < mbdyn.pre.singleNodeOffsetJoint
             
             options = mbdyn.pre.singleNodeOffsetJoint.defaultConstructorOptions ();
             
-            nopass_list = {};
+            nopass_list = {'RelativeOffset'};
             
         end
         
