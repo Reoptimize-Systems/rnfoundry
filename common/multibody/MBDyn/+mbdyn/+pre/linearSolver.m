@@ -30,7 +30,52 @@ classdef linearSolver < mbdyn.pre.base
     methods
         
         function self = linearSolver (method, varargin)
-            
+        % replace h1 line
+        %
+        % Syntax
+        %
+        % lsobj = mbdyn.pre.linearSolver (method)
+        % lsobj = mbdyn.pre.linearSolver (..., 'Parameter', Value)
+        %
+        % Description
+        %
+        % Creates a linear solver object, can be one of 'naive', 'umfpack',
+        % 'klu', 'y12', 'lapack', 'superlu', 'taucs' or 'watson'.
+        %
+        % Input
+        %
+        %  method - character vector indicating the type of linear solver
+        %    to create. Can be one of 'naive', 'umfpack', 'klu', 'y12',
+        %    'lapack', 'superlu', 'taucs' or 'watson'.
+        %
+        % Addtional arguments may be supplied as parameter-value pairs. The
+        % available options are:
+        %
+        %  'SparseMatrixHandling' - 
+        %
+        %  'Reordering' - 
+        %
+        %  'Threads' - 
+        %
+        %  'WorkspaceSize' - 
+        %
+        %  'PivotFactor' - 
+        %
+        %  'DropTolerance' - 
+        %
+        %  'BlockSize' - 
+        %
+        %  'Scale' - 
+        %
+        % Output
+        %
+        %  lsobj - 
+        %
+        %
+        %
+        % See Also: 
+        %
+
             options.SparseMatrixHandling = '';
             options.Reordering = '';
             options.Threads = [];
