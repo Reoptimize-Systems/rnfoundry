@@ -1,20 +1,27 @@
-function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
+function [mbstatus, cmdout, pid, inputfile] = start_mbdyn (input, varargin)
 % runs mbdyn with the appropriate commands
 %
 % Syntax
 %
 % [status, cmdout] = start_mbdyn (inputfile)
+% [status, cmdout] = start_mbdyn (input_system)
 % [status, cmdout] = start_mbdyn (..., 'Parameter', value)
 %
 % Description
 %
-% Finds and rund the MBDyn executable with the provided file as the MBDyn
-% input file.
+% Finds and runs the MBDyn executable with the provided file as the MBDyn
+% input file, or generates an input file if an mbdyn.pre.system object is
+% provided.
 %
 % Input
 %
 %  inputfile - character vector containing the path to the MBDyn input file
 %   containing the problem to be solved by MBDyn.
+%
+%  input_system - an mbdyn.pre.system object, the generateMBDynInputFile
+%   will be called to create the MBDyn input file in the system temporary
+%   directory. The location of the created file will be returned in
+%   the 'inputfile' output argument.
 %
 % Addtional arguments may be supplied as parameter-value pairs. The
 % available options are:
@@ -62,11 +69,15 @@ function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
 %  status - the status returned by the operating system after attempting to
 %   run the MBDyn command.
 %
-%  cmdout - string containing the std output produced by the MBDyn command
+%  cmdout - character vector containing the std output produced by the
+%    MBDyn command
 %
+%  pid - 
 %
+%  inputfile - character vector containing the path of the input file used
+%    when starting MBDyn
 %
-% See Also: 
+% See Also: mbdyn.pre.system.generateMBDynInputFile
 %
 
     options.Verbosity = 0;
@@ -85,6 +96,19 @@ function [mbstatus, cmdout, pid] = start_mbdyn (inputfile, varargin)
     assert (ischar (options.MBDynOutputFile), 'MBDynOutputFile must be a character vector');
     assert (ischar (options.OutputPrefix), 'OutputPrefix must be a character vector');
     mbdyn.pre.base.checkLogicalScalar (options.Block, true, 'Block');
+    
+    if isa (input, 'mbdyn.pre.system')
+        inputfile = [ tempname, '.mbd'];
+        input.generateMBDynInputFile (inputfile);
+    elseif ischar (input)
+        if exist (input, 'file') == 2
+            inputfile = input;
+        else
+            error ('The input file %s does exist.', input);
+        end
+    else
+        error ('Input must be a file name or a mbdyn.pre.system objet');
+    end
     
     if ~exist (options.MBDynExecutable, 'file')
         error ('MBDyn executable was not found in the specified location.');
