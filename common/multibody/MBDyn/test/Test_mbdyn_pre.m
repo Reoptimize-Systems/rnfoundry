@@ -1152,6 +1152,18 @@ obj = mbdyn.pre.deformableDisplacementJoint (sn1, sn2, law, offset1, offset2);
 
 obj.generateMBDynInputString ()
 
+%% viscousBody
+
+sn1 = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+
+damping_matrix = diag (ones (6,1));
+
+law = mbdyn.pre.linearViscousGenericConstituativeLaw (damping_matrix);
+
+obj = mbdyn.pre.viscousBody (sn1, law, 'null');
+
+obj.generateMBDynInputString ()
+
 %% linearViscoElasticIsotropicConstituativeLaw
 
 law = mbdyn.pre.linearViscoElasticIsotropicConstituativeLaw (1, 2);
