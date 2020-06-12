@@ -1334,7 +1334,7 @@ void mexFunction(
         Print_Start_Message();
 
         mexAtExit(CleanUpMex);
-        /* Init all connecttions to to free */
+        /* Init all connections to to free */
         for(con_index = 0; con_index < MAX_CON; con_index++)
             init_con(-1,STATUS_FREE);
         con_index = 0;
@@ -1404,6 +1404,7 @@ void mexFunction(
     /* Get connection handler and suppose that it is a connection assosiated function */
     /* Find given handel */
     //       if(strncasecmp(fun, "DEF",3) != 0)
+
     if(move_con((int)my_mexInputScalar(0)) == 0)
         mexErrMsgTxt("Unknown connection handler");
     strncpy(fun,my_mexInputOptionString(1),80);
@@ -1550,6 +1551,26 @@ void mexFunction(
         my_mexReturnMatrix(1,4,ip_bytes);
         my_mexReturnValue((int)ntohs(con[con_index].remote_addr.sin_port));
         return;
+    }
+    if(myoptstrcmp(fun, "GETLOCALTCPPORT") == 0)
+    {
+        struct sockaddr_in sa;
+        int sa_len;
+        
+        if(con[con_index].status != STATUS_TCP_SOCKET)
+            mexErrMsgTxt("Invalid socket for GETLOCALTCPPORT, Already open, or UDP?...");
+        
+        sa_len = sizeof(sa);
+        /* Ask getsockname to fill in this socket's local     */
+        /* address.                                           */
+       if (getsockname(con[con_index].fid, &sa, &sa_len) == -1) {
+          my_mexReturnValue(-1); 
+       }
+       else {
+          my_mexReturnValue((int) ntohs(sa.sin_port));
+       }
+        
+       return;
     }
     if(myoptstrcmp(fun, "SETCALLBACK") == 0)
     {
