@@ -364,10 +364,11 @@ classdef hydroSystem < handle
                 % each hydro node with an upward force
                 for bodyind = 1:numel (self.hydroBodies)
                     
-                    [node, body] = self.hydroBodies(bodyind).makeMBDynComponents ();
+                    [node, body, elements] = self.hydroBodies(bodyind).makeMBDynComponents ();
                 
                     mbnodes = [mbnodes, {node}];
                     mbbodies = [mbbodies, {body}];
+                    mbelements = [mbelements, elements];
                     
                     % upward force to cancel gravity which will be added
                     % manually by the hydrobody when calculating buoyancy
