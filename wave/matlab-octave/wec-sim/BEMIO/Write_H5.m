@@ -80,12 +80,14 @@ for i = 1:hydro.Nb
     H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/impulse_response_fun/t'],hydro.ra_t,'Time vector for the impulse resonse function','s');
     H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/impulse_response_fun/w'],hydro.ra_w,'Interpolated frequencies used to compute the impulse response function','s');
     if isfield(hydro,'ss_A')==1 % Only if state space variables have been calculated
-        H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/A/all'],permute(hydro.ss_A((n+1):(n+m),:,:,:),[4 3 2 1]),'State Space A Coefficient','');
-        H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/B/all'],permute(hydro.ss_B((n+1):(n+m),:,:,:),[4 3 2 1]),'State Space B Coefficient','');
-        H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/C/all'],permute(hydro.ss_C((n+1):(n+m),:,:,:),[4 3 2 1]),'State Space C Coefficient','');
-        H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/D/all'],permute(hydro.ss_D((n+1):(n+m),:),[2 1]),'State Space D Coefficient','');
-        H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/it'],permute(hydro.ss_O((n+1):(n+m),:),[2 1]),'Order of state space realization','');
-        H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/r2t'],permute(hydro.ss_R2((n+1):(n+m),:),[2 1]),'State space curve fitting R**2 value','');
+        try
+            H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/A/all'],permute(hydro.ss_A((n+1):(n+m),:,:,:),[4 3 2 1]),'State Space A Coefficient','');
+            H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/B/all'],permute(hydro.ss_B((n+1):(n+m),:,:,:),[4 3 2 1]),'State Space B Coefficient','');
+            H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/C/all'],permute(hydro.ss_C((n+1):(n+m),:,:,:),[4 3 2 1]),'State Space C Coefficient','');
+            H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/D/all'],permute(hydro.ss_D((n+1):(n+m),:),[2 1]),'State Space D Coefficient','');
+            H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/it'],permute(hydro.ss_O((n+1):(n+m),:),[2 1]),'Order of state space realization','');
+            H5_Create_Write_Att(filename,['/body' num2str(i) '/hydro_coeffs/radiation_damping/state_space/r2t'],permute(hydro.ss_R2((n+1):(n+m),:),[2 1]),'State space curve fitting R**2 value','');
+        end
     end
     waitbar((1+(i+i-1+i-1))/N);
     for j = (n+1):(n+m)
