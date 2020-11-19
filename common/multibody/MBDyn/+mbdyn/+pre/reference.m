@@ -305,7 +305,7 @@ classdef reference < mbdyn.pre.base
             
         end
         
-        function [hax, hquiv, hhiddenquiv] = draw (this, varargin)
+        function [hax, hfig, hquiv, hhiddenquiv] = draw (this, varargin)
             % draw the reference in a figure
             %
             % Syntax
@@ -359,13 +359,15 @@ classdef reference < mbdyn.pre.base
             %
             % Output
             %
+            %  hax - handle to axes in which the plot is made
+            %
+            %  hfig - handle to figure in which the plot is made
+            %
             %  hquiv - 3 or 6 element array of handles to quiver objects. If
             %    DrawGlobal is false, it will be 3 elements, the 3 quiver
             %    plots for the orientation matrix axes plot. If DrawGlobal
             %    is true, it will be 6 elements, the additional 3 elements
             %    are the handles to the global axes quiver plots.
-            %
-            %  hax - handle to axes in which the plot is made
             %
             %  hhiddenquiv - 3 or 6 element array of handles to hidden quiver
             %    objects (i.e. with 'LineStyle' set to 'none'). See the
@@ -397,6 +399,11 @@ classdef reference < mbdyn.pre.base
                 mbdyn.pre.base.checkNumericScalar (options.GlobalScale, true, 'GlobalScale');
             end
             mbdyn.pre.base.checkLogicalScalar (options.DrawHidden, true, 'DrawHidden');
+            
+%             if isempty (options.PlotAxes)
+%                 hfig = figure;
+%                 options.PlotAxes = axes;
+%             end
             
             [hquiv, hax, hhiddenquiv] = draw ( this.orientm, ...
                                                'PlotAxes', options.PlotAxes, ...

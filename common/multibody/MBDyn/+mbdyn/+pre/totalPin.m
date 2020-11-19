@@ -15,7 +15,7 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
         absoluteRotOrientation;
         absoluteRotOrientationReference;
         imposedAbsolutePosition;
-        imposedAbsoluteOrientation;
+        imposedAbsoluteRotation;
         positionStatus;
         orientationStatus;
         
@@ -79,7 +79,7 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
         %
         %  'OrientationStatus' - 
         %
-        %  'ImposedAbsoluteOrientation' - 
+        %  'ImposedAbsoluteRotation' - 
         %
         % Output
         %
@@ -168,13 +168,13 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                     'ImposedAbsolutePosition must be an mbdyn.pre.componentTplDriveCaller object, or the keyword ''null''');
             end
 
-            if ~isempty (options.ImposedAbsoluteOrientation)
-                assert ( isa (options.ImposedAbsoluteOrientation, 'mbdyn.pre.componentTplDriveCaller') ...
+            if ~isempty (options.ImposedAbsoluteRotation)
+                assert ( isa (options.ImposedAbsoluteRotation, 'mbdyn.pre.componentTplDriveCaller') ...
                             || ( ...
-                                 ischar (options.ImposedAbsoluteOrientation) ...
-                                    && strcmp (options.ImposedAbsoluteOrientation, 'null') ...
+                                 ischar (options.ImposedAbsoluteRotation) ...
+                                    && strcmp (options.ImposedAbsoluteRotation, 'null') ...
                                ), ...
-                    'ImposedAbsoluteOrientation must be an mbdyn.pre.componentTplDriveCaller object, or the keyword ''null''');
+                    'ImposedAbsoluteRotation must be an mbdyn.pre.componentTplDriveCaller object, or the keyword ''null''');
             end
             
             self.relativeOffset = options.RelativeOffset;
@@ -192,7 +192,7 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             self.positionStatus = options.PositionStatus;
             self.imposedAbsolutePosition = options.ImposedAbsolutePosition;
             self.orientationStatus = options.OrientationStatus;
-            self.imposedAbsoluteOrientation = options.ImposedAbsoluteOrientation;
+            self.imposedAbsoluteRotation = options.ImposedAbsoluteRotation;
             
         end
         
@@ -361,10 +361,10 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
                 
                 str = self.addOutputLine (str, 'orientation constraint', 2, true);
                 str = self.addOutputLine (str, self.commaSepList (self.orientationStatus{:}), 3, true, 'orientation constraint status');
-                if ischar (self.imposedAbsoluteOrientation)
-                    str = self.addOutputLine (str, self.imposedAbsoluteOrientation, 3, false);
+                if ischar (self.imposedAbsoluteRotation)
+                    str = self.addOutputLine (str, self.imposedAbsoluteRotation, 3, false);
                 else
-                    str = self.addOutputLine (str, self.imposedAbsoluteOrientation.generateMBDynInputString (), 3, false);
+                    str = self.addOutputLine (str, self.imposedAbsoluteRotation.generateMBDynInputString (), 3, false);
                 end
                 
             end
@@ -537,7 +537,7 @@ classdef totalPin < mbdyn.pre.singleNodeJoint
             options.PositionStatus = {};
             options.ImposedAbsolutePosition = 'null';
             options.OrientationStatus = {};
-            options.ImposedAbsoluteOrientation = 'null';
+            options.ImposedAbsoluteRotation = 'null';
             
             allfnames = fieldnames (options);
             
