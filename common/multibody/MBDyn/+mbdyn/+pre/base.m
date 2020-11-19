@@ -486,6 +486,89 @@ classdef base < handle
             
         end
         
+        function [options, commMethod] = checkSocketOptions (options)
+            % checks create, host, port and path options for socket elements
+            %
+            % Syntax
+            %
+            % options = checkSocketOptions (options)
+            %
+            % Input
+            %
+            %  options - 
+            %
+            %
+            
+            if ~isempty (options.Create)
+                if ischar (options.Create)
+                    mbdyn.pre.base.checkAllowedStringInputs (options.Create, {'yes', 'no'}, true, 'Create');
+                elseif check.isLogicalScalar (options.Create, false, 'Create')
+                    if options.Create
+                        options.Create = 'yes';
+                    else
+                        options.Create = 'no'; 
+                    end
+                else
+                    error ('Create must be a logical scalar or ''yes'' or ''no''');
+                end
+            end
+            
+            if ~isempty (options.Path) && ~isempty (options.Port)
+                error ('You cannot specify both path and port option for the socket');
+            end
+            
+            if isempty (options.Path) && isempty (options.Port)
+%                 error ('You must specify either Path or Port option for the socket');
+                if strcmp (options.Create, 'yes')
+                    if ispc ()
+                        % windows doesn't have local sockets, so create an
+                        % INET socket by default, and try to pick an unused
+                        % port
+                        if exist ('pnet', 'file') == 3
+                            % setting the port to 0 means the OS will choose a free port for this socket
+                            sockcon = pnet('tcpsocket', 0);
+                            % find out what port was chosen
+                            options.Port = pnet (sockcon, 'getlocaltcpport');
+                            % close the socket so it can be used by mbdyn
+                            pnet (sockcon, 'close');
+                        else
+                            options.Port = randi ([10000, 30000]);
+                        end
+                    else
+                        options.Path = 'auto';
+                    end
+                else
+                    error ('If ''Create'' is ''no'', you must specify either Path or Port option for the socket');
+                end
+            end
+            
+            if ~isempty (options.Port)
+                assert (ischar (options.Host), 'Host must be a character vector');
+            end
+            
+            if isempty (options.Path)
+                commMethod = 'inet socket';
+            else
+                commMethod = 'local socket';
+                
+                if strcmpi (options.Path, 'auto')
+                    
+                    if isempty (options.Create) || strcmpi (options.Create, 'no'), ...
+                        error ('If Create is ''no'' or empty, Path cannot be ''auto''');
+                    end
+                    
+                    % make the path with a random name, generated using
+                    % uuidgen. uuidgen guarentees a unique ID string for the
+                    % system
+                    [~, uuid] = system ('uuidgen');
+                    
+                    options.Path = fullfile (tempdir, sprintf ('mbdyn_%s.sock', strrep (strtrim (uuid), '-', '')));
+                    
+                end
+            end
+            
+        end
+        
         function mat = getOrientationMatrix (om)
             % gets the raw 3x3 orientation matrix
             %

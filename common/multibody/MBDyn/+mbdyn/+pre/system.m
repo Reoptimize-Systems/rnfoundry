@@ -249,6 +249,7 @@ classdef system < mbdyn.pre.base
             options.OutputResults = { 'netcdf', 'no text' };
             options.UseInAssembly = {};
             options.AssemblyTolerance = [];
+            options.AssemblyMaxIterations = [];
             
             options = parse_pv_pairs (options, varargin);
             
@@ -424,12 +425,17 @@ classdef system < mbdyn.pre.base
                 self.checkNumericScalar (options.AssemblyTolerance, true, 'AssemblyTolerance');
             end
             
+            if ~isempty (options.AssemblyMaxIterations)
+                self.checkScalarInteger (options.AssemblyMaxIterations, true, 'AssemblyMaxIterations');
+            end
+
             self.controlData.DefaultOutput = options.DefaultOutput;
             self.controlData.DefaultOrientation = options.DefaultOrientation;
             self.controlData.DefaultScales = options.DefaultScales;
             self.controlData.OutputResults = options.OutputResults;
             self.controlData.UseInAssembly = options.UseInAssembly;
             self.controlData.AssemblyTolerance = options.AssemblyTolerance;
+            self.controlData.AssemblyMaxIterations = options.AssemblyMaxIterations;
             
         end
         
@@ -1221,6 +1227,10 @@ classdef system < mbdyn.pre.base
                 str = self.addOutputLine (str , sprintf('rigid bodies: %d;', elcount.RigidBodies), 1, false);
             end
             
+            if elcount.AddedMasses > 0
+                str = self.addOutputLine (str , sprintf('added masses: %d;', elcount.AddedMasses), 1, false);
+            end
+            
             if elcount.Joints > 0
                 str = self.addOutputLine (str , sprintf('joints: %d;', elcount.Joints), 1, false);
             end
@@ -1299,6 +1309,10 @@ classdef system < mbdyn.pre.base
             
             if ~isempty (self.controlData.AssemblyTolerance)
                 str = self.addOutputLine (str , sprintf('tolerance: %s;',self.formatNumber (self.controlData.AssemblyTolerance)), 1, false);
+            end
+            
+            if ~isempty (self.controlData.AssemblyMaxIterations)
+                str = self.addOutputLine (str , sprintf('max iterations: %s;', self.formatInteger (self.controlData.AssemblyMaxIterations)), 1, false);
             end
 
             str = self.addOutputLine (str , 'end: control data;', 0, false);
@@ -1456,6 +1470,7 @@ classdef system < mbdyn.pre.base
             elcount.Gravity = false;
             elcount.Genels = 0;
             elcount.AbstractNodes = 0;
+            elcount.AddedMasses = 0;
             
             % not yet implemented
             elcount.ElectricNodes = 0;
@@ -1506,6 +1521,10 @@ classdef system < mbdyn.pre.base
                 
                 if isa (self.elements{ind}, 'mbdyn.pre.body')
                     elcount.RigidBodies = elcount.RigidBodies + 1;
+                end
+                
+                if isa (self.elements{ind}, 'mbdyn.pre.addedMassAndInertia')
+                    elcount.AddedMasses = elcount.AddedMasses + 1;
                 end
                 
                 if isa (self.elements{ind}, 'mbdyn.pre.gravity')

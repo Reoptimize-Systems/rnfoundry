@@ -170,7 +170,8 @@ classdef streamDriver < mbdyn.pre.fileDriver
 
             self.subType = 'stream';
             
-            self.checkLogicalScalar (create, true, 'create');
+            options.Create = create;
+            [options, self.commMethod] = mbdyn.pre.base.checkSocketOptions (options);
             
             self.checkScalarInteger (nvalues, true, 'nvalues');
             
@@ -184,34 +185,6 @@ classdef streamDriver < mbdyn.pre.fileDriver
             
             if ~isempty (options.ReceiveFirst)
                 self.checkLogicalScalar (options.ReceiveFirst, true, 'ReceiveFirst');
-            end
-            
-            if ~isempty (options.Path) && ~isempty (options.Port)
-                error ('You cannot specify both path and port option for the socket');
-            end
-            
-            if isempty (options.Path) && isempty (options.Port)
-                error ('You must specify either Path or Port option for the socket');
-            end
-            
-            if ~isempty (options.Port)
-                assert (ischar (options.Host), 'Host must be a character vector');
-            end
-            
-            if isempty (options.Path)
-                self.commMethod = 'inet socket';
-            else
-                self.commMethod = 'local socket';
-                
-                if strcmpi (options.Path, 'auto')
-                    
-                    if isempty (create) || strcmpi (create, 'no'), ...
-                        error ('If Create is ''no'' or empty, Path cannot be ''auto''');
-                    end
-                    
-                    options.Path = fullfile (tempdir, sprintf ('mbdyn_output_%d.sock', randi (100000) ));
-                    
-                end
             end
             
             if ~isempty (options.InitialValues)
@@ -234,7 +207,7 @@ classdef streamDriver < mbdyn.pre.fileDriver
             end
             
             if ~isempty (options.Timeout)
-                self.checkNumericScalar (options.Timeout, true, '1Timeout');
+                self.checkNumericScalar (options.Timeout, true, 'Timeout');
                 assert (options.Timeout >= 0, 'Timeout must be greatr than or equal to zero')
             end
             

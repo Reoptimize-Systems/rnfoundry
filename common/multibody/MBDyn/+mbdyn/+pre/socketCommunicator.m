@@ -60,13 +60,14 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             %    'no'. This indicates whether MBDyn must send the predicted
             %    motion or not when playing a tight coupling loop.
             %
-            %  'Create' - character vector which can be 'yes' or 'no'. If
-            %    'yes', it indicates that MBDyn will create the socket, and
-            %    the peer will have to connect to it. Otherwise, when set
-            %    to 'no', it indicates that MBDyn will try to connect to an
-            %    already existing socket created by the peer. Connecting to
-            %    a peer is attempted while reading the input file. Sockets
-            %    are created when the input file has been read. MBDyn waits
+            %  'Create' - true/false flag or character vector which can be
+            %    'yes' or 'no'. If 'yes' (or true), it indicates that MBDyn
+            %    will create the socket, and the peer will have to connect
+            %    to it. Otherwise, when set to 'no' (or false), it
+            %    indicates that MBDyn will try to connect to an already
+            %    existing socket created by the peer. Connecting to a peer
+            %    is attempted while reading the input file. Sockets are
+            %    created when the input file has been read. MBDyn waits
             %    until all sockets have been connected to by peers before
             %    the simulation is started.
             %
@@ -111,7 +112,7 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
             options.SleepTime = [];
             options.Coupling = [];
             options.SendAfterPredict = 'yes';
-            options.Create = [];
+            options.Create = 'yes';
             options.Host = 'localhost';
             options.Port = [];
             options.Path = [];
@@ -126,44 +127,7 @@ classdef socketCommunicator < mbdyn.pre.externalFileCommunicator
                     
             self.type = 'socket';
 
-            if ~isempty (options.Create)
-                self.checkAllowedStringInputs (options.Create, {'yes', 'no'}, true, 'Create');
-            end
-            
-            if ~isempty (options.Path) && ~isempty (options.Port)
-                error ('You cannot specify both path and port option for the socket');
-            end
-            
-            if isempty (options.Path) && isempty (options.Port)
-                error ('You must specify either Path or Port option for the socket');
-            end
-            
-            if ~isempty (options.Port)
-                assert (ischar (options.Host), 'Host must be a character vector');
-            end
-            
-            if isempty (options.Path)
-                self.commMethod = 'inet socket';
-            else
-                self.commMethod = 'local socket';
-                
-                if strcmpi (options.Path, 'auto')
-                    
-                    if isempty (options.Create) || strcmpi (options.Create, 'no'), ...
-                        error ('If Create is ''no'' or empty, Path cannot be ''auto''');
-                    end
-                    
-                    if ~mbdyn.pre.base.isOctave ()
-                        % make sure the random number seed is differrent in
-                        % different matlab instances to avoid name clashes
-                        rng('shuffle');
-                    end
-                    
-                    % make the path with the random name 
-                    options.Path = fullfile (tempdir, sprintf ('mbdyn_%d.sock', randi (100000) ));
-                    
-                end
-            end
+            [options, self.commMethod] = mbdyn.pre.base.checkSocketOptions (options);
             
             self.create = options.Create;
             self.path = options.Path;

@@ -46,15 +46,17 @@ classdef streamOutput < mbdyn.pre.force
             % Addtional arguments may be supplied as parameter-value pairs.
             % The available options are:
             %
-            %  'Create' - true/false flag. If true, it indicates that MBDyn
-            %    will create the socket, and the peer will have to connect
-            %    to it. Otherwise, when set to false, it indicates that
-            %    MBDyn will try to connect to an already existing socket
-            %    created by the peer. Connecting to a peer is attempted
-            %    while reading the input file. Sockets are created when the
-            %    input file has been read. MBDyn waits until all sockets
-            %    have been connected to by peers before the simulation is
-            %    started.
+            %  'Create' - true/false flag or character vector 'yes' or
+            %    'no'. If true (or 'yes'), it indicates that MBDyn will
+            %    create the socket, and the peer will have to connect to
+            %    it. Otherwise, when set to false (or 'no'), it indicates
+            %    that MBDyn will try to connect to an already existing
+            %    socket created by the peer. Connecting to a peer is
+            %    attempted while reading the input file. Sockets are
+            %    created when the input file has been read. MBDyn waits
+            %    until all sockets have been connected to by peers before
+            %    the simulation is started. Default is 'yes' if not
+            %    specified.
             %
             %  'Host' - MBDyn supports local (unix) sockets, defined using
             %    the Path parameter, and inet sockets, defined using the
@@ -134,7 +136,7 @@ classdef streamOutput < mbdyn.pre.force
             % See Also: mbdyn.mint.MBCNodal
             %
             
-            options.Create = [];
+            options.Create = 'yes';
             options.Signal = [];
             options.Blocking = [];
             options.SendFirst = [];
@@ -157,10 +159,6 @@ classdef streamOutput < mbdyn.pre.force
                        || isa (content, mbdyn.pre.motionOutputContent), ...
                      'content must be an mbdyn.pre.valuesOutputContent object or an mbdyn.pre.motionOutputContent object' );
             
-            if ~isempty (options.Create)
-                self.checkLogicalScalar (options.Create, true, 'Create');
-            end
-            
             if ~isempty (options.Signal)
                 self.checkLogicalScalar (options.Signal, true, 'Signal');
             end
@@ -177,44 +175,19 @@ classdef streamOutput < mbdyn.pre.force
                 self.checkLogicalScalar (options.AbortIfBroken, true, 'AbortIfBroken');
             end
             
-            if ~isempty (options.Path) && ~isempty (options.Port)
-                error ('You cannot specify both path and port option for the socket');
-            end
-            
-            if isempty (options.Path) && isempty (options.Port)
-                error ('You must specify either Path or Port option for the socket');
-            end
-            
-            if ~isempty (options.Port)
-                assert (ischar (options.Host), 'Host must be a character vector');
-            end
-            
-            if isempty (options.Path)
-                self.commMethod = 'inet socket';
-            else
-                self.commMethod = 'local socket';
-                
-                if strcmpi (options.Path, 'auto')
-                    
-                    if isempty (options.Create) || strcmpi (options.Create, 'no'), ...
-                        error ('If Create is ''no'' or empty, Path cannot be ''auto''');
-                    end
-                    
-                    options.Path = fullfile (tempdir, sprintf ('mbdyn_output_%d.sock', randi (100000) ));
-                    
-                end
-            end
+            [options, self.commMethod] = mbdyn.pre.base.checkSocketOptions (options);
             
             self.create = options.Create;
+            self.path = options.Path;
+            self.port = options.Port;
+            self.host = options.Host;
+            
             self.signal = options.Signal;
             self.blocking = options.Blocking;
             self.sendFirst = options.SendFirst;
             self.abortIfBroken = options.AbortIfBroken;
             self.socketType = options.SocketType;
             self.outputSteps = options.OutputSteps;
-            self.path = options.Path;
-            self.port = options.Port;
-            self.host = options.Host;
             self.echo = options.Echo;
             self.echoPrecision = options.EchoPrecision;
             self.echoShift = options.EchoShift;
@@ -248,12 +221,7 @@ classdef streamOutput < mbdyn.pre.force
             str = sprintf ('    %s,', self.type);
             
             if ~isempty (self.create)
-                if self.create
-                    createstr = 'yes';
-                else
-                    createstr = 'no'; 
-                end
-                str = self.addOutputLine (str, self.commaSepList ('create', createstr), 2, true);
+                str = self.addOutputLine (str, self.commaSepList ('create', self.create), 2, true);
             end
             
             if isempty (self.path)
