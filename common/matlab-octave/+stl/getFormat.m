@@ -22,7 +22,7 @@ else
     isSolid = strcmp(header(1:min(5,length(header))),'solid'); % take first 5 char
     fseek(fid,-80,1); % go to the end of the file minus 80 characters
     tail = char(fread(fid,80,'uchar')');
-    isEndSolid = strfind(tail,'endsolid');
+    isEndSolid = ~isempty (strfind(tail,'endsolid')); % use 'contains' when Octave supports it
     
     % Double check by reading the last 80 characters of the file.
     % For an ASCII file, the data should end (give or take a few
