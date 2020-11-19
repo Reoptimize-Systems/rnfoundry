@@ -3,6 +3,10 @@ function a = structfield2array (S, fieldname)
 
     assert (isfield (S, fieldname), '%s is not a field in the input structure', fieldname);
     
-    a = arrayfun (@(x) x.(fieldname), S);
+    if ischar (S(1).(fieldname))
+        a = arrayfun (@(x) x.(fieldname), S, 'UniformOutput', false);
+    else
+        a = arrayfun (@(x) x.(fieldname), S);
+    end
 
 end
