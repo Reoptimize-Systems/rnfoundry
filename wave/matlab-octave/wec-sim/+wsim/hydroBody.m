@@ -313,7 +313,8 @@ classdef hydroBody < handle
         %  method will be used to calculate the added mass forces:
         %
         %     'extrapolate acceleration from previous steps'
-        %     'iterate' 
+        %     'iterate'
+        %     'mbdyn'
         addedMassMethod;
         
 %         hydroRestoringForceMethod;
@@ -375,6 +376,10 @@ classdef hydroBody < handle
         freeSurfaceMethodNum;
         diagViscDrag;
         viscDragDiagVals;
+        mbdynLinearDamping;
+        mbdynViscousDamping; 
+        mbdynAddedMass;
+        noOffDiagonalAddedMassTerms = false;
 
         % properties used to calculate nonFKForce at reduced sample time
         oldForce    = [];
@@ -937,7 +942,7 @@ classdef hydroBody < handle
         end
 
         function adjustMassMatrix(obj)
-            % Merges diagonal term of added mass matrix to the mass matrix
+            % Merges diagonal terms of added mass matrix to the mass matrix
             %
             % Syntax
             %
@@ -962,13 +967,55 @@ classdef hydroBody < handle
             obj.hydroForce.storage.mass = obj.mass;
             obj.hydroForce.storage.momOfInertia = obj.momOfInertia;
             obj.hydroForce.storage.fAddedMass = obj.hydroForce.fAddedMass;
+            
+            if obj.simu.b2b == true
+                tmp_added_mass = obj.hydroForce.fAddedMass( 1:3, (1+(iBod-1)*6):(1+(iBod-1)*6)+2 );
+            else
+                tmp_added_mass = obj.hydroForce.fAddedMass( 1:3,1:3 );
+            end
+            
+            tmp_added_mass(1,1) = 0;
+            tmp_added_mass(2,2) = 0;
+            tmp_added_mass(3,3) = 0;
+            
+            obj.noOffDiagonalAddedMassTerms = ~(any (any (tmp_added_mass)));
                 
-             if obj.disableAddedMassForce
-                 
-                 obj.hydroForce.fAddedMass = zeros (size (obj.hydroForce.fAddedMass));
-                 
-             else
-                 
+            if obj.disableAddedMassForce
+                
+                obj.hydroForce.fAddedMass = zeros (size (obj.hydroForce.fAddedMass));
+                
+            elseif obj.mbdynAddedMass
+                
+                if obj.simu.b2b == true
+
+                    % clear the main diagonal terms in the mass matrix as
+                    % mbdyn will handle these terms (but not off-diagonal
+                    % terms)
+                    obj.hydroForce.fAddedMass(1,1+(iBod-1)*6) = 0;
+                    obj.hydroForce.fAddedMass(2,2+(iBod-1)*6) = 0;
+                    obj.hydroForce.fAddedMass(3,3+(iBod-1)*6) = 0;
+                    
+                    % clear the whole added inertia matrix as mbdyn will
+                    % handle all of this
+                    obj.hydroForce.fAddedMass(4:6,(4+(iBod-1)*6):(4+(iBod-1)*6)+2) = 0;
+                    
+                else
+ 
+                    % clear the main diagonal terms in the mass matrix as
+                    % mbdyn will handle these terms (but not off-diagonal
+                    % terms)
+                    obj.hydroForce.fAddedMass(1,1) = 0;
+                    obj.hydroForce.fAddedMass(2,2) = 0;
+                    obj.hydroForce.fAddedMass(3,3) = 0;
+                    
+                    % clear the whole added inertia matrix as mbdyn will
+                    % handle all of this
+                    obj.hydroForce.fAddedMass(4:6,4:6) = 0;
+                    
+                end
+                
+            else
+                
                 if obj.simu.b2b == true
                     
                     tmp.fadm = diag (obj.hydroForce.fAddedMass(:,1+(iBod-1)*6:6+(iBod-1)*6));
@@ -1466,7 +1513,7 @@ classdef hydroBody < handle
             
         end
         
-        function [node, body] = makeMBDynComponents (obj)
+        function [node, body, elements] = makeMBDynComponents (obj)
             % creates mbdyn components for the hydroBody
             %
             % Syntax
@@ -1517,6 +1564,65 @@ classdef hydroBody < handle
                                     diag (obj.momOfInertia), ...
                                     node, ...
                                     'STLFile', stl_file );
+                      
+            elements = {};
+            
+            if obj.doAddedMass && obj.mbdynAddedMass
+            
+                iBod = obj.bodyNumber;
+                
+                if obj.simu.b2b == true
+                    tmp_added_mass = obj.hydroForce.storage.fAddedMass( 1:3, (1+(iBod-1)*6):(1+(iBod-1)*6)+2 );
+                else
+                    tmp_added_mass = obj.hydroForce.storage.fAddedMass( 1:3,1:3 );
+                end
+                
+                if obj.simu.b2b == true
+                    added_inertia_mat = obj.hydroForce.storage.fAddedMass( 4:6, (4+(iBod-1)*6):(4+(iBod-1)*6)+2 );
+                else
+                    added_inertia_mat = obj.hydroForce.storage.fAddedMass( 4:6,4:6 );
+                end
+                
+                added_mass = mbdyn.pre.addedMassAndInertia ( [ tmp_added_mass(1,1); 
+                                                               tmp_added_mass(2,2); 
+                                                               tmp_added_mass(3,3) ], ...
+                                                              [0;0;0], ...
+                                                              added_inertia_mat, ...
+                                                              node );
+                                                              
+                elements = [elements, {added_mass}];
+                
+            end
+            
+            if obj.doLinearDamping && obj.mbdynLinearDamping
+                
+                linear_damping_law = mbdyn.pre.linearViscousGenericConstituativeLaw (obj.hydroForce.linearDamping);
+
+                j_viscous_body = mbdyn.pre.viscousBody (node, linear_damping_law, 'null');
+                
+                elements = [elements, {j_viscous_body}];
+
+            end
+            
+            if obj.doViscousDamping && obj.mbdynViscousDamping
+                
+                if obj.diagViscDrag == false
+                    error ('You cannot use MBDyn to perform viscous drag with a non-diaagonal viscous drag matrix');
+                end
+                
+                quad_viscous_damping_law = mbdyn.pre.symbolicViscousConstituativeLaw ({'vel1', 'vel2', 'vel3', 'avel1', 'avel2', 'avel3'}, ...
+                                                                                      { sprintf('%s * tanh(1000*vel1) * vel1^2', mbdyn.pre.base.formatNumber (obj.viscDragDiagVals(1))), ...
+                                                                                        sprintf('%s * tanh(1000*vel2) * vel2^2', mbdyn.pre.base.formatNumber (obj.viscDragDiagVals(2))), ...
+                                                                                        sprintf('%s * tanh(1000*vel3) * vel3^2', mbdyn.pre.base.formatNumber (obj.viscDragDiagVals(3))), ...
+                                                                                        sprintf('%s * tanh(1000*avel1) * avel1^2', mbdyn.pre.base.formatNumber (obj.viscDragDiagVals(4))), ...
+                                                                                        sprintf('%s * tanh(1000*avel2) * avel2^2', mbdyn.pre.base.formatNumber (obj.viscDragDiagVals(5))), ...
+                                                                                        sprintf('%s * tanh(1000*avel3) * avel3^2', mbdyn.pre.base.formatNumber (obj.viscDragDiagVals(6))) });
+
+                j_quad_viscous_body = mbdyn.pre.viscousBody (node, quad_viscous_damping_law, 'null');
+                
+                elements = [elements, {j_quad_viscous_body}];
+                
+            end
             
         end
         
@@ -1953,17 +2059,25 @@ classdef hydroBody < handle
             
             
             % Linear Damping
+            obj.mbdynLinearDamping = false;
             if obj.simu.linearDamping == 0
                 obj.doLinearDamping = false;
             elseif obj.simu.linearDamping == 1
                 obj.doLinearDamping = true;
+            elseif obj.simu.linearDamping == 2
+                obj.doLinearDamping = true;
+                obj.mbdynLinearDamping = true;
             end
             
             % Viscous Damping
+            obj.mbdynViscousDamping = false;
             if obj.simu.viscousDamping == 0
                 obj.doViscousDamping = false;
             elseif obj.simu.viscousDamping == 1
                 obj.doViscousDamping = true;
+            elseif obj.simu.viscousDamping == 2
+                obj.doViscousDamping = true;
+                obj.mbdynViscousDamping = true;
             end
                 
             % Morrison Element
@@ -2020,6 +2134,7 @@ classdef hydroBody < handle
                 obj.doRadiationDamping = false;
             end
             
+            obj.mbdynAddedMass = false;
             switch lower (obj.simu.addedMassMethod)
                 
                 case 'extrap'
@@ -2027,8 +2142,13 @@ classdef hydroBody < handle
                     obj.addedMassMethodNum = 0;
                     
                 case 'iterate'
-                    obj.addedMassMethod = 'iterate';
+                    obj.addedMassMethod = 'iterate added mass forces at every time step';
                     obj.addedMassMethodNum = 1;
+                    
+                case 'mbdyn'
+                    obj.addedMassMethod = 'use mbdyn added mass element';
+                    obj.addedMassMethodNum = 2;
+                    obj.mbdynAddedMass = true;
                     
                 otherwise
                     error ('Unrecognised addedMassMethod');
@@ -2309,14 +2429,14 @@ classdef hydroBody < handle
 
             zero_force = zeros (obj.dof, 1);
             
-            if obj.doViscousDamping
+            if obj.doViscousDamping && ~obj.mbdynViscousDamping
                 breakdown.F_ViscousDamping = viscousDamping (obj, vel(:,obj.bodyNumber));
             else
                 breakdown.F_ViscousDamping = zero_force;
             end
             
             % linear damping
-            if obj.doLinearDamping
+            if obj.doLinearDamping && ~obj.mbdynLinearDamping
                 breakdown.F_LinearDamping = linearDampingForce (obj, vel(:,obj.bodyNumber));
             else
                 breakdown.F_LinearDamping = zero_force;
@@ -2329,7 +2449,7 @@ classdef hydroBody < handle
                 breakdown.F_RadiationDamping = zero_force;
             end
             
-            if obj.doAddedMass
+            if obj.doAddedMass && ~(obj.mbdynAddedMass && obj.noOffDiagonalAddedMassTerms)
                 if obj.bodyToBodyInteraction
                     breakdown.F_AddedMass = addedMassForces (obj, t, accel);
                 else
@@ -2676,11 +2796,18 @@ classdef hydroBody < handle
                         F_AddedMass = zeros (obj.dof, 1);
                     end
 
-                case 1
+                case {1,2}
 
                     % slower (an assumption, not tested), but mbdyn will
                     % iterate to get the right force
                     F_AddedMass = obj.hydroForce.fAddedMass * accel(:);
+                    
+%                 case 2
+%                     
+%                     % added mass is being calculated using the mbdyn added
+%                     % mass element, but off-diagonal added mass terms must
+%                     % be handled here
+%                     F_AddedMass = obj.hydroForce.fAddedMass(1:3,1:3) * accel(1:3);
 
             end
 

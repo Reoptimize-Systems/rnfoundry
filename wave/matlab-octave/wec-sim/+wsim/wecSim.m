@@ -4,6 +4,8 @@ classdef wecSim < handle
         wavePlotNumPointsX = 50;
         wavePlotNumPointsY = 50;
         wavePlotDomainSize = [];
+        
+        loggingSettings;
     end
 
     properties (GetAccess = public, SetAccess = private)
@@ -46,8 +48,6 @@ classdef wecSim < handle
         %    for the simulation
         %
         simInfo;
-
-        loggingSettings;
 
         % logging variables
         lastTime;                   % last value of simulation time
@@ -1314,97 +1314,101 @@ classdef wecSim < handle
 
 
         function mbdyn_postproc = simFinish (self)
-            % finalaise a simulation and clean up
+            % finalise a simulation and clean up
 
-            assert ( self.simStarted, 'You must call simStart before calling simFinish' );
+%             assert ( self.simStarted, 'You must call simStart before calling simFinish' );
 
-            % clear the MBCNodal object, hich should trigger its delete
-            % method
-            self.mBDynMBCNodal = [];
+            if self.simStarted
+                
+                % clear the MBCNodal object, which should trigger its delete
+                % method
+                self.mBDynMBCNodal = [];
 
-            if self.showProgress
-                % needs to be called before anything else is printed
-                self.progressBar.done ();
-            end
-            
-            % finish off
-            fprintf ( 1, 'Reached time %fs (%fs of an intended %fs), in %d steps, postprocessing ...\n', ...
-                      self.lastTime, ...
-                      self.lastTime - self.simInfo.TStart, ...
-                      self.simInfo.TEnd - self.simInfo.TStart, ...
-                      self.simStepCount-1 );
-
-            if self.loggingSettings.nodeForces ...
-                    || self.loggingSettings.forceAddedMass ...
-                    || self.loggingSettings.nodeMoments ...
-                    || self.loggingSettings.momentAddedMass
-
-                if self.loggingSettings.nodeForces
-                    self.logger.setSeries ('NodeForces', self.logger.data.NodeForcesUncorrected);
+                if self.showProgress
+                    % needs to be called before anything else is printed
+                    self.progressBar.done ();
                 end
 
-                if self.loggingSettings.nodeMoments
-                    self.logger.setSeries ('NodeMoments', self.logger.data.NodeMomentsUncorrected);
+                % finish off
+                fprintf ( 1, 'Reached time %fs (%fs of an intended %fs), in %d steps, postprocessing ...\n', ...
+                          self.lastTime, ...
+                          self.lastTime - self.simInfo.TStart, ...
+                          self.simInfo.TEnd - self.simInfo.TStart, ...
+                          self.simStepCount-1 );
+
+                if self.loggingSettings.nodeForces ...
+                        || self.loggingSettings.forceAddedMass ...
+                        || self.loggingSettings.nodeMoments ...
+                        || self.loggingSettings.momentAddedMass
+
+                    if self.loggingSettings.nodeForces
+                        self.logger.setSeries ('NodeForces', self.logger.data.NodeForcesUncorrected);
+                    end
+
+                    if self.loggingSettings.nodeMoments
+                        self.logger.setSeries ('NodeMoments', self.logger.data.NodeMomentsUncorrected);
+                    end
+
+                    % the total forces on hydrodynamic bodies must be corrected
+                    [ corrected_node_forces_and_moments, ...
+                      F_and_M_added_mass ] = ...
+                        correctAddedMassForce ( self.hydroSystem ...
+                                                , [ self.logger.data.NodeForcesUncorrected(:,self.hydroNodeIndexMap(:,1),:); ...
+                                                    self.logger.data.NodeMomentsUncorrected(:,self.hydroNodeIndexMap(:,1),:) ] ...
+                                                , [ self.logger.data.ForceAddedMassUncorrected; ...
+                                                    self.logger.data.MomentAddedMassUncorrected ] ...
+                                                , [ self.logger.data.Accelerations; ...
+                                                    self.logger.data.AngularAccelerations ] ...
+                                              );
+
+                    if self.loggingSettings.nodeForces
+                        self.logger.data.NodeForces(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(1:3,:,:);
+                    end
+
+                    if self.loggingSettings.nodeMoments
+                        self.logger.data.NodeMoments(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(4:6,:,:);
+                    end
+
+                    if self.loggingSettings.forceAddedMass
+                        self.logger.setSeries ('ForceAddedMass', F_and_M_added_mass(1:3,:,:));
+                    end
+
+                    if self.loggingSettings.momentAddedMass
+                        self.logger.setSeries ('MomentAddedMass', F_and_M_added_mass(4:6,:,:));
+                    end
+
                 end
 
-                % the total forces on hydrodynamic bodies must be corrected
-                [ corrected_node_forces_and_moments, ...
-                  F_and_M_added_mass ] = ...
-                    correctAddedMassForce ( self.hydroSystem ...
-                                            , [ self.logger.data.NodeForcesUncorrected(:,self.hydroNodeIndexMap(:,1),:); ...
-                                                self.logger.data.NodeMomentsUncorrected(:,self.hydroNodeIndexMap(:,1),:) ] ...
-                                            , [ self.logger.data.ForceAddedMassUncorrected; ...
-                                                self.logger.data.MomentAddedMassUncorrected ] ...
-                                            , [ self.logger.data.Accelerations; ...
-                                                self.logger.data.AngularAccelerations ] ...
-                                          );
+                % tell the PTOs we are done
+                self.finishPTOs ();
 
-                if self.loggingSettings.nodeForces
-                    self.logger.data.NodeForces(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(1:3,:,:);
+                % tell the controller we are done (if there is one)
+                if ~isempty (self.wecController)
+                    self.wecController.start ();
                 end
 
-                if self.loggingSettings.nodeMoments
-                    self.logger.data.NodeMoments(:,self.hydroNodeIndexMap(:,1),:) = corrected_node_forces_and_moments(4:6,:,:);
+                fprintf (1, 'Simulation complete\n');
+
+                self.logger.truncateAllVariables ();
+
+                self.simComplete = true;
+                self.simStarted = false;
+                self.readyToRun = false;
+
+                if nargout > 0
+                    mbdyn_postproc = mbdyn.postproc (self.outputFilePrefix, self.mBDynSystem);
+                    self.mBDynPostProc = mbdyn_postproc;
                 end
 
-                if self.loggingSettings.forceAddedMass
-                    self.logger.setSeries ('ForceAddedMass', F_and_M_added_mass(1:3,:,:));
+                if self.simStepCount < 5
+                    if ~isempty (self.mBDynOutputFile)
+                       if exist (self.mBDynOutputFile, 'file')
+                           fprintf (1, 'Simulation achieved less than 5 steps before stopping, printing the MBDyn output:\n');
+                           self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
+                       end
+                    end
                 end
-
-                if self.loggingSettings.momentAddedMass
-                    self.logger.setSeries ('MomentAddedMass', F_and_M_added_mass(4:6,:,:));
-                end
-
-            end
-
-            % tell the PTOs we are done
-            self.finishPTOs ();
-
-            % tell the controller we are done (if there is one)
-            if ~isempty (self.wecController)
-                self.wecController.start ();
-            end
-
-            fprintf (1, 'Simulation complete\n');
-
-            self.logger.truncateAllVariables ();
-
-            self.simComplete = true;
-            self.simStarted = false;
-            self.readyToRun = false;
-
-            if nargout > 0
-                mbdyn_postproc = mbdyn.postproc (self.outputFilePrefix, self.mBDynSystem);
-                self.mBDynPostProc = mbdyn_postproc;
-            end
-            
-            if self.simStepCount < 5
-                if ~isempty (self.mBDynOutputFile)
-                   if exist (self.mBDynOutputFile, 'file')
-                       fprintf (1, 'Simulation achieved less than 5 steps before stopping, printing the MBDyn output:\n');
-                       self.displayLastNLinesOfFile (self.mBDynOutputFile, 50);
-                   end
-                end
+                
             end
 
         end
