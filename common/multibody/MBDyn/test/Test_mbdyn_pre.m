@@ -336,6 +336,16 @@ bd.setSize (2, 0.1, 0.1, 0.1);
 bd.setSize (3, 0.1, 0.1, 0.1);
 bd.draw ()
 
+%% Added Mass
+
+sn6dof = mbdyn.pre.structuralNode6dof ('dynamic', 'Accel', true);
+mass = [ 1; 2; 3 ];
+cog = [0;0;0];
+inertiamat = eye (3);
+
+bd = mbdyn.pre.addedMassAndInertia (mass, cog, inertiamat, sn6dof);
+
+str = bd.generateMBDynInputString ()
 
 %% Total Joint
 
