@@ -59,7 +59,7 @@ function usages = find_in_files(exp, topdir, dodisplay)
             if exist (topdir, 'file') ~= 7
                 error ('supplied directory name does not exist.')
             end
-            thepath = path2cell (genpath (topdir));
+            thepath = path2cell (subdir_recurse (topdir));
         end
     end
     
@@ -75,7 +75,7 @@ function usages = find_in_files(exp, topdir, dodisplay)
 
         for indii = 1:numel(mfiles)
             % find expression in file using regexp
-            usages = [ usages; searchfile(fullfile(thepath{indi}, mfiles(indii).name), exp) ];
+            usages = [ usages; searchfileforexp(fullfile(thepath{indi}, mfiles(indii).name), exp) ];
         end
 
     end
@@ -96,43 +96,32 @@ function usages = find_in_files(exp, topdir, dodisplay)
 end
 
 
-function usages = searchfile(filename, exp)
-% search a file line by line for the regular expression exp 
+function path = subdir_recurse(topdir)
 
-    usages = {};
+    path = '';           % path to be returned
+
+    % Generate path based on given root directory
+    files = dir (topdir);
+
+    % Add topdir to the path even if it is empty.
+    path = [path, topdir, pathsep()];
+
+    % set logical vector for subdirectory entries in d
+    isdir = logical(cat(1, files.isdir));
+
+    % recursively descend through directories
+    dirs = files(isdir);
     
-    [fid, msg] = fopen(filename);
-    
-    [pathstr, name, ext] = fileparts(filename);
+    for ind = 1:length(dirs)
         
-    linenum = 0;
-    
-    while 1
-    
-        linenum = linenum + 1;
+        dirname = dirs(ind).name;
         
-        tline = fgets(fid);
-
-        if tline ~= -1
-
-            [matchstart,...
-                matchend,...
-                tokenindices,...
-                matchstring,...
-                tokenstring,...
-                tokenname ] = regexp(tline, exp);
-
-            if ~isempty(matchstart)
-                % string newlines 
-                tline = strrep(tline, sprintf('\r\n'), ''); % windows line ending
-                tline = strrep(tline, sprintf('\n'), ''); % unix line ending
-                usages = [ usages; {[name, ext], linenum, tline, matchstart, matchend} ];
-            end
-        else
-            break;
+        if ~strcmp( dirname,'.') && ~strcmp( dirname,'..')
+            
+            path = [path, subdir_recurse(fullfile(topdir,dirname))]; % recursive calling of this function.
+            
         end
+        
     end
-    
-    fclose(fid);
 
 end
