@@ -1,5 +1,4 @@
-RENEWNET FOUNRDY
-****************
+# RENEWNET FOUNRDY
 
 The renewnet foundry is a set of matlab codes and other software
 aimed at the simulation of renewable energy systems, including
@@ -11,8 +10,7 @@ simulation tools.
 Most code in the foundry is also compatible with Octave, the free
 alternative to Matlab.
 
-INSTALLATION
-============
+## INSTALLATION
 
 To get started with the matlab code you should run the function::
 
@@ -25,13 +23,11 @@ optimum performance. Ideally you will have a C++ compiler set up
 with your matlab installation, see the rnfoundry_setup help for
 more information. Other than this the setup is fully automated.
 
-USAGE
-=====
+## USAGE
 
 You can find some example scripts in the following directories:
 
-Edinburgh Wave Systems Toolbox
-------------------------------
+### Edinburgh Wave Systems Toolbox
 
 rnfoundry/wave/doc/sphinx/examples
 
@@ -42,8 +38,7 @@ be found in
 rnfoundry-hg/wave/matlab-octave/wec-sim/test
 
 
-MBdyn Multibody Dynamics Toolbox
---------------------------------
+### MBdyn Multibody Dynamics Toolbox
 
 rnfoundry/common/multibody/MBDyn/doc/sphinx/examples
 
@@ -53,8 +48,7 @@ testing code in
 rnfoundry/common/multibody/MBDyn/test
 
 
-Permanent Magnet Machines Toolbox
----------------------------------
+### Permanent Magnet Machines Toolbox
 
 rnfoundry/common/electrical/matlab-octave/permanent_magnet_machines_tools/examples_and_tutorials
 
