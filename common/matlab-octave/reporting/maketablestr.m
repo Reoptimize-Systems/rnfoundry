@@ -165,9 +165,9 @@ function tablestr = maketablestr (data, varargin)
     end
     
     % replace empty format specifiers with 'f'
-    for i = 1:numel(options.Format)
-        if isempty(options.Format{i})
-            options.Format{i} = 'f';
+    for formatstr_ind = 1:numel(options.Format)
+        if isempty(options.Format{formatstr_ind})
+            options.Format{formatstr_ind} = 'f';
         end
     end
     
@@ -228,23 +228,23 @@ function tablestr = maketablestr (data, varargin)
         
         tempoptions.ColWidth = zeros(1, numel(options.Format));
 
-        for i = 1:numel(options.Format)
+        for formatstr_ind = 1:numel(options.Format)
 
             % get the number of decimal places specified
-            [start_idx, end_idx, extents, matches] = regexp(options.Format{i}, '(?<=\.)\d+');
+            [start_idx, end_idx, extents, matches] = regexp(options.Format{formatstr_ind}, '(?<=\.)\d+');
 
             if isempty(start_idx)
 
                 % no numbers were found in the format spec, just use the
                 % supplied width
-                tempoptions.ColWidth(i) = options.ColWidth;
+                tempoptions.ColWidth(formatstr_ind) = options.ColWidth;
 
             else
 
                 % some numbers were supplied, use the larger of the width
                 % or the number of desired decimal places plus two (to
                 % allow for leading number plus decimal point)
-                tempoptions.ColWidth(i) = max(options.ColWidth, round(str2double(matches{1})) + 2);
+                tempoptions.ColWidth(formatstr_ind) = max(options.ColWidth, round(str2double(matches{1})) + 2);
 
             end
 
@@ -350,48 +350,48 @@ function tablestr = maketablestr (data, varargin)
     
     fmt = arrayfun(@(x) ['%',num2str(options.ColWidth(x)),options.Format{x}],1:nColD,'UniformOutput',false);
     
-    for i = 1:size(data,1)
+    for data_row_ind = 1:size(data,1)
         
         tablestr = appendstr (tablestr, '%s', options.RowStart);
         
         % first print a row header if necessary
         if ~isempty(options.RowHeadings)
-            tablestr = appendstr (tablestr, ['%',num2str(rhwid),'s',options.ColSep], options.RowHeadings{i});
+            tablestr = appendstr (tablestr, ['%',num2str(rhwid),'s',options.ColSep], options.RowHeadings{data_row_ind});
         end
             
         % now loop through the data formatting and printing as appropriate
-        for j = 1:size(data,2)
+        for data_col_ind = 1:size(data,2)
 
             if iscell(data)
                 % data is a cell array, possibly containing mixed data
                 % types
 
-                if ischar(data{i,j})
+                if ischar(data{data_row_ind,data_col_ind})
                     
-                    str = sprintf(['%',num2str(options.ColWidth(j)),'s'],data{i,j});
+                    str = sprintf(['%',num2str(options.ColWidth(data_col_ind)),'s'],data{data_row_ind,data_col_ind});
                     
-                elseif isscalar(data{i,j})
+                elseif isscalar(data{data_row_ind,data_col_ind})
                     
                     % write the number 
-                    str = sprintf(fmt{j},data{i,j});
+                    str = sprintf(fmt{data_col_ind},data{data_row_ind,data_col_ind});
                     
-                    if length(str) > options.ColWidth(j)
+                    if length(str) > options.ColWidth(data_col_ind)
 
                         % convert to scientific notation as it doesn't fit
-                        str =  sprintf(['%',num2str(options.ColWidth(j)),'g'],data{i,j});
+                        str =  sprintf(['%',num2str(options.ColWidth(data_col_ind)),'g'],data{data_row_ind,data_col_ind});
 
-                        if length(str) > options.ColWidth(j)
+                        if length(str) > options.ColWidth(data_col_ind)
                             % fill space with #s as the number stil doesn't
                             % fit in
-                            str = repmat('#', 1, options.ColWidth(j));
+                            str = repmat('#', 1, options.ColWidth(data_col_ind));
                         end
 
                     end
 
-                elseif isempty(data{i,j})
+                elseif isempty(data{data_row_ind,data_col_ind})
                     
                     % indicate an empty value 
-                    str = sprintf(['%',num2str(options.ColWidth(j)),'s'],'');
+                    str = sprintf(['%',num2str(options.ColWidth(data_col_ind)),'s'],'');
                     
                 else
                     % we can only tabulate strings and scalars, so throw an
@@ -402,9 +402,9 @@ function tablestr = maketablestr (data, varargin)
                 end
                 
                 % print the string
-                tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(j)));
+                tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(data_col_ind)));
                 
-                if j < size(data,2)
+                if data_col_ind < size(data,2)
                     % print column separator
                     tablestr = appendstr (tablestr, options.ColSep);
                 end
@@ -413,33 +413,33 @@ function tablestr = maketablestr (data, varargin)
                 
                 % data is a numerical matrix
 
-                str = sprintf(fmt{j},data(i,j));
+                str = sprintf(fmt{data_col_ind},data(data_row_ind,data_col_ind));
 
-                if length(str) > options.ColWidth(j)
+                if length(str) > options.ColWidth(data_col_ind)
                     
                     % convert to scientific notation as it doesn't fit
-                    str =  sprintf(['%',num2str(options.ColWidth(j)),'g'],data(i,j));
+                    str =  sprintf(['%',num2str(options.ColWidth(data_col_ind)),'g'],data(data_row_ind,data_col_ind));
                     
-                    if length(str) > options.ColWidth(j)
+                    if length(str) > options.ColWidth(data_col_ind)
                         % fill space with #s as the number doesn't fit in
-                        str = repmat('#', 1, options.ColWidth(j));
+                        str = repmat('#', 1, options.ColWidth(data_col_ind));
                     end
                     
                 end
                 
-                if j == size(data,2)
+                if data_col_ind == size(data,2)
                     % do not print the last column separator at the end of
                     % a row
-                    tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(j)));
+                    tablestr = appendstr (tablestr, '%s', str(1:options.ColWidth(data_col_ind)));
                 else
-                    tablestr = appendstr (tablestr, ['%s',options.ColSep], str(1:options.ColWidth(j)));
+                    tablestr = appendstr (tablestr, ['%s',options.ColSep], str(1:options.ColWidth(data_col_ind)));
                 end
             end
             
         end
         
         % end of line so put in a new row
-        if j ~= size(data,1)
+        if data_row_ind < size(data,1)
             tablestr = appendstr (tablestr, '%s\n', options.RowEnding);
         end
         
