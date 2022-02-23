@@ -27,8 +27,8 @@ function tablestr = maketablestr (data, varargin)
 %  'ColWidth - (optional) scalar or vector of column Widths to use for the
 %    table. If scalar, every column will have the same width. If a vector
 %    it must be of the same length as the number of columns of data. If not
-%    supplied, and column headers are supplied, the width of the width
-%    column header will be used. If not supplied and column headers are not
+%    supplied, and column headers are supplied, the width of the column
+%    header will be used. If not supplied and column headers are not
 %    supplied, a default with of 16 characters is used.
 % 
 %  'Format - (optional) a string, or cell array of strings containing format
@@ -206,12 +206,12 @@ function tablestr = maketablestr (data, varargin)
             
         else
             
-            tempoptions.ColWidth = zeros(size(options.ColHeadings));
+            tempoptions.ColWidth = repmat(10, size(options.ColHeadings));
             for colheadind = 1:numel(options.ColHeadings)
 
                 % get a column width which is the minimum to accept the
                 % column heading length or the default width specification
-                tempoptions.ColWidth(colheadind) = max(length(options.ColHeadings{colheadind}), options.ColWidth(colheadind));
+                tempoptions.ColWidth(colheadind) = max(length(options.ColHeadings{colheadind}), tempoptions.ColWidth(colheadind));
 
                 if tempoptions.ColWidth < 1
                     error('Column width is less than 1, and the column header is empty.')
@@ -438,7 +438,8 @@ function tablestr = maketablestr (data, varargin)
             
         end
         
-        % end of line so put in a new row
+        % end of line so put in a new row, if there are more rows to be
+        % printed
         if data_row_ind < size(data,1)
             tablestr = appendstr (tablestr, '%s\n', options.RowEnding);
         end

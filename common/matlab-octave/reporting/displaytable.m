@@ -3,7 +3,8 @@ function displaytable(data, varargin)
 % 
 % Syntax
 % 
-% displaytable(data, colheadings, wid, fms, rowheadings, fid, colsep, rowending)
+% displaytable(data)
+% displaytable(data, 'Parameter', value)
 % 
 % Input
 % 
@@ -26,8 +27,8 @@ function displaytable(data, varargin)
 %  'ColWidth' - (optional) scalar or vector of column Widths to use for the
 %    table. If scalar, every column will have the same width. If a vector
 %    it must be of the same length as the number of columns of data. If not
-%    supplied, and column headers are supplied, the width of the width
-%    column header will be used. If not supplied and column headers are not
+%    supplied, and column headers are supplied, the width of the column
+%    header will be used. If not supplied and column headers are not
 %    supplied, a default with of 16 characters is used.
 % 
 %  'Format' - (optional) a string, or cell array of strings containing 
@@ -202,7 +203,7 @@ function displaytable(data, varargin)
         options.ColSep = ' | ';
         options.RowHeadings = {};
         options.Format = 'g';
-        options.ColWidth = 10;
+        options.ColWidth = []; % leave this empty as non-emty defaults override setting the ColWidth from ColHeader width
         options.ColHeadings = {};
         options.FileID = 1;
         
