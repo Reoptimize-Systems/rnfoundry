@@ -7,26 +7,51 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
 % refactor_fcn_name(fcnname, newfcnname)
 % refactor_fcn_name(fcnname, newfcnname, topdir)
 % refactor_fcn_name(fcnname, newfcnname, topdir, domove)
+% refactor_fcn_name(..., 'Parameter', Value)
+%
 %
 % Description
 %
 % refactor_fcn_name(fcnname, newfcnname) finds all uses of the function
 % name in fcnname and replaces it with the string in newfcnname in the
-% entire matlab path. The function must be function in an m-file on the
-% Matlab path. By default the mfile containing the fuction is also then
-% renamed to the new name.
+% entire matlab path, except the matlabroot paths (see discussion of topdir
+% option below). The function must be function in an m-file on the Matlab
+% path. By default the mfile containing the fuction is also then renamed to
+% the new name.
 %
 % refactor_fcn_name(fcnname, newfcnname, topdir) performs the same action
-% but searching the folder provided in 'topdir' and all it's subdirectories
-% rather than the entire Matlab path. If topdir is the string 'allbutroot'
-% all direcotries on the path will be searched, which are not
-% sibdirectories of the matlab root path (as returned by matlabroot.m). In
-% practice this means built-in toolbox directories will be ignored.
+% but searching the folder provided in 'topdir' and all it's
+% subdirectories. If topdir is the string  'all', or is empty, the entire
+% path will be searched, including matlab's own toolbox directories
+% contained in the directory pointed to by matlabroot(). If topdir is the
+% string 'allbutroot' all direcotries on the path will be searched, which
+% are not sibdirectories of the matlab root path. In practice this means
+% built-in toolbox directories will be ignored.
 %
 % refactor_fcn_name(fcnname, newfcnname, topdir, domove) performs the same
 % action but the 'domove' flag determines whether the function file is
 % actually moved or not. If this evaluates to true the file is moved to the
 % mfile with the new name, if false nothing is moved.
+%
+%
+% Input
+%
+%  fcnname - name of the function to be replaced, can be part of a package,
+%   in which case use the fully qualified name (mypackage.myfunction)
+%
+%  newfcnname - the new name of the function to be replaced
+%
+%  topdir - character vector containing either the string 'allbutroot'
+%
+%  domove - 
+%
+% Addtional arguments may be supplied as parameter-value pairs. The available options are:
+%
+%  'StripVersionControl' - 
+%
+%  'AllowDotBeforeName' - 
+%
+%  'WarnIfFcnNotOnPath' - 
 %
 %
 % See also: regexprepfile
@@ -49,39 +74,49 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
     end
     
     % refactor_fcn_name
-    loc = which (fcnname);
+    fullpath = which (fcnname);
     
-    if isempty (loc) && options.WarnIfFcnNotOnPath
+    if isempty (fullpath) && options.WarnIfFcnNotOnPath
         warning('refactor_fcn_name:notonpath', 'fcnname is not a function or class on the path')
     end
-    
-    [pathstr, ~, ext] = fileparts (which (fcnname));
+
+    [pathstr, ~, ext] = fileparts (fullpath);
+
+    fcnname_dots = strfind (fcnname, '.');
+
+    if ~isempty (fcnname_dots)
+        fcnname_no_package = fcnname (fcnname_dots(end)+1:end);
+    end
     
     if isempty(strcmpi(ext, '.m'))
        warning('function is not an m-file on the path.') 
     end
     
-    if nargin < 3 || isempty (topdir)
+    if nargin < 3 
+        topdir = 'allbutroot';
+    elseif isempty (topdir)
+        topdir = 'all';
+    end
+
+    if ~ischar (topdir)
+        error ('topdir must be a character vector');
+    end
+
+    if strcmpi (topdir, 'all')
         thepath = path2cell (path);
+    elseif strcmpi (topdir, 'allbutroot')
+        thepath = path2cell (path);
+        thepath(strncmpi (thepath, matlabroot, numel (matlabroot))) = [];
     else
-        if ~ischar (topdir)
-            error ('topdir must be a string');
+        if exist (topdir, 'file') ~= 7
+            error ('supplied directory name does not exist.')
         end
-        if strcmpi (topdir, 'allbutroot')
-            thepath = path2cell (path);
-            thepath(strncmpi (thepath, matlabroot, numel (matlabroot))) = [];
-        else
-            if exist (topdir, 'file') ~= 7
-                error ('supplied directory name does not exist.')
-            end
-            thepath = path2cell (genpath (topdir));
-        end
+        thepath = path2cell (genpath (topdir));
     end
 
     if nargin < 4
         domove = true;
     end
-    
     
     if options.StripVersionControl
         rminds = [];
@@ -116,7 +151,19 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
 
     if domove
         % finally move the function file to the new m-file with the correct
-        % name, 
+        % name, but fix the function file if it's in a package
+
+        new_fcnname_dots = strfind (fcnname, '.');
+
+        if ~isempty (new_fcnname_dots)
+            new_fcnname_no_package = newfcnname (new_fcnname_dots(end)+1:end);
+        end
+
+        if ~isempty (new_fcnname_dots)
+            % function was in a package so fix the function line
+            strrepfile (fullpath, fcnname_no_package, new_fcnname_no_package);
+        end
+
         if ispc
             % On windows we can't use the built-in movefile function as the
             % file system is not case sensitive, and will refuse to move
@@ -132,47 +179,9 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
         
         else
             % on other systems, just move it!
-            movefile(fullfile(pathstr, [fcnname, ext]), fullfile(pathstr, [newfcnname, ext]));  
+            movefile(fullfile(pathstr, [fcnname_no_package, ext]), fullfile(pathstr, [new_fcnname_no_package, ext]));  
         end
-        
+
     end
 
 end
-
-
-function pathlist = path2cell(pathstr)
-%PATH2CELL Convert search path to cell array.
-%
-%   PATH2CELL returns a cell array where each element is a directory
-%   in the search path.
-%
-%   PATH2CELL(MYPATH) converts MYPATH rather than the search path.
-%
-%   Empty directories are removed, so under UNIX, PATH2CELL('foo::bar')
-%   returns {'foo', 'bar'} rather than {'foo', '', 'bar'}.
-
-%   Author:      Peter J. Acklam
-%   Time-stamp:  2001-10-18 21:23:19 +0200
-%   E-mail:      pjacklam@online.no
-%   URL:         http://home.online.no/~pjacklam
-
-   % check number of input arguments
-%    error(nargchk(0, 1, nargin));
-
-   % use MATLAB's search path if no input path is given
-   if ~nargin
-      pathstr = path;
-   end
-
-   k = find(pathstr == pathsep);            % find path separators
-   k = [0 k length(pathstr)+1];             % find directory boundaries
-   ndirs = length(k)-1;                     % number of directories
-   pathlist = cell(0);                      % initialize output argument
-   for i = 1 : ndirs
-      dir = pathstr(k(i)+1 : k(i+1)-1);     % get i'th directory
-      if ~isempty(dir)                      % if non-empty...
-         pathlist{end+1,1} = dir;           % ...append to list
-      end
-   end
-end
-
