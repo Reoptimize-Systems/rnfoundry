@@ -1,39 +1,45 @@
-function [gf] = gfit2(t,y,gFitMeasure,options)
+function [gf, S] = gfit2(t,y,gFitMeasure,options)
 % GFIT2 Computes goodness of fit for regression model
 %
-% USAGE:
-%       [gf] = gfit2(t,y)
-%       [gf] = gfit2(t,y,gFitMeasure) 
-%       [gf] = gfit2(t,y,gFitMeasure,options)
+% Syntax
 %
-% INPUT:
-%           t:  matrix or vector of target values for regression model
-%           y:  matrix or vector of output from regression model.
-% gFitMeasure:  a string or cell array of string values representing
-%               different form of goodness of fit measure as follows:
+% [gf] = gfit2(t,y)
+% [gf] = gfit2(t,y,gFitMeasure) 
+% [gf] = gfit2(t,y,gFitMeasure,options)
+% [gf, S] = gfit2(...)
+%
+% Input
+%
+%  t - matrix or vector of target values for regression model
+%
+%  y - matrix or vector of output from regression model.
+%
+%  gFitMeasure -  a string or cell array of string values representing
+%   different form of goodness of fit measure as follows:
 %               
-%               'all' - calculates all the measures below
-%               '1' - mean squared error (mse)  
-%               '2' - normalised mean squared error (nmse)
-%               '3' - root mean squared error (rmse)
-%               '4' - normalised root mean squared error (nrmse)
-%               '5' - mean absolute error (mae)
-%               '6' - mean  absolute relative error  (mare)
-%               '7' - coefficient of correlation (r)
-%               '8' - coefficient of determination (r2)
-%               '9' - coefficient of efficiency (e)
-%               '10' - maximum absolute error 
-%               '11' - maximum absolute relative error (mxare)
+%   'all' - calculates all the measures below
+%   '1' or 'mse' - mean squared error (mse)  
+%   '2' or 'nmse' - normalised mean squared error (nmse)
+%   '3' or 'rmse' - root mean squared error (rmse)
+%   '4' or 'nrmse' - normalised root mean squared error (nrmse)
+%   '5' or 'mae' - mean absolute error (mae)
+%   '6' or 'mare' - mean  absolute relative error  (mare)
+%   '7' or 'r' - coefficient of correlation (r)
+%   '8' or 'r2' - coefficient of determination (r2)
+%   '9' or 'e' - coefficient of efficiency (e)
+%   '10' or 'mxae' - maximum absolute error 
+%   '11' or 'mxare' - maximum absolute relative error (mxare)
 %
-%    options: a string containing other output options, currently the only
-%             option is verbose output.
+%  options - a string containing other output options, currently the only
+%   option is verbose output.
 %
-%                'v' - verbose output, posts some text output for the
-%                      chosen measures to the command line
+%   'v' - verbose output, posts some text output for the chosen measures to
+%         the command line
 %              
-% OUTPUT:
-%       gf: vector of goodness of fit values between model output and target for
-%       each of the strings in gFitMeasure
+% Output
+%
+%  gf - vector of goodness of fit values between model output and target 
+%   for each of the strings in gFitMeasure
 %
 % EXAMPLES
 %
@@ -57,6 +63,9 @@ function [gf] = gfit2(t,y,gFitMeasure,options)
 %                                           efficiency as a vector with
 %                                           information on each of these
 %                                           also posted to the command line
+%
+%
+
 %
 % Modified from gFit 2008/11/07 by Richard Crozier, extended to report multiple
 % statistics at once (i.e. can pass in a cell array of strings describing
@@ -117,96 +126,112 @@ function [gf] = gfit2(t,y,gFitMeasure,options)
     e = t - y; % Calculate the error
     
     gf = ones(1,size(gFitMeasure,2)); % preallocate array
-    
+
+    S = struct ();
+            
     for i = 1:numel(gFitMeasure)
         
         switch gFitMeasure{i}
 
-        case '1'                      % mean squared error
-            gf(i) = mean(e.^2);        % 0 - perfect match between output and target
-            if nargin == 4
-                if options == 'v'
-                    disp(sprintf(['mean squared error (mse): ' num2str(gf(i))]))
+            case {'1', 'mse'}                      % mean squared error
+                gf(i) = mean(e.^2);        % 0 - perfect match between output and target
+                if nargin == 4
+                    if options == 'v'
+                        disp(sprintf(['mean squared error (mse): ' num2str(gf(i))]))
+                    end
                 end
-            end
-
-        case '2'                      % normalised mean squared error
-            gf(i) = mean(e.^2)/var(t); % 0 - perfect match 
-            if nargin == 4
-                if options == 'v'
-                    disp(['normalised mean squared error (nmse): ' num2str(gf(i))])
+                S.MeanSquaredErrorMSE = gf(i);
+    
+            case {'2', 'nmse'}                      % normalised mean squared error
+                gf(i) = mean(e.^2)/var(t); % 0 - perfect match 
+                if nargin == 4
+                    if options == 'v'
+                        disp(['normalised mean squared error (nmse): ' num2str(gf(i))])
+                    end
                 end
-            end
-
-        case '3'                      % root mean squared error
-            gf(i) = sqrt(mean(e.^2));  % 0 - perfect match     
-            if nargin == 4
-                if options == 'v'
-                    disp(['root mean squared error (rmse): ' num2str(gf(i))])
+                S.NormalisedMeanSquaredErrorNMSE = gf(i);
+    
+            case {'3', 'rmse'}                      % root mean squared error
+                gf(i) = sqrt(mean(e.^2));  % 0 - perfect match     
+                if nargin == 4
+                    if options == 'v'
+                        disp(['root mean squared error (rmse): ' num2str(gf(i))])
+                    end
                 end
-            end
-        case '4'                            % normalised root mean squared error
-            gf(i) = sqrt(mean(e.^2)/var(t)); % 0 - perfect match
-            if nargin == 4
-                if options == 'v'
-                    disp(['normalised root mean squared error (nrmse): ' num2str(gf(i))])
+                S.RootMeanSquaredErrorRMSE = gf(i);
+            case {'4', 'nrmse'}                            % normalised root mean squared error
+                gf(i) = sqrt(mean(e.^2)/var(t)); % 0 - perfect match
+                if nargin == 4
+                    if options == 'v'
+                        disp(['normalised root mean squared error (nrmse): ' num2str(gf(i))])
+                    end
                 end
-            end
-        case '5'                      % mean absolute error 
-           gf(i) = mean(abs(e));       % 0 - perfect match
-            if nargin == 4
-                if options == 'v'
-                    disp(['mean absolute error (mae): ' num2str(gf(5))])
+                S.NormalisedRootMeanSquaredErrorNRMSE = gf(i);
+            case {'5', 'mae'}                      % mean absolute error 
+               gf(i) = mean(abs(e));       % 0 - perfect match
+                if nargin == 4
+                    if options == 'v'
+                        disp(['mean absolute error (mae): ' num2str(gf(5))])
+                    end
                 end
-            end
-        case '6'                      % mean absolute relative error
-           gf(i) = mean((abs(e./t)));  % 0 - perfect match
-            if nargin == 4
-                if options == 'v'
-                    disp(['mean  absolute relative error (mare): ' num2str(gf(6))])
+                S.MeanAbsoluteErrorMAE = gf(i);
+            case {'6',  'mare'}                      % mean absolute relative error
+               gf(i) = mean((abs(e./t)));  % 0 - perfect match
+                if nargin == 4
+                    if options == 'v'
+                        disp(['mean  absolute relative error (mare): ' num2str(gf(6))])
+                    end
                 end
-            end
-        case '7'                      % coefficient of correlation
-           cf = corrcoef(t,y);      % 1 - perfect match
-           gf(i) = cf(1,2);   
-           if nargin == 4
-                if options == 'v'
-                    disp(['coefficient of correlation (r): ' num2str(gf(7))])
+                S.MeanAbsoluteRelativeErrorMARE = gf(i);
+            case {'7', 'r'}                      % coefficient of correlation
+               cf = corrcoef(t,y);      % 1 - perfect match
+               gf(i) = cf(1,2);   
+               if nargin == 4
+                    if options == 'v'
+                        disp(['coefficient of correlation (r): ' num2str(gf(7))])
+                    end
+               end
+               S.CoefficientOfCorrelationR = gf(i);
+            case {'8', 'r2'}                      % coefficient of determination (r-squared)
+               cf = corrcoef(t,y);      
+               gf(i) = cf(1,2);
+               gf(i) = gf(i)^2;               % 1 - perfect match
+                if nargin == 4
+                    if options == 'v'
+                        disp(['coefficient of determination (r-squared): ' num2str(gf(8))])
+                    end
                 end
-            end
-        case '8'                      % coefficient of determination (r-squared)
-           cf = corrcoef(t,y);      
-           gf(i) = cf(1,2);
-           gf(i) = gf(i)^2;               % 1 - perfect match
-            if nargin == 4
-                if options == 'v'
-                    disp(['coefficient of determination (r-squared): ' num2str(gf(8))])
-                end
-            end
-        case '9'                                       % coefficient of efficiency
-           gf(i) = 1 - sum(e.^2)/sum((t - mean(t)).^2); % 1 - perfect match
-            if nargin == 4
-                if options == 'v'
-                    disp(['coefficient of efficiency (e): ' num2str(gf(9))])
-                end
-            end
-        case '10'
-            gf(i) = max(abs(e));       % maximum absolute error
-            if nargin == 4
-                if options == 'v'
-                    disp(['maximum absolute error: ' num2str(gf(10))])
-                end
-            end
-        case '11'
-            gf(i) = max(abs(e./t));    %  maximum absolute relative error
-            if nargin == 4
-                if options == 'v'
-                    disp(['maximum absolute relative error: ' num2str(gf(11))])
-                end
-            end
+                S.CoefficientOfDeterminationR2 = gf(i);
                 
-        otherwise
-            error('Invalid goodness of fit measure in gFitMeasure(%d):\nIt must be one of the strings {1 2 3 4 5 6 7 8 9 10 11}, but actually contained ''%s''',i,char(gFitMeasure(i)))
+            case {'9', 'e'}                                       % coefficient of efficiency
+               gf(i) = 1 - sum(e.^2)/sum((t - mean(t)).^2); % 1 - perfect match
+                if nargin == 4
+                    if options == 'v'
+                        disp(['coefficient of efficiency (e): ' num2str(gf(9))])
+                    end
+                end
+                S.CoefficientOfEfficiencyE = gf(i);
+                
+            case {'10', 'mxae'}
+                gf(i) = max(abs(e));       % maximum absolute error
+                if nargin == 4
+                    if options == 'v'
+                        disp(['maximum absolute error: ' num2str(gf(10))])
+                    end
+                end
+                S.MaximumAbsoluteError = gf(i);
+                
+            case {'11', 'mxare'}
+                gf(i) = max(abs(e./t));    %  maximum absolute relative error
+                if nargin == 4
+                    if options == 'v'
+                        disp(['maximum absolute relative error: ' num2str(gf(11))])
+                    end
+                end
+                S.MaximumAbsoluteRelativeErrorMXARE = gf(i);
+                    
+            otherwise
+                error('Invalid goodness of fit measure in gFitMeasure(%d):\nIt must be one of the strings {1 2 3 4 5 6 7 8 9 10 11}, but actually contained ''%s''',i,char(gFitMeasure(i)))
         end
     end
 end
