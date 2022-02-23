@@ -10,28 +10,33 @@ function numbers = randMat(a, b, method, n, newseed)
 % Arguments: (input)
 %
 %   a - (i x 1) row vector of values specifying the lower limit in each
-%       interval or mean value of the normal distribution.
+%     interval or mean value of the normal distribution.
 %
 %   b - (i x 1) row vector of values specifying the higher limit in each
-%       interval or variance of the normal distribution.
+%     interval or variance of the normal distribution.
 %
 %   method - (i x 1) row vector of integers to indicate normal or uniform 
-%            distribution for each corresponding a,b pair, 0 indicates a
-%            uniform distribution, 1 indicates a normal distribution.
+%     distribution for each corresponding a,b pair, 0 indicates a uniform
+%     distribution, 1 indicates a normal distribution.
 %
 %   n - scalar, number of random numbers to be output for all desired
-%       distributions.
+%     distributions.
 %
 %   newseed - optional scalar, if 1, a new seed is generated from the
-%             system clock, if 0 the existing sequence is used. If omitted,
-%             the default value is zero.
+%     system clock, if 0 the existing sequence is used. If omitted, the
+%     default value is zero.
 %
 % Arguments: (output)
 %   
 %   numbers - (i x n) matrix of random numbers generated for each a,b pair
-%             in the input arguments. Each a,b pair's corresponding output is
-%             represented by a column of n random numbers. 
+%     in the input arguments. Each a,b pair's corresponding output is
+%     represented by a column of n random numbers.
 
+
+    if nargin < 5
+        newseed = 0;
+    end
+    
     if size(a,1) ~= size(b,1)
 
         error('a and b are not of the same size')
@@ -53,10 +58,10 @@ function numbers = randMat(a, b, method, n, newseed)
         end
     end
 
-    if nargin == 4 || (nargin > 4 && newseed == 1)
+    if newseed == 1
         % Initialise the state of the pseudorandom number generator to
         % ensure unique numbers are produced
-        rand('state',sum(100*clock));
+        rand('state', sum(100*clock));
     end
 
     for i = 1:size(a,1)
