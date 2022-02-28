@@ -145,7 +145,7 @@ classdef postproc < handle
             %      possible values are: 'euler123', 'euler313', 'euler321',
             %      'orientation vector' or 'orientation matrix'. This
             %      field is ignored if a netcdf format output file is
-            %      avaialable as the default orientation is determined from
+            %      available as the default orientation is determined from
             %      the contents of the file.
             %
             
