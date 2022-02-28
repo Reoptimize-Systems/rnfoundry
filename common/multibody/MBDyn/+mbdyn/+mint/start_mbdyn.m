@@ -3,9 +3,9 @@ function [mbstatus, cmdout, pid, inputfile] = start_mbdyn (input, varargin)
 %
 % Syntax
 %
-% [status, cmdout] = start_mbdyn (inputfile)
-% [status, cmdout] = start_mbdyn (input_system)
-% [status, cmdout] = start_mbdyn (..., 'Parameter', value)
+% [status, cmdout] = mbdyn.mint.start_mbdyn (inputfile)
+% [status, cmdout] = mbdyn.mint.start_mbdyn (input_system)
+% [status, cmdout] = mbdyn.mint.start_mbdyn (..., 'Parameter', value)
 %
 % Description
 %
@@ -61,7 +61,7 @@ function [mbstatus, cmdout, pid, inputfile] = start_mbdyn (input, varargin)
 %    will wait while MBDyn runs the command.
 %
 %  'ThrowExceptions' - optional true/false flag indicating whether MBDyn
-%    will thro exceptions (can be useful for debugging). Default is false. 
+%    will throw exceptions (can be useful for debugging). Default is false. 
 %
 %
 % Output
