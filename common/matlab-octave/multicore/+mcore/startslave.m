@@ -1,6 +1,5 @@
 function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerrors)
-% STARTMULTICORESLAVE2: Start multi-core processing slave process. For use
-% in conjunction with startmulticoremaster and startmulticoremaster2.
+% mcore.startslave: Start multi-core processing slave process.
 %
 % Syntax
 %
