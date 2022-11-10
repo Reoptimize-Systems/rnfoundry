@@ -1,38 +1,77 @@
 function resultCell = startmaster(evalfcns, fcnparams, settings)
-%STARTMULTICOREMASTER  Start multi-core processing master process.
-%   RESULTCELL = STARTMASTER(FHANDLE, fcnparams)
-%   starts a multi-core processing master process. The function specified
-%   by the given function handle is evaluated with the parameters saved in
-%   each cell of fcnparams. Each cell may include parameters in any
-%   form or another cell array which is expanded to an argument list using
-%   the {:} notation to pass multiple input arguments. The outputs of the
-%   function are returned in cell array RESULTCELL of the same size as
-%   fcnparams. Only the first output argument of the function is
-%   returned. If you need to get multiple outputs, write a small adapter
-%   that puts the outputs of your function into a single cell array.
+% start multi-core processing master process.
 %
-%   To make use of multiple cores/machines, function STARTMASTER
-%   saves files with the function handle and the parameters to a temporary
-%   directory (default: <TEMPDIR2>/multicorefiles, where <TEMPDIR2> is the
-%   directory returned by function TEMPDIR2). These files are loaded by
-%   function STARTMULTICORESLAVE running in other Matlab processes which
-%   have access to the temporary directory. The slave processes evaluate
-%   the given function with the saved parameters and save the result in
-%   another file. The results are later collected by the master process.
+% Syntax
+%   
+% result_cell = mcore.startmaster(fcn_handle, fcnparams)
+% result_cell = mcore.startmaster(fcn_handle, fcnparams, settings)
 %
-%   Note that you can make use of multiple cores on a single machine or on
-%   different machines with a commonly accessible directory/network share
-%   or a combination of both.
+% Description
 %
-%   RESULTCELL = STARTMULTICOREMASTER(FHANDLE, fcnparams, SETTINGS)
-%   The additional input structure SETTINGS may contain any of the
-%   following fields:
+% starts a multi-core processing master process. The function specified by
+% the given function handle is evaluated with the parameters saved in each
+% cell of fcnparams. Each cell may include parameters in any form or
+% another cell array which is expanded to an argument list using the {:}
+% notation to pass multiple input arguments. The outputs of the function
+% are returned in cell array result_cell of the same size as fcnparams. Only
+% the first output argument of the function is returned. If you need to get
+% multiple outputs, write a small adapter that puts the outputs of your
+% function into a single cell array.
 %
-%   settings.multicoreDir:
-%     Directory for temporary files (standard directory is used if empty)
+% To make use of multiple cores/machines, function mcore.startmaster saves
+% files with the function handle and the parameters to a temporary
+% directory (default: <TEMPDIR2>/multicorefiles, where <TEMPDIR2> is the
+% directory returned by function TEMPDIR2). These files are loaded by
+% function mcore.startslave running in other Matlab processes which have
+% access to the temporary directory. The slave processes evaluate the given
+% function with the saved parameters and save the result in another file.
+% The results are later collected by the master process.
 %
-%   settings.nrOfEvalsAtOnce:
-%     Number of function evaluations gathered to a single job.
+% Note that you can make use of multiple cores on a single machine or on
+% different machines with a commonly accessible directory/network share or
+% a combination of both.
+%
+% The syntax RESULTCELL = mcore.startmaster(FHANDLECELL, fcnparams, ...),
+%   with a cell array FHANDLECELL including function handles, allows to
+%   evaluate different functions.
+%
+%   Example: If you have your parameters saved in parameter cell
+%   fcnparams, the for-loop
+%
+%   	for k=1:numel(fcnparams)
+%   		RESULTCELL{k} = FHANDLE(fcnparams{k});
+%   	end
+%
+%   which you would run in a single process can be run in parallel on
+%   different cores/machines using STARTMULTICOREMASTER and
+%   STARTMULTICORESLAVE. Run
+%
+%   	RESULTCELL = mcore.startmaster(FHANDLE, fcnparams, DIRNAME)
+%
+%   in one Matlab process and
+%
+%   	STARTMULTICORESLAVE(DIRNAME)
+%
+%   in one or more other Matlab processes.
+%
+% Inputs
+%
+%  fcn_handle - either a function handle, or a cell array of function
+%   handles of the same size as the fcnparams cell array. If a single
+%   function handle, the same function will be evaluated for every set of
+%   parameters provided. If a cell array, the function in each cell will be
+%   passed the parameters in the coresponding cell in fcnparams as input.
+% 
+%  fcnparams - 
+%
+%  settings - optional structure containing settings parameters which
+%   control the operation of th multicore process
+%
+%   settings.multicoreDir : Directory for temporary files (standard
+%    directory is used if empty)
+%
+%   settings.nrOfEvalsAtOnce : Number of function evaluations gathered to a
+%    single job.
 %
 %   settings.maxEvalTimeSingle:
 %     Timeout for a single function evaluation. Choose this parameter
@@ -41,6 +80,7 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
 %   settings.masterIsWorker:
 %     If true, master process acts as worker and coordinator, if false the
 %     master acts only as coordinator.
+%
 %   settings.preProcessHandle:
 %     A handle to a function to be called before evaluation of the jobs,
 %     default is an empty matrix meaning no prepreocessing is performed
@@ -111,33 +151,14 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
 %   Please refer to the heavily commented demo function MULTICOREDEMO for
 %   details and explanations of the settings.
 %
-%   RESULTCELL = STARTMULTICOREMASTER(FHANDLECELL, fcnparams, ...),
-%   with a cell array FHANDLECELL including function handles, allows to
-%   evaluate different functions.
 %
-%   Example: If you have your parameters saved in parameter cell
-%   fcnparams, the for-loop
-%
-%   	for k=1:numel(fcnparams)
-%   		RESULTCELL{k} = FHANDLE(fcnparams{k});
-%   	end
-%
-%   which you would run in a single process can be run in parallel on
-%   different cores/machines using STARTMULTICOREMASTER and
-%   STARTMULTICORESLAVE. Run
-%
-%   	RESULTCELL = STARTMULTICOREMASTER(FHANDLE, fcnparams, DIRNAME)
-%
-%   in one Matlab process and
-%
-%   	STARTMULTICORESLAVE(DIRNAME)
-%
-%   in one or more other Matlab processes.
+%   See also mcore.startslave, mcore.startnslaves, FUNCTION_HANDLE.
+
+
 %
 %		Markus Buehren
 %		Last modified 19.06.2009
-%
-%   See also STARTMULTICORESLAVE, FUNCTION_HANDLE.
+
     
     if nargin < 3
         settings = struct;
