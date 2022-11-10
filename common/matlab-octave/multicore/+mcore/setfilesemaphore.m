@@ -170,7 +170,7 @@ function semaphore = setfilesemaphore(fileList, showWarnings, debugMode, slaveID
                 end
 
                 % wait before checking again
-                pause(checkWaitTime + maxRandomTime * generaterandomnumber);
+                pause(checkWaitTime + maxRandomTime * mcore.generaterandomnumber); 
 
             end % if ~isempty(dirStruct)
 
@@ -235,7 +235,7 @@ function semaphore = setfilesemaphore(fileList, showWarnings, debugMode, slaveID
                     mcore.mbdelete2(semaphoreFileName, showWarnings, 0); %% file access %%
 
                     % wait random time before checking everything again in while-loop
-                    pause(maxRandomTime * generaterandomnumber);
+                    pause(maxRandomTime * mcore.generaterandomnumber);
                 end
             end % if ~semaphoreExisting
         end % while 1
