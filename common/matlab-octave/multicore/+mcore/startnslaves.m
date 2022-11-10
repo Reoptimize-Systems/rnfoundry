@@ -15,9 +15,14 @@ function startnslaves (nslaves, varargin)
 %  'MulticoreSharedDir' - shared directory to use for the multicore
 %    communication. By default the value returned by the function
 %      
-%     mcore.defaultmulticoredir ()
+%    mcore.defaultmulticoredir ()
 %
-%     is used.
+%    is used.
+%
+%  'CountExisting' - true/false flag indicating whether existing slaves
+%    should be counted in the total number to be launched. Default is true,
+%    so only the number of slaves will be launched which are necessary to
+%    take the total number of active slaves to the value of nslaves.
 %
 %  'SlaveType' - either 'm' or 'o' to indicated if Matlab (m) or Octave (o)
 %    slaves should be launched. Default is 'm'.
@@ -45,11 +50,20 @@ function startnslaves (nslaves, varargin)
     % writing) slaves will quit after this time
     Inputs.EndDate = [2101,2,3,4,5,6];
     Inputs.OutputFilePrefix = '/dev/null';
+    Inputs.CountExisting = true;
     
     Inputs = parse_pv_pairs (Inputs, varargin);
 
+    check.isLogicalScalar (Inputs.CountExisting, true, 'CountExisting');
+
     if isdatetime (Inputs.EndDate)
+
         Inputs.EndDate = datevec (Inputs.EndDate);
+
+    elseif ~(isreal (Inputs.EndDate) && numel(Inputs.EndDate) == 6)
+
+        error ('EndDate should be a datetime object or a 6 element date vector');
+
     end
 
     if ~exist (Inputs.MulticoreSharedDir, 'dir')
@@ -65,31 +79,51 @@ function startnslaves (nslaves, varargin)
             error ('slavetype should be ''m'' for matlab of ''o'' for octave')
     end
     
-    sleeptime = 0;
-    for n = 1:nslaves
+    if Inputs.CountExisting
 
-        if strcmp (Inputs.OutputFilePrefix, '/dev/null')
-            outfile = '/dev/null';
-        else
-            outfile = sprintf('%s_%d.txt', fullfile(Inputs.MulticoreSharedDir, Inputs.OutputFilePrefix), n);
-        end
-        
-        if isunix ()
-            launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d > "%s" &', ...
-                Inputs.MulticoreSharedDir, ...
-                Inputs.EndDate(1), Inputs.EndDate(2), Inputs.EndDate(3), Inputs.EndDate(4), Inputs.EndDate(5), Inputs.EndDate(6), ...
-                Inputs.StartDir, ...
-                sleeptime, ...
-                outfile);
-            
-            fulllaunchscript = fullfile (getmfilepath ('mcore.startnslaves'), '..', [launchscript, '.sh']);
-        else
-            fulllaunchscript  = fullfile (getmfilepath ('mcore.startnslaves'), '..', [launchscript, '.cmd']);
-        end
+        spawnopts.maxslaves = nslaves;
+        spawnopts.sharedir = Inputs.MulticoreSharedDir;
+        spawnopts.matoroct = Inputs.SlaveType;
+        spawnopts.pausetime = Inputs.PauseTime;
+        spawnopts.slavestartdir = Inputs.StartDir;
+        spawnopts.initialwait = 0;
+        spawnopts.pausetime = Inputs.PauseTime;
+        spawnopts.starttime = [];
+        spawnopts.ignoreparamfiles = true;
+
+        spawnstate = mcore.slavespawn (spawnopts);
+
+        spawnstate = mcore.slavespawn (spawnopts, spawnstate);
+
+    else
+
+        sleeptime = 0;
+        for n = 1:nslaves
     
-        system (['"', fulllaunchscript , '"' launchargs]);
+            if strcmp (Inputs.OutputFilePrefix, '/dev/null')
+                outfile = '/dev/null';
+            else
+                outfile = sprintf('%s_%d.txt', fullfile(Inputs.MulticoreSharedDir, Inputs.OutputFilePrefix), n);
+            end
+            
+            if isunix ()
+                launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d > "%s" &', ...
+                    Inputs.MulticoreSharedDir, ...
+                    Inputs.EndDate(1), Inputs.EndDate(2), Inputs.EndDate(3), Inputs.EndDate(4), Inputs.EndDate(5), Inputs.EndDate(6), ...
+                    Inputs.StartDir, ...
+                    sleeptime, ...
+                    outfile);
+                
+                fulllaunchscript = fullfile (getmfilepath ('mcore.startnslaves'), '..', [launchscript, '.sh']);
+            else
+                fulllaunchscript  = fullfile (getmfilepath ('mcore.startnslaves'), '..', [launchscript, '.cmd']);
+            end
         
-        sleeptime = sleeptime + Inputs.PauseTime;
+            system (['"', fulllaunchscript , '"' launchargs]);
+            
+            sleeptime = sleeptime + Inputs.PauseTime;
+    
+        end
 
     end
     
