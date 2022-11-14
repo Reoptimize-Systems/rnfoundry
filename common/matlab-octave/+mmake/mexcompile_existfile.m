@@ -7,8 +7,8 @@ function mexcompile_existfile (varargin)
     options.ThrowBuildErrors = false;
     
     options = parse_pv_pairs (options, varargin);
-    
-    filepath = getmfilepath (['mcore.', mfilename]);
+
+    filepath = getmfilepath (['mmake.', mfilename]);
     
     cdir = pwd;
     CC = onCleanup (@() cd (cdir));
@@ -17,7 +17,7 @@ function mexcompile_existfile (varargin)
     
     mexargs = {'existfile.c'};
     
-    if ~mcore.isoctave ()
+    if ~isoctave ()
         mexargs = [mexargs, { ['EXE="existfile.', options.MexExtension, '"']}];
     end
     
@@ -26,7 +26,7 @@ function mexcompile_existfile (varargin)
     end
     
     try
-        fprintf (1, 'Building mcore.existfile mex file\n');
+        fprintf (1, 'Building mmake.existfile mex file\n');
         mex (mexargs{:}, options.ExtraMexArgs{:});
     catch err
         if options.ThrowBuildErrors == true
