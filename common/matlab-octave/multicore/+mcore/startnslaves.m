@@ -1,4 +1,4 @@
-function startnslaves (nslaves, varargin)
+function spawnstate = startnslaves (nslaves, varargin)
 % launches slave processes for multicore, on same machine as master process
 %
 % Syntax
@@ -40,7 +40,11 @@ function startnslaves (nslaves, varargin)
 %    expiry date for slave so it will self-terminate after a given time. By
 %    default this is set to the date [2101,2,3,4,5,6], far in the future so
 %    there is effectively no end date.
-%    
+%
+%  'OutputFilePrefix' - character vector containing file prefix to use for 
+%    piping the output of the script which launches the slave process.
+%    Default is /dev/null so no output is saved.
+%
 
     Inputs.MulticoreSharedDir = mcore.defaultmulticoredir ();
     Inputs.SlaveType = 'm';
@@ -90,20 +94,25 @@ function startnslaves (nslaves, varargin)
         spawnopts.pausetime = Inputs.PauseTime;
         spawnopts.starttime = [];
         spawnopts.ignoreparamfiles = true;
+        spawnopts.outputfileprefix = Inputs.OutputFilePrefix;
 
         spawnstate = mcore.slavespawn (spawnopts);
 
         spawnstate = mcore.slavespawn (spawnopts, spawnstate);
 
     else
+        spawnstate = [];
 
         sleeptime = 0;
+
+        nactiveslaves = mcore.countslaveIDfiles (Inputs.MulticoreSharedDir);
+
         for n = 1:nslaves
     
             if strcmp (Inputs.OutputFilePrefix, '/dev/null')
                 outfile = '/dev/null';
             else
-                outfile = sprintf('%s_%d.txt', fullfile(Inputs.MulticoreSharedDir, Inputs.OutputFilePrefix), n);
+                outfile = sprintf('%s_%d.txt', fullfile(Inputs.MulticoreSharedDir, Inputs.OutputFilePrefix), n+nactiveslaves);
             end
             
             if isunix ()

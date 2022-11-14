@@ -46,7 +46,9 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
 %     of whether there are any files to processed waiting in the shared
 %     directory. If false, slaves will only be launched if there are files
 %     waiting to be processed.
-% 
+%
+%   outputfileprefix : 
+%
 %  spawnstate - structure containing information about the spawning process
 %   and state. The following fields must be present in the structure:
 %
@@ -119,7 +121,8 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
                           'SlaveType', spawnopts.matoroct, ...
                           'PauseTime', spawnopts.pausetime, ...
                           'StartDir', spawnopts.slavestartdir, ...
-                          'CountExisting', false);
+                          'CountExisting', false, ...
+                          'OutputFilePrefix', spawnopts.outputfileprefix);
 
             % increment the count of spawning events (mainly so we can
             % optionally wait for a while after the first spawning event
