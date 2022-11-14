@@ -4,6 +4,8 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
 %
 % Syntax
 % 
+% spawnstate = mcore.slavespawn ()
+% spawnstate = mcore.slavespawn (spawnopts)
 % spawnstate = mcore.slavespawn (spawnopts, spawnstate)
 %
 % Description
@@ -11,33 +13,56 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
 % slavespawn launches a predetermined number of slaves and keeps them
 % active, starting new processes to get the desired number. 
 % 
+% 
+%
 % Inputs
 % 
 %  spawnopts - structure containing options determining the spwning
 %   process. The following fields must be present in the structure:
 %
-%   pausetime : time between launching slaves
+%   pausetime : A pause is included between launching slaves, as lauhching
+%     them all simultaneously occasionally causes problems with file system
+%     access as they all almost simultaneously attempt to access the same
+%     files when parsing the Matlab path.
 %
-%   initialwait : 
+%   initialwait : if SpawnCount is one, an initial delay in seconds to wait
+%     before checking if additional slaves are needed and launching them. 
 %
 %   starttime : 
 %
-%   sharedir : 
+%   sharedir : shared directory to use for the multicore
+%     communication.
 %
-%   maxslaves : 
+%   maxslaves : target number of slaves to reach
 %
 %   matoroct : character vector containing 'm' or 'o' indicating whether
 %     Matlab of Octave workers are to be created.
 %
-%   slavestartdir : 
+%   slavestartdir : the startup directory 
 %
-%   ignoreparamfiles : 
+%   ignoreparamfiles : true/false flag indicating whether to ignore the
+%     precence of parameter files when determining whether to launch new
+%     slave proceses. If this is true, slaves will be launched regardless
+%     of whether there are any files to processed waiting in the shared
+%     directory. If false, slaves will only be launched if there are files
+%     waiting to be processed.
 % 
-%  spawnstate - 
+%  spawnstate - structure containing information about the spawning process
+%   and state. The following fields must be present in the structure:
+%
+%   SlavesSubmitted : The number of slaves submitted in the previous call
+%     to mcore.slavespawn. Default is zero.
+%
+%   SlavesSubmissionTime : Date number with the time of the previous slave
+%     submissions being started.
+%
+%   SpawnCount : Count of the number of times the spawning process has been
+%     attempted.
+%
 %
 % Output
 %
-%  spawnstate - 
+%  spawnstate - same as input, but updated with latest information
 %
 
     logfcn = @(fid, msg) fprintf ( fid, [ 'MCORE SLAVE SPAWN: [', datestr(now()), '] ', msg, sprintf('\n')] );
@@ -46,9 +71,9 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
         
         spawnstate = struct ('SlavesSubmitted', 0, ...
                              'SlavesSubmissionTime', now (), ...
-                             'CurrentSlaves', 0, ...
-                             'SlavesDeletionTime', now (), ...
-                             'DeletedSlaves', 0, ...
+                             ... 'CurrentSlaves', 0, ...
+                             ... 'SlavesDeletionTime', now (), ...
+                             ... 'DeletedSlaves', 0, ...
                              'SpawnCount', 0 );
                         
         return;
