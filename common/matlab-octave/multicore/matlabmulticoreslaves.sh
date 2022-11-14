@@ -14,5 +14,5 @@ sleep $4
 echo "Running Maltab without jvm"
 # Start the matlab process with no gui, no java (until this is fixed),
 # and limited to a single thread
-matlab -nodesktop -nosplash -nojvm -singleCompThread -r "cd('$3');disp(pwd);ls;startup;disp('Successfully Completed Startup');startmulticoreslave2('$1', 1, datenum($2));quit;"
+matlab -batch "cd('$3');disp(pwd);ls;startup;disp('Successfully Completed Startup');mcore.startslave('$1', 1, datenum($2));quit;"
 
