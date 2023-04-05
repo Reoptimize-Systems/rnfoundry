@@ -1,14 +1,10 @@
-function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerrors)
+function startslave(varargin)
 % mcore.startslave: Start multi-core processing slave process.
 %
 % Syntax
 %
-% mcore.startslave
-% mcore.startslave(multicoreDir)
-% mcore.startslave(..., quitmode)
-% mcore.startslave(..., quitdatenum)
-% mcore.startslave(..., IDfilestart)
-% mcore.startslave(..., throwerrors)
+% mcore.startslave()
+% mcore.startslave('Param', value)
 %
 % Description
 %
@@ -27,8 +23,8 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 % origin. If this slaveID file is not found in the multicore directory the
 % slave quits.
 %
-% mcore.startslave(multicoreDir) starts the slave in the directory
-% specified by multicoreDir.
+% mcore.startslave(MulticoreSharedDir) starts the slave in the directory
+% specified by MulticoreSharedDir.
 %
 % If supplied, quitmode is a scalar value determining how the slave behaves
 % on exit. If zero, the function simply exits as normal. If 1, the matlab
@@ -46,6 +42,9 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 % the contents of this string. The random number identifying the slave will
 % still be appended to this string. 
 %
+%
+% See also mcore.startmaster, mcore.startnslaves
+
 %
 % Orignial Author: Markus Buehren
 % Last modified: 10.04.2009
@@ -65,8 +64,7 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 % Richard Crozier     2011-12-07   Added more detailed error checking for
 %                                  multicore directoy 
 %
-%   See also STARTMULTICOREMASTER, STARTMULTICOREMASTER2,
-%   STARTMULTICORESLAVE
+% Further changes recorded in hg and git logs etc
 
 
 % some day we will get the slave to clean up after itself when interrupted
@@ -75,40 +73,64 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 %                          'WorkingIDFile', [], ...
 %                          'Sem', []);
     
-    debugMode    = 0;
-    showWarnings = 0;
+    options.DebugMode = false;
+    options.ShowWarnings = false;
+    options.MulticoreSharedDir = mcore.defaultmulticoredir ();
+    options.QuitMatlabOnExit = true;
+    options.QuitDatenum = [];
+    options.IDfilestart = 'slaveID_';
+    options.ThrowErrors = false;
+    options.SlaveID = [];
     
-    if nargin == 0
-        multicoreDir = '';
+    options = parse_pv_pairs (options, varargin);
+
+    debugMode = options.DebugMode;
+    showWarnings = options.ShowWarnings;
+    throwerrors = options.ThrowErrors;
+    IDfilestart = options.IDfilestart;
+    MulticoreSharedDir = options.MulticoreSharedDir;
+    quitdatenum = options.QuitDatenum;
+    quitmode = options.QuitMatlabOnExit;
+
+    maxID = 99999;
+
+    if isempty (options.SlaveID)
+        try
+            % try and get a really random number from online
+            options.SlaveID = randi_org(maxID, 1);
+        catch
+            % if that doesn't work, try generating one locally, using a new
+            % seed based on the system clock
+            if showWarnings, fprintf(1, 'Could not access online random number generator, using randi()\n'); end
+            options.SlaveID = randi(99999);
+        end
+    else
+        check.isScalarInteger (options.SlaveID, true, 'SlaveID');
+        if options.SlaveID <= 1 || options.SlaveID >= maxID
+            error ('SlaveID must be <= 1 and >= %d, but supplied value was %d', maxID, options.SlaveID);
+        end
+        slaveID = options.SlaveID;
     end
     
-    if ~ischar(multicoreDir)
+    if ~ischar(MulticoreSharedDir)
         
-        error('multicoreDir must be a character array specifying a directory location');
+        error('MulticoreSharedDir must be a character array specifying a directory location');
         
-    elseif isempty(multicoreDir)
+    elseif isempty(MulticoreSharedDir)
         
         % default directory for multicore
-        multicoreDir = mcore.defaultmulticoredir ();
-        disp(['No dir specified, starting in: ', multicoreDir])
+        MulticoreSharedDir = mcore.defaultMulticoreSharedDir ();
+        disp(['No dir specified, starting in: ', MulticoreSharedDir])
         
-    elseif ~exist(multicoreDir, 'dir')
+    elseif ~exist(MulticoreSharedDir, 'dir')
         
-        error('slave file directory %s does not exist.', multicoreDir);
+        error('slave file directory %s does not exist.', MulticoreSharedDir);
         
-    end
-    
-    if nargin < 4 || isempty(IDfilestart)
-        IDfilestart = 'slaveID_';
-    end
-    
-    if nargin < 5
-        throwerrors = false;
     end
 
     if debugMode
         % activate all messages
-        showWarnings = 1;
+        showWarnings = true;
     end
 
     % parameters
@@ -127,25 +149,6 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 
     persistent lastSessionDateStr
 
-    % get slave file directory name
-    if ~exist('multicoreDir', 'var') || isempty(multicoreDir)
-        multicoreDir = fullfile(tempdir2, 'multicorefiles');
-    end
-
-    % check or set quitmode
-    if nargin < 2 || isempty(quitmode)
-        quitmode = 0;
-    end
-
-    try
-        % try and get a really random number from online
-        slaveID = randi_org(99999, 1);
-    catch
-        % if that doesn't work, try generating one locally, using a new
-        % seed based on the system clock
-        if showWarnings, fprintf(1, 'Could not access online random number generator, using randi()\n'); end
-        slaveID = randi(99999);
-    end
     
     startWaitTime = startWaitTime + (slaveID/100000);
     maxWaitTime = maxWaitTime + (3*slaveID/100000);
@@ -160,7 +163,7 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 %     C = onCleanup(@() onfinish(slaveID));
     fprintf (1, 'This is a multicore slave process with ID: %d\n', slaveID)
     
-    slaveIDfile = fullfile(multicoreDir, [IDfilestart, num2str(slaveID), '.mat']);
+    slaveIDfile = fullfile(MulticoreSharedDir, [IDfilestart, num2str(slaveID), '.mat']);
     fprintf (1, 'Slave control file is:\n%s\nDelete this file to quit slave process.\n', slaveIDfile);
     
     % try to delete the slave ID file when we quit the slave for any reason
@@ -176,14 +179,14 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 
     % Determine if there is a difference in local computer time and the
     % time of the multicore directory
-    dirtdiff = mcore.localvfiledirtimediff(multicoreDir, slaveID);
+    dirtdiff = mcore.localvfiledirtimediff(MulticoreSharedDir, slaveID);
     
     fprintf(1,'Slave ID number: %d\n', slaveID)
 
-    if nargin == 3 && ~isempty(quitdatenum)
-        willquit = true;
+    if isempty(quitdatenum)
+        willexitbydate = false;
     else
-        willquit = false;
+        willexitbydate = true;
     end
     
     settoquitasnodiraccess = false;
@@ -191,7 +194,7 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
     while 1
 
         % Check if a job end datetime has been specified
-        if willquit
+        if willexitbydate
             if datenum(clock) > quitdatenum
                 disp(['Clock states: ', datestr(clock)])
                 disp(['quitdatenum is: ', datestr(quitdatenum)])
@@ -203,7 +206,7 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
         end
         
         % check the directory can be accessed
-        if exist(multicoreDir, 'dir')
+        if exist(MulticoreSharedDir, 'dir')
             
             % check for the existence of an active file for this slave
             if exist(slaveIDfile,'file') ~= 2
@@ -223,13 +226,13 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
             if settoquitasnodiraccess
                 settoquitasnodiraccess = false;
                 if nargin < 3
-                    willquit = false;
+                    willexitbydate = false;
                 end
                 curWaitTime = startWaitTime;
             end
         else
             
-            willquit = true;
+            willexitbydate = true;
             
             % keep trying for half a day before quitting if no quit date
             % is already specified
@@ -250,7 +253,7 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
             continue;
         end
             
-        parameterFileList = mcore.findfiles(multicoreDir, 'parameters_*.mat', 'nonrecursive');
+        parameterFileList = mcore.findfiles(MulticoreSharedDir, 'parameters_*.mat', 'nonrecursive');
 
         % get last file that is not a semaphore file
         parameterFileName = '';
@@ -514,11 +517,11 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
     % We have exited the loop, so either the slave id file was deleted or
     % inaccessible for too long, or the quit time was specified and has 
     % passed
-    if quitmode == 1
-        disp('quitmode is set to one, so quitting matlab client')
+    if quitmode == true
+        disp('QuitMatlabOnExit is set to true, so quitting matlab client')
         quit;
-    elseif quitmode ~= 0
-        disp('quitmode is not zero or one, not quitting client')
+    else
+        disp('QuitMatlabOnExit is set to false, not quitting client')
     end
     
 end

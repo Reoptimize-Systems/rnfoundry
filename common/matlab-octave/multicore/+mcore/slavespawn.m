@@ -20,34 +20,34 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
 %  spawnopts - structure containing options determining the spwning
 %   process. The following fields must be present in the structure:
 %
-%   pausetime : A pause is included between launching slaves, as lauhching
+%   PauseTime : A pause is included between launching slaves, as lauhching
 %     them all simultaneously occasionally causes problems with file system
 %     access as they all almost simultaneously attempt to access the same
 %     files when parsing the Matlab path.
 %
-%   initialwait : if SpawnCount is one, an initial delay in seconds to wait
+%   InitialWait : if SpawnCount is one, an initial delay in seconds to wait
 %     before checking if additional slaves are needed and launching them. 
 %
-%   starttime : 
+%   StartTime : 
 %
-%   sharedir : shared directory to use for the multicore
+%   MulticoreSharedDir : shared directory to use for the multicore
 %     communication.
 %
-%   maxslaves : target number of slaves to reach
+%   MaxSlaves : target number of slaves to reach
 %
-%   matoroct : character vector containing 'm' or 'o' indicating whether
+%   MatOrOct : character vector containing 'm' or 'o' indicating whether
 %     Matlab of Octave workers are to be created.
 %
-%   slavestartdir : the startup directory 
+%   SlaveStartDir : the startup directory 
 %
-%   ignoreparamfiles : true/false flag indicating whether to ignore the
+%   IgnoreParamFiles : true/false flag indicating whether to ignore the
 %     precence of parameter files when determining whether to launch new
 %     slave proceses. If this is true, slaves will be launched regardless
 %     of whether there are any files to processed waiting in the shared
 %     directory. If false, slaves will only be launched if there are files
 %     waiting to be processed.
 %
-%   outputfileprefix : 
+%   OutputFilePrefix : 
 %
 %  spawnstate - structure containing information about the spawning process
 %   and state. The following fields must be present in the structure:
@@ -69,7 +69,11 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
 
     logfcn = @(fid, msg) fprintf ( fid, [ 'MCORE SLAVE SPAWN: [', datestr(now()), '] ', msg, sprintf('\n')] );
 
-    if nargin < 2 || isempty (spawnstate)
+    if nargin < 2
+        spawnstate = [];
+    end
+
+    if isempty (spawnstate)
         
         spawnstate = struct ('SlavesSubmitted', 0, ...
                              'SlavesSubmissionTime', now (), ...
@@ -87,42 +91,42 @@ function spawnstate = slavespawn (spawnopts, spawnstate)
     currenttime = currenttime(4:end);
 
     submit_time = dateadd ( spawnstate.SlavesSubmissionTime, ...
-                           [0,0,0,0,0,spawnstate.SlavesSubmitted*4*spawnopts.pausetime] );
+                           [0,0,0,0,0,spawnstate.SlavesSubmitted*4*spawnopts.PauseTime] );
 
     if spawnstate.SpawnCount == 1
-        % after the first spawning event wait for initialwait
+        % after the first spawning event wait for InitialWait
         % before spawning again
-        submit_time = dateadd ( submit_time, [0,0,0,0,0,spawnopts.initialwait] );
+        submit_time = dateadd ( submit_time, [0,0,0,0,0,spawnopts.InitialWait] );
     end
 
-    if (isempty (spawnopts.starttime) || time2seconds (currenttime) > time2seconds (spawnopts.starttime)) ...
+    if (isempty (spawnopts.StartTime) || time2seconds (currenttime) > time2seconds (spawnopts.StartTime)) ...
             && (spawnstate.SlavesSubmitted == 0 || submit_time < now)
 
         spawnstate.SlavesSubmitted = 0;
 
         % count the number of parameter files in the multicore
         % directory
-        nparamfiles = mcore.countparameterfiles (spawnopts.sharedir);
+        nparamfiles = mcore.countparameterfiles (spawnopts.MulticoreSharedDir);
 
-        nactiveslaves = mcore.countslaveIDfiles (spawnopts.sharedir);
+        nactiveslaves = mcore.countslaveIDfiles (spawnopts.MulticoreSharedDir);
 
-        if (nparamfiles > 0 || spawnopts.ignoreparamfiles) && (nactiveslaves < spawnopts.maxslaves) 
+        if (nparamfiles > 0 || spawnopts.IgnoreParamFiles) && (nactiveslaves < spawnopts.MaxSlaves) 
             % start some slaves
             
             % choose the number of slaves to launch, but no more
-            % than a hard limit specified in spawnopts.maxslaves
-            nslaves = spawnopts.maxslaves - nactiveslaves;
+            % than a hard limit specified in spawnopts.MaxSlaves
+            nslaves = spawnopts.MaxSlaves - nactiveslaves;
 
             % start the slaves
             logfcn (1, sprintf ('Attempting to launch %d slaves.', nslaves));
 
             mcore.startnslaves ( nslaves, ...
-                          'MulticoreSharedDir', spawnopts.sharedir, ...
-                          'SlaveType', spawnopts.matoroct, ...
-                          'PauseTime', spawnopts.pausetime, ...
-                          'StartDir', spawnopts.slavestartdir, ...
+                          'MulticoreSharedDir', spawnopts.MulticoreSharedDir, ...
+                          'SlaveType', spawnopts.MatOrOct, ...
+                          'PauseTime', spawnopts.PauseTime, ...
+                          'StartDir', spawnopts.SlaveStartDir, ...
                           'CountExisting', false, ...
-                          'OutputFilePrefix', spawnopts.outputfileprefix);
+                          'OutputFilePrefix', spawnopts.OutputFilePrefix);
 
             % increment the count of spawning events (mainly so we can
             % optionally wait for a while after the first spawning event

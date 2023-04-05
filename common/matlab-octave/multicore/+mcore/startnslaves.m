@@ -85,16 +85,16 @@ function spawnstate = startnslaves (nslaves, varargin)
     
     if Inputs.CountExisting
 
-        spawnopts.maxslaves = nslaves;
-        spawnopts.sharedir = Inputs.MulticoreSharedDir;
-        spawnopts.matoroct = Inputs.SlaveType;
-        spawnopts.pausetime = Inputs.PauseTime;
-        spawnopts.slavestartdir = Inputs.StartDir;
-        spawnopts.initialwait = 0;
-        spawnopts.pausetime = Inputs.PauseTime;
-        spawnopts.starttime = [];
-        spawnopts.ignoreparamfiles = true;
-        spawnopts.outputfileprefix = Inputs.OutputFilePrefix;
+        spawnopts.MaxSlaves = nslaves;
+        spawnopts.ShareDir = Inputs.MulticoreSharedDir;
+        spawnopts.MatOrOct = Inputs.SlaveType;
+        spawnopts.PauseTime = Inputs.PauseTime;
+        spawnopts.SlaveStartDir = Inputs.StartDir;
+        spawnopts.InitialWait = 0;
+        spawnopts.PauseTime = Inputs.PauseTime;
+        spawnopts.StartTime = [];
+        spawnopts.IgnoreParamFiles = true;
+        spawnopts.OutputFilePrefix = Inputs.OutputFilePrefix;
 
         spawnstate = mcore.slavespawn (spawnopts);
 
@@ -105,23 +105,24 @@ function spawnstate = startnslaves (nslaves, varargin)
 
         sleeptime = 0;
 
-        nactiveslaves = mcore.countslaveIDfiles (Inputs.MulticoreSharedDir);
-
         for n = 1:nslaves
-    
+
+            slaveID = randi(99999);
+
             if strcmp (Inputs.OutputFilePrefix, '/dev/null')
                 outfile = '/dev/null';
             else
-                outfile = sprintf('%s_%d.txt', fullfile(Inputs.MulticoreSharedDir, Inputs.OutputFilePrefix), n+nactiveslaves);
+                outfile = sprintf('%s_%d.txt', fullfile(Inputs.MulticoreSharedDir, Inputs.OutputFilePrefix), slaveID);
             end
             
             if isunix ()
-                launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d > "%s" &', ...
+                launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d %d > "%s" &', ...
                     Inputs.MulticoreSharedDir, ...
                     Inputs.EndDate(1), Inputs.EndDate(2), Inputs.EndDate(3), Inputs.EndDate(4), Inputs.EndDate(5), Inputs.EndDate(6), ...
                     Inputs.StartDir, ...
                     sleeptime, ...
-                    outfile);
+                    slaveID, ...
+                    outfile          );
                 
                 fulllaunchscript = fullfile (getmfilepath ('mcore.startnslaves'), '..', [launchscript, '.sh']);
             else

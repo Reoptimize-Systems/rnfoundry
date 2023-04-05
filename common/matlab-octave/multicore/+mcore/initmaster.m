@@ -6,7 +6,7 @@ function [mcstate, settings, evalfcns, postProcStruct, parameters] = initmaster(
     multicorerootdir = fullfile (fileparts(which('mcore.startmulticoremaster2')), '..');
 
     % default settings
-    settingsDefault.multicoreDir        = mcore.defaultmulticoredir ();
+    settingsDefault.MulticoreSharedDir  = mcore.defaultmulticoredir ();
     settingsDefault.nrOfEvalsAtOnce     = 1;
     settingsDefault.maxEvalTimeSingle   = 60;
     settingsDefault.initCheckPauseTime  = 0.1;
@@ -102,14 +102,14 @@ function [mcstate, settings, evalfcns, postProcStruct, parameters] = initmaster(
     settings.nrOfEvalsAtOnce = round(settings.nrOfEvalsAtOnce);
 
 
-    if ~exist(settings.multicoreDir, 'dir')
-        error('Slave file directory %s does not exist.', settings.multicoreDir);
+    if ~exist(settings.MulticoreSharedDir, 'dir')
+        error('Slave file directory %s does not exist.', settings.MulticoreSharedDir);
     end
     
     % Determine if there is a difference in local computer time and the
     % time of the directory for determining correctly if file semaphores
     % are out of date or not
-    mcstate.dirTimeDiff = mcore.localvfiledirtimediff(settings.multicoreDir, 0);
+    mcstate.dirTimeDiff = mcore.localvfiledirtimediff(settings.MulticoreSharedDir, 0);
 
     % check maxEvalTimeSingle
     if settings.maxEvalTimeSingle < 0
@@ -139,9 +139,9 @@ function [mcstate, settings, evalfcns, postProcStruct, parameters] = initmaster(
 
     % remove all existing temporary multicore files
     existingMulticoreFiles = [...
-        mcore.findfiles(settings.multicoreDir, 'parameters_*.mat', 'nonrecursive'), ...
-        mcore.findfiles(settings.multicoreDir, 'working_*.mat',    'nonrecursive'), ...
-        mcore.findfiles(settings.multicoreDir, 'result_*.mat',     'nonrecursive')];
+        mcore.findfiles(settings.MulticoreSharedDir, 'parameters_*.mat', 'nonrecursive'), ...
+        mcore.findfiles(settings.MulticoreSharedDir, 'working_*.mat',    'nonrecursive'), ...
+        mcore.findfiles(settings.MulticoreSharedDir, 'result_*.mat',     'nonrecursive')];
     
     if settings.clearExistingFiles
         if settings.debugMode, fprintf(1, 'Master is deleting previous mcore files\n'); end
@@ -163,7 +163,7 @@ function [mcstate, settings, evalfcns, postProcStruct, parameters] = initmaster(
     % build parameter file name (including the date is important because slave
     % processes might still be working with old parameters)
     dateStr = sprintf('%04d%02d%02d%02d%02d%02d', round(clock));
-    mcstate.parameterFileNameTemplate = fullfile(settings.multicoreDir, sprintf('parameters_%s_XX_mID_%d.mat', dateStr, mcstate.ID));
+    mcstate.parameterFileNameTemplate = fullfile(settings.MulticoreSharedDir, sprintf('parameters_%s_XX_mID_%d.mat', dateStr, mcstate.ID));
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % generate parameter files %

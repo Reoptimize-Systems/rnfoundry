@@ -67,7 +67,7 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
 %  settings - optional structure containing settings parameters which
 %   control the operation of th multicore process
 %
-%   settings.multicoreDir : Directory for temporary files (standard
+%   settings.MulticoreSharedDir : Directory for temporary files (standard
 %    directory is used if empty)
 %
 %   settings.nrOfEvalsAtOnce : Number of function evaluations gathered to a
@@ -177,7 +177,7 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
     while 1 % this while-loop will be left if all work is done
         
         % check the directory can be accessed
-        if ~exist(settings.multicoreDir, 'dir')
+        if ~exist(settings.MulticoreSharedDir, 'dir')
 
             if settings.showWarnings
                 disp('Multicore directory not currently accessible')
