@@ -1,18 +1,18 @@
-function [design, simoptions, T, Y, results] = evaluatedesign_RADIAL(design, simoptions)
-% simulates and evaluates the design of a radial flux pm machine
+function [design, simoptions, T, Y, results] = evaluatedesign_ROTARY(design, simoptions)
+% simulates and evaluates the design of a rotary pm machine
 %
 % Syntax
 %
-% [design, simoptions, T, Y, results] = evaluatedesign_RADIAL(design, simoptions)
+% [design, simoptions, T, Y, results] = evaluatedesign_ROTARY (design, simoptions)
 %
 % Description
 %
-% evaluatedesign_RADIAL simulates a radial flux permanent magnet machine
+% evaluatedesign_ROTARY simulates a rotary permanent magnet machine
 % according to the specified simulation parameters, and evaluates the
 % design according to supplied scoring criteria and data.
-% evaluatedesign_RADIAL is generally intended to be called by a higher
+% evaluatedesign_ROTARY is generally intended to be called by a higher
 % level function specific to a particular type of radial flux machine,
-% e.g. evaluatedesign_RADIAL_SLOTTED.
+% e.g. evaluatedesign_RADIAL.
 %
 % Input
 %
@@ -197,8 +197,9 @@ function [design, simoptions, T, Y, results] = evaluatedesign_RADIAL(design, sim
 
 % Copyright Richard Crozier 2012
 
+    
     % simulate the machine
-    [design, simoptions, T, Y, results] = evaluatedesign_ROTARY (design, simoptions);
+    [T, Y, results, design, simoptions] = simulatemachine_AM (design, simoptions);
     
 %     % evaluate the structure, unless we are told to skip it
 %     if ~simoptions.Evaluation.SkipStructural

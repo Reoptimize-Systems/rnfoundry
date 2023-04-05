@@ -170,7 +170,7 @@ function semaphore = setfilesemaphore(fileList, showWarnings, debugMode, slaveID
                 end
 
                 % wait before checking again
-                pause(checkWaitTime + maxRandomTime * mcore.generaterandomnumber); 
+                pause(checkWaitTime + maxRandomTime * mcore.generaterandomnumber());
 
             end % if ~isempty(dirStruct)
 
@@ -180,7 +180,7 @@ function semaphore = setfilesemaphore(fileList, showWarnings, debugMode, slaveID
                 %%%%%%%%%%%%%%%%%%%%%%%%%%
                 for attemptNr = 1:10
                     % build semaphore file name
-                    [randomNr, randomStr] = mcore.generaterandomnumber; 
+                    [randomNr, randomStr] = mcore.generaterandomnumber(); 
                     semaphoreFileName = [fileName, '.semaphore.', hostname, '.', randomStr, '.mat'];
                     
                     if ~mcore.isoctave
@@ -235,7 +235,7 @@ function semaphore = setfilesemaphore(fileList, showWarnings, debugMode, slaveID
                     mcore.mbdelete2(semaphoreFileName, showWarnings, 0); %% file access %%
 
                     % wait random time before checking everything again in while-loop
-                    pause(maxRandomTime * mcore.generaterandomnumber);
+                    pause(maxRandomTime * mcore.generaterandomnumber());
                 end
             end % if ~semaphoreExisting
         end % while 1
@@ -243,7 +243,7 @@ function semaphore = setfilesemaphore(fileList, showWarnings, debugMode, slaveID
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function [randomNr, randomStr] = mcore.generaterandomnumber
+% function [randomNr, randomStr] = generaterandomnumber
 % %GENERATERANDOMNUMBER
 % %   in very unlikely cases, it might happen that the random states of rand
 % %   and randn are equal in two Matlab processes calling function

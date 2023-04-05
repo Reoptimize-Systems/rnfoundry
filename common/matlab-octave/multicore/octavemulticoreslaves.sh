@@ -24,8 +24,8 @@ disp(pwd); \
 ls; \
 save_default_options ('-binary'); \
 disp('Successfully Completed Startup'); \
-startmulticoreslave2('$1', 1, datenum($2)); \
+mcore.startslave('$1', 1, datenum($2)); \
 quit;"
 
 # Start the octave process 
-octave-cli --eval "${OCT_COMMAND}"
+octave --eval "${OCT_COMMAND}"

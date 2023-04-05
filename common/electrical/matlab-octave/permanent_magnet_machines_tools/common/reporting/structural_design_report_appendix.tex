@@ -1,0 +1,30 @@
+\section{Structural Formulas}
+
+\subsection{Generic Deflection and Stress Formulas}
+
+\begin{equation}
+\sigma = -\frac{My}{I}
+\label{eq:bendingstress}
+\end{equation}
+
+\begin{equation}
+y = y_A + \theta_A + \theta_Ax \frac{M_A x^2}{2EI} + \frac{R_Ax^2}{6EI} - \frac{w_A}{24EI} \langle x-a \rangle^4 - \frac{(w_l-w_a}{120EI(l-a)}\langle x - a \rangle^5
+\label{eq:beamdefgeneric}
+\end{equation}
+
+For a simply supported beam equations (\ref{eq:simpsuppRA}) through (\ref{eq:simpsuppthetaA}) apply.
+\begin{align}
+R_A & = \frac{w_a}{2l} (l-a)^2 + \frac{w_a-w_l}{6l}(l - a)^2 \label{eq:simpsuppRA} \\ 
+M_A & = 0 \label{eq:simpsuppMA} \\ 
+y_A & = 0 \label{eq:simpsuppyA} \\ 
+\theta_A & = \frac{-w_a}{24EIl} (l-a)^2 (l^2 + 2al - a^2) - \frac{w_l - w_a}{360EIl}(l-a)^2 (7l^2 + 6al - 3a^2) \label{eq:simpsuppthetaA}
+\end{align}
+
+\subsection{Formulas Related to Bolts and Screws}
+
+The minimum diameter of a standard metric bolt is given by (\ref{eq:boltdmin}) where $D_{\text{MAJ}}$ is the outer diameter and $P$  is the thread pitch in mm.
+\begin{equation}
+D_{\text{MIN}} = D_{\text{MAJ}} - 1.082532 P
+\label{eq:boltdmin}
+\end{equation}
+

@@ -1,4 +1,4 @@
-function [mbstatus, cmdout, pid, inputfile] = start_mbdyn (input, varargin)
+function [mbstatus, cmdout, pid, inputfile, cmdline] = start_mbdyn (input, varargin)
 % runs mbdyn with the appropriate commands
 %
 % Syntax
@@ -76,6 +76,8 @@ function [mbstatus, cmdout, pid, inputfile] = start_mbdyn (input, varargin)
 %
 %  inputfile - character vector containing the path of the input file used
 %    when starting MBDyn
+%
+%  cmdline - character vector containing the command used to launch mbdyn
 %
 % See Also: mbdyn.pre.system.generateMBDynInputFile
 %

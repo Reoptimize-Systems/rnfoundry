@@ -62,7 +62,7 @@ function [ptables, pdata] = performancetables_RADIAL_SLOTTED(design, simoptions,
     % set up the simulation functions
     simoptions = setfieldifabsent (simoptions, 'ODESim', struct());
     simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'PreProcFcn', 'simfun_RADIAL_SLOTTED');
-    simoption.ODESims = setfieldifabsent (simoptions.ODESim, 'PostPreProcFcn', 'prescribedmotfinfun_RADIAL_SLOTTED');
+    simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'PostPreProcFcn', 'prescribedmotfinfun_RADIAL_SLOTTED');
     simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'EvalFcn', 'prescribedmotodetorquefcn_ROTARY');
     simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'TorqueFcn', 'torquefcn_ROTARY');
     simoptions.ODESim = setfieldifabsent (simoptions.ODESim, 'PostSimFcn', 'prescribedmotresfun_ROTARY');
