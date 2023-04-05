@@ -32,9 +32,10 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %    thetam - angular pitch of magnet in radians
 %
 %    thetac - angular pitch of coil slot, this can be a single value or two 
-%      values. If two values, it is the pitch at the base (close to armature 
-%      yoke) and top (close to slot opening) of the slot respectively. If this 
-%      is a single value, the same pitch is used for both the base and the top.
+%      values. If two values, it is the pitch at the base (close to
+%      armature yoke) and top (close to slot opening) of the slot
+%      respectively. If this is a single value, the same pitch is used for
+%      both the base and the top.
 %
 %    thetasg - angular pitch of the coil slot opening between shoes.
 %
@@ -80,10 +81,11 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
 %
 %
 % This completes the specification of the physical dimentions of the
-% armature and field. Alternative methods of specifying the dimensions (such as 
-% as a set of dimensionless ratios) are possible which can be easily converted 
-% to this form using the helper function completedesign_RADIAL_SLOTTED.m. See 
-% the help for  completedesign_RADIAL_SLOTTED for more details.
+% armature and field. Alternative methods of specifying the dimensions
+% (such as as a set of dimensionless ratios) are possible which can be
+% easily converted to this form using the helper function
+% completedesign_RADIAL_SLOTTED.m. See the help for
+% completedesign_RADIAL_SLOTTED for more details.
 %
 % In addition, a winding specification must be supplied. The winding is
 % described using the following variables:
