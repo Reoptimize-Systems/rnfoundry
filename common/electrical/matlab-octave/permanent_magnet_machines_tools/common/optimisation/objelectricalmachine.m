@@ -65,7 +65,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'maxattempts', 3);
     
     % set some default common spawning settings if not supplied
-    simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreMonitorFunction', 'mcoreslavespawn');
+    simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreMonitorFunction', 'mcore.slavespawn');
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreMonitorData', []);
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'starttime', [5,0,1]);
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'endtime', [5,0,0]);
@@ -171,7 +171,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
                 % spawn matlab processes to do the work
                 fprintf (1, 'spawnslaves true for FEA\n');
                 
-                if strcmp (simoptions.Evaluation.MCoreMonitorFunction, 'mcoreslavespawn')
+                if strcmp (simoptions.Evaluation.MCoreMonitorFunction, 'mcore.slavespawn')
                     
                     % set up the mcorecondormatlabslavespawn monitor function, called
                     % by the multicore master process each time it looks for new files
