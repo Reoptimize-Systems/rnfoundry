@@ -6,6 +6,13 @@ function startnslaves (nslaves, varargin)
 % startnslaves (nslaves)
 % startnslaves (nslaves, 'Param', value)
 %
+% Description
+%
+% Starts one or more slave processes on the local machine. Slaves can be
+% stopped by deleting individual slave ID file (files created by slaves
+% named slave_ID*.mat in the shared multicore directory), or by calling
+% mcore.quitallslaves.
+%
 % Input
 %
 %  nslaves - The number of slaves to launch on the local machine.
@@ -14,7 +21,7 @@ function startnslaves (nslaves, varargin)
 %
 %  'MulticoreSharedDir' - shared directory to use for the multicore
 %    communication. By default the value returned by the function
-%      
+%
 %    mcore.defaultmulticoredir ()
 %
 %    is used.
@@ -40,18 +47,25 @@ function startnslaves (nslaves, varargin)
 %    expiry date for slave so it will self-terminate after a given time. By
 %    default this is set to the date [2101,2,3,4,5,6], far in the future so
 %    there is effectively no end date.
-%    
+%
+%
+% See Also: mcore.startslave, mcore.quitallslaves
+%
 
     Inputs.MulticoreSharedDir = mcore.defaultmulticoredir ();
-    Inputs.SlaveType = 'm';
+    if mcore.isoctave ()
+        Inputs.SlaveType = 'o';
+    else
+        Inputs.SlaveType = 'm';
+    end
     Inputs.PauseTime = 5;
-    Inputs.StartDir = '~/Documents/MATLAB/';
+    Inputs.StartDir = userpath ();
     % default end date is a very long time in the future (at the time of
     % writing) slaves will quit after this time
     Inputs.EndDate = [2101,2,3,4,5,6];
     Inputs.OutputFilePrefix = '/dev/null';
     Inputs.CountExisting = true;
-    
+
     Inputs = parse_pv_pairs (Inputs, varargin);
 
     check.isLogicalScalar (Inputs.CountExisting, true, 'CountExisting');
@@ -66,10 +80,14 @@ function startnslaves (nslaves, varargin)
 
     end
 
+    if ispc
+        error ('Starting multiple slaves is currently only supported on linux');
+    end
+
     if ~exist (Inputs.MulticoreSharedDir, 'dir')
         mkdir (Inputs.MulticoreSharedDir);
     end
-    
+
     switch Inputs.SlaveType
         case 'm'
             launchscript = 'matlabmulticoreslaves';
@@ -78,7 +96,9 @@ function startnslaves (nslaves, varargin)
         otherwise
             error ('slavetype should be ''m'' for matlab of ''o'' for octave')
     end
-    
+
+    launchscript = fullfile (getmfilepath ('mcore.startnslaves'), '..', launchscript);
+
     if Inputs.CountExisting
 
         spawnopts.maxslaves = nslaves;
@@ -122,7 +142,7 @@ function startnslaves (nslaves, varargin)
             system (['"', fulllaunchscript , '"' launchargs]);
             
             sleeptime = sleeptime + Inputs.PauseTime;
-    
+ 
         end
 
     end

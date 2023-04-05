@@ -15,11 +15,11 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 % mcore.startslave starts a slave process which looks in a given directory
 % for files created by a companion function, mcore.startmaster, running in
 % another matlab client. mcore.startslave runs the jobs specified in the
-% communication files created by startmulticoremaster and saves the output
+% communication files created by more.startmaster and saves the output
 % to results files in the same directoyr for collection by
-% mcore.startmaster. If called with no arguments startmulticoreslave2
+% mcore.startmaster. If called with no arguments mcore.startslave
 % uses the default directory 'Temp_Files' expected to be in the same
-% directory as the startmulticoreslave2 function file. The slave also
+% directory as the mcore.startslave function file. The slave also
 % produces an individual file which it moitors between processing of job
 % files. This file is given the default name 'slaveID_XXX' where XXX is any
 % number of random digits, specific to the slave. This number is also
@@ -47,6 +47,9 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 % still be appended to this string. 
 %
 %
+% See also: mcore.startmaster, mcore.startnslaves, mcore.quitallslaves
+%
+
 % Orignial Author: Markus Buehren
 % Last modified: 10.04.2009
 %
@@ -64,10 +67,6 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
 %
 % Richard Crozier     2011-12-07   Added more detailed error checking for
 %                                  multicore directoy 
-%
-%   See also STARTMULTICOREMASTER, STARTMULTICOREMASTER2,
-%   STARTMULTICORESLAVE
-
 
 % some day we will get the slave to clean up after itself when interrupted
 %     cleanupinfo = struct('SlaveIDFile', [], ...
@@ -208,7 +207,7 @@ function startslave(multicoreDir, quitmode, quitdatenum, IDfilestart, throwerror
             % check for the existence of an active file for this slave
             if exist(slaveIDfile,'file') ~= 2
                 % Exit the loop if it is not found
-                disp('File not found for slave, exiting startmulticoreslave2')
+                disp('File not found for slave, exiting mcore.startslave')
                 break;
             else
                 % overwrite the file so we can look at the time stamp
