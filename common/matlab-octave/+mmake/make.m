@@ -719,7 +719,7 @@ function b = file_exist(filename)
         b=(a.exists() && ~a.isDirectory);
     else
         try
-            b = existfile (filename);
+            b = mmake.existfile (filename);
             if b == true
                 [~, msg] = fileattrib (filename);
                 if msg.directory == 1
@@ -728,7 +728,7 @@ function b = file_exist(filename)
             end
         catch
             error ('MJB:mmake:file_exist', ...
-                   'mmake requires java support or the existfile function.');
+                   'mmake requires java support or the mcore.existfile function.');
         end
     end
 end
@@ -744,7 +744,7 @@ function t = ftime(filename)
         end
     else
         if isoctave
-            if existfile (filename)
+            if mmake.existfile (filename)
                 info = stat (filename);
                 t = info.mtime;
             else

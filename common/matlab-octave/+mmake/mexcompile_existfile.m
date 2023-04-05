@@ -7,9 +7,8 @@ function mexcompile_existfile (varargin)
     options.ThrowBuildErrors = false;
     
     options = parse_pv_pairs (options, varargin);
-    
 
-    filepath = getmfilepath (mfilename);
+    filepath = getmfilepath (['mmake.', mfilename]);
     
     cdir = pwd;
     CC = onCleanup (@() cd (cdir));
@@ -27,6 +26,7 @@ function mexcompile_existfile (varargin)
     end
     
     try
+        fprintf (1, 'Building mmake.existfile mex file\n');
         mex (mexargs{:}, options.ExtraMexArgs{:});
     catch err
         if options.ThrowBuildErrors == true

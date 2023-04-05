@@ -8,8 +8,7 @@ function mexcompile_existfile (varargin)
     
     options = parse_pv_pairs (options, varargin);
     
-
-    filepath = getmfilepath (mfilename);
+    filepath = getmfilepath (['mcore.', mfilename]);
     
     cdir = pwd;
     CC = onCleanup (@() cd (cdir));
@@ -27,6 +26,7 @@ function mexcompile_existfile (varargin)
     end
     
     try
+        fprintf (1, 'Building mcore.existfile mex file\n');
         mex (mexargs{:}, options.ExtraMexArgs{:});
     catch err
         if options.ThrowBuildErrors == true

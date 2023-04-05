@@ -36,13 +36,21 @@ function rnfoundry_setup (varargin)
 %  'RunTests' - Flag determining whether tor runs some scripts to test the 
 %    setup after installation is complete. Default is false.
 %
-%  'ForceExistfileSetup' - Forces the recompilation of the existfile mex
-%    function. A non-mex version will be used if not present. Default is
-%    false.
+%  'ForceMulticoreExistfileSetup' - Forces the recompilation of the 
+%    existfile mex function in the multicore package. A non-mex version
+%    will be used if not present. Default is false.
 %
-%  'SkipExistfileSetup' - Skips compilation of the existfile mex
-%    function, even if it is not on the path. A slower non-mex version will
-%    be used if not present. Default is false.
+%  'SkipMulticoreExistfileSetup' - Skips compilation of the existfile mex
+%    function in the multicore package, even if it is not on the path. A
+%    slower non-mex version will be used if not present. Default is false.
+%
+%  'ForceMMakeExistfileSetup' - Forces the recompilation of the 
+%    existfile mex function in the mmake package. A non-mex version will be
+%    used if not present. Default is false.
+%
+%  'SkipMMakeExistfileSetup' - Skips compilation of the existfile mex
+%    function in the mmake package, even if it is not on the path. A slower
+%    non-mex version will be used if not present. Default is false.
 %
 %  'ForceMexLseiSetup' - Forces the recompilation of the mexlsei mex 
 %    function even if it already on the path. mexlsei is not required if
@@ -194,8 +202,10 @@ function rnfoundry_setup (varargin)
 %         Inputs.XFemmDownloadSource = '';
 %     end
     options.XFemmInstallPrefix = fullfile (thisfilepath, 'common');
-    options.ForceExistfileSetup = false;
-    options.SkipExistfileSetup = false;
+    options.ForceMulticoreExistfileSetup = false;
+    options.SkipMulticoreExistfileSetup = false;
+    options.ForceMMakeExistfileSetup = false;
+    options.SkipMMakeExistfileSetup = false;
     
     options.W64CrossBuild = false;
     options.W64CrossBuildMexLibsDir = '';
@@ -210,9 +220,37 @@ function rnfoundry_setup (varargin)
         options.ForceMexSLMSetup = true;
         options.ForceMBDynSetup = true;
         options.ForceMexPPValSetup = true;
-        options.ForceExistfileSetup = true;
+        options.ForceMulticoreExistfileSetup = true;
+        options.ForceMMakeExistfileSetup = true;
         options.ForceMexmPhaseWLSetup = true;
     end
+
+    % input checking
+    check.isLogicalScalar (options.RunTests, true, 'RunTests');
+    check.isLogicalScalar (options.Verbose, true, 'Verbose');
+    check.isLogicalScalar (options.ForceAllMex, true, 'ForceAllMex');
+
+    check.isLogicalScalar (options.ForceMexLseiSetup, true, 'ForceMexLseiSetup');
+    check.isLogicalScalar (options.ForceMexSLMSetup, true, 'ForceMexSLMSetup');
+    check.isLogicalScalar (options.ForceMBDynSetup, true, 'ForceMBDynSetup');
+    check.isLogicalScalar (options.ForceMexPPValSetup, true, 'ForceMexPPValSetup');
+    check.isLogicalScalar (options.ForceMulticoreExistfileSetup, true, 'ForceMulticoreExistfileSetup');
+    check.isLogicalScalar (options.ForceMMakeExistfileSetup, true, 'ForceMMakeExistfileSetup');
+    check.isLogicalScalar (options.ForceMexmPhaseWLSetup, true, 'ForceMexmPhaseWLSetup');
+
+    check.isLogicalScalar (options.SkipMexLseiSetup, true, 'SkipMexLseiSetup');
+    check.isLogicalScalar (options.SkipMexSLMSetup, true, 'SkipMexSLMSetup');
+    check.isLogicalScalar (options.SkipMBDynSetup, true, 'SkipMBDynSetup');
+    check.isLogicalScalar (options.SkipMexPPValSetup, true, 'SkipMexPPValSetup');
+    check.isLogicalScalar (options.SkipMulticoreExistfileSetup, true, 'SkipMulticoreExistfileSetup');
+    check.isLogicalScalar (options.SkipMMakeExistfileSetup, true, 'SkipMMakeExistfileSetup');
+    check.isLogicalScalar (options.SkipMexmPhaseWLSetup, true, 'SkipMexmPhaseWLSetup');
+
+    check.isLogicalScalar (options.PreventXFemmCheck, true, 'PreventXFemmCheck');
+    check.isLogicalScalar (options.ForceMexLseiF2cLibRecompile, true, 'ForceMexLseiF2cLibRecompile');
+    check.isLogicalScalar (options.ForceMexLseiCFileCreation, true, 'ForceMexLseiCFileCreation');
+    check.isLogicalScalar (options.W64CrossBuild, true, 'W64CrossBuild');
+    check.isLogicalScalar (options.ThrowBuildErrors, true, 'ThrowBuildErrors');
     
     didcompwarn = false;
     
@@ -246,13 +284,16 @@ function rnfoundry_setup (varargin)
         
     end
     
-    %% existfile
-    if options.ForceExistfileSetup && options.SkipExistfileSetup
-        error ('The options ForceExistfileSetup and SkipExistfileSetup are both set to true');
+    %% mcore.existfile
+    if options.ForceMulticoreExistfileSetup && options.SkipMulticoreExistfileSetup
+        error ('The options ForceMulticoreExistfileSetup and SkipMulticoreExistfileSetup are both set to true');
     end
     
-    if ~options.SkipExistfileSetup
-        if options.ForceExistfileSetup || (exist (['existfile.', mex_ext], 'file') ~= 3)
+    if ~options.SkipMulticoreExistfileSetup
+
+        mcore_pkg_dir = fullfile (rnfoundry_common_rootdir (), 'multicore', '+mcore');
+
+        if options.ForceMulticoreExistfileSetup || (exist (fullfile(mcore_pkg_dir, ['existfile.', mex_ext]), 'file') ~= 3)
             didcompwarn = compilerwarning (didcompwarn);
             
             if options.W64CrossBuild
@@ -262,17 +303,47 @@ function rnfoundry_setup (varargin)
             end
             
             % set up existfile mex function
-            mexcompile_existfile ( 'Verbose', options.Verbose, ...
-                                   'ExtraMexArgs', extra_mex_args, ...
-                                   'MexExt', mex_ext, ...
-                                   'ThrowBuildErrors', options.ThrowBuildErrors  );
+            mcore.mexcompile_existfile ( 'Verbose', options.Verbose, ...
+                                         'ExtraMexArgs', extra_mex_args, ...
+                                         'MexExt', mex_ext, ...
+                                         'ThrowBuildErrors', options.ThrowBuildErrors  );
         else
             if options.Verbose
                 fprintf (1, 'Not compiling %s mex as it already exists\n', 'existfile')
             end
         end
     end
+
+    %% mmake.existfile
+    if options.ForceMMakeExistfileSetup && options.SkipMMakeExistfileSetup
+        error ('The options ForceMMakeExistfileSetup and SkipMMakeExistfileSetup are both set to true');
+    end
     
+    if ~options.SkipMMakeExistfileSetup
+
+        mmake_pkg_dir = fullfile (rnfoundry_common_rootdir (), '+mmake');
+
+        if options.ForceMMakeExistfileSetup || (exist (fullfile(mmake_pkg_dir, ['existfile.', mex_ext]), 'file') ~= 3)
+            didcompwarn = compilerwarning (didcompwarn);
+            
+            if options.W64CrossBuild
+                extra_mex_args = common_extra_mex_args;
+            else
+                extra_mex_args = {};
+            end
+            
+            % set up existfile mex function
+            mmake.mexcompile_existfile ( 'Verbose', options.Verbose, ...
+                                         'ExtraMexArgs', extra_mex_args, ...
+                                         'MexExt', mex_ext, ...
+                                         'ThrowBuildErrors', options.ThrowBuildErrors  );
+        else
+            if options.Verbose
+                fprintf (1, 'Not compiling %s mex as it already exists\n', 'existfile')
+            end
+        end
+    end
+
     %% mexlsei
     if options.ForceMexLseiSetup && options.SkipMexLseiSetup
         error ('The options ForceMexLseiSetup and SkipMexLseiSetup are both set to true');
