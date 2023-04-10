@@ -94,6 +94,11 @@ function startslave(varargin)
 
     maxID = 99999;
 
+    if options.DebugMode
+        fprintf(1, 'Slave options are: \n'); 
+        dispstruct (options);
+    end
+
     if isempty (options.SlaveID)
         try
             % try and get a really random number from online
@@ -317,7 +322,7 @@ function startslave(varargin)
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if debugMode
                 fprintf(1,'Slave evaluates job nr %d.\n', fileNr);
-                t0 = mcore.mbtime;
+                t0 = mcore.mbtime();
             end
 
             % Check if date string in parameter file name has changed. If yes, call
@@ -432,7 +437,7 @@ function startslave(varargin)
             end
 
             if debugMode
-                fprintf(1,'Slave finished job nr %d in %.2f seconds.\n', fileNr, mbtime - t0);
+                fprintf(1,'Slave finished job nr %d in %.2f seconds.\n', fileNr, mcore.mbtime() - t0); 
             end
 
             % Save result. Use file semaphore of the parameter file to reduce the
