@@ -67,7 +67,8 @@ function spawnstate = startnslaves (nslaves, varargin)
     % default end date is a very long time in the future (at the time of
     % writing) slaves will quit after this time
     Inputs.EndDate = [2101,2,3,4,5,6];
-    Inputs.OutputFilePrefix = '/dev/null';
+%     Inputs.OutputFilePrefix = '/dev/null';
+    Inputs.OutputFilePrefix = 'slave';
     Inputs.CountExisting = true;
 
     Inputs = parse_pv_pairs (Inputs, varargin);
@@ -101,7 +102,6 @@ function spawnstate = startnslaves (nslaves, varargin)
             error ('slavetype should be ''m'' for matlab of ''o'' for octave')
     end
 
-    launchscript = fullfile (getmfilepath ('mcore.startnslaves'), '..', launchscript);
 
     if Inputs.CountExisting
 
@@ -121,6 +121,10 @@ function spawnstate = startnslaves (nslaves, varargin)
         spawnstate = mcore.slavespawn (spawnopts, spawnstate);
 
     else
+
+        % get the full path to the launch script
+        launchscript = fullfile (getmfilepath ('mcore.startnslaves'), '..', launchscript);
+
         spawnstate = [];
 
         sleeptime = 0;
@@ -144,12 +148,12 @@ function spawnstate = startnslaves (nslaves, varargin)
                     slaveID, ...
                     outfile          );
                 
-                fulllaunchscript = fullfile (getmfilepath ('mcore.startnslaves'), '..', [launchscript, '.sh']);
+                fulllaunchscript = [launchscript, '.sh'];
             else
-                fulllaunchscript  = fullfile (getmfilepath ('mcore.startnslaves'), '..', [launchscript, '.cmd']);
+                fulllaunchscript  = [launchscript, '.cmd'];
             end
         
-            system (['"', fulllaunchscript , '"' launchargs]);
+            cleansystem (['"', fulllaunchscript , '"' launchargs]);
             
             sleeptime = sleeptime + Inputs.PauseTime;
  
