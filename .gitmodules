@@ -1,3 +1,6 @@
 [submodule "common/matlab-octave/plotting_tools/tb-matlab2tikz"]
 	path = common/matlab-octave/plotting_tools/tb-matlab2tikz
 	url = https://github.com/matlab2tikz/matlab2tikz.git
+[submodule "common/matlab-octave/plotting_tools/tb-export_fig"]
+	path = common/matlab-octave/plotting_tools/tb-export_fig
+	url = https://github.com/altmany/export_fig.git
