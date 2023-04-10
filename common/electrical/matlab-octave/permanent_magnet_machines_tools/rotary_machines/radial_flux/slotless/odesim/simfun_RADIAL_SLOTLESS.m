@@ -320,12 +320,12 @@ function [design, simoptions] = simfun_RADIAL_SLOTLESS(design, simoptions)
         pos = linspace (0, 0.9*design.g, simoptions.NForcePoints-1);
         pos(end+1) = 0.95*design.g;
     
-        design.gforce = [0, closingforce_RADIAL_SLOTTED(design, pos)];
+        design.ForceGapClosingWithDisp = [0, closingforce_RADIAL_SLOTTED(design, pos)];
 %     else
-%         design.gforce = [0, zeros(1, numel (pos))];
-        design.gvar = [0, pos];
+%         design.ForceGapClosingWithDisp = [0, zeros(1, numel (pos))];
+        design.DispGapClosingForce = [0, pos];
     end
-%     design.gvar = [0, pos];
+%     design.DispGapClosingForce = [0, pos];
     
     % make sure the winding properties (number of turns etc.) are up to date
     if rmcoilturns
@@ -425,10 +425,10 @@ function [RawCoggingTorque, BxCoreLossData, ByCoreLossData, ArmatureToothFluxDen
         solution.groupselectblock( [ design.FemmProblem.Groups.Magnet, ...
                                      design.FemmProblem.Groups.BackIron ]);
 
-%                     design.gforce = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
+%                     design.ForceGapClosingWithDisp = dot ([solution.blockintegral(18)/2, solution.blockintegral(19)/2], ...
 %                                           gvector);
 %                                     
-%                     design.gvar = design.g;
+%                     design.DispGapClosingForce = design.g;
 
         % determine a unit vector pointing in the direction normal to the air
         % gap half way between the Poles for the purpose of extracting the

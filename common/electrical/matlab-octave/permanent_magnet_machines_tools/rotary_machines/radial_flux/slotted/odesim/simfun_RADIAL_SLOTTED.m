@@ -461,9 +461,9 @@ function [design, simoptions] = simfun_RADIAL_SLOTTED(design, simoptions)
                                                 'DeleteFEMFiles', simoptions.VariableGapForceDeleteFEMFiles, ...
                                                 'DeleteANSFiles', simoptions.VariableGapForceDeleteANSFiles );
 
-        design.gforce = [0, tmpforce];
+        design.ForceGapClosingWithDisp = [0, tmpforce];
 
-        design.gvar = [0, simoptions.VariableGapForcePositions];
+        design.DispGapClosingForce = [0, simoptions.VariableGapForcePositions];
         
     end
 

@@ -134,14 +134,14 @@ function [design, simoptions] = simfun_TORUS_SLOTLESS(design, simoptions)
             % get the forces
             solution.clearblock();
             solution.groupselectblock(simoptions.ndrawnstages+1)
-            design.gforce = solution.blockintegral(18)/2;
+            design.ForceGapClosingWithDisp = solution.blockintegral(18)/2;
         else
             % get the forces
             mo_clearblock();
             mo_groupselectblock(simoptions.ndrawnstages+1)
-            design.gforce = mo_blockintegral(18)/2;
+            design.ForceGapClosingWithDisp = mo_blockintegral(18)/2;
         end
-        design.gvar = design.g;
+        design.DispGapClosingForce = design.g;
         
         % extract the information necessary to calculate the losses in the
         % core material, note that the directions of the field are changed
@@ -183,11 +183,11 @@ function [design, simoptions] = simfun_TORUS_SLOTLESS(design, simoptions)
         pos(end) = 2*design.g;
 
         if simoptions.GetVariableGapForce
-            design.gforce = [design.gforce, rotorforces_TORUS_SLOTLESS(design, simoptions.ndrawnstages, 2, pos)];
+            design.ForceGapClosingWithDisp = [design.ForceGapClosingWithDisp, rotorforces_TORUS_SLOTLESS(design, simoptions.ndrawnstages, 2, pos)];
         else
-            design.gforce = [design.gforce, repmat(design.gforce, 1, numel(pos))]; 
+            design.ForceGapClosingWithDisp = [design.ForceGapClosingWithDisp, repmat(design.ForceGapClosingWithDisp, 1, numel(pos))]; 
         end
-        design.gvar = [design.gvar, design.g + pos];
+        design.DispGapClosingForce = [design.DispGapClosingForce, design.g + pos];
 
         % clean up by removing the FEA files
         delete(femfilename);

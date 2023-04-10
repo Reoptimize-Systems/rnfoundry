@@ -15,7 +15,7 @@ function [design, simoptions] = finfun_ACPMSM(design, simoptions)
     design.CoilResistance = coilresistance_ACPMSM(design);
     
     % Convert air gap closing force to force per unit area
-    design.gforce = design.gforce ./ (design.Taup * design.ls);
+    design.ForceGapClosingWithDisp = design.ForceGapClosingWithDisp ./ (design.Taup * design.ls);
     
     % set the pole width field used for generic calculations
     design.PoleWidth = design.Taup;

@@ -66,7 +66,7 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, vararg
     end
     
     if isfield(design, 'gforce')
-        gforce = abs(design.gforce(1));
+        gforce = abs(design.ForceGapClosingWithDisp(1));
     else
         gforce = 'N/A';
     end

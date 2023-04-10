@@ -158,12 +158,12 @@ function [design, simoptions] = finfun_AM(design, simoptions)
     % if the data is supplied, fit a curve to variation in air gap closing
     % force with variation in air gap
     if isfield(design, 'gforce') && isfield(design, 'gvar')
-        if numel (design.gvar) > 2
+        if numel (design.DispGapClosingForce) > 2
             order = 2;
         else
             order = 1;
         end
-        design.p_gforce = polyfitn(design.gvar, design.gforce, order);
+        design.p_gforce = polyfitn(design.DispGapClosingForce, design.ForceGapClosingWithDisp, order);
         
     end
     
