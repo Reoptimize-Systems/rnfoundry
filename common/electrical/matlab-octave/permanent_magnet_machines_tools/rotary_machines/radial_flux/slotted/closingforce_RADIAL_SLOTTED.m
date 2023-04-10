@@ -1,6 +1,6 @@
 function [force, filenames] = closingforce_RADIAL_SLOTTED (design, pos, varargin)
 % gets the net force between rotor and stator of a slotted radial flux
-% machine with a give deflection of the rotor
+% machine with a given deflection of the rotor
 %
 % Syntax
 %
