@@ -4,3 +4,6 @@
 [submodule "common/matlab-octave/plotting_tools/tb-export_fig"]
 	path = common/matlab-octave/plotting_tools/tb-export_fig
 	url = https://github.com/altmany/export_fig.git
+[submodule "common/matlab-octave/matlab-octave-input-checking"]
+	path = common/matlab-octave/matlab-octave-input-checking
+	url = https://github.com/Reoptimize-Systems/matlab-octave-input-checking.git
