@@ -86,8 +86,8 @@ function [design, simoptions] = simfunnocurrent_PMSM(design, simoptions)
     % air-gap closing forces in the machine. The first value of the closing
     % forces will be assumed to be the maximum force found as we moved the
     % translator in the previous simulations
-    [design.gforce, I] = max(design.FEAFx);
-    design.gvar = design.g;
+    [design.ForceGapClosingWithDisp, I] = max(design.FEAFx);
+    design.DispGapClosingForce = design.g;
     
     % the normalized position in design.indepvar is shifted by 0.5, so we
     % must move it again to get the position where the biggest force
@@ -137,8 +137,8 @@ function [design, simoptions] = simfunnocurrent_PMSM(design, simoptions)
         % force.
         FEAFx = -solution.blockintegral(18)/2;
 
-        design.gforce(i+1) = FEAFx;
-        design.gvar(i+1) = tempdesign.g;
+        design.ForceGapClosingWithDisp(i+1) = FEAFx;
+        design.DispGapClosingForce(i+1) = tempdesign.g;
 
         % delete the ans and .fem file
         delete(femfilename);
@@ -174,8 +174,8 @@ function [design, simoptions] = simfunnocurrent_PMSM(design, simoptions)
     FEAFx = -solution.blockintegral(18)/2;
     
     % complete the air-gap force data
-    design.gforce = [FEAFx, design.gforce];
-    design.gvar = [tempdesign.g, design.gvar];
+    design.ForceGapClosingWithDisp = [FEAFx, design.ForceGapClosingWithDisp];
+    design.DispGapClosingForce = [tempdesign.g, design.DispGapClosingForce];
     
     % delete the ans and .fem file
     delete(femfilename);

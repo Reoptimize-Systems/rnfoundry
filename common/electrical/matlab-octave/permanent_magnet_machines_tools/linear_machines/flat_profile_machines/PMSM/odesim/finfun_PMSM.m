@@ -7,7 +7,7 @@ function [design, simoptions] = finfun_PMSM(design, simoptions)
 %     design.ConductorArea = pi * (design.Dc/2)^2;
     
     % Convert air gap closing force to force per unit area
-    design.gforce = design.gforce ./ (design.Wp * design.ls);
+    design.ForceGapClosingWithDisp = design.ForceGapClosingWithDisp ./ (design.Wp * design.ls);
     
     design.CoilResistance = coilresistance_PMSM(design);
     

@@ -66,7 +66,7 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, vararg
     end
     
     if isfield(design, 'gforce')
-        gforce = abs(design.gforce(1));
+        gforce = abs(design.ForceGapClosingWithDisp(1));
     else
         gforce = 'N/A';
     end
@@ -111,7 +111,14 @@ function reportstrs = designreport_ROTARY(design, simoptions, reportstrs, vararg
         error('Temporary file could not be opened.');
     end
     
-    displaytable(tabledata, colheadings, [60, 20], fms, rowheadings, fid, colsep, rowending);
+    displaytable(tabledata, ...
+                 'ColHeadings', colheadings, ...
+                 'ColWidth', [60, 20], ...
+                 'Format', fms, ...
+                 'RowHeadings', rowheadings, ...
+                 'FileID', fid, ...
+                 'ColSep', colsep, ...
+                 'RowEnding', rowending); 
     
     % close the file
     fclose(fid);

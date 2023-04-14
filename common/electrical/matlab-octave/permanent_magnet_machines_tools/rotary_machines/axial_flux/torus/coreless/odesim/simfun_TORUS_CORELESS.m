@@ -74,8 +74,8 @@ function [design, simoptions] = simfun_TORUS_CORELESS(design, simoptions)
                 % get the forces
                 femmsolution.clearblock();
                 femmsolution.groupselectblock(simoptions.ndrawnstages+1)
-                design.gforce = -femmsolution.blockintegral(18)/simoptions.ndrawnstages;
-                design.gvar = design.g;
+                design.ForceGapClosingWithDisp = -femmsolution.blockintegral(18)/simoptions.ndrawnstages;
+                design.DispGapClosingForce = design.g;
                 
                 clear femmsolution;
             else
@@ -94,8 +94,8 @@ function [design, simoptions] = simfun_TORUS_CORELESS(design, simoptions)
                 % get the forces
                 mo_clearblock();
                 mo_groupselectblock(simoptions.ndrawnstages+1)
-                design.gforce = -mo_blockintegral(18)/simoptions.ndrawnstages;
-                design.gvar = design.g;
+                design.ForceGapClosingWithDisp = -mo_blockintegral(18)/simoptions.ndrawnstages;
+                design.DispGapClosingForce = design.g;
                 
                 mo_close;
             
@@ -119,11 +119,11 @@ function [design, simoptions] = simfun_TORUS_CORELESS(design, simoptions)
             pos(end) = 2*design.g;
 
             if simoptions.GetVariableGapForce
-                design.gforce = [design.gforce, rotorforces_TORUS_CORELESS(design, simoptions.ndrawnstages, 2, pos)];
+                design.ForceGapClosingWithDisp = [design.ForceGapClosingWithDisp, rotorforces_TORUS_CORELESS(design, simoptions.ndrawnstages, 2, pos)];
             else
-                design.gforce = [design.gforce, repmat(design.gforce, 1, numel(pos))];
+                design.ForceGapClosingWithDisp = [design.ForceGapClosingWithDisp, repmat(design.ForceGapClosingWithDisp, 1, numel(pos))];
             end
-            design.gvar = [design.gvar, design.g + pos];
+            design.DispGapClosingForce = [design.DispGapClosingForce, design.g + pos];
 
         end
         

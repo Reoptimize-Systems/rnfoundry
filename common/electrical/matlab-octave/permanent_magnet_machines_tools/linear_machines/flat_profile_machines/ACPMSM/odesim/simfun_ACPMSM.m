@@ -72,8 +72,8 @@ function [design, simoptions] = simfun_ACPMSM(design, simoptions)
     % force.
     FEAFx = -solution.blockintegral(18)/2;
 
-    design.gforce = FEAFx;
-    design.gvar = tempdesign.g;
+    design.ForceGapClosingWithDisp = FEAFx;
+    design.DispGapClosingForce = tempdesign.g;
     
     delete(femfilename);
     delete(ansfilename);
@@ -110,8 +110,8 @@ function [design, simoptions] = simfun_ACPMSM(design, simoptions)
         % force.
         FEAFx = -solution.blockintegral(18)/2;
         
-        design.gforce(i+1) = FEAFx;
-        design.gvar(i+1) = tempdesign.g;
+        design.ForceGapClosingWithDisp(i+1) = FEAFx;
+        design.DispGapClosingForce(i+1) = tempdesign.g;
         
         delete(femfilename);
         delete(ansfilename);
@@ -145,8 +145,8 @@ function [design, simoptions] = simfun_ACPMSM(design, simoptions)
     delete(ansfilename);
     
     % complete the air-gap force data
-    design.gforce = [FEAFx, design.gforce];
-    design.gvar = [tempdesign.g, design.gvar];
+    design.ForceGapClosingWithDisp = [FEAFx, design.ForceGapClosingWithDisp];
+    design.DispGapClosingForce = [tempdesign.g, design.DispGapClosingForce];
     
     % Now get the inductances etc.
     

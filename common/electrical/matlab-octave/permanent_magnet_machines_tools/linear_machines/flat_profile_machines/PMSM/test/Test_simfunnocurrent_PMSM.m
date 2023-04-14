@@ -40,7 +40,7 @@ design.mode = [1, 1, 0, 1];
 
 figure; plot([design.FEAFx(:), design.FEAFy(:)]);
 
-figure; plot(design.gvar, design.gforce);
+figure; plot(design.DispGapClosingForce, design.ForceGapClosingWithDisp);
 
 figure; plot(design.psi);
 

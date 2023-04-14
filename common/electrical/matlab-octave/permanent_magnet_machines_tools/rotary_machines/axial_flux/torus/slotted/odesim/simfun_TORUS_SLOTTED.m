@@ -145,8 +145,8 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
                 % get the forces
                 solution.clearblock();
                 solution.groupselectblock(simoptions.ndrawnstages+1)
-                design.gforce = solution.blockintegral(18)/2;
-                design.gvar = design.g;
+                design.ForceGapClosingWithDisp = solution.blockintegral(18)/2;
+                design.DispGapClosingForce = design.g;
             end
             
         else
@@ -175,8 +175,8 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
                 % get the forces
                 mo_clearblock();
                 mo_groupselectblock(simoptions.ndrawnstages+1)
-                design.gforce = mo_blockintegral(18)/2;
-                design.gvar = design.g;
+                design.ForceGapClosingWithDisp = mo_blockintegral(18)/2;
+                design.DispGapClosingForce = design.g;
             end
 
             mi_close;
@@ -195,11 +195,11 @@ function [design, simoptions] = simfun_TORUS_SLOTTED(design, simoptions)
     pos(end) = 2*design.g;
     
     if simoptions.GetVariableGapForce
-        design.gforce = [design.gforce, rotorforces_TORUS_SLOTTED(design.FemmProblem, simoptions.ndrawnstages, 2, pos)];
+        design.ForceGapClosingWithDisp = [design.ForceGapClosingWithDisp, rotorforces_TORUS_SLOTTED(design.FemmProblem, simoptions.ndrawnstages, 2, pos)];
     else
-        design.gforce = [design.gforce, repmat(design.gforce, 1, numel(pos))];
+        design.ForceGapClosingWithDisp = [design.ForceGapClosingWithDisp, repmat(design.ForceGapClosingWithDisp, 1, numel(pos))];
     end
-    design.gvar = [design.gvar, design.g + pos];
+    design.DispGapClosingForce = [design.DispGapClosingForce, design.g + pos];
     
     % perform an inductance sim
     Lcurrent = inductancesimcurrent(design.CoilArea, design.CoilTurns);

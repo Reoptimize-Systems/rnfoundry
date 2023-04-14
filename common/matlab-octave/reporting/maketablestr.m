@@ -82,11 +82,11 @@ function tablestr = maketablestr (data, varargin)
 % rowheadings = {'Jimmy Slick', 'Norman Noob'}
 % data = [3 rand(1) rand(1); 1 rand(1) rand(1)];
 % wid = 16;
-% options.Format = {'d'};
+% fmt = {'d'};
 % 
 % colsep = ' & ';
 % rowending = ' \\';
-%
+% 
 % >> maketablestr(data, 'ColHeadings', colheadings, 'ColWidth', wid, 'Format', fmt, 'RowHeadings', rowheadings, 'ColSep', colsep, 'RowEnding', rowending);
 %
 %             & number of projec &            sales &           profit \\
@@ -437,11 +437,13 @@ function tablestr = maketablestr (data, varargin)
             end
             
         end
+
+        tablestr = appendstr (tablestr, '%s', options.RowEnding);
         
         % end of line so put in a new row, if there are more rows to be
         % printed
         if data_row_ind < size(data,1)
-            tablestr = appendstr (tablestr, '%s\n', options.RowEnding);
+            tablestr = appendstr (tablestr, '\n');
         end
         
     end

@@ -79,7 +79,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
     if simoptions.Evaluation.MCorePreProc
         
         simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCorePreProcDir', '');
-        PPsettings.multicoreDir = fullfile (multicoredir, simoptions.Evaluation.MCorePreProcDir);
+        PPsettings.MulticoreSharedDir = fullfile (multicoredir, simoptions.Evaluation.MCorePreProcDir);
         PPsettings.nResults = 2;
         PPsettings.nrOfEvalsAtOnce = 5;
         PPsettings.masterIsWorker = true;
@@ -153,13 +153,13 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
         
         simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreFEADir', '');
 
-        settings.multicoreDir = fullfile (multicoredir, simoptions.Evaluation.MCoreFEADir);
+        settings.MulticoreSharedDir = fullfile (multicoredir, simoptions.Evaluation.MCoreFEADir);
 
         % quit any slaves in the ODE directory, as we may be some time
     %     quitallslaves ( fullfile(multicoredir, 'ODE') );
 
         if simoptions.Evaluation.waitforotherfea
-            while numel (dir (fullfile (settings.multicoreDir, 'parameters_*'))) > 0
+            while numel (dir (fullfile (settings.MulticoreSharedDir, 'parameters_*'))) > 0
                 pause (20);
             end
         end
@@ -178,7 +178,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
                     % to check if new matlab slaves should be spawned or not
                     settings.monitorUserData = struct ( ...
                         'SlaveStartDir', simoptions.Evaluation.slavestartdir, ...
-                        'MulticoreSharedDir', settings.multicoreDir, ...
+                        'MulticoreSharedDir', settings.MulticoreSharedDir, ...
                         'MaxSlaves', simoptions.Evaluation.maxslaves, ...
                         'MatOrOct', simoptions.Evaluation.matoroctslaves, ...
                         'PauseTime', 5, ... % time between Condor jobs starting
@@ -188,7 +188,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
                         'DeletePauseTime', 60, ...
                         'InitialWait', 10*60, ... % wait 10 mins after the first slave launch before respawning
                         'IgnoreParamFiles', true, ...
-                        'OutputFilePrefix', '/dev/null' ...
+                        'OutputFilePrefix', 'slave' ...
                         );
                     
                 else
@@ -201,7 +201,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
         end
 
         % save the intermediate values in case of errors
-        save (fullfile (settings.multicoreDir, ['pre_', 'mcoresimfun_AM', '_output.mat']));
+        save (fullfile (settings.MulticoreSharedDir, ['pre_', 'mcoresimfun_AM', '_output.mat']));
 
         parameterCell = mcoreobjfcneval ('mcoresimfun_AM', parameterCell, ...
                                          settings, simoptions.Evaluation.maxattempts, ...
@@ -222,11 +222,11 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
 
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreODEDir', '');
     
-    settings.multicoreDir = fullfile (multicoredir, simoptions.Evaluation.MCoreODEDir);
+    settings.MulticoreSharedDir = fullfile (multicoredir, simoptions.Evaluation.MCoreODEDir);
 
     % save the intermediate values in case of errors
     if ischar (evalfcn)
-        save (fullfile (settings.multicoreDir, ['pre_', evalfcn, '_output.mat']))
+        save (fullfile (settings.MulticoreSharedDir, ['pre_', evalfcn, '_output.mat']))
     end
 
     if simoptions.Evaluation.spawnslaves(2)
@@ -239,7 +239,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
             % to check if new matlab slaves should be spawned or not
             settings.monitorUserData = struct ( ...
                 'SlaveStartDir', simoptions.Evaluation.slavestartdir, ...
-                'MulticoreSharedDir', settings.multicoreDir, ...
+                'MulticoreSharedDir', settings.MulticoreSharedDir, ...
                 'MaxSlaves', simoptions.Evaluation.maxslaves, ...
                 'MatOrOct', simoptions.Evaluation.matoroctslaves, ...
                 'PauseTime', 5, ... % time between Condor jobs starting
@@ -249,7 +249,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
                 'DeletePauseTime', 60, ...
                 'InitialWait', 10*60, ... % wait 10 mins after the first slave launch before respawning
                 'IgnoreParamFiles', true, ...
-                'OutputFilePrefix', '/dev/null' ...
+                'OutputFilePrefix', 'slave' ...
                 );
             
         else
@@ -270,7 +270,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
         waits = 0;
         while 1
             % check for parameter files, but ignoring semaphore files
-            pfiles = dir (fullfile (settings.multicoreDir, 'parameters_*'));
+            pfiles = dir (fullfile (settings.MulticoreSharedDir, 'parameters_*'));
             seminds = [];
             for ind = 1:numel (pfiles)
                 if ~isempty (strfind (pfiles(ind).name, 'semaphore'))

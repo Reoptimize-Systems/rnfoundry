@@ -16,7 +16,7 @@ function startrow = designxls_ROTARY(design, simoptions, filename, sheet, startr
     end
     
     if isfield(design, 'gforce')
-        gforce = abs(design.gforce(1));
+        gforce = abs(design.ForceGapClosingWithDisp(1));
     else
         gforce = 0;
     end

@@ -148,8 +148,8 @@ function design = fieldenergy2forces (design)
                         'knots', design.FieldEnergyDisp, ...
                         'concavedown', 'on');
     
-    design.gforce = slmeval (design.FieldEnergyDisp, slm_fe, 1);
-    design.gvar = design.g - design.FieldEnergyDisp;
+    design.ForceGapClosingWithDisp = slmeval (design.FieldEnergyDisp, slm_fe, 1);
+    design.DispGapClosingForce = design.g - design.FieldEnergyDisp;
     
 end
 
