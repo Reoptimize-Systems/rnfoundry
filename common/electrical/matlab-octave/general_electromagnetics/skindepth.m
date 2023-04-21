@@ -30,7 +30,7 @@ function d = skindepth(rho, mu_r, freq)
       %
       % mu_0 * pi = 4e-7 * pi * pi = 3.947841760435743e-06
       %
-      d = sqrt (rho ./ (mu_r .* 3.947841760435743e-06 .* freq);
+      d = sqrt (rho ./ (mu_r .* 3.947841760435743e-06 .* freq));
     
     
 end
