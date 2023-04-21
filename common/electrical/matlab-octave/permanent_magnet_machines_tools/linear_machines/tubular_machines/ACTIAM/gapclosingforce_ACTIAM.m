@@ -63,7 +63,7 @@ function netforce = gapclosingforce_ACTIAM (design, simoptions, displ, varargin)
         g = Ri - R2;
 
         % determine the force contribution of this section
-        section_forces =  cos (A) .*  polyvaln (design.p_gforce, g).' ./ k;
+        section_forces =  cos (A) .*  polyvaln (design.p_ForceGapClosingWithDisp, g).' ./ k;
 
         netforce(ind) = sum (section_forces);
 

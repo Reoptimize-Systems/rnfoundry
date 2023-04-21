@@ -34,7 +34,7 @@ function [maxzdef, maxstress, design] = evaluatestructure_AF(design, simoptions)
     magarea = (0.5 * magtheta * (design.Rmo.^2 - design.Rmi.^2));
     
     % get the outer axial forces
-    axialforces = polyvaln(design.p_gforce, design.g) / magarea;
+    axialforces = polyvaln(design.p_ForceGapClosingWithDisp, design.g) / magarea;
     
     % invent some forces to ensure the inner back iron must have some
     % thickness

@@ -128,13 +128,13 @@ function [g, closingForces, BeamInfo, design] = feairgapclosure_FM(design, optio
             % The following assumes a polynomial has been fitted to
             % the force per unit area of translator surface versus
             % the air gap
-            closingForces(k,:,1) = polyvaln(design.p_gforce, interp1(interpgx, g(k,:,1), gxi));
+            closingForces(k,:,1) = polyvaln(design.p_ForceGapClosingWithDisp, interp1(interpgx, g(k,:,1), gxi));
             % Get the force per unit length on a support beam
             closingForces(k,:,1) = closingForces(k,:,1) * design.PoleWidth * forceRatio;
 
             if size(g,3) > 1
 
-                closingForces(k,:,3) = -polyvaln(design.p_gforce, interp1(interpgx, g(k,:,2), gxi));
+                closingForces(k,:,3) = -polyvaln(design.p_ForceGapClosingWithDisp, interp1(interpgx, g(k,:,2), gxi));
 
                 % Get the force per unit length on a support beam
                 closingForces(k,:,3) = closingForces(k,:,3) * design.PoleWidth * forceRatio;

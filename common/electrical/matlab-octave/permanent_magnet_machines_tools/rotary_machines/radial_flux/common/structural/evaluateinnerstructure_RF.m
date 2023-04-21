@@ -45,7 +45,7 @@ function [maxzdef, maxstress, design] = evaluateinnerstructure_RF(design, simopt
         shearforce = (design.TorquePtoPeak / design.Ryo) / (2 * pi * design.Ryo * design.ls);
         
         % get the outer radial force
-        radialforce = polyvaln(design.p_gforce, design.g) / (2 * pi * design.Ryo * design.thetap * design.ls);
+        radialforce = polyvaln(design.p_ForceGapClosingWithDisp, design.g) / (2 * pi * design.Ryo * design.thetap * design.ls);
     
         % apply the forces to the finite element block
         [Kmat, Fmat] = inerstructurestresses_RF( fens, gcells, feb, geom, u, ...
@@ -62,7 +62,7 @@ function [maxzdef, maxstress, design] = evaluateinnerstructure_RF(design, simopt
         shearforce = (design.TorquePtoPeak / design.Rbo) / (2 * pi * design.Ryo * design.ls);
         
         % get the outer radial force
-        radialforce = polyvaln(design.p_gforce, design.g) / (2 * pi * design.Rbo * design.thetap * design.ls);
+        radialforce = polyvaln(design.p_ForceGapClosingWithDisp, design.g) / (2 * pi * design.Rbo * design.thetap * design.ls);
         
         % apply the forces to the finite element block
         [Kmat, Fmat] = inerstructurestresses_RF( fens, gcells, feb, geom, u, ...

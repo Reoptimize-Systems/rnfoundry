@@ -5,7 +5,7 @@ function [Def, BeamInfo] = analyticalstructdef_FM(design, options, WperRail, Bea
     % The following assumes a polynomial has been fitted to
     % the force per unit area of translator surface versus
     % the air gap
-    closingForce = -polyvaln(design.p_gforce, design.g);
+    closingForce = -polyvaln(design.p_ForceGapClosingWithDisp, design.g);
 
     % Get the force per unit length on a support beam
     closingForce = closingForce * design.PoleWidth * forceRatio;

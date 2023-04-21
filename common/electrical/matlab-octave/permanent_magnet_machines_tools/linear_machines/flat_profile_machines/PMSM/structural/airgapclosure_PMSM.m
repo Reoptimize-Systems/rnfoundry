@@ -163,7 +163,7 @@ function [g, actForce] = airgapclosure_PMSM(design, E, IVars, IMethod, sections,
                 % The following assumes a polynomial has been fitted to
                 % the force per unit area of translator surface versus
                 % the air gap
-                Force = polyvaln(design.p_gforce, g(1,i));
+                Force = polyvaln(design.p_ForceGapClosingWithDisp, g(1,i));
                 % Get the total force over the surface of a pole
                 Force = Force * design.Wp * design.ls;
                 % From this calculate the total force in each section
@@ -228,7 +228,7 @@ function [g, actForce] = airgapclosure_PMSM(design, E, IVars, IMethod, sections,
                     % The following assumes a polynomial has been fitted to
                     % the force per unit area of translator surface versus
                     % the air gap
-                    Force = polyvaln(design.p_gforce, g(j,i));
+                    Force = polyvaln(design.p_ForceGapClosingWithDisp, g(j,i));
                     % Get the total force over the surface of a pole
                     Force = Force * design.Wp * design.ls;
                     % From this calculate the total force in each section

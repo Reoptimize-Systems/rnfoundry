@@ -68,7 +68,7 @@ function [mingap, maxstress, design] = evaluateouterstructure_RADIAL_SLOTTED(des
     shearforce = -(design.TorquePtoPeak / design.OuterStructure.Rsoi) / (2 * pi * design.OuterStructure.Rsoi * design.ls);
 
     % get the outer radial force
-    radialforce = polyvaln(design.p_gforce, design.g) / (design.OuterStructure.Rsoi * design.thetap * design.ls);
+    radialforce = polyvaln(design.p_ForceGapClosingWithDisp, design.g) / (design.OuterStructure.Rsoi * design.thetap * design.ls);
 
     % apply the forces to the finite element block
     [Kmat, Fmat] = outerstructurestresses_RF( faeprob, ...

@@ -8,7 +8,7 @@ function [design, simoptions] = finfun_TORUS(design, simoptions)
 %     design.ForceGapClosingWithDisp = design.ForceGapClosingWithDisp ./ (design.taupm * design.hm);
 %     
 %     % fit a polynomial to the air gap force
-%     design.p_gforce = polyfitn(design.DispGapClosingForce, design.ForceGapClosingWithDisp, 2);
+%     design.p_ForceGapClosingWithDisp = polyfitn(design.DispGapClosingForce, design.ForceGapClosingWithDisp, 2);
 
     % set the polewidth to be the distance swept out by a pole at the mid
     % point of the magnets
