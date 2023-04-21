@@ -175,6 +175,10 @@ function [pdata, design] = simfcn (design, simoptions, outfields, rpm, LoadVal, 
     design = rmiffield (design, 'LoadResistance');
     design = rmiffield (design, 'RlVRp');
 
+    % set PostPreProcessingComplete = false so that the load is
+    % recalculated properly if necessary
+    design.PostPreProcessingComplete = false;
+
     switch options.LoadSpecType
         case 'ratio'
             simoptions.RlVRp = LoadVal;
@@ -188,8 +192,8 @@ function [pdata, design] = simfcn (design, simoptions, outfields, rpm, LoadVal, 
 
     % remove flux linkage slm to trigger rerun of postprocessing
     % function
-    design = rmiffield (design, 'slm_fluxlinkage');
-    simoptions.abstol = [];
+%     design = rmiffield (design, 'slm_fluxlinkage');
+    simoptions.ODESim.AbsTol = [];
 
     % simulate the machine
     [~, ~, ~, design, ~] = simulatemachine_AM ( design, ...
