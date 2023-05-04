@@ -1,4 +1,4 @@
-function [results, design] = resfun_RADIAL_SLOTTED(T, Y, design, simoptions)
+function [results, design, summary_time_inds] = resfun_RADIAL_SLOTTED(T, Y, design, simoptions)
 % post processes results from an ode simulation of a slotted radial flux
 % electrical machine
 %
@@ -14,7 +14,7 @@ function [results, design] = resfun_RADIAL_SLOTTED(T, Y, design, simoptions)
 % Copyright Richard Crozier 2014
 
 
-    [results, design] = resfun_RADIAL(T, Y, design, simoptions);
+    [results, design, summary_time_inds] = resfun_RADIAL(T, Y, design, simoptions);
     
     if isfield(results, 'TqaddEBD') && (size (results.TqaddEBD, 2) > 4)
         

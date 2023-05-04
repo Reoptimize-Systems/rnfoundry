@@ -1,4 +1,4 @@
-function [results, design] = resfun_AM(T, Y, design, simoptions)
+function [results, design, summary_time_inds] = resfun_AM(T, Y, design, simoptions)
 % calculates the results from a generator/system ode simulation performed
 % using the appropriatately coded simulation functions
 %
@@ -34,6 +34,22 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
     % skipped when getting the output values
     simoptions = setfieldifabsent (simoptions, 'SkipOutputFields', {});
     
+    if isfield(simoptions, 'SummaryResultsStartTimeFraction')
+
+        t_start = T(1);
+        t_end = T(end);
+        t_duration = t_end - t_start;
+
+        design.SummaryTimeStart = t_start + t_duration*simoptions.SummaryResultsStartTimeFraction;
+
+        summary_time_inds = T >= design.SummaryTimeStart;
+
+    else
+
+        summary_time_inds = ':';
+
+    end
+
     % if a reset function exists for any solution components, call it
     % before recalculating the results of the ODE
     call_resets_recurse (simoptions.ODESim);
@@ -68,13 +84,24 @@ function [results, design] = resfun_AM(T, Y, design, simoptions)
     simoptions = setfieldifabsent (simoptions, 'SkipODEElectricalResults', false);
     
     if ~simoptions.SkipODEElectricalResults
+
+        if size(results.RPhase, 1) > 1
         % Determine some interesting machine electrical outputs
-        design = odeelectricalresults(T, ...
-                                      Y(:,currentInds), ...
-                                      results.EMF, ...
-                                      results.RPhase, ...
-                                      design, ...
-                                      simoptions);
+            design = odeelectricalresults(T(summary_time_inds), ...
+                                          Y(summary_time_inds,currentInds), ...
+                                          results.EMF(summary_time_inds,:), ...
+                                          results.RPhase(summary_time_inds,:), ...
+                                          design, ...
+                                          simoptions);
+        else
+            design = odeelectricalresults(T(summary_time_inds), ...
+                                          Y(summary_time_inds,currentInds), ...
+                                          results.EMF(summary_time_inds,:), ...
+                                          results.RPhase, ...
+                                          design, ...
+                                          simoptions);
+
+        end
     end
 
 end

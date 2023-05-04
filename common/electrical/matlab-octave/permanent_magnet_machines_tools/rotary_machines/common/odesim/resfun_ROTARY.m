@@ -1,4 +1,4 @@
-function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
+function [results, design, summary_time_inds] = resfun_ROTARY(T, Y, design, simoptions)
 % post processes results from an ode simulation of a rotary electrical
 % machine
 %
@@ -17,13 +17,13 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
         simoptions.ODEPhaseCurrentCol = 1;
     end
 
-    [results, design] = resfun_AM(T, Y, design, simoptions);
+    [results, design, summary_time_inds] = resfun_AM(T, Y, design, simoptions);
     
     % calculate the input power and efficiency if the required information
     % is present
     if isfield(results, 'Tqpto')
         
-        design.TorquePtoPeak = max(abs(results.Tqpto));
+        design.TorquePtoPeak = max(abs(results.Tqpto(summary_time_inds,:)));
             
         if isfield (design, 'Rmm')
             % get the maximum force on the magnets
@@ -32,12 +32,12 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
             results.Fpto = results.Tqpto ./ design.Rmm;
             %
             % determine the maximum force on the magnets
-            design.MaxFpto = design.TorquePtoPeak / design.Rmm;
+            design.MaxFpto = design.TorquePtoPeak ./ design.Rmm;
         end
         
         % divide the maximum amplitude of the normalised torque ripple by the
         % mean to get the ripple factor
-        design.TorqueRippleFactor = torqueripple(T, results);
+        design.TorqueRippleFactor = torqueripple(T, results, summary_time_inds);
         
         if isfield (results, 'omegaT')
 
@@ -48,15 +48,15 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
             % instantaneous power is force / velocity
             results.Pinput = -(results.Tqpto + results.TqaddE) .* results.omegaT;
 
-            design.PowerInputMean = contmean(T, results.Pinput);
+            design.PowerInputMean = contmean(T(summary_time_inds), results.Pinput(summary_time_inds,:));
 
-            design.EnergyInputTotal = trapz(T, results.Pinput);
+            design.EnergyInputTotal = trapz(T(summary_time_inds), results.Pinput(summary_time_inds,:));
 
             if isfield (design, 'EnergyLoadTotal')
                 design.Efficiency = design.EnergyLoadTotal / design.EnergyInputTotal;
             end
 
-            design.TorquePtoMean = contmean(T, results.Tqpto);
+            design.TorquePtoMean = contmean(T(summary_time_inds), results.Tqpto(summary_time_inds,:));
 
         end
         
@@ -79,11 +79,11 @@ function [results, design] = resfun_ROTARY(T, Y, design, simoptions)
         
     end
     
-    [design.FrequencyPeak, design.OmegaPeak] = freqest_ROTARY(design, results);
+    [design.FrequencyPeak, design.OmegaPeak] = freqest_ROTARY(design, results, summary_time_inds);
 
 end
 
-function TR = torqueripple(T, results)
+function TR = torqueripple(T, results, summary_time_inds)
 % calculates a torque ripple factor 
 %
 
@@ -96,42 +96,42 @@ function TR = torqueripple(T, results)
     normripple(results.omegaT == 0) = 0;
     
     % remove the first 20% of the time to allow for start up conditions
-    normripple = normripple(T > (max(T) - min(T))*0.2);
-    T = T(T > (max(T) - min(T))*0.2);
+%     normripple = normripple(T > (max(T) - min(T))*0.2);
+%     T = T(T > (max(T) - min(T))*0.2);
     
     % divide the maximum amplitude of the normalised torque ripple by the
     % mean to get the ripple factor
-    TR = abs((max(normripple) - min(normripple)) / contmean(T, normripple));
+    TR = abs((max(normripple(summary_time_inds,:)) - min(normripple(summary_time_inds,:))) / contmean(T(summary_time_inds), normripple(summary_time_inds,:)));
 
 end
 
 
-function [freqpeak, omegapeak] = freqest_ROTARY(design, results)
+function [freqpeak, omegapeak] = freqest_ROTARY(design, results, summary_time_inds)
 % estimates the max electrical frequency from the machine velocity
 
     % get the max rpm of the generator
     if isfield(results, 'vT')
 
-        omegapeak = max(abs(vel2omega(results.vT, design.Rmm)));
+        omegapeak = max(abs(vel2omega(results.vT(summary_time_inds,:), design.Rmm)));
 
     elseif isfield(results, 'vE')
 
-        omegapeak = max(abs(vel2omega(results.vE, design.Rmm)));
+        omegapeak = max(abs(vel2omega(results.vE(summary_time_inds,:), design.Rmm)));
 
     elseif isfield(results, 'omegaT')
 
-        omegapeak = max(abs(results.omegaT));
+        omegapeak = max(abs(results.omegaT(summary_time_inds,:)));
 
 	elseif isfield(results, 'omegaE')
         
-        omegapeak = max(abs(results.omegaE));
+        omegapeak = max(abs(results.omegaE(summary_time_inds,:)));
         
     end
     
     % get the frequency of rotation
-    freqpeak = omegapeak / (2*pi);
+    freqpeak = omegapeak ./ (2*pi);
     
     % estimate the electrical frequency at the peak velocity
-    freqpeak = freqpeak  * (design.Poles/2);
+    freqpeak = freqpeak .* (design.Poles/2);
 
 end
