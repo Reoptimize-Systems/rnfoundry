@@ -53,10 +53,12 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
         '$N_T$', 'Coil Turns', design.CoilTurns;
         '$f_c$', 'Copper Fill Factor', design.CoilFillFactor;
         '$N_s$', 'Strands Per Turn', design.NStrands;
-        '$D_c$', 'Copper Wire Diameter [mm]', design.Dc*1000;
+        '$D_sc$', 'Copper Strand Wire Diameter [mm]', design.WireStrandDiameter*1000;
+        '$D_c$', 'Equivalent Copper Conductor Diameter [mm]', design.Dc*1000;
         '', 'Copper Cross-Sectional Area [mm\textsuperscript{2}]', design.ConductorArea * 1e6;
         '', 'Parallel Branches', design.Branches;
         '', 'Series Coils Per Branch', design.CoilsPerBranch;
+        '', 'Coil Mean Turn Length (m)', design.MTL;
     };
 
     % generate the LaTex table of the outputs
@@ -96,23 +98,31 @@ function [reportstrs] = designreport_AM(design, simoptions, reportstrs, varargin
     else
         VoltagePercentTHD = 'N/A';
     end
+
+    if isfield(design, 'FluxDensityMagnitudeAirGapPeak')
+        FluxDensityMagnitudeAirGapPeak = design.FluxDensityMagnitudeAirGapPeak;
+    else
+        FluxDensityMagnitudeAirGapPeak = 'N/A';
+    end
     
     tbfcn = @quantity_to_table_cell_pair;
     
     tabledata = [ ...
-        tbfcn('Peak Phase Current', 'A', design, 'IPhasePeak'),       tbfcn('RMS Phase Current', 'A', design, 'IPhaseRms');
-        tbfcn('Peak Coil Current', 'A', design, 'ICoilPeak'),         tbfcn('RMS Coil Current', 'A', design, 'ICoilRms');                            
-        tbfcn('Peak Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilPeak', 1e-6), tbfcn('RMS Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilRms', 1e-6);
-        tbfcn('Peak Phase EMF', 'V', design, 'EMFPhasePeak'),         tbfcn('RMS Phase EMF', 'V', design, 'EMFPhaseRms');         
-        tbfcn('Mean Exported Power', 'W', design, 'PowerLoadMean'),   tbfcn('Peak Exported Power', 'W', design, 'PowerLoadPeak');
-        tbfcn('Phase Inductance', 'H', design, 'PhaseInductance'),    tbfcn('Phase Resistance', '\si{\ohm}', design, 'PhaseResistance');
-        tbfcn('Load Resistance', '\si{\ohm}',  design, 'LoadResistance'),  tbfcn('Load Inductance', 'H', design, 'LoadInductance');
-        tbfcn('Peak Flux Linkage', 'Wb', design, 'FluxLinkagePeak'), {'Efficiency', design.Efficiency};
-        tbfcn('Mean Winding Losses', 'W', design, 'PowerPhaseRMean'), tbfcn('Mean Iron Losses', 'W', design, 'PowerLossIronMean');
-        tbfcn('Mean Winding Eddy Losses', 'W', design, 'PowerLossEddyMean'),    tbfcn('Mean Input Power', 'W', design, 'PowerInputMean');
-        {'Voltage THD (\%)', VoltagePercentTHD},                      tbfcn('Peak Electrical Frequency', 'Hz', design, 'FrequencyPeak');
+        tbfcn('Peak Phase Current', 'A', design, 'IPhasePeak'),                                  tbfcn('RMS Phase Current', 'A', design, 'IPhaseRms');
+        tbfcn('Peak Coil Current', 'A', design, 'ICoilPeak'),                                    tbfcn('RMS Coil Current', 'A', design, 'ICoilRms');                            
+        tbfcn('Peak Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilPeak', 1e-6),     tbfcn('RMS Current Density', 'A/mm\textsuperscript{2}', design, 'JCoilRms', 1e-6);
+        tbfcn('Peak Phase EMF', 'V', design, 'EMFPhasePeak'),                                    tbfcn('RMS Phase EMF', 'V', design, 'EMFPhaseRms');
+        tbfcn('Peak Phase Terminal Voltage', 'V', design, 'VoltageGenTerminalPhasePeak'),         tbfcn('RMS Phase Terminal Voltage', 'V', design, 'VoltageGenTerminalPhaseRms');
+        tbfcn('Mean Exported Power', 'W', design, 'PowerLoadMean'),                              tbfcn('Peak Exported Power', 'W', design, 'PowerLoadPeak');
+        tbfcn('Phase Inductance', 'H', design, 'PhaseInductance'),                               tbfcn('Phase Resistance', '\si{\ohm}', design, 'PhaseResistance');
+        tbfcn('Load Resistance', '\si{\ohm}',  design, 'LoadResistance'),                        tbfcn('Load Inductance', 'H', design, 'LoadInductance');
+        tbfcn('Peak Flux Linkage', 'Wb', design, 'FluxLinkagePeak'),                             {'Efficiency', design.Efficiency};
+        tbfcn('Mean Winding Losses', 'W', design, 'PowerPhaseRMean'),                            tbfcn('Mean Iron Losses', 'W', design, 'PowerLossIronMean');
+        tbfcn('Mean Winding Eddy Losses', 'W', design, 'PowerLossEddyMean'),                     tbfcn('Mean Input Power', 'W', design, 'PowerInputMean');
+        {'Voltage THD (\%)', VoltagePercentTHD},                                                 tbfcn('Peak Electrical Frequency', 'Hz', design, 'FrequencyPeak');
         tbfcn('Mean Air Gap Shear Stress', 'N/m\textsuperscript{2}', design, 'ShearStressMean'), tbfcn('Air-Gap Closing Stress', 'N/m\textsuperscript{2}', design, 'AirGapClosingStress');
-        tbfcn('Per-Pole Gap Closing Force', 'N', design, 'PerPoleAirGapClosingForce'), {'', ''} ];
+        tbfcn('Per-Pole Gap Closing Force', 'N', design, 'PerPoleAirGapClosingForce'),           {'Peak Air Gap Flux Density (T)', FluxDensityMagnitudeAirGapPeak};
+    ];
 
     % generate the LaTex table of the outputs
     colheadings = {};
