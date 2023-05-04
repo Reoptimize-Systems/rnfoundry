@@ -63,19 +63,34 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
     
     % common multicore settings
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'maxattempts', 3);
-    
-    % set some default common spawning settings if not supplied
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreMonitorFunction', 'mcore.slavespawn');
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreMonitorData', []);
+    simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreErrorFunction', 'mcore.processreturnederror');
+    simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCoreErrorFcnSettings', []);
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'starttime', [5,0,1]);
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'endtime', [5,0,0]);
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'maxslaves', 100);
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'slavestartdir', '~/Documents/MATLAB');
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'matoroctslaves', 'm');
-    
-    % -------       preprocess the designs before simulation     -------- %
+    simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MailToAddress', '');
+    simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'allowheld', 10);
     simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCorePreProc', false);
     
+
+    if strcmp (simoptions.Evaluation.MCoreErrorFunction, 'mcore.processreturnederror') ...
+            && isempty (simoptions.Evaluation.MCoreErrorFcnSettings)
+                    
+        % set up the mcorecondormatlabslavespawn monitor function, called
+        % by the multicore master process each time it looks for new files
+        % to check if new matlab slaves should be spawned or not
+        simoptions.Evaluation.MCoreErrorFcnSettings = ...
+            struct( ...
+                    'MailToAddress', simoptions.Evaluation.MailToAddress ...
+                  );
+
+    end
+
+    % -------       preprocess the designs before simulation     -------- %
     if simoptions.Evaluation.MCorePreProc
         
         simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'MCorePreProcDir', '');
@@ -85,7 +100,8 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
         PPsettings.masterIsWorker = true;
         parameterCell = mcoreobjfcneval ( preprocfcn, construct_pp_parametercell (simoptions, Chrom), ...
                                           PPsettings, simoptions.Evaluation.maxattempts, ...
-                                          'ErrorUserFcn', @mcoreerrormail, ...
+                                          'ErrorUserFcn', simoptions.Evaluation.MCoreErrorFunction, ...
+                                          'ErrorFcnSettings', simoptions.Evaluation.MCoreErrorFcnSettings, ...
                                           'TryLocalEval', true );
     else
         % no multicore eval, will evaluate locally in the loop below, here
@@ -133,7 +149,7 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
     settings.postProcessUserData = {};
     settings.debugMode = 0;
     settings.showWarnings = 1;
-    simoptions.Evaluation = setfieldifabsent (simoptions.Evaluation, 'allowheld', 10);
+    
         
     if separatesimfun
         
@@ -188,7 +204,8 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
                         'DeletePauseTime', 60, ...
                         'InitialWait', 10*60, ... % wait 10 mins after the first slave launch before respawning
                         'IgnoreParamFiles', true, ...
-                        'OutputFilePrefix', 'slave' ...
+                        'OutputFilePrefix', 'slave', ...
+                        'MailToAddress', simoptions.Evaluation.MailToAddress ...
                         );
                     
                 else
@@ -205,7 +222,8 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
 
         parameterCell = mcoreobjfcneval ('mcoresimfun_AM', parameterCell, ...
                                          settings, simoptions.Evaluation.maxattempts, ...
-                                         'ErrorUserFcn', @mcoreerrormail, ...
+                                         'ErrorUserFcn', simoptions.Evaluation.MCoreErrorFunction, ...
+                                         'ErrorFcnSettings', simoptions.Evaluation.MCoreErrorFcnSettings, ...
                                          'TryLocalEval', true);
     end
     
@@ -249,7 +267,8 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
                 'DeletePauseTime', 60, ...
                 'InitialWait', 10*60, ... % wait 10 mins after the first slave launch before respawning
                 'IgnoreParamFiles', true, ...
-                'OutputFilePrefix', 'slave' ...
+                'OutputFilePrefix', 'slave', ...
+                'MailToAddress', simoptions.Evaluation.MailToAddress ...
                 );
             
         else
@@ -301,7 +320,8 @@ function ObjVal = objelectricalmachine (simoptions, Chrom, preprocfcn, evalfcn, 
     
     ObjVal = mcoreobjfcneval (evalfcn, parameterCell, settings, ...
                               simoptions.Evaluation.maxattempts, ...
-                              'ErrorUserFcn', @condorslavesoutofmemerr, ...
+                              'ErrorUserFcn', simoptions.Evaluation.MCoreErrorFunction, ...
+                              'ErrorFcnSettings', simoptions.Evaluation.MCoreErrorFcnSettings, ...
                               'TryLocalEval', true);
 
     ObjVal = reshape (cell2mat (ObjVal),[],1);
