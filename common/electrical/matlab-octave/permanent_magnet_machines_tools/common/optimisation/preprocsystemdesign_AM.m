@@ -17,16 +17,28 @@ function design = preprocsystemdesign_AM(design, simoptions, activecoilsperphase
     
     design.Dc = sqrt(4 * (design.Hc * design.Wc * design.CoilFillFactor * design.DcAreaFac) / pi);
     
+    % Calculate what strand diameter gives the exact same copper conductor
+    % CS area
     design.WireStrandDiameter = stranddiameter (design.Dc, design.NStrands);
     
+    % Check it's not smaller than the minimum possible wire size
     if design.WireStrandDiameter < simoptions.MinStrandDiameter
+
         design.WireStrandDiameter = simoptions.MinStrandDiameter;
+
         design.Dc = equivDcfromstranded (design.WireStrandDiameter, design.NStrands);
+
     end
     
+    % check it's not bigger than the biggest allowed wire size
     if design.WireStrandDiameter > simoptions.MaxStrandDiameter
+
         design.WireStrandDiameter = simoptions.MaxStrandDiameter;
+
+        [design.NStrands, design.WireStrandDiameter] = CoilTurns (circlearea(design.Dc/2), 1.0, design.WireStrandDiameter);
+
         design.Dc = equivDcfromstranded (design.WireStrandDiameter, design.NStrands);
+
     end
     
     % determine an appropriate series/parallel coil configuration
