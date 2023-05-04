@@ -21,7 +21,9 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
 %  EMF - (n x p) Time series of values of the phase emfs produced by the
 %   generator, each column is a generator phase.
 %
-%  RPhase - 
+%  RPhase - either (1 x p) or (n x p) matrix. Each row in RPhase is the
+%   phase resistances of the machine at each time step. May be a (1 x p)
+%   vector if RPhase is not varying with time.
 %
 %  design - 
 %
@@ -39,13 +41,13 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
     
     % we should use the phase that produced the highest current in some
     % calculations
-    [design.IPhasePeak,maxIind] = max(max(abs(Iphase), [], 1));
+    [design.IPhasePeak,maxIind] = max (max (abs (Iphase), [], 1) );
     
     % rms phase current, use phase current which has the max value
-    design.IPhaseRms = contrms(T, Iphase(:,maxIind));
+    design.IPhaseRms = contrms (T, Iphase(:,maxIind));
     
     % rms branch (coil) current
-    design.ICoilRms = contrms(T, Iphase(:,maxIind) ./ design.Branches);
+    design.ICoilRms = contrms (T, Iphase(:,maxIind) ./ design.Branches);
     % peak branch (coil current) (phase current divided by number of
     % parallel branches))
     design.ICoilPeak = design.IPhasePeak ./ design.Branches;
@@ -57,10 +59,16 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
     end
     
     % rms phase EMF (coil EMF times the number of coils per branch)
-    design.EMFPhaseRms = contrms(T, EMF(:,maxIind));
+    design.EMFPhaseRms = contrms (T, EMF(:,maxIind));
     
     % peak phase EMF (coil EMF time the number of coils per branch)
-    design.EMFPhasePeak = max(abs(EMF(:)));
+    design.EMFPhasePeak = max (abs ( EMF(:) ) );
+
+    VoltageGenTerminal = EMF(:,maxIind) - (Iphase(:,maxIind) .* RPhase(maxIind));
+
+    design.VoltageGenTerminalPhaseRms = contrms (T, VoltageGenTerminal);
+
+    design.VoltageGenTerminalPhasePeak = max ( abs (VoltageGenTerminal) );
 
     switch lower (regexprep (simoptions.LoadModel, '\s+', ''))
         
@@ -90,8 +98,8 @@ function design = odeelectricalresults(T, Iphase, EMF, RPhase, design, simoption
                 % divide real power by apparent power to get power factor
                 design.PowerFactorEstimate = (design.Phases ...
                                                 .* design.IPhaseRms.^2 ...
-                                                .* (design.PhaseResistance(end)+design.LoadResistance)) ...
-                                              ./ (design.Phases * design.EMFPhaseRms * design.IPhaseRms);
+                                                .* (design.PhaseResistance(end) + design.LoadResistance)) ...
+                                              ./ (design.Phases .* design.EMFPhaseRms .* design.IPhaseRms);
 
         %         
         %         Y = fft(y,251);
