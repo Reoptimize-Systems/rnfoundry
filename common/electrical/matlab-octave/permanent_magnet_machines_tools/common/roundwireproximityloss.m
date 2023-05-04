@@ -1,12 +1,12 @@
 function P = roundwireproximityloss(rho, He, delta, G)
+error ('this function is not yet complete');
+%     gamma = () .* ();
+%     
+%     G = -2*pi*rho * ( real(besselj(2,gamma)) .* real(besseljderiv(0,gamma)) ...
+%                       + imag(besselj(2,gamma)) .* imag(besseljderiv(0,gamma)) ) ...
+%          ./ ( real(besselj(0,gamma)).^2 + imag(besselj(2,gamma)) );
 
-    gamma = () .* ();
-    
-    G = -2*pi*rho * ( real(besselj(2,gamma)) .* real(besseljderiv(0,gamma)) ...
-                      + imag(besselj(2,gamma)) .* imag(besseljderiv(0,gamma)) ) ...
-         ./ ( real(besselj(0,gamma)).^2 + imag(besselj(2,gamma)) );
-
-    P = 
+%     P = 
 end
 
 
