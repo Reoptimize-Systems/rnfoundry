@@ -52,6 +52,68 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
 
     % exceeding desired maximum rms current desity
     
+    
+    % apply the target mean load power penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'JCoilRms', design.OptimInfo.BaseScore, score);
+    
+    % apply the upper coil peak current density
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'JCoilPeak', design.OptimInfo.BaseScore, score);
+    
+    % apply the target mean load power penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'EMFPhasePeak', design.OptimInfo.BaseScore, score);
+    
+    % apply the max EMFPhaseRms penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'EMFPhaseRms', design.OptimInfo.BaseScore, score);
+    
+    % apply the min EMFPhaseRms penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'lower', 'EMFPhaseRms', design.OptimInfo.BaseScore, score);
+
+    % apply the max VoltageGenTerminalPhaseRms penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'VoltageGenTerminalPhaseRms', design.OptimInfo.BaseScore, score);
+    
+    % apply the min VoltageGenTerminalPhaseRms penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'lower', 'VoltageGenTerminalPhaseRms', design.OptimInfo.BaseScore, score);
+
+    % apply the target mean load power penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'target', 'PowerLoadMean', design.OptimInfo.BaseScore, score);
+
+    % apply the penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'lower', 'PowerLoadMean', design.OptimInfo.BaseScore, score);
+
+    % apply the penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'PowerLoadMean', design.OptimInfo.BaseScore, score);
+
+    % apply the penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'lower', 'PowerFactor', 1, score);
+    
+    
+    % Total harmonic distotion (THD) penalty
+    [score, design, simoptions] = ...
+        addpenalty_AM(design, simoptions, 'upper', 'VoltagePercentTHD', 1, score);
+    
+
+    % support legacy code with old penalty names
+    [score, design, simoptions] = LEGACY_electricalpenalties_AM(design, simoptions, score);
+
+    
+end
+
+function [score, design, simoptions] = LEGACY_electricalpenalties_AM(design, simoptions, score)
+
+    % support legacy code with old penalty names
+    % ---------------------------------------------------------------------
+
     % support legacy code with old penalty name
     if isfield(simoptions, 'maxAllowedJrms') ...
             && ~isfield(simoptions, 'max_JCoilRms')
@@ -63,10 +125,6 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
         end
         
     end
-    
-    % apply the target mean load power penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'JCoilRms', design.OptimInfo.BaseScore, score);
 
     % exceeding max allowed peak current density
     % support legacy code with old penalty name
@@ -81,10 +139,6 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
             simoptions.max_JCoilPeak_penfactor = simoptions.maxAllowedJpeakPenFactor;
         end
     end
-    
-    % apply the upper coil peak current density
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'JCoilPeak', design.OptimInfo.BaseScore, score);
 
     % exceeding max allowed peak phase EMF
     % support legacy code with old penalty name
@@ -97,13 +151,8 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
             simoptions.max_EMFPhasePeak_penfactor = simoptions.maxAllowedEMFpeakPenFactor;
         end
     end
-    
-    % apply the target mean load power penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'EMFPhasePeak', design.OptimInfo.BaseScore, score);
-    
+
     % exceeding max allowed rms voltage
-    % support legacy code with old penalty name
     if isfield(simoptions, 'maxAllowedRMSEMF') ...
             && ~isfield(simoptions, 'max_EMFPhaseRms')
         
@@ -113,13 +162,8 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
             simoptions.max_EMFPhaseRms_penfactor = simoptions.maxAllowedRMSEMFPenFactor;
         end
     end
-    
-    % apply the target mean load power penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'EMFPhaseRms', design.OptimInfo.BaseScore, score);
 
     % difference from minimum desired rms emf 
-    % support legacy code with old penalty name
     if isfield(simoptions, 'minAllowedRMSEMF') ...
             && ~isfield(simoptions, 'min_EMFPhaseRms')
         
@@ -129,34 +173,7 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
             simoptions.min_EMFPhaseRms_penfactor = simoptions.minAllowedRMSEMFPenFactor;
         end
     end
-    
-    % apply the target mean load power penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'lower', 'EMFPhaseRms', design.OptimInfo.BaseScore, score);
-    
-    
-%     design.minAllowedEMFrmspenalty = 0;
-% 
-%     if isfield(simoptions, 'minAllowedRMSEMF')
-%         if ~isempty(simoptions.minAllowedRMSEMF)
-%             if design.EMFPhaseRms < simoptions.minAllowedRMSEMF
-%                 
-%                 simoptions = setfieldifabsent(simoptions, 'minAllowedRMSEMFPenFactor', [20, 0]);
-%                 
-%                 if isscalar(simoptions.minAllowedRMSEMFPenFactor)
-%                     simoptions.minAllowedRMSEMFPenFactor = [simoptions.minAllowedRMSEMFPenFactor, 0];
-%                 end
-%                 
-%                 design.minAllowedEMFrmspenalty = ...
-%                     simoptions.minAllowedRMSEMFPenFactor(1) * design.OptimInfo.BaseScore * (simoptions.minAllowedRMSEMF/design.EMFPhaseRms) ...
-%                       + design.OptimInfo.BaseScore * (simoptions.minAllowedRMSEMFPenFactor(2) * simoptions.minAllowedRMSEMF/design.EMFPhaseRms)^2;
-% 
-%                 score = score + design.minAllowedEMFrmspenalty;
-%                 
-%             end
-%         end
-%     end
-    
+
     % target power is desired
     % support legacy code with old penalty name
     if isfield(simoptions, 'targetMeanPower') ...
@@ -167,10 +184,7 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
             simoptions.target_PowerLoadMean_penfactor = simoptions.targetMeanPowerPenFactor;
         end
     end
-    
-    % apply the target mean load power penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'target', 'PowerLoadMean', design.OptimInfo.BaseScore, score);
+
 
 %     design.targetMeanPowerpenalty = 0;
 % 
@@ -226,10 +240,6 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
         end
     end
     
-    % apply the penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'lower', 'PowerLoadMean', design.OptimInfo.BaseScore, score);
-    
 %     if isfield(simoptions, 'minPowerLoadMean')
 %         if design.PowerLoadMean < simoptions.minPowerLoadMean
 % 
@@ -260,9 +270,7 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
         end
     end
     
-    % apply the penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'PowerLoadMean', design.OptimInfo.BaseScore, score);
+
     
     % difference from minimum desired power factor
     % support legacy code with old penalty name
@@ -275,16 +283,7 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
             simoptions.min_PowerFactor_penfactor = simoptions.minAllowedPowerFactorPenFactor;
         end
     end
-    
-    % apply the penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'lower', 'PowerFactor', 1, score);
-    
-    
-    % Total harmonic distotion (THD) penalty
-    [score, design, simoptions] = ...
-        addpenalty_AM(design, simoptions, 'upper', 'VoltagePercentTHD', 1, score);
-    
+
     
 %     design.minAllowedPowerFactorpenalty = 0;
 % 
@@ -308,5 +307,6 @@ function [score, design, simoptions] = electricalpenalties_AM(design, simoptions
 %         end
 %     end
     
-    
+    % ---------------------------------------------------------------------
+
 end
