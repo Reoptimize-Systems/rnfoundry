@@ -180,6 +180,17 @@ function [ RawTorque, ...
 
     ArmatureToothFluxDensity = max (Bmag);
 
+    design.FluxDensityMagnitudeAirGapTheta = linspace (0, 2*design.thetap, NBpnts);
+
+    % now get peak flux density in the air gap
+    [x, y] = pol2cart (design.FluxDensityMagnitudeAirGapTheta, ...
+                       repmat (design.Rgm, 1, NBpnts) );
+
+    Bmag = magn (solution.getb (x, y));
+
+    design.FluxDensityMagnitudeAirGap = Bmag;
+
+    design.FluxDensityMagnitudeAirGapPeak = max (Bmag);
     
     if numel(design.FemmProblem.Circuits) > 0
         FemmDirectFluxLinkage = zeros (1,numel(design.FemmProblem.Circuits));
