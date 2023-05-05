@@ -266,6 +266,14 @@ function design = completedesign_RADIAL_SLOTTED(design, simoptions, setchoice)
     else
         error('Unrecognised armature type.')
     end
+
+    simoptions = setfieldifabsent (simoptions, 'ForceParallelSlotSides', false);
+
+    if simoptions.ForceParallelSlotSides
+        design.thetacg = design.thetacy;
+        design.thetacgVthetas = design.thetacg / design.thetas;
+        design.thetacyVthetas = design.thetacy / design.thetas;
+    end
         
     % mean radial position of magnets and coils
     design.Rmm = mean([design.Rmo, design.Rmi]);
