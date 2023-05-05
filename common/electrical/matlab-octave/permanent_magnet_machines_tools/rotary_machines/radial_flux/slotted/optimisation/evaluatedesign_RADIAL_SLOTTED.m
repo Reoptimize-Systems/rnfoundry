@@ -200,12 +200,12 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
 %   of fields containing default options used which were not provided by
 %   the user. The exact fields added are simulaiton dependant.
 %
-% T - output time vector as produced by ode solver functions, e.g. ode45
+%  T - output time vector as produced by ode solver functions, e.g. ode45
 %
-% Y - output solution vector as produced by ode solver functions, e.g.
+%  Y - output solution vector as produced by ode solver functions, e.g.
 %   ode45
 % 
-% results - the results as produced by the supplied function in
+%  results - the results as produced by the supplied function in
 %   ODESim.PostSimFcn. Typically a structure containig fields which are the
 %   outputs of various quantities at each time step in the simulation.
 %
@@ -215,6 +215,12 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
     simoptions = setfieldifabsent (simoptions, 'Evaluation', []);
 
     simoptions.Evaluation = designandevaloptions_RADIAL_SLOTTED(simoptions.Evaluation);
+
+    if strcmp(design.ArmatureType, 'external')
+        design.Rgm = design.Rmo + design.g/2;
+    elseif strcmp(design.ArmatureType, 'internal')
+        design.Rgm = design.Rmi - design.g/2;
+    end
     
     % pre-screen the design to see if a full simulation is worth it
     [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions);
@@ -224,11 +230,25 @@ function [score, design, simoptions, T, Y, results] = evaluatedesign_RADIAL_SLOT
     
     check.isLogicalScalar (simoptions.ForceFullSim, true, 'ForceFullSim');
     check.isLogicalScalar (simoptions.DoStructEval, true, 'DoStructEval');
+
+    % prefer to screen for desired EMF range, terminal voltage seems to be
+    % more challenging for the GA to handle
+    if isfield (ssimoptions, 'max_EMFPhaseRms')
+        max_Voltage_check_value = ssimoptions.max_EMFPhaseRms;
+    elseif isfield (ssimoptions, 'max_VoltageGenTerminalPhaseRms')
+        max_Voltage_check_value = ssimoptions.max_VoltageGenTerminalPhaseRms;
+    end
+
+    if isfield (ssimoptions, 'min_EMFPhaseRms')
+        min_Voltage_check_value = ssimoptions.min_EMFPhaseRms;
+    elseif isfield (ssimoptions, 'min_VoltageGenTerminalPhaseRms')
+        min_Voltage_check_value = ssimoptions.min_VoltageGenTerminalPhaseRms;
+    end
     
     if ~simoptions.ForceFullSim && ...
          ( ...
-            (sdesign.EMFPhaseRms > 2*ssimoptions.max_EMFPhaseRms) ...
-            || (sdesign.EMFPhaseRms < 0.25*ssimoptions.min_EMFPhaseRms) ...
+            (sdesign.EMFPhaseRms > 2*max_Voltage_check_value) ...
+            || (sdesign.EMFPhaseRms < 0.25*min_Voltage_check_value) ...
             || (sdesign.PowerLoadMean > 2*ssimoptions.max_PowerLoadMean) ...
             || (sdesign.PowerLoadMean < 0.5*ssimoptions.min_PowerLoadMean) ...
          )
@@ -269,7 +289,7 @@ end
 
 
 function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions)
-% pre-screens a design to assess if it is promising enough to 
+% pre-screens a design to assess if whether to perform full assessment
 
     sdesign = design;
     ssimoptions = simoptions;
@@ -287,14 +307,14 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     % coil properties
     ssimoptions.SkipCheckCoilProps = true;
     [sdesign, ssimoptions] = simfun_RADIAL(sdesign, ssimoptions);
-    
+
     % we are going to perform a single FEA simulation of the design to
     % extract some basic info about it to make a simple evaluation of the
     % performance
     ssimoptions.MagFEASim = setfieldifabsent(ssimoptions.MagFEASim, 'ShoeGapRegionMeshSize', -1);
     ssimoptions.MagFEASim = setfieldifabsent(ssimoptions.MagFEASim, 'YokeRegionMeshSize', -1);
     ssimoptions.MagFEASim = setfieldifabsent(ssimoptions.MagFEASim, 'CoilRegionMeshSize', -1);
-    
+
     rmcoilturns = false;
     if ~isfield(sdesign, 'CoilTurns')
         sdesign.CoilTurns = 1;
@@ -309,19 +329,18 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         coilspan = (design.yd-1) * design.thetas;
     end
     pos = (-design.thetap/2) + firstslotcentre + (coilspan / 2);
-    
-    
+
     if sdesign.pb == 1
         simpolepairs = 1;
     else
         simpolepairs = sdesign.pb/2;
     end
-    
+
     if ~iseven (sdesign.pb) && (sdesign.pb*2 <= sdesign.Poles)
         % double the number of poes in the simulation
         simpolepairs = sdesign.pb;
     end
-    
+
     % make sure there's at least 6 slots in the simulation. If not, as long
     % as there are enough slots in the whole machine to simulate another
     % pole pair, simulate another basic winding unit
@@ -349,12 +368,12 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     if rmcoilturns
         sdesign = rmfield (sdesign, 'CoilTurns');
     end
-    
+
     femfilename = [tempname, '_simfun_RADIAL_SLOTTED.fem'];
-    
+
     % write the fem file to disk
     writefemmfile (femfilename, sdesign.FemmProblem);
-    
+
     % analyse the problem
     try
         ansfilename = analyse_mfemm ( femfilename, ...
@@ -369,7 +388,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
             rethrow (err);
         end
     end
-	
+
     solution = fpproc (ansfilename);
     solution.smoothon ();
 
@@ -394,9 +413,9 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
         % coil shape. We append the last slot again
         intAslm(ind) = slmengine ([slotPos; slotPos(end)+slotPos(2)-slotPos(1)], ...
                                   [slotIntA(:,ind); slotIntA(1,ind)], ...
-            'EndCon', 'periodic', ...
-            'knots', 2*numel (slotPos)+1, ...
-            'Plot', 'off');
+                                  'EndCon', 'periodic', ...
+                                  'knots', 2*numel (slotPos)+1, ...
+                                  'Plot', 'off');
     end
 
     lambda = fluxlinkagefrmintAslm ( intAslm, ...
@@ -406,7 +425,7 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
                             sdesign.CoilArea, ...
                            'Skew', sdesign.MagnetSkew, ...
                            'NSkewPositions', sdesign.NSkewMagnetsPerPole );
-                       
+
     peakfl = max ( abs (lambda));
 
     % get the peak flux density in the armature back iron along
@@ -423,7 +442,19 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     Bmag = magn (solution.getb (x, y));
 
     sdesign.ArmatureToothFluxDensityPeak = max (Bmag);
-        
+
+    sdesign.FluxDensityMagnitudeAirGapTheta = linspace (0, 2*sdesign.thetap, NBpnts);
+
+    % now get peak flux density in the air gap
+    [x, y] = pol2cart (sdesign.FluxDensityMagnitudeAirGapTheta, ...
+                       repmat (design.Rgm, 1, NBpnts) );
+
+    Bmag = magn (solution.getb (x, y));
+
+    sdesign.FluxDensityMagnitudeAirGap = Bmag;
+
+    sdesign.FluxDensityMagnitudeAirGapPeak = max (Bmag);
+
     % tidy up the fea files
     delete (femfilename); delete (ansfilename); 
     
@@ -432,12 +463,42 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     if rmcoilturns
        peakfl = peakfl * sdesign.CoilTurns;
     end
+
+    omega = rpm2omega(ssimoptions.RPM);
+
+    sdesign.EMFCoilPeak = peakemfest_ROTARY(abs(peakfl), omega, sdesign.Poles / 2);
+    
+    sdesign.EMFCoilRms = sdesign.EMFCoilPeak / sqrt(2);
+
+    sdesign.EMFPhasePeak = sdesign.CoilsPerBranch * sdesign.EMFCoilPeak;
+    
+    sdesign.EMFPhaseRms = sdesign.EMFPhasePeak  / sqrt(2);
+
+%     if sdesign.EMFPhaseRms < ssimoptions.min_EMFPhaseRms
+% 
+%         min_coil_turns_factor = ssimoptions.min_EMFPhaseRms / sdesign.EMFPhaseRms;
+% 
+%         sdesign = rmfield (sdesign, 'Dc');
+% 
+%         sdesign.CoilTurns = max (10000, round (min_coil_turns_factor * ssdesign.CoilTurns));
+% 
+%         sdesign = checkcoilprops_AM(sdesign);
+% 
+%     elseif sdesign.EMFPhaseRms > ssimoptions.max_EMFPhaseRms
+% 
+%         min_coil_turns_factor = ssimoptions.max_EMFPhaseRms / sdesign.EMFPhaseRms;
+% 
+%         sdesign = rmfield (sdesign, 'Dc');
+% 
+%         sdesign.CoilTurns = min(1, round (min_coil_turns_factor * ssdesign.CoilTurns));
+% 
+%         sdesign = checkcoilprops_AM(sdesign);
+% 
+%     end
     
     % now calculate coil resistance using the same function as would be
     % used in simfun_RADIAL_SLOTTED
     sdesign = coilresistance_RADIAL_SLOTTED (sdesign);
-                           
-    omega = rpm2omega(ssimoptions.RPM);
     
     sdesign.CoilInductance = 0;
     
@@ -445,19 +506,13 @@ function [sdesign, ssimoptions] = screendesign_RADIAL_SLOTTED(design, simoptions
     
     [sdesign, ssimoptions] = finfun_RADIAL(sdesign, ssimoptions);
 
-    sdesign.EMFCoilPeak = peakemfest_ROTARY(abs(peakfl), omega, sdesign.Poles / 2);
-    
-    sdesign.EMFCoilRms = sdesign.EMFCoilPeak / sqrt(2);
-    
-    sdesign.EMFPhasePeak = sdesign.CoilsPerBranch * sdesign.EMFCoilPeak;
-    
-    sdesign.EMFPhaseRms = sdesign.EMFPhasePeak  / sqrt(2);
-    
     sdesign.IPhasePeak = sdesign.EMFPhasePeak / (sdesign.PhaseResistance(1) + sdesign.LoadResistance(1));
     sdesign.ICoilPeak = sdesign.IPhasePeak / sdesign.Branches;
     
     sdesign.IPhaseRms = sdesign.IPhasePeak / sqrt(2);
     sdesign.ICoilRms = sdesign.IPhaseRms / sdesign.Branches;
+
+    sdesign.VoltageGenTerminalPhaseRms = sdesign.EMFPhaseRms - (sdesign.IPhaseRms.*sdesign.PhaseResistance(1));
     
     sdesign.PowerLoadMean = sdesign.IPhaseRms.^2 * sdesign.LoadResistance * sdesign.Phases;
     
