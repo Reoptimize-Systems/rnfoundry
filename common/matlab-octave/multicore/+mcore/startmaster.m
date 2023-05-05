@@ -168,7 +168,7 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
         mcore.initmaster (evalfcns, fcnparams, settings);
     
     % preallocate a cell array to hold the results
-    resultCell = cell(size(fcnparams));
+    resultCell = cell (size (fcnparams));
 
     % Call "clear functions" to ensure that the latest file versions are used,
     % no older versions in Matlab's memory.
@@ -177,17 +177,19 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
     while 1 % this while-loop will be left if all work is done
         
         % check the directory can be accessed
-        if ~exist(settings.MulticoreSharedDir, 'dir')
+        if ~exist (settings.MulticoreSharedDir, 'dir')
 
             if settings.showWarnings
-                disp('Multicore directory not currently accessible')
+                disp ('Multicore directory not currently accessible')
             end
             
             if mcstate.multicoreCancelled
                 return;
             else
-                pause(mcstate.curPauseTime);
-                mcstate.curPauseTime = min(settings.maxCheckPauseTime, mcstate.curPauseTime + settings.initCheckPauseTime);
+                pause (mcstate.curPauseTime);
+
+                mcstate.curPauseTime = min ( settings.maxCheckPauseTime, ...
+                                             mcstate.curPauseTime + settings.initCheckPauseTime);
             end
 
             continue;
@@ -195,31 +197,47 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
         
         % run a supplied preprocessing function if present
         if ~isempty(settings.preProcessHandle)
-            mcstate.preProcState = feval(settings.preProcessHandle, settings.preProcessUserData{:}, mcstate.preProcState);
+            mcstate.preProcState = feval ( settings.preProcessHandle, ...
+                                           settings.preProcessUserData{:}, ...
+                                           mcstate.preProcState );
         end
         
         % run the multicore monitor function before beginning evaluation if
         % it has been supplied
         if ~isempty(settings.monitorFunction)
-            mcstate.monitorstate = feval(settings.monitorFunction, settings.monitorUserData, mcstate.monitorstate);
+
+            mcstate.monitorstate = feval ( settings.monitorFunction, ...
+                                           settings.monitorUserData, ...
+                                           mcstate.monitorstate );
+
         end
         
         if settings.masterIsWorker 
             
             % if the master is also a worker, it looks for results, and
             % also does jobs which have timed out here
-            [mcstate, resultCell] = mcore.masterisworkerdowork(mcstate, settings, evalfcns, fcnparams, resultCell);
+            [mcstate, resultCell] = mcore.masterisworkerdowork ( ...
+                        mcstate, settings, evalfcns, fcnparams, resultCell);
             
         else % if settings.masterIsWorker
             
             % pause a little time to let the slaves catch up (this is
             % different from the main loop pause time stored in
             % curPauseTime
-            pause(min(settings.maxCheckPauseTime, max(settings.initCheckPauseTime, 0.01 * settings.maxEvalTimeSingle)));
+            pause ( min ( settings.maxCheckPauseTime, ...
+                          max ( settings.initCheckPauseTime, ...
+                                0.01 * settings.maxEvalTimeSingle ...
+                              ) ...
+                        ) ...
+                  );
             
             % run the multicore monitor function if supplied
             if ~isempty(settings.monitorFunction)
-                mcstate.monitorstate = feval(settings.monitorFunction, settings.monitorUserData, mcstate.monitorstate);
+
+                mcstate.monitorstate = feval ( settings.monitorFunction, ...
+                                               settings.monitorUserData, ...
+                                               mcstate.monitorstate );
+
             end
             
         end % if settings.masterIsWorker
@@ -239,7 +257,8 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
             % all results have been collected, leave big while-loop
             if settings.debugMode
                 disp('********************************');
-                fprintf(1,'All work is done (mcstate.lastFileNrMaster = %d, mcstate.lastFileNrSlave = %d).\n', mcstate.lastFileNrMaster, mcstate.lastFileNrSlave);
+                fprintf(1,'All work is done (mcstate.lastFileNrMaster = %d, mcstate.lastFileNrSlave = %d).\n', ...
+                        mcstate.lastFileNrMaster, mcstate.lastFileNrSlave);
             end
             break;
         end
@@ -247,7 +266,7 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
         mcstate.curPauseTime = settings.initCheckPauseTime;
 
         % check for results from the slaves
-        [mcstate, resultCell] = mcore.checkforresults(mcstate, settings, evalfcns, fcnparams, resultCell);
+        [mcstate, resultCell] = mcore.checkforresults (mcstate, settings, evalfcns, fcnparams, resultCell);
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Check again if all work is done %
@@ -273,7 +292,7 @@ function resultCell = startmaster(evalfcns, fcnparams, settings)
         fprintf(1,'%2d jobs done by slaves\n', mcstate.nrOfFilesSlaves);
         %disp('No jobs done by slaves. (Note: You need to run function startmulticoreslave.m in another Matlab session?)');
 
-        overallTime = mcore.mbtime() - mcstate.startTime;
+        overallTime = mcore.mbtime () - mcstate.startTime;
         fprintf(1,'Processing took %.1f seconds.\n', overallTime);
         fprintf(1,'Overhead caused by setting  semaphores: %.1f seconds (%.1f%%).\n', ...
             mcstate.setTime,    100*mcstate.setTime    / overallTime);
@@ -288,16 +307,16 @@ end % function mcore.startmulticoremaster2
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cancelCallback(hObject, eventdata, multicoreCancelHandle) %#ok
+function cancelCallback (hObject, eventdata, multicoreCancelHandle) %#ok
     %CANCELCALLBACK  Cancel multicore computation on user request.
     %   This callback function is used to avoid having to use "hObject" and
     %   "eventdata" in function multicoreCancel above.
 
     % remove cancel button
-    delete(hObject);
+    delete (hObject);
 
     % call cancel function
-    multicoreCancelHandle();
+    multicoreCancelHandle ();
 
 end % function
 
