@@ -70,10 +70,16 @@ function spawnstate = startnslaves (nslaves, varargin)
 %     Inputs.OutputFilePrefix = '/dev/null';
     Inputs.OutputFilePrefix = 'slave';
     Inputs.CountExisting = true;
+    Inputs.SlaveNiceProcessPriority = 5;
 
     Inputs = parse_pv_pairs (Inputs, varargin);
 
     check.isLogicalScalar (Inputs.CountExisting, true, 'CountExisting');
+    check.isScalarInteger (Inputs.SlaveNiceProcessPriority, true, 'SlaveNiceProcessPriority');
+    
+    if (Inputs.SlaveNiceProcessPriority < -20) || (Inputs.SlaveNiceProcessPriority > 19)
+        error ('SlaveNiceProcessPriority must be between -20 and 19');
+    end
 
     if isdatetime (Inputs.EndDate)
 
@@ -115,6 +121,7 @@ function spawnstate = startnslaves (nslaves, varargin)
         spawnopts.StartTime = [];
         spawnopts.IgnoreParamFiles = true;
         spawnopts.OutputFilePrefix = Inputs.OutputFilePrefix;
+        spawnopts.SlaveNiceProcessPriority = Inputs.SlaveNiceProcessPriority;
 
         spawnstate = mcore.slavespawn (spawnopts);
 
@@ -140,12 +147,13 @@ function spawnstate = startnslaves (nslaves, varargin)
             end
             
             if isunix ()
-                launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d %d > "%s" &', ...
+                launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d %d %d > "%s" &', ...
                     Inputs.MulticoreSharedDir, ...
                     Inputs.EndDate(1), Inputs.EndDate(2), Inputs.EndDate(3), Inputs.EndDate(4), Inputs.EndDate(5), Inputs.EndDate(6), ...
                     Inputs.StartDir, ...
                     sleeptime, ...
                     slaveID, ...
+                    Inputs.SlaveNiceProcessPriority, ...
                     outfile          );
                 
                 fulllaunchscript = [launchscript, '.sh'];
