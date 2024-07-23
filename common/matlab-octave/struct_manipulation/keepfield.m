@@ -8,10 +8,10 @@ function s = keepfield(s, fields)
 %
 % Description
 % 
-% s = rmfield(s, 'fieldname') keeps the specified field in the structure
+% s = keepfield(s, 'fieldname') keeps the specified field in the structure
 % array s, removing all others.
 % 
-% s = rmfield(s, fields) keeps several fields discarding all others. fields
+% s = keepfield(s, fields) keeps several fields discarding all others. fields
 % is a character array of field names or cell array of strings.
 %
 % See Also, FIELDNAMES, SETFIELD, GETFIELD, ISFIELD, ORDERFIELDS, RMFIELD
