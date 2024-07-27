@@ -1,11 +1,10 @@
 function refactor_code_string (expression, replace, varargin)
-% refactor a code string, changing all occurances of the string name in the
-% path to the new string
+% change all occurances of an expression in the path to the new string
 %
 % Syntax
 %
-% replace_fcnname (expression, replace)
-% replace_fcnname (..., 'Parameter', Value)
+% refactor_code_string (expression, replace)
+% refactor_code_string (..., 'Parameter', Value)
 %
 % Description
 %
