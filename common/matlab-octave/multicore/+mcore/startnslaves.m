@@ -71,6 +71,7 @@ function spawnstate = startnslaves (nslaves, varargin)
     Inputs.OutputFilePrefix = 'slave';
     Inputs.CountExisting = true;
     Inputs.SlaveNiceProcessPriority = 5;
+    Inputs.CopyWorkspace = false;
 
     Inputs = parse_pv_pairs (Inputs, varargin);
 
@@ -99,6 +100,13 @@ function spawnstate = startnslaves (nslaves, varargin)
         mkdir (Inputs.MulticoreSharedDir);
     end
 
+    if Inputs.CopyWorkspace
+        workspace_file = [ tempname(Inputs.MulticoreSharedDir), '.mat' ];
+        evalin('base', sprintf('save(''%s'');', workspace_file));
+    else
+        workspace_file = '';
+    end
+
     switch Inputs.SlaveType
         case 'm'
             launchscript = 'matlabmulticoreslaves';
@@ -108,11 +116,10 @@ function spawnstate = startnslaves (nslaves, varargin)
             error ('slavetype should be ''m'' for matlab of ''o'' for octave')
     end
 
-
     if Inputs.CountExisting
 
         spawnopts.MaxSlaves = nslaves;
-        spawnopts.ShareDir = Inputs.MulticoreSharedDir;
+        spawnopts.MulticoreSharedDir = Inputs.MulticoreSharedDir;
         spawnopts.MatOrOct = Inputs.SlaveType;
         spawnopts.PauseTime = Inputs.PauseTime;
         spawnopts.SlaveStartDir = Inputs.StartDir;
@@ -147,14 +154,16 @@ function spawnstate = startnslaves (nslaves, varargin)
             end
             
             if isunix ()
-                launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d %d %d > "%s" &', ...
+                launchargs = sprintf ( ' ''%s'' [%d,%d,%d,%d,%d,%d] ''%s'' %d %d %d %s > "%s" &', ...
                     Inputs.MulticoreSharedDir, ...
                     Inputs.EndDate(1), Inputs.EndDate(2), Inputs.EndDate(3), Inputs.EndDate(4), Inputs.EndDate(5), Inputs.EndDate(6), ...
                     Inputs.StartDir, ...
                     sleeptime, ...
                     slaveID, ...
                     Inputs.SlaveNiceProcessPriority, ...
-                    outfile          );
+                    workspace_file, ...
+                    outfile ...
+                );
                 
                 fulllaunchscript = [launchscript, '.sh'];
             else

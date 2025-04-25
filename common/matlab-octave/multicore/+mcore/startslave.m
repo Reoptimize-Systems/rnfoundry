@@ -81,6 +81,7 @@ function startslave(varargin)
     options.IDfilestart = 'slaveID_';
     options.ThrowErrors = false;
     options.SlaveID = [];
+    options.LoadIntoBaseWorkspace = '';
     
     options = parse_pv_pairs (options, varargin);
 
@@ -195,6 +196,10 @@ function startslave(varargin)
     end
     
     settoquitasnodiraccess = false;
+
+    if ~isempty(options.LoadIntoBaseWorkspace)
+        evalin("base", "load('" + options.LoadIntoBaseWorkspace + ");");
+    end
     
     while 1
 

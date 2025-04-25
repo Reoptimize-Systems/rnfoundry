@@ -11,12 +11,17 @@ echo "The slave ID number"
 echo $5 # The slave ID number
 echo "The nice (process priority) value"
 echo $6 # The slave ID number
+echo "The file to load into the base workspace at slave startup"
+echo $7
 
 echo waiting $4 seconds
 sleep $4
 
 echo "Running Matlab in batch mode"
-# Start the matlab process in batch mode
-# and limited to a single thread, we also reduce the process priority a bit 
-# using nice to try to make 
-nice -n $6 matlab -singleCompThread -nosplash -sd "$3" -batch "disp(pwd);disp('Successfully Completed Startup');mcore.startslave('MulticoreSharedDir', '$1', 'QuitMatlabOnExit', true, 'QuitDatenum', datenum($2), 'SlaveID', $5, 'DebugMode', false);quit;"
+#matlab -sd "$3" -batch "disp(pwd);disp('Successfully Completed Startup');mcore.startslave('$1', 1, datenum($2));quit();"
+
+
+#echo "Running Maltab without jvm"
+# Start the matlab process with no gui, no java (until this is fixed),
+# and limited to a single thread
+nice -n $6 matlab -sd "$3" -batch "cd('$3');disp(pwd);ls;startup;disp('Successfully Completed Startup');mcore.startslave('MulticoreSharedDir', '$1', 'QuitMatlabOnExit', true, 'QuitDatenum', datenum($2), 'SlaveID', $5, 'LoadIntoBaseWorkspace', '$7', 'DebugMode', true);quit;"
