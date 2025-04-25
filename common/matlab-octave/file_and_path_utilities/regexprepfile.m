@@ -34,7 +34,7 @@ function changecount = regexprepfile(filename, exp, repstr, display, dryrun)
 %  display - optional T/F flag determining whether to display output about
 %   the replacement process. Default is false
 % 
-%  display - optional T/F flag determining whether to do a dry run test
+%  dryrun - optional T/F flag determining whether to do a dry run test
 %   where the replacement is not actually performed. Default is false
 %
 % Output
@@ -55,6 +55,8 @@ function changecount = regexprepfile(filename, exp, repstr, display, dryrun)
     
     if ~iscellstr(filename) && ischar(filename)
         filename = {filename};
+    elseif isstring(filename)
+        filename = cellstr(filename);
     elseif ~iscellstr(filename)
         error('filename must be a string or cell array of strings containing file locations.')
     end
