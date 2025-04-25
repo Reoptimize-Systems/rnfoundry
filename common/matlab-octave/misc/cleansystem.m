@@ -1,4 +1,4 @@
-function [status,result] = cleansystem (cmd, restoreuser)
+function [status,result] = cleansystem (cmd, restoreuser, echo)
 % run command on host system with a clean user envionment
 %
 % Syntax
@@ -38,6 +38,10 @@ function [status,result] = cleansystem (cmd, restoreuser)
         restoreuser = true;
     end
 
+    if nargin < 3
+        echo = false;
+    end
+
     if ispc
         precmd = '';
     else
@@ -58,6 +62,10 @@ function [status,result] = cleansystem (cmd, restoreuser)
     
     cmdline = sprintf ('%s %s', precmd, cmd);
 
-	[status,result] = system ( cmdline );
+    if echo
+	    [status,result] = system ( cmdline, '-echo' );
+    else
+        [status,result] = system ( cmdline );
+    end
             
 end
