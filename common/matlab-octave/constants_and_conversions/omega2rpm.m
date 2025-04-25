@@ -3,7 +3,7 @@ function rpm = omega2rpm(omega)
 
 % Created by Richard Crozier 
 
-    rpm = 60 * (omega / (2*pi));
+    rpm = 60 .* (omega ./ (2.*pi));
 
 
 end
