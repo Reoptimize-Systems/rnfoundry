@@ -1,5 +1,32 @@
 function usages = searchfileforexp(filename, exp)
 % search a file line by line for the regular expression exp 
+%
+% Syntax
+%
+% usages = searchfileforexp (filename, exp)
+%
+% Description
+%
+% Searches a file line-by-line for the regular expression provided in exp. 
+%
+% Input
+%
+%  filename - path to file to be searched
+%
+%  exp - regular expression
+%
+% Output
+%
+%  usages - (n x 5) cell array where each row contains information about an
+%   expression match found in the file, i.e:
+%   { name of the file, 
+%     line number match was found,
+%     copy of the full line from the file where the match was found,
+%     start indices of matches as returned by the regexp function,
+%     end indices of vectors as returned by the regexp function }
+%
+% See Also: regexp, regexprepfile
+%
 
     usages = {};
     

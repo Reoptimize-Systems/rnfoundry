@@ -1,9 +1,11 @@
-function changecount = regexprepfile(filename,exp,repstr,display,dryrun)
+function changecount = regexprepfile(filename, exp, repstr, display, dryrun)
 % Replace string in one or more files using regular expressions.
 %
 % Syntax
 %
-% regexprepfile(filename,exp,repstr)
+% regexprepfile(filename, exp, repstr)
+% regexprepfile(..., display)
+% regexprepfile(..., dryrun)
 %
 % Description
 % 
@@ -21,17 +23,20 @@ function changecount = regexprepfile(filename,exp,repstr,display,dryrun)
 % Input
 %
 %  filename - string or cell array of strings being file paths to be
-%    checked by regexprepfile for the expression exp
+%   checked by regexprepfile for the expression exp
 %
 %  exp - regular expression replacement using the pattern exp, in the same
-%    format as required by regexprep.m
+%   format as required by regexprep.m
 %
 %  repstr - string with which to replace any occurances of the pattern in
-%    exp, in all files in 'filename'
+%   exp, in all files in 'filename'
 %
 %  display - optional T/F flag determining whether to display output about
-%    the replacement process. Default is false
+%   the replacement process. Default is false
 % 
+%  dryrun - optional T/F flag determining whether to do a dry run test
+%   where the replacement is not actually performed. Default is false
+%
 % Output
 % 
 %  changecount - number 
@@ -50,6 +55,8 @@ function changecount = regexprepfile(filename,exp,repstr,display,dryrun)
     
     if ~iscellstr(filename) && ischar(filename)
         filename = {filename};
+    elseif isstring(filename)
+        filename = cellstr(filename);
     elseif ~iscellstr(filename)
         error('filename must be a string or cell array of strings containing file locations.')
     end

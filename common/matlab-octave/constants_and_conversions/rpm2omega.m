@@ -8,6 +8,6 @@ function omega = rpm2omega(rpm)
 
 % Created by Richard Crozier 
 
-    omega = 2 * pi * rpm2freq(rpm);
+    omega = 2 .* pi .* rpm2freq(rpm);
     
 end

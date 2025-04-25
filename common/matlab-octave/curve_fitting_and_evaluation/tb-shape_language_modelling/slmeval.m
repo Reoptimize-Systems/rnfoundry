@@ -128,7 +128,7 @@ function y = slmeval(x, slm, evalmode, checkinput)
     persistent usemexslmeval
     
     if isempty(usemexslmeval)
-        if exist ('mexslmeval', 'file')
+        if exist ('mexslmeval', 'file') == 3
             usemexslmeval = true;
         else
             usemexslmeval = false;

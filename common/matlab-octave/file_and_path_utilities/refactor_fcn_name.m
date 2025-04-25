@@ -43,25 +43,32 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
 %
 %  topdir - character vector containing either the string 'allbutroot'
 %
-%  domove - 
+%  domove - true/false flag indicating whether to move the origninal
+%   function file name to the new file name. It will be kept in the same
+%   directory.
 %
 % Addtional arguments may be supplied as parameter-value pairs. The available options are:
 %
-%  'StripVersionControl' - 
+%  'StripVersionControl' - true/false Flag indicating whether to remove
+%    paths containing '.svn', '.hg', '.git', '.cvs'.
 %
-%  'AllowDotBeforeName' - 
+%  'AllowDotBeforeName' - true/false Flag indicating whether names preceded
+%    by a '.' character will be modified. This is really only useful if
+%    coercing this code to refactor somehting like a structure variable
+%    rather than a function name.
 %
-%  'WarnIfFcnNotOnPath' - 
+%  'WarnIfFcnNotOnPath' - true/false Flag indicating whether to issue a
+%    warning if the function to be modified does not appear to be on the
+%    Matlab path.
 %
 %
 % See also: regexprepfile
 %
 
-% Copyright Richard Crozier 2013-2015
-
     options.StripVersionControl = true;
     options.AllowDotBeforeName = true;
     options.WarnIfFcnNotOnPath = true;
+    options.UseGenpathForSubdirs = true;
     
     options = parse_pv_pairs (options, varargin);
 
@@ -84,7 +91,9 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
 
     fcnname_dots = strfind (fcnname, '.');
 
-    if ~isempty (fcnname_dots)
+    if isempty (fcnname_dots)
+        fcnname_no_package = fcnname;
+    else
         fcnname_no_package = fcnname (fcnname_dots(end)+1:end);
     end
     
@@ -111,7 +120,21 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
         if exist (topdir, 'file') ~= 7
             error ('supplied directory name does not exist.')
         end
-        thepath = path2cell (genpath (topdir));
+        if options.UseGenpathForSubdirs
+            thepath = path2cell (genpath (topdir));
+        else
+            dirlist = dir(fullfile(topdir, '**'));  % get list of files and folders reursively
+            dirlist = dirlist(...
+                [dirlist.isdir] ...
+                    & ~arrayfun(@(x) string(x.name).matches('.'), dirlist)' ...
+                    & ~arrayfun(@(x) string(x.name).matches('..'), dirlist)' ...
+            );  %remove non directories from list
+
+            thepath = cell(numel(dirlist),1);
+            for ind = 1:numel(dirlist)
+                thepath{ind} = fullfile(dirlist(ind).folder, dirlist(ind).name);
+            end
+        end
     end
 
     if nargin < 4
@@ -141,9 +164,17 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
             % looking for word boundaries to avoid functions with similar
             % substrings
             if options.AllowDotBeforeName
-                regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), ['(?<=^|\W)', fcnname, '(?=((\s*\()|(\s*;)|(\s*$)))'], newfcnname);
+                regexprepfile(...
+                    fullfile(thepath{indi}, mfiles(indii).name), ...
+                    ['(?<=^|\W)', fcnname, '(?=((\s*\()|(\s*;)|(\s*$)))'], ...
+                    newfcnname ...
+                );
             else
-                regexprepfile(fullfile(thepath{indi}, mfiles(indii).name), ['(?<=^|\W)(?<![.])', fcnname, '(?=((\s*\()|(\s*;)|(\s*$)))'], newfcnname);
+                regexprepfile(...
+                    fullfile(thepath{indi}, mfiles(indii).name), ...
+                    ['(?<=^|\W)(?<![.])', fcnname, '(?=((\s*\()|(\s*;)|(\s*$)))'], ...
+                    newfcnname ...
+                );
             end
         end
 
@@ -155,7 +186,9 @@ function refactor_fcn_name(fcnname, newfcnname, topdir, domove, varargin)
 
         new_fcnname_dots = strfind (fcnname, '.');
 
-        if ~isempty (new_fcnname_dots)
+        if isempty (new_fcnname_dots)
+            new_fcnname_no_package = newfcnname;
+        else
             new_fcnname_no_package = newfcnname (new_fcnname_dots(end)+1:end);
         end
 

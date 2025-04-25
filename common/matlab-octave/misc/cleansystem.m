@@ -1,4 +1,4 @@
-function [status,result] = cleansystem (cmd, restoreuser)
+function [status,result] = cleansystem (cmd, restoreuser, echo)
 % run command on host system with a clean user envionment
 %
 % Syntax
@@ -10,9 +10,9 @@ function [status,result] = cleansystem (cmd, restoreuser)
 %
 % cleansystem is identical to 'system' but ensures the command runs in a
 % clean environment. On linux, before running the command, LD_LIBRARY_PATH
-% is removed (using unset) the user's bashrc is rerun to restore the user
-% environment. This removes Matlab's modifications to the library path and
-% restores the users environment if necessary.
+% is removed (using unset) the user's bashrc or equivalent is rerun to
+% restore the user environment. This removes Matlab's modifications to the
+% library path and restores the users environment if necessary.
 %
 % Input
 %
@@ -38,21 +38,34 @@ function [status,result] = cleansystem (cmd, restoreuser)
         restoreuser = true;
     end
 
+    if nargin < 3
+        echo = false;
+    end
+
     if ispc
         precmd = '';
     else
         precmd = 'unset LD_LIBRARY_PATH ; ';
         
         if restoreuser
-            % the '.' below it the portable version of the bash 'source'
+            % the '.' below is the portable version of the bash 'source'
             % command. 
             precmd = [precmd, '. ~/.bashrc ;'];
+
+            if exist ('~/.bash_aliases', 'file') == 2
+                precmd = [precmd, ' . ~/.bash_aliases ; '];
+            end
+
         end
         
     end
     
     cmdline = sprintf ('%s %s', precmd, cmd);
 
-	[status,result] = system ( cmdline );
+    if echo
+	    [status,result] = system ( cmdline, '-echo' );
+    else
+        [status,result] = system ( cmdline );
+    end
             
 end
