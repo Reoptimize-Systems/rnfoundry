@@ -25,9 +25,13 @@ function s = setfieldifabsent(s, field, v)
         error('field must be a character array');
     end
     
-    if ~isfield(s, field)
-        
-        s.(field) = v;
+    for ind = 1:numel(s)
+
+        if ~isfield(s, field)
+            
+            s(ind).(field) = v;
+            
+        end
         
     end
 
